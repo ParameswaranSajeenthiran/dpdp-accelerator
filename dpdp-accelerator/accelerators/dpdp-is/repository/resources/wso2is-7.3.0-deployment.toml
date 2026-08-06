@@ -114,3 +114,8 @@ read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_
 context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications(.*)"
+secure = "false"
+http_method = "all"

@@ -36,6 +36,17 @@
             <version>${project.version}</version>
             <type>war</type>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.event.notifications.service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.event.notifications.endpoint</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
     </dependencies>
 
     <build>
@@ -78,8 +89,15 @@
                         </goals>
                         <configuration>
                             <target>
+                                <copy todir="${project.basedir}/carbon-home/repository/components/dropins">
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
+                                </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal/"/>
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#dpdp#event-notifications.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#event-notifications/"/>
                             </target>
                         </configuration>
                     </execution>

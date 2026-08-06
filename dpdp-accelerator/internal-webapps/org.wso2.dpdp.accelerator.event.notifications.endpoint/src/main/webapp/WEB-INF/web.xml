@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0" metadata-complete="true">
+  <absolute-ordering />
+
+  <display-name>WSO2 DPDP Accelerator - Event Notification API</display-name>
+
+  <servlet>
+    <servlet-name>CXFServlet</servlet-name>
+    <servlet-class>
+      org.wso2.carbon.identity.servlet.mgt.CustomCXFNonSpringJaxrsServlet
+    </servlet-class>
+    <init-param>
+      <param-name>jaxrs.serviceClasses</param-name>
+      <param-value>
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.SubscriptionResource,
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.TopicResource
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>jaxrs.providers</param-name>
+      <param-value>
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.ENFExceptionMapper,
+        com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider
+      </param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>CXFServlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>

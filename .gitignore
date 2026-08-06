@@ -10,6 +10,7 @@ replay_pid*
 
 # Maven
 target/
+**/target/
 release.properties
 pom.xml.releaseBackup
 
@@ -21,11 +22,17 @@ npm-debug.log*
 
 # Accelerator overlay: the exploded webapp is generated at package time.
 **/carbon-home/repository/deployment/server/webapps/
+**/carbon-home/repository/components/dropins/*.jar
+*.jar
 
 # IDE
 .idea/
 *.iml
 .vscode/
+.claude/
+.classpath
+.project
+.settings/
 .DS_Store
 
 # Env
