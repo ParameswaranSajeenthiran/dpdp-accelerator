@@ -100,10 +100,8 @@ for IDENTIFIER in \
   "/api/identity/consent-mgt/v2.0/purposes" \
   "/api/identity/consent-mgt/v2.0/elements"; do
 
-  RESOURCE=$(${CURL} "${BASE}/api/server/v1/api-resources?limit=500&type=SYSTEM" | json "next((r['id'] for r in d.get('apiResources',[]) if r.get('identifier','').strip('/')=='${IDENTIFIER}'.strip('/')), '')")
-  if [ -z "${RESOURCE}" ]; then
-    RESOURCE=$(${CURL} "${BASE}/api/server/v1/api-resources?limit=500" | json "next((r['id'] for r in d.get('apiResources',[]) if r.get('identifier','').strip('/')=='${IDENTIFIER}'.strip('/')), '')")
-  fi
+  RESOURCE=$(${CURL} --get --data-urlencode "filter=identifier eq ${IDENTIFIER}" \
+    "${BASE}/api/server/v1/api-resources" | json "d['apiResources'][0]['id'] if d.get('apiResources') else ''")
 
   if [ -z "${RESOURCE}" ]; then
     echo "ERROR: API resource ${IDENTIFIER} is not registered."
