@@ -62,10 +62,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-              The webapp is shipped exploded so that a deployment can edit files
-              inside it (and so merge.sh can preserve them across an upgrade).
-            -->
+            <!-- The consent portal ships as a packed WAR, deployed by Carbon's hot-deployment. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -78,8 +75,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
-                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal/"/>
+                                <copy file="../../react-apps/consent-portal/target/consent-portal.war"
+                                      todir="${project.basedir}/carbon-home/repository/deployment/server/webapps/"/>
                             </target>
                         </configuration>
                     </execution>
