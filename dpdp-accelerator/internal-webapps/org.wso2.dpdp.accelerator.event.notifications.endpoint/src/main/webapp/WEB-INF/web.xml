@@ -15,14 +15,14 @@
     <init-param>
       <param-name>jaxrs.serviceClasses</param-name>
       <param-value>
-        org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.SubscriptionResource,
-        org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.TopicResource
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.SubscriptionEndpoint,
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint
       </param-value>
     </init-param>
     <init-param>
       <param-name>jaxrs.providers</param-name>
       <param-value>
-        org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.ENFExceptionMapper,
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.EventNotificationExceptionMapper,
         com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider
       </param-value>
     </init-param>

@@ -20,6 +20,8 @@ package org.wso2.dpdp.accelerator.portal.webapp.servlet;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.wso2.dpdp.accelerator.portal.webapp.client.IdentityServerClient;
+import org.wso2.dpdp.accelerator.portal.webapp.model.AuthenticatedUser;
+import org.wso2.dpdp.accelerator.portal.webapp.service.TokenValidator;
 import org.wso2.dpdp.accelerator.portal.webapp.util.AuthUtil;
 import org.wso2.dpdp.accelerator.portal.webapp.util.HttpUtil;
 import org.wso2.dpdp.accelerator.portal.webapp.util.PortalConfig;
@@ -61,6 +63,29 @@ public abstract class AbstractProxyServlet extends HttpServlet {
             return null;
         }
         return new IdentityServerClient(PortalConfig.getInstance(getServletContext()), accessToken);
+    }
+
+    /**
+     * Resolves the server-side organization ID for the authenticated request.
+     * Extracts the organization ID from the authenticated user's access token,
+     * defaulting to "carbon.super" if absent or unresolvable.
+     * Always ignores untrusted caller-supplied 'org-id' headers.
+     */
+    protected String resolveOrgId(HttpServletRequest request) {
+
+        String accessToken = AuthUtil.resolveAccessToken(request);
+        if (accessToken != null) {
+            try {
+                PortalConfig config = PortalConfig.getInstance(getServletContext());
+                AuthenticatedUser user = TokenValidator.getInstance(config).validate(accessToken);
+                if (user != null && user.getOrganizationId() != null && !user.getOrganizationId().trim().isEmpty()) {
+                    return user.getOrganizationId();
+                }
+            } catch (Exception e) {
+                // If token resolution or validation fails, fall back to PortalConstants.DEFAULT_TENANT_DOMAIN
+            }
+        }
+        return PortalConstants.DEFAULT_TENANT_DOMAIN;
     }
 
     protected static String readBody(HttpServletRequest request) throws IOException {

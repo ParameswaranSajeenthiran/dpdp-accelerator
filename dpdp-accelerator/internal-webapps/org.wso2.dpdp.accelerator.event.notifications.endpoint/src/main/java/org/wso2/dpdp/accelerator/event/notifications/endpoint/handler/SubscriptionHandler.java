@@ -18,16 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 
-import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
-
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionEventHistoryResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionEventListResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionListResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.mapper.SubscriptionMapper;
-
-import org.wso2.dpdp.accelerator.event.notifications.service.ServiceFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
@@ -35,67 +27,66 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 
+import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+
 public class SubscriptionHandler {
 
     private final SubscriptionService subscriptionService;
 
     public SubscriptionHandler() {
-        this.subscriptionService = ServiceFactory.createSubscriptionService();
+        SubscriptionService svc = (SubscriptionService) PrivilegedCarbonContext
+                .getThreadLocalCarbonContext()
+                .getOSGiService(SubscriptionService.class, null);
+        if (svc == null) {
+            throw new IllegalStateException("SubscriptionService OSGi service not available");
+        }
+        this.subscriptionService = svc;
     }
 
     public SubscriptionHandler(SubscriptionService subscriptionService) {
         this.subscriptionService = subscriptionService;
     }
 
-    public SubscriptionResponse createSubscription(String orgId, String groupId,
-            SubscriptionCreateRequest request) {
+    public SubscriptionDTO createSubscription(String orgId, SubscriptionDTO request) {
+        String groupId = request != null ? request.getGroupId() : null;
         String topic = request != null ? request.getTopic() : null;
-        FilterDTO filterDTO = SubscriptionMapper.toFilterDTO(request != null ? request.getFilter() : null);
-        DeliveryConfigDTO deliveryDTO = SubscriptionMapper
-                .toDeliveryConfigDTO(request != null ? request.getDelivery() : null);
-
-        SubscriptionDTO dto = subscriptionService.createSubscription(orgId, groupId, topic, filterDTO, deliveryDTO);
-        return SubscriptionMapper.toResponse(dto);
+        FilterDTO filterDTO = request != null ? request.getFilter() : null;
+        DeliveryConfigDTO deliveryDTO = request != null ? request.getDelivery() : null;
+        return subscriptionService.createSubscription(orgId, groupId, topic, filterDTO, deliveryDTO);
     }
 
-    public SubscriptionListResponse listSubscriptions(String orgId, String status, String purposes,
+    public PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes,
             String search, Integer limit, Integer offset, String sort) {
-        int lim = limit != null && limit > 0 ? limit : 20;
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
         int off = offset != null && offset >= 0 ? offset : 0;
-
-        PaginatedResult<SubscriptionDTO> result = subscriptionService.listSubscriptions(orgId, status, purposes, search,
-                lim, off, sort);
-        return SubscriptionMapper.toListResponse(result.getItems(), result.getTotal(), lim, off);
+        return subscriptionService.listSubscriptions(orgId, status, purposes, search, lim, off, sort);
     }
 
-    public SubscriptionResponse getSubscription(String orgId, String subscriptionId) {
-        SubscriptionDTO dto = subscriptionService.getSubscription(orgId, subscriptionId);
-        return SubscriptionMapper.toResponse(dto);
+    public SubscriptionDTO getSubscription(String orgId, String subscriptionId) {
+        return subscriptionService.getSubscription(orgId, subscriptionId);
     }
 
     public void deleteSubscription(String orgId, String subscriptionId) {
         subscriptionService.deleteSubscription(orgId, subscriptionId);
     }
 
-    public SubscriptionResponse retryVerification(String orgId, String subscriptionId) {
-        SubscriptionDTO dto = subscriptionService.retryVerification(orgId, subscriptionId);
-        return SubscriptionMapper.toResponse(dto);
+    public SubscriptionDTO retryVerification(String orgId, String subscriptionId) {
+        return subscriptionService.retryVerification(orgId, subscriptionId);
     }
 
-    public SubscriptionEventListResponse listSubscriptionEvents(String orgId, String subscriptionId,
+    public PaginatedResult<SubscriptionDeliveryDTO> listSubscriptionEvents(String orgId, String subscriptionId,
             Integer limit, Integer offset) {
-        int lim = limit != null && limit > 0 ? limit : 20;
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
         int off = offset != null && offset >= 0 ? offset : 0;
-
-        PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionService.listSubscriptionEvents(orgId,
-                subscriptionId, lim, off);
-        return SubscriptionMapper.toEventListResponse(result.getItems(), result.getTotal(), lim, off);
+        return subscriptionService.listSubscriptionEvents(orgId, subscriptionId, lim, off);
     }
 
-    public SubscriptionEventHistoryResponse getSubscriptionEventHistory(String orgId, String subscriptionId,
+    public SubscriptionEventHistoryDTO getSubscriptionEventHistory(String orgId, String subscriptionId,
             String deliveryId) {
-        SubscriptionEventHistoryDTO dto = subscriptionService.getSubscriptionEventHistory(orgId, subscriptionId,
-                deliveryId);
-        return SubscriptionMapper.toHistoryResponse(dto);
+        return subscriptionService.getSubscriptionEventHistory(orgId, subscriptionId, deliveryId);
     }
 }

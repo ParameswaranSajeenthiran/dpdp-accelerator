@@ -18,12 +18,15 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
+
 public class TopicDTO {
 
     private String topicId;
     private String name;
     private String description;
     private String status;
+    private String initiatedBy;
 
     public TopicDTO() {
     }
@@ -33,6 +36,15 @@ public class TopicDTO {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.initiatedBy = Initiator.USER.getValue();
+    }
+
+    public TopicDTO(String topicId, String name, String description, String status, String initiatedBy) {
+        this.topicId = topicId;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.initiatedBy = initiatedBy;
     }
 
     public String getTopicId() {
@@ -65,5 +77,13 @@ public class TopicDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getInitiatedBy() {
+        return initiatedBy;
+    }
+
+    public void setInitiatedBy(String initiatedBy) {
+        this.initiatedBy = initiatedBy;
     }
 }

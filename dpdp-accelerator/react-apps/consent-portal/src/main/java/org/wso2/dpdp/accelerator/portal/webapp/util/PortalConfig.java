@@ -107,12 +107,20 @@ public final class PortalConfig {
 
     public String getClientId() {
 
-        return get(OAUTH_CLIENT_ID);
+        String clientId = get(OAUTH_CLIENT_ID);
+        if (clientId == null || clientId.trim().isEmpty()) {
+            LOG.warn("OAuth client_id is missing in portal configuration.");
+        }
+        return clientId;
     }
 
     public String getClientSecret() {
 
-        return get(OAUTH_CLIENT_SECRET);
+        String secret = get(OAUTH_CLIENT_SECRET);
+        if (secret == null || secret.trim().isEmpty()) {
+            LOG.warn("OAuth client_secret is missing in portal configuration.");
+        }
+        return secret;
     }
 
     public String getScopes() {

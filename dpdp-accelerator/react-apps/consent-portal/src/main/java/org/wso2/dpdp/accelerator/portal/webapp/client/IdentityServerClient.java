@@ -40,6 +40,8 @@ public class IdentityServerClient {
     public static final String USER_CONSENT_API = "/api/users/v1/me/consents";
     /** Base path of the consent management v2 (administrative) API. */
     public static final String CONSENT_MGT_V2_API = "/api/identity/consent-mgt/v2.0";
+    /** Base path of the event notifications API. */
+    public static final String EVENT_NOTIFICATION_API = "/api/dpdp/event-notifications";
 
     private final PortalConfig config;
     private final String accessToken;
@@ -124,6 +126,35 @@ public class IdentityServerClient {
     public Result delete(String path) throws IOException, InterruptedException {
 
         return send(request(path).DELETE().build());
+    }
+
+    public Result forwardEventNotificationRequest(String method, String path, String jsonBody, String orgId)
+            throws IOException, InterruptedException {
+
+        HttpRequest.Builder builder = request(path);
+        if (orgId != null && !orgId.trim().isEmpty()) {
+            builder.header("org-id", orgId.trim());
+        }
+
+        switch (method) {
+            case "GET":
+                builder.GET();
+                break;
+            case "POST":
+                if (jsonBody == null || jsonBody.isEmpty()) {
+                    builder.POST(HttpRequest.BodyPublishers.noBody());
+                } else {
+                    builder.header("Content-Type", PortalConstants.CONTENT_TYPE_JSON)
+                            .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+                }
+                break;
+            case "DELETE":
+                builder.DELETE();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+        }
+        return send(builder.build());
     }
 
     private Result send(HttpRequest request) throws IOException, InterruptedException {

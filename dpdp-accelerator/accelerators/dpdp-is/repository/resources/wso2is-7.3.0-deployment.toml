@@ -30,6 +30,13 @@ username = "wso2carbon"
 password = "wso2carbon"
 driver = "org.h2.Driver"
 
+[datasource.EventNotificationDB]
+id = "EventNotificationDB"
+url = "jdbc:h2:./repository/database/WSO2EVENT_NOTIFICATION_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+driver = "org.h2.Driver"
+
 [keystore.primary]
 file_name = "wso2carbon.p12"
 password = "wso2carbon"
@@ -116,6 +123,49 @@ secure = "false"
 http_method = "all"
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications(.*)"
-secure = "false"
-http_method = "all"
+context = "(.*)/api/dpdp/event-notifications/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["portal:event-topics:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["portal:event-topics:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["portal:event-subscriptions:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["portal:event-subscriptions:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["portal:events:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["portal:events:write"]
+
+[event_notifications]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 3
+

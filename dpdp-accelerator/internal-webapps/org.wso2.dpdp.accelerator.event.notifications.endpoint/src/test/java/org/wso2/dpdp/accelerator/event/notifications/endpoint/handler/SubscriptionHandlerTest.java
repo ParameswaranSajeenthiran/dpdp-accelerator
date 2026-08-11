@@ -22,11 +22,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionListResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionResponse;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.enums.SubscriptionStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Collections;
@@ -62,11 +60,11 @@ public class SubscriptionHandlerTest {
 
         when(subscriptionService.listSubscriptions(anyString(), any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(serviceResult);
 
-        SubscriptionListResponse response = subscriptionHandler.listSubscriptions("org1", "active", null, null, 10, 0, "asc");
+        PaginatedResult<SubscriptionDTO> response = subscriptionHandler.listSubscriptions("org1", "active", null, null, 10, 0, "asc");
         assertNotNull(response);
         assertEquals(response.getTotal(), 1);
-        assertEquals(response.getSubscriptions().size(), 1);
-        assertEquals(response.getSubscriptions().get(0).getSubscriptionId(), "sub1");
+        assertEquals(response.getItems().size(), 1);
+        assertEquals(response.getItems().get(0).getSubscriptionId(), "sub1");
     }
 
     @Test
@@ -76,7 +74,7 @@ public class SubscriptionHandlerTest {
         dto.setStatus(SubscriptionStatus.ACTIVE);
         when(subscriptionService.getSubscription("org1", "sub1")).thenReturn(dto);
 
-        SubscriptionResponse response = subscriptionHandler.getSubscription("org1", "sub1");
+        SubscriptionDTO response = subscriptionHandler.getSubscription("org1", "sub1");
         assertNotNull(response);
         assertEquals(response.getSubscriptionId(), "sub1");
     }

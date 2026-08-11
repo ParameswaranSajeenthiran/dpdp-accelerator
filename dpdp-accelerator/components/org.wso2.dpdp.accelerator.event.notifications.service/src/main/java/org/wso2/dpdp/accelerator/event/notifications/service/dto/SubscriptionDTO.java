@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
-import org.wso2.dpdp.accelerator.event.notifications.service.enums.SubscriptionStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 
 /**
  * Data Transfer Object representing an Event Subscription at the service layer.
@@ -26,6 +26,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.enums.SubscriptionS
 public class SubscriptionDTO {
 
     private String subscriptionId;
+    private String groupId;
     private String topic;
     private FilterDTO filter;
     private DeliveryConfigDTO delivery;
@@ -40,7 +41,13 @@ public class SubscriptionDTO {
 
     public SubscriptionDTO(String subscriptionId, String topic, FilterDTO filter, DeliveryConfigDTO delivery,
             SubscriptionStatus status, Long createdAt, Long updatedAt, Boolean alreadyExists, String message) {
+        this(subscriptionId, null, topic, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
+    }
+
+    public SubscriptionDTO(String subscriptionId, String groupId, String topic, FilterDTO filter, DeliveryConfigDTO delivery,
+            SubscriptionStatus status, Long createdAt, Long updatedAt, Boolean alreadyExists, String message) {
         this.subscriptionId = subscriptionId;
+        this.groupId = groupId;
         this.topic = topic;
         this.filter = filter;
         this.delivery = delivery;
@@ -57,6 +64,14 @@ public class SubscriptionDTO {
 
     public void setSubscriptionId(String subscriptionId) {
         this.subscriptionId = subscriptionId;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     public String getTopic() {

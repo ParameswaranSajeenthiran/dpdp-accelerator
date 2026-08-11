@@ -157,6 +157,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
@@ -183,6 +189,30 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>${spring.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-core</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon</groupId>
+                <artifactId>org.wso2.carbon.utils</artifactId>
+                <version>${carbon.kernel.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
@@ -257,6 +287,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
+        <carbon.kernel.version>4.9.0</carbon.kernel.version>
         <servlet.api.version>4.0.1</servlet.api.version>
         <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <javax.validation.api.version>2.0.1.Final</javax.validation.api.version>
@@ -269,6 +300,9 @@
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
         <slf4j.version>1.7.36</slf4j.version>
+        <h2.version>2.2.224</h2.version>
+        <cxf.version>3.5.5</cxf.version>
+        <spring.version>5.3.31</spring.version>
 
         <maven.bundle.plugin.version>5.1.9</maven.bundle.plugin.version>
         <maven.war.plugin.version>3.3.2</maven.war.plugin.version>

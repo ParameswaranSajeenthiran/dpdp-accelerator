@@ -42,4 +42,6 @@ public interface SubscriptionService {
             int offset);
 
     SubscriptionEventHistoryDTO getSubscriptionEventHistory(String orgId, String subscriptionId, String deliveryId);
+
+    void retriggerVerificationTask(String orgId, String subscriptionId, String callbackUrl, String topicName);
 }

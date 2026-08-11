@@ -22,9 +22,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicListResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicResponse;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -53,14 +50,14 @@ public class TopicHandlerTest {
 
     @Test
     public void testCreateTopic() {
-        TopicCreateRequest req = new TopicCreateRequest();
+        TopicDTO req = new TopicDTO();
         req.setName("user-consent");
         req.setDescription("desc");
 
         TopicDTO dto = new TopicDTO("t1", "user-consent", "desc", "active");
         when(topicService.createTopic("org1", "user-consent", "desc")).thenReturn(dto);
 
-        TopicResponse response = topicHandler.createTopic("org1", req);
+        TopicDTO response = topicHandler.createTopic("org1", req);
         assertNotNull(response);
         assertEquals(response.getTopicId(), "t1");
         assertEquals(response.getName(), "user-consent");
@@ -73,12 +70,10 @@ public class TopicHandlerTest {
         PaginatedResult<TopicDTO> serviceResult = new PaginatedResult<>(Collections.singletonList(dto), 1);
         when(topicService.listTopics(anyString(), anyString(), any(), anyInt(), anyInt(), any())).thenReturn(serviceResult);
 
-        TopicListResponse response = topicHandler.listTopics("org1", "active", null, 10, 0, "asc");
+        PaginatedResult<TopicDTO> response = topicHandler.listTopics("org1", "active", null, 10, 0, "asc");
         assertNotNull(response);
         assertEquals(response.getTotal(), 1);
-        assertEquals(response.getLimit(), 10);
-        assertEquals(response.getOffset(), 0);
-        assertEquals(response.getTopics().size(), 1);
+        assertEquals(response.getItems().size(), 1);
     }
 
     @Test
@@ -86,7 +81,7 @@ public class TopicHandlerTest {
         TopicDTO dto = new TopicDTO("t1", "user-consent", "desc", "deregistered");
         when(topicService.deleteTopic("org1", "t1")).thenReturn(dto);
 
-        TopicResponse response = topicHandler.deleteTopic("org1", "t1");
+        TopicDTO response = topicHandler.deleteTopic("org1", "t1");
         assertNotNull(response);
         assertEquals(response.getTopicId(), "t1");
         assertEquals(response.getStatus(), "deregistered");

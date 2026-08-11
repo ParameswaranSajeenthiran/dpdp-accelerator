@@ -90,8 +90,19 @@
                         <configuration>
                             <target>
                                 <copy todir="${project.basedir}/carbon-home/repository/components/dropins">
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.common/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.dao/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/target">
                                         <include name="*.jar"/>
+                                    </fileset>
+                                </copy>
+                                <copy todir="${project.basedir}/carbon-home/dbscripts/dpdp">
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/src/main/resources/dbscripts">
+                                        <include name="*.sql"/>
                                     </fileset>
                                 </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"

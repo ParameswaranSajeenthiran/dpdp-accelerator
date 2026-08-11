@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
-import org.wso2.dpdp.accelerator.event.notifications.service.enums.PurposeFilterMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 
 import java.util.List;
 

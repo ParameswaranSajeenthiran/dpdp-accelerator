@@ -19,54 +19,132 @@
 package org.wso2.dpdp.accelerator.event.notifications.service.queries;
 
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
+
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class SubscriptionQueryBuilderTest {
 
     @Test
-    public void testBuildWithOrgIdOnly() {
-        SubscriptionQueryBuilder builder = SubscriptionQueryBuilder.build("org1", null, null, null, 10, 0, null);
-        assertNotNull(builder);
+    public void testBaseSelectQueryAndCountQuery() {
+        SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123");
 
-        String countSql = builder.getCountSql();
-        String selectSql = builder.getSelectSql();
+        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(" ORDER BY s.UPDATED_AT DESC");
+        SubscriptionQueryBuilder.QueryResult countResult = builder.buildCountQuery();
 
-        assertTrue(countSql.contains("WHERE ORG_ID = ?"));
-        assertTrue(selectSql.contains("WHERE ORG_ID = ?"));
-        assertTrue(selectSql.contains("LIMIT ? OFFSET ?"));
-        assertEquals(builder.getParameters().size(), 1);
-        assertEquals(builder.getParameters().get(0), "org1");
+        assertTrue(selectResult.getSql().contains("WHERE s.ORG_ID = ?"));
+        assertTrue(selectResult.getSql().contains("ORDER BY s.UPDATED_AT DESC"));
+        assertEquals(selectResult.getParameters().size(), 1);
+        assertEquals(selectResult.getParameters().get(0), "org123");
+
+        assertTrue(countResult.getSql().startsWith("SELECT COUNT(DISTINCT s.SUBSCRIPTION_ID)"));
+        assertTrue(countResult.getSql().contains("WHERE s.ORG_ID = ?"));
+        assertEquals(countResult.getParameters().size(), 1);
+        assertEquals(countResult.getParameters().get(0), "org123");
     }
 
     @Test
-    public void testBuildWithStatusAndSearch() {
-        SubscriptionQueryBuilder builder = SubscriptionQueryBuilder.build("org1", "active", null, "consent", 20, 10, "asc");
-        assertNotNull(builder);
+    public void testStatusFilter() {
+        SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
+                .setStatus("active");
 
-        String selectSql = builder.getSelectSql();
-        assertTrue(selectSql.contains("AND LOWER(STATUS) = ?"));
-        assertTrue(selectSql.contains("AND (LOWER(SUBSCRIPTION_ID) LIKE ?"));
-        assertTrue(selectSql.contains("ORDER BY CREATED_AT ASC"));
+        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
 
-        // 1 (orgId) + 1 (status) + 4 (search term fields) = 6 parameters
-        assertEquals(builder.getParameters().size(), 6);
-        assertEquals(builder.getParameters().get(0), "org1");
-        assertEquals(builder.getParameters().get(1), "active");
+        assertTrue(selectResult.getSql().contains("AND s.STATUS = ?"));
+        assertEquals(selectResult.getParameters().size(), 2);
+        assertEquals(selectResult.getParameters().get(0), "org123");
+        assertEquals(selectResult.getParameters().get(1), "active");
     }
 
     @Test
-    public void testBuildWithPurposes() {
-        SubscriptionQueryBuilder builder = SubscriptionQueryBuilder.build("org1", null, "marketing,analytics", null, 10, 0, null);
-        assertNotNull(builder);
+    public void testSearchFilterAndLikeEscaping() {
+        SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
+                .setSearch("test_user%name\\foo");
 
-        String selectSql = builder.getSelectSql();
-        assertTrue(selectSql.contains("SUBSCRIPTION_PURPOSE"));
-        // 1 (orgId) + 2 (purposes) = 3 parameters
-        assertEquals(builder.getParameters().size(), 3);
-        assertEquals(builder.getParameters().get(1), "marketing");
-        assertEquals(builder.getParameters().get(2), "analytics");
+        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
+
+        assertTrue(selectResult.getSql().contains("LOWER(s.GROUP_ID) LIKE ?"));
+        assertTrue(selectResult.getSql().contains("LOWER(sp.PURPOSE_NAME) LIKE ?"));
+        
+        // 1 orgId parameter + 5 LIKE parameters
+        List<Object> params = selectResult.getParameters();
+        assertEquals(params.size(), 6);
+        assertEquals(params.get(0), "org123");
+        assertEquals(params.get(1), "%test\\_user\\%name\\\\foo%");
+    }
+
+    @Test
+    public void testLikePatternEscapingHelper() {
+        assertEquals(SubscriptionQueryBuilder.escapeLikePattern(null), "");
+        assertEquals(SubscriptionQueryBuilder.escapeLikePattern("normal"), "normal");
+        assertEquals(SubscriptionQueryBuilder.escapeLikePattern("100%_pure\\"), "100\\%\\_pure\\\\");
+    }
+
+    @Test
+    public void testPurposesFilterSingleAndMultiple() {
+        // Single purpose
+        SubscriptionQueryBuilder singleBuilder = new SubscriptionQueryBuilder("org123")
+                .setPurposes("marketing");
+        SubscriptionQueryBuilder.QueryResult singleResult = singleBuilder.buildSelectQuery(null);
+        assertTrue(singleResult.getSql().contains("LOWER(sp2.PURPOSE_NAME) IN (?)"));
+        assertEquals(singleResult.getParameters().get(1), "marketing");
+
+        // Multiple comma-separated purposes with spaces
+        SubscriptionQueryBuilder multiBuilder = new SubscriptionQueryBuilder("org123")
+                .setPurposes(" Marketing , Analytics, PROFILING ");
+        SubscriptionQueryBuilder.QueryResult multiResult = multiBuilder.buildSelectQuery(null);
+        assertTrue(multiResult.getSql().contains("LOWER(sp2.PURPOSE_NAME) IN (?, ?, ?)"));
+        assertEquals(multiResult.getParameters().size(), 4);
+        assertEquals(multiResult.getParameters().get(1), "marketing");
+        assertEquals(multiResult.getParameters().get(2), "analytics");
+        assertEquals(multiResult.getParameters().get(3), "profiling");
+
+        // Empty / blank purposes
+        SubscriptionQueryBuilder emptyBuilder = new SubscriptionQueryBuilder("org123")
+                .setPurposes("  ,  ");
+        SubscriptionQueryBuilder.QueryResult emptyResult = emptyBuilder.buildSelectQuery(null);
+        assertFalse(emptyResult.getSql().contains("SUBSCRIPTION_PURPOSE sp2"));
+        assertEquals(emptyResult.getParameters().size(), 1);
+    }
+
+    @Test
+    public void testSortColumnResolution() {
+        assertEquals(new SubscriptionQueryBuilder("org").setSort("updatedAt").resolveSortColumn(), "s.UPDATED_AT ASC");
+        assertEquals(new SubscriptionQueryBuilder("org").setSort("createdAt").resolveSortColumn(), "s.CREATED_AT ASC");
+        assertEquals(new SubscriptionQueryBuilder("org").setSort("-createdAt").resolveSortColumn(), "s.CREATED_AT DESC");
+        assertEquals(new SubscriptionQueryBuilder("org").setSort("invalid").resolveSortColumn(), "s.UPDATED_AT DESC");
+        assertEquals(new SubscriptionQueryBuilder("org").setSort(null).resolveSortColumn(), "s.UPDATED_AT DESC");
+    }
+
+    @Test
+    public void testCombinedFilters() {
+        SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
+                .setStatus("active")
+                .setSearch("callback")
+                .setPurposes("marketing, analytics")
+                .setSort("-createdAt");
+
+        String sortColumn = builder.resolveSortColumn();
+        assertEquals(sortColumn, "s.CREATED_AT DESC");
+
+        SubscriptionQueryBuilder.QueryResult result = builder.buildSelectQuery(" ORDER BY " + sortColumn);
+
+        assertTrue(result.getSql().contains("AND s.STATUS = ?"));
+        assertTrue(result.getSql().contains("LIKE ?"));
+        assertTrue(result.getSql().contains("IN (?, ?)"));
+        assertTrue(result.getSql().contains("ORDER BY s.CREATED_AT DESC"));
+
+        List<Object> params = result.getParameters();
+        // orgId (1) + status (1) + search (5) + purposes (2) = 9 params
+        assertEquals(params.size(), 9);
+        assertEquals(params.get(0), "org123");
+        assertEquals(params.get(1), "active");
+        assertEquals(params.get(2), "%callback%");
+        assertEquals(params.get(7), "marketing");
+        assertEquals(params.get(8), "analytics");
     }
 }

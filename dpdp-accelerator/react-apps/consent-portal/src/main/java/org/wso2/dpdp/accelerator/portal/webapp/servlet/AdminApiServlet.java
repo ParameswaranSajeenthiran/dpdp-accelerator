@@ -25,6 +25,7 @@ import org.wso2.dpdp.accelerator.portal.webapp.client.IdentityServerClient;
 import org.wso2.dpdp.accelerator.portal.webapp.util.HttpUtil;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import javax.servlet.annotation.WebServlet;
@@ -129,6 +130,11 @@ public class AdminApiServlet extends AbstractProxyServlet {
     static String translate(String path) {
 
         if (!SAFE_PATH.matcher(path).matches()) {
+            return null;
+        }
+
+        String normalized = Paths.get(path).normalize().toString().replace('\\', '/');
+        if (normalized.contains("..") || (!normalized.equals(path) && !(normalized + "/").equals(path))) {
             return null;
         }
         if (path.startsWith("/consents")) {

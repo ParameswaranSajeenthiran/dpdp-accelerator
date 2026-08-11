@@ -22,10 +22,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.service.dao.TopicDAO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dao.model.Topic;
+import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
+import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.ENFException;
+import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Collections;
@@ -61,17 +63,17 @@ public class TopicServiceImplTest {
         assertEquals(result.getStatus(), "active");
     }
 
-    @Test(expectedExceptions = ENFException.class)
+    @Test(expectedExceptions = EventNotificationException.class)
     public void testCreateTopicMissingOrgId() {
         topicService.createTopic(null, "user-consent", "desc");
     }
 
-    @Test(expectedExceptions = ENFException.class)
+    @Test(expectedExceptions = EventNotificationException.class)
     public void testCreateTopicMissingName() {
         topicService.createTopic("org1", "", "desc");
     }
 
-    @Test(expectedExceptions = ENFException.class)
+    @Test(expectedExceptions = EventNotificationException.class)
     public void testCreateTopicAlreadyExists() {
         Topic existing = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(existing));
@@ -82,7 +84,7 @@ public class TopicServiceImplTest {
     @Test
     public void testListTopics() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
-        PaginatedResult<Topic> daoResult = new PaginatedResult<>(Collections.singletonList(topic), 1);
+        PaginatedDAOResult<Topic> daoResult = new PaginatedDAOResult<>(Collections.singletonList(topic), 1);
         when(topicDAO.listTopics("org1", "active", null, 10, 0, "asc")).thenReturn(daoResult);
 
         PaginatedResult<TopicDTO> result = topicService.listTopics("org1", "active", null, 10, 0, "asc");
@@ -95,27 +97,39 @@ public class TopicServiceImplTest {
     @Test
     public void testDeleteTopicSuccess() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
-        when(topicDAO.getTopicById("t1")).thenReturn(Optional.of(topic));
-        when(topicDAO.hasActiveSubscriptions("t1")).thenReturn(false);
-        when(topicDAO.updateTopicStatus("t1", "deregistered")).thenReturn(true);
+        when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(topic));
+        when(topicDAO.deregisterTopicAtomic("t1", "org1")).thenReturn(true);
 
         TopicDTO result = topicService.deleteTopic("org1", "t1");
         assertNotNull(result);
         assertEquals(result.getStatus(), "deregistered");
     }
 
-    @Test(expectedExceptions = ENFException.class)
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testDeleteTopicHasActiveSubscriptionsReturns409() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(topic));
+        when(topicDAO.deregisterTopicAtomic("t1", "org1")).thenThrow(
+                new EventNotificationDuplicateResourceException(
+                        org.wso2.dpdp.accelerator.event.notifications.common.constants
+                                .EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS));
+
+        topicService.deleteTopic("org1", "t1");
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
     public void testDeleteTopicNotFound() {
-        when(topicDAO.getTopicById("t99")).thenReturn(Optional.empty());
+        when(topicDAO.getTopicById("t99", "org1")).thenReturn(Optional.empty());
         topicService.deleteTopic("org1", "t99");
     }
 
-    @Test(expectedExceptions = ENFException.class)
-    public void testDeleteTopicWithActiveSubscriptions() {
-        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
-        when(topicDAO.getTopicById("t1")).thenReturn(Optional.of(topic));
-        when(topicDAO.hasActiveSubscriptions("t1")).thenReturn(true);
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateTopicDataAccessExceptionMappedTo409() {
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.empty());
+        when(topicDAO.addTopic(any(Topic.class))).thenThrow(
+                new EventNotificationDuplicateResourceException(
+                        "Duplicate key", null));
 
-        topicService.deleteTopic("org1", "t1");
+        topicService.createTopic("org1", "user-consent", "desc");
     }
 }

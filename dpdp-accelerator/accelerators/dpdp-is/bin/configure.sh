@@ -62,7 +62,7 @@ if [ ! -f "${TOML_TEMPLATE}" ]; then
   exit 2
 fi
 
-echo "[1/3] Installing deployment.toml from $(basename "${TOML_TEMPLATE}")"
+echo "[1/4] Installing deployment.toml from $(basename "${TOML_TEMPLATE}")"
 cp "${TOML_TEMPLATE}" "${TOML_STAGING}"
 
 # Substituted on the staging copy so the shipped template keeps its placeholders.
@@ -89,7 +89,7 @@ echo "      deployment.toml was REPLACED, not merged - re-apply any local"
 echo "      customisation from the backup before starting the server."
 
 # ------------------------------------------------------------- portal properties
-echo "[2/3] Writing ${PORTAL_PROPERTIES}"
+echo "[2/4] Writing ${PORTAL_PROPERTIES}"
 IS_BASE_URL="https://${IS_HOSTNAME}:${IS_PORT}"
 if [ -f "${PORTAL_PROPERTIES}" ] && grep -q "^oauth.client.id=.\+" "${PORTAL_PROPERTIES}"; then
   echo "      Existing client credentials found; only the base URLs are refreshed."
@@ -113,20 +113,20 @@ EOF
 
 # ------------------------------------------------------------ consent DB migration
 if [ "${APPLY_CONSENT_DB_MIGRATION}" != "true" ]; then
-  echo "[3/3] Skipping the consent schema migration (APPLY_CONSENT_DB_MIGRATION is not true)."
+  echo "[3/4] Skipping the consent schema migration (APPLY_CONSENT_DB_MIGRATION is not true)."
 else
   MIGRATION="${WSO2_IS_HOME}/dbscripts/migrations/consent/${DB_TYPE}-migration.txt"
   if [ ! -f "${MIGRATION}" ]; then
-    echo "[3/3] WARNING: no migration script at ${MIGRATION}; skipping."
+    echo "[3/4] WARNING: no migration script at ${MIGRATION}; skipping."
   elif [ "${DB_TYPE}" != "h2" ]; then
     # Only the bundled H2 database can be migrated without external credentials.
-    echo "[3/3] Apply ${MIGRATION} to your ${DB_TYPE} identity database before starting the server."
+    echo "[3/4] Apply ${MIGRATION} to your ${DB_TYPE} identity database before starting the server."
   else
     H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
     if [ -z "${H2_JAR}" ]; then
-      echo "[3/3] WARNING: could not locate the H2 engine jar; apply ${MIGRATION} manually."
+      echo "[3/4] WARNING: could not locate the H2 engine jar; apply ${MIGRATION} manually."
     else
-      echo "[3/3] Applying the consent schema migration to the embedded H2 database"
+      echo "[3/4] Applying the consent schema migration to the embedded H2 database"
       TMP_SQL="$(mktemp)"
       grep -v '^#' "${MIGRATION}" > "${TMP_SQL}"
       java -cp "${H2_JAR}" org.h2.tools.RunScript \
@@ -135,6 +135,19 @@ else
       rm -f "${TMP_SQL}"
       echo "      Migration applied."
     fi
+  fi
+fi
+
+# ------------------------------------------------------------ DPDP DB schema
+echo "[4/4] Applying DPDP database schema to separate embedded H2 database (WSO2EVENT_NOTIFICATION_DB)"
+H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
+if [ -n "${H2_JAR}" ]; then
+  DPDP_H2_SCRIPT="${WSO2_IS_HOME}/dbscripts/dpdp/db_schema_h2.sql"
+  if [ -f "${DPDP_H2_SCRIPT}" ]; then
+    java -cp "${H2_JAR}" org.h2.tools.RunScript \
+      -url "jdbc:h2:${WSO2_IS_HOME}/repository/database/WSO2EVENT_NOTIFICATION_DB" \
+      -user wso2carbon -password wso2carbon -script "${DPDP_H2_SCRIPT}" || true
+    echo "      DPDP DB Schema applied successfully to WSO2EVENT_NOTIFICATION_DB."
   fi
 fi
 

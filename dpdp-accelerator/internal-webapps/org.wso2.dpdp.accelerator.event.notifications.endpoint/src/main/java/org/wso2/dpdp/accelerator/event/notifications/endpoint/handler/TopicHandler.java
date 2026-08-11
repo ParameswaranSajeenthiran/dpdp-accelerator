@@ -18,15 +18,10 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicListResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicResponse;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.mapper.TopicMapper;
-
-import org.wso2.dpdp.accelerator.event.notifications.service.ServiceFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
-
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 public class TopicHandler {
@@ -34,30 +29,36 @@ public class TopicHandler {
     private final TopicService topicService;
 
     public TopicHandler() {
-        this.topicService = ServiceFactory.createTopicService();
+        TopicService svc = (TopicService) PrivilegedCarbonContext
+                .getThreadLocalCarbonContext()
+                .getOSGiService(TopicService.class, null);
+        if (svc == null) {
+            throw new IllegalStateException("TopicService OSGi service not available");
+        }
+        this.topicService = svc;
     }
 
     public TopicHandler(TopicService topicService) {
         this.topicService = topicService;
     }
 
-    public TopicResponse createTopic(String orgId, TopicCreateRequest request) {
-        String[] params = TopicMapper.toServiceParams(request);
-        TopicDTO dto = topicService.createTopic(orgId, params[0], params[1]);
-        return TopicMapper.toResponse(dto);
+    public TopicDTO createTopic(String orgId, TopicDTO request) {
+        String name = request != null ? request.getName() : null;
+        String description = request != null ? request.getDescription() : null;
+        return topicService.createTopic(orgId, name, description);
     }
 
-    public TopicListResponse listTopics(String orgId, String status, String search,
+    public PaginatedResult<TopicDTO> listTopics(String orgId, String status, String search,
             Integer limit, Integer offset, String sort) {
-        int lim = limit != null && limit > 0 ? limit : 20;
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
         int off = offset != null && offset >= 0 ? offset : 0;
 
-        PaginatedResult<TopicDTO> result = topicService.listTopics(orgId, status, search, lim, off, sort);
-        return TopicMapper.toListResponse(result.getItems(), result.getTotal(), lim, off);
+        return topicService.listTopics(orgId, status, search, lim, off, sort);
     }
 
-    public TopicResponse deleteTopic(String orgId, String topicId) {
-        TopicDTO dto = topicService.deleteTopic(orgId, topicId);
-        return TopicMapper.toResponse(dto);
+    public TopicDTO deleteTopic(String orgId, String topicId) {
+        return topicService.deleteTopic(orgId, topicId);
     }
 }

@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
-import org.wso2.dpdp.accelerator.event.notifications.service.enums.DeliveryMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 
 /**
  * Data Transfer Object representing delivery configuration for a subscription.

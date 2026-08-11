@@ -25,11 +25,11 @@
          http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
     <jaxrs:server id="dpdpEventNotifications" address="/">
         <jaxrs:serviceBeans>
-            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.SubscriptionResource"/>
-            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.resource.TopicResource"/>
+            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.api.SubscriptionEndpoint"/>
+            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
-            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.ENFExceptionMapper"/>
+            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.EventNotificationExceptionMapper"/>
             <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
         </jaxrs:providers>
     </jaxrs:server>
