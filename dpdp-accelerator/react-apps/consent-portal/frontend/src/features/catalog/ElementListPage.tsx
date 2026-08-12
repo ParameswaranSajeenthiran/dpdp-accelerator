@@ -30,15 +30,21 @@ import {
   TableRow,
   Typography,
 } from '@wso2/oxygen-ui'
-import { CircleSlash, RefreshCw, Search } from '@wso2/oxygen-ui-icons-react'
-import { useMemo } from 'react'
+import { CircleSlash, Plus, RefreshCw, Search } from '@wso2/oxygen-ui-icons-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import CursorPaginationFooter from '../../components/CursorPaginationFooter'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { CursorPageParams } from '../../types/catalog'
+import { APIError } from '../../utils/apiClient'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
-import { useElementsQuery } from './hooks/useCatalogQueries'
+import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import useAuthorization from '../auth/useAuthorization'
+import { buildElementNameFilter } from './api/catalogApi'
+import ElementFormDialog from './components/ElementFormDialog'
+import ElementSearchFilter from './components/ElementSearchFilter'
+import { useCreateElementMutation, useElementsQuery } from './hooks/useCatalogQueries'
 import { CATALOG_ROWS_PER_PAGE_OPTIONS } from './constants'
 import { getCursorPageParams, toCatalogSearchParams } from './utils/catalogSearchParams'
 
@@ -47,29 +53,77 @@ function ElementListPage(): React.JSX.Element {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const params = useMemo(() => getCursorPageParams(searchParams), [searchParams])
-  const query = useElementsQuery(params)
+  const nameSearch = searchParams.get('name') ?? ''
+  const query = useElementsQuery({ ...params, filter: buildElementNameFilter(nameSearch) })
   const rows = query.data?.Elements ?? []
+  const { hasScope } = useAuthorization()
+  const canWrite = hasScope(PORTAL_SCOPES.ELEMENTS_WRITE)
+  const [createOpen, setCreateOpen] = useState(false)
+  const createMutation = useCreateElementMutation()
 
+  // A 409 here has one well-known cause -- a duplicate name -- so it gets a
+  // precise, actionable message regardless of the upstream's own wording.
+  let createErrorMessage: string | undefined
+  if (createMutation.error) {
+    createErrorMessage =
+      createMutation.error instanceof APIError && createMutation.error.status === 409
+        ? t('catalog.elementForm.duplicateName', { name: createMutation.variables?.name ?? '' })
+        : t('catalog.elementForm.createFailed')
+  }
+
+  // Paging must keep the active search; only a new search resets to page one.
   const updateParams = (nextParams: CursorPageParams): void => {
-    setSearchParams(toCatalogSearchParams(nextParams), { replace: true })
+    const next = toCatalogSearchParams(nextParams)
+    if (nameSearch) {
+      next.set('name', nameSearch)
+    }
+    setSearchParams(next, { replace: true })
+  }
+
+  const applySearch = (nextName: string): void => {
+    const next = toCatalogSearchParams({ limit: params.limit })
+    const trimmed = nextName.trim()
+    if (trimmed) {
+      next.set('name', trimmed)
+    }
+    setSearchParams(next, { replace: true })
   }
 
   const openElement = (elementId: string): void => {
     navigate(`/elements/${encodeURIComponent(elementId)}`)
   }
 
+  const closeCreateDialog = (): void => {
+    setCreateOpen(false)
+    createMutation.reset()
+  }
+
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
-        <Stack spacing={1}>
-          <HeaderBreadcrumbs />
-          <Typography variant="h4" fontWeight={700}>
-            {t('catalog.elements.title')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t('catalog.elements.subtitle')}
-          </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+          <Stack spacing={1}>
+            <HeaderBreadcrumbs />
+            <Typography variant="h4" fontWeight={700}>
+              {t('catalog.elements.title')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('catalog.elements.subtitle')}
+            </Typography>
+          </Stack>
+          {canWrite ? (
+            <Button
+              variant="contained"
+              startIcon={<Plus size={16} />}
+              sx={{ flexShrink: 0 }}
+              onClick={() => setCreateOpen(true)}
+            >
+              {t('catalog.actions.addElement')}
+            </Button>
+          ) : null}
         </Stack>
+
+        <ElementSearchFilter key={nameSearch} value={nameSearch} onSearch={applySearch} />
 
         <TableContainer component={Paper} elevation={1}>
           <Table aria-label={t('catalog.elements.tableLabel')} sx={{ tableLayout: 'fixed' }}>
@@ -156,7 +210,9 @@ function ElementListPage(): React.JSX.Element {
                       <Search size={28} aria-hidden="true" />
                       <Typography fontWeight={600}>{t('catalog.elements.emptyTitle')}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {t('catalog.elements.empty')}
+                        {nameSearch
+                          ? t('catalog.elements.emptySearch', { term: nameSearch })
+                          : t('catalog.elements.empty')}
                       </Typography>
                     </Stack>
                   </TableCell>
@@ -186,6 +242,21 @@ function ElementListPage(): React.JSX.Element {
           />
         </TableContainer>
       </Stack>
+
+      <ElementFormDialog
+        open={createOpen}
+        loading={createMutation.isPending}
+        error={createErrorMessage}
+        onClose={closeCreateDialog}
+        onSubmit={(payload) => {
+          createMutation.mutate(payload, {
+            onSuccess: (created) => {
+              setCreateOpen(false)
+              openElement(created.id)
+            },
+          })
+        }}
+      />
     </Box>
   )
 }

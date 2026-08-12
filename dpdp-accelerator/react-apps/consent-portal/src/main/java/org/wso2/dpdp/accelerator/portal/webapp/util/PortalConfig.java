@@ -50,6 +50,7 @@ public final class PortalConfig {
     public static final String OAUTH_CLIENT_SECRET = "oauth.client.secret";
     public static final String OAUTH_SCOPES = "oauth.scopes";
     public static final String COOKIE_SECURE = "cookie.secure";
+    public static final String ORG_ID_CLAIM = "org.id.claim";
 
     private PortalConfig(ServletContext servletContext) {
 
@@ -123,6 +124,11 @@ public final class PortalConfig {
     public boolean isCookieSecure() {
 
         return Boolean.parseBoolean(get(COOKIE_SECURE, "true"));
+    }
+
+    public String getOrgIdClaim() {
+
+        return get(ORG_ID_CLAIM, "org_handle");
     }
 
     public String getPortalBasePath() {

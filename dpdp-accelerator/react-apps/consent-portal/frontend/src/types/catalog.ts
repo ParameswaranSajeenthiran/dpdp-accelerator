@@ -34,6 +34,11 @@ export interface CursorPageParams {
   before?: string
 }
 
+/** Element listing adds the Identity Server's SCIM-style `filter` parameter. */
+export interface ElementListQueryParams extends CursorPageParams {
+  filter?: string
+}
+
 export interface PurposeVersionRef {
   id: string
   version: string
@@ -82,8 +87,17 @@ export interface CatalogElement {
   displayName?: string
   description?: string
   tenantDomain?: string
+  properties?: Record<string, string>
 }
 
 export interface ElementListResponse extends CursorPage {
   Elements: CatalogElement[]
+}
+
+/** Payload for creating an element. The Identity Server has no type, namespace or schema fields. */
+export interface ElementInput {
+  name: string
+  displayName?: string
+  description?: string
+  properties?: Record<string, string>
 }

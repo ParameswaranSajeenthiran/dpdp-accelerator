@@ -19,12 +19,14 @@
 import type {
   CatalogElement,
   CursorPageParams,
+  ElementInput,
+  ElementListQueryParams,
   ElementListResponse,
   PurposeDetail,
   PurposeListResponse,
   PurposeVersionListResponse,
 } from '../../../types/catalog'
-import { apiRequest } from '../../../utils/apiClient'
+import { apiRequest, apiRequestNoContent } from '../../../utils/apiClient'
 
 function toCursorQuery(params: CursorPageParams): Record<string, string | number | undefined> {
   return {
@@ -34,16 +36,44 @@ function toCursorQuery(params: CursorPageParams): Record<string, string | number
   }
 }
 
-export function fetchElements(params: CursorPageParams): Promise<ElementListResponse> {
+/**
+ * Builds a `name co "<term>"` filter for the Elements API. Values are quoted
+ * per the filter grammar so a search term containing spaces or quotes stays
+ * a single value rather than being parsed as separate filter tokens.
+ */
+export function buildElementNameFilter(term: string): string | undefined {
+  const trimmed = term.trim()
+  if (!trimmed) {
+    return undefined
+  }
+  const escaped = trimmed.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return `name co "${escaped}"`
+}
+
+export function fetchElements(params: ElementListQueryParams): Promise<ElementListResponse> {
   return apiRequest<ElementListResponse>('/api/consent-elements', {
     method: 'GET',
-    query: toCursorQuery(params),
+    query: { ...toCursorQuery(params), filter: params.filter },
   })
 }
 
 export function fetchElement(elementId: string): Promise<CatalogElement> {
   return apiRequest<CatalogElement>(`/api/consent-elements/${encodeURIComponent(elementId)}`, {
     method: 'GET',
+  })
+}
+
+export function createElement(payload: ElementInput): Promise<CatalogElement> {
+  return apiRequest<CatalogElement>('/api/consent-elements', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteElement(elementId: string): Promise<void> {
+  return apiRequestNoContent(`/api/consent-elements/${encodeURIComponent(elementId)}`, {
+    method: 'DELETE',
   })
 }
 

@@ -16,16 +16,27 @@
  * under the License.
  */
 
-import { keepPreviousData, type UseQueryResult, useQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  type UseMutationResult,
+  type UseQueryResult,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type {
   CatalogElement,
   CursorPageParams,
+  ElementInput,
+  ElementListQueryParams,
   ElementListResponse,
   PurposeDetail,
   PurposeListResponse,
   PurposeVersionListResponse,
 } from '../../../types/catalog'
 import {
+  createElement,
+  deleteElement,
   fetchElement,
   fetchElements,
   fetchPurpose,
@@ -35,7 +46,9 @@ import {
 
 export const CATALOG_VERSIONS_PAGE_SIZE = 50
 
-export function useElementsQuery(params: CursorPageParams): UseQueryResult<ElementListResponse> {
+export function useElementsQuery(
+  params: ElementListQueryParams,
+): UseQueryResult<ElementListResponse> {
   return useQuery({
     queryKey: ['elements', params],
     queryFn: () => fetchElements(params),
@@ -48,6 +61,28 @@ export function useElementQuery(elementId?: string): UseQueryResult<CatalogEleme
     queryKey: ['element', elementId],
     queryFn: () => fetchElement(String(elementId)),
     enabled: Boolean(elementId),
+  })
+}
+
+export function useCreateElementMutation(): UseMutationResult<CatalogElement, Error, ElementInput> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: ElementInput) => createElement(payload),
+    onSuccess: async (): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['elements'] })
+    },
+  })
+}
+
+export function useDeleteElementMutation(): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (elementId: string) => deleteElement(elementId),
+    onSuccess: async (): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['elements'] })
+    },
   })
 }
 

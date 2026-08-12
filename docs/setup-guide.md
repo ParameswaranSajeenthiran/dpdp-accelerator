@@ -25,8 +25,10 @@ In the Console (`https://<host>:9443/console`):
 3. Authorized redirect URL: `https://<host>:9443/consent-portal/auth/callback`
 4. Open the new application's **Protocol** tab and enable the **Code** and
    **Refresh Token** grant types.
-5. Note the **Client ID** and **Client Secret** on the same tab — you'll need
+5. On the same tab, under **Access Token**, set **Type** to **JWT**.
+6. Note the **Client ID** and **Client Secret** on the same tab — you'll need
    them in step 6.
+7. Set the Application role type as Organization.
 
 ## 3. Skip the consent screen and request the username claim
 
@@ -45,18 +47,16 @@ selecting **all scopes** for each and policy **RBAC**:
 - Consent Management — Purposes
 - Consent Management — Elements
 
-## 5. Create the portal administrator role
+## 5. Create the portal roles
 
-On the **Roles** tab of the same application, create a new role:
+In **User Management → Roles → New Role**, create two organization-wide
+roles (Audience: **Organization**):
 
-- Name: `dpdp-consent-admin`
-- Permissions: every scope authorized in step 4
+1. `dpdp-consent-admin` — Permissions: every scope authorized in step 4.
+2. `dpdp-consent-user` — No permissions assigned yet.
 
-Create the role here, on the application itself, rather than from the
-global roles list, so its permissions apply to this application.
-
-Assign users to this role from **User Management → Users → *user* → Roles**
-to grant them portal administration access.
+Assign users to `dpdp-consent-admin` from **User Management → Users →
+*user* → Roles** to grant them portal administration access.
 
 ## 6. Add the client credentials to the portal configuration
 

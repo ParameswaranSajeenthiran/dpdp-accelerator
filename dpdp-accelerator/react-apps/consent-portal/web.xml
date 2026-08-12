@@ -48,6 +48,10 @@
         <param-name>cookie.secure</param-name>
         <param-value>true</param-value>
     </context-param>
+    <context-param>
+        <param-name>org.id.claim</param-name>
+        <param-value>org_handle</param-value>
+    </context-param>
 
     <!--
       Client-side routes are served by SpaServlet, which is mapped at the
