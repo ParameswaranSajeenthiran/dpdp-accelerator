@@ -41,8 +41,10 @@ function safeDecodeURIComponent(value: string): string {
 
 function buildBreadcrumbItems(
   pathname: string,
+  search: string,
   homeLabel: string,
   consentsLabel: string,
+  pendingConsentsLabel: string,
   purposesLabel: string,
   elementsLabel: string,
   administrationLabel: string,
@@ -110,6 +112,8 @@ function buildBreadcrumbItems(
   }
 
   if (pathname.startsWith('/consents')) {
+    const isPending = new URLSearchParams(search).get('state') === 'PENDING'
+
     return [
       {
         label: homeLabel,
@@ -117,7 +121,7 @@ function buildBreadcrumbItems(
         isCurrent: false,
       },
       {
-        label: consentsLabel,
+        label: isPending ? pendingConsentsLabel : consentsLabel,
         path: '/consents',
         isCurrent: true,
       },
@@ -172,8 +176,10 @@ function HeaderBreadcrumbs({ currentLabel }: HeaderBreadcrumbsProps): React.JSX.
 
   const breadcrumbItems = buildBreadcrumbItems(
     location.pathname,
+    location.search,
     t('layout.home'),
     t('sidebar.allConsents'),
+    t('sidebar.pendingConsents'),
     t('sidebar.purposes'),
     t('sidebar.elements'),
     t('sidebar.administration'),

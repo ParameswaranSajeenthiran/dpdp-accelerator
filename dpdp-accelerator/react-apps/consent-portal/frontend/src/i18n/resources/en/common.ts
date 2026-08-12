@@ -42,14 +42,14 @@ const commonEn = {
   sidebar: {
     ariaLabel: 'Primary navigation',
     dashboard: 'Dashboard',
-    consent: 'Consent',
-    allConsents: 'All Consents',
-    pendingConsents: 'Pending Consents',
+    consent: 'Consents',
+    allConsents: 'My Consents',
+    pendingConsents: 'My Pending Consents',
     catalog: 'Definitions',
     purposes: 'Purposes',
     elements: 'Elements',
     administration: 'Administration',
-    adminConsents: 'Consents',
+    adminConsents: 'All Consents',
   },
   layout: {
     home: 'Home',
@@ -83,20 +83,25 @@ const commonEn = {
     viewPending: 'View all pending consents',
   },
   adminConsents: {
-    title: 'Consents',
+    title: 'All Consents',
     filters: {
       sectionAriaLabel: 'Administrative consent filters',
       consentIdSearchPlaceholder: 'Search by consent ID',
       removeConsentIdForAdvanced: 'Remove the Consent ID filter to use advanced filters.',
       removeConsentIdForState: 'Remove the Consent ID filter to use the state filter.',
-      subjectId: 'User',
+      removeConsentIdForSubject: 'Remove the Consent ID filter to use the User ID filter.',
+      subjectId: 'User ID',
       subjectIdHelp: 'Username of the data subject',
       serviceId: 'Service',
+      purposeId: 'Purpose',
+      purposeIdHelp: 'Purpose ID',
+      propertyFilterLabel: 'Consent property',
+      propertyKey: 'Key',
+      propertyValue: 'Value',
       active: 'Active filters',
     },
   },
   consentRegistry: {
-    title: 'All Consents',
     details: {
       title: 'Consent Details',
       consentId: 'Consent ID',
@@ -113,8 +118,10 @@ const commonEn = {
       noAuthorizations: 'No authorizations are recorded for this consent.',
       noElements: 'No elements are associated with this purpose.',
       noPurposes: 'No purposes are associated with this consent.',
+      noProperties: 'No properties are associated with this consent.',
       section: {
         purposes: 'Consent Purposes',
+        properties: 'Properties',
         authorizations: 'Authorizations',
       },
       table: {
@@ -283,7 +290,8 @@ const commonEn = {
       propertyKeyLabel: 'Key',
       propertyValueLabel: 'Value',
       propertyKeyRequired: 'Add a key, or this value will not be saved.',
-      propertyDuplicateKey: 'This key is used more than once. Use a different key for each property.',
+      propertyDuplicateKey:
+        'This key is used more than once. Use a different key for each property.',
       addProperty: 'Add property',
       removeProperty: 'Remove property',
       submitting: 'Creating...',

@@ -36,12 +36,14 @@ describe('current-user API', () => {
       userId: 'user-1',
       organizationId: 'org-1',
       scopes: [PORTAL_SCOPES.CONSENTS_READ_SELF],
+      hideSelfConsentsForAdmins: true,
     })
 
     await expect(fetchCurrentUser()).resolves.toEqual({
       userId: 'user-1',
       organizationId: 'org-1',
       scopes: [PORTAL_SCOPES.CONSENTS_READ_SELF],
+      hideSelfConsentsForAdmins: true,
     })
     expect(apiClientMocks.apiRequest).toHaveBeenCalledWith('/me', { method: 'GET' })
   })
@@ -51,6 +53,17 @@ describe('current-user API', () => {
       userId: 'user-1',
       organizationId: '',
       scopes: ['portal:unknown'],
+      hideSelfConsentsForAdmins: true,
+    })
+
+    await expect(fetchCurrentUser()).rejects.toThrow('invalid current-user response')
+  })
+
+  it('rejects a response missing the hideSelfConsentsForAdmins flag', async () => {
+    apiClientMocks.apiRequest.mockResolvedValue({
+      userId: 'user-1',
+      organizationId: 'org-1',
+      scopes: [PORTAL_SCOPES.CONSENTS_READ_SELF],
     })
 
     await expect(fetchCurrentUser()).rejects.toThrow('invalid current-user response')

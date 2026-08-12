@@ -100,19 +100,46 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
     setSearchParams(toSearchParams(nextFilters, nextCursor, nextRowsPerPage), { replace: true })
   }
 
-  const activeFilters = Object.entries(filters).filter(([key, value]) => {
-    if (key === 'state') return value !== 'All'
-    return Boolean(value)
-  }) as Array<[keyof AdminConsentRegistryFilters, string]>
-
-  const filterLabels: Record<keyof AdminConsentRegistryFilters, string> = {
-    state: t('consentRegistry.filters.state'),
-    consentId: t('consentRegistry.details.consentId'),
-    subjectId: t('adminConsents.filters.subjectId'),
-    serviceId: t('adminConsents.filters.serviceId'),
+  interface ActiveFilterChip {
+    key: string
+    label: string
+    value: string
   }
 
-  const removeFilter = (key: keyof AdminConsentRegistryFilters): void => {
+  const activeFilters: ActiveFilterChip[] = [
+    filters.state !== 'All'
+      ? { key: 'state', label: t('consentRegistry.filters.state'), value: filters.state }
+      : undefined,
+    filters.consentId
+      ? {
+          key: 'consentId',
+          label: t('consentRegistry.details.consentId'),
+          value: filters.consentId,
+        }
+      : undefined,
+    filters.subjectId
+      ? { key: 'subjectId', label: t('adminConsents.filters.subjectId'), value: filters.subjectId }
+      : undefined,
+    filters.serviceId
+      ? { key: 'serviceId', label: t('adminConsents.filters.serviceId'), value: filters.serviceId }
+      : undefined,
+    filters.purposeId
+      ? { key: 'purposeId', label: t('adminConsents.filters.purposeId'), value: filters.purposeId }
+      : undefined,
+    filters.propertyKey && filters.propertyValue
+      ? {
+          key: 'property',
+          label: t('adminConsents.filters.propertyFilterLabel'),
+          value: `${filters.propertyKey} = ${filters.propertyValue}`,
+        }
+      : undefined,
+  ].filter((chip): chip is ActiveFilterChip => Boolean(chip))
+
+  const removeFilter = (key: string): void => {
+    if (key === 'property') {
+      updateParams({ ...filters, propertyKey: '', propertyValue: '' })
+      return
+    }
     updateParams({
       ...filters,
       [key]: key === 'state' ? 'All' : '',
@@ -141,13 +168,13 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
             <Typography variant="caption" color="text.secondary">
               {t('adminConsents.filters.active')}
             </Typography>
-            {activeFilters.map(([key, value]) => (
+            {activeFilters.map((chip) => (
               <Chip
-                key={key}
+                key={chip.key}
                 size="small"
                 variant="outlined"
-                label={`${filterLabels[key]}: ${value}`}
-                onDelete={() => removeFilter(key)}
+                label={`${chip.label}: ${chip.value}`}
+                onDelete={() => removeFilter(chip.key)}
               />
             ))}
             <Button size="small" onClick={() => updateParams(EMPTY_ADMIN_CONSENT_FILTERS)}>
@@ -171,7 +198,6 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
           onRetry={() => consentListQuery.refetch()}
           detailBasePath="/administration/consents"
           showSubject
-          showPurposes={Boolean(filters.consentId)}
           canRevoke={canWriteAny}
           onRevoke={setSelectedRevocationConsentID}
           isMutating={revokeMutation.isPending}

@@ -31,6 +31,7 @@ function parseCurrentUser(value: unknown): CurrentUser {
     !value.userId.trim() ||
     typeof value.organizationId !== 'string' ||
     !value.organizationId.trim() ||
+    typeof value.hideSelfConsentsForAdmins !== 'boolean' ||
     !Array.isArray(value.scopes) ||
     !value.scopes.every(isPortalScope)
   ) {
@@ -41,6 +42,7 @@ function parseCurrentUser(value: unknown): CurrentUser {
     userId: value.userId,
     organizationId: value.organizationId,
     scopes: value.scopes,
+    hideSelfConsentsForAdmins: value.hideSelfConsentsForAdmins,
   }
 }
 

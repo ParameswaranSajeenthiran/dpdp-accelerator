@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
@@ -115,7 +115,7 @@ describe('ConsentRegistryPage', () => {
 
     renderConsentRegistryPage(createQueryClient())
 
-    expect(await screen.findByRole('heading', { name: 'All Consents' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'My Consents' })).toBeInTheDocument()
     expect(screen.getByLabelText('Consent filters')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Search by service')).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'State' })).toBeInTheDocument()
@@ -225,6 +225,19 @@ describe('ConsentRegistryPage', () => {
       limit: '25',
       offset: '50',
     })
+  })
+
+  it('shows the pending title and breadcrumb when filtered to pending consents', async () => {
+    mockConsentSearch([])
+
+    renderConsentRegistryPage(createQueryClient(), '/consents?state=PENDING')
+
+    expect(await screen.findByRole('heading', { name: 'My Pending Consents' })).toBeInTheDocument()
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('My Pending Consents')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   it('ignores the removed CREATED status in the URL', async () => {

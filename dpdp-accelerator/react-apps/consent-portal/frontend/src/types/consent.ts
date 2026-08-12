@@ -73,13 +73,20 @@ export interface ConsentDetail {
   properties?: Record<string, string>
 }
 
-/** Consents returned by the administrative list endpoint carry no purposes. */
+/**
+ * Consents returned by the administrative list endpoint.
+ *
+ * The Identity Server's raw list rows carry no purposes; the BFF expands
+ * each row with a detail lookup before this reaches the SPA, so `purposes`
+ * is present in practice even though the upstream summary lacks it.
+ */
 export interface ConsentSummary {
   id: string
   subjectId: string
   serviceId: string
   state: ConsentState | string
   timestamp: number
+  purposes?: ConsentPurpose[]
 }
 
 /**
@@ -104,6 +111,9 @@ export interface ConsentRegistryFilters {
 export interface AdminConsentRegistryFilters extends ConsentRegistryFilters {
   consentId: string
   subjectId: string
+  purposeId: string
+  propertyKey: string
+  propertyValue: string
 }
 
 /**
@@ -138,6 +148,8 @@ export interface AdminConsentListQueryParams {
   subjectId?: string
   serviceId?: string
   state?: string
+  purposeId?: string
+  filter?: string
 }
 
 export interface AdminConsentListResponse {

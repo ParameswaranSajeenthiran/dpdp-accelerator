@@ -16,11 +16,12 @@
  * under the License.
  */
 
-import type { PortalScope } from '../utils/portalScopes'
-
-export interface CurrentUser {
-  userId: string
-  organizationId: string
-  scopes: PortalScope[]
-  hideSelfConsentsForAdmins: boolean
+/**
+ * Quotes and escapes a value for the Identity Server's SCIM-style `filter`
+ * query parameter, shared by the Elements, Purposes and Consents list APIs.
+ * Quoting keeps a value containing spaces or quotes as a single filter
+ * token rather than letting it be parsed as separate filter grammar.
+ */
+export function escapeFilterValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }

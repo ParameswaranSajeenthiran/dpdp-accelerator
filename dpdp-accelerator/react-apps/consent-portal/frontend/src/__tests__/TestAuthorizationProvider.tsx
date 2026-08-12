@@ -23,19 +23,30 @@ import type { PortalScope } from '../utils/portalScopes'
 interface TestAuthorizationProviderProps {
   children: ReactNode
   scopes: PortalScope[]
+  hideSelfConsentsForAdmins?: boolean
 }
 
 function TestAuthorizationProvider({
   children,
   scopes,
+  hideSelfConsentsForAdmins,
 }: TestAuthorizationProviderProps): React.JSX.Element {
   return (
     <AuthorizationProvider
-      currentUser={{ userId: 'test-user', organizationId: 'test-org', scopes }}
+      currentUser={{
+        userId: 'test-user',
+        organizationId: 'test-org',
+        scopes,
+        hideSelfConsentsForAdmins: hideSelfConsentsForAdmins ?? false,
+      }}
     >
       {children}
     </AuthorizationProvider>
   )
+}
+
+TestAuthorizationProvider.defaultProps = {
+  hideSelfConsentsForAdmins: false,
 }
 
 export default TestAuthorizationProvider

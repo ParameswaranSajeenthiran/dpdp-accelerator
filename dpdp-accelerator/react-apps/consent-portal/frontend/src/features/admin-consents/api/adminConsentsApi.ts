@@ -22,6 +22,20 @@ import type {
   ConsentDetail,
 } from '../../../types/consent'
 import { apiRequest } from '../../../utils/apiClient'
+import { escapeFilterValue } from '../../../utils/filterGrammar'
+
+/**
+ * Builds a `properties.<key> eq "<value>"` filter, the Identity Server's
+ * dot-notation search over a consent's custom properties. Both key and
+ * value are required -- a lone key or value can't be searched.
+ */
+export function buildConsentPropertyFilter(key: string, value: string): string | undefined {
+  const trimmedKey = key.trim()
+  const trimmedValue = value.trim()
+  return trimmedKey && trimmedValue
+    ? `properties.${trimmedKey} eq "${escapeFilterValue(trimmedValue)}"`
+    : undefined
+}
 
 export async function fetchAdminConsents(
   params: AdminConsentListQueryParams,
@@ -35,6 +49,8 @@ export async function fetchAdminConsents(
       subjectId: params.subjectId,
       serviceId: params.serviceId,
       state: params.state,
+      purposeId: params.purposeId,
+      filter: params.filter,
     },
   })
 }
