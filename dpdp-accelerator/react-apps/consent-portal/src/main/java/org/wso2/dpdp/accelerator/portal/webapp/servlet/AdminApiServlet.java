@@ -52,13 +52,14 @@ public class AdminApiServlet extends AbstractProxyServlet {
 
     /**
      * All methods are routed here rather than through the {@code doXxx} hooks
-     * because {@code HttpServlet} has no PATCH hook and consent updates use it.
+     * because {@code HttpServlet} has no PATCH or PUT hook, and purpose
+     * updates and promoting a purpose version to latest use them.
      */
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String method = request.getMethod();
-        if (!"GET".equals(method) && !"POST".equals(method)
+        if (!"GET".equals(method) && !"POST".equals(method) && !"PUT".equals(method)
                 && !"PATCH".equals(method) && !"DELETE".equals(method)) {
             HttpUtil.sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED",
                     method + " is not supported by this endpoint.");
@@ -94,6 +95,9 @@ public class AdminApiServlet extends AbstractProxyServlet {
                     break;
                 case "POST":
                     result = client.post(target, readBody(request));
+                    break;
+                case "PUT":
+                    result = client.put(target, readBody(request));
                     break;
                 case "PATCH":
                     result = client.patch(target, readBody(request));

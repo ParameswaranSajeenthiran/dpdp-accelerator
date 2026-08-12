@@ -26,22 +26,30 @@ import {
 } from '@tanstack/react-query'
 import type {
   CatalogElement,
-  CursorPageParams,
   ElementInput,
   ElementListQueryParams,
   ElementListResponse,
   PurposeDetail,
+  PurposeInput,
+  PurposeListQueryParams,
   PurposeListResponse,
+  PurposeVersionInput,
   PurposeVersionListResponse,
+  PurposeVersionSummary,
 } from '../../../types/catalog'
 import {
   createElement,
+  createPurpose,
+  createPurposeVersion,
   deleteElement,
+  deletePurpose,
+  deletePurposeVersion,
   fetchElement,
   fetchElements,
   fetchPurpose,
   fetchPurposes,
   fetchPurposeVersions,
+  setLatestPurposeVersion,
 } from '../api/catalogApi'
 
 export const CATALOG_VERSIONS_PAGE_SIZE = 50
@@ -86,7 +94,9 @@ export function useDeleteElementMutation(): UseMutationResult<void, Error, strin
   })
 }
 
-export function usePurposesQuery(params: CursorPageParams): UseQueryResult<PurposeListResponse> {
+export function usePurposesQuery(
+  params: PurposeListQueryParams,
+): UseQueryResult<PurposeListResponse> {
   return useQuery({
     queryKey: ['purposes', params],
     queryFn: () => fetchPurposes(params),
@@ -102,6 +112,28 @@ export function usePurposeQuery(purposeId?: string): UseQueryResult<PurposeDetai
   })
 }
 
+export function useCreatePurposeMutation(): UseMutationResult<PurposeDetail, Error, PurposeInput> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: PurposeInput) => createPurpose(payload),
+    onSuccess: async (): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['purposes'] })
+    },
+  })
+}
+
+export function useDeletePurposeMutation(): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (purposeId: string) => deletePurpose(purposeId),
+    onSuccess: async (): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['purposes'] })
+    },
+  })
+}
+
 export function usePurposeVersionsQuery(
   purposeId?: string,
 ): UseQueryResult<PurposeVersionListResponse> {
@@ -109,5 +141,72 @@ export function usePurposeVersionsQuery(
     queryKey: ['purpose', purposeId, 'versions'],
     queryFn: () => fetchPurposeVersions(String(purposeId), { limit: CATALOG_VERSIONS_PAGE_SIZE }),
     enabled: Boolean(purposeId),
+  })
+}
+
+interface CreatePurposeVersionArgs {
+  purposeId: string
+  payload: PurposeVersionInput
+}
+
+export function useCreatePurposeVersionMutation(): UseMutationResult<
+  PurposeVersionSummary,
+  Error,
+  CreatePurposeVersionArgs
+> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ purposeId, payload }: CreatePurposeVersionArgs) =>
+      createPurposeVersion(purposeId, payload),
+    onSuccess: async (_data, { purposeId }): Promise<void> => {
+      // Prefix match invalidates both the detail and versions queries.
+      await queryClient.invalidateQueries({ queryKey: ['purpose', purposeId] })
+      await queryClient.invalidateQueries({ queryKey: ['purposes'] })
+    },
+  })
+}
+
+interface SetLatestPurposeVersionArgs {
+  purposeId: string
+  versionId: string
+}
+
+export function useSetLatestPurposeVersionMutation(): UseMutationResult<
+  void,
+  Error,
+  SetLatestPurposeVersionArgs
+> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ purposeId, versionId }: SetLatestPurposeVersionArgs) =>
+      setLatestPurposeVersion(purposeId, versionId),
+    onSuccess: async (_data, { purposeId }): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['purpose', purposeId] })
+      await queryClient.invalidateQueries({ queryKey: ['purposes'] })
+    },
+  })
+}
+
+interface DeletePurposeVersionArgs {
+  purposeId: string
+  versionId: string
+}
+
+export function useDeletePurposeVersionMutation(): UseMutationResult<
+  void,
+  Error,
+  DeletePurposeVersionArgs
+> {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ purposeId, versionId }: DeletePurposeVersionArgs) =>
+      deletePurposeVersion(purposeId, versionId),
+    onSuccess: async (_data, { purposeId }): Promise<void> => {
+      await queryClient.invalidateQueries({ queryKey: ['purpose', purposeId] })
+      await queryClient.invalidateQueries({ queryKey: ['purposes'] })
+    },
   })
 }

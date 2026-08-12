@@ -39,6 +39,11 @@ export interface ElementListQueryParams extends CursorPageParams {
   filter?: string
 }
 
+/** Purpose listing supports the same `filter` grammar, over `name` and `type`. */
+export interface PurposeListQueryParams extends CursorPageParams {
+  filter?: string
+}
+
 export interface PurposeVersionRef {
   id: string
   version: string
@@ -79,6 +84,30 @@ export interface PurposeListResponse extends CursorPage {
 
 export interface PurposeVersionListResponse extends CursorPage {
   Versions: PurposeVersionSummary[]
+}
+
+export interface PurposeElementInput {
+  id: string
+  mandatory: boolean
+}
+
+/**
+ * Payload for a purpose version. The Identity Server does not carry a new
+ * version's description/elements/properties over from the version it was
+ * created from -- the dialog has to copy them explicitly if that's wanted.
+ */
+export interface PurposeVersionInput {
+  version: string
+  setAsLatest?: boolean
+  description?: string
+  elements?: PurposeElementInput[]
+  properties?: Record<string, string>
+}
+
+/** Payload for creating a purpose. IS has no element/type enum -- both are free text. */
+export interface PurposeInput extends PurposeVersionInput {
+  name: string
+  type: string
 }
 
 export interface CatalogElement {

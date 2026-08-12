@@ -121,6 +121,14 @@ public class IdentityServerClient {
                 .build());
     }
 
+    public Result put(String path, String jsonBody) throws IOException, InterruptedException {
+
+        return send(request(path)
+                .header("Content-Type", PortalConstants.CONTENT_TYPE_JSON)
+                .method("PUT", HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build());
+    }
+
     public Result delete(String path) throws IOException, InterruptedException {
 
         return send(request(path).DELETE().build());
