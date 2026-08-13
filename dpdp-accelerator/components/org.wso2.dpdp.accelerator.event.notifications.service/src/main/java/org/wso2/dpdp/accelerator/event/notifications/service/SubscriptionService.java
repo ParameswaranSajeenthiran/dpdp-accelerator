@@ -34,7 +34,7 @@ public interface SubscriptionService {
 
     SubscriptionDTO getSubscription(String orgId, String subscriptionId);
 
-    void deleteSubscription(String orgId, String subscriptionId);
+    SubscriptionDTO deleteSubscription(String orgId, String subscriptionId);
 
     SubscriptionDTO retryVerification(String orgId, String subscriptionId);
 

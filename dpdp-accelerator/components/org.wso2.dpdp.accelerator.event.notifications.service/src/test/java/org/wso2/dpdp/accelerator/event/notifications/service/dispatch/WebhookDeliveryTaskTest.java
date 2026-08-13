@@ -18,11 +18,14 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
@@ -41,14 +44,26 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Unit tests for {@link WebhookDeliveryTask}. The {@link HttpClient} is mocked; everything
- * else (delivery row, audit row, retry state) is verified through Mockito assertions.
+ * else (delivery row, audit row, retry state, request envelope, signature) is verified
+ * through Mockito assertions and Jackson tree reads.
  */
 public class WebhookDeliveryTaskTest {
+
+    private static final String DELIVERY_ID = "deliv-1";
+    private static final String SUBSCRIPTION_ID = "sub-1";
+    private static final String EVENT_ID = "event-1";
+    private static final String ORG_ID = "org-1";
+    private static final String CALLBACK_URL = "https://callback.example.com/hook";
+    private static final String SHARED_SECRET = "secret";
+    private static final String TOPIC_ID = "topic-1";
+    private static final String TOPIC_NAME = "accounts";
 
     @Mock
     private DeliveryDAO deliveryDAO;
@@ -63,9 +78,9 @@ public class WebhookDeliveryTaskTest {
 
     private WebhookDelivery delivery(int attemptCount) {
         return new WebhookDelivery(
-                "deliv-1",
-                "sub-1",
-                "event-1",
+                DELIVERY_ID,
+                SUBSCRIPTION_ID,
+                EVENT_ID,
                 "pending",
                 attemptCount,
                 null,
@@ -75,64 +90,102 @@ public class WebhookDeliveryTaskTest {
     }
 
     private WebhookDeliveryTask task(WebhookDelivery delivery) {
+        return task(delivery, "{\"hello\":\"world\"}");
+    }
+
+    private WebhookDeliveryTask task(WebhookDelivery delivery, String payload) {
         return new WebhookDeliveryTask(
                 delivery,
-                "org-1",
-                "{\"hello\":\"world\"}",
-                "https://callback.example.com/hook",
-                "secret",
+                ORG_ID,
+                payload,
+                CALLBACK_URL,
+                SHARED_SECRET,
+                TOPIC_ID,
+                TOPIC_NAME,
                 deliveryDAO,
                 httpClient);
     }
 
-    // Raw type avoids HttpResponse<String> vs HttpResponse<Object> witness mismatch.
-    private HttpResponse<?> mockResponse(int status) {
-        HttpResponse<?> response = org.mockito.Mockito.mock(HttpResponse.class);
+    @SuppressWarnings("unchecked")
+    private HttpResponse<String> mockResponse(int status) {
+        HttpResponse<String> response = (HttpResponse<String>) org.mockito.Mockito.mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(status);
         when(response.body()).thenReturn("ignored");
         return response;
     }
 
     // doReturn bypasses Mockito's generic type-checking on HttpResponse<String>.
-    @SuppressWarnings("unchecked")
     private void stubHttpResponse(int status) throws Exception {
         org.mockito.Mockito.doReturn(mockResponse(status))
                 .when(httpClient)
                 .send(any(HttpRequest.class), any());
     }
 
-    @SuppressWarnings("unchecked")
     private void stubHttpException(IOException ex) throws Exception {
         org.mockito.Mockito.doThrow(ex)
                 .when(httpClient)
                 .send(any(HttpRequest.class), any());
     }
 
+    /**
+     * Captures the actual HttpRequest that the task sent, so envelope tests can assert on
+     * the body, the signature header, and the routing headers without re-implementing the
+     * dispatch logic.
+     */
+    private HttpRequest captureRequest() throws Exception {
+        ArgumentCaptor<HttpRequest> requestCaptor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(httpClient).send(requestCaptor.capture(), any());
+        return requestCaptor.getValue();
+    }
+
+    private String bodyOf(HttpRequest request) throws Exception {
+        // HttpRequest.BodyPublisher doesn't expose its bytes; subscribe a tiny in-memory
+        // collector to it so tests can read what the task actually sent. We only use this
+        // with BodyPublishers.ofString, which is synchronous under request(Long.MAX_VALUE).
+        return request.bodyPublisher().map(pub -> {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            java.util.concurrent.Flow.Subscriber<java.nio.ByteBuffer> sink =
+                    new java.util.concurrent.Flow.Subscriber<java.nio.ByteBuffer>() {
+                        @Override public void onSubscribe(java.util.concurrent.Flow.Subscription s) {
+                            s.request(Long.MAX_VALUE);
+                        }
+                        @Override public void onNext(java.nio.ByteBuffer item) {
+                            byte[] buf = new byte[item.remaining()];
+                            item.get(buf);
+                            out.write(buf, 0, buf.length);
+                        }
+                        @Override public void onError(Throwable t) { }
+                        @Override public void onComplete() { }
+                    };
+            pub.subscribe(sink);
+            return out.toString(java.nio.charset.StandardCharsets.UTF_8);
+        }).orElseThrow(() -> new AssertionError("expected request to carry a body"));
+    }
+
     @Test
     public void testSuccessMarksDeliveredAndWritesAudit() throws Exception {
         WebhookDelivery delivery = delivery(0);
         stubHttpResponse(200);
-        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+        when(deliveryDAO.recordSuccessfulAttempt(any(), any())).thenReturn(true);
 
         task(delivery).run();
 
+        ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
         ArgumentCaptor<WebhookDelivery> updatedCaptor = ArgumentCaptor.forClass(WebhookDelivery.class);
-        verify(deliveryDAO).updateWebhookDeliveryStatus(updatedCaptor.capture());
+        verify(deliveryDAO).recordSuccessfulAttempt(auditCaptor.capture(), updatedCaptor.capture());
+
         WebhookDelivery updated = updatedCaptor.getValue();
         assertEquals(updated.getStatus(), "delivered");
         assertEquals(updated.getAttemptCount(), 1);
         assertNotNull(updated.getDeliveredAt());
         assertNull(updated.getNextRetryAt());
 
-        ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
-        verify(deliveryDAO).addWebhookDeliveryAudit(auditCaptor.capture());
         WebhookDeliveryAudit audit = auditCaptor.getValue();
         assertEquals(audit.getResponseCode(), "200");
-        assertEquals(audit.getDeliveryId(), "deliv-1");
+        assertEquals(audit.getDeliveryId(), DELIVERY_ID);
 
         // On success we never release.
-        verify(deliveryDAO, never()).releaseWebhookDelivery(anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
+        verify(deliveryDAO, never()).recordRetryableFailure(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
     }
 
     @Test
@@ -140,45 +193,43 @@ public class WebhookDeliveryTaskTest {
         // attempt 0 → fails → newAttempt = 1, which is below maxRetries (default 5).
         WebhookDelivery delivery = delivery(0);
         stubHttpResponse(500);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
-        when(deliveryDAO.releaseWebhookDelivery(anyString(), org.mockito.ArgumentMatchers.anyInt(), any()))
+        when(deliveryDAO.recordRetryableFailure(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any()))
                 .thenReturn(true);
 
         task(delivery).run();
 
         ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
-        verify(deliveryDAO).addWebhookDeliveryAudit(auditCaptor.capture());
-        assertEquals(auditCaptor.getValue().getResponseCode(), "500");
-
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Integer> attemptCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<Timestamp> nextCaptor = ArgumentCaptor.forClass(Timestamp.class);
-        verify(deliveryDAO).releaseWebhookDelivery(eq("deliv-1"), attemptCaptor.capture(), nextCaptor.capture());
+
+        verify(deliveryDAO).recordRetryableFailure(auditCaptor.capture(), idCaptor.capture(), attemptCaptor.capture(), nextCaptor.capture());
+        assertEquals(auditCaptor.getValue().getResponseCode(), "500");
+        assertEquals(idCaptor.getValue(), DELIVERY_ID);
         assertEquals(attemptCaptor.getValue().intValue(), 1);
 
         // 5s * 3^(1-1) = 5s after now; the next retry should be ~5_000ms in the future.
         long delayMs = nextCaptor.getValue().getTime() - System.currentTimeMillis();
-        assertEquals(delayMs >= 4_000L && delayMs <= 6_500L, true,
+        assertTrue(delayMs >= 4_000L && delayMs <= 6_500L,
                 "expected ~5s backoff, got " + delayMs + "ms");
 
         // We don't mark as delivered or failed on a retryable failure.
-        verify(deliveryDAO, never()).updateWebhookDeliveryStatus(any());
+        verify(deliveryDAO, never()).recordSuccessfulAttempt(any(), any());
+        verify(deliveryDAO, never()).recordPermanentFailure(any(), any());
     }
 
     @Test
     public void testExceptionIsTreatedAsRetryableFailure() throws Exception {
         WebhookDelivery delivery = delivery(2);
         stubHttpException(new IOException("boom"));
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
-        when(deliveryDAO.releaseWebhookDelivery(anyString(), org.mockito.ArgumentMatchers.anyInt(), any()))
+        when(deliveryDAO.recordRetryableFailure(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any()))
                 .thenReturn(true);
 
         task(delivery).run();
 
         ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
-        verify(deliveryDAO).addWebhookDeliveryAudit(auditCaptor.capture());
+        verify(deliveryDAO).recordRetryableFailure(auditCaptor.capture(), eq(DELIVERY_ID), org.mockito.ArgumentMatchers.eq(3), any());
         assertEquals(auditCaptor.getValue().getResponseCode(), "EXCEPTION");
-
-        verify(deliveryDAO).releaseWebhookDelivery(eq("deliv-1"), org.mockito.ArgumentMatchers.eq(3), any());
     }
 
     @Test
@@ -186,22 +237,21 @@ public class WebhookDeliveryTaskTest {
         // attempt 4 → fails → newAttempt = 5, which equals maxRetries (default) → failed.
         WebhookDelivery delivery = delivery(4);
         stubHttpResponse(500);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
-        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.recordPermanentFailure(any(), any())).thenReturn(true);
 
         task(delivery).run();
 
+        ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
         ArgumentCaptor<WebhookDelivery> updatedCaptor = ArgumentCaptor.forClass(WebhookDelivery.class);
-        verify(deliveryDAO).updateWebhookDeliveryStatus(updatedCaptor.capture());
+        verify(deliveryDAO).recordPermanentFailure(auditCaptor.capture(), updatedCaptor.capture());
+
         assertEquals(updatedCaptor.getValue().getStatus(), "failed");
         assertEquals(updatedCaptor.getValue().getAttemptCount(), 5);
         assertNull(updatedCaptor.getValue().getNextRetryAt());
+        assertEquals(auditCaptor.getValue().getResponseCode(), "500");
 
         // On terminal failure we never release for a retry.
-        verify(deliveryDAO, never()).releaseWebhookDelivery(anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
-
-        // Audit row is still written.
-        verify(deliveryDAO, times(1)).addWebhookDeliveryAudit(any());
+        verify(deliveryDAO, never()).recordRetryableFailure(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
     }
 
     @Test
@@ -212,21 +262,164 @@ public class WebhookDeliveryTaskTest {
         d2.setDeliveryId("deliv-2");
 
         stubHttpResponse(200);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
-        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.recordSuccessfulAttempt(any(), any())).thenReturn(true);
 
         task(d1).run();
         task(d2).run();
 
         ArgumentCaptor<WebhookDeliveryAudit> captor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
-        verify(deliveryDAO, times(2)).addWebhookDeliveryAudit(captor.capture());
+        ArgumentCaptor<WebhookDelivery> devCaptor = ArgumentCaptor.forClass(WebhookDelivery.class);
+        verify(deliveryDAO, times(2)).recordSuccessfulAttempt(captor.capture(), devCaptor.capture());
         java.util.List<WebhookDeliveryAudit> rows = captor.getAllValues();
         assertEquals(rows.size(), 2);
         // Different UUIDs for each.
-        assertEquals(rows.get(0).getAuditId().equals(rows.get(1).getAuditId()), false,
+        assertNotEquals(rows.get(0).getAuditId(), rows.get(1).getAuditId(),
                 "audit IDs must be distinct per attempt");
         UUID.fromString(rows.get(0).getAuditId());
         UUID.fromString(rows.get(1).getAuditId());
+    }
+
+    // -------- Envelope & signature tests --------
+
+    @Test
+    public void testRequestBodyIsEnvelopeNotRawPayload() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery, "{\"hello\":\"world\"}").run();
+
+        HttpRequest request = captureRequest();
+        String body = bodyOf(request);
+
+        // Body must be parseable JSON, distinct from the raw payload string.
+        JsonNode envelope = new ObjectMapper().readTree(body);
+        assertTrue(envelope.has("payload"), "envelope should carry a payload field");
+        // Original payload sits nested under "payload" — receivers can do envelope.payload.hello.
+        assertEquals(envelope.get("payload").get("hello").asText(), "world");
+    }
+
+    @Test
+    public void testEnvelopeCarriesAllRoutingFields() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery, "{\"k\":\"v\"}").run();
+
+        JsonNode envelope = new ObjectMapper().readTree(bodyOf(captureRequest()));
+        assertEquals(envelope.get("deliveryId").asText(), DELIVERY_ID);
+        assertEquals(envelope.get("eventId").asText(), EVENT_ID);
+        assertEquals(envelope.get("subscriptionId").asText(), SUBSCRIPTION_ID);
+        assertEquals(envelope.get("orgId").asText(), ORG_ID);
+        assertEquals(envelope.get("topicId").asText(), TOPIC_ID);
+        assertEquals(envelope.get("topicName").asText(), TOPIC_NAME);
+    }
+
+    @Test
+    public void testEventSignatureIsHmacOfEnvelope() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery, "{\"hello\":\"world\"}").run();
+
+        HttpRequest request = captureRequest();
+        String body = bodyOf(request);
+
+        // The header must be present and prefixed with the algorithm.
+        String signatureHeader = request.headers().firstValue("Event-Signature").orElse(null);
+        assertNotNull(signatureHeader, "Event-Signature header should be set");
+        assertTrue(signatureHeader.startsWith("sha256="),
+                "Event-Signature should be prefixed with 'sha256=', got: " + signatureHeader);
+
+        // The signature is over the full envelope body — not the raw payload. Recomputing
+        // HMAC over the envelope must match what's in the header.
+        String expected = HmacSigner.sign(SHARED_SECRET, body);
+        assertEquals(signatureHeader, "sha256=" + expected,
+                "signature must be HMAC over the envelope body");
+    }
+
+    @Test
+    public void testSignatureDiffersWhenRawPayloadWouldHaveBeenSigned() throws Exception {
+        // Regression guard: the signature must NOT be computed over the raw payload. If a
+        // future refactor accidentally signs the payload before wrapping, the digest will
+        // match HMAC(payload) and this test will fail.
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        String rawPayload = "{\"hello\":\"world\"}";
+        task(delivery, rawPayload).run();
+
+        HttpRequest request = captureRequest();
+        String body = bodyOf(request);
+        String signatureHeader = request.headers().firstValue("Event-Signature").orElseThrow();
+
+        String signedOverRawPayload = "sha256=" + HmacSigner.sign(SHARED_SECRET, rawPayload);
+        assertNotEquals(signatureHeader, signedOverRawPayload,
+                "signature must be over the envelope, not the raw payload");
+    }
+
+    @Test
+    public void testDeliveryIdHeaderIsSetForDedupe() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery).run();
+
+        String deliveryIdHeader = captureRequest().headers().firstValue("Delivery-Id").orElse(null);
+        assertEquals(deliveryIdHeader, DELIVERY_ID,
+                "Delivery-Id header lets receivers dedupe without recomputing the HMAC");
+    }
+
+    @Test
+    public void testContentTypeIsJson() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery).run();
+
+        String contentType = captureRequest().headers().firstValue("Content-Type").orElseThrow();
+        assertEquals(contentType, "application/json");
+    }
+
+    @Test
+    public void testUnparseablePayloadFallsBackToEmptyObject() throws Exception {
+        // If the producer stored a non-JSON blob (corruption, legacy row), the envelope
+        // must still be valid JSON so receivers can parse the body without a try/catch.
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery, "not-json-at-all").run();
+
+        JsonNode envelope = new ObjectMapper().readTree(bodyOf(captureRequest()));
+        assertTrue(envelope.get("payload").isObject(), "payload should fall back to an object");
+        assertEquals(envelope.get("payload").size(), 0, "fallback object should be empty");
+    }
+
+    @Test
+    public void testNullPayloadStillProducesValidEnvelope() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+
+        task(delivery, null).run();
+
+        JsonNode envelope = new ObjectMapper().readTree(bodyOf(captureRequest()));
+        assertTrue(envelope.get("payload").isObject(), "null payload should fall back to an object");
+        assertEquals(envelope.get("payload").size(), 0);
     }
 
     // Quick helper; keeps the test file readable.

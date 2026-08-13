@@ -58,4 +58,21 @@ public final class HttpUtil {
         body.put("message", message);
         sendJson(response, status, body);
     }
+
+    /**
+     * Overload that also forwards an optional {@code description} field, used
+     * when relaying a JSON error envelope from an upstream service so the SPA
+     * keeps the diagnostic detail the upstream chose to send.
+     */
+    public static void sendError(HttpServletResponse response, int status, String code, String message,
+            String description) throws IOException {
+
+        ObjectNode body = MAPPER.createObjectNode();
+        body.put("code", code);
+        body.put("message", message);
+        if (description != null && !description.trim().isEmpty()) {
+            body.put("description", description.trim());
+        }
+        sendJson(response, status, body);
+    }
 }

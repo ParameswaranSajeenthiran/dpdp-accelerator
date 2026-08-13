@@ -18,18 +18,34 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryDispatchContext;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 public interface DeliveryDAO {
 
-    boolean addWebhookDelivery(WebhookDelivery delivery);
+    boolean addWebhookDelivery(Connection conn, WebhookDelivery delivery);
+
+    default boolean addWebhookDelivery(WebhookDelivery delivery) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return addWebhookDelivery(conn, delivery);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_ADDING_WEBHOOK_DELIVERY,
+                            delivery != null ? delivery.getDeliveryId() : "null"), e);
+        }
+    }
 
     Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId);
 
@@ -53,11 +69,21 @@ public interface DeliveryDAO {
      */
     List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit);
 
+    List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit, Timestamp updatedBefore);
+
     List<WebhookDelivery> getPendingWebhookDeliveries(int limit);
 
     List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit);
 
+    List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit, Timestamp updatedBefore);
+
     boolean updateWebhookDeliveryStatus(WebhookDelivery delivery);
+
+    boolean recordSuccessfulAttempt(WebhookDeliveryAudit audit, WebhookDelivery delivery);
+
+    boolean recordRetryableFailure(WebhookDeliveryAudit audit, String deliveryId, int attemptCount, Timestamp nextRetryAt);
+
+    boolean recordPermanentFailure(WebhookDeliveryAudit audit, WebhookDelivery delivery);
 
     boolean addWebhookDeliveryAudit(WebhookDeliveryAudit audit);
 
@@ -73,7 +99,15 @@ public interface DeliveryDAO {
 
     boolean claimWebhookDelivery(String deliveryId);
 
-    boolean releaseWebhookDelivery(String deliveryId, int attemptCount, java.sql.Timestamp nextRetryAt);
+    /**
+     * Atomically reclaims a stuck {@code in_flight} delivery whose {@code UPDATED_AT} is
+     * older than {@code updatedBefore}. Returns {@code true} only if the row was still
+     * in_flight AND old enough — a concurrent active worker whose UPDATED_AT was just
+     * refreshed will not be interrupted.
+     */
+    boolean claimStuckWebhookDelivery(String deliveryId, Timestamp updatedBefore);
+
+    boolean releaseWebhookDelivery(String deliveryId, int attemptCount, Timestamp nextRetryAt);
 
     boolean claimPollDelivery(String deliveryId);
 

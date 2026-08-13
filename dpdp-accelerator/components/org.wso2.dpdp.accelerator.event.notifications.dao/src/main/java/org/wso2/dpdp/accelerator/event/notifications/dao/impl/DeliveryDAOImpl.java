@@ -59,9 +59,11 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     @Override
-    public boolean addWebhookDelivery(WebhookDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryQuery())) {
+    public boolean addWebhookDelivery(Connection conn, WebhookDelivery delivery) {
+        if (conn == null) {
+            return DeliveryDAO.super.addWebhookDelivery(delivery);
+        }
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryQuery())) {
             ps.setString(1, delivery.getDeliveryId());
             ps.setString(2, delivery.getSubscriptionId());
             ps.setString(3, delivery.getEventId());
@@ -141,7 +143,14 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit) {
-        return loadDispatchContexts(getQueries().getGetStuckInFlightWebhookDispatchContextsQuery(), limit);
+        int threshold = org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - threshold * 1000L);
+        return getStuckInFlightWebhookDispatchContexts(limit, cutoff);
+    }
+
+    @Override
+    public List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit, Timestamp updatedBefore) {
+        return loadDispatchContextsWithCutoff(getQueries().getGetStuckInFlightWebhookDispatchContextsQuery(), limit, updatedBefore);
     }
 
     private List<WebhookDeliveryDispatchContext> loadDispatchContexts(String sql, int limit) {
@@ -167,7 +176,45 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                             rs.getString("CALLBACK_URL"),
                             rs.getString("SHARED_SECRET"),
                             rs.getString("PAYLOAD"),
-                            rs.getTimestamp("UPDATED_AT")));
+                            rs.getTimestamp("UPDATED_AT"),
+                            rs.getString("TOPIC_ID"),
+                            rs.getString("TOPIC_NAME")));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
+        }
+    }
+
+    private List<WebhookDeliveryDispatchContext> loadDispatchContextsWithCutoff(String sql, int limit, Timestamp cutoff) {
+        List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
+        try (Connection conn = DBUtils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, cutoff != null ? cutoff : new Timestamp(System.currentTimeMillis()));
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    WebhookDelivery delivery = new WebhookDelivery(
+                            rs.getString("DELIVERY_ID"),
+                            rs.getString("SUBSCRIPTION_ID"),
+                            rs.getString("EVENT_ID"),
+                            rs.getString("STATUS"),
+                            rs.getInt("ATTEMPT_COUNT"),
+                            rs.getTimestamp("NEXT_RETRY_AT"),
+                            rs.getTimestamp("CREATED_AT"),
+                            rs.getTimestamp("UPDATED_AT"),
+                            rs.getTimestamp("DELIVERED_AT"));
+                    list.add(new WebhookDeliveryDispatchContext(
+                            delivery,
+                            rs.getString("ORG_ID"),
+                            rs.getString("CALLBACK_URL"),
+                            rs.getString("SHARED_SECRET"),
+                            rs.getString("PAYLOAD"),
+                            rs.getTimestamp("UPDATED_AT"),
+                            rs.getString("TOPIC_ID"),
+                            rs.getString("TOPIC_NAME")));
                 }
             }
             return list;
@@ -179,8 +226,18 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean updateWebhookDeliveryStatus(WebhookDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateWebhookDeliveryStatusQuery())) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return updateWebhookDeliveryStatus(conn, delivery);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS,
+                            (delivery != null ? delivery.getDeliveryId() : "null")),
+                    e);
+        }
+    }
+
+    public boolean updateWebhookDeliveryStatus(Connection conn, WebhookDelivery delivery) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateWebhookDeliveryStatusQuery())) {
             ps.setString(1, delivery.getStatus());
             ps.setInt(2, delivery.getAttemptCount());
             ps.setTimestamp(3, delivery.getNextRetryAt());
@@ -196,9 +253,107 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     @Override
+    public boolean recordSuccessfulAttempt(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
+        try (Connection conn = DBUtils.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                addWebhookDeliveryAudit(conn, audit);
+                boolean updated = updateWebhookDeliveryStatus(conn, delivery);
+                conn.commit();
+                return updated;
+            } catch (Exception e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS,
+                            (delivery != null ? delivery.getDeliveryId() : "null")),
+                    e);
+        }
+    }
+
+    @Override
+    public boolean recordRetryableFailure(WebhookDeliveryAudit audit, String deliveryId, int attemptCount, Timestamp nextRetryAt) {
+        try (Connection conn = DBUtils.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                addWebhookDeliveryAudit(conn, audit);
+                boolean released = releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
+                conn.commit();
+                return released;
+            } catch (Exception e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
+        }
+    }
+
+    @Override
+    public boolean recordPermanentFailure(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
+        try (Connection conn = DBUtils.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                addWebhookDeliveryAudit(conn, audit);
+                boolean updated = updateWebhookDeliveryStatus(conn, delivery);
+                conn.commit();
+                return updated;
+            } catch (Exception e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ignored) {
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS,
+                            (delivery != null ? delivery.getDeliveryId() : "null")),
+                    e);
+        }
+    }
+
+    @Override
     public boolean addWebhookDeliveryAudit(WebhookDeliveryAudit audit) {
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAuditQuery())) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return addWebhookDeliveryAudit(conn, audit);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_ADDING_WEBHOOK_DELIVERY_AUDIT,
+                            (audit != null ? audit.getDeliveryId() : "null")),
+                    e);
+        }
+    }
+
+    public boolean addWebhookDeliveryAudit(Connection conn, WebhookDeliveryAudit audit) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAuditQuery())) {
             ps.setString(1, audit.getAuditId());
             ps.setString(2, audit.getEventId());
             ps.setString(3, audit.getDeliveryId());
@@ -288,11 +443,19 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit) {
+        int threshold = org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - threshold * 1000L);
+        return getStuckInFlightWebhookDeliveries(limit, cutoff);
+    }
+
+    @Override
+    public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit, Timestamp updatedBefore) {
         List<WebhookDelivery> list = new ArrayList<>();
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement ps = conn.prepareStatement(
                         getQueries(conn).getGetStuckInFlightWebhookDeliveriesQuery())) {
-            ps.setInt(1, limit);
+            ps.setTimestamp(1, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
+            ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new WebhookDelivery(
@@ -353,38 +516,40 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
         try (Connection conn = DBUtils.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-            EventNotificationCommonDBQueries queries = getQueries(conn);
+            try {
+                conn.setAutoCommit(false);
+                EventNotificationCommonDBQueries queries = getQueries(conn);
 
-            try (PreparedStatement updatePs = conn
-                    .prepareStatement(queries.getUpdatePollDeliveryStatusByEventAndGroupQuery())) {
-                if (ackEventIds != null && !ackEventIds.isEmpty()) {
-                    for (String eventId : ackEventIds) {
-                        if (eventId != null && !eventId.trim().isEmpty()) {
-                            updatePs.setString(1, PollStatus.ACKNOWLEDGED.getValue());
-                            updatePs.setString(2, eventId.trim());
-                            updatePs.setString(3, orgId);
-                            updatePs.setString(4, groupId);
-                            updatePs.addBatch();
+                try (PreparedStatement updatePs = conn
+                        .prepareStatement(queries.getUpdatePollDeliveryStatusByEventAndGroupQuery())) {
+                    if (ackEventIds != null && !ackEventIds.isEmpty()) {
+                        for (String eventId : ackEventIds) {
+                            if (eventId != null && !eventId.trim().isEmpty()) {
+                                updatePs.setString(1, PollStatus.ACKNOWLEDGED.getValue());
+                                updatePs.setString(2, eventId.trim());
+                                updatePs.setString(3, orgId);
+                                updatePs.setString(4, groupId);
+                                updatePs.addBatch();
+                            }
                         }
+                        updatePs.executeBatch();
                     }
-                    updatePs.executeBatch();
-                }
 
-                if (errEventIds != null && !errEventIds.isEmpty()) {
-                    for (String eventId : errEventIds) {
-                        if (eventId != null && !eventId.trim().isEmpty()) {
-                            updatePs.setString(1, PollStatus.ERR.getValue());
-                            updatePs.setString(2, eventId.trim());
-                            updatePs.setString(3, orgId);
-                            updatePs.setString(4, groupId);
-                            updatePs.addBatch();
+                    if (errEventIds != null && !errEventIds.isEmpty()) {
+                        for (String eventId : errEventIds) {
+                            if (eventId != null && !eventId.trim().isEmpty()) {
+                                updatePs.setString(1, PollStatus.ERR.getValue());
+                                updatePs.setString(2, eventId.trim());
+                                updatePs.setString(3, orgId);
+                                updatePs.setString(4, groupId);
+                                updatePs.addBatch();
+                            }
                         }
+                        updatePs.executeBatch();
                     }
-                    updatePs.executeBatch();
-                }
 
-                conn.commit();
+                    conn.commit();
+                }
             } catch (SQLException e) {
                 try {
                     conn.rollback();
@@ -417,12 +582,33 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     @Override
+    public boolean claimStuckWebhookDelivery(String deliveryId, Timestamp updatedBefore) {
+        try (Connection conn = DBUtils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getClaimStuckWebhookDeliveryQuery())) {
+            ps.setString(1, deliveryId);
+            ps.setTimestamp(2, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
+        }
+    }
+
+    @Override
     public boolean releaseWebhookDelivery(String deliveryId, int attemptCount, Timestamp nextRetryAt) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
+        }
+    }
+
+    public boolean releaseWebhookDelivery(Connection conn, String deliveryId, int attemptCount, Timestamp nextRetryAt) {
         if (deliveryId == null || deliveryId.trim().isEmpty()) {
             return false;
         }
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getReleaseWebhookDeliveryQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getReleaseWebhookDeliveryQuery())) {
             ps.setInt(1, attemptCount);
             ps.setTimestamp(2, nextRetryAt);
             ps.setString(3, deliveryId.trim());

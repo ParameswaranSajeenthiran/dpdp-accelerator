@@ -16,7 +16,8 @@
       <param-name>jaxrs.serviceClasses</param-name>
       <param-value>
         org.wso2.dpdp.accelerator.event.notifications.endpoint.api.SubscriptionEndpoint,
-        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint,
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.EventEndpoint
       </param-value>
     </init-param>
     <init-param>

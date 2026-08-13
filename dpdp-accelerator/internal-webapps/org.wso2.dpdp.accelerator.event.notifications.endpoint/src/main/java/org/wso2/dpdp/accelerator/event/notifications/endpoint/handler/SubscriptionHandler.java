@@ -68,8 +68,8 @@ public class SubscriptionHandler {
         return subscriptionService.getSubscription(orgId, subscriptionId);
     }
 
-    public void deleteSubscription(String orgId, String subscriptionId) {
-        subscriptionService.deleteSubscription(orgId, subscriptionId);
+    public SubscriptionDTO deleteSubscription(String orgId, String subscriptionId) {
+        return subscriptionService.deleteSubscription(orgId, subscriptionId);
     }
 
     public SubscriptionDTO retryVerification(String orgId, String subscriptionId) {

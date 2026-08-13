@@ -28,7 +28,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,38 +36,49 @@ import java.util.logging.Logger;
  * Batch driver for the webhook dispatch loop. One tick:
  *
  * <ol>
- *   <li>Reads up to {@code delivery_worker_batch_size} pending dispatch contexts from the
- *       DAO. Each context is a single-row join of {@code WEBHOOK_DELIVERY}, the matching
- *       {@code SUBSCRIPTION} (callback URL + shared secret), and the matching {@code EVENT}
- *       payload, so the worker can hand one object straight to {@link WebhookDeliveryTask}
- *       without further DAO calls.</li>
- *   <li>For each context, atomically flips the row to {@code in_flight} via
- *       {@link DeliveryDAO#claimWebhookDelivery(String)} so a concurrent worker does not
- *       pick the same row.</li>
- *   <li>Submits a {@link WebhookDeliveryTask} to the shared scheduler.</li>
- *   <li>Also drains stuck {@code in_flight} rows whose {@code UPDATED_AT} is older than the
- *       configured stuck threshold so a crashed worker does not permanently block delivery.</li>
+ * <li>Reads up to {@code delivery_worker_batch_size} pending dispatch contexts
+ * from the
+ * DAO. Each context is a single-row join of {@code WEBHOOK_DELIVERY}, the
+ * matching
+ * {@code SUBSCRIPTION} (callback URL + shared secret), and the matching
+ * {@code EVENT}
+ * payload, so the worker can hand one object straight to
+ * {@link WebhookDeliveryTask}
+ * without further DAO calls.</li>
+ * <li>For each context, atomically flips the row to {@code in_flight} via
+ * {@link DeliveryDAO#claimWebhookDelivery(String)} so a concurrent worker does
+ * not
+ * pick the same row.</li>
+ * <li>Submits a {@link WebhookDeliveryTask} to the shared scheduler.</li>
+ * <li>Submits a {@link WebhookDeliveryTask} to the shared executor.</li>
+ * <li>Also drains stuck {@code in_flight} rows whose {@code UPDATED_AT} is
+ * older than the
+ * configured stuck threshold so a crashed worker does not permanently block
+ * delivery.</li>
  * </ol>
  *
- * <p>Owned by {@code DeliveryRecoveryService}; not an OSGi component itself because its
- * lifecycle is tied to the same {@link ScheduledExecutorService} that powers the pending
- * subscription recovery task.</p>
+ * <p>
+ * Owned by {@code DeliveryRecoveryService}; not an OSGi component itself
+ * because its
+ * lifecycle is tied to the same {@link Executor} that powers the pending
+ * subscription recovery task.
+ * </p>
  */
 public class WebhookDeliveryWorker implements Runnable {
 
     private static final Logger LOG = Logger.getLogger(WebhookDeliveryWorker.class.getName());
 
     private final DeliveryDAO deliveryDAO;
-    private final ScheduledExecutorService scheduler;
+    private final Executor executor;
     private final HttpClient httpClient;
 
-    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, ScheduledExecutorService scheduler) {
-        this(deliveryDAO, scheduler, defaultHttpClient());
+    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor) {
+        this(deliveryDAO, executor, defaultHttpClient());
     }
 
-    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, ScheduledExecutorService scheduler, HttpClient httpClient) {
+    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor, HttpClient httpClient) {
         this.deliveryDAO = deliveryDAO;
-        this.scheduler = scheduler;
+        this.executor = executor;
         this.httpClient = httpClient;
     }
 
@@ -87,24 +98,28 @@ public class WebhookDeliveryWorker implements Runnable {
     }
 
     /**
-     * Visible for tests so they can drive the loop deterministically without scheduling.
+     * Visible for tests so they can drive the loop deterministically without
+     * scheduling.
      * Returns {@code int[submitted, reclaimed]} so tests can verify both the first
      * pass and the stuck-recovery pass fired.
      */
     public int[] runTick() {
         int batchSize = EventNotificationConfigParser.getInstance().getDeliveryWorkerBatchSize();
         List<WebhookDeliveryDispatchContext> pending = fetch(batchSize, false);
-        int submitted = submitBatch(pending);
-        // Only reclaim stuck in-flight if the pending pass was short of the batch — otherwise
-        // we already have work above budget and the in-flight rows will be picked up on a
-        // later tick anyway.
+        int submitted = submitBatch(pending, false, null);
+        // Only reclaim stuck in-flight when we are below budget — if pending already filled
+        // the batch there is enough work; stuck rows will be picked up on a later tick.
         int reclaimed = 0;
-        if (pending.size() < batchSize) {
-            List<WebhookDeliveryDispatchContext> stuck = fetch(Math.max(0, batchSize - submitted), true);
+        int remaining = batchSize - submitted;
+        if (remaining > 0) {
+            int thresholdSeconds = EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+            java.sql.Timestamp cutoff = new java.sql.Timestamp(
+                    System.currentTimeMillis() - thresholdSeconds * 1000L);
+            List<WebhookDeliveryDispatchContext> stuck = fetch(remaining, true);
             if (!stuck.isEmpty()) {
                 LOG.info("Reclaiming " + stuck.size() + " stuck in-flight webhook deliveries.");
             }
-            reclaimed = submitBatch(stuck);
+            reclaimed = submitBatch(stuck, true, cutoff);
         }
         if (submitted + reclaimed > 0) {
             LOG.info("Webhook delivery tick: submitted=" + submitted + ", reclaimed=" + reclaimed + ".");
@@ -117,42 +132,61 @@ public class WebhookDeliveryWorker implements Runnable {
             return Collections.emptyList();
         }
         try {
-            return reclaim
-                    ? deliveryDAO.getStuckInFlightWebhookDispatchContexts(limit)
-                    : deliveryDAO.getPendingWebhookDispatchContexts(limit);
+            if (reclaim) {
+                int thresholdSeconds = EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+                java.sql.Timestamp cutoff = new java.sql.Timestamp(
+                        System.currentTimeMillis() - thresholdSeconds * 1000L);
+                return deliveryDAO.getStuckInFlightWebhookDispatchContexts(limit, cutoff);
+            }
+            return deliveryDAO.getPendingWebhookDispatchContexts(limit);
         } catch (Exception e) {
             LOG.log(Level.WARNING,
                     "Failed to fetch " + (reclaim ? "stuck" : "pending") + " webhook deliveries: "
-                            + e.getMessage(), e);
+                            + e.getMessage(),
+                    e);
             return Collections.emptyList();
         }
     }
 
-    private int submitBatch(List<WebhookDeliveryDispatchContext> contexts) {
+    /**
+     * @param isReclaim  {@code true} when processing stuck in-flight rows; the claim uses
+     *                   {@link DeliveryDAO#claimStuckWebhookDelivery} with a cutoff guard
+     *                   to prevent re-claiming a row that is still being actively processed.
+     * @param stuckCutoff the UPDATED_AT cutoff; only used when {@code isReclaim} is true.
+     */
+    private int submitBatch(List<WebhookDeliveryDispatchContext> contexts,
+            boolean isReclaim, java.sql.Timestamp stuckCutoff) {
         int submitted = 0;
         for (WebhookDeliveryDispatchContext ctx : contexts) {
             WebhookDelivery delivery = ctx.getDelivery();
-            if (!claim(delivery.getDeliveryId())) {
+            boolean claimed = isReclaim
+                    ? claimStuck(delivery.getDeliveryId(), stuckCutoff)
+                    : claim(delivery.getDeliveryId());
+            if (!claimed) {
                 continue;
             }
             if (!isDeliverable(ctx)) {
-                markUnrecoverable(delivery, "missing callback URL or event payload");
+                markUnrecoverable(delivery, isReclaim
+                        ? "missing callback URL or event payload (subscription may have been deleted)"
+                        : "missing callback URL or event payload");
                 continue;
             }
             try {
-                scheduler.submit(new WebhookDeliveryTask(
+                executor.execute(new WebhookDeliveryTask(
                         delivery,
                         ctx.getOrgId(),
                         ctx.getPayload(),
                         ctx.getCallbackUrl(),
                         ctx.getSharedSecret(),
+                        ctx.getTopicId(),
+                        ctx.getTopicName(),
                         deliveryDAO,
                         httpClient));
                 submitted++;
             } catch (Exception e) {
                 LOG.log(Level.SEVERE, "Failed to submit WebhookDeliveryTask for delivery ["
                         + delivery.getDeliveryId() + "]: " + e.getMessage(), e);
-                markUnrecoverable(delivery, "scheduler rejected task");
+                markUnrecoverable(delivery, "executor rejected task");
             }
         }
         return submitted;
@@ -163,6 +197,16 @@ public class WebhookDeliveryWorker implements Runnable {
             return deliveryDAO.claimWebhookDelivery(deliveryId);
         } catch (Exception e) {
             LOG.log(Level.WARNING, "claimWebhookDelivery failed for [" + deliveryId + "]: "
+                    + e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private boolean claimStuck(String deliveryId, java.sql.Timestamp cutoff) {
+        try {
+            return deliveryDAO.claimStuckWebhookDelivery(deliveryId, cutoff);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "claimStuckWebhookDelivery failed for [" + deliveryId + "]: "
                     + e.getMessage(), e);
             return false;
         }
@@ -181,8 +225,10 @@ public class WebhookDeliveryWorker implements Runnable {
     }
 
     /**
-     * Best-effort flip to {@code failed} for a delivery whose claim succeeded but whose task
-     * could not be hydrated. We deliberately skip an audit row here — the operator can see
+     * Best-effort flip to {@code failed} for a delivery whose claim succeeded but
+     * whose task
+     * could not be hydrated. We deliberately skip an audit row here — the operator
+     * can see
      * the FAILED status and the reason in the worker logs.
      */
     private void markUnrecoverable(WebhookDelivery delivery, String reason) {

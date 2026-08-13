@@ -18,8 +18,14 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Optional;
 
 public interface TopicDAO {
@@ -28,9 +34,18 @@ public interface TopicDAO {
 
     Optional<Topic> getTopicById(String topicId, String orgId);
 
-    Optional<Topic> getTopicByOrgAndName(String orgId, String name);
+    Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name);
 
-    boolean updateTopicStatus(String topicId, String orgId, String status);
+    default Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getTopicByOrgAndName(conn, orgId, name);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name), e);
+        }
+    }
+
+    boolean updateTopicStatus(String topicId, String orgId, TopicStatus status);
 
     boolean deregisterTopicAtomic(String topicId, String orgId);
 

@@ -22,10 +22,10 @@ import java.sql.Timestamp;
 
 /**
  * Aggregated dispatch context for a single webhook delivery. The DAO joins
- * {@code WEBHOOK_DELIVERY} with {@code SUBSCRIPTION} and {@code EVENT} to project
- * the delivery row alongside the URL, shared secret, and JSON payload the worker
- * needs to make a single outbound POST. This avoids the worker making three
- * separate round-trips per delivery.
+ * {@code WEBHOOK_DELIVERY} with {@code SUBSCRIPTION}, {@code EVENT}, and
+ * {@code TOPIC} to project the delivery row alongside the URL, shared secret,
+ * JSON payload, and the topic the event was published under. The worker uses
+ * these fields to build a single outbound POST without further DAO calls.
  */
 public class WebhookDeliveryDispatchContext {
 
@@ -35,15 +35,19 @@ public class WebhookDeliveryDispatchContext {
     private final String sharedSecret;
     private final String payload;
     private final Timestamp claimedAt;
+    private final String topicId;
+    private final String topicName;
 
     public WebhookDeliveryDispatchContext(WebhookDelivery delivery, String orgId, String callbackUrl,
-            String sharedSecret, String payload, Timestamp claimedAt) {
+            String sharedSecret, String payload, Timestamp claimedAt, String topicId, String topicName) {
         this.delivery = delivery;
         this.orgId = orgId;
         this.callbackUrl = callbackUrl;
         this.sharedSecret = sharedSecret;
         this.payload = payload;
         this.claimedAt = claimedAt;
+        this.topicId = topicId;
+        this.topicName = topicName;
     }
 
     public WebhookDelivery getDelivery() {
@@ -68,5 +72,13 @@ public class WebhookDeliveryDispatchContext {
 
     public Timestamp getClaimedAt() {
         return claimedAt;
+    }
+
+    public String getTopicId() {
+        return topicId;
+    }
+
+    public String getTopicName() {
+        return topicName;
     }
 }

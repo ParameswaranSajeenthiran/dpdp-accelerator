@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.portal.webapp.servlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.portal.webapp.client.IdentityServerClient;
+import org.wso2.dpdp.accelerator.portal.webapp.util.AuthUtil;
 import org.wso2.dpdp.accelerator.portal.webapp.util.HttpUtil;
 
 import java.io.IOException;
@@ -63,6 +64,7 @@ public class EventNotificationsServlet extends AbstractProxyServlet {
         }
 
         String orgId = resolveOrgId(request);
+        String groupId = AuthUtil.resolveGroupId(request);
 
         String query = request.getQueryString();
         String target = IdentityServerClient.EVENT_NOTIFICATION_API + path
@@ -70,7 +72,8 @@ public class EventNotificationsServlet extends AbstractProxyServlet {
 
         try {
             String body = "POST".equals(method) ? readBody(request) : null;
-            IdentityServerClient.Result result = client.forwardEventNotificationRequest(method, target, body, orgId);
+            IdentityServerClient.Result result = client.forwardEventNotificationRequest(method, target, body, orgId,
+                    groupId);
             relay(result, response);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

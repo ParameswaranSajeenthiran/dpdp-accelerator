@@ -98,6 +98,20 @@ public class SubscriptionServiceImplTest {
     }
 
     @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateSubscriptionNullGroupId() {
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+        subscriptionService.createSubscription("org1", null, "topic1", filter, delivery);
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateSubscriptionBlankGroupId() {
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+        subscriptionService.createSubscription("org1", "   ", "topic1", filter, delivery);
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
     public void testCreateSpecificSubscriptionMissingPurposes() {
         Topic topic = new Topic("t1", "org1", "topic1", "desc", "active");
         when(topicDAO.getTopicByOrgAndName("org1", "topic1")).thenReturn(Optional.of(topic));
@@ -179,8 +193,12 @@ public class SubscriptionServiceImplTest {
         Subscription sub = new Subscription("sub1", "org1", "group1", "t1", "ALL", Collections.emptyList(), "POLL", null, "secret", "ACTIVE", new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
         when(subscriptionDAO.getSubscriptionById("sub1", "org1")).thenReturn(Optional.of(sub));
         when(subscriptionDAO.deleteSubscriptionAtomic("sub1", "org1", "ACTIVE")).thenReturn(true);
+        when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(new Topic("t1", "org1", "user-consent", "desc", "active")));
 
-        subscriptionService.deleteSubscription("org1", "sub1");
+        SubscriptionDTO deleted = subscriptionService.deleteSubscription("org1", "sub1");
+        assertNotNull(deleted);
+        assertEquals(deleted.getSubscriptionId(), "sub1");
+        assertEquals(deleted.getStatus(), SubscriptionStatus.DELETED);
         verify(subscriptionDAO).deleteSubscriptionAtomic("sub1", "org1", "ACTIVE");
     }
 

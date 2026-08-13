@@ -35,6 +35,8 @@ public class DBUtils {
 
     private static final Logger LOG = Logger.getLogger(DBUtils.class.getName());
     private static volatile DataSource dataSource;
+    private static volatile long lastJndiLookupFailedTime = 0L;
+    private static final long JNDI_LOOKUP_COOLDOWN_MS = 10000L;
 
     private DBUtils() {
     }
@@ -66,6 +68,10 @@ public class DBUtils {
 
     private static DataSource getDataSource() {
         if (dataSource == null) {
+            long now = System.currentTimeMillis();
+            if (now - lastJndiLookupFailedTime < JNDI_LOOKUP_COOLDOWN_MS) {
+                return null;
+            }
             synchronized (DBUtils.class) {
                 if (dataSource == null) {
                     try {
@@ -80,7 +86,11 @@ public class DBUtils {
                             }
                         }
                     } catch (Exception e) {
+                        lastJndiLookupFailedTime = System.currentTimeMillis();
                         LOG.log(Level.FINE, "JNDI lookup failed for [" + EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME + "], falling back to direct connection.", e);
+                    }
+                    if (dataSource == null) {
+                        lastJndiLookupFailedTime = System.currentTimeMillis();
                     }
                 }
             }

@@ -27,6 +27,7 @@
         <jaxrs:serviceBeans>
             <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.api.SubscriptionEndpoint"/>
             <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint"/>
+            <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.api.EventEndpoint"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <bean class="org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.EventNotificationExceptionMapper"/>

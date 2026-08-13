@@ -43,12 +43,17 @@ public class IdentityServerClient {
     /** Base path of the event notifications API. */
     public static final String EVENT_NOTIFICATION_API = "/api/dpdp/event-notifications";
 
-    private final PortalConfig config;
+    private final String identityServerInternalBaseUrl;
     private final String accessToken;
 
     public IdentityServerClient(PortalConfig config, String accessToken) {
 
-        this.config = config;
+        this(config.getIdentityServerInternalBaseUrl(), accessToken);
+    }
+
+    IdentityServerClient(String identityServerInternalBaseUrl, String accessToken) {
+
+        this.identityServerInternalBaseUrl = identityServerInternalBaseUrl;
         this.accessToken = accessToken;
     }
 
@@ -85,7 +90,7 @@ public class IdentityServerClient {
     private HttpRequest.Builder request(String path) {
 
         return HttpRequest.newBuilder()
-                .uri(URI.create(config.getIdentityServerInternalBaseUrl() + path))
+                .uri(URI.create(identityServerInternalBaseUrl + path))
                 .timeout(Duration.ofSeconds(30))
                 .header("Authorization", "Bearer " + accessToken)
                 .header("Accept", PortalConstants.CONTENT_TYPE_JSON);
@@ -128,12 +133,15 @@ public class IdentityServerClient {
         return send(request(path).DELETE().build());
     }
 
-    public Result forwardEventNotificationRequest(String method, String path, String jsonBody, String orgId)
-            throws IOException, InterruptedException {
+    public Result forwardEventNotificationRequest(String method, String path, String jsonBody, String orgId,
+            String groupId) throws IOException, InterruptedException {
 
         HttpRequest.Builder builder = request(path);
         if (orgId != null && !orgId.trim().isEmpty()) {
             builder.header("org-id", orgId.trim());
+        }
+        if (groupId != null && !groupId.trim().isEmpty()) {
+            builder.header("group-id", groupId.trim());
         }
 
         switch (method) {

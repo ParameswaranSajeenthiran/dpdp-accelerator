@@ -58,9 +58,11 @@ public class SubscriptionHandlerTest {
         dto.setStatus(SubscriptionStatus.ACTIVE);
         PaginatedResult<SubscriptionDTO> serviceResult = new PaginatedResult<>(Collections.singletonList(dto), 1);
 
-        when(subscriptionService.listSubscriptions(anyString(), any(), any(), any(), anyInt(), anyInt(), any())).thenReturn(serviceResult);
+        when(subscriptionService.listSubscriptions(anyString(), any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(serviceResult);
 
-        PaginatedResult<SubscriptionDTO> response = subscriptionHandler.listSubscriptions("org1", "active", null, null, 10, 0, "asc");
+        PaginatedResult<SubscriptionDTO> response = subscriptionHandler.listSubscriptions("org1", "active", null, null,
+                10, 0, "asc");
         assertNotNull(response);
         assertEquals(response.getTotal(), 1);
         assertEquals(response.getItems().size(), 1);
@@ -81,8 +83,15 @@ public class SubscriptionHandlerTest {
 
     @Test
     public void testDeleteSubscription() {
-        doNothing().when(subscriptionService).deleteSubscription("org1", "sub1");
-        subscriptionHandler.deleteSubscription("org1", "sub1");
+        SubscriptionDTO dto = new SubscriptionDTO();
+        dto.setSubscriptionId("sub1");
+        dto.setStatus(SubscriptionStatus.DELETED);
+        when(subscriptionService.deleteSubscription("org1", "sub1")).thenReturn(dto);
+
+        SubscriptionDTO response = subscriptionHandler.deleteSubscription("org1", "sub1");
+        assertNotNull(response);
+        assertEquals(response.getSubscriptionId(), "sub1");
+        assertEquals(response.getStatus(), SubscriptionStatus.DELETED);
         verify(subscriptionService).deleteSubscription("org1", "sub1");
     }
 }

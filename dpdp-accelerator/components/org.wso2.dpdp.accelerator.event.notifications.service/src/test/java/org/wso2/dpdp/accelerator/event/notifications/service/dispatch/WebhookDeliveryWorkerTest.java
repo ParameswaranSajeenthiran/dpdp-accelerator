@@ -87,6 +87,11 @@ public class WebhookDeliveryWorkerTest {
     }
 
     private WebhookDeliveryDispatchContext context(String deliveryId, int attemptCount) {
+        return context(deliveryId, attemptCount, "topic-1", "accounts");
+    }
+
+    private WebhookDeliveryDispatchContext context(String deliveryId, int attemptCount,
+            String topicId, String topicName) {
         WebhookDelivery delivery = new WebhookDelivery(
                 deliveryId,
                 "sub-1",
@@ -103,7 +108,9 @@ public class WebhookDeliveryWorkerTest {
                 "https://callback.example.com/hook",
                 "secret",
                 "{\"hello\":\"world\"}",
-                delivery.getUpdatedAt());
+                delivery.getUpdatedAt(),
+                topicId,
+                topicName);
     }
 
     @Test
@@ -141,9 +148,11 @@ public class WebhookDeliveryWorkerTest {
         // No pending rows; the second pass should pick up stuck in-flight rows.
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(Collections.emptyList());
-        when(deliveryDAO.getStuckInFlightWebhookDispatchContexts(anyInt()))
+        when(deliveryDAO.getStuckInFlightWebhookDispatchContexts(anyInt(), any()))
                 .thenReturn(java.util.Collections.singletonList(context("stuck-1", 3)));
-        when(deliveryDAO.claimWebhookDelivery(eq("stuck-1"))).thenReturn(true);
+        // Stuck rows are claimed via claimStuckWebhookDelivery (cutoff-guarded), not the
+        // regular claimWebhookDelivery, so the pending-claim mock is intentionally absent.
+        when(deliveryDAO.claimStuckWebhookDelivery(eq("stuck-1"), any())).thenReturn(true);
 
         WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
         int[] counts = worker.runTick();
@@ -157,7 +166,7 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", null, "secret", "{}", new Timestamp(0));
+                delivery, "org-1", null, "secret", "{}", new Timestamp(0), "topic-1", "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));
@@ -176,7 +185,8 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", "https://callback.example.com/hook", "secret", null, new Timestamp(0));
+                delivery, "org-1", "https://callback.example.com/hook", "secret", null,
+                new Timestamp(0), "topic-1", "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));
@@ -194,7 +204,7 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", null, "secret", "{}", new Timestamp(0));
+                delivery, "org-1", null, "secret", "{}", new Timestamp(0), "topic-1", "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));

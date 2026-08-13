@@ -18,8 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.TopicHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
@@ -41,27 +40,19 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class TopicEndpoint {
 
-    private final TopicService topicService;
+    private final TopicHandler topicHandler;
 
     public TopicEndpoint() {
-        TopicService svc = (TopicService) PrivilegedCarbonContext
-                .getThreadLocalCarbonContext()
-                .getOSGiService(TopicService.class, null);
-        if (svc == null) {
-            throw new IllegalStateException("TopicService OSGi service not available");
-        }
-        this.topicService = svc;
+        this.topicHandler = new TopicHandler();
     }
 
-    public TopicEndpoint(TopicService topicService) {
-        this.topicService = topicService;
+    public TopicEndpoint(TopicHandler topicHandler) {
+        this.topicHandler = topicHandler;
     }
 
     @POST
     public Response createTopic(@HeaderParam("org-id") String orgId, TopicDTO request) {
-        String name = request != null ? request.getName() : null;
-        String description = request != null ? request.getDescription() : null;
-        TopicDTO dto = topicService.createTopic(orgId, name, description);
+        TopicDTO dto = topicHandler.createTopic(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
@@ -73,7 +64,7 @@ public class TopicEndpoint {
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("sort") String sort) {
-        PaginatedResult<TopicDTO> result = topicService.listTopics(orgId, status, search, limit, offset, sort);
+        PaginatedResult<TopicDTO> result = topicHandler.listTopics(orgId, status, search, limit, offset, sort);
         return Response.ok(result).build();
     }
 
@@ -82,7 +73,7 @@ public class TopicEndpoint {
     public Response deleteTopic(
             @HeaderParam("org-id") String orgId,
             @PathParam("topicId") String topicId) {
-        TopicDTO dto = topicService.deleteTopic(orgId, topicId);
+        TopicDTO dto = topicHandler.deleteTopic(orgId, topicId);
         return Response.ok(dto).build();
     }
 }

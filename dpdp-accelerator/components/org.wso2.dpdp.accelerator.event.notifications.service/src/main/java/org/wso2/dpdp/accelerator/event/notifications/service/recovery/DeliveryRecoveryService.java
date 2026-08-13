@@ -31,6 +31,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.WebhookDel
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +58,7 @@ public class DeliveryRecoveryService {
     private SubscriptionService subscriptionService;
 
     private ScheduledExecutorService scheduler;
+    private ExecutorService workerPool;
 
     public DeliveryRecoveryService() {
     }
@@ -71,16 +73,22 @@ public class DeliveryRecoveryService {
     @Activate
     protected void activate() {
         int poolSize = EventNotificationConfigParser.getInstance().getThreadPoolSize();
-        this.scheduler = Executors.newScheduledThreadPool(Math.max(1, poolSize / 2), r -> {
-            Thread t = new Thread(r, "delivery-recovery-pool");
+        this.scheduler = Executors.newScheduledThreadPool(2, r -> {
+            Thread t = new Thread(r, "delivery-recovery-scheduler");
             t.setDaemon(true);
             return t;
         });
+        this.workerPool = Executors.newFixedThreadPool(Math.max(1, poolSize), r -> {
+            Thread t = new Thread(r, "webhook-delivery-worker");
+            t.setDaemon(true);
+            return t;
+        });
+
         this.scheduler.scheduleWithFixedDelay(new PendingDeliveryRecoveryTask(), 10, 30, TimeUnit.SECONDS);
 
         int deliveryPollSeconds = EventNotificationConfigParser.getInstance().getDeliveryWorkerPollSeconds();
         this.scheduler.scheduleWithFixedDelay(
-                new WebhookDeliveryWorker(deliveryDAO, this.scheduler),
+                new WebhookDeliveryWorker(deliveryDAO, this.workerPool),
                 10,
                 deliveryPollSeconds,
                 TimeUnit.SECONDS);
@@ -91,9 +99,24 @@ public class DeliveryRecoveryService {
 
     @Deactivate
     protected void deactivate() {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdownNow();
-            LOG.info("Delivery Recovery Service deactivated cleanly.");
+        shutdownGracefully("delivery-recovery-scheduler", scheduler);
+        shutdownGracefully("webhook-delivery-worker-pool", workerPool);
+        LOG.info("Delivery Recovery Service deactivated cleanly.");
+    }
+
+    private static void shutdownGracefully(String name, java.util.concurrent.ExecutorService pool) {
+        if (pool == null || pool.isShutdown()) {
+            return;
+        }
+        pool.shutdown();
+        try {
+            if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+                LOG.warning(name + " did not terminate within 5 s; forcing interrupt.");
+                pool.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            pool.shutdownNow();
         }
     }
 
@@ -108,7 +131,9 @@ public class DeliveryRecoveryService {
         }
 
         private void recoverPendingSubscriptions() {
-            Timestamp threshold = new Timestamp(System.currentTimeMillis() - 60000); // 60s threshold
+            Timestamp threshold = new Timestamp(System.currentTimeMillis()
+                    - EventNotificationConfigParser.getInstance().getPendingSubscriptionRecoveryThresholdSeconds()
+                    * 1000L);
             List<Subscription> pendingSubs = subscriptionDAO.getPendingSubscriptionsForRecovery(threshold, 20);
             for (Subscription sub : pendingSubs) {
                 if (sub.getCallbackUrl() != null && !sub.getCallbackUrl().trim().isEmpty()) {

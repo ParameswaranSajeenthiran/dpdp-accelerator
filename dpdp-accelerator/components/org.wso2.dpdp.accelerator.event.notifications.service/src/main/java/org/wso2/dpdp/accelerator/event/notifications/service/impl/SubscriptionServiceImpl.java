@@ -131,6 +131,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
+        if (groupId == null || groupId.trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG, 400);
+        }
         if (topicName == null || topicName.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -160,9 +165,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         validatePurposeFilterMode(filterType, purposes);
 
-        List<Subscription> existingSubs = subscriptionDAO.getSubscriptionsByOrgAndTopic(orgId.trim(),
+        List<Subscription> existingSubs = subscriptionDAO.getLiveSubscriptionsByOrgAndTopic(orgId.trim(),
                 topic.getTopicId());
-        String effectiveGroupId = (groupId != null) ? groupId.trim() : "";
+        String effectiveGroupId = groupId.trim();
         validateDuplicateAndConflict(existingSubs, effectiveGroupId, filterType, purposes, deliveryMode, callbackUrl);
 
         String initialStatus = (deliveryMode == DeliveryMode.WEBHOOK)
@@ -179,9 +184,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         try {
             subscriptionDAO.addSubscription(sub);
         } catch (EventNotificationInvalidStateException e) {
-            // The DAO detected a deregistered/inactive topic under the row lock — a concurrent
-            // TopicService.deleteTopic committed between our service-layer pre-check and the
-            // FOR UPDATE acquisition in the DAO. Map to 409 with the topic name for clarity.
+            // The DAO detected a deregistered/inactive topic under the row lock — a
+            // concurrent
+            // TopicService.deleteTopic committed between our service-layer pre-check and
+            // the
+            // FOR UPDATE acquisition in the DAO. Map to 409 with the topic name for
+            // clarity.
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
                     EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
@@ -245,7 +253,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
-    private void scheduleWebhookVerificationTask(String subscriptionId, String orgId, String callbackUrl, String topicName,
+    private void scheduleWebhookVerificationTask(String subscriptionId, String orgId, String callbackUrl,
+            String topicName,
             int attempt) {
         if (scheduler == null || scheduler.isShutdown()) {
             return;
@@ -255,7 +264,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             delaySeconds = EventNotificationConfigParser.getInstance().getBaseBackoffSeconds()
                     * (long) Math.pow(3, attempt - 1);
         }
-        scheduler.schedule(new WebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, attempt), delaySeconds,
+        scheduler.schedule(new WebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, attempt),
+                delaySeconds,
                 TimeUnit.SECONDS);
     }
 
@@ -266,7 +276,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         private final String topicName;
         private final int attempt;
 
-        WebhookVerificationTask(String subscriptionId, String orgId, String callbackUrl, String topicName, int attempt) {
+        WebhookVerificationTask(String subscriptionId, String orgId, String callbackUrl, String topicName,
+                int attempt) {
             this.subscriptionId = subscriptionId;
             this.orgId = orgId;
             this.callbackUrl = callbackUrl;
@@ -297,7 +308,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 } else {
                     LOG.log(Level.WARNING,
                             "Exhausted all retries for subscription [" + subscriptionId + "]. Marking as STALE.");
-                    subscriptionDAO.updateSubscriptionStatus(subscriptionId, orgId, SubscriptionStatus.PENDING.getValue(),
+                    subscriptionDAO.updateSubscriptionStatus(subscriptionId, orgId,
+                            SubscriptionStatus.PENDING.getValue(),
                             SubscriptionStatus.STALE.getValue());
                 }
             }
@@ -348,7 +360,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     .GET()
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            int maxBodyBytes = EventNotificationConfigParser.getInstance().getMaxVerificationResponseBodyBytes();
             if (response.statusCode() != 200) {
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
@@ -357,9 +370,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         422);
             }
 
-            String body = response.body() != null ? response.body().trim() : "";
-            // Spec-compliant verification: the response body must be the challenge value exactly
-            // (modulo surrounding whitespace). Using contains() would let a receiver pass the
+            byte[] bodyBytes = response.body() != null ? response.body() : new byte[0];
+            if (bodyBytes.length > maxBodyBytes) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
+                        EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
+                        "Verification response body exceeded " + maxBodyBytes + " bytes", 422);
+            }
+            String body = new String(bodyBytes, StandardCharsets.UTF_8).trim();
+            // Spec-compliant verification: the response body must be the challenge value
+            // exactly
+            // (modulo surrounding whitespace). Using contains() would let a receiver pass
+            // the
             // check by appending the challenge to arbitrary content.
             if (!challenge.equals(body)) {
                 throw new EventNotificationException(
@@ -429,7 +451,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void deleteSubscription(String orgId, String subscriptionIdStr) {
+    public SubscriptionDTO deleteSubscription(String orgId, String subscriptionIdStr) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -472,6 +494,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.FAILED_TO_DELETE_SUBSCRIPTION_ERROR_MSG, 500);
         }
+
+        String topicName = topicDAO.getTopicById(sub.getTopicId(), sub.getOrgId()).map(Topic::getName)
+                .orElse("unknown");
+        Subscription deletedSub = new Subscription(
+                sub.getSubscriptionId(),
+                sub.getOrgId(),
+                sub.getGroupId(),
+                sub.getTopicId(),
+                sub.getPurposeFilterMode(),
+                sub.getPurposes(),
+                sub.getDeliveryMode(),
+                sub.getCallbackUrl(),
+                sub.getSharedSecret(),
+                SubscriptionStatus.DELETED.getValue(),
+                sub.getCreatedAt(),
+                new java.sql.Timestamp(System.currentTimeMillis()));
+        return mapToDTO(deletedSub, topicName);
     }
 
     @Override
@@ -494,7 +533,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.CALLBACK_URL_REQUIRED_ERROR_MSG, 422);
         }
 
-        // Confirm the subscription exists for this org before scheduling any outbound traffic.
+        // Confirm the subscription exists for this org before scheduling any outbound
+        // traffic.
         Optional<Subscription> subOpt = subscriptionDAO.getSubscriptionById(subscriptionId.trim(), orgId.trim());
         if (subOpt.isEmpty() || SubscriptionStatus.DELETED.getValue().equalsIgnoreCase(subOpt.get().getStatus())) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
@@ -502,7 +542,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404);
         }
 
-        // Apply the same SSRF + scheme guards the public path uses. Without this, this entry point
+        // Apply the same SSRF + scheme guards the public path uses. Without this, this
+        // entry point
         // would let callers schedule arbitrary outbound webhooks against any URL.
         validateCallbackUrl(callbackUrl.trim());
 
@@ -702,7 +743,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
             dto.setHistory(attempts);
         } else {
-            Optional<PollDelivery> pollOpt = deliveryDAO.getPollDeliveryById(deliveryId.trim(), orgId);
+            Optional<PollDelivery> pollOpt = deliveryDAO.getPollDeliveryById(deliveryId.trim(), orgId.trim());
             List<SubscriptionDeliveryAttemptDTO> attempts = new ArrayList<>();
             String pollStatus = summary.getCurrentStatus() != null ? summary.getCurrentStatus()
                     : EventNotificationServiceConstants.STATUS_PENDING;
@@ -743,6 +784,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return new SubscriptionDTO(
                 sub.getSubscriptionId(),
                 sub.getOrgId(),
+                sub.getGroupId(),
                 topicName,
                 filter,
                 delivery,

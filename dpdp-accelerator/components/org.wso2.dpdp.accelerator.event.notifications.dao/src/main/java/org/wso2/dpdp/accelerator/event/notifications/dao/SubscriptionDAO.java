@@ -18,8 +18,13 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +45,34 @@ public interface SubscriptionDAO {
     PaginatedDAOResult<Subscription> listSubscriptions(String orgId, String status, String purposes, String search,
             int limit, int offset, String sort);
 
-    List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId);
+    List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
+
+    default List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getSubscriptionsByOrgAndTopic(conn, orgId, topicId);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId, topicId), e);
+        }
+    }
 
     List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId, String status);
+
+    /**
+     * Returns all subscriptions for a topic that are in a live state
+     * (active, pending, stale) — i.e. all except deleted. Used for
+     * duplicate-and-conflict checking on subscription creation.
+     */
+    List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
+
+    default List<Subscription> getLiveSubscriptionsByOrgAndTopic(String orgId, String topicId) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId, topicId), e);
+        }
+    }
 
     long countActiveSubscriptionsForTopic(String orgId, String topicId);
 

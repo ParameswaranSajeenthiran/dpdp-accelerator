@@ -18,10 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.SubscriptionHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
@@ -45,20 +42,14 @@ import javax.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class SubscriptionEndpoint {
 
-    private final SubscriptionService subscriptionService;
+    private final SubscriptionHandler subscriptionHandler;
 
     public SubscriptionEndpoint() {
-        SubscriptionService svc = (SubscriptionService) PrivilegedCarbonContext
-                .getThreadLocalCarbonContext()
-                .getOSGiService(SubscriptionService.class, null);
-        if (svc == null) {
-            throw new IllegalStateException("SubscriptionService OSGi service not available");
-        }
-        this.subscriptionService = svc;
+        this.subscriptionHandler = new SubscriptionHandler();
     }
 
-    public SubscriptionEndpoint(SubscriptionService subscriptionService) {
-        this.subscriptionService = subscriptionService;
+    public SubscriptionEndpoint(SubscriptionHandler subscriptionHandler) {
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @POST
@@ -66,13 +57,10 @@ public class SubscriptionEndpoint {
             @HeaderParam("org-id") String orgId,
             @HeaderParam("group-id") String headerGroupId,
             SubscriptionDTO request) {
-        String groupId = (request != null && request.getGroupId() != null && !request.getGroupId().trim().isEmpty())
-                ? request.getGroupId().trim() : headerGroupId;
-        String topicName = request != null ? request.getTopic() : null;
-        FilterDTO filter = (request != null) ? request.getFilter() : null;
-        DeliveryConfigDTO delivery = (request != null) ? request.getDelivery() : null;
-
-        SubscriptionDTO dto = subscriptionService.createSubscription(orgId, groupId, topicName, filter, delivery);
+        if (request != null && request.getGroupId() == null && headerGroupId != null) {
+            request.setGroupId(headerGroupId.trim());
+        }
+        SubscriptionDTO dto = subscriptionHandler.createSubscription(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
@@ -85,7 +73,7 @@ public class SubscriptionEndpoint {
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("sort") String sort) {
-        PaginatedResult<SubscriptionDTO> result = subscriptionService.listSubscriptions(
+        PaginatedResult<SubscriptionDTO> result = subscriptionHandler.listSubscriptions(
                 orgId, status, purposes, search, limit, offset, sort);
         return Response.ok(result).build();
     }
@@ -95,7 +83,7 @@ public class SubscriptionEndpoint {
     public Response getSubscription(
             @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionService.getSubscription(orgId, subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.getSubscription(orgId, subscriptionId);
         return Response.ok(dto).build();
     }
 
@@ -104,8 +92,8 @@ public class SubscriptionEndpoint {
     public Response deleteSubscription(
             @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        subscriptionService.deleteSubscription(orgId, subscriptionId);
-        return Response.noContent().build();
+        SubscriptionDTO dto = subscriptionHandler.deleteSubscription(orgId, subscriptionId);
+        return Response.ok(dto).build();
     }
 
     @POST
@@ -113,7 +101,7 @@ public class SubscriptionEndpoint {
     public Response retryVerification(
             @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionService.retryVerification(orgId, subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.retryVerification(orgId, subscriptionId);
         return Response.ok(dto).build();
     }
 
@@ -124,7 +112,7 @@ public class SubscriptionEndpoint {
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
-        PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionService.listSubscriptionEvents(
+        PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionHandler.listSubscriptionEvents(
                 orgId, subscriptionId, limit, offset);
         return Response.ok(result).build();
     }
@@ -135,7 +123,7 @@ public class SubscriptionEndpoint {
             @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId,
             @PathParam("deliveryId") String deliveryId) {
-        SubscriptionEventHistoryDTO dto = subscriptionService.getSubscriptionEventHistory(
+        SubscriptionEventHistoryDTO dto = subscriptionHandler.getSubscriptionEventHistory(
                 orgId, subscriptionId, deliveryId);
         return Response.ok(dto).build();
     }

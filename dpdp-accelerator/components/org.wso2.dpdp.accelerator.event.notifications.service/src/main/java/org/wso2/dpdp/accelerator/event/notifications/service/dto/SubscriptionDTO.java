@@ -26,6 +26,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionSt
 public class SubscriptionDTO {
 
     private String subscriptionId;
+    private String orgId;
     private String groupId;
     private String topic;
     private FilterDTO filter;
@@ -41,12 +42,19 @@ public class SubscriptionDTO {
 
     public SubscriptionDTO(String subscriptionId, String topic, FilterDTO filter, DeliveryConfigDTO delivery,
             SubscriptionStatus status, Long createdAt, Long updatedAt, Boolean alreadyExists, String message) {
-        this(subscriptionId, null, topic, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
+        this(subscriptionId, null, null, topic, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
     }
 
     public SubscriptionDTO(String subscriptionId, String groupId, String topic, FilterDTO filter, DeliveryConfigDTO delivery,
             SubscriptionStatus status, Long createdAt, Long updatedAt, Boolean alreadyExists, String message) {
+        this(subscriptionId, null, groupId, topic, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
+    }
+
+    public SubscriptionDTO(String subscriptionId, String orgId, String groupId, String topic, FilterDTO filter,
+            DeliveryConfigDTO delivery, SubscriptionStatus status, Long createdAt, Long updatedAt,
+            Boolean alreadyExists, String message) {
         this.subscriptionId = subscriptionId;
+        this.orgId = orgId;
         this.groupId = groupId;
         this.topic = topic;
         this.filter = filter;
@@ -64,6 +72,14 @@ public class SubscriptionDTO {
 
     public void setSubscriptionId(String subscriptionId) {
         this.subscriptionId = subscriptionId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public String getGroupId() {

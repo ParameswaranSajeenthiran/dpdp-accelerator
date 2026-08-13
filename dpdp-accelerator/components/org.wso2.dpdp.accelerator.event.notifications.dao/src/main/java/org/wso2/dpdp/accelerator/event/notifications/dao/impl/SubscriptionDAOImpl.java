@@ -73,9 +73,9 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
         try (Connection conn = DBUtils.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
             try {
+                conn.setAutoCommit(false);
+
                 EventNotificationCommonDBQueries queries = getQueries(conn);
                 try (PreparedStatement topicLockPs = conn
                         .prepareStatement(queries.getLockTopicForSubscriptionQuery())) {
@@ -321,18 +321,61 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     }
 
     @Override
-    public List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        return getSubscriptionsByOrgAndTopic(orgId, topicId, SubscriptionStatus.ACTIVE.getValue());
+    public List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId) {
+        if (conn == null) {
+            return SubscriptionDAO.super.getSubscriptionsByOrgAndTopic(orgId, topicId);
+        }
+        return getSubscriptionsByOrgAndTopic(conn, orgId, topicId, SubscriptionStatus.ACTIVE.getValue());
+    }
+
+    @Override
+    public List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId) {
+        List<Subscription> list = new ArrayList<>();
+        try (PreparedStatement ps = conn
+                .prepareStatement(getQueries(conn).getGetLiveSubscriptionsByOrgAndTopicQuery())) {
+            ps.setString(1, orgId);
+            ps.setString(2, topicId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapSubscription(rs));
+                }
+            }
+            if (!list.isEmpty()) {
+                List<String> subIds = new ArrayList<>();
+                for (Subscription s : list) {
+                    subIds.add(s.getSubscriptionId());
+                }
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
+                for (Subscription s : list) {
+                    s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
+                            topicId),
+                    e);
+        }
     }
 
     @Override
     public List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId, String status) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getSubscriptionsByOrgAndTopic(conn, orgId, topicId, status);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
+                            topicId),
+                    e);
+        }
+    }
+
+    public List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId, String status) {
         List<Subscription> list = new ArrayList<>();
         String targetStatus = (status != null && !status.trim().isEmpty()) ? status.trim()
                 : SubscriptionStatus.ACTIVE.getValue();
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn
-                        .prepareStatement(getQueries(conn).getGetSubscriptionsByOrgAndTopicQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionsByOrgAndTopicQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, topicId);
             ps.setString(3, targetStatus);
@@ -347,7 +390,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 for (Subscription s : list) {
                     subIds.add(s.getSubscriptionId());
                 }
-                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(subIds);
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
                 for (Subscription s : list) {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
@@ -405,6 +448,15 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public Map<String, List<String>> getPurposesBySubscriptionIds(List<String> subscriptionIds) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getPurposesBySubscriptionIds(conn, subscriptionIds);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_BATCH_SUBSCRIPTION_IDS, e);
+        }
+    }
+
+    public Map<String, List<String>> getPurposesBySubscriptionIds(Connection conn, List<String> subscriptionIds) {
         if (subscriptionIds == null || subscriptionIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -412,7 +464,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         Map<String, List<String>> map = new HashMap<>();
         String placeholders = String.join(",", Collections.nCopies(subscriptionIds.size(), "?"));
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try {
             String sql = String.format(getQueries(conn).getGetSubscriptionPurposesByIdsTemplate(), placeholders);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (int i = 0; i < subscriptionIds.size(); i++) {

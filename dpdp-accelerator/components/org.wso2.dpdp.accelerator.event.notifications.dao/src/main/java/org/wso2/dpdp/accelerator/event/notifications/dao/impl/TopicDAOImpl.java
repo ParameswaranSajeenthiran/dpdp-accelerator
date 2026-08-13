@@ -21,8 +21,10 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
@@ -37,6 +39,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component(service = TopicDAO.class, immediate = true)
@@ -46,31 +49,63 @@ public class TopicDAOImpl implements TopicDAO {
         return EventNotificationQueryFactory.getQueryProvider(conn);
     }
 
-    private EventNotificationCommonDBQueries getQueries() {
-        return EventNotificationQueryFactory.getQueryProvider();
-    }
-
     private static String escapeLikePattern(String text) {
         return SubscriptionQueryBuilder.escapeLikePattern(text);
     }
 
     @Override
     public boolean addTopic(Topic topic) {
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddTopicQuery())) {
-            ps.setString(1, topic.getTopicId());
-            ps.setString(2, topic.getOrgId());
-            ps.setString(3, topic.getName());
-            ps.setString(4, topic.getDescription());
-            ps.setString(5, topic.getStatus());
-            ps.setString(6, topic.getInitiatedBy() != null ? topic.getInitiatedBy() : Initiator.USER.getValue());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
-                throw new EventNotificationDuplicateResourceException("Topic already exists: " + (topic != null ? topic.getName() : "null"), e);
+        Objects.requireNonNull(topic, EventNotificationCommonConstants.ERROR_TOPIC_NULL);
+        try (Connection conn = DBUtils.getConnection()) {
+            boolean originalAutoCommit = conn.getAutoCommit();
+            try {
+                conn.setAutoCommit(false);
+                try (PreparedStatement checkPs = conn
+                        .prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
+                    checkPs.setString(1, topic.getOrgId());
+                    checkPs.setString(2, topic.getName());
+                    try (ResultSet rs = checkPs.executeQuery()) {
+                        if (rs.next() && TopicStatus.ACTIVE.getValue().equalsIgnoreCase(rs.getString("STATUS"))) {
+                            throw new EventNotificationDuplicateResourceException(
+                                    String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
+                                            topic.getName()));
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddTopicQuery())) {
+                    ps.setString(1, topic.getTopicId());
+                    ps.setString(2, topic.getOrgId());
+                    ps.setString(3, topic.getName());
+                    ps.setString(4, topic.getDescription());
+                    ps.setString(5, topic.getStatus());
+                    ps.setString(6,
+                            topic.getInitiatedBy() != null ? topic.getInitiatedBy() : Initiator.USER.getValue());
+                    boolean created = ps.executeUpdate() > 0;
+                    conn.commit();
+                    return created;
+                }
+            } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
+                if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                    throw new EventNotificationDuplicateResourceException(
+                            String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
+                                    topic.getName()), e);
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(originalAutoCommit);
+                } catch (SQLException ignored) {
+                }
             }
+        } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, (topic != null ? topic.getName() : "null")), e);
+                    String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, topic.getName()), e);
         }
     }
 
@@ -94,8 +129,20 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        try (Connection conn = DBUtils.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
+        try (Connection conn = DBUtils.getConnection()) {
+            return getTopicByOrgAndName(conn, orgId, name);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name), e);
+        }
+    }
+
+    @Override
+    public Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name) {
+        if (conn == null) {
+            return getTopicByOrgAndName(orgId, name);
+        }
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, name);
             try (ResultSet rs = ps.executeQuery()) {
@@ -106,15 +153,17 @@ public class TopicDAOImpl implements TopicDAO {
             return Optional.empty();
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name), e);
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
+                    e);
         }
     }
 
     @Override
-    public boolean updateTopicStatus(String topicId, String orgId, String status) {
+    public boolean updateTopicStatus(String topicId, String orgId, TopicStatus status) {
+        Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
         try (Connection conn = DBUtils.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateTopicStatusQuery())) {
-            ps.setString(1, status);
+            ps.setString(1, status.getValue());
             ps.setString(2, topicId);
             ps.setString(3, orgId);
             return ps.executeUpdate() > 0;
@@ -128,9 +177,9 @@ public class TopicDAOImpl implements TopicDAO {
     public boolean deregisterTopicAtomic(String topicId, String orgId) {
         try (Connection conn = DBUtils.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-
             try {
+                conn.setAutoCommit(false);
+
                 EventNotificationCommonDBQueries queries = getQueries(conn);
 
                 // Lock the topic row so concurrent subscription creates serialize with us.
@@ -158,13 +207,13 @@ public class TopicDAOImpl implements TopicDAO {
                 }
 
                 if (activeCount > 0) {
-                    throw new EventNotificationDuplicateResourceException(
+                    throw new EventNotificationInvalidStateException(
                             EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS);
                 }
 
                 int updated;
                 try (PreparedStatement ps = conn.prepareStatement(queries.getUpdateTopicStatusQuery())) {
-                    ps.setString(1, "deregistered");
+                    ps.setString(1, TopicStatus.DEREGISTERED.getValue());
                     ps.setString(2, topicId);
                     ps.setString(3, orgId);
                     updated = ps.executeUpdate();
@@ -187,7 +236,7 @@ public class TopicDAOImpl implements TopicDAO {
             }
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_TOPIC_STATUS, topicId), e);
+                    String.format(EventNotificationCommonConstants.ERROR_DEREGISTERING_TOPIC, topicId), e);
         }
     }
 

@@ -30,6 +30,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
@@ -63,28 +64,16 @@ public class TopicServiceImpl implements TopicService {
 
         Optional<Topic> existing = topicDAO.getTopicByOrgAndName(orgId.trim(), name.trim());
         if (existing.isPresent()) {
-            Topic existingTopic = existing.get();
-            if (!TopicStatus.DEREGISTERED.getValue().equalsIgnoreCase(existingTopic.getStatus())) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
-                        EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
-                        EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
-                        409);
-            }
-            if (!topicDAO.updateTopicStatus(existingTopic.getTopicId(), orgId.trim(), TopicStatus.ACTIVE.getValue())) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
-                        EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
-                        EventNotificationServiceConstants.FAILED_TO_REACTIVATE_TOPIC_ERROR_MSG,
-                        500);
-            }
-            return new TopicDTO(existingTopic.getTopicId(), existingTopic.getName(), existingTopic.getDescription(),
-                    TopicStatus.ACTIVE.getValue(), existingTopic.getInitiatedBy());
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                    EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
+                    EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
+                    409);
         }
 
         String topicId = UUID.randomUUID().toString();
         Topic topic = new Topic(topicId, orgId.trim(), name.trim(), description != null ? description.trim() : null,
-                TopicStatus.ACTIVE.getValue());
+                TopicStatus.ACTIVE.getValue(), Initiator.USER.getValue());
         try {
             boolean created = topicDAO.addTopic(topic);
             if (!created) {
@@ -174,7 +163,7 @@ public class TopicServiceImpl implements TopicService {
         boolean updated;
         try {
             updated = topicDAO.deregisterTopicAtomic(topic.getTopicId(), orgId.trim());
-        } catch (EventNotificationDuplicateResourceException e) {
+        } catch (EventNotificationInvalidStateException e) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                     EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,

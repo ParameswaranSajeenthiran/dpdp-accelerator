@@ -59,4 +59,20 @@ public final class AuthUtil {
         }
         return part1 + part2;
     }
+
+    /**
+     * Returns the caller-supplied {@code group-id} header, or {@code null} when
+     * absent. Unlike {@code org-id}, group-id is not a security boundary: it
+     * identifies a logical grouping within the authenticated org and the API
+     * trusts whatever the SPA passes through.
+     */
+    public static String resolveGroupId(HttpServletRequest request) {
+
+        String header = request.getHeader("group-id");
+        if (header == null) {
+            return null;
+        }
+        String trimmed = header.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }

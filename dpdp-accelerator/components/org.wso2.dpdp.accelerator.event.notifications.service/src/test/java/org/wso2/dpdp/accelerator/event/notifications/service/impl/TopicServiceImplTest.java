@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Collections;
@@ -110,7 +111,7 @@ public class TopicServiceImplTest {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(topic));
         when(topicDAO.deregisterTopicAtomic("t1", "org1")).thenThrow(
-                new EventNotificationDuplicateResourceException(
+                new EventNotificationInvalidStateException(
                         org.wso2.dpdp.accelerator.event.notifications.common.constants
                                 .EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS));
 

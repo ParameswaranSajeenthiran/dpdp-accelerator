@@ -167,5 +167,5 @@ scopes = ["portal:events:write"]
 [event_notifications]
 thread_pool_size = 4
 base_backoff_seconds = 5
-max_retries = 3
-
+max_retries = 5
+# max_verification_response_body_bytes = 4096  # Default. Max bytes read from a subscriber's verification response.

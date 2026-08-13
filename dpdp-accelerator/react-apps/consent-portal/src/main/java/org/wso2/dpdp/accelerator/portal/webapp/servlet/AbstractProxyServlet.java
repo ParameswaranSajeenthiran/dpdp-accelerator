@@ -133,6 +133,9 @@ public abstract class AbstractProxyServlet extends HttpServlet {
                 break;
         }
         // Prefer the Identity Server's own code/message when it sent a JSON error.
+        // Propagate the upstream description too when present, so future BFF-
+        // relayed errors stay diagnosable; the SPA renders it as a tooltip.
+        String description = null;
         try {
             JsonNode body = HttpUtil.mapper().readTree(result.getBody());
             if (body.hasNonNull("code")) {
@@ -141,10 +144,13 @@ public abstract class AbstractProxyServlet extends HttpServlet {
             if (body.hasNonNull("message")) {
                 message = body.get("message").asText();
             }
+            if (body.hasNonNull("description")) {
+                description = body.get("description").asText();
+            }
         } catch (IOException ignored) {
             // Non-JSON upstream error; keep the generic envelope above.
         }
-        HttpUtil.sendError(response, result.getStatus(), code, message);
+        HttpUtil.sendError(response, result.getStatus(), code, message, description);
     }
 
     protected void sendNotFound(HttpServletResponse response, String path) throws IOException {

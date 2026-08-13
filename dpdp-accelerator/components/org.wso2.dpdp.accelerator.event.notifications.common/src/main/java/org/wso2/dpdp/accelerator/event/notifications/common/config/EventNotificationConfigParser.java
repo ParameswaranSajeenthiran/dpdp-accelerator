@@ -20,8 +20,8 @@ package org.wso2.dpdp.accelerator.event.notifications.common.config;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -38,7 +38,7 @@ public class EventNotificationConfigParser {
     private static final Logger LOG = Logger.getLogger(EventNotificationConfigParser.class.getName());
 
     private static volatile EventNotificationConfigParser instance;
-    private final Map<String, Object> configurationMap = new HashMap<>();
+    private final Map<String, Object> configurationMap = new ConcurrentHashMap<>();
 
     private EventNotificationConfigParser() {
         loadConfigurations();
@@ -90,6 +90,16 @@ public class EventNotificationConfigParser {
                 resolveIntConfig("EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS",
                         EventNotificationCommonConstants.CONFIG_STUCK_INFLIGHT_THRESHOLD_SECONDS,
                         EventNotificationCommonConstants.DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS));
+
+        configurationMap.put(EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
+                resolveIntConfig("EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES",
+                        EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
+                        EventNotificationCommonConstants.DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES));
+
+        configurationMap.put(EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
+                resolveIntConfig("EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS",
+                        EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
+                        EventNotificationCommonConstants.DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS));
     }
 
     private int resolveIntConfig(String envKey, String sysKey, int defaultValue) {
@@ -194,6 +204,10 @@ public class EventNotificationConfigParser {
         return EventNotificationCommonConstants.DEFAULT_MAX_RETRIES;
     }
 
+    public int getMaxAttempts() {
+        return getMaxRetries();
+    }
+
     public boolean isAllowHttpCallbackUrl() {
         Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_ALLOW_HTTP_CALLBACK_URL);
         if (val instanceof Boolean) {
@@ -248,5 +262,35 @@ public class EventNotificationConfigParser {
             }
         }
         return EventNotificationCommonConstants.DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS;
+    }
+
+    public int getMaxVerificationResponseBodyBytes() {
+        Object val = configurationMap.get(
+                EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
+        if (val instanceof Integer) {
+            return (Integer) val;
+        } else if (val instanceof String) {
+            try {
+                return Integer.parseInt(((String) val).trim());
+            } catch (NumberFormatException e) {
+                LOG.warning("Invalid max verification response body bytes in config map: '" + val + "'");
+            }
+        }
+        return EventNotificationCommonConstants.DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES;
+    }
+
+    public int getPendingSubscriptionRecoveryThresholdSeconds() {
+        Object val = configurationMap.get(
+                EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
+        if (val instanceof Integer) {
+            return (Integer) val;
+        } else if (val instanceof String) {
+            try {
+                return Integer.parseInt(((String) val).trim());
+            } catch (NumberFormatException e) {
+                LOG.warning("Invalid pending subscription recovery threshold in config map: '" + val + "'");
+            }
+        }
+        return EventNotificationCommonConstants.DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS;
     }
 }
