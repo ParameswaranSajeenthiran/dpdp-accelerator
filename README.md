@@ -16,9 +16,8 @@ mvn clean install
 This builds the consent portal (frontend + backend WAR) and packages
 `wso2-dpdp-is-accelerator-<version>.zip` under
 `dpdp-accelerator/accelerators/dpdp-is/target/` — ready to unzip inside
-`<IS_HOME>`. See
-[`dpdp-accelerator/accelerators/dpdp-is/README.md`](dpdp-accelerator/accelerators/dpdp-is/README.md)
-for installation.
+`<IS_HOME>`. See [`docs/setup-guide.md`](docs/setup-guide.md) for
+installation.
 
 ## Documentation
 
@@ -26,4 +25,3 @@ for installation.
   and starting the Identity Server.
 - [`docs/configuration-guide.md`](docs/configuration-guide.md) — registering
   the consent portal application on a running Identity Server.
-- [`dpdp-accelerator/accelerators/dpdp-is/README.md`](dpdp-accelerator/accelerators/dpdp-is/README.md) — full installation guide.
