@@ -22,7 +22,8 @@ for installation.
 
 ## Documentation
 
-- [`docs/setup-guide.md`](docs/setup-guide.md) — registering the consent
-  portal application on a running Identity Server.
+- [`docs/setup-guide.md`](docs/setup-guide.md) — installing the accelerator
+  and starting the Identity Server.
+- [`docs/configuration-guide.md`](docs/configuration-guide.md) — registering
+  the consent portal application on a running Identity Server.
 - [`dpdp-accelerator/accelerators/dpdp-is/README.md`](dpdp-accelerator/accelerators/dpdp-is/README.md) — full installation guide.
-- [`GAP-ANALYSIS.md`](GAP-ANALYSIS.md) — feature gaps vs. the portal this was migrated from.

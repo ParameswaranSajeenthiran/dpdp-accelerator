@@ -283,7 +283,8 @@ const commonEn = {
       propertyKeyLabel: 'Key',
       propertyValueLabel: 'Value',
       propertyKeyRequired: 'Add a key, or this value will not be saved.',
-      propertyDuplicateKey: 'This key is used more than once. Use a different key for each property.',
+      propertyDuplicateKey:
+        'This key is used more than once. Use a different key for each property.',
       addProperty: 'Add property',
       removeProperty: 'Remove property',
       submitting: 'Creating...',

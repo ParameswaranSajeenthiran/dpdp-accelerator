@@ -62,7 +62,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- The consent portal ships as a packed WAR, deployed by Carbon's hot-deployment. -->
+            <!-- The consent portal ships pre-exploded so Carbon does not have to unpack it during startup. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -75,8 +75,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="../../react-apps/consent-portal/target/consent-portal.war"
-                                      todir="${project.basedir}/carbon-home/repository/deployment/server/webapps/"/>
+                                <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>
                             </target>
                         </configuration>
                     </execution>
