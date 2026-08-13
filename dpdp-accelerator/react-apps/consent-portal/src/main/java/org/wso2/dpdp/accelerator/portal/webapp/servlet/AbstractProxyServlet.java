@@ -119,8 +119,9 @@ public abstract class AbstractProxyServlet extends HttpServlet {
             if (body.hasNonNull("message")) {
                 message = body.get("message").asText();
             }
-            if (body.hasNonNull("description")) {
-                message = body.get("description").asText();
+            JsonNode description = body.get("description");
+            if (description != null && description.isTextual() && !description.asText().isBlank()) {
+                message = description.asText();
             }
         } catch (IOException ignored) {
             // Non-JSON upstream error; keep the generic envelope above.

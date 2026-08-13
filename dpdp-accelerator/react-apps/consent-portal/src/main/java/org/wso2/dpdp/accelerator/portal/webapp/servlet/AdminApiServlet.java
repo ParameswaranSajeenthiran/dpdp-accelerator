@@ -52,8 +52,9 @@ public class AdminApiServlet extends AbstractProxyServlet {
 
     /**
      * All methods are routed here rather than through the {@code doXxx} hooks
-     * because {@code HttpServlet} has no PATCH or PUT hook, and purpose
-     * updates and promoting a purpose version to latest use them.
+     * because {@code HttpServlet} has no PATCH hook, and purpose updates use
+     * it; routing PUT the same way, alongside it, keeps the dispatch logic
+     * in one place instead of split across {@code service} and {@code doPut}.
      */
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {

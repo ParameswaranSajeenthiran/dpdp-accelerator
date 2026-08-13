@@ -53,6 +53,7 @@ import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { APIError } from '../../utils/apiClient'
 import { PORTAL_SCOPES } from '../../utils/portalScopes'
 import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from './components/DetailGrid'
@@ -133,14 +134,26 @@ function PurposeDetailsPage(): React.JSX.Element {
   }
   const existingVersions = versions.map((version) => version.version)
 
-  const deleteErrorMessage = deletePurposeMutation.error
-    ? deletePurposeMutation.error.message || t('catalog.purposeDelete.deleteFailed')
-    : undefined
+  // A 409 here has one well-known cause -- the purpose is still referenced by
+  // a consent -- so it gets a precise, actionable message regardless of the
+  // upstream's own wording; anything else falls back to a plain apology
+  // rather than surfacing raw server text.
+  let deleteErrorMessage: string | undefined
+  if (deletePurposeMutation.error) {
+    deleteErrorMessage =
+      deletePurposeMutation.error instanceof APIError && deletePurposeMutation.error.status === 409
+        ? t('catalog.purposeDelete.conflict')
+        : t('catalog.purposeDelete.deleteFailed')
+  }
+  // Duplicate version names are rejected before submit (see
+  // PurposeVersionFormDialog), so any server error here is unexpected.
   const createVersionErrorMessage = createVersionMutation.error
-    ? createVersionMutation.error.message || t('catalog.purposeVersionForm.createFailed')
+    ? t('catalog.purposeVersionForm.createFailed')
     : undefined
+  // Deleting the latest version is disabled in the table below, so any
+  // server error here is unexpected.
   const deleteVersionErrorMessage = deleteVersionMutation.error
-    ? deleteVersionMutation.error.message || t('catalog.purposeVersionDelete.deleteFailed')
+    ? t('catalog.purposeVersionDelete.deleteFailed')
     : undefined
 
   return (
@@ -380,6 +393,11 @@ function PurposeDetailsPage(): React.JSX.Element {
               <Alert severity="error">{t('catalog.messages.versionsLoadFailed')}</Alert>
             </CardContent>
           ) : null}
+          {setLatestMutation.isError ? (
+            <CardContent>
+              <Alert severity="error">{t('catalog.messages.setLatestFailed')}</Alert>
+            </CardContent>
+          ) : null}
           {!versionsQuery.isLoading && !versionsQuery.isError ? (
             <TableContainer>
               <Table size="small">
@@ -429,10 +447,7 @@ function PurposeDetailsPage(): React.JSX.Element {
                                 <Tooltip title={t('catalog.actions.setLatest')}>
                                   <IconButton
                                     size="small"
-                                    disabled={
-                                      setLatestMutation.isPending &&
-                                      setLatestMutation.variables?.versionId === version.id
-                                    }
+                                    disabled={setLatestMutation.isPending}
                                     aria-label={t('catalog.actions.setLatest')}
                                     onClick={() =>
                                       setLatestMutation.mutate({

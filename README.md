@@ -9,7 +9,7 @@ on the `PATH`.
 Run from this directory (the repository root) — **not** from `dpdp-accelerator/`,
 which only builds the consent portal on its own and skips the accelerator zip:
 
-```
+```sh
 mvn clean install
 ```
 
