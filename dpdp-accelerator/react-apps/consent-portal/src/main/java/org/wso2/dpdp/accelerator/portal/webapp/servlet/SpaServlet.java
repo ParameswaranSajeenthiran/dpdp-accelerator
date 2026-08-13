@@ -41,9 +41,12 @@ import javax.servlet.http.HttpServletResponse;
  * never issues that redirect. The bundled webapps that work (console,
  * myaccount) declare a root servlet for the same reason.
  *
- * Real files are handed back to the container's default servlet; anything else
- * is a client-side route and receives index.html with a 200, so deep links
- * work without dressing an error status up as a page.
+ * Real files are handed back to the container's default servlet; an
+ * extensionless path is assumed to be a client-side route and receives
+ * index.html with a 200, so deep links work without dressing an error status
+ * up as a page. A missing path that looks like a static asset (it has a file
+ * extension, e.g. a stale hashed bundle or a typoed icon request) gets a real
+ * 404 instead, rather than silently serving the SPA shell for it.
  */
 @WebServlet(urlPatterns = "/")
 public class SpaServlet extends HttpServlet {
@@ -62,6 +65,13 @@ public class SpaServlet extends HttpServlet {
         RequestDispatcher container = getServletContext().getNamedDispatcher(DEFAULT_SERVLET);
         if (staticFile && container != null) {
             container.forward(request, response);
+            return;
+        }
+
+        if (looksLikeStaticAsset(path)) {
+            // The path is not echoed into the response: SpotBugs (rightly) flags handing
+            // request-controlled text to sendError's message as a reflected-XSS pattern.
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
@@ -106,5 +116,19 @@ public class SpaServlet extends HttpServlet {
         } catch (MalformedURLException e) {
             return false;
         }
+    }
+
+    /**
+     * A client-side route never contains a dot in its last segment (routes
+     * are plain ids/paths), so a dot there means the request was for a file
+     * that turned out not to exist, not a route the SPA router should handle.
+     */
+    private static boolean looksLikeStaticAsset(String path) {
+
+        if (path == null || path.isEmpty() || "/".equals(path)) {
+            return false;
+        }
+        String lastSegment = path.substring(path.lastIndexOf('/') + 1);
+        return lastSegment.contains(".");
     }
 }

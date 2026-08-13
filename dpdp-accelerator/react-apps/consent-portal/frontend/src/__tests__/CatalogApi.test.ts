@@ -18,6 +18,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as catalogApi from '../features/catalog/api/catalogApi'
+import { getNextCursor, getPreviousCursor } from '../utils/cursorPagination'
 
 const fetchMock = vi.fn()
 
@@ -62,6 +63,46 @@ describe('catalog API', () => {
     expect(Object.fromEntries(requestedUrl().searchParams)).toEqual({
       limit: '10',
       after: 'Mg==',
+    })
+  })
+
+  it('reads next and previous cursors out of an Elements response', async () => {
+    mockJSONResponse({
+      totalResults: 2,
+      links: [
+        {
+          rel: 'next',
+          href: 'https://localhost:9443/api/identity/consent-mgt/v2.0/elements?limit=1&after=MQ==',
+        },
+        {
+          rel: 'previous',
+          href: 'https://localhost:9443/api/identity/consent-mgt/v2.0/elements?limit=1&before=MA==',
+        },
+      ],
+      Elements: [],
+    })
+
+    const page = await catalogApi.fetchElements({ limit: 1 })
+
+    expect(getNextCursor(page.links)).toBe('MQ==')
+    expect(getPreviousCursor(page.links)).toBe('MA==')
+  })
+
+  it('quotes and escapes a name search into the filter grammar', () => {
+    expect(catalogApi.buildElementNameFilter('email')).toBe('name co "email"')
+    expect(catalogApi.buildElementNameFilter('  email address  ')).toBe('name co "email address"')
+    expect(catalogApi.buildElementNameFilter('say "hi"')).toBe('name co "say \\"hi\\""')
+    expect(catalogApi.buildElementNameFilter('   ')).toBeUndefined()
+  })
+
+  it('forwards the name filter as a query parameter when searching elements', async () => {
+    mockJSONResponse({ totalResults: 0, links: [], Elements: [] })
+
+    await catalogApi.fetchElements({ limit: 10, filter: 'name co "email"' })
+
+    expect(Object.fromEntries(requestedUrl().searchParams)).toEqual({
+      limit: '10',
+      filter: 'name co "email"',
     })
   })
 
@@ -115,13 +156,155 @@ describe('catalog API', () => {
     expect(versions.Versions).toHaveLength(1)
   })
 
-  it('exposes no element or purpose write operations', () => {
+  it('combines name and type into the purpose filter grammar', () => {
+    expect(catalogApi.buildPurposeFilter('ui', '')).toBe('name co "ui"')
+    expect(catalogApi.buildPurposeFilter('', 'Marketing')).toBe('type eq "Marketing"')
+    expect(catalogApi.buildPurposeFilter('ui', 'Marketing')).toBe(
+      'name co "ui" and type eq "Marketing"',
+    )
+    expect(catalogApi.buildPurposeFilter('', '')).toBeUndefined()
+  })
+
+  it('forwards the combined filter when searching purposes', async () => {
+    mockJSONResponse({ totalResults: 0, links: [], Purposes: [] })
+
+    await catalogApi.fetchPurposes({ limit: 10, filter: 'name co "ui" and type eq "Marketing"' })
+
+    expect(Object.fromEntries(requestedUrl().searchParams)).toEqual({
+      limit: '10',
+      filter: 'name co "ui" and type eq "Marketing"',
+    })
+  })
+
+  it('creates a purpose with elements and properties', async () => {
+    mockJSONResponse({
+      id: 'bfc68e5e',
+      name: 'ui-verify-purpose',
+      type: 'Marketing',
+      latestVersion: { id: 'e8d303e4', version: 'v1' },
+      elements: [],
+    })
+
+    await catalogApi.createPurpose({
+      name: 'ui-verify-purpose',
+      type: 'Marketing',
+      version: 'v1',
+      elements: [{ id: 'e12b', mandatory: true }],
+      properties: { lawfulBasis: 'consent' },
+    })
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-purposes')
+    expect(requestInit).toMatchObject({ method: 'POST' })
+    expect(JSON.parse(String(requestInit.body))).toEqual({
+      name: 'ui-verify-purpose',
+      type: 'Marketing',
+      version: 'v1',
+      elements: [{ id: 'e12b', mandatory: true }],
+      properties: { lawfulBasis: 'consent' },
+    })
+  })
+
+  it('deletes a purpose by encoded id and expects no content', async () => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+
+    await catalogApi.deletePurpose('purpose/1')
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-purposes/purpose%2F1')
+    expect(requestInit).toMatchObject({ method: 'DELETE' })
+  })
+
+  it('creates a purpose version, not inheriting anything by default', async () => {
+    mockJSONResponse({ id: '3efd4b26', version: 'v2', elements: [] })
+
+    await catalogApi.createPurposeVersion('bfc68e5e', { version: 'v2', setAsLatest: true })
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-purposes/bfc68e5e/versions')
+    expect(requestInit).toMatchObject({ method: 'POST' })
+    expect(JSON.parse(String(requestInit.body))).toEqual({ version: 'v2', setAsLatest: true })
+  })
+
+  it('sets a version as latest via PUT with the version id in the body', async () => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+
+    await catalogApi.setLatestPurposeVersion('bfc68e5e', 'e8d303e4')
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-purposes/bfc68e5e/versions/latest')
+    expect(requestInit).toMatchObject({ method: 'PUT' })
+    expect(JSON.parse(String(requestInit.body))).toEqual({ id: 'e8d303e4' })
+  })
+
+  it('deletes a purpose version by encoded ids and expects no content', async () => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+
+    await catalogApi.deletePurposeVersion('purpose/1', 'version/2')
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-purposes/purpose%2F1/versions/version%2F2')
+    expect(requestInit).toMatchObject({ method: 'DELETE' })
+  })
+
+  it('creates an element with the given fields', async () => {
+    mockJSONResponse({
+      id: 'e12b',
+      name: 'gap-check-el',
+      displayName: 'Gap Check',
+      description: 'probe',
+      properties: { pii: 'true' },
+    })
+
+    const created = await catalogApi.createElement({
+      name: 'gap-check-el',
+      displayName: 'Gap Check',
+      description: 'probe',
+      properties: { pii: 'true' },
+    })
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-elements')
+    expect(requestInit).toMatchObject({ method: 'POST' })
+    expect(JSON.parse(String(requestInit.body))).toEqual({
+      name: 'gap-check-el',
+      displayName: 'Gap Check',
+      description: 'probe',
+      properties: { pii: 'true' },
+    })
+    expect(created.id).toBe('e12b')
+  })
+
+  it('deletes an element by encoded id and expects no content', async () => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+
+    await catalogApi.deleteElement('element/1')
+
+    const [, requestInit] = fetchMock.mock.calls[0] ?? []
+    expect(requestedUrl().pathname).toBe('/api/consent-elements/element%2F1')
+    expect(requestInit).toMatchObject({ method: 'DELETE' })
+  })
+
+  it('exposes exactly the element and purpose operations the catalog UI uses', () => {
     expect(Object.keys(catalogApi).sort()).toEqual([
+      'buildElementNameFilter',
+      'buildPurposeFilter',
+      'createElement',
+      'createPurpose',
+      'createPurposeVersion',
+      'deleteElement',
+      'deletePurpose',
+      'deletePurposeVersion',
       'fetchElement',
       'fetchElements',
       'fetchPurpose',
       'fetchPurposeVersions',
       'fetchPurposes',
+      'setLatestPurposeVersion',
     ])
   })
 })

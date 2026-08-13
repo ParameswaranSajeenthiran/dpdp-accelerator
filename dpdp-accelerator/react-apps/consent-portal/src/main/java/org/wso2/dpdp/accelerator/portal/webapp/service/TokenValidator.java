@@ -46,11 +46,13 @@ public final class TokenValidator {
     private static volatile TokenValidator instance;
 
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
+    private final String orgIdClaim;
 
     private TokenValidator(PortalConfig config) throws MalformedURLException {
 
         URL jwksUrl = new URL(config.getIdentityServerInternalBaseUrl() + "/oauth2/jwks");
         JWKSource<SecurityContext> keySource = new RemoteJWKSet<>(jwksUrl);
+        orgIdClaim = config.getOrgIdClaim();
         jwtProcessor = new DefaultJWTProcessor<>();
         // The Identity Server issues RFC 9068 access tokens typed "at+jwt"; the
         // Nimbus default accepts only "JWT" or an absent type.
@@ -92,7 +94,7 @@ public final class TokenValidator {
             throw new TokenValidationException("Access token has no subject");
         }
 
-        String orgId = stringClaim(claims, "org_id");
+        String orgId = stringClaim(claims, orgIdClaim);
         String scope = stringClaim(claims, "scope");
         List<String> scopes = scope == null ? List.of() : Arrays.asList(scope.split("\\s+"));
         return new AuthenticatedUser(subject, orgId, scopes);
