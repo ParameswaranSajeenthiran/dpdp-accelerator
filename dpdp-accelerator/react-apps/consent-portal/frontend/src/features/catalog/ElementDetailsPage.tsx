@@ -25,21 +25,43 @@ import {
   Divider,
   Skeleton,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
 } from '@wso2/oxygen-ui'
-import {
-  AlignLeft,
-  Building2,
-  Fingerprint,
-  Tag,
-  Type as TypeIcon,
-} from '@wso2/oxygen-ui-icons-react'
+import { AlignLeft, Fingerprint, Tag, Trash2, Type as TypeIcon } from '@wso2/oxygen-ui-icons-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { APIError } from '../../utils/apiClient'
+import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from './components/DetailGrid'
-import { useElementQuery } from './hooks/useCatalogQueries'
+import ElementDeleteDialog from './components/ElementDeleteDialog'
+import { useDeleteElementMutation, useElementQuery } from './hooks/useCatalogQueries'
+
+/**
+ * Translates the delete failure into a message a user can act on. A 409 here
+ * has one well-known cause -- the element is still referenced by a purpose --
+ * so it gets a precise message regardless of the upstream's own wording;
+ * anything else falls back to a plain apology rather than surfacing raw
+ * server text.
+ */
+function deleteErrorMessage(error: Error | null, t: (key: string) => string): string | undefined {
+  if (!error) {
+    return undefined
+  }
+  if (error instanceof APIError && error.status === 409) {
+    return t('catalog.elementDelete.conflict')
+  }
+  return t('catalog.elementDelete.deleteFailed')
+}
 
 function ElementDetailsPage(): React.JSX.Element {
   const { t } = useTranslation('common')
@@ -47,6 +69,11 @@ function ElementDetailsPage(): React.JSX.Element {
   const navigate = useNavigate()
   const detailQuery = useElementQuery(id)
   const detail = detailQuery.data
+  const { hasScope } = useAuthorization()
+  const canWrite = hasScope(PORTAL_SCOPES.ELEMENTS_WRITE)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const deleteMutation = useDeleteElementMutation()
+  const propertyEntries = Object.entries(detail?.properties ?? {})
 
   if (detailQuery.isLoading) {
     return (
@@ -78,11 +105,24 @@ function ElementDetailsPage(): React.JSX.Element {
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
-        <Stack spacing={1} minWidth={0}>
-          <HeaderBreadcrumbs currentLabel={detail.name} />
-          <Typography variant="h4" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>
-            {detail.displayName ?? detail.name}
-          </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+          <Stack spacing={1} minWidth={0}>
+            <HeaderBreadcrumbs currentLabel={detail.name} />
+            <Typography variant="h4" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>
+              {detail.displayName ?? detail.name}
+            </Typography>
+          </Stack>
+          {canWrite ? (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<Trash2 size={16} />}
+              sx={{ flexShrink: 0 }}
+              onClick={() => setDeleteOpen(true)}
+            >
+              {t('catalog.actions.delete')}
+            </Button>
+          ) : null}
         </Stack>
 
         <Card sx={{ boxShadow: 1 }}>
@@ -127,11 +167,6 @@ function ElementDetailsPage(): React.JSX.Element {
                   value: detail.displayName ?? '-',
                 },
                 {
-                  icon: <Building2 size={14} />,
-                  label: t('catalog.fields.tenantDomain'),
-                  value: detail.tenantDomain ?? '-',
-                },
-                {
                   icon: <AlignLeft size={14} />,
                   label: t('catalog.fields.description'),
                   value: detail.description ?? '-',
@@ -140,7 +175,67 @@ function ElementDetailsPage(): React.JSX.Element {
             />
           </CardContent>
         </Card>
+
+        <Card sx={{ boxShadow: 1 }}>
+          <CardHeader
+            title={
+              <Typography variant="h5" fontWeight={600}>
+                {t('catalog.fields.properties')}
+              </Typography>
+            }
+            sx={{ pb: 1 }}
+          />
+          <Divider />
+          {propertyEntries.length > 0 ? (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700, width: '35%' }}>
+                      {t('catalog.elementForm.propertyKeyLabel')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {t('catalog.elementForm.propertyValueLabel')}
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {propertyEntries.map(([key, value]) => (
+                    <TableRow key={key} hover>
+                      <TableCell>
+                        <Box component="code">{key}</Box>
+                      </TableCell>
+                      <TableCell sx={{ overflowWrap: 'anywhere' }}>{value}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <CardContent>
+              <Typography variant="body2" color="text.secondary">
+                {t('catalog.messages.noProperties')}
+              </Typography>
+            </CardContent>
+          )}
+        </Card>
       </Stack>
+
+      <ElementDeleteDialog
+        open={deleteOpen}
+        elementName={detail.displayName ?? detail.name}
+        loading={deleteMutation.isPending}
+        error={deleteErrorMessage(deleteMutation.error, t)}
+        onClose={() => {
+          setDeleteOpen(false)
+          deleteMutation.reset()
+        }}
+        onConfirm={() => {
+          deleteMutation.mutate(detail.id, {
+            onSuccess: () => navigate('/elements'),
+          })
+        }}
+      />
     </Box>
   )
 }

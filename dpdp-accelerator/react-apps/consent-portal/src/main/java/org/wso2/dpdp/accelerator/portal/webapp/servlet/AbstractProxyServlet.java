@@ -132,10 +132,10 @@ public abstract class AbstractProxyServlet extends HttpServlet {
                 message = "The consent service returned an error.";
                 break;
         }
-        // Prefer the Identity Server's own code/message when it sent a JSON error.
-        // Propagate the upstream description too when present, so future BFF-
-        // relayed errors stay diagnosable; the SPA renders it as a tooltip.
-        String description = null;
+        // Prefer the Identity Server's own code/message when it sent a JSON error. Identity
+        // Server error bodies follow {code, message, description}: message is a terse phrase
+        // (often just the HTTP reason, e.g. "Conflict"), description carries the actual detail
+        // -- prefer it when present so the SPA doesn't surface the terse phrase to the user.
         try {
             JsonNode body = HttpUtil.mapper().readTree(result.getBody());
             if (body.hasNonNull("code")) {
@@ -144,13 +144,14 @@ public abstract class AbstractProxyServlet extends HttpServlet {
             if (body.hasNonNull("message")) {
                 message = body.get("message").asText();
             }
-            if (body.hasNonNull("description")) {
-                description = body.get("description").asText();
+            JsonNode description = body.get("description");
+            if (description != null && description.isTextual() && !description.asText().isBlank()) {
+                message = description.asText();
             }
         } catch (IOException ignored) {
             // Non-JSON upstream error; keep the generic envelope above.
         }
-        HttpUtil.sendError(response, result.getStatus(), code, message, description);
+        HttpUtil.sendError(response, result.getStatus(), code, message);
     }
 
     protected void sendNotFound(HttpServletResponse response, String path) throws IOException {

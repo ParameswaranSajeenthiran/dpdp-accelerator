@@ -73,10 +73,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--
-              The webapp is shipped exploded so that a deployment can edit files
-              inside it (and so merge.sh can preserve them across an upgrade).
-            -->
+            <!-- The consent portal ships pre-exploded so Carbon does not have to unpack it during startup. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
