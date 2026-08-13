@@ -47,10 +47,11 @@ import ElementDeleteDialog from './components/ElementDeleteDialog'
 import { useDeleteElementMutation, useElementQuery } from './hooks/useCatalogQueries'
 
 /**
- * Translates the delete failure into a message a user can act on. A 409 has
- * one well-known cause here (see GAP-ANALYSIS.md A4) so it gets a precise
- * message regardless of the upstream's own wording; anything else falls back
- * to a plain apology rather than surfacing raw server text.
+ * Translates the delete failure into a message a user can act on. A 409 here
+ * has one well-known cause -- the element is still referenced by a purpose --
+ * so it gets a precise message regardless of the upstream's own wording;
+ * anything else falls back to a plain apology rather than surfacing raw
+ * server text.
  */
 function deleteErrorMessage(error: Error | null, t: (key: string) => string): string | undefined {
   if (!error) {

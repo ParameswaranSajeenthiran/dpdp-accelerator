@@ -71,8 +71,11 @@ function PurposeListPage(): React.JSX.Element {
   const [createOpen, setCreateOpen] = useState(false)
   const createMutation = useCreatePurposeMutation()
 
+  // Unlike elements, purpose names aren't unique -- there is no well-known
+  // cause for a create failure here, so any error gets the generic message
+  // rather than surfacing raw server text.
   const createErrorMessage = createMutation.error
-    ? createMutation.error.message || t('catalog.purposeForm.createFailed')
+    ? t('catalog.purposeForm.createFailed')
     : undefined
 
   // Paging must keep the active search; only a new search resets to page one.

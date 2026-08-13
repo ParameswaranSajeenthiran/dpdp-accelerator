@@ -9,20 +9,19 @@ on the `PATH`.
 Run from this directory (the repository root) — **not** from `dpdp-accelerator/`,
 which only builds the consent portal on its own and skips the accelerator zip:
 
-```
+```sh
 mvn clean install
 ```
 
 This builds the consent portal (frontend + backend WAR) and packages
 `wso2-dpdp-is-accelerator-<version>.zip` under
 `dpdp-accelerator/accelerators/dpdp-is/target/` — ready to unzip inside
-`<IS_HOME>`. See
-[`dpdp-accelerator/accelerators/dpdp-is/README.md`](dpdp-accelerator/accelerators/dpdp-is/README.md)
-for installation.
+`<IS_HOME>`. See [`docs/setup-guide.md`](docs/setup-guide.md) for
+installation.
 
 ## Documentation
 
-- [`docs/setup-guide.md`](docs/setup-guide.md) — registering the consent
-  portal application on a running Identity Server.
-- [`dpdp-accelerator/accelerators/dpdp-is/README.md`](dpdp-accelerator/accelerators/dpdp-is/README.md) — full installation guide.
-- [`GAP-ANALYSIS.md`](GAP-ANALYSIS.md) — feature gaps vs. the portal this was migrated from.
+- [`docs/setup-guide.md`](docs/setup-guide.md) — installing the accelerator
+  and starting the Identity Server.
+- [`docs/configuration-guide.md`](docs/configuration-guide.md) — registering
+  the consent portal application on a running Identity Server.

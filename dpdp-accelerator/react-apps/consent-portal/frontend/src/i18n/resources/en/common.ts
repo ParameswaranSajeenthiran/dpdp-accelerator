@@ -278,6 +278,7 @@ const commonEn = {
       noProperties: 'No custom properties.',
       noVersions: 'No versions are available.',
       versionsLoadFailed: 'Unable to load version history right now.',
+      setLatestFailed: 'Unable to set this version as the latest. Please try again.',
     },
     elementForm: {
       title: 'Add Element',
@@ -338,6 +339,8 @@ const commonEn = {
       note: 'This action is permanent and cannot be undone.',
       confirm: 'Delete Purpose',
       deleting: 'Deleting...',
+      conflict:
+        "This purpose can't be deleted because it's still referenced by one or more consents.",
       deleteFailed: 'Something went wrong and the purpose could not be deleted. Please try again.',
     },
     purposeVersionDelete: {

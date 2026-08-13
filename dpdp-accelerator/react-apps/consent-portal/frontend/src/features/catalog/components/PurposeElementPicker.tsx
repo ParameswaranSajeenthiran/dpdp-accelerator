@@ -51,7 +51,18 @@ function PurposeElementPicker({
   const { t } = useTranslation('common')
   const elementsQuery = useElementsQuery({ limit: ELEMENT_PICKER_PAGE_SIZE })
   const options = elementsQuery.data?.Elements ?? []
-  const selectedOptions = options.filter((option) => selected.some((item) => item.id === option.id))
+  // A selection seeded from an existing version may not be on this page of
+  // options (the query is still pending, or the catalog exceeds the page
+  // size), so fall back to the metadata already carried on `selected`
+  // rather than silently dropping it from the value and the next submit.
+  const selectedOptions = selected.map(
+    (item) =>
+      options.find((option) => option.id === item.id) ?? {
+        id: item.id,
+        name: item.name,
+        displayName: item.displayName,
+      },
+  )
 
   return (
     <Stack spacing={1.5}>
