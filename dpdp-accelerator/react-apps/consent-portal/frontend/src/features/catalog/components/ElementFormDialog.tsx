@@ -146,6 +146,8 @@ function ElementFormDialog({
   )
 }
 
+// React 19 no longer applies defaultProps on function components; this exists
+// only to satisfy the react/require-default-props lint rule.
 ElementFormDialog.defaultProps = {
   error: undefined,
 }
