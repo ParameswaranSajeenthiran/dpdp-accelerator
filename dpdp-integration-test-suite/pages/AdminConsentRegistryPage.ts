@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import { type Locator, type Page } from '@playwright/test'
+
+/** AdminConsentRegistryPage.tsx - the admin view of every subject's consents. */
+export class AdminConsentRegistryPage {
+  readonly table: Locator
+  readonly consentIdSearch: Locator
+  readonly advancedFiltersButton: Locator
+
+  constructor(private readonly page: Page) {
+    this.table = page.getByRole('table', { name: 'Consent registry table' })
+    this.consentIdSearch = page.getByPlaceholder('Search by consent ID')
+    this.advancedFiltersButton = page.getByRole('button', { name: 'Advanced filters' })
+  }
+
+  async goto(): Promise<void> {
+    // No leading slash - see the comment in ConsentRegistryPage.goto() for why.
+    await this.page.goto('administration/consents')
+  }
+
+  rowByConsentId(consentId: string): Locator {
+    // Same underlying ConsentRegistryTable component as the self-service registry - see
+    // ConsentRegistryPage.rowByConsentId for why this targets the data attribute.
+    return this.table.locator(`tr[data-consent-id="${consentId}"]`)
+  }
+
+  async openByConsentId(consentId: string): Promise<void> {
+    await this.rowByConsentId(consentId).click()
+  }
+
+  async revokeFromList(consentId: string): Promise<void> {
+    await this.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }).click()
+  }
+
+  async searchByConsentId(consentId: string): Promise<void> {
+    await this.consentIdSearch.fill(consentId)
+    await this.consentIdSearch.press('Enter')
+  }
+
+  async openAdvancedFilters(): Promise<void> {
+    await this.advancedFiltersButton.click()
+  }
+
+  async filterBySubjectAndService(subjectId: string, serviceId: string): Promise<void> {
+    await this.openAdvancedFilters()
+    await this.page.getByLabel('User').fill(subjectId)
+    await this.page.getByLabel('Service').fill(serviceId)
+    await this.page.getByRole('button', { name: 'Apply' }).click()
+  }
+
+  get stateFilter(): Locator {
+    // getByLabel('State') also matches an unrelated tooltip whose aria-label contains "state" as
+    // a substring ("Remove the Consent ID filter to use the state filter."), so this goes
+    // straight to the combobox by role instead.
+    return this.page.getByRole('combobox', { name: 'State' })
+  }
+
+  async filterByState(stateLabel: string): Promise<void> {
+    await this.stateFilter.click()
+    await this.page.getByRole('option', { name: stateLabel, exact: true }).click()
+  }
+
+  activeFilterChip(labelAndValue: string): Locator {
+    return this.page.getByText(labelAndValue, { exact: true })
+  }
+
+  async clearAllFilters(): Promise<void> {
+    await this.page.getByRole('button', { name: 'Clear all' }).click()
+  }
+
+  get emptyStateMessage(): Locator {
+    return this.page.getByText('No consents found for the selected filters.')
+  }
+}
