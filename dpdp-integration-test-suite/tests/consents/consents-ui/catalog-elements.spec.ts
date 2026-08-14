@@ -113,8 +113,8 @@ test.describe('Element catalog (UI)', () => {
       // One more than the smallest page size, so there's guaranteed to be a next page regardless
       // of how many elements earlier runs already left in this shared environment.
       const seedCount = 11
+      // Each creation is its own UI round-trip - sequential by design, not perf-sensitive.
       for (let i = 0; i < seedCount; i += 1) {
-        // eslint-disable-next-line no-await-in-loop -- each creation is its own UI round-trip
         await createElementViaUi(consentAdminPage, consentCleanupTracker)
       }
 

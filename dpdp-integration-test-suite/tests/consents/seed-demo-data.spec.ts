@@ -151,15 +151,14 @@ test.describe('Seed Consent environment', () => {
   }) => {
     test.setTimeout(300_000)
 
+    // Each creation is its own UI round-trip; sequential keeps this simple.
     const elements: NamedRecord[] = []
     for (const body of RICH_ELEMENTS) {
-      // eslint-disable-next-line no-await-in-loop -- each creation is its own UI round-trip; sequential keeps this simple
       elements.push(await getOrCreateElement(consentAdminPage, consentAdminConsentApi, body))
     }
 
     const purposes: NamedRecord[] = []
     for (const definition of RICH_PURPOSES) {
-      // eslint-disable-next-line no-await-in-loop -- see above
       const purpose = await getOrCreatePurposeWithElements(consentAdminPage, consentAdminConsentApi, definition)
       purposes.push(purpose)
       // Two elements per consent, cycling through the pool so different purposes reference
@@ -168,7 +167,6 @@ test.describe('Seed Consent environment', () => {
       const elementIds = [elements[index % elements.length], elements[(index + 1) % elements.length]].map(
         (element) => element.id,
       )
-      // eslint-disable-next-line no-await-in-loop -- see above
       await seedRichConsent(
         consentAdminConsentApi,
         env.dataPrincipal.username,
@@ -182,7 +180,7 @@ test.describe('Seed Consent environment', () => {
     expect(elements).toHaveLength(RICH_ELEMENTS.length)
     expect(purposes).toHaveLength(RICH_PURPOSES.length)
 
-    // eslint-disable-next-line no-console -- deliberately informative output for a maintenance script
+    // Deliberately informative output for a maintenance script.
     console.log(
       `Rich demo dataset ready: ${String(elements.length)} elements, ${String(purposes.length)} purposes, ` +
         `${String(RICH_PURPOSES.length)} consents for ${env.dataPrincipal.username}.`,

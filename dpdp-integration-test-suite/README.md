@@ -17,7 +17,7 @@ tests/
     └── consents-ui/   Browser journeys for Consents, Purposes and Elements. Purpose and Element
                         management has no create/edit UI in this accelerator today (the catalog
                         is read-only), so those and every Consent are seeded through the admin
-                        API - see tests/consents/README.md - and only the real UI's read/act
+                        API - see tests/consents/plan.md - and only the real UI's read/act
                         surface is driven and asserted on.
 utils/                 Env/config loading, auth-storage helpers, test data generators
 ```
@@ -25,17 +25,19 @@ utils/                 Env/config loading, auth-storage helpers, test data gener
 ## Prerequisites
 
 1. A running WSO2 Identity Server with the DPDP accelerator merged, configured, and the portal
-   app registered - see `accelerators/dpdp-is/README.md` in the parent repo for the
-   `merge.sh` → `configure.sh` → `register-portal-app.sh` flow. `curl -sk https://<host>:9443/oauth2/jwks`
+   app registered - see `docs/setup-guide.md` and `docs/configuration-guide.md` in the parent
+   repo for the `merge.sh` → `configure.sh` → start the server → manually register the OAuth
+   app and create the portal roles in the Console flow. `curl -sk https://<host>:9443/oauth2/jwks`
    and `curl -sk https://<host>:9443/consent-portal/` should both respond.
 2. A real IS user account to act as the Data Principal persona (no special role needed - plain
    `internal_login` is enough for the self-service consent registry and negative authorization
    checks).
-3. A real IS user account assigned the `dpdp-consent-admin` role (created by
-   `register-portal-app.sh` but not auto-assigned - assign it via the Console app). This one role
-   grants every `internal_consent_mgt_*` scope at once (view, create, update, delete across
-   consents, purposes and elements), so a single persona both drives the admin consent registry
-   UI and seeds Purposes/Elements/Consents via the API for `tests/consents/consents-ui`.
+3. A real IS user account assigned the `dpdp-consent-admin` role (created manually in the
+   Console per `docs/configuration-guide.md` step 4 - role membership is likewise manual, assign
+   it via the Console app). This one role grants every `internal_consent_mgt_*` scope at once
+   (view, create, update, delete across consents, purposes and elements), so a single persona
+   both drives the admin consent registry UI and seeds Purposes/Elements/Consents via the API
+   for `tests/consents/consents-ui`.
 4. Node.js 18+.
 
 ## Setup
@@ -82,6 +84,14 @@ and saves the resulting session (`.auth/*.json`, gitignored). Everything else - 
 client and the UI page objects - reuses those sessions; nothing else in the suite performs its
 own login.
 
+**Before it logs in, `global-setup.ts` also force-terminates every existing session for each
+configured account** (`DELETE /api/users/v1/me/sessions`), so a stale session from a previous run
+can't collide with this one. This is not scoped to Playwright - it will silently sign out a
+teammate's manual login in their own browser if they happen to be using the same shared test
+account at that moment. Treat these accounts (`TEST_DATA_PRINCIPAL_USERNAME`,
+`TEST_CONSENT_ADMIN_USERNAME`, ...) as dedicated to this test suite, not for casual manual testing
+while a run might be in progress.
+
 ## Why tests don't assume an empty environment
 
 This suite has no per-run database reset (there's no fake backend to reset - it's the real
@@ -100,4 +110,4 @@ to enable them; otherwise they report as skipped (not failed) with that reason.
 
 - `tests/consents/consents-ui/` covers only the UI layer, per this round's scope. There is no
   `consents-server-api`/`consents-bff-api` layer yet, and Purpose/Element authoring has no UI to
-  test until that's built - see `tests/consents/README.md`.
+  test until that's built - see `tests/consents/plan.md`.

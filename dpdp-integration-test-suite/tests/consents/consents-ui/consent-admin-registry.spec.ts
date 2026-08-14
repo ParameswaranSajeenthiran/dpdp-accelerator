@@ -50,7 +50,7 @@ test.describe('Admin consent registry (UI)', () => {
       await registryPage.goto()
       // The unfiltered list is sorted oldest-first with no way to jump pages, so a freshly
       // created row is found by its own id rather than by browsing - see
-      // tests/consents/README.md.
+      // tests/consents/plan.md.
       await registryPage.searchByConsentId(consentId)
       await expect(registryPage.rowByConsentId(consentId)).toContainText(env.dataPrincipal.username)
       await expect(registryPage.rowByConsentId(consentId)).toContainText(serviceId)

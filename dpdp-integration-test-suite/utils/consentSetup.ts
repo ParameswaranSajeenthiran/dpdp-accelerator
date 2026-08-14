@@ -42,7 +42,7 @@ function idFromDetailUrl(url: string, segment: 'elements' | 'purposes'): string 
 }
 
 /**
- * Only Consent creation has no create UI at all (see tests/consents/README.md), so it's the one
+ * Only Consent creation has no create UI at all (see tests/consents/plan.md), so it's the one
  * step here that goes through the admin API; the Element and Purpose it needs are created
  * through the real "Add Element" / "Add Purpose" admin UI forms, same as a real admin would use.
  *
@@ -97,7 +97,7 @@ export async function seedConsent(
     // underlying CM_RECEIPT.LANGUAGE DB column is NOT NULL with no server-side default (verified
     // live - IS returns a generic CM_00084 "Internal server error" wrapping an
     // H2 NULL-not-allowed constraint violation on that column). Tracked as a real product bug,
-    // not a test bug - see tests/consents/README.md.
+    // not a test bug - see tests/consents/plan.md.
     language: 'en',
     purposes: [{ id: purposeId, elements: [{ id: elementId }] }],
     ...(state === 'PENDING'

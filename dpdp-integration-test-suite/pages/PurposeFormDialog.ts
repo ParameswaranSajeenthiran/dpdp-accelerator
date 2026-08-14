@@ -68,7 +68,7 @@ export class PurposeFormDialog {
    * searching for specific just-created elements by name. The picker only fetches its first
    * 200 elements (oldest first, see PurposeElementPicker.tsx), so a freshly created one is not
    * guaranteed to be among them once the shared environment has accumulated more than that -
-   * the same class of gap as the catalog lists' own pagination (see tests/consents/README.md).
+   * the same class of gap as the catalog lists' own pagination (see tests/consents/plan.md).
    * Returns the selected elements' label text, in selection order, for the caller to assert
    * against. A single-element purpose is just `addElements([true])`.
    */
@@ -83,19 +83,17 @@ export class PurposeFormDialog {
       //   (`filterSelectedOptions` defaults to false, and PurposeElementPicker.tsx doesn't set
       //   it) - so picking by `.first()` repeatedly just re-toggles the same item. Picking by a
       //   fixed `.nth(index)` instead is what actually advances through distinct elements.
-      // eslint-disable-next-line no-await-in-loop -- each click must land before the next query
+      // Each click/selection must land before the next query - not run concurrently.
       await this.elementsPicker.click()
       const option = this.page.getByRole('option').nth(index)
-      // eslint-disable-next-line no-await-in-loop -- each selection must land before the next
       labels.push((await option.textContent())?.trim() ?? '')
-      // eslint-disable-next-line no-await-in-loop -- see above
       await option.click()
     }
     // The popup is already closed after the last selection (see above); nothing further to
     // dismiss before the mandatory checkboxes below the field become clickable.
     for (const [index, mandatory] of mandatoryFlags.entries()) {
       if (mandatory) {
-        // eslint-disable-next-line no-await-in-loop -- checkbox order mirrors selection order
+        // Checkbox order mirrors selection order.
         await this.root.getByRole('checkbox').nth(index).check()
       }
     }

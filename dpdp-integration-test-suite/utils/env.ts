@@ -71,11 +71,11 @@ export const env = {
     password: required('TEST_DATA_PRINCIPAL_PASSWORD'),
   } satisfies Persona,
 
-  // Must be a real user assigned the dpdp-consent-admin role (created by
-  // accelerators/dpdp-is/bin/register-portal-app.sh; role membership itself is not automated -
-  // assign it via the Console app after running that script). Grants every
-  // internal_consent_mgt_* scope, so this single persona both drives the admin consent registry
-  // UI and creates Purposes/Elements/Consents via the API as test setup for the UI layer.
+  // Must be a real user assigned the dpdp-consent-admin role (created manually in the Console
+  // per docs/configuration-guide.md step 4; role membership itself is not automated - assign it
+  // via the Console app after creating the role). Grants every internal_consent_mgt_* scope, so
+  // this single persona both drives the admin consent registry UI and creates
+  // Purposes/Elements/Consents via the API as test setup for the UI layer.
   consentAdmin: {
     username: required('TEST_CONSENT_ADMIN_USERNAME'),
     password: required('TEST_CONSENT_ADMIN_PASSWORD'),

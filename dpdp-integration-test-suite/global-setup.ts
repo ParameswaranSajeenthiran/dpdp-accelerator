@@ -19,7 +19,8 @@
 import { mkdirSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 import { LoginPage } from './pages/LoginPage'
-import { authStateFile, env, type Persona, type PersonaName } from './utils/env'
+import { authHeadersFromStorageState } from './utils/authStorage'
+import { authStateFile, consentPurposesApiUrl, env, type Persona, type PersonaName } from './utils/env'
 
 // Node's global fetch (unlike Playwright's own browser/request APIs) has no per-call option to
 // ignore an untrusted certificate - it only honors this process-wide env var. The shipped
@@ -100,6 +101,30 @@ async function loginAndSave(persona: Persona, personaName: PersonaName): Promise
   await browser.close()
 }
 
+/**
+ * A successful login only proves the consent-admin persona's credentials are valid, not that the
+ * account actually holds the `dpdp-consent-admin` role - that role assignment is a manual Console
+ * step (see docs/configuration-guide.md step 4) that's easy to forget for a freshly created test
+ * account. Without this check, a missing role surfaces as dozens of unrelated, confusing
+ * assertion failures scattered across the suite (every seeded Purpose/Element/Consent creation
+ * silently 401s/403s) instead of one clear error naming the actual problem, right at setup.
+ */
+async function verifyConsentAdminAuthorized(): Promise<void> {
+  const headers = authHeadersFromStorageState(authStateFile('consent-admin'))
+  const response = await fetch(consentPurposesApiUrl(''), {
+    headers: { ...headers },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      `TEST_CONSENT_ADMIN_USERNAME ("${env.consentAdmin.username}") logged in successfully but ` +
+        `is not authorized for the consent-management admin API (got ${String(response.status)} ` +
+        `from ${consentPurposesApiUrl('')}). Assign this account the dpdp-consent-admin role in ` +
+        `the Console - see docs/configuration-guide.md step 4.`,
+    )
+  }
+}
+
 export default async function globalSetup(): Promise<void> {
   mkdirSync(env.authStateDir, { recursive: true })
 
@@ -113,6 +138,7 @@ export default async function globalSetup(): Promise<void> {
 
   await terminateAllSessions(env.consentAdmin)
   await loginAndSave(env.consentAdmin, 'consent-admin')
+  await verifyConsentAdminAuthorized()
 
   const secondPrincipal = env.secondDataPrincipal()
   if (secondPrincipal) {
