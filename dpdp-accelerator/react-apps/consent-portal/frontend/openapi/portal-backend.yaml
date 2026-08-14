@@ -628,6 +628,8 @@ components:
             'portal:elements:write': Modify consent elements.
             'portal:purposes:read': Read consent purposes.
             'portal:purposes:write': Modify consent purposes.
+            'portal:event-topics:read': Read event topics.
+            'portal:event-topics:write': Modify event topics.
     AccessTokenPart2:
       type: apiKey
       in: cookie
@@ -657,6 +659,8 @@ components:
               - portal:consents:write:any
               - portal:elements:read
               - portal:elements:write
+              - portal:event-topics:read
+              - portal:event-topics:write
               - portal:purposes:read
               - portal:purposes:write
     LogoutResponse:

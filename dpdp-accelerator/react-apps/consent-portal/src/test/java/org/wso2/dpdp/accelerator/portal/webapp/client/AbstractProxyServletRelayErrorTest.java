@@ -73,8 +73,7 @@ public class AbstractProxyServletRelayErrorTest {
 
         JsonNode body = new ObjectMapper().readTree(bodyWriter.toString());
         assertEquals(body.get("code").asText(), "CS-4001");
-        assertEquals(body.get("message").asText(), "Malformed request");
-        assertEquals(body.get("description").asText(), "Group ID is required.");
+        assertEquals(body.get("message").asText(), "Group ID is required.");
     }
 
     @Test
@@ -103,8 +102,7 @@ public class AbstractProxyServletRelayErrorTest {
 
         JsonNode body = new ObjectMapper().readTree(bodyWriter.toString());
         assertEquals(body.get("code").asText(), "CS-4220");
-        assertEquals(body.get("message").asText(), "Webhook verification failed");
-        assertEquals(body.get("description").asText(), "Callback URL responded with HTTP 500");
+        assertEquals(body.get("message").asText(), "Callback URL responded with HTTP 500");
     }
 
     @Test

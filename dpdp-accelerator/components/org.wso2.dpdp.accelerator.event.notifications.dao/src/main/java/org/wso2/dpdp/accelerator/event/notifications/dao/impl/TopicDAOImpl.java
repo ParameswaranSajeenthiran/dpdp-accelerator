@@ -94,7 +94,8 @@ public class TopicDAOImpl implements TopicDAO {
                 if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
                     throw new EventNotificationDuplicateResourceException(
                             String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
-                                    topic.getName()), e);
+                                    topic.getName()),
+                            e);
                 }
                 throw e;
             } finally {
@@ -133,7 +134,8 @@ public class TopicDAOImpl implements TopicDAO {
             return getTopicByOrgAndName(conn, orgId, name);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name), e);
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
+                    e);
         }
     }
 
@@ -252,15 +254,16 @@ public class TopicDAOImpl implements TopicDAO {
         params.add(orgId);
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND STATUS = ?");
-            countSql.append(" AND STATUS = ?");
+            sql.append(" AND LOWER(STATUS) = LOWER(?)");
+            countSql.append(" AND LOWER(STATUS) = LOWER(?)");
             params.add(status.trim());
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
-            countSql.append(" AND (LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
+            sql.append(" AND (LOWER(TOPIC_ID) LIKE ? OR LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
+            countSql.append(" AND (LOWER(TOPIC_ID) LIKE ? OR LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
+            params.add(term);
             params.add(term);
             params.add(term);
         }

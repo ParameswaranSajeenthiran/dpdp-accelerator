@@ -23,6 +23,7 @@ const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; scope: PortalScope 
   { path: '/consents', scope: PORTAL_SCOPES.CONSENTS_READ_SELF },
   { path: '/purposes', scope: PORTAL_SCOPES.PURPOSES_READ },
   { path: '/elements', scope: PORTAL_SCOPES.ELEMENTS_READ },
+  { path: '/events/topics', scope: PORTAL_SCOPES.EVENT_TOPICS_READ },
   { path: '/administration/consents', scope: PORTAL_SCOPES.CONSENTS_READ_ANY },
 ]
 

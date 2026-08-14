@@ -82,6 +82,13 @@ public final class ScopeMapper {
                 || identityServerScopes.contains(IS_PURPOSE_DELETE)) {
             portalScopes.add(PORTAL_PURPOSES_WRITE);
         }
+        // Pass through any scope already expressed in the portal:* vocabulary
+        // (e.g. portal:event-topics:read, portal:event-subscriptions:write).
+        // These are issued directly by Identity Server and require no translation.
+        identityServerScopes.stream()
+                .filter(s -> s.startsWith("portal:"))
+                .filter(s -> !portalScopes.contains(s))
+                .forEach(portalScopes::add);
         return portalScopes;
     }
 }

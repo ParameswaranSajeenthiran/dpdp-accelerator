@@ -26,6 +26,7 @@ import ElementDetailsPage from './features/catalog/ElementDetailsPage'
 import ElementListPage from './features/catalog/ElementListPage'
 import PurposeDetailsPage from './features/catalog/PurposeDetailsPage'
 import PurposeListPage from './features/catalog/PurposeListPage'
+import TopicsPage from './features/events/TopicsPage'
 import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegistryPage'
 import ConsentDetailsPage from './features/consent-registry/ConsentDetailsPage'
 import ConsentRegistryPage from './features/consent-registry/ConsentRegistryPage'
@@ -181,6 +182,14 @@ function App(): React.JSX.Element {
             element={
               <AuthorizedRoute scope={PORTAL_SCOPES.ELEMENTS_READ}>
                 <ElementDetailsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/topics"
+            element={
+              <AuthorizedRoute scope={PORTAL_SCOPES.EVENT_TOPICS_READ}>
+                <TopicsPage />
               </AuthorizedRoute>
             }
           />

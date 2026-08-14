@@ -38,7 +38,8 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Shared plumbing for the servlets that proxy to the Identity Server consent
- * APIs: token resolution, upstream response relay and the {@code {code, message}}
+ * APIs: token resolution, upstream response relay and the
+ * {@code {code, message}}
  * error envelope.
  *
  * These servlets always write their own status and body rather than calling
@@ -82,7 +83,8 @@ public abstract class AbstractProxyServlet extends HttpServlet {
                     return user.getOrganizationId();
                 }
             } catch (Exception e) {
-                // If token resolution or validation fails, fall back to PortalConstants.DEFAULT_TENANT_DOMAIN
+                // If token resolution or validation fails, fall back to
+                // PortalConstants.DEFAULT_TENANT_DOMAIN
             }
         }
         return PortalConstants.DEFAULT_TENANT_DOMAIN;
@@ -132,10 +134,14 @@ public abstract class AbstractProxyServlet extends HttpServlet {
                 message = "The consent service returned an error.";
                 break;
         }
-        // Prefer the Identity Server's own code/message when it sent a JSON error. Identity
-        // Server error bodies follow {code, message, description}: message is a terse phrase
-        // (often just the HTTP reason, e.g. "Conflict"), description carries the actual detail
-        // -- prefer it when present so the SPA doesn't surface the terse phrase to the user.
+        // Prefer the Identity Server's own code/message when it sent a JSON error.
+        // Identity
+        // Server error bodies follow {code, message, description}: message is a terse
+        // phrase
+        // (often just the HTTP reason, e.g. "Conflict"), description carries the actual
+        // detail
+        // -- prefer it when present so the SPA doesn't surface the terse phrase to the
+        // user.
         try {
             JsonNode body = HttpUtil.mapper().readTree(result.getBody());
             if (body.hasNonNull("code")) {

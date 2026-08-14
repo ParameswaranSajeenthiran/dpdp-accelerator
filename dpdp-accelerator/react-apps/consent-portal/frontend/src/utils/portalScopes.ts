@@ -25,6 +25,14 @@ export const PORTAL_SCOPES = {
   ELEMENTS_WRITE: 'portal:elements:write',
   PURPOSES_READ: 'portal:purposes:read',
   PURPOSES_WRITE: 'portal:purposes:write',
+  EVENT_TOPICS_READ: 'portal:event-topics:read',
+  EVENT_TOPICS_WRITE: 'portal:event-topics:write',
+  EVENT_SUBSCRIPTIONS_READ: 'portal:event-subscriptions:read',
+  EVENT_SUBSCRIPTIONS_WRITE: 'portal:event-subscriptions:write',
+  EVENTS_READ: 'portal:events:read',
+  EVENTS_WRITE: 'portal:events:write',
+  EVENT_DELIVERIES_READ: 'portal:event-deliveries:read',
+  EVENT_DELIVERIES_WRITE: 'portal:event-deliveries:write',
 } as const
 
 export type PortalScope = (typeof PORTAL_SCOPES)[keyof typeof PORTAL_SCOPES]
