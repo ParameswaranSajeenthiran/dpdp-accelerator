@@ -148,7 +148,8 @@ public class TopicServiceImpl implements TopicService {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
-                    String.format(EventNotificationServiceConstants.SYSTEM_TOPIC_DELETE_FORBIDDEN_ERROR_MSG, topic.getName()),
+                    String.format(EventNotificationServiceConstants.SYSTEM_TOPIC_DELETE_FORBIDDEN_ERROR_MSG,
+                            topic.getName()),
                     409);
         }
 
@@ -156,7 +157,8 @@ public class TopicServiceImpl implements TopicService {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,
                     EventNotificationServiceConstants.ERROR_TITLE_TOPIC_NOT_FOUND,
-                    String.format(EventNotificationServiceConstants.TOPIC_ALREADY_DEREGISTERED_ERROR_MSG, topicIdStr.trim()),
+                    String.format(EventNotificationServiceConstants.TOPIC_ALREADY_DEREGISTERED_ERROR_MSG,
+                            topicIdStr.trim()),
                     404);
         }
 

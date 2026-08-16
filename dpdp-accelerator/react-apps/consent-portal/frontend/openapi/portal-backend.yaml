@@ -630,6 +630,12 @@ components:
             'portal:purposes:write': Modify consent purposes.
             'portal:event-topics:read': Read event topics.
             'portal:event-topics:write': Modify event topics.
+            'portal:event-subscriptions:read': Read event subscriptions.
+            'portal:event-subscriptions:write': Modify event subscriptions.
+            'portal:events:read': Read events.
+            'portal:events:write': Modify events.
+            'portal:event-deliveries:read': Read event deliveries.
+            'portal:event-deliveries:write': Modify event deliveries.
     AccessTokenPart2:
       type: apiKey
       in: cookie

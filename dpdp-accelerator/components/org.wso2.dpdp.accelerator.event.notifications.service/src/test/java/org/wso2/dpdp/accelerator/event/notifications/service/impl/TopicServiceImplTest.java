@@ -112,8 +112,7 @@ public class TopicServiceImplTest {
         when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(topic));
         when(topicDAO.deregisterTopicAtomic("t1", "org1")).thenThrow(
                 new EventNotificationInvalidStateException(
-                        org.wso2.dpdp.accelerator.event.notifications.common.constants
-                                .EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS));
+                        org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS));
 
         topicService.deleteTopic("org1", "t1");
     }

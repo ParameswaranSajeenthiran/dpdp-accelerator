@@ -56,7 +56,8 @@ public class TopicConcurrencyAndHistoryTest {
         String orgId = "org-1";
         String topicName = "consent.update";
 
-        // Active lookup returns empty because existing topic with same name was deregistered
+        // Active lookup returns empty because existing topic with same name was
+        // deregistered
         when(topicDAO.getTopicByOrgAndName(orgId, topicName)).thenReturn(Optional.empty());
         when(topicDAO.addTopic(any())).thenReturn(true);
 

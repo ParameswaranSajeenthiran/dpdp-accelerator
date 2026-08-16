@@ -129,4 +129,41 @@ describe('AppSidebar', () => {
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
     expect(screen.getByText('/administration/consents')).toBeInTheDocument()
   })
+
+  it('renders and navigates to events topics and subscriptions', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/events/subscriptions']}>
+            <TestAuthorizationProvider
+              scopes={[
+                PORTAL_SCOPES.EVENT_TOPICS_READ,
+                PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ,
+              ]}
+            >
+              <Routes>
+                <Route
+                  path="*"
+                  element={
+                    <>
+                      <AppSidebar collapsed={false} />
+                      <LocationProbe />
+                    </>
+                  }
+                />
+              </Routes>
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.getByText('Events')).toBeInTheDocument()
+    expect(screen.getByText('Topics')).toBeInTheDocument()
+    expect(screen.getByText('Subscriptions')).toBeInTheDocument()
+    expect(screen.getByText('/events/subscriptions')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Topics'))
+    expect(screen.getByText('/events/topics')).toBeInTheDocument()
+  })
 })

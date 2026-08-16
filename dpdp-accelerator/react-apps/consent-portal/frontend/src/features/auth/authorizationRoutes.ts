@@ -24,6 +24,7 @@ const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; scope: PortalScope 
   { path: '/purposes', scope: PORTAL_SCOPES.PURPOSES_READ },
   { path: '/elements', scope: PORTAL_SCOPES.ELEMENTS_READ },
   { path: '/events/topics', scope: PORTAL_SCOPES.EVENT_TOPICS_READ },
+  { path: '/events/subscriptions', scope: PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ },
   { path: '/administration/consents', scope: PORTAL_SCOPES.CONSENTS_READ_ANY },
 ]
 

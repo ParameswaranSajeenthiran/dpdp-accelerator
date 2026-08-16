@@ -41,7 +41,8 @@ public interface TopicDAO {
             return getTopicByOrgAndName(conn, orgId, name);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name), e);
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
+                    e);
         }
     }
 

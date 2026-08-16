@@ -47,6 +47,9 @@ function buildBreadcrumbItems(
   elementsLabel: string,
   administrationLabel: string,
   administrationConsentsLabel: string,
+  eventsLabel: string,
+  subscriptionsLabel: string,
+  topicsLabel: string,
 ): BreadcrumbItem[] {
   const adminConsentDetailsMatch = pathname.match(/^\/administration\/consents\/([^/]+)$/)
 
@@ -157,6 +160,37 @@ function buildBreadcrumbItems(
     ]
   }
 
+  const subscriptionDetailsMatch = pathname.match(/^\/events\/subscriptions\/([^/]+)$/)
+
+  if (subscriptionDetailsMatch) {
+    return [
+      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: eventsLabel, path: '/events/subscriptions', isCurrent: false },
+      { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: false },
+      {
+        label: safeDecodeURIComponent(subscriptionDetailsMatch[1]),
+        path: pathname,
+        isCurrent: true,
+      },
+    ]
+  }
+
+  if (pathname.startsWith('/events/subscriptions')) {
+    return [
+      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: eventsLabel, path: '/events/subscriptions', isCurrent: false },
+      { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: true },
+    ]
+  }
+
+  if (pathname.startsWith('/events/topics')) {
+    return [
+      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: eventsLabel, path: '/events/topics', isCurrent: false },
+      { label: topicsLabel, path: '/events/topics', isCurrent: true },
+    ]
+  }
+
   return [
     {
       label: homeLabel,
@@ -178,6 +212,9 @@ function HeaderBreadcrumbs({ currentLabel }: HeaderBreadcrumbsProps): React.JSX.
     t('sidebar.elements'),
     t('sidebar.administration'),
     t('sidebar.adminConsents'),
+    t('sidebar.events'),
+    t('sidebar.subscriptions'),
+    t('sidebar.topics'),
   ).map((item) => (item.isCurrent && currentLabel ? { ...item, label: currentLabel } : item))
 
   return (

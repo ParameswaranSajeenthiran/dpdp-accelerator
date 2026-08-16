@@ -38,7 +38,7 @@ public class EventNotificationCommonDBQueries {
 
     public String getGetTopicByOrgAndNameQuery() {
         return "SELECT TOPIC_ID, ORG_ID, NAME, DESCRIPTION, STATUS, INITIATED_BY " +
-                "FROM TOPIC WHERE ORG_ID = ? AND NAME = ? AND STATUS = 'active'";
+                "FROM TOPIC WHERE ORG_ID = ? AND LOWER(NAME) = LOWER(?) AND LOWER(STATUS) = 'active'";
     }
 
     public String getUpdateTopicStatusQuery() {
@@ -88,15 +88,16 @@ public class EventNotificationCommonDBQueries {
     }
 
     /**
-     * Atomically soft-deletes a subscription if it has no pending or in-flight deliveries.
+     * Atomically soft-deletes a subscription if it has no pending or in-flight
+     * deliveries.
      * <p>
      * <b>Parameter binding order (caller must bind all five in sequence):</b>
      * <ol>
-     *   <li>SUBSCRIPTION_ID (main WHERE)</li>
-     *   <li>ORG_ID</li>
-     *   <li>STATUS (expected current status guard)</li>
-     *   <li>SUBSCRIPTION_ID (NOT EXISTS WEBHOOK_DELIVERY sub-query)</li>
-     *   <li>SUBSCRIPTION_ID (NOT EXISTS POLL_DELIVERY sub-query)</li>
+     * <li>SUBSCRIPTION_ID (main WHERE)</li>
+     * <li>ORG_ID</li>
+     * <li>STATUS (expected current status guard)</li>
+     * <li>SUBSCRIPTION_ID (NOT EXISTS WEBHOOK_DELIVERY sub-query)</li>
+     * <li>SUBSCRIPTION_ID (NOT EXISTS POLL_DELIVERY sub-query)</li>
      * </ol>
      */
     public String getDeleteSubscriptionAtomicQuery() {
@@ -341,9 +342,12 @@ public class EventNotificationCommonDBQueries {
     /**
      * Updates a poll delivery status directly by delivery ID.
      * <p>
-     * <b>For internal background worker use only.</b> Delivery IDs are UUIDs generated
-     * internally and are never user-supplied. No ORG_ID scoping is applied at the query
-     * level; tenant isolation is enforced upstream when the delivery context is fetched.
+     * <b>For internal background worker use only.</b> Delivery IDs are UUIDs
+     * generated
+     * internally and are never user-supplied. No ORG_ID scoping is applied at the
+     * query
+     * level; tenant isolation is enforced upstream when the delivery context is
+     * fetched.
      */
     public String getUpdatePollDeliveryStatusQuery() {
         return "UPDATE POLL_DELIVERY SET STATUS = ?, COMPLETED_AT = ? WHERE DELIVERY_ID = ?";
@@ -356,7 +360,8 @@ public class EventNotificationCommonDBQueries {
     }
 
     /**
-     * Atomically claims a poll delivery row by flipping STATUS from 'pending' to 'acknowledged'.
+     * Atomically claims a poll delivery row by flipping STATUS from 'pending' to
+     * 'acknowledged'.
      * <p>
      * <b>For internal background worker use only.</b> No ORG_ID scoping — see
      * {@link #getUpdatePollDeliveryStatusQuery()} for rationale.
@@ -370,12 +375,16 @@ public class EventNotificationCommonDBQueries {
      * Atomically claims a pending webhook delivery row by flipping STATUS from
      * {@code 'pending'} to {@code 'in_flight'}.
      * <p>
-     * <b>For internal background worker use only.</b> No ORG_ID scoping — the background
+     * <b>For internal background worker use only.</b> No ORG_ID scoping — the
+     * background
      * delivery worker operates across all tenants by design.
      * <p>
-     * The {@code STATUS = 'pending'} guard ensures exactly-one-worker semantics: a second
-     * concurrent worker calling this method for the same row will find STATUS already
-     * {@code 'in_flight'} and the UPDATE will affect 0 rows, so it correctly returns false.
+     * The {@code STATUS = 'pending'} guard ensures exactly-one-worker semantics: a
+     * second
+     * concurrent worker calling this method for the same row will find STATUS
+     * already
+     * {@code 'in_flight'} and the UPDATE will affect 0 rows, so it correctly
+     * returns false.
      */
     public String getClaimWebhookDeliveryQuery() {
         return "UPDATE WEBHOOK_DELIVERY SET STATUS = 'in_flight', UPDATED_AT = CURRENT_TIMESTAMP " +
@@ -387,9 +396,12 @@ public class EventNotificationCommonDBQueries {
      * {@code UPDATED_AT} is older than the supplied cutoff timestamp.
      * <p>
      * A stuck row is one whose worker crashed (or was interrupted) after calling
-     * {@link #getClaimWebhookDeliveryQuery()} but before releasing the row.  This guard
-     * uses {@code UPDATED_AT <= ?} rather than {@code STATUS = 'in_flight'} alone so that
-     * a row whose timestamp was just refreshed by an <em>active</em> worker is never
+     * {@link #getClaimWebhookDeliveryQuery()} but before releasing the row. This
+     * guard
+     * uses {@code UPDATED_AT <= ?} rather than {@code STATUS = 'in_flight'} alone
+     * so that
+     * a row whose timestamp was just refreshed by an <em>active</em> worker is
+     * never
      * double-claimed.
      */
     public String getClaimStuckWebhookDeliveryQuery() {

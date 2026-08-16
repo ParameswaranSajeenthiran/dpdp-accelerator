@@ -67,14 +67,30 @@ public class SubscriptionQueryBuilderTest {
 
         SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
 
+        assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ?"));
         assertTrue(selectResult.getSql().contains("LOWER(s.GROUP_ID) LIKE ?"));
         assertTrue(selectResult.getSql().contains("LOWER(sp.PURPOSE_NAME) LIKE ?"));
         
-        // 1 orgId parameter + 5 LIKE parameters
+        // 1 orgId parameter + 6 LIKE parameters
         List<Object> params = selectResult.getParameters();
-        assertEquals(params.size(), 6);
+        assertEquals(params.size(), 7);
         assertEquals(params.get(0), "org123");
         assertEquals(params.get(1), "%test\\_user\\%name\\\\foo%");
+    }
+
+    @Test
+    public void testSearchBySubscriptionId() {
+        String subId = "6a37566c-26e2-4ae9-b070-e6733271b0ce";
+        SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
+                .setSearch(subId);
+
+        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
+
+        assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ?"));
+        List<Object> params = selectResult.getParameters();
+        assertEquals(params.size(), 7);
+        assertEquals(params.get(0), "org123");
+        assertEquals(params.get(1), "%" + subId.toLowerCase() + "%");
     }
 
     @Test
@@ -139,12 +155,12 @@ public class SubscriptionQueryBuilderTest {
         assertTrue(result.getSql().contains("ORDER BY s.CREATED_AT DESC"));
 
         List<Object> params = result.getParameters();
-        // orgId (1) + status (1) + search (5) + purposes (2) = 9 params
-        assertEquals(params.size(), 9);
+        // orgId (1) + status (1) + search (6) + purposes (2) = 10 params
+        assertEquals(params.size(), 10);
         assertEquals(params.get(0), "org123");
         assertEquals(params.get(1), "active");
         assertEquals(params.get(2), "%callback%");
-        assertEquals(params.get(7), "marketing");
-        assertEquals(params.get(8), "analytics");
+        assertEquals(params.get(8), "marketing");
+        assertEquals(params.get(9), "analytics");
     }
 }

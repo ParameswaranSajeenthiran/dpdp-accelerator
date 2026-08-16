@@ -114,8 +114,9 @@ public class SubscriptionQueryBuilder {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(s.GROUP_ID) LIKE ? OR LOWER(s.STATUS) LIKE ? OR LOWER(s.CALLBACK_URL) LIKE ? OR LOWER(t.NAME) LIKE ? OR LOWER(sp.PURPOSE_NAME) LIKE ?)");
+            sql.append(" AND (LOWER(s.SUBSCRIPTION_ID) LIKE ? OR LOWER(s.GROUP_ID) LIKE ? OR LOWER(s.STATUS) LIKE ? OR LOWER(s.CALLBACK_URL) LIKE ? OR LOWER(t.NAME) LIKE ? OR LOWER(sp.PURPOSE_NAME) LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
+            params.add(term);
             params.add(term);
             params.add(term);
             params.add(term);
