@@ -75,8 +75,10 @@ export const DEFAULT_LANGUAGE = 'en'
 /** English, the first entry above and the fallback for every other language. */
 export const DEFAULT_LANGUAGE_META: LanguageMeta = BUNDLED_LANGUAGES[0]
 
-/** localStorage key used to remember the language choice. */
+/** Cookie name used to remember the language choice. */
 export const LANGUAGE_STORAGE_KEY = 'dpdp.lang'
+/** One year, matching how long a language preference is worth remembering. */
+const LANGUAGE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 
 let available: LanguageMeta[] = BUNDLED_LANGUAGES
 let byCode = new Map(available.map((language) => [language.code, language]))
@@ -145,22 +147,42 @@ export function applyLanguageSideEffects(code: string): void {
   document.documentElement.setAttribute('lang', code)
 }
 
+/**
+ * Persisted as a cookie rather than browser script-accessible storage: this
+ * codebase forbids that outright (see scripts/verify-production-security.mjs)
+ * since it is a standing XSS target, whereas a plain preference cookie
+ * holding nothing sensitive is not.
+ */
+function readLanguageCookie(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const prefix = `${encodeURIComponent(LANGUAGE_STORAGE_KEY)}=`
+  const match = document.cookie
+    .split(';')
+    .map((entry) => entry.trim())
+    .find((entry) => entry.startsWith(prefix))
+  if (!match) return undefined
+  try {
+    return decodeURIComponent(match.slice(prefix.length))
+  } catch {
+    return undefined
+  }
+}
+
+function writeLanguageCookie(code: string): void {
+  if (typeof document === 'undefined') return
+  document.cookie =
+    `${encodeURIComponent(LANGUAGE_STORAGE_KEY)}=${encodeURIComponent(code)}; ` +
+    `max-age=${LANGUAGE_COOKIE_MAX_AGE_SECONDS}; path=/; SameSite=Lax`
+}
+
 /** Read the persisted language, falling back to the default. */
 export function readStoredLanguage(): string {
-  try {
-    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY)
-    if (stored && byCode.has(stored)) return stored
-  } catch {
-    // localStorage unavailable - fall through to default
-  }
+  const stored = readLanguageCookie()
+  if (stored && byCode.has(stored)) return stored
   return DEFAULT_LANGUAGE
 }
 
-/** Persist the language choice; ignored where localStorage is unavailable. */
+/** Persist the language choice. */
 export function storeLanguage(code: string): void {
-  try {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, code)
-  } catch {
-    // ignore
-  }
+  writeLanguageCookie(code)
 }

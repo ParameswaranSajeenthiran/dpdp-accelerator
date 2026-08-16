@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   getConsentStateChipColor,
@@ -24,8 +26,14 @@ import {
   isConsentRejectableState,
   isConsentRevokableState,
 } from '../features/consent-registry/utils/statusChip'
-import commonEn from '../i18n/resources/en/common'
 import { CONSENT_AUTHORIZATION_STATES, CONSENT_STATES, isConsentState } from '../types/consent'
+
+// Translations moved off a compiled TS resource onto runtime-fetched JSON;
+// reading the file directly keeps this test independent of any test-only
+// i18n wiring.
+const commonEn: { consentRegistry: { status: Record<string, string> } } = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, '../../public/i18n/en/common.json'), 'utf8'),
+)
 
 describe('consent state presentation', () => {
   it('maps consent and authorization states to the expected chip colors', () => {
