@@ -342,7 +342,12 @@
       "searchPlaceholder": "ᱮᱞᱤᱢᱮᱱᱴ ᱧᱩᱛᱩᱢ ᱛᱮ ᱯᱟᱸᱡᱟᱭ ᱢᱮ",
       "subtitle": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ ᱪᱟᱞᱟᱣ ᱢᱮ।",
       "tableLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
-      "title": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ"
+      "title": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
+      "form": {
+        "nameLabel": "ᱧᱩᱛᱩᱢ",
+        "nameRequired": "ᱧᱩᱛᱩᱢ ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ ᱠᱟᱱᱟ।",
+        "displayNameLabel": "ᱩᱫᱩᱜ ᱧᱩᱛᱩᱢ"
+      }
     },
     "purposes": {
       "add": "ᱩᱫᱽᱫᱮᱥ ᱡᱚᱲᱟᱣ ᱢᱮ",
@@ -364,7 +369,18 @@
       "scopeFilter": "ᱩᱫᱽᱫᱮᱥ ᱥᱠᱳᱯ",
       "subtitle": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱩᱫᱽᱫᱮᱥ ᱠᱚ ᱪᱟᱞᱟᱣ ᱢᱮ।",
       "tableLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱩᱫᱽᱫᱮᱥ ᱠᱚ",
-      "title": "ᱩᱫᱽᱫᱮᱥ ᱠᱚ"
+      "title": "ᱩᱫᱽᱫᱮᱥ ᱠᱚ",
+      "form": {
+        "title": "ᱩᱫᱽᱫᱮᱥ ᱡᱚᱲᱟᱣ ᱢᱮ",
+        "nameLabel": "ᱧᱩᱛᱩᱢ",
+        "nameRequired": "ᱧᱩᱛᱩᱢ ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ ᱠᱟᱱᱟ।",
+        "typeLabel": "ᱴᱟᱭᱤᱯ",
+        "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ",
+        "elementsLabel": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ"
+      },
+      "versionForm": {
+        "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ"
+      }
     },
     "details": {
       "definition": "ᱢᱮᱱᱮᱛ",

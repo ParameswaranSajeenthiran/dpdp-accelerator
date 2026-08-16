@@ -342,7 +342,12 @@
       "searchPlaceholder": "तत्वको नाम द्वारा खोज्नुहोस्",
       "subtitle": "पुनः प्रयोगयोग्य सहमति तत्वहरू र तिनका संस्करण परिभाषाहरू प्रबन्ध गर्नुहोस्।",
       "tableLabel": "सहमति तत्वहरू",
-      "title": "तत्वहरू"
+      "title": "तत्वहरू",
+      "form": {
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक छ।",
+        "displayNameLabel": "देखाउने नाम"
+      }
     },
     "purposes": {
       "add": "उद्देश्य थप्नुहोस्",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देश्यको दायरा",
       "subtitle": "पुनः प्रयोगयोग्य सहमति उद्देश्यहरू र तिनका तत्व परिभाषाहरू प्रबन्ध गर्नुहोस्।",
       "tableLabel": "सहमति उद्देश्यहरू",
-      "title": "उद्देश्यहरू"
+      "title": "उद्देश्यहरू",
+      "form": {
+        "title": "उद्देश्य थप्नुहोस्",
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक छ।",
+        "typeLabel": "प्रकार",
+        "versionLabel": "संस्करण",
+        "elementsLabel": "तत्वहरू"
+      },
+      "versionForm": {
+        "versionLabel": "संस्करण"
+      }
     },
     "details": {
       "definition": "परिभाषा",

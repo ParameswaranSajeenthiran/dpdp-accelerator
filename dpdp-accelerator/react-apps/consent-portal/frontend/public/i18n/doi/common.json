@@ -342,7 +342,12 @@
       "searchPlaceholder": "तत्व दे नां कन्नै खोजो",
       "subtitle": "बर्तने आह्ले सहमति तत्वा ते उंदे वर्ज़न दी परिभाषां दा प्रबंधन करो।",
       "tableLabel": "सहमति तत्व",
-      "title": "तत्व"
+      "title": "तत्व",
+      "form": {
+        "nameLabel": "नां",
+        "nameRequired": "नां जरूरी ऐ।",
+        "displayNameLabel": "दस्सने आह्ला नां"
+      }
     },
     "purposes": {
       "add": "उद्देश्य जोड़ो",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देश्य दा दायरा",
       "subtitle": "बर्तने आह्ले सहमति उद्देश्यें ते उंदी तत्व परिभाषां दा प्रबंधन करो।",
       "tableLabel": "सहमति उद्देश्य",
-      "title": "उद्देश्य"
+      "title": "उद्देश्य",
+      "form": {
+        "title": "उद्देश्य जोड़ो",
+        "nameLabel": "नां",
+        "nameRequired": "नां जरूरी ऐ।",
+        "typeLabel": "प्रकार",
+        "versionLabel": "वर्ज़न",
+        "elementsLabel": "तत्व"
+      },
+      "versionForm": {
+        "versionLabel": "वर्ज़न"
+      }
     },
     "details": {
       "definition": "परिभाषा",

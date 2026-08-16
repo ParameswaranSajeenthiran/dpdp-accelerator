@@ -342,7 +342,12 @@
       "searchPlaceholder": "घटकाच्या नावां वरवीं सोदात",
       "subtitle": "परत वापरूंक येवपी संमती घटक आणि तांच्या आवृत्ती व्याख्यांचे व्यवस्थापन करात.",
       "tableLabel": "संमती घटक",
-      "title": "घटक"
+      "title": "घटक",
+      "form": {
+        "nameLabel": "नाव",
+        "nameRequired": "नाव गरजेचे आसा.",
+        "displayNameLabel": "दाखवपाचे नाव"
+      }
     },
     "purposes": {
       "add": "उद्देश जोडा",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देशाची व्याप्ती",
       "subtitle": "परत वापरूंक येवपी संमती उद्देश आणि तांच्या घटक व्याख्यांचे व्यवस्थापन करात.",
       "tableLabel": "संमती उद्देश",
-      "title": "उद्देश"
+      "title": "उद्देश",
+      "form": {
+        "title": "उद्देश जोडा",
+        "nameLabel": "नाव",
+        "nameRequired": "नाव गरजेचे आसा.",
+        "typeLabel": "प्रकार",
+        "versionLabel": "आवृत्ती",
+        "elementsLabel": "घटक"
+      },
+      "versionForm": {
+        "versionLabel": "आवृत्ती"
+      }
     },
     "details": {
       "definition": "व्याख्या",

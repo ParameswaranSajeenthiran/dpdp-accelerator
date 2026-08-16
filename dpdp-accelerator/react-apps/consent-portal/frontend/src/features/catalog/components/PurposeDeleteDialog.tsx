@@ -70,7 +70,7 @@ function PurposeDeleteDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" color="error" disabled={loading} onClick={onConfirm}>
-          {loading ? t('catalog.purposeDelete.deleting') : t('catalog.purposeDelete.confirm')}
+          {loading ? t('catalog.actions.deleting') : t('catalog.purposeDelete.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

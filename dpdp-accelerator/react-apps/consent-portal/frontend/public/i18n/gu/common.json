@@ -342,7 +342,12 @@
       "searchPlaceholder": "ઘટકના નામ દ્વારા શોધો",
       "subtitle": "પુનઃઉપયોગી સંમતિ ઘટકો અને તેના સંસ્કરણયુક્ત વ્યાખ્યાઓનું સંચાલન કરો.",
       "tableLabel": "સંમતિ ઘટકો",
-      "title": "ઘટકો"
+      "title": "ઘટકો",
+      "form": {
+        "nameLabel": "નામ",
+        "nameRequired": "નામ જરૂરી છે.",
+        "displayNameLabel": "દર્શાવવાનું નામ"
+      }
     },
     "purposes": {
       "add": "હેતુ ઉમેરો",
@@ -364,7 +369,18 @@
       "scopeFilter": "હેતુ સ્કૉપ",
       "subtitle": "પુનઃઉપયોગી સંમતિ હેતુઓ અને તેમની ઘટક વ્યાખ્યાઓનું સંચાલન કરો.",
       "tableLabel": "સંમતિ હેતુઓ",
-      "title": "હેતુઓ"
+      "title": "હેતુઓ",
+      "form": {
+        "title": "હેતુ ઉમેરો",
+        "nameLabel": "નામ",
+        "nameRequired": "નામ જરૂરી છે.",
+        "typeLabel": "પ્રકાર",
+        "versionLabel": "સંસ્કરણ",
+        "elementsLabel": "ઘટકો"
+      },
+      "versionForm": {
+        "versionLabel": "સંસ્કરણ"
+      }
     },
     "details": {
       "definition": "વ્યાખ્યા",

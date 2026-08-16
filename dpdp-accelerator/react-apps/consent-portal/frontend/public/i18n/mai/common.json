@@ -342,7 +342,12 @@
       "searchPlaceholder": "तत्व नाम सँ खोजू",
       "subtitle": "पुनः प्रयोज्य सहमति तत्व सभ आ ओकर संस्करणबद्ध परिभाषा सभक प्रबंधन करू।",
       "tableLabel": "सहमति तत्व सभ",
-      "title": "तत्व सभ"
+      "title": "तत्व सभ",
+      "form": {
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक अछि।",
+        "displayNameLabel": "प्रदर्शित नाम"
+      }
     },
     "purposes": {
       "add": "उद्देश्य जोड़ू",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देश्य दायरा",
       "subtitle": "पुनः प्रयोज्य सहमति उद्देश्य सभ आ ओकर तत्व परिभाषा सभक प्रबंधन करू।",
       "tableLabel": "सहमति उद्देश्य सभ",
-      "title": "उद्देश्य सभ"
+      "title": "उद्देश्य सभ",
+      "form": {
+        "title": "उद्देश्य जोड़ू",
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक अछि।",
+        "typeLabel": "प्रकार",
+        "versionLabel": "संस्करण",
+        "elementsLabel": "तत्व सभ"
+      },
+      "versionForm": {
+        "versionLabel": "संस्करण"
+      }
     },
     "details": {
       "definition": "परिभाषा",

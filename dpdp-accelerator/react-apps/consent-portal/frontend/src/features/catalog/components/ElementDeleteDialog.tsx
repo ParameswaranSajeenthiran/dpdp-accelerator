@@ -70,7 +70,7 @@ function ElementDeleteDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" color="error" disabled={loading} onClick={onConfirm}>
-          {loading ? t('catalog.elementDelete.deleting') : t('catalog.elementDelete.confirm')}
+          {loading ? t('catalog.actions.deleting') : t('catalog.elementDelete.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

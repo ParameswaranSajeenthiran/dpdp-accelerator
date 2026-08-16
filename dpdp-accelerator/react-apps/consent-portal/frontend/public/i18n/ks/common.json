@@ -342,7 +342,12 @@
       "searchPlaceholder": "عُنصُر ناو سِیِتھ تپاس کِریو",
       "subtitle": "دوبارٕ اِستِعمال گَچھَن وٲلِ رضامندی عناصرَن تہٕ تِہنٛدِین ورژنَن ہُنٛد اِنتِظام کِریو۔",
       "tableLabel": "رضامندی عناصر",
-      "title": "عَناصِر"
+      "title": "عَناصِر",
+      "form": {
+        "nameLabel": "ناو",
+        "nameRequired": "ناو چھُ لازمی۔",
+        "displayNameLabel": "وُچھن وول ناو"
+      }
     },
     "purposes": {
       "add": "مَقصَد شامِل کِریو",
@@ -364,7 +369,18 @@
       "scopeFilter": "مَقصَد دائرٕ کار",
       "subtitle": "دوبارٕ اِستِعمال گَچھَن وٲلِ رضامندی مقاصِد تہٕ تِہنٛدِین عُنصُر تعریفاتن ہُند اِنتِظام کِریو۔",
       "tableLabel": "رضامندی مقاصِد",
-      "title": "مقاصِد"
+      "title": "مقاصِد",
+      "form": {
+        "title": "مَقصَد شامِل کِریو",
+        "nameLabel": "ناو",
+        "nameRequired": "ناو چھُ لازمی۔",
+        "typeLabel": "قِسم",
+        "versionLabel": "ورژن",
+        "elementsLabel": "عَناصِر"
+      },
+      "versionForm": {
+        "versionLabel": "ورژن"
+      }
     },
     "details": {
       "definition": "تَعریف",

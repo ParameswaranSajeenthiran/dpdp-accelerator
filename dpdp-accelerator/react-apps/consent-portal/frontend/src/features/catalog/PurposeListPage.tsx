@@ -134,7 +134,7 @@ function PurposeListPage(): React.JSX.Element {
               sx={{ flexShrink: 0 }}
               onClick={() => setCreateOpen(true)}
             >
-              {t('catalog.actions.addPurpose')}
+              {t('catalog.purposes.add')}
             </Button>
           ) : null}
         </Stack>

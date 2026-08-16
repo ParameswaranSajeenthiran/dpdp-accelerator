@@ -255,10 +255,10 @@ function PurposeDetailsPage(): React.JSX.Element {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700, width: '35%' }}>
-                      {t('catalog.elementForm.propertyKeyLabel')}
+                      {t('catalog.fields.propertyKey')}
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>
-                      {t('catalog.elementForm.propertyValueLabel')}
+                      {t('catalog.fields.propertyValue')}
                     </TableCell>
                   </TableRow>
                 </TableHead>

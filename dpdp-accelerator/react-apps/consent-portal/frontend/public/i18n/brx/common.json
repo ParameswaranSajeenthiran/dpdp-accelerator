@@ -342,7 +342,12 @@
       "searchPlaceholder": "बाहागोनि मुंजों नागिर",
       "subtitle": "बाहायनो हाथाव गनायथि बाहागोफोर आरो बेसेनि भार्जन बेजायफोरखौ सामलाय।",
       "tableLabel": "गनायथि बाहागोफोर",
-      "title": "बाहागोफोर"
+      "title": "बाहागोफोर",
+      "form": {
+        "nameLabel": "मुं",
+        "nameRequired": "मुं गोनांथार।",
+        "displayNameLabel": "दिन्थिनाय मुं"
+      }
     },
     "purposes": {
       "add": "थांखि सोदेर",
@@ -364,7 +369,18 @@
       "scopeFilter": "थांखिनि सीमा",
       "subtitle": "बाहायनो हाथाव गनायथि थांखिफोर आरो बेसेनि बाहागो बेजायफोरखौ सामलाय।",
       "tableLabel": "गनायथि थांखिफोर",
-      "title": "थांखिफोर"
+      "title": "थांखिफोर",
+      "form": {
+        "title": "थांखि सोदेर",
+        "nameLabel": "मुं",
+        "nameRequired": "मुं गोनांथार।",
+        "typeLabel": "रोखोम",
+        "versionLabel": "भार्जन",
+        "elementsLabel": "बाहागोफोर"
+      },
+      "versionForm": {
+        "versionLabel": "भार्जन"
+      }
     },
     "details": {
       "definition": "बेजाय",

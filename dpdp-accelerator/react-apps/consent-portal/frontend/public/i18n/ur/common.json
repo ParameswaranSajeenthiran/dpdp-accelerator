@@ -342,7 +342,12 @@
       "searchPlaceholder": "عنصر کے نام سے تلاش کریں",
       "subtitle": "دوبارہ قابل استعمال رضامندی کے عناصر اور ان کی ورژن شدہ تعریفات کا انتظام کریں۔",
       "tableLabel": "رضامندی کے عناصر",
-      "title": "عناصر"
+      "title": "عناصر",
+      "form": {
+        "nameLabel": "نام",
+        "nameRequired": "نام ضروری ہے۔",
+        "displayNameLabel": "ڈسپلے کا نام"
+      }
     },
     "purposes": {
       "add": "مقصد شامل کریں",
@@ -364,7 +369,18 @@
       "scopeFilter": "مقصد کا اسکوپ",
       "subtitle": "دوبارہ قابل استعمال رضامندی کے مقاصد اور ان کے عنصر کی تعریفات کا انتظام کریں۔",
       "tableLabel": "رضامندی کے مقاصد",
-      "title": "مقاصد"
+      "title": "مقاصد",
+      "form": {
+        "title": "مقصد شامل کریں",
+        "nameLabel": "نام",
+        "nameRequired": "نام ضروری ہے۔",
+        "typeLabel": "قسم",
+        "versionLabel": "ورژن",
+        "elementsLabel": "عناصر"
+      },
+      "versionForm": {
+        "versionLabel": "ورژن"
+      }
     },
     "details": {
       "definition": "تعریف",

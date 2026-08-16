@@ -342,7 +342,12 @@
       "searchPlaceholder": "घटकाच्या नावाने शोधा",
       "subtitle": "पुन्हा वापरण्यायोग्य संमती घटक आणि त्यांच्या आवृत्ती-आधारित व्याख्या व्यवस्थापित करा.",
       "tableLabel": "संमती घटक",
-      "title": "घटक"
+      "title": "घटक",
+      "form": {
+        "nameLabel": "नाव",
+        "nameRequired": "नाव आवश्यक आहे.",
+        "displayNameLabel": "प्रदर्शित नाव"
+      }
     },
     "purposes": {
       "add": "उद्देश जोडा",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देश व्याप्ती",
       "subtitle": "पुन्हा वापरण्यायोग्य संमतीचे उद्देश आणि त्यांच्या घटकांच्या व्याख्या व्यवस्थापित करा.",
       "tableLabel": "संमतीचे उद्देश",
-      "title": "उद्देश"
+      "title": "उद्देश",
+      "form": {
+        "title": "उद्देश जोडा",
+        "nameLabel": "नाव",
+        "nameRequired": "नाव आवश्यक आहे.",
+        "typeLabel": "प्रकार",
+        "versionLabel": "आवृत्ती",
+        "elementsLabel": "घटक"
+      },
+      "versionForm": {
+        "versionLabel": "आवृत्ती"
+      }
     },
     "details": {
       "definition": "व्याख्या",

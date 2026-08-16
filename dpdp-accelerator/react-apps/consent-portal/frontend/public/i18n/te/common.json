@@ -342,7 +342,12 @@
       "searchPlaceholder": "అంశం పేరు ద్వారా వెతకండి",
       "subtitle": "పునర్వినియోగ సమ్మతి అంశాలను మరియు వాటి వెర్షన్ నిర్వచనాలను నిర్వహించండి.",
       "tableLabel": "సమ్మతి అంశాలు",
-      "title": "అంశాలు"
+      "title": "అంశాలు",
+      "form": {
+        "nameLabel": "పేరు",
+        "nameRequired": "పేరు తప్పనిసరి.",
+        "displayNameLabel": "ప్రదర్శన పేరు"
+      }
     },
     "purposes": {
       "add": "ప్రయోజనాన్ని జోడించు",
@@ -364,7 +369,18 @@
       "scopeFilter": "ప్రయోజన స్కోప్",
       "subtitle": "పునర్వినియోగ సమ్మతి ప్రయోజనాలను మరియు వాటి అంశాల నిర్వచనాలను నిర్వహించండి.",
       "tableLabel": "సమ్మతి ప్రయోజనాలు",
-      "title": "ప్రయోజనాలు"
+      "title": "ప్రయోజనాలు",
+      "form": {
+        "title": "ప్రయోజనాన్ని జోడించు",
+        "nameLabel": "పేరు",
+        "nameRequired": "పేరు తప్పనిసరి.",
+        "typeLabel": "రకం",
+        "versionLabel": "వెర్షన్",
+        "elementsLabel": "అంశాలు"
+      },
+      "versionForm": {
+        "versionLabel": "వెర్షన్"
+      }
     },
     "details": {
       "definition": "నిర్వచనం",

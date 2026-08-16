@@ -342,7 +342,12 @@
       "searchPlaceholder": "तत्व के नाम से खोजें",
       "subtitle": "पुनः उपयोग योग्य सहमति तत्वों और उनके संस्करणों का प्रबंधन करें।",
       "tableLabel": "सहमति तत्व",
-      "title": "तत्व"
+      "title": "तत्व",
+      "form": {
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक है।",
+        "displayNameLabel": "प्रदर्शित नाम"
+      }
     },
     "purposes": {
       "add": "उद्देश्य जोड़ें",
@@ -364,7 +369,18 @@
       "scopeFilter": "उद्देश्य का दायरा",
       "subtitle": "पुनः उपयोग योग्य सहमति उद्देश्यों और उनके तत्व परिभाषाओं का प्रबंधन करें।",
       "tableLabel": "सहमति के उद्देश्य",
-      "title": "उद्देश्य"
+      "title": "उद्देश्य",
+      "form": {
+        "title": "उद्देश्य जोड़ें",
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक है।",
+        "typeLabel": "प्रकार",
+        "versionLabel": "संस्करण",
+        "elementsLabel": "तत्व"
+      },
+      "versionForm": {
+        "versionLabel": "संस्करण"
+      }
     },
     "details": {
       "definition": "परिभाषा",

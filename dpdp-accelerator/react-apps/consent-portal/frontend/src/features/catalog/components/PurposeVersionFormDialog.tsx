@@ -134,7 +134,7 @@ function PurposeVersionFormDialog({
             autoFocus
             required
             fullWidth
-            label={t('catalog.purposeVersionForm.versionLabel')}
+            label={t('catalog.purposes.versionForm.versionLabel')}
             error={versionMissing || versionDuplicate}
             helperText={versionHelperText}
             value={version}
@@ -158,7 +158,7 @@ function PurposeVersionFormDialog({
             fullWidth
             multiline
             minRows={2}
-            label={t('catalog.elementForm.descriptionLabel')}
+            label={t('catalog.fields.description')}
             value={description}
             disabled={loading}
             onChange={(event) => setDescription(event.target.value)}

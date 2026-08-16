@@ -342,7 +342,12 @@
       "searchPlaceholder": "Search by element name",
       "subtitle": "Manage reusable consent elements and their versioned definitions.",
       "tableLabel": "Consent elements",
-      "title": "Elements"
+      "title": "Elements",
+      "form": {
+        "nameLabel": "Name",
+        "nameRequired": "Name is required.",
+        "displayNameLabel": "Display name"
+      }
     },
     "purposes": {
       "add": "Add purpose",
@@ -364,7 +369,18 @@
       "scopeFilter": "Purpose scope",
       "subtitle": "Manage reusable consent purposes and their element definitions.",
       "tableLabel": "Consent purposes",
-      "title": "Purposes"
+      "title": "Purposes",
+      "form": {
+        "title": "Add purpose",
+        "nameLabel": "Name",
+        "nameRequired": "Name is required.",
+        "typeLabel": "Type",
+        "versionLabel": "Version",
+        "elementsLabel": "Elements"
+      },
+      "versionForm": {
+        "versionLabel": "Version"
+      }
     },
     "details": {
       "definition": "Definition",

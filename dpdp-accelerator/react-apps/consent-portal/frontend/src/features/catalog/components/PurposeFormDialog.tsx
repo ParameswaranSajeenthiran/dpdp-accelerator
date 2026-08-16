@@ -109,7 +109,7 @@ function PurposeFormDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.purposeForm.title')}
+        {t('catalog.purposes.form.title')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
@@ -120,9 +120,9 @@ function PurposeFormDialog({
             autoFocus
             required
             fullWidth
-            label={t('catalog.purposeForm.nameLabel')}
+            label={t('catalog.purposes.form.nameLabel')}
             error={nameError}
-            helperText={nameError ? t('catalog.purposeForm.nameRequired') : undefined}
+            helperText={nameError ? t('catalog.purposes.form.nameRequired') : undefined}
             value={name}
             disabled={loading}
             onChange={(event) => setName(event.target.value)}
@@ -141,7 +141,7 @@ function PurposeFormDialog({
                 // eslint-disable-next-line react/jsx-props-no-spreading -- MUI's Autocomplete requires forwarding all of `params`
                 {...params}
                 required
-                label={t('catalog.purposeForm.typeLabel')}
+                label={t('catalog.purposes.form.typeLabel')}
                 error={typeError}
                 helperText={
                   typeError
@@ -155,7 +155,7 @@ function PurposeFormDialog({
           <TextField
             required
             fullWidth
-            label={t('catalog.purposeForm.versionLabel')}
+            label={t('catalog.purposes.form.versionLabel')}
             error={versionError}
             helperText={
               versionError
@@ -172,7 +172,7 @@ function PurposeFormDialog({
             fullWidth
             multiline
             minRows={2}
-            label={t('catalog.elementForm.descriptionLabel')}
+            label={t('catalog.fields.description')}
             value={description}
             disabled={loading}
             onChange={(event) => setDescription(event.target.value)}

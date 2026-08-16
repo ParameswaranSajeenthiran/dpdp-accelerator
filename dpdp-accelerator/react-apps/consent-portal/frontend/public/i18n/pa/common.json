@@ -342,7 +342,12 @@
       "searchPlaceholder": "ਤੱਤ ਦੇ ਨਾਮ ਦੁਆਰਾ ਖੋਜੋ",
       "subtitle": "ਮੁੜ-ਵਰਤੋਂਯੋਗ ਸਹਿਮਤੀ ਤੱਤਾਂ ਅਤੇ ਉਹਨਾਂ ਦੀਆਂ ਸੰਸਕਰਣ ਪਰਿਭਾਸ਼ਾਵਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ।",
       "tableLabel": "ਸਹਿਮਤੀ ਤੱਤ",
-      "title": "ਤੱਤ"
+      "title": "ਤੱਤ",
+      "form": {
+        "nameLabel": "ਨਾਮ",
+        "nameRequired": "ਨਾਮ ਲਾਜ਼ਮੀ ਹੈ।",
+        "displayNameLabel": "ਦਿਖਾਇਆ ਜਾਣ ਵਾਲਾ ਨਾਮ"
+      }
     },
     "purposes": {
       "add": "ਉਦੇਸ਼ ਜੋੜੋ",
@@ -364,7 +369,18 @@
       "scopeFilter": "ਉਦੇਸ਼ ਦਾ ਖੇਤਰ",
       "subtitle": "ਮੁੜ-ਵਰਤੋਂਯੋਗ ਸਹਿਮਤੀ ਉਦੇਸ਼ਾਂ ਅਤੇ ਉਹਨਾਂ ਦੇ ਤੱਤ ਪਰਿਭਾਸ਼ਾਵਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ।",
       "tableLabel": "ਸਹਿਮਤੀ ਉਦੇਸ਼",
-      "title": "ਉਦੇਸ਼"
+      "title": "ਉਦੇਸ਼",
+      "form": {
+        "title": "ਉਦੇਸ਼ ਜੋੜੋ",
+        "nameLabel": "ਨਾਮ",
+        "nameRequired": "ਨਾਮ ਲਾਜ਼ਮੀ ਹੈ।",
+        "typeLabel": "ਕਿਸਮ",
+        "versionLabel": "ਸੰਸਕਰਣ",
+        "elementsLabel": "ਤੱਤ"
+      },
+      "versionForm": {
+        "versionLabel": "ਸੰਸਕਰਣ"
+      }
     },
     "details": {
       "definition": "ਪਰਿਭਾਸ਼ਾ",

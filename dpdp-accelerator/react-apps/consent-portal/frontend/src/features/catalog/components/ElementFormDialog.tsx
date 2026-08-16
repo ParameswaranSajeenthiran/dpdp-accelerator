@@ -99,9 +99,11 @@ function ElementFormDialog({
             autoFocus
             required
             fullWidth
-            label={t('catalog.elementForm.nameLabel')}
+            label={t('catalog.elements.form.nameLabel')}
             helperText={
-              nameError ? t('catalog.elementForm.nameRequired') : t('catalog.elementForm.nameHelp')
+              nameError
+                ? t('catalog.elements.form.nameRequired')
+                : t('catalog.elementForm.nameHelp')
             }
             error={nameError}
             value={name}
@@ -112,7 +114,7 @@ function ElementFormDialog({
 
           <TextField
             fullWidth
-            label={t('catalog.elementForm.displayNameLabel')}
+            label={t('catalog.elements.form.displayNameLabel')}
             value={displayName}
             disabled={loading}
             onChange={(event) => setDisplayName(event.target.value)}
@@ -122,7 +124,7 @@ function ElementFormDialog({
             fullWidth
             multiline
             minRows={2}
-            label={t('catalog.elementForm.descriptionLabel')}
+            label={t('catalog.fields.description')}
             value={description}
             disabled={loading}
             onChange={(event) => setDescription(event.target.value)}

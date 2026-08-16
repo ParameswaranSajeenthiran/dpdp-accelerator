@@ -342,7 +342,12 @@
       "searchPlaceholder": "عنصر جي نالي سان ڳوليو",
       "subtitle": "ٻيهر استعمال جوڳا رضامندي عنصر ۽ انهن جي ورزن جي وصفن جو انتظام ڪريو.",
       "tableLabel": "رضامندي جا عنصر",
-      "title": "عنصر"
+      "title": "عنصر",
+      "form": {
+        "nameLabel": "نالو",
+        "nameRequired": "نالو ضروري آهي.",
+        "displayNameLabel": "ڏيکارڻ جو نالو"
+      }
     },
     "purposes": {
       "add": "مقصد شامل ڪريو",
@@ -364,7 +369,18 @@
       "scopeFilter": "مقصد جو دائرو",
       "subtitle": "ٻيهر استعمال جوڳا رضامندي مقصد ۽ انهن جي عنصر جي وصفن جو انتظام ڪريو.",
       "tableLabel": "رضامندي جا مقصد",
-      "title": "مقصد"
+      "title": "مقصد",
+      "form": {
+        "title": "مقصد شامل ڪريو",
+        "nameLabel": "نالو",
+        "nameRequired": "نالو ضروري آهي.",
+        "typeLabel": "قسم",
+        "versionLabel": "ورزن",
+        "elementsLabel": "عنصر"
+      },
+      "versionForm": {
+        "versionLabel": "ورزن"
+      }
     },
     "details": {
       "definition": "وصف (Definition)",
