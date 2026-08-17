@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
 import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
@@ -115,6 +116,31 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                         while (rs.next()) {
                             String existingId = rs.getString("SUBSCRIPTION_ID");
                             String existingModeStr = rs.getString("PURPOSE_FILTER_MODE");
+                            String existingDeliveryModeStr = rs.getString("DELIVERY_MODE");
+                            String existingCallbackUrl = rs.getString("CALLBACK_URL");
+
+                            DeliveryMode newDelMode = DeliveryMode.fromValueOrDefault(subscription.getDeliveryMode(),
+                                    DeliveryMode.WEBHOOK);
+                            DeliveryMode existingDelMode = DeliveryMode.fromValueOrDefault(existingDeliveryModeStr,
+                                    DeliveryMode.WEBHOOK);
+
+                            if (newDelMode == DeliveryMode.WEBHOOK) {
+                                if (existingDelMode != DeliveryMode.WEBHOOK) {
+                                    continue;
+                                }
+                                String newCb = subscription.getCallbackUrl() != null
+                                        ? subscription.getCallbackUrl().trim().toLowerCase() : "";
+                                String existCb = existingCallbackUrl != null
+                                        ? existingCallbackUrl.trim().toLowerCase() : "";
+                                if (!newCb.equals(existCb)) {
+                                    continue;
+                                }
+                            } else {
+                                if (existingDelMode != DeliveryMode.POLL) {
+                                    continue;
+                                }
+                            }
+
                             PurposeFilterMode existingMode = PurposeFilterMode.fromValueOrDefault(existingModeStr,
                                     PurposeFilterMode.ALL);
                             List<String> existingPurposes = getPurposesBySubscriptionId(existingId, conn);

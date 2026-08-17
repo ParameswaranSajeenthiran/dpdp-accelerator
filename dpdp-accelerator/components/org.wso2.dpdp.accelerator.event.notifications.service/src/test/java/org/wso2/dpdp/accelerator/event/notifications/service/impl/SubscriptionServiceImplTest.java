@@ -97,18 +97,37 @@ public class SubscriptionServiceImplTest {
         subscriptionService.createSubscription("org1", "group1", null, filter, delivery);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
-    public void testCreateSubscriptionNullGroupId() {
+    @Test
+    public void testCreateSubscriptionNullGroupIdDefaultsToOrgId() {
+        Topic topic = new Topic("t1", "org1", "topic1", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "topic1")).thenReturn(Optional.of(topic));
+        doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
+
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
-        subscriptionService.createSubscription("org1", null, "topic1", filter, delivery);
+        SubscriptionDTO result = subscriptionService.createSubscription("org1", null, "topic1", filter, delivery);
+        assertNotNull(result);
+        assertEquals(result.getGroupId(), "org1");
+    }
+
+    @Test
+    public void testCreateSubscriptionBlankGroupIdDefaultsToOrgId() {
+        Topic topic = new Topic("t1", "org1", "topic1", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "topic1")).thenReturn(Optional.of(topic));
+        doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+        SubscriptionDTO result = subscriptionService.createSubscription("org1", "   ", "topic1", filter, delivery);
+        assertNotNull(result);
+        assertEquals(result.getGroupId(), "org1");
     }
 
     @Test(expectedExceptions = EventNotificationException.class)
-    public void testCreateSubscriptionBlankGroupId() {
+    public void testCreateSubscriptionNullOrgId() {
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
-        subscriptionService.createSubscription("org1", "   ", "topic1", filter, delivery);
+        subscriptionService.createSubscription(null, "group1", "topic1", filter, delivery);
     }
 
     @Test(expectedExceptions = EventNotificationException.class)
@@ -219,5 +238,42 @@ public class SubscriptionServiceImplTest {
         when(subscriptionDAO.getSubscriptionById("sub1", "org1")).thenReturn(Optional.of(sub));
 
         subscriptionService.retryVerification("org1", "sub1");
+    }
+
+    @Test
+    public void testCreateWebhookSubscriptionDifferentCallbacksSucceeds() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
+                "WEBHOOK", "https://example.com/callback1", "secret1", "ACTIVE",
+                new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
+        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
+                .thenReturn(Collections.singletonList(existingSub));
+        doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://example.com/callback2", "secret2");
+
+        SubscriptionDTO result = subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
+        assertNotNull(result);
+        assertEquals(result.getStatus(), SubscriptionStatus.PENDING);
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateWebhookSubscriptionSameCallbackFailsWithConflict() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
+                "WEBHOOK", "https://example.com/callback1", "secret1", "ACTIVE",
+                new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
+        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
+                .thenReturn(Collections.singletonList(existingSub));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://example.com/callback1", "secret2");
+
+        subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
     }
 }

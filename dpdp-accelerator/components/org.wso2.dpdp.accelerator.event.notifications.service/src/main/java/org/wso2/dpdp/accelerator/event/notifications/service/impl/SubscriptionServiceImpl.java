@@ -131,11 +131,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
-        if (groupId == null || groupId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG, 400);
-        }
+        String effectiveGroupId = (groupId != null && !groupId.trim().isEmpty())
+                ? groupId.trim()
+                : orgId.trim();
         if (topicName == null || topicName.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -167,7 +165,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         List<Subscription> existingSubs = subscriptionDAO.getLiveSubscriptionsByOrgAndTopic(orgId.trim(),
                 topic.getTopicId());
-        String effectiveGroupId = groupId.trim();
         validateDuplicateAndConflict(existingSubs, effectiveGroupId, filterType, purposes, deliveryMode, callbackUrl);
 
         String initialStatus = (deliveryMode == DeliveryMode.WEBHOOK)
@@ -228,6 +225,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             PurposeFilterMode filterType, List<String> purposes,
             DeliveryMode deliveryMode, String callbackUrl) {
         Set<String> newPurposesSet = PurposeOverlapUtils.canonicalize(purposes);
+        String normalizedCallbackUrl = callbackUrl != null ? callbackUrl.trim().toLowerCase() : "";
 
         for (Subscription existing : existingSubs) {
             if (!groupId.equals(existing.getGroupId() != null ? existing.getGroupId() : "")) {
@@ -239,6 +237,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     && !SubscriptionStatus.PENDING.getValue().toLowerCase().equals(existingStatus)
                     && !SubscriptionStatus.STALE.getValue().toLowerCase().equals(existingStatus)) {
                 continue;
+            }
+
+            DeliveryMode existingDeliveryMode = DeliveryMode.fromValueOrDefault(existing.getDeliveryMode(),
+                    DeliveryMode.WEBHOOK);
+
+            if (deliveryMode == DeliveryMode.WEBHOOK) {
+                if (existingDeliveryMode != DeliveryMode.WEBHOOK) {
+                    continue;
+                }
+                String existingCallbackUrl = existing.getCallbackUrl() != null
+                        ? existing.getCallbackUrl().trim().toLowerCase() : "";
+                if (!normalizedCallbackUrl.equals(existingCallbackUrl)) {
+                    continue;
+                }
+            } else {
+                if (existingDeliveryMode != DeliveryMode.POLL) {
+                    continue;
+                }
             }
 
             PurposeFilterMode existingFilterMode = PurposeFilterMode.fromValueOrDefault(existing.getPurposeFilterMode(),

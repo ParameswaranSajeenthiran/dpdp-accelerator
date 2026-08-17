@@ -26,6 +26,12 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 
 public interface SubscriptionService {
+
+    default SubscriptionDTO createSubscription(String orgId, String topicName, FilterDTO filter,
+            DeliveryConfigDTO delivery) {
+        return createSubscription(orgId, orgId, topicName, filter, delivery);
+    }
+
     SubscriptionDTO createSubscription(String orgId, String groupId, String topicName, FilterDTO filter,
             DeliveryConfigDTO delivery);
 

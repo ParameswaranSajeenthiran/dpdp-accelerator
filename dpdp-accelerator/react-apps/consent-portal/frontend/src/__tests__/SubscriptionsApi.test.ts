@@ -81,7 +81,6 @@ describe('subscriptionsApi', () => {
 
     const payload = {
       topic: 'consent.revoke',
-      groupId: 'group-1',
       filter: { type: 'specific' as const, purposes: ['MARKETING'] },
       delivery: {
         mode: 'webhook' as const,

@@ -57,8 +57,12 @@ public class SubscriptionEndpoint {
             @HeaderParam("org-id") String orgId,
             @HeaderParam("group-id") String headerGroupId,
             SubscriptionDTO request) {
-        if (request != null && request.getGroupId() == null && headerGroupId != null) {
-            request.setGroupId(headerGroupId.trim());
+        if (request != null && (request.getGroupId() == null || request.getGroupId().trim().isEmpty())) {
+            if (headerGroupId != null && !headerGroupId.trim().isEmpty()) {
+                request.setGroupId(headerGroupId.trim());
+            } else if (orgId != null && !orgId.trim().isEmpty()) {
+                request.setGroupId(orgId.trim());
+            }
         }
         SubscriptionDTO dto = subscriptionHandler.createSubscription(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();

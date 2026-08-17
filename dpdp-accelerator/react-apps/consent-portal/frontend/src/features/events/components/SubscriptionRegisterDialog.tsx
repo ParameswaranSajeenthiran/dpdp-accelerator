@@ -73,7 +73,6 @@ export default function SubscriptionRegisterDialog({
   const [topicsLoading, setTopicsLoading] = useState(false)
 
   const [topic, setTopic] = useState('')
-  const [groupId, setGroupId] = useState('')
   const [filterMode, setFilterMode] = useState<PurposeFilterMode>('all')
   const [purposesInput, setPurposesInput] = useState('')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('webhook')
@@ -156,7 +155,6 @@ export default function SubscriptionRegisterDialog({
 
     onSubmit({
       topic: topic.trim(),
-      groupId: groupId.trim() || undefined,
       filter: {
         type: filterMode,
         purposes: filterMode !== 'all' ? trimmedPurposes : undefined,
@@ -228,16 +226,6 @@ export default function SubscriptionRegisterDialog({
               </Select>
               {topicError ? <FormHelperText>{topicError}</FormHelperText> : null}
             </FormControl>
-
-            <TextField
-              fullWidth
-              size="small"
-              label={t('subscriptions.dialog.groupIdLabel')}
-              placeholder={t('subscriptions.dialog.groupIdPlaceholder')}
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value)}
-              helperText={t('subscriptions.dialog.groupIdHelper')}
-            />
 
             <FormControl fullWidth size="small">
               <InputLabel id="filter-mode-label">
