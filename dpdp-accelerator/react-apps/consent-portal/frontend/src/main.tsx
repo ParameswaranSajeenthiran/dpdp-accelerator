@@ -21,9 +21,9 @@ import { createRoot } from 'react-dom/client'
 import { I18nextProvider } from 'react-i18next'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { OxygenUIThemeProvider, AcrylicOrangeTheme, CssBaseline } from '@wso2/oxygen-ui'
 import App from './App'
-import i18n from './i18n/i18n'
+import i18n, { i18nReady } from './i18n/i18n'
+import LocaleProvider from './i18n/LocaleProvider'
 import queryClient from './utils/queryClient'
 
 const rootElement = document.getElementById('root')
@@ -32,17 +32,20 @@ if (!rootElement) {
   throw new Error('Root element not found. Check index.html for <div id="root">.')
 }
 
+// Awaited so the initial language's translations are already loaded before
+// the first paint; otherwise the reader sees a frame of raw i18n keys.
+await i18nReady
+
 createRoot(rootElement).render(
   <StrictMode>
-    <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-      <CssBaseline />
-      <I18nextProvider i18n={i18n}>
+    <I18nextProvider i18n={i18n}>
+      <LocaleProvider>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
             <App />
           </BrowserRouter>
         </QueryClientProvider>
-      </I18nextProvider>
-    </OxygenUIThemeProvider>
+      </LocaleProvider>
+    </I18nextProvider>
   </StrictMode>,
 )

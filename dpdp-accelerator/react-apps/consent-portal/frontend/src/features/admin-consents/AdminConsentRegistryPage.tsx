@@ -118,7 +118,7 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
         }
       : undefined,
     filters.subjectId
-      ? { key: 'subjectId', label: t('adminConsents.filters.subjectId'), value: filters.subjectId }
+      ? { key: 'subjectId', label: t('consentRegistry.details.table.user'), value: filters.subjectId }
       : undefined,
     filters.serviceId
       ? { key: 'serviceId', label: t('adminConsents.filters.serviceId'), value: filters.serviceId }
