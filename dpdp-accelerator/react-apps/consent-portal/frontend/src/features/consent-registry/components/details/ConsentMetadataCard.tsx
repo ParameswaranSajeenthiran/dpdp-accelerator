@@ -128,7 +128,7 @@ function ConsentMetadataCard({ consentId, detail }: ConsentMetadataCardProps): R
         >
           <MetadataField
             icon={<UserRound size={14} />}
-            label={t('consentRegistry.details.subject')}
+            label={t('consentRegistry.details.table.user')}
             value={detail.subjectId}
           />
           <MetadataField
@@ -143,7 +143,7 @@ function ConsentMetadataCard({ consentId, detail }: ConsentMetadataCardProps): R
           />
           <MetadataField
             icon={<Globe size={14} />}
-            label={t('consentRegistry.details.language')}
+            label={t('language.label')}
             value={detail.language ?? '-'}
           />
           <MetadataField

@@ -75,7 +75,7 @@ function PurposeListPage(): React.JSX.Element {
   // cause for a create failure here, so any error gets the generic message
   // rather than surfacing raw server text.
   const createErrorMessage = createMutation.error
-    ? t('catalog.purposeForm.createFailed')
+    ? t('catalog.purposes.form.createFailed')
     : undefined
 
   // Paging must keep the active search; only a new search resets to page one.

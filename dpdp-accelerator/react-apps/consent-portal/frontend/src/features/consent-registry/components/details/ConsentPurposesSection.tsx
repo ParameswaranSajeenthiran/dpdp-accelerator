@@ -111,7 +111,7 @@ function ConsentPurposesSection({ purposes }: ConsentPurposesSectionProps): Reac
                         {t('consentRegistry.details.table.element')}
                       </TableCell>
                       <TableCell sx={{ fontWeight: 700, width: '60%' }}>
-                        {t('consentRegistry.details.table.displayName')}
+                        {t('catalog.fields.displayName')}
                       </TableCell>
                     </TableRow>
                   </TableHead>

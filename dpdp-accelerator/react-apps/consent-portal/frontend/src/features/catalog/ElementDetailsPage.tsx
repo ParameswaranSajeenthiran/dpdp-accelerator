@@ -58,9 +58,9 @@ function deleteErrorMessage(error: Error | null, t: (key: string) => string): st
     return undefined
   }
   if (error instanceof APIError && error.status === 409) {
-    return t('catalog.elementDelete.conflict')
+    return t('catalog.elements.delete.conflict')
   }
-  return t('catalog.elementDelete.deleteFailed')
+  return t('catalog.elements.delete.deleteFailed')
 }
 
 function ElementDetailsPage(): React.JSX.Element {

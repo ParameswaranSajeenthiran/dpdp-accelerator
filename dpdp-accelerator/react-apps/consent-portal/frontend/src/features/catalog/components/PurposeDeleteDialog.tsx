@@ -50,17 +50,17 @@ function PurposeDeleteDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.purposeDelete.title')}
+        {t('catalog.purposes.delete.title')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error ? <Alert severity="error">{error}</Alert> : null}
           <Typography variant="body2">
-            {t('catalog.purposeDelete.message', { name: purposeName })}
+            {t('catalog.purposes.delete.message', { name: purposeName })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('catalog.purposeDelete.note')}
+            {t('catalog.purposes.delete.note')}
           </Typography>
         </Stack>
       </DialogContent>
@@ -70,7 +70,7 @@ function PurposeDeleteDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" color="error" disabled={loading} onClick={onConfirm}>
-          {loading ? t('catalog.actions.deleting') : t('catalog.purposeDelete.confirm')}
+          {loading ? t('catalog.actions.deleting') : t('catalog.purposes.delete.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

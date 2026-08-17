@@ -88,7 +88,7 @@ function ElementFormDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.elementForm.title')}
+        {t('catalog.elements.add')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
@@ -103,7 +103,7 @@ function ElementFormDialog({
             helperText={
               nameError
                 ? t('catalog.elements.form.nameRequired')
-                : t('catalog.elementForm.nameHelp')
+                : t('catalog.elements.form.nameHelp')
             }
             error={nameError}
             value={name}
@@ -139,7 +139,7 @@ function ElementFormDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" disabled={loading || propertyErrors} onClick={handleSubmit}>
-          {loading ? t('catalog.elementForm.submitting') : t('catalog.actions.create')}
+          {loading ? t('catalog.elements.form.submitting') : t('catalog.actions.create')}
         </Button>
       </DialogActions>
     </Dialog>

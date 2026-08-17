@@ -71,7 +71,10 @@
     "typeBreakdown": "गनायथिनि रोखोम बायदिसिना",
     "typeBreakdownSubtitle": "नोंथांनि गासै गनायथिफोरखौ रोखोम बादि राननाय जाबाय",
     "noTypes": "दासिम जेबो गनायथिनि रोखोम गैया।",
-    "viewPending": "गासै नेनानाव थानाय गनायथिफोरखौ नाय"
+    "viewPending": "गासै नेनानाव थानाय गनायथिफोरखौ नाय",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "गनायथिफोर",
@@ -83,7 +86,10 @@
       "userIds": "बाहायग्रा ID फोर",
       "groupIds": "हान्जा ID फोर",
       "commaSeparatedUsers": "बां बाहायग्रा ID फोरखौ कमा (,) जों आलादा खालाम",
-      "active": "सोलिफुनाय फिल्टरफोर"
+      "active": "सोलिफुनाय फिल्टरफोर",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "संपदफोर",
         "eventType": "जाथायनि रोखोम",
         "date": "अक्ट'",
-        "time": "सम"
+        "time": "सम",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "गनायथिनि जिउ-चक्र",
@@ -153,7 +160,14 @@
         "no": "नङा",
         "required": "गोनांथार",
         "optional": "खुसिबादै"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "नाय",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} आव {{elementLabel}} नि थाखाय गोहो सोलाय",
         "loading": "गनायथिनि गुवारै विवरण लोड खालामफुगासिनो...",
         "noMandatory": "बे गनायथिनि थाखाय जेबो गोनांथार बाहागो गैया।",
-        "confirm": "गनायथि हो आरो सालायलां"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "नेवसिनायखौ थि खालाम",
@@ -223,7 +239,9 @@
       "endDate": "जोबनाय अक्ट'",
       "endDateAriaLabel": "जोबनाय अक्ट' फिल्टर",
       "clear": "गासै बोखार",
-      "clearAriaLabel": "गासै फिल्टरफोरखौ बोखार"
+      "clearAriaLabel": "गासै फिल्टरफोरखौ बोखार",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "गनायथिफोरखौ लोड खालामफुगासिनो...",
@@ -248,7 +266,9 @@
         "purposes": "थांखिफोर",
         "updated": "अपडेट खालामबाय",
         "expiration": "सम जोबनाय",
-        "actions": "हाबाफोर"
+        "actions": "हाबाफोर",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "थोंगासिनो...",
       "view": "नाय",
       "viewElement": "{{name}} खौ नाय",
-      "viewPurpose": "{{name}} खौ नाय"
+      "viewPurpose": "{{name}} खौ नाय",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "हाबाफोर",
@@ -301,7 +325,8 @@
       "requirement": "गोनांथारथि",
       "schema": "स्कीमा",
       "type": "रोखोम",
-      "version": "भार्जन"
+      "version": "भार्जन",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "बां हान्जा ID फोरखौ कमा (,) जों आलादा खालाम",
@@ -346,8 +371,23 @@
       "form": {
         "nameLabel": "मुं",
         "nameRequired": "मुं गोनांथार।",
-        "displayNameLabel": "दिन्थिनाय मुं"
-      }
+        "displayNameLabel": "दिन्थिनाय मुं",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "थांखि सोदेर",
@@ -376,11 +416,39 @@
         "nameRequired": "मुं गोनांथार।",
         "typeLabel": "रोखोम",
         "versionLabel": "भार्जन",
-        "elementsLabel": "बाहागोफोर"
+        "elementsLabel": "बाहागोफोर",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
       },
       "versionForm": {
-        "versionLabel": "भार्जन"
-      }
+        "versionLabel": "भार्जन",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "बेजाय",
@@ -405,7 +473,8 @@
       "noSchema": "बे भार्जननि थाखाय जेबो स्कीमा थि खालामाखै।",
       "noPurposeElements": "दासिम जेबो बाहागो सोदेराखै। थांखि सोर्जिनो कम्तिआव मोनसे बाहागो सोदेर।",
       "noVersions": "जेबो भार्जन थाहाथाव नङा।",
-      "versionsLoadFailed": "दा भार्जन जारिमिनखौ लोड खालामनो हायाखै।"
+      "versionsLoadFailed": "दा भार्जन जारिमिनखौ लोड खालामनो हायाखै।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "मोनफ्रोम बाहागोखौ खेबसेल' सोदेरनो हागोन।",
@@ -867,5 +936,10 @@
         "close": "बंध खालाम"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

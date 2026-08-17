@@ -57,10 +57,10 @@ function PurposeVersionDeleteDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error ? <Alert severity="error">{error}</Alert> : null}
           <Typography variant="body2">
-            {t('catalog.purposeVersionDelete.message', { version })}
+            {t('catalog.purposes.versionDelete.message', { version })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('catalog.purposeVersionDelete.note')}
+            {t('catalog.purposes.versionDelete.note')}
           </Typography>
         </Stack>
       </DialogContent>

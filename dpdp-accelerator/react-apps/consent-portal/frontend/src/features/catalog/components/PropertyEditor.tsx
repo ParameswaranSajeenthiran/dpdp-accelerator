@@ -54,9 +54,9 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
         const { duplicateKey, orphanedValue } = issues[index]
         let keyHelperText: string | undefined
         if (duplicateKey) {
-          keyHelperText = t('catalog.elementForm.propertyDuplicateKey')
+          keyHelperText = t('catalog.elements.form.propertyDuplicateKey')
         } else if (orphanedValue) {
-          keyHelperText = t('catalog.elementForm.propertyKeyRequired')
+          keyHelperText = t('catalog.elements.form.propertyKeyRequired')
         }
 
         return (

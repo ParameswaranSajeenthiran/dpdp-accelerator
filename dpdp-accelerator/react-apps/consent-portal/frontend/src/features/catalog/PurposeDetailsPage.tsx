@@ -142,18 +142,18 @@ function PurposeDetailsPage(): React.JSX.Element {
   if (deletePurposeMutation.error) {
     deleteErrorMessage =
       deletePurposeMutation.error instanceof APIError && deletePurposeMutation.error.status === 409
-        ? t('catalog.purposeDelete.conflict')
-        : t('catalog.purposeDelete.deleteFailed')
+        ? t('catalog.purposes.delete.conflict')
+        : t('catalog.purposes.delete.deleteFailed')
   }
   // Duplicate version names are rejected before submit (see
   // PurposeVersionFormDialog), so any server error here is unexpected.
   const createVersionErrorMessage = createVersionMutation.error
-    ? t('catalog.purposeVersionForm.createFailed')
+    ? t('catalog.purposes.versionForm.createFailed')
     : undefined
   // Deleting the latest version is disabled in the table below, so any
   // server error here is unexpected.
   const deleteVersionErrorMessage = deleteVersionMutation.error
-    ? t('catalog.purposeVersionDelete.deleteFailed')
+    ? t('catalog.purposes.versionDelete.deleteFailed')
     : undefined
 
   return (
@@ -463,7 +463,7 @@ function PurposeDetailsPage(): React.JSX.Element {
                               <Tooltip
                                 title={
                                   isLatest
-                                    ? t('catalog.purposeVersionDelete.latestBlocked')
+                                    ? t('catalog.purposes.versionDelete.latestBlocked')
                                     : t('catalog.actions.delete')
                                 }
                               >

@@ -71,7 +71,10 @@
     "typeBreakdown": "सहमति प्रकार विवरण",
     "typeBreakdownSubtitle": "प्रकार द्वारा समूहबद्ध अहाँक सभ सहमति",
     "noTypes": "अखनि कोनहु सहमति प्रकार उपलब्ध नहि अछि।",
-    "viewPending": "सभ लंबित सहमति देखू"
+    "viewPending": "सभ लंबित सहमति देखू",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "सहमति सभ",
@@ -83,7 +86,10 @@
       "userIds": "उपयोगकर्ता आईडी",
       "groupIds": "समूह आईडी",
       "commaSeparatedUsers": "अनेक उपयोगकर्ता आईडी केँ कॉमा सँ अलग करू",
-      "active": "सक्रिय फ़िल्टर"
+      "active": "सक्रिय फ़िल्टर",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "संसाधन सभ",
         "eventType": "घटना प्रकार",
         "date": "तिथि",
-        "time": "समय"
+        "time": "समय",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "सहमति जीवनचक्र",
@@ -153,7 +160,14 @@
         "no": "नहि",
         "required": "आवश्यक",
         "optional": "वैकल्पिक"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "देखू",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} मे {{elementLabel}} लेल अनुमति बदलू",
         "loading": "सहमति विवरण लोड भऽ रहल अछि...",
         "noMandatory": "अहि सहमति लेल कोनहु अनिवार्य आवश्यकता नहि अछि।",
-        "confirm": "स्वीकृत करू आ जारी राखू"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "अस्वीकृतिका पुष्टि करू",
@@ -223,7 +239,9 @@
       "endDate": "अंतिम तिथि",
       "endDateAriaLabel": "अंतिम तिथि फ़िल्टर",
       "clear": "सभ साफ़ करू",
-      "clearAriaLabel": "सभ फ़िल्टर साफ़ करू"
+      "clearAriaLabel": "सभ फ़िल्टर साफ़ करू",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "सहमति सभ लोड भऽ रहल अछि...",
@@ -248,7 +266,9 @@
         "purposes": "उद्देश्य सभ",
         "updated": "अद्यतन कएल गेल",
         "expiration": "समाप्ति",
-        "actions": "कार्रवाई सभ"
+        "actions": "कार्रवाई सभ",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "सहेजल् जा रहल अछि...",
       "view": "देखू",
       "viewElement": "{{name}} देखू",
-      "viewPurpose": "{{name}} देखू"
+      "viewPurpose": "{{name}} देखू",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "कार्रवाई सभ",
@@ -301,7 +325,8 @@
       "requirement": "आवश्यकता",
       "schema": "स्कीमा",
       "type": "प्रकार",
-      "version": "संस्करण"
+      "version": "संस्करण",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "अनेक समूह आईडी केँ कॉमा सँ अलग करू",
@@ -346,8 +371,23 @@
       "form": {
         "nameLabel": "नाम",
         "nameRequired": "नाम आवश्यक अछि।",
-        "displayNameLabel": "प्रदर्शित नाम"
-      }
+        "displayNameLabel": "प्रदर्शित नाम",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "उद्देश्य जोड़ू",
@@ -376,11 +416,39 @@
         "nameRequired": "नाम आवश्यक अछि।",
         "typeLabel": "प्रकार",
         "versionLabel": "संस्करण",
-        "elementsLabel": "तत्व सभ"
+        "elementsLabel": "तत्व सभ",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
       },
       "versionForm": {
-        "versionLabel": "संस्करण"
-      }
+        "versionLabel": "संस्करण",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "परिभाषा",
@@ -405,7 +473,8 @@
       "noSchema": "अहि संस्करण लेल कोनहु स्कीमा कॉन्फ़िगर नहि अछि।",
       "noPurposeElements": "अखनि तक कोनहु तत्व नहि जोड़ल गेल अछि। उद्देश्य बनाबै लेल कम सँ कम एक तत्व जोड़ू।",
       "noVersions": "कोनहु संस्करण उपलब्ध नहि अछि।",
-      "versionsLoadFailed": "अखनि संस्करण इतिहास लोड करै मे असमर्थ।"
+      "versionsLoadFailed": "अखनि संस्करण इतिहास लोड करै मे असमर्थ।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "प्रत्येक तत्व केँ केवल एक बेर शामिल कएल जा सकैत अछि।",
@@ -867,5 +936,10 @@
         "close": "बंद करू"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

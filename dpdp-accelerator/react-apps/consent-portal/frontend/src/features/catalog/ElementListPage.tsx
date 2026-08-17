@@ -67,8 +67,8 @@ function ElementListPage(): React.JSX.Element {
   if (createMutation.error) {
     createErrorMessage =
       createMutation.error instanceof APIError && createMutation.error.status === 409
-        ? t('catalog.elementForm.duplicateName', { name: createMutation.variables?.name ?? '' })
-        : t('catalog.elementForm.createFailed')
+        ? t('catalog.elements.form.duplicateName', { name: createMutation.variables?.name ?? '' })
+        : t('catalog.elements.form.createFailed')
   }
 
   // Paging must keep the active search; only a new search resets to page one.

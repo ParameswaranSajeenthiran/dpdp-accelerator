@@ -71,7 +71,10 @@
     "typeBreakdown": "സമ്മത തരങ്ങളുടെ തരംതിരിവ്",
     "typeBreakdownSubtitle": "നിങ്ങളുടെ എല്ലാ സമ്മതങ്ങളും തരം തിരിച്ച് ഗ്രൂപ്പുചെയ്‌തിരിക്കുന്നു",
     "noTypes": "സമ്മത തരങ്ങളൊന്നും ഇതുവരെ ലഭ്യമല്ല.",
-    "viewPending": "തീർപ്പുകൽപ്പിക്കാത്ത എല്ലാ സമ്മതങ്ങളും കാണുക"
+    "viewPending": "തീർപ്പുകൽപ്പിക്കാത്ത എല്ലാ സമ്മതങ്ങളും കാണുക",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "സമ്മതങ്ങൾ",
@@ -83,7 +86,10 @@
       "userIds": "ഉപയോക്തൃ ഐഡികൾ",
       "groupIds": "ഗ്രൂപ്പ് ഐഡികൾ",
       "commaSeparatedUsers": "ഒന്നിലധികം ഉപയോക്തൃ ഐഡികൾ കോമ ഉപയോഗിച്ച് വേർതിരിക്കുക",
-      "active": "സജീവമായ ഫിൽട്ടറുകൾ"
+      "active": "സജീവമായ ഫിൽട്ടറുകൾ",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "വിഭവങ്ങൾ",
         "eventType": "ഇവന്റ് തരം",
         "date": "തീയതി",
-        "time": "സമയം"
+        "time": "സമയം",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "സമ്മത ജീവിതചക്രം",
@@ -153,7 +160,14 @@
         "no": "അല്ല",
         "required": "ആവശ്യമാണ്",
         "optional": "ഓപ്ഷണൽ"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "കാണുക",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}}-ൽ {{elementLabel}}-നുള്ള അനുമതി ടോഗിൾ ചെയ്യുക",
         "loading": "സമ്മത വിശദാംശങ്ങൾ ലോഡുചെയ്യുന്നു...",
         "noMandatory": "ഈ സമ്മതത്തിന് നിർബന്ധിത ആവശ്യകതകളൊന്നുമില്ല.",
-        "confirm": "അംഗീകരിച്ച് തുടരുക"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "നിരസിക്കൽ സ്ഥിരീകരിക്കുക",
@@ -223,7 +239,9 @@
       "endDate": "അവസാന തീയതി",
       "endDateAriaLabel": "അവസാന തീയതി ഫിൽട്ടർ",
       "clear": "എല്ലാം മായ്‌ക്കുക",
-      "clearAriaLabel": "എല്ലാ ഫിൽട്ടറുകളും മായ്‌ക്കുക"
+      "clearAriaLabel": "എല്ലാ ഫിൽട്ടറുകളും മായ്‌ക്കുക",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "സമ്മതങ്ങൾ ലോഡുചെയ്യുന്നു...",
@@ -248,7 +266,9 @@
         "purposes": "ലക്ഷ്യങ്ങൾ",
         "updated": "അപ്ഡേറ്റ് ചെയ്തത്",
         "expiration": "കാലഹരണപ്പെടൽ",
-        "actions": "നടപടികൾ"
+        "actions": "നടപടികൾ",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "സൂക്ഷിക്കുന്നു...",
       "view": "കാണുക",
       "viewElement": "{{name}} കാണുക",
-      "viewPurpose": "{{name}} കാണുക"
+      "viewPurpose": "{{name}} കാണുക",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "നടപടികൾ",
@@ -301,7 +325,8 @@
       "requirement": "ആവശ്യകത",
       "schema": "സ്കീമ",
       "type": "തരം",
-      "version": "പതിപ്പ്"
+      "version": "പതിപ്പ്",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "ഒന്നിലധികം ഗ്രൂപ്പ് ഐഡികൾ കോമ ഉപയോഗിച്ച് വേർതിരിക്കുക",
@@ -346,8 +371,23 @@
       "form": {
         "nameLabel": "പേര്",
         "nameRequired": "പേര് ആവശ്യമാണ്.",
-        "displayNameLabel": "പ്രദർശിപ്പിക്കുന്ന പേര്"
-      }
+        "displayNameLabel": "പ്രദർശിപ്പിക്കുന്ന പേര്",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "ലക്ഷ്യം ചേർക്കുക",
@@ -376,11 +416,39 @@
         "nameRequired": "പേര് ആവശ്യമാണ്.",
         "typeLabel": "തരം",
         "versionLabel": "പതിപ്പ്",
-        "elementsLabel": "ഘടകങ്ങൾ"
+        "elementsLabel": "ഘടകങ്ങൾ",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
       },
       "versionForm": {
-        "versionLabel": "പതിപ്പ്"
-      }
+        "versionLabel": "പതിപ്പ്",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "നിർവചനം",
@@ -405,7 +473,8 @@
       "noSchema": "ഈ പതിപ്പിനായി സ്കീമയൊന്നും കോൺഫിഗർ ചെയ്തിട്ടില്ല.",
       "noPurposeElements": "ഘടകങ്ങളൊന്നും ഇതുവരെ ചേർത്തിട്ടില്ല. ലക്ഷ്യം സൃഷ്ടിക്കാൻ കുറഞ്ഞത് ഒരു ഘടകമെങ്കിലും ചേർക്കുക.",
       "noVersions": "പതിപ്പുകളൊന്നും ലഭ്യമല്ല.",
-      "versionsLoadFailed": "ഇപ്പോൾ പതിപ്പ് ചരിത്രം ലോഡുചെയ്യാൻ കഴിഞ്ഞില്ല."
+      "versionsLoadFailed": "ഇപ്പോൾ പതിപ്പ് ചരിത്രം ലോഡുചെയ്യാൻ കഴിഞ്ഞില്ല.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "ഓരോ ഘടകവും ഒരിക്കൽ മാത്രമേ ഉൾപ്പെടുത്താൻ കഴിയൂ.",
@@ -867,5 +936,10 @@
         "close": "അടയ്ക്കുക"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

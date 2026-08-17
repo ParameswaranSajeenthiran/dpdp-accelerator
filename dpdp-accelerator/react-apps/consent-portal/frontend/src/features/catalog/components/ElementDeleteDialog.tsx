@@ -50,17 +50,17 @@ function ElementDeleteDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.elementDelete.title')}
+        {t('catalog.elements.delete.title')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error ? <Alert severity="error">{error}</Alert> : null}
           <Typography variant="body2">
-            {t('catalog.elementDelete.message', { name: elementName })}
+            {t('catalog.elements.delete.message', { name: elementName })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('catalog.elementDelete.note')}
+            {t('catalog.elements.delete.note')}
           </Typography>
         </Stack>
       </DialogContent>
@@ -70,7 +70,7 @@ function ElementDeleteDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" color="error" disabled={loading} onClick={onConfirm}>
-          {loading ? t('catalog.actions.deleting') : t('catalog.elementDelete.confirm')}
+          {loading ? t('catalog.actions.deleting') : t('catalog.elements.delete.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

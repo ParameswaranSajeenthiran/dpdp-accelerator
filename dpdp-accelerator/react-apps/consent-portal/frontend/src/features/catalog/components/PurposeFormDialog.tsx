@@ -145,8 +145,8 @@ function PurposeFormDialog({
                 error={typeError}
                 helperText={
                   typeError
-                    ? t('catalog.purposeForm.typeRequired')
-                    : t('catalog.purposeForm.typeHelp')
+                    ? t('catalog.purposes.form.typeRequired')
+                    : t('catalog.purposes.form.typeHelp')
                 }
               />
             )}
@@ -159,8 +159,8 @@ function PurposeFormDialog({
             error={versionError}
             helperText={
               versionError
-                ? t('catalog.purposeForm.versionRequired')
-                : t('catalog.purposeForm.versionHelp')
+                ? t('catalog.purposes.form.versionRequired')
+                : t('catalog.purposes.form.versionHelp')
             }
             value={version}
             disabled={loading}
@@ -189,7 +189,7 @@ function PurposeFormDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" disabled={loading || propertyErrors} onClick={handleSubmit}>
-          {loading ? t('catalog.purposeForm.submitting') : t('catalog.actions.create')}
+          {loading ? t('catalog.purposes.form.submitting') : t('catalog.actions.create')}
         </Button>
       </DialogActions>
     </Dialog>
