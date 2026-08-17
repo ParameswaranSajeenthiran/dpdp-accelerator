@@ -78,8 +78,12 @@ the super-tenant Console, run the same script as that tenant's administrator:
 
 ```sh
 sh bin/create-portal-app.sh -b https://<host>:9443 \
-   -t wso2.com -u admin@wso2.com -p '<password>'
+   -t wso2.com -u admin -p '<password>'
 ```
+
+`-u` may be given bare or fully qualified: a tenant administrator has to
+authenticate as `user@tenant`, and the script appends the tenant domain when
+it is missing.
 
 Then assign `dpdp-consent-admin` to the tenant's administrators and open
 `https://<host>:9443/t/wso2.com/consent-portal/`.

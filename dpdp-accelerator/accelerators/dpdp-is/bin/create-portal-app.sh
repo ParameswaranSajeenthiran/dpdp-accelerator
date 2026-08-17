@@ -97,6 +97,14 @@ fi
 API="${BASE}${TENANT_PATH}"
 PORTAL_URL="${BASE}${TENANT_PATH}/consent-portal/"
 
+# A tenant user authenticates as user@tenant; an unqualified name is read as a
+# super tenant user and rejected.
+case "${TENANT}:${ADMIN_USER}" in
+  carbon.super:*) ;;
+  *:*@*) ;;
+  *) ADMIN_USER="${ADMIN_USER}@${TENANT}" ;;
+esac
+
 # -k is required because the shipped Identity Server certificate is self-signed.
 CURL="curl -sk -u ${ADMIN_USER}:${ADMIN_PASS}"
 
@@ -104,13 +112,34 @@ json() { python3 -c "import json,sys; d=json.load(sys.stdin); print($1)" 2>/dev/
 
 echo "Identity Server : ${BASE}"
 echo "Tenant          : ${TENANT}"
+echo "Administrator   : ${ADMIN_USER}"
 echo "Portal          : ${PORTAL_URL}"
 echo
 
-if ! ${CURL} "${API}/api/server/v1/api-resources?limit=1" -o /dev/null -w '' 2>/dev/null; then
-  echo "ERROR: cannot reach the Identity Server. Is it running?"
-  exit 2
-fi
+# Separate "the server is not there" from "it turned us away", so a wrong
+# password does not read as a wrong URL.
+# curl already reports 000 when it cannot connect, so do not add a fallback
+# of our own here or the two run together.
+STATUS=$(${CURL} -o /dev/null -w '%{http_code}' "${API}/api/server/v1/api-resources?limit=1" 2>/dev/null) || true
+case "${STATUS:-000}" in
+  2*) ;;
+  000)
+    echo "ERROR: cannot reach ${BASE}. Is the Identity Server running there?"
+    exit 2 ;;
+  401)
+    echo "ERROR: ${BASE} rejected ${ADMIN_USER}."
+    echo "       Check the password, and that this user administers ${TENANT}."
+    exit 2 ;;
+  403)
+    echo "ERROR: ${ADMIN_USER} is not allowed to manage applications in ${TENANT}."
+    exit 2 ;;
+  404)
+    echo "ERROR: ${API} returned 404. Does the tenant ${TENANT} exist?"
+    exit 2 ;;
+  *)
+    echo "ERROR: ${API} returned HTTP ${STATUS}."
+    exit 2 ;;
+esac
 
 # ------------------------------------------------------------------ application
 echo "[1/5] Registering ${CLIENT_ID}"
