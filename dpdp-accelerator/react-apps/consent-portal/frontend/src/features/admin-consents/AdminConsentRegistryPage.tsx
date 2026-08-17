@@ -108,7 +108,7 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
   const filterLabels: Record<keyof AdminConsentRegistryFilters, string> = {
     state: t('consentRegistry.filters.state'),
     consentId: t('consentRegistry.details.consentId'),
-    subjectId: t('adminConsents.filters.subjectId'),
+    subjectId: t('consentRegistry.details.table.user'),
     serviceId: t('adminConsents.filters.serviceId'),
   }
 

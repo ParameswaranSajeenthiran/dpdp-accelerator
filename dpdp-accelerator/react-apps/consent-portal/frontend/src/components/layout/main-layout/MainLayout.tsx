@@ -21,6 +21,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router-dom'
 import AppSidebar from '../sidebar/AppSidebar'
+import LanguageSwitcher from './LanguageSwitcher'
 import RouteScrollManager from './RouteScrollManager'
 import UserProfileMenu from './UserProfileMenu'
 
@@ -58,6 +59,7 @@ function MainLayout(): React.JSX.Element {
           </Header.Brand>
           <Header.Spacer />
           <Header.Actions>
+            <LanguageSwitcher />
             <ColorSchemeToggle />
             <UserProfileMenu />
           </Header.Actions>

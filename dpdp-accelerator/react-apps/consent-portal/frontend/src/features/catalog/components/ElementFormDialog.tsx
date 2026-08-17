@@ -88,7 +88,7 @@ function ElementFormDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.elementForm.title')}
+        {t('catalog.elements.add')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
@@ -99,9 +99,11 @@ function ElementFormDialog({
             autoFocus
             required
             fullWidth
-            label={t('catalog.elementForm.nameLabel')}
+            label={t('catalog.elements.form.nameLabel')}
             helperText={
-              nameError ? t('catalog.elementForm.nameRequired') : t('catalog.elementForm.nameHelp')
+              nameError
+                ? t('catalog.elements.form.nameRequired')
+                : t('catalog.elements.form.nameHelp')
             }
             error={nameError}
             value={name}
@@ -112,7 +114,7 @@ function ElementFormDialog({
 
           <TextField
             fullWidth
-            label={t('catalog.elementForm.displayNameLabel')}
+            label={t('catalog.elements.form.displayNameLabel')}
             value={displayName}
             disabled={loading}
             onChange={(event) => setDisplayName(event.target.value)}
@@ -122,7 +124,7 @@ function ElementFormDialog({
             fullWidth
             multiline
             minRows={2}
-            label={t('catalog.elementForm.descriptionLabel')}
+            label={t('catalog.fields.description')}
             value={description}
             disabled={loading}
             onChange={(event) => setDescription(event.target.value)}
@@ -137,7 +139,7 @@ function ElementFormDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" disabled={loading || propertyErrors} onClick={handleSubmit}>
-          {loading ? t('catalog.elementForm.submitting') : t('catalog.actions.create')}
+          {loading ? t('catalog.elements.form.submitting') : t('catalog.actions.create')}
         </Button>
       </DialogActions>
     </Dialog>

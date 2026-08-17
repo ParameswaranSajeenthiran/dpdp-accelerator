@@ -71,7 +71,10 @@
     "typeBreakdown": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱴᱟᱭᱤᱯ ᱦᱟᱹᱴᱤᱧ",
     "typeBreakdownSubtitle": "ᱟᱢᱟᱜ ᱡᱚᱛᱚ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱴᱟᱭᱤᱯ ᱞᱮᱠᱟᱛᱮ ᱦᱟᱹᱴᱤᱧ ᱟᱠᱟᱱᱟ",
     "noTypes": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱴᱟᱭᱤᱯ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
-    "viewPending": "ᱡᱚᱛᱚ ᱵᱟᱹᱠᱤ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱧᱮᱞ ᱢᱮ"
+    "viewPending": "ᱡᱚᱛᱚ ᱵᱟᱹᱠᱤ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱧᱮᱞ ᱢᱮ",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "ᱥᱟᱹᱢᱟᱹᱛᱤ",
@@ -83,7 +86,10 @@
       "userIds": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID ᱠᱚ",
       "groupIds": "ᱜᱩᱴ ID ᱠᱚ",
       "commaSeparatedUsers": "ᱟᱭᱢᱟ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID ᱠᱚᱢᱟ (,) ᱛᱮ ᱵᱷᱮᱜᱟᱨ ᱢᱮ",
-      "active": "ᱪᱟᱹᱞᱩ ᱯᱷᱤᱞᱴᱚᱨ ᱠᱚ"
+      "active": "ᱪᱟᱹᱞᱩ ᱯᱷᱤᱞᱴᱚᱨ ᱠᱚ",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "ᱨᱤᱥᱳᱨᱥ",
         "eventType": "ᱤᱵᱷᱮᱱᱴ ᱴᱟᱭᱤᱯ",
         "date": "ᱢᱟᱹᱦᱤᱛ",
-        "time": "ᱚᱠᱛᱚ"
+        "time": "ᱚᱠᱛᱚ",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱞᱟᱭᱤᱯᱷᱥᱟᱭᱠᱮᱞ",
@@ -153,7 +160,14 @@
         "no": "ᱵᱟᱝ",
         "required": "ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ",
         "optional": "ᱚᱯᱥᱚᱱᱮᱞ"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "ᱧᱮᱞ ᱢᱮ",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} ᱨᱮ {{elementLabel}} ᱞᱟᱹᱜᱤᱫ ᱟᱹᱭᱫᱟᱹᱨᱤ ᱵᱚᱫᱚᱞ ᱢᱮ",
         "loading": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱵᱤᱵᱚᱨᱚᱱ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
         "noMandatory": "ᱱᱚᱣᱟ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱪᱮᱫ ᱦᱚᱸ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
-        "confirm": "ᱟᱸᱜᱳᱪ ᱟᱨ ᱞᱟᱦᱟᱜ ᱢᱮ"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "ᱵᱟᱹᱜᱤᱭᱟᱜ ᱴᱷᱟᱹᱣᱠᱟᱹᱭ ᱢᱮ",
@@ -223,7 +239,9 @@
       "endDate": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ",
       "endDateAriaLabel": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ ᱯᱷᱤᱞᱴᱚᱨ",
       "clear": "ᱡᱚᱛᱚ ᱥᱟᱯᱷᱟᱭ ᱢᱮ",
-      "clearAriaLabel": "ᱡᱚᱛᱚ ᱯᱷᱤᱞᱴᱚᱨ ᱥᱟᱯᱷᱟᱭ ᱢᱮ"
+      "clearAriaLabel": "ᱡᱚᱛᱚ ᱯᱷᱤᱞᱴᱚᱨ ᱥᱟᱯᱷᱟᱭ ᱢᱮ",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱠᱚ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
@@ -248,7 +266,9 @@
         "purposes": "ᱩᱫᱽᱫᱮᱥ",
         "updated": "ᱟᱯᱰᱮᱴ ᱟᱠᱟᱱᱟ",
         "expiration": "ᱪᱟᱵᱟᱜ ᱢᱟᱹᱦᱤᱛ",
-        "actions": "ᱠᱟᱹᱢᱤ ᱠᱚ"
+        "actions": "ᱠᱟᱹᱢᱤ ᱠᱚ",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "ᱥᱟᱸᱪᱟᱣ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
       "view": "ᱧᱮᱞ ᱢᱮ",
       "viewElement": "{{name}} ᱧᱮᱞ ᱢᱮ",
-      "viewPurpose": "{{name}} ᱧᱮᱞ ᱢᱮ"
+      "viewPurpose": "{{name}} ᱧᱮᱞ ᱢᱮ",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "ᱠᱟᱹᱢᱤ ᱠᱚ",
@@ -301,7 +325,8 @@
       "requirement": "ᱞᱟᱹᱠᱛᱤ",
       "schema": "ᱥᱠᱤᱢᱟ",
       "type": "ᱴᱟᱭᱤᱯ",
-      "version": "ᱵᱷᱚᱨᱥᱚᱱ"
+      "version": "ᱵᱷᱚᱨᱥᱚᱱ",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "ᱟᱭᱢᱟ ᱜᱩᱴ ID ᱠᱚᱢᱟ (,) ᱛᱮ ᱵᱷᱮᱜᱟᱨ ᱢᱮ",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "ᱮᱞᱤᱢᱮᱱᱴ ᱧᱩᱛᱩᱢ ᱛᱮ ᱯᱟᱸᱡᱟᱭ ᱢᱮ",
       "subtitle": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ ᱪᱟᱞᱟᱣ ᱢᱮ।",
       "tableLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
-      "title": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ"
+      "title": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
+      "form": {
+        "nameLabel": "ᱧᱩᱛᱩᱢ",
+        "nameRequired": "ᱧᱩᱛᱩᱢ ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ ᱠᱟᱱᱟ।",
+        "displayNameLabel": "ᱩᱫᱩᱜ ᱧᱩᱛᱩᱢ",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "ᱩᱫᱽᱫᱮᱥ ᱡᱚᱲᱟᱣ ᱢᱮ",
@@ -364,7 +409,46 @@
       "scopeFilter": "ᱩᱫᱽᱫᱮᱥ ᱥᱠᱳᱯ",
       "subtitle": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱩᱫᱽᱫᱮᱥ ᱠᱚ ᱪᱟᱞᱟᱣ ᱢᱮ।",
       "tableLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱩᱫᱽᱫᱮᱥ ᱠᱚ",
-      "title": "ᱩᱫᱽᱫᱮᱥ ᱠᱚ"
+      "title": "ᱩᱫᱽᱫᱮᱥ ᱠᱚ",
+      "form": {
+        "title": "ᱩᱫᱽᱫᱮᱥ ᱡᱚᱲᱟᱣ ᱢᱮ",
+        "nameLabel": "ᱧᱩᱛᱩᱢ",
+        "nameRequired": "ᱧᱩᱛᱩᱢ ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ ᱠᱟᱱᱟ।",
+        "typeLabel": "ᱴᱟᱭᱤᱯ",
+        "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ",
+        "elementsLabel": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "ᱢᱮᱱᱮᱛ",
@@ -389,7 +473,8 @@
       "noSchema": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱥᱠᱤᱢᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
       "noPurposeElements": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱮᱞᱤᱢᱮᱱᱴ ᱵᱟᱝ ᱡᱚᱲᱟᱣ ᱟᱠᱟᱱᱟ।",
       "noVersions": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱵᱷᱚᱨᱥᱚᱱ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
-      "versionsLoadFailed": "ᱵᱷᱚᱨᱥᱚᱱ ᱱᱟᱜᱟᱢ ᱞᱳᱰ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ।"
+      "versionsLoadFailed": "ᱵᱷᱚᱨᱥᱚᱱ ᱱᱟᱜᱟᱢ ᱞᱳᱰ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "ᱢᱤᱫᱴᱟᱹᱝ ᱮᱞᱤᱢᱮᱱᱴ ᱢᱤᱫ ᱫᱷᱟᱣ ᱜᱮ ᱥᱮᱞᱮᱫ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ।",
@@ -851,5 +936,10 @@
         "close": "ᱵᱚᱸᱫᱷ ᱢᱮ"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

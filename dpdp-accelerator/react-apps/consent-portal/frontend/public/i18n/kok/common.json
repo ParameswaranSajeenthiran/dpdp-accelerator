@@ -71,7 +71,10 @@
     "typeBreakdown": "संमती प्रकाराचे वर्गीकरण",
     "typeBreakdownSubtitle": "तुमच्यो सगळ्यो संमती प्रकारानुसार गट केल्यात",
     "noTypes": "अजून खंयचेच संमती प्रकार उपलब्ध नात.",
-    "viewPending": "सगळ्यो प्रलंबित संमती पळयात"
+    "viewPending": "सगळ्यो प्रलंबित संमती पळयात",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "संमती",
@@ -83,7 +86,10 @@
       "userIds": "वापरपी आयडी",
       "groupIds": "गट आयडी",
       "commaSeparatedUsers": "एका परस चड वापरपी आयडी स्वल्पविरामान वेगळे करात",
-      "active": "सक्रिय फिल्टर"
+      "active": "सक्रिय फिल्टर",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "संसाधनां",
         "eventType": "घडणुकेचो प्रकार",
         "date": "तारीख",
-        "time": "वेळ"
+        "time": "वेळ",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "संमतीचे जीवनचक्र",
@@ -153,7 +160,14 @@
         "no": "ना",
         "required": "गरजेचे",
         "optional": "विकल्पीक"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "पळयात",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} मधील {{elementLabel}} खातीर परवानगी बदला",
         "loading": "संमतीची म्हायती लोड जाता...",
         "noMandatory": "हे संमती खातीर खंयच्याच अनिवार्य गजालींची गरज ना.",
-        "confirm": "मान्यताय दियात आणि फुडे वचात"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "नकार निश्चित करात",
@@ -223,7 +239,9 @@
       "endDate": "शेवटाची तारीख",
       "endDateAriaLabel": "शेवटाची तारीख फिल्टर",
       "clear": "सगळे पुसून उडयात",
-      "clearAriaLabel": "सगळे फिल्टर पुसून उडयात"
+      "clearAriaLabel": "सगळे फिल्टर पुसून उडयात",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "संमती लोड जाता...",
@@ -248,7 +266,9 @@
         "purposes": "उद्देश",
         "updated": "अद्ययावत केलां",
         "expiration": "मुदत सोंपल्या",
-        "actions": "कृती"
+        "actions": "कृती",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "साठयता...",
       "view": "पळयात",
       "viewElement": "{{name}} पळयात",
-      "viewPurpose": "{{name}} पळयात"
+      "viewPurpose": "{{name}} पळयात",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "कृती",
@@ -301,7 +325,8 @@
       "requirement": "गरज",
       "schema": "स्कीमा (Schema)",
       "type": "प्रकार",
-      "version": "आवृत्ती"
+      "version": "आवृत्ती",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "एका परस चड गट आयडी स्वल्पविरामान वेगळे करात",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "घटकाच्या नावां वरवीं सोदात",
       "subtitle": "परत वापरूंक येवपी संमती घटक आणि तांच्या आवृत्ती व्याख्यांचे व्यवस्थापन करात.",
       "tableLabel": "संमती घटक",
-      "title": "घटक"
+      "title": "घटक",
+      "form": {
+        "nameLabel": "नाव",
+        "nameRequired": "नाव गरजेचे आसा.",
+        "displayNameLabel": "दाखवपाचे नाव",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "उद्देश जोडा",
@@ -364,7 +409,46 @@
       "scopeFilter": "उद्देशाची व्याप्ती",
       "subtitle": "परत वापरूंक येवपी संमती उद्देश आणि तांच्या घटक व्याख्यांचे व्यवस्थापन करात.",
       "tableLabel": "संमती उद्देश",
-      "title": "उद्देश"
+      "title": "उद्देश",
+      "form": {
+        "title": "उद्देश जोडा",
+        "nameLabel": "नाव",
+        "nameRequired": "नाव गरजेचे आसा.",
+        "typeLabel": "प्रकार",
+        "versionLabel": "आवृत्ती",
+        "elementsLabel": "घटक",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "आवृत्ती",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "व्याख्या",
@@ -389,7 +473,8 @@
       "noSchema": "हे आवृत्ती खातीर खंयचोच स्कीमा थारायल्लो ना.",
       "noPurposeElements": "अजून खंयचेच घटक जोडले नात. उद्देश तयार करपाक उण्यांत उणो एक घटक जोडा.",
       "noVersions": "खंयच्योच आवृत्त्या उपलब्ध नात.",
-      "versionsLoadFailed": "सद्या आवृत्ती इतिहास लोड करपाक अपयश आयले."
+      "versionsLoadFailed": "सद्या आवृत्ती इतिहास लोड करपाक अपयश आयले.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "दर एक घटक फकत एक फावट आस्पावूंक येता.",
@@ -851,5 +936,10 @@
         "close": "बंद करात"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

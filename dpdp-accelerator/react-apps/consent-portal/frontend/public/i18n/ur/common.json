@@ -71,7 +71,10 @@
     "typeBreakdown": "رضامندی کی قسم کی تفصیل",
     "typeBreakdownSubtitle": "قسم کے لحاظ سے آپ کی تمام رضامندیاں",
     "noTypes": "ابھی تک رضامندی کی کوئی قسم دستیاب نہیں ہے۔",
-    "viewPending": "تمام زیر التواء رضامندیاں دیکھیں"
+    "viewPending": "تمام زیر التواء رضامندیاں دیکھیں",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "رضامندیاں",
@@ -83,7 +86,10 @@
       "userIds": "صارف IDs",
       "groupIds": "گروپ IDs",
       "commaSeparatedUsers": "متعدد صارف IDs کو کوما (,) سے الگ کریں",
-      "active": "فعال فلٹرز"
+      "active": "فعال فلٹرز",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "وسائل",
         "eventType": "تقریب کی قسم",
         "date": "تاریخ",
-        "time": "وقت"
+        "time": "وقت",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "رضامندی کا لائف سائیکل",
@@ -153,7 +160,14 @@
         "no": "نہیں",
         "required": "ضروری",
         "optional": "اختیاری"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "دیکھیں",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} میں {{elementLabel}} کے لیے اجازت کی حالت بدلیں",
         "loading": "رضامندی کی تفصیلات لوڈ ہو رہی ہیں...",
         "noMandatory": "اس رضامندی کے لیے کوئی لازمی ضروریات نہیں ہیں۔",
-        "confirm": "منظور کریں اور آگے بڑھیں"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "مسترد کرنے کی تصدیق کریں",
@@ -223,7 +239,9 @@
       "endDate": "آخری تاریخ",
       "endDateAriaLabel": "آخری تاریخ کا فلٹر",
       "clear": "سب صاف کریں",
-      "clearAriaLabel": "تمام فلٹرز صاف کریں"
+      "clearAriaLabel": "تمام فلٹرز صاف کریں",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "رضامندیاں لوڈ ہو رہی ہیں...",
@@ -248,7 +266,9 @@
         "purposes": "مقاصد",
         "updated": "اپ ڈیٹ شدہ",
         "expiration": "میعاد ختم ہونے کی تاریخ",
-        "actions": "اقدامات"
+        "actions": "اقدامات",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "محفوظ ہو رہا ہے...",
       "view": "دیکھیں",
       "viewElement": "{{name}} دیکھیں",
-      "viewPurpose": "{{name}} دیکھیں"
+      "viewPurpose": "{{name}} دیکھیں",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "اقدامات",
@@ -301,7 +325,8 @@
       "requirement": "ضرورت",
       "schema": "اسکیما",
       "type": "قسم",
-      "version": "ورژن"
+      "version": "ورژن",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "متعدد گروپ IDs کو کوما (,) سے الگ کریں",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "عنصر کے نام سے تلاش کریں",
       "subtitle": "دوبارہ قابل استعمال رضامندی کے عناصر اور ان کی ورژن شدہ تعریفات کا انتظام کریں۔",
       "tableLabel": "رضامندی کے عناصر",
-      "title": "عناصر"
+      "title": "عناصر",
+      "form": {
+        "nameLabel": "نام",
+        "nameRequired": "نام ضروری ہے۔",
+        "displayNameLabel": "ڈسپلے کا نام",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "مقصد شامل کریں",
@@ -364,7 +409,46 @@
       "scopeFilter": "مقصد کا اسکوپ",
       "subtitle": "دوبارہ قابل استعمال رضامندی کے مقاصد اور ان کے عنصر کی تعریفات کا انتظام کریں۔",
       "tableLabel": "رضامندی کے مقاصد",
-      "title": "مقاصد"
+      "title": "مقاصد",
+      "form": {
+        "title": "مقصد شامل کریں",
+        "nameLabel": "نام",
+        "nameRequired": "نام ضروری ہے۔",
+        "typeLabel": "قسم",
+        "versionLabel": "ورژن",
+        "elementsLabel": "عناصر",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "ورژن",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "تعریف",
@@ -389,7 +473,8 @@
       "noSchema": "اس ورژن کے لیے کوئی اسکیما کنفیگر نہیں ہے۔",
       "noPurposeElements": "ابھی تک کوئی عنصر شامل نہیں کیا گیا۔ مقصد بنانے کے لیے کم از کم ایک عنصر شامل کریں۔",
       "noVersions": "کوئی ورژن دستیاب نہیں ہے۔",
-      "versionsLoadFailed": "اس وقت ورژن ہسٹری لوڈ کرنے میں ناکامی ہوئی۔"
+      "versionsLoadFailed": "اس وقت ورژن ہسٹری لوڈ کرنے میں ناکامی ہوئی۔",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "ہر عنصر کو صرف ایک بار شامل کیا جا سکتا ہے۔",
@@ -851,5 +936,10 @@
         "close": "بند کریں"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

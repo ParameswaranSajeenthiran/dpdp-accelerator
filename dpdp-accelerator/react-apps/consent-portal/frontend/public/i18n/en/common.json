@@ -71,7 +71,10 @@
     "typeBreakdown": "Consent type breakdown",
     "typeBreakdownSubtitle": "All of your consents grouped by type",
     "noTypes": "No consent types are available yet.",
-    "viewPending": "View all pending consents"
+    "viewPending": "View all pending consents",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "Consents",
@@ -83,7 +86,10 @@
       "userIds": "User IDs",
       "groupIds": "Group IDs",
       "commaSeparatedUsers": "Separate multiple user IDs with commas",
-      "active": "Active filters"
+      "active": "Active filters",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "Resources",
         "eventType": "Event Type",
         "date": "Date",
-        "time": "Time"
+        "time": "Time",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "Consent lifecycle",
@@ -153,7 +160,14 @@
         "no": "No",
         "required": "Required",
         "optional": "Optional"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "View",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "Toggle permission for {{elementLabel}} in {{purposeLabel}}",
         "loading": "Loading consent details...",
         "noMandatory": "No mandatory requirements for this consent.",
-        "confirm": "Approve & Continue"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "Confirm Rejection",
@@ -223,7 +239,9 @@
       "endDate": "End date",
       "endDateAriaLabel": "End date filter",
       "clear": "Clear all",
-      "clearAriaLabel": "Clear all filters"
+      "clearAriaLabel": "Clear all filters",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "Loading consents...",
@@ -248,7 +266,9 @@
         "purposes": "Purposes",
         "updated": "Updated",
         "expiration": "Expiration",
-        "actions": "Actions"
+        "actions": "Actions",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "Saving...",
       "view": "View",
       "viewElement": "View {{name}}",
-      "viewPurpose": "View {{name}}"
+      "viewPurpose": "View {{name}}",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "Actions",
@@ -301,7 +325,8 @@
       "requirement": "Requirement",
       "schema": "Schema",
       "type": "Type",
-      "version": "Version"
+      "version": "Version",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "Separate multiple group IDs with commas",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "Search by element name",
       "subtitle": "Manage reusable consent elements and their versioned definitions.",
       "tableLabel": "Consent elements",
-      "title": "Elements"
+      "title": "Elements",
+      "form": {
+        "nameLabel": "Name",
+        "nameRequired": "Name is required.",
+        "displayNameLabel": "Display name",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "Add purpose",
@@ -364,7 +409,46 @@
       "scopeFilter": "Purpose scope",
       "subtitle": "Manage reusable consent purposes and their element definitions.",
       "tableLabel": "Consent purposes",
-      "title": "Purposes"
+      "title": "Purposes",
+      "form": {
+        "title": "Add purpose",
+        "nameLabel": "Name",
+        "nameRequired": "Name is required.",
+        "typeLabel": "Type",
+        "versionLabel": "Version",
+        "elementsLabel": "Elements",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "Version",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "Definition",
@@ -389,7 +473,8 @@
       "noSchema": "No schema is configured for this version.",
       "noPurposeElements": "No elements added yet. Add at least one element to create the purpose.",
       "noVersions": "No versions are available.",
-      "versionsLoadFailed": "Unable to load version history right now."
+      "versionsLoadFailed": "Unable to load version history right now.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "Each element can only be included once.",
@@ -851,5 +936,10 @@
         "close": "Close"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

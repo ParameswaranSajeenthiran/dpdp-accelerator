@@ -64,7 +64,7 @@ function PurposeSearchFilter({ value, onSearch }: PurposeSearchFilterProps): Rea
       <TextField
         size="small"
         sx={{ width: { xs: '100%', sm: 200 }, flexShrink: 0 }}
-        label={t('catalog.purposes.typeFilterLabel')}
+        label={t('catalog.fields.type')}
         value={draft.type}
         onChange={(event) => setDraft({ ...draft, type: event.target.value })}
         onKeyDown={(event) => {

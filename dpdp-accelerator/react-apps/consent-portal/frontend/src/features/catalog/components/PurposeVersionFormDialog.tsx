@@ -98,11 +98,11 @@ function PurposeVersionFormDialog({
 
   let versionHelperText: string | undefined
   if (versionMissing) {
-    versionHelperText = t('catalog.purposeVersionForm.versionRequired')
+    versionHelperText = t('catalog.purposes.versionForm.versionRequired')
   } else if (versionDuplicate) {
-    versionHelperText = t('catalog.purposeVersionForm.versionDuplicate')
+    versionHelperText = t('catalog.purposes.versionForm.versionDuplicate')
   } else {
-    versionHelperText = t('catalog.purposeVersionForm.versionHelp')
+    versionHelperText = t('catalog.purposes.versionForm.versionHelp')
   }
 
   const handleSubmit = (): void => {
@@ -123,7 +123,7 @@ function PurposeVersionFormDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.purposeVersionForm.title')}
+        {t('catalog.purposes.versionForm.title')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
@@ -134,7 +134,7 @@ function PurposeVersionFormDialog({
             autoFocus
             required
             fullWidth
-            label={t('catalog.purposeVersionForm.versionLabel')}
+            label={t('catalog.purposes.versionForm.versionLabel')}
             error={versionMissing || versionDuplicate}
             helperText={versionHelperText}
             value={version}
@@ -151,14 +151,14 @@ function PurposeVersionFormDialog({
                 onChange={(event) => setSetAsLatest(event.target.checked)}
               />
             }
-            label={t('catalog.purposeVersionForm.setAsLatestLabel')}
+            label={t('catalog.purposes.versionForm.setAsLatestLabel')}
           />
 
           <TextField
             fullWidth
             multiline
             minRows={2}
-            label={t('catalog.elementForm.descriptionLabel')}
+            label={t('catalog.fields.description')}
             value={description}
             disabled={loading}
             onChange={(event) => setDescription(event.target.value)}
@@ -175,7 +175,7 @@ function PurposeVersionFormDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" disabled={loading || propertyErrors} onClick={handleSubmit}>
-          {loading ? t('catalog.purposeVersionForm.submitting') : t('catalog.actions.create')}
+          {loading ? t('catalog.purposes.versionForm.submitting') : t('catalog.actions.create')}
         </Button>
       </DialogActions>
     </Dialog>

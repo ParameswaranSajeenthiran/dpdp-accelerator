@@ -71,7 +71,10 @@
     "typeBreakdown": "সম্মতির প্রকারভেদ",
     "typeBreakdownSubtitle": "প্রকার অনুসারে আপনার সমস্ত সম্মতি",
     "noTypes": "এখনও কোনো সম্মতির প্রকার উপলব্ধ নেই।",
-    "viewPending": "সমস্ত বিবেচনাধীন সম্মতি দেখুন"
+    "viewPending": "সমস্ত বিবেচনাধীন সম্মতি দেখুন",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "সম্মতিসমূহ",
@@ -83,7 +86,10 @@
       "userIds": "ব্যবহারকারী আইডি",
       "groupIds": "গ্রুপ আইডি",
       "commaSeparatedUsers": "একাধিক ব্যবহারকারী আইডি কমা দিয়ে আলাদা করুন",
-      "active": "সক্রিয় ফিল্টারসমূহ"
+      "active": "সক্রিয় ফিল্টারসমূহ",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "রিসোর্স",
         "eventType": "ইভেন্টের প্রকার",
         "date": "তারিখ",
-        "time": "সময়"
+        "time": "সময়",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "সম্মতির জীবনচক্র",
@@ -153,7 +160,14 @@
         "no": "না",
         "required": "প্রয়োজনীয়",
         "optional": "ঐচ্ছিক"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "দেখুন",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} এর মধ্যে {{elementLabel}} এর জন্য অনুমতি টগল করুন",
         "loading": "সম্মতির বিবরণ লোড হচ্ছে...",
         "noMandatory": "এই সম্মতির জন্য কোনো বাধ্যতামূলক প্রয়োজনীয়তা নেই।",
-        "confirm": "অনুমোদন করুন এবং চালিয়ে যান"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "প্রত্যাখ্যান নিশ্চিত করুন",
@@ -223,7 +239,9 @@
       "endDate": "শেষের তারিখ",
       "endDateAriaLabel": "শেষের তারিখ ফিল্টার",
       "clear": "সব মুছুন",
-      "clearAriaLabel": "সমস্ত ফিল্টার মুছুন"
+      "clearAriaLabel": "সমস্ত ফিল্টার মুছুন",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "সম্মতিসমূহ লোড হচ্ছে...",
@@ -248,7 +266,9 @@
         "purposes": "উদ্দেশ্যসমূহ",
         "updated": "আপডেট হয়েছে",
         "expiration": "মেয়াদ শেষ",
-        "actions": "অ্যাকশন"
+        "actions": "অ্যাকশন",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "সেভ করা হচ্ছে...",
       "view": "দেখুন",
       "viewElement": "{{name}} দেখুন",
-      "viewPurpose": "{{name}} দেখুন"
+      "viewPurpose": "{{name}} দেখুন",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "অ্যাকশন",
@@ -301,7 +325,8 @@
       "requirement": "প্রয়োজনীয়তা",
       "schema": "স্কিমা",
       "type": "প্রকার",
-      "version": "সংস্করণ"
+      "version": "সংস্করণ",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "একাধিক গ্রুপ আইডি কমা দিয়ে আলাদা করুন",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "উপাদানের নাম দিয়ে খুঁজুন",
       "subtitle": "পুনর্ব্যবহারযোগ্য সম্মতির উপাদান এবং তাদের সংস্করণের সংজ্ঞা পরিচালনা করুন।",
       "tableLabel": "সম্মতির উপাদানসমূহ",
-      "title": "উপাদানসমূহ"
+      "title": "উপাদানসমূহ",
+      "form": {
+        "nameLabel": "নাম",
+        "nameRequired": "নাম প্রয়োজন।",
+        "displayNameLabel": "প্রদর্শনের নাম",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "উদ্দেশ্য যোগ করুন",
@@ -364,7 +409,46 @@
       "scopeFilter": "উদ্দেশ্যের স্কোপ",
       "subtitle": "পুনর্ব্যবহারযোগ্য সম্মতির উদ্দেশ্য এবং তাদের উপাদানের সংজ্ঞা পরিচালনা করুন।",
       "tableLabel": "সম্মতির উদ্দেশ্যসমূহ",
-      "title": "উদ্দেশ্যসমূহ"
+      "title": "উদ্দেশ্যসমূহ",
+      "form": {
+        "title": "উদ্দেশ্য যোগ করুন",
+        "nameLabel": "নাম",
+        "nameRequired": "নাম প্রয়োজন।",
+        "typeLabel": "প্রকার",
+        "versionLabel": "সংস্করণ",
+        "elementsLabel": "উপাদানসমূহ",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "সংস্করণ",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "সংজ্ঞা",
@@ -389,7 +473,8 @@
       "noSchema": "এই সংস্করণের জন্য কোনো স্কিমা কনফিগার করা হয়নি।",
       "noPurposeElements": "এখনও কোনো উপাদান যোগ করা হয়নি। উদ্দেশ্য তৈরি করতে কমপক্ষে একটি উপাদান যোগ করুন।",
       "noVersions": "কোনো সংস্করণ উপলব্ধ নেই।",
-      "versionsLoadFailed": "এই মুহূর্তে সংস্করণের ইতিহাস লোড করা যাচ্ছে না।"
+      "versionsLoadFailed": "এই মুহূর্তে সংস্করণের ইতিহাস লোড করা যাচ্ছে না।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "প্রতিটি উপাদান শুধুমাত্র একবার অন্তর্ভুক্ত করা যেতে পারে।",
@@ -851,5 +936,10 @@
         "close": "বন্ধ করুন"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

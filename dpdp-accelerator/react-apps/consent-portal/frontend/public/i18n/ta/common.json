@@ -71,7 +71,10 @@
     "typeBreakdown": "சம்மத வகை பகுப்பாய்வு",
     "typeBreakdownSubtitle": "வகையின் அடிப்படையில் பிரிக்கப்பட்ட உங்களின் அனைத்து சம்மதங்கள்",
     "noTypes": "சம்மத வகைகள் எதுவும் இதுவரை கிடைக்கவில்லை.",
-    "viewPending": "நிலுவையிலுள்ள அனைத்து சம்மதங்களையும் பார்"
+    "viewPending": "நிலுவையிலுள்ள அனைத்து சம்மதங்களையும் பார்",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "சம்மதங்கள்",
@@ -83,7 +86,10 @@
       "userIds": "பயனர் ஐடிகள்",
       "groupIds": "குழு ஐடிகள்",
       "commaSeparatedUsers": "பல பயனர் ஐடிகளை கற்புள்ளி (comma) மூலம் பிரிக்கவும்",
-      "active": "செயலில் உள்ள வடிகட்டிகள்"
+      "active": "செயலில் உள்ள வடிகட்டிகள்",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "வளங்கள்",
         "eventType": "நிகழ்வு வகை",
         "date": "தேதி",
-        "time": "நேரம்"
+        "time": "நேரம்",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "சம்மதச் சுழற்சி",
@@ -153,7 +160,14 @@
         "no": "இல்லை",
         "required": "கட்டாயம்",
         "optional": "விருப்பத்தேர்வு"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "பார்",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} இல் உள்ள {{elementLabel}} க்கான அனுமதியை மாற்று",
         "loading": "சம்மத விவரங்கள் ஏற்றப்படுகின்றன...",
         "noMandatory": "இந்தச் சம்மதத்திற்கு எந்தக் கட்டாயத் தேவைகளும் இல்லை.",
-        "confirm": "ஒப்புதல் அளித்து தொடரவும்"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "நிராகரிப்பை உறுதிப்படுத்துக",
@@ -223,7 +239,9 @@
       "endDate": "முடிவு தேதி",
       "endDateAriaLabel": "முடிவு தேதி வடிகட்டி",
       "clear": "துடை",
-      "clearAriaLabel": "அனைத்து வடிகட்டிகளையும் துடை"
+      "clearAriaLabel": "அனைத்து வடிகட்டிகளையும் துடை",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "சம்மதங்கள் ஏற்றப்படுகின்றன...",
@@ -248,7 +266,9 @@
         "purposes": "நோக்கங்கள்",
         "updated": "புதுப்பிக்கப்பட்டது",
         "expiration": "காலாவதி",
-        "actions": "நடவடிக்கைகள்"
+        "actions": "நடவடிக்கைகள்",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "சேமிக்கப்படுகிறது...",
       "view": "பார்",
       "viewElement": "{{name}} ஐ பார்",
-      "viewPurpose": "{{name}} ஐ பார்"
+      "viewPurpose": "{{name}} ஐ பார்",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "நடவடிக்கைகள்",
@@ -301,7 +325,8 @@
       "requirement": "தேவை",
       "schema": "ஸ்கீமா (Schema)",
       "type": "வகை",
-      "version": "பதிப்பு"
+      "version": "பதிப்பு",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "பல குழு ஐடிகளை கற்புள்ளி (comma) மூலம் பிரிக்கவும்",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "கூறு பெயர் மூலம் தேடு",
       "subtitle": "மீண்டும் பயன்படுத்தக்கூடிய சம்மதக் கூறுகள் மற்றும் அவற்றின் பதிப்பு வரையறைகளை நிர்வகிக்கவும்.",
       "tableLabel": "சம்மதக் கூறுகள்",
-      "title": "கூறுகள்"
+      "title": "கூறுகள்",
+      "form": {
+        "nameLabel": "பெயர்",
+        "nameRequired": "பெயர் தேவைப்படுகிறது.",
+        "displayNameLabel": "காட்சிப் பெயர்",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "நோக்கத்தைச் சேர்",
@@ -364,7 +409,46 @@
       "scopeFilter": "நோக்கத்தின் எல்லை",
       "subtitle": "மீண்டும் பயன்படுத்தக்கூடிய சம்மத நோக்கங்கள் மற்றும் அவற்றின் கூறுக் கோப்புகளை நிர்வகிக்கவும்.",
       "tableLabel": "சம்மத நோக்கங்கள்",
-      "title": "நோக்கங்கள்"
+      "title": "நோக்கங்கள்",
+      "form": {
+        "title": "நோக்கத்தைச் சேர்",
+        "nameLabel": "பெயர்",
+        "nameRequired": "பெயர் தேவைப்படுகிறது.",
+        "typeLabel": "வகை",
+        "versionLabel": "பதிப்பு",
+        "elementsLabel": "கூறுகள்",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "பதிப்பு",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "வரையறை",
@@ -389,7 +473,8 @@
       "noSchema": "இந்த பதிப்பிற்கு எந்த ஸ்கீமாவும் கட்டமைக்கப்படவில்லை.",
       "noPurposeElements": "இன்னும் எந்த கூறுகளும் சேர்க்கப்படவில்லை. நோக்கத்தை உருவாக்க குறைந்தபட்சம் ஒரு கூறைச் சேர்க்கவும்.",
       "noVersions": "பதிப்புகள் எதுவும் கிடைக்கவில்லை.",
-      "versionsLoadFailed": "தற்போது பதிப்பு வரலாற்றை ஏற்ற முடியவில்லை."
+      "versionsLoadFailed": "தற்போது பதிப்பு வரலாற்றை ஏற்ற முடியவில்லை.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "ஒவ்வொரு கூறும் ஒரு முறை மட்டுமே சேர்க்கப்பட முடியும்.",
@@ -851,5 +936,10 @@
         "close": "மூடு"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

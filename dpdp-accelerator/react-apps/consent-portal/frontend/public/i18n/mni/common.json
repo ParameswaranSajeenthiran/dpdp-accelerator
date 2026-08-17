@@ -71,7 +71,10 @@
     "typeBreakdown": "য়ানবা মখাল খাইদোকপা",
     "typeBreakdownSubtitle": "নহাৎকী য়ানবা পুম্নমক মখালগী মাতুংইন্না খায়দোকপা",
     "noTypes": "য়ানবা মখাল লৈত্রে।",
-    "viewPending": "ঙাইরিবা য়ানবা পুম্নমক য়েংবিয়ু"
+    "viewPending": "ঙাইরিবা য়ানবা পুম্নমক য়েংবিয়ু",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "য়ানবা কেন্দ্র",
@@ -83,7 +86,10 @@
       "userIds": "শীজিন্নবমী আইডিসিং",
       "groupIds": "গ্রুপ আইডিসিং",
       "commaSeparatedUsers": "কমা শীজিন্নদুনা কয়াংশিং খাইদোকবিয়ু",
-      "active": "অ্যাক্টিভ ফিল্টরশিং"
+      "active": "অ্যাক্টিভ ফিল্টরশিং",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "রিসোর্সশিং",
         "eventType": "থৌদোক মখাল",
         "date": "তারিখ",
-        "time": "তম্পাক/সময়"
+        "time": "তম্পাক/সময়",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "য়ানবা পুন্সি চৎনবী",
@@ -153,7 +160,14 @@
         "no": "নত্তে",
         "required": "মথৌ তাবা",
         "optional": "অপাম্বা অমা (Optional)"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "য়েংবিয়ু",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} গী মনুংদা {{elementLabel}} গী অয়াবা ওন্থোক-ওনশিন তৌবিয়ু",
         "loading": "য়ানবা অকুপ্পা মরোল লোড তৌরি...",
         "noMandatory": "য়ানবা অসিগী মথৌ তাবা তঙাইফদবা লৈত্রে।",
-        "confirm": "অয়াবা পীবা অমসুং মাংদা চংশিনবা"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "য়াদবা চেকনবা",
@@ -223,7 +239,9 @@
       "endDate": "লোইবা তারিখ",
       "endDateAriaLabel": "লোইবা তারিখ ফিল্টর",
       "clear": "পুম্নমক সেংদোকপা",
-      "clearAriaLabel": "ফিল্টর পুম্নমক সেংদোকপা"
+      "clearAriaLabel": "ফিল্টর পুম্নমক সেংদোকপা",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "য়ানবা লোড তৌরি...",
@@ -248,7 +266,9 @@
         "purposes": "পান্দমশিং",
         "updated": "নৌহোংবা",
         "expiration": "লোইবা নুমিত",
-        "actions": "থবকশিং"
+        "actions": "থবকশিং",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "সেভ তৌরি...",
       "view": "য়েংবিয়ু",
       "viewElement": "{{name}} য়েংবিয়ু",
-      "viewPurpose": "{{name}} য়েংবিয়ু"
+      "viewPurpose": "{{name}} য়েংবিয়ু",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "থবকশিং",
@@ -301,7 +325,8 @@
       "requirement": "মথৌ তাবা",
       "schema": "স্কিমা (Schema)",
       "type": "মখাল",
-      "version": "ভার্সন"
+      "version": "ভার্সন",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "কমা শীজিন্নদুনা কয়াংশিং খাইদোকবিয়ু",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "মচাক মমিংগা লোয়ননা থিবিয়ু",
       "subtitle": "শীজিন্নবা য়াবা য়ানবা মচাকশিং অমসুং ভার্সনশিং পরিচালনা তৌবিয়ু।",
       "tableLabel": "য়ানবা মচাকশিং",
-      "title": "মচাকশিং"
+      "title": "মচাকশিং",
+      "form": {
+        "nameLabel": "মমিং",
+        "nameRequired": "মমিং ইবা তঙাইফাই।",
+        "displayNameLabel": "উৎকদবা মমিং",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "পান্দম হাপচিনবা",
@@ -364,7 +409,46 @@
       "scopeFilter": "পান্দম স্কোপ",
       "subtitle": "শীজিন্নবা য়াবা য়ানবা পান্দমশিং পরিচালনা তৌবিয়ু।",
       "tableLabel": "য়ানবা পান্দমশিং",
-      "title": "পান্দমশিং"
+      "title": "পান্দমশিং",
+      "form": {
+        "title": "পান্দম হাপচিনবা",
+        "nameLabel": "মমিং",
+        "nameRequired": "মমিং ইবা তঙাইফাই।",
+        "typeLabel": "মখাল",
+        "versionLabel": "ভার্সন",
+        "elementsLabel": "মচাকশিং",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "ভার্সন",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "সংজ্ঞা",
@@ -389,7 +473,8 @@
       "noSchema": "ভার্সন অসিদা স্কিমা শেমত্রিবনি।",
       "noPurposeElements": "পান্দম শেম্নবগীদমক খ্বাইদগী য়ামদ্রবদা মচাক অমা হাপচিনবিয়ু।",
       "noVersions": "ভার্সন লৈত্রে।",
-      "versionsLoadFailed": "হージュিক ভার্সন ইতিহাস লোড তৌবা ঙমদ্রে।"
+      "versionsLoadFailed": "হージュিক ভার্সন ইতিহাস লোড তৌবা ঙমদ্রে।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "মচাক অমমম অহাংবা একবার খক্তা হাপচিনবা য়াই।",
@@ -406,7 +491,7 @@
       "warning": "অসি অমুক হনজিনবা য়াদ্রে। রেফর তৌরবা ভার্সনশিং মুত্থোকপা য়াদে, অমসুং অরোইবা ভার্সন মুত্থোকপনা এন্ট্রি অপুনবা মুত্থোকখিগনি।"
     }
   },
-   "nominee": {
+  "nominee": {
     "title": "মনোনয়নশিং (Nominations)",
     "messages": {
       "loadFailed": "হージュিক মনোনয়নশিং লোড তৌবা ঙমদ্রে।"
@@ -851,5 +936,10 @@
         "close": "থিংজিনবিয়ু"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

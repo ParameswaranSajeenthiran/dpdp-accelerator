@@ -71,7 +71,10 @@
     "typeBreakdown": "सहमति प्रकार वर्गीकरण",
     "typeBreakdownSubtitle": "प्रकार अनुसार समूहबद्ध गरिएका सहमतिहरू",
     "noTypes": "कुनै पनि सहमति प्रकार अझै उपलब्ध छैनन्।",
-    "viewPending": "सबै पेन्डिङ सहमतिहरू हेर्नुहोस्"
+    "viewPending": "सबै पेन्डिङ सहमतिहरू हेर्नुहोस्",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "सहमतिहरू",
@@ -83,7 +86,10 @@
       "userIds": "प्रयोगकर्ता IDs",
       "groupIds": "समूह IDs",
       "commaSeparatedUsers": "धेरै प्रयोगकर्ता ID हरू अल्पविरामले छुट्याउनुहोस्",
-      "active": "सक्रिय फिल्टरहरू"
+      "active": "सक्रिय फिल्टरहरू",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "स्रोतहरू",
         "eventType": "घटना प्रकार",
         "date": "मिति",
-        "time": "समय"
+        "time": "समय",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "सहमति जीवनचक्र",
@@ -153,7 +160,14 @@
         "no": "होइन",
         "required": "अनिवार्य",
         "optional": "ऐच्छिक"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "हेर्नुहोस्",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} मा {{elementLabel}} को लागि अनुमति टोगल गर्नुहोस्",
         "loading": "सहमति विवरण लोड हुँदैछ...",
         "noMandatory": "यस सहमतिको लागि कुनै अनिवार्य आवश्यकताहरू छैनन्।",
-        "confirm": "स्वीकृत गरी अगाडि बढ्नुहोस्"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "अस्वीकृति पुष्टि गर्नुहोस्",
@@ -223,7 +239,9 @@
       "endDate": "अन्तिम मिति",
       "endDateAriaLabel": "अन्तिम मिति फिल्टर",
       "clear": "सबै हटाउनुहोस्",
-      "clearAriaLabel": "सबै फिल्टरहरू हटाउनुहोस्"
+      "clearAriaLabel": "सबै फिल्टरहरू हटाउनुहोस्",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "सहमतिहरू लोड हुँदैछन्...",
@@ -248,7 +266,9 @@
         "purposes": "उद्देश्यहरू",
         "updated": "अद्यावधिक गरिएको",
         "expiration": "समाप्ति मिति",
-        "actions": "कार्यहरू"
+        "actions": "कार्यहरू",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "बचत हुँदैछ...",
       "view": "हेर्नुहोस्",
       "viewElement": "{{name}} हेर्नुहोस्",
-      "viewPurpose": "{{name}} हेर्नुहोस्"
+      "viewPurpose": "{{name}} हेर्नुहोस्",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "कार्यहरू",
@@ -301,7 +325,8 @@
       "requirement": "आवश्यकता",
       "schema": "स्कीमा",
       "type": "प्रकार",
-      "version": "संस्करण"
+      "version": "संस्करण",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "धेरै समूह ID हरू अल्पविरामले छुट्याउनुहोस्",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "तत्वको नाम द्वारा खोज्नुहोस्",
       "subtitle": "पुनः प्रयोगयोग्य सहमति तत्वहरू र तिनका संस्करण परिभाषाहरू प्रबन्ध गर्नुहोस्।",
       "tableLabel": "सहमति तत्वहरू",
-      "title": "तत्वहरू"
+      "title": "तत्वहरू",
+      "form": {
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक छ।",
+        "displayNameLabel": "देखाउने नाम",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "उद्देश्य थप्नुहोस्",
@@ -364,7 +409,46 @@
       "scopeFilter": "उद्देश्यको दायरा",
       "subtitle": "पुनः प्रयोगयोग्य सहमति उद्देश्यहरू र तिनका तत्व परिभाषाहरू प्रबन्ध गर्नुहोस्।",
       "tableLabel": "सहमति उद्देश्यहरू",
-      "title": "उद्देश्यहरू"
+      "title": "उद्देश्यहरू",
+      "form": {
+        "title": "उद्देश्य थप्नुहोस्",
+        "nameLabel": "नाम",
+        "nameRequired": "नाम आवश्यक छ।",
+        "typeLabel": "प्रकार",
+        "versionLabel": "संस्करण",
+        "elementsLabel": "तत्वहरू",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "संस्करण",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "परिभाषा",
@@ -389,7 +473,8 @@
       "noSchema": "यस संस्करणका लागि कुनै स्कीमा कन्फिगर गरिएको छैन।",
       "noPurposeElements": "अझै कुनै तत्व थपिएको छैन। उद्देश्य सिर्जना गर्न कम्तिमा एउटा तत्व थप्नुहोस्।",
       "noVersions": "कुनै संस्करणहरू उपलब्ध छैनन्।",
-      "versionsLoadFailed": "अहिले संस्करण इतिहास लोड गर्न सकिएन।"
+      "versionsLoadFailed": "अहिले संस्करण इतिहास लोड गर्न सकिएन।",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "प्रत्येक तत्व एक पटक मात्र समाविष्ट गर्न सकिन्छ।",
@@ -851,5 +936,10 @@
         "close": "बन्द गर्नुहोस्"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

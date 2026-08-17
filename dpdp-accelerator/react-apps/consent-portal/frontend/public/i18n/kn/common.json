@@ -71,7 +71,10 @@
     "typeBreakdown": "ಸಮ್ಮತಿ ಪ್ರಕಾರದ ವಿಭಜನೆ",
     "typeBreakdownSubtitle": "ಪ್ರಕಾರದ ಆಧಾರದ ಮೇಲೆ ಗುಂಪು ಮಾಡಲಾದ ನಿಮ್ಮ ಎಲ್ಲಾ ಸಮ್ಮತಿಗಳು",
     "noTypes": "ಯಾವುದೇ ಸಮ್ಮತಿಯ ಪ್ರಕಾರಗಳು ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ.",
-    "viewPending": "ಎಲ್ಲಾ ಬಾಕಿ ಸಮ್ಮತಿಗಳನ್ನು ವೀಕ್ಷಿಸಿ"
+    "viewPending": "ಎಲ್ಲಾ ಬಾಕಿ ಸಮ್ಮತಿಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "ಸಮ್ಮತಿಗಳು",
@@ -83,7 +86,10 @@
       "userIds": "ಬಳಕೆದಾರ ID ಗಳು",
       "groupIds": "ಗುಂಪು ID ಗಳು",
       "commaSeparatedUsers": "ಅಲ್ಪವಿರಾಮಗಳೊಂದಿಗೆ ಬಹು ಬಳಕೆದಾರ ID ಗಳನ್ನು ಪ್ರತ್ಯೇಕಿಸಿ",
-      "active": "ಸಕ್ರಿಯ ಫಿಲ್ಟರ್‌ಗಳು"
+      "active": "ಸಕ್ರಿಯ ಫಿಲ್ಟರ್‌ಗಳು",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "ಸಂಪನ್ಮೂಲಗಳು",
         "eventType": "ಈವೆಂಟ್ ಪ್ರಕಾರ",
         "date": "ದಿನಾಂಕ",
-        "time": "ಸಮಯ"
+        "time": "ಸಮಯ",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "ಸಮ್ಮತಿ ಜೀವನಚಕ್ರ",
@@ -153,7 +160,14 @@
         "no": "ಇಲ್ಲ",
         "required": "ಅಗತ್ಯವಿದೆ",
         "optional": "ಐಚ್ಛಿಕ"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "ವೀಕ್ಷಿಸಿ",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} ನಲ್ಲಿ {{elementLabel}} ಗಾಗಿ ಅನುಮತಿಯನ್ನು ಟಾಗಲ್ ಮಾಡಿ",
         "loading": "ಸಮ್ಮತಿಯ ವಿವರಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
         "noMandatory": "ಈ ಸಮ್ಮತಿಗೆ ಯಾವುದೇ ಕಡ್ಡಾಯ ಅವಶ್ಯಕತೆಗಳಿಲ್ಲ.",
-        "confirm": "ಅನುಮೋದಿಸಿ ಮತ್ತು ಮುಂದುವರಿಯಿರಿ"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "ತಿರಸ್ಕಾರವನ್ನು ಖಚಿತಪಡಿಸಿ",
@@ -223,7 +239,9 @@
       "endDate": "ಅಂತ್ಯ ದಿನಾಂಕ",
       "endDateAriaLabel": "ಅಂತ್ಯ ದಿನಾಂಕ ಫಿಲ್ಟರ್",
       "clear": "ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ",
-      "clearAriaLabel": "ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ"
+      "clearAriaLabel": "ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "ಸಮ್ಮತಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
@@ -248,7 +266,9 @@
         "purposes": "ಉದ್ದೇಶಗಳು",
         "updated": "ನವೀಕರಿಸಲಾಗಿದೆ",
         "expiration": "ಮುಕ್ತಾಯ",
-        "actions": "ಕ್ರಿಯೆಗಳು"
+        "actions": "ಕ್ರಿಯೆಗಳು",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
       "view": "ವೀಕ್ಷಿಸಿ",
       "viewElement": "{{name}} ವೀಕ್ಷಿಸಿ",
-      "viewPurpose": "{{name}} ವೀಕ್ಷಿಸಿ"
+      "viewPurpose": "{{name}} ವೀಕ್ಷಿಸಿ",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "ಕ್ರಿಯೆಗಳು",
@@ -301,7 +325,8 @@
       "requirement": "ಅವಶ್ಯಕತೆ",
       "schema": "ಸ್ಕೀಮಾ",
       "type": "ಪ್ರಕಾರ",
-      "version": "ಆವೃತ್ತಿ"
+      "version": "ಆವೃತ್ತಿ",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "ಅಲ್ಪವಿರಾಮಗಳೊಂದಿಗೆ ಬಹು ಗುಂಪು ID ಗಳನ್ನು ಪ್ರತ್ಯೇಕಿಸಿ",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "ಅಂಶದ ಹೆಸರಿನ ಮೂಲಕ ಹುಡುಕಿ",
       "subtitle": "ಮರುಬಳಕೆ ಮಾಡಬಹುದಾದ ಸಮ್ಮತಿಯ ಅಂಶಗಳು ಮತ್ತು ಅವುಗಳ ಆವೃತ್ತಿ ವ್ಯಾಖ್ಯಾನಗಳನ್ನು ನಿರ್ವಹಿಸಿ.",
       "tableLabel": "ಸಮ್ಮತಿಯ ಅಂಶಗಳು",
-      "title": "ಅಂಶಗಳು"
+      "title": "ಅಂಶಗಳು",
+      "form": {
+        "nameLabel": "ಹೆಸರು",
+        "nameRequired": "ಹೆಸರು ಅಗತ್ಯವಿದೆ.",
+        "displayNameLabel": "ಪ್ರದರ್ಶನದ ಹೆಸರು",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "ಉದ್ದೇಶವನ್ನು ಸೇರಿಸಿ",
@@ -364,7 +409,46 @@
       "scopeFilter": "ಉದ್ದೇಶದ ವ್ಯಾಪ್ತಿ",
       "subtitle": "ಮರುಬಳಕೆ ಮಾಡಬಹುದಾದ ಸಮ್ಮತಿಯ ಉದ್ದೇಶಗಳು ಮತ್ತು ಅವುಗಳ ಅಂಶ ವ್ಯಾಖ್ಯಾನಗಳನ್ನು ನಿರ್ವಹಿಸಿ.",
       "tableLabel": "ಸಮ್ಮತಿಯ ಉದ್ದೇಶಗಳು",
-      "title": "ಉದ್ದೇಶಗಳು"
+      "title": "ಉದ್ದೇಶಗಳು",
+      "form": {
+        "title": "ಉದ್ದೇಶವನ್ನು ಸೇರಿಸಿ",
+        "nameLabel": "ಹೆಸರು",
+        "nameRequired": "ಹೆಸರು ಅಗತ್ಯವಿದೆ.",
+        "typeLabel": "ಪ್ರಕಾರ",
+        "versionLabel": "ಆವೃತ್ತಿ",
+        "elementsLabel": "ಅಂಶಗಳು",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "ಆವೃತ್ತಿ",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "ವ್ಯಾಖ್ಯಾನ",
@@ -389,7 +473,8 @@
       "noSchema": "ಈ ಆವೃತ್ತಿಗೆ ಯಾವುದೇ ಸ್ಕೀಮಾವನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿಲ್ಲ.",
       "noPurposeElements": "ಯಾವುದೇ ಅಂಶಗಳನ್ನು ಇನ್ನೂ ಸೇರಿಸಲಾಗಿಲ್ಲ. ಉದ್ದೇಶವನ್ನು ರಚಿಸಲು ಕನಿಷ್ಠ ಒಂದು ಅಂಶವನ್ನು ಸೇರಿಸಿ.",
       "noVersions": "ಯಾವುದೇ ಆವೃತ್ತಿಗಳು ಲಭ್ಯವಿಲ್ಲ.",
-      "versionsLoadFailed": "ಈಗ ಆವೃತ್ತಿ ಇತಿಹಾಸವನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ."
+      "versionsLoadFailed": "ಈಗ ಆವೃತ್ತಿ ಇತಿಹಾಸವನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "ಪ್ರತಿಯೊಂದು ಅಂಶವನ್ನು ಒಮ್ಮೆ ಮಾತ್ರ ಸೇರಿಸಬಹುದು.",
@@ -851,5 +936,10 @@
         "close": "ಮುಚ್ಚಿ"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

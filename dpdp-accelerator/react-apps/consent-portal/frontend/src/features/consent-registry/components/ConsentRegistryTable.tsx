@@ -162,7 +162,7 @@ export default function ConsentRegistryTable({
               {t('consentRegistry.table.headers.consentId')}
             </TableCell>
             {showSubject ? (
-              <TableCell sx={{ width: '14%' }}>{t('consentRegistry.table.headers.user')}</TableCell>
+              <TableCell sx={{ width: '14%' }}>{t('consentRegistry.details.table.user')}</TableCell>
             ) : null}
             <TableCell sx={{ width: '16%' }}>
               {t('consentRegistry.table.headers.service')}
@@ -173,9 +173,7 @@ export default function ConsentRegistryTable({
               </TableCell>
             ) : null}
             <TableCell sx={{ width: '12%' }}>{t('consentRegistry.table.headers.state')}</TableCell>
-            <TableCell sx={{ width: '16%' }}>
-              {t('consentRegistry.table.headers.created')}
-            </TableCell>
+            <TableCell sx={{ width: '16%' }}>{t('consentRegistry.details.created')}</TableCell>
             <TableCell align="center" sx={{ width: '10%' }}>
               {t('consentRegistry.table.headers.actions')}
             </TableCell>

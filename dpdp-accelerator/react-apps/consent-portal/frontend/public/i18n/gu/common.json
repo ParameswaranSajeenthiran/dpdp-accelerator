@@ -71,7 +71,10 @@
     "typeBreakdown": "સંમતિના પ્રકાર મુજબ વિભાજન",
     "typeBreakdownSubtitle": "પ્રકાર અનુસાર જૂથબદ્ધ તમારી બધી સંમતિઓ",
     "noTypes": "હજુ સુધી કોઈ સંમતિ પ્રકારો ઉપલબ્ધ નથી.",
-    "viewPending": "તમામ પેન્ડિંગ સંમતિઓ જુઓ"
+    "viewPending": "તમામ પેન્ડિંગ સંમતિઓ જુઓ",
+    "serviceBreakdown": "Consent breakdown by service",
+    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
+    "noServices": "No services are available yet."
   },
   "adminConsents": {
     "title": "સંમતિઓ",
@@ -83,7 +86,10 @@
       "userIds": "વપરાશકર્તા ID",
       "groupIds": "જૂથ ID",
       "commaSeparatedUsers": "બહુવિધ વપરાશકર્તા IDને અલ્પવિરામથી અલગ કરો",
-      "active": "સક્રિય ફિલ્ટર્સ"
+      "active": "સક્રિય ફિલ્ટર્સ",
+      "subjectIdHelp": "Username of the data subject",
+      "serviceId": "Service",
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
     }
   },
   "consentRegistry": {
@@ -132,7 +138,8 @@
         "resources": "સંસાધનો",
         "eventType": "ઇવેન્ટ પ્રકાર",
         "date": "તારીખ",
-        "time": "સમય"
+        "time": "સમય",
+        "state": "State"
       },
       "lifecycle": {
         "tableAriaLabel": "સંમતિ લાઇફસાયકલ",
@@ -153,7 +160,14 @@
         "no": "ના",
         "required": "અનિવાર્ય",
         "optional": "મરજિયાત"
-      }
+      },
+      "service": "Service",
+      "elementCount": "{{count}} elements",
+      "elementCount_one": "{{count}} element",
+      "elementCount_other": "{{count}} elements",
+      "noAuthorizations": "No authorizations are recorded for this consent.",
+      "noElements": "No elements are associated with this purpose.",
+      "noPurposes": "No purposes are associated with this consent."
     },
     "actions": {
       "view": "જુઓ",
@@ -179,7 +193,9 @@
         "toggleWithDetails": "{{purposeLabel}} માં {{elementLabel}} માટે પરવાનગી બદલો",
         "loading": "સંમતિ વિગતો લોડ થઈ રહી છે...",
         "noMandatory": "આ સંમતિ માટે કોઈ અનિવાર્ય આવશ્યકતાઓ નથી.",
-        "confirm": "મંજૂર કરો અને આગળ વધો"
+        "confirm": "Approve Consent",
+        "message": "Are you sure you want to approve this consent?",
+        "note": "Approving grants every purpose and element requested by this consent."
       },
       "rejection": {
         "title": "અસ્વીકારની પુષ્ટિ કરો",
@@ -223,7 +239,9 @@
       "endDate": "અંતિમ તારીખ",
       "endDateAriaLabel": "અંતિમ તારીખ ફિલ્ટર",
       "clear": "તમામ સાફ કરો",
-      "clearAriaLabel": "બધા ફિલ્ટર્સ સાફ કરો"
+      "clearAriaLabel": "બધા ફિલ્ટર્સ સાફ કરો",
+      "serviceSearchPlaceholder": "Search by service",
+      "state": "State"
     },
     "messages": {
       "loading": "સંમતિઓ લોડ થઈ રહી છે...",
@@ -248,7 +266,9 @@
         "purposes": "હેતુઓ",
         "updated": "અપડેટ કરેલ",
         "expiration": "સમાપ્તિ તારીખ",
-        "actions": "ક્રિયાઓ"
+        "actions": "ક્રિયાઓ",
+        "service": "Service",
+        "state": "State"
       }
     }
   },
@@ -271,7 +291,11 @@
       "saving": "સાચવી રહ્યું છે...",
       "view": "જુઓ",
       "viewElement": "{{name}} જુઓ",
-      "viewPurpose": "{{name}} જુઓ"
+      "viewPurpose": "{{name}} જુઓ",
+      "addVersion": "Add Version",
+      "reset": "Reset",
+      "search": "Search",
+      "setLatest": "Set as latest"
     },
     "fields": {
       "actions": "ક્રિયાઓ",
@@ -301,7 +325,8 @@
       "requirement": "આવશ્યકતા",
       "schema": "સ્કીમા",
       "type": "પ્રકાર",
-      "version": "સંસ્કરણ"
+      "version": "સંસ્કરણ",
+      "latestVersion": "Latest version"
     },
     "help": {
       "commaSeparatedGroups": "બહુવિધ જૂથ IDsને અલ્પવિરામથી અલગ કરો",
@@ -342,7 +367,27 @@
       "searchPlaceholder": "ઘટકના નામ દ્વારા શોધો",
       "subtitle": "પુનઃઉપયોગી સંમતિ ઘટકો અને તેના સંસ્કરણયુક્ત વ્યાખ્યાઓનું સંચાલન કરો.",
       "tableLabel": "સંમતિ ઘટકો",
-      "title": "ઘટકો"
+      "title": "ઘટકો",
+      "form": {
+        "nameLabel": "નામ",
+        "nameRequired": "નામ જરૂરી છે.",
+        "displayNameLabel": "દર્શાવવાનું નામ",
+        "nameHelp": "A unique machine identifier, for example \"email-address\".",
+        "submitting": "Creating...",
+        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
+        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
+        "propertyKeyRequired": "Add a key, or this value will not be saved."
+      },
+      "delete": {
+        "title": "Delete Element",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Element",
+        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
+        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+      },
+      "emptySearch": "No elements match \"{{term}}\"."
     },
     "purposes": {
       "add": "હેતુ ઉમેરો",
@@ -364,7 +409,46 @@
       "scopeFilter": "હેતુ સ્કૉપ",
       "subtitle": "પુનઃઉપયોગી સંમતિ હેતુઓ અને તેમની ઘટક વ્યાખ્યાઓનું સંચાલન કરો.",
       "tableLabel": "સંમતિ હેતુઓ",
-      "title": "હેતુઓ"
+      "title": "હેતુઓ",
+      "form": {
+        "title": "હેતુ ઉમેરો",
+        "nameLabel": "નામ",
+        "nameRequired": "નામ જરૂરી છે.",
+        "typeLabel": "પ્રકાર",
+        "versionLabel": "સંસ્કરણ",
+        "elementsLabel": "ઘટકો",
+        "typeRequired": "Type is required.",
+        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
+        "versionRequired": "Version is required.",
+        "versionHelp": "A version identifier, e.g. \"v1\".",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+      },
+      "versionForm": {
+        "versionLabel": "સંસ્કરણ",
+        "title": "Add Version",
+        "versionRequired": "Version is required.",
+        "versionDuplicate": "This purpose already has a version with this name.",
+        "versionHelp": "A version identifier, e.g. \"v2\".",
+        "setAsLatestLabel": "Set as the latest version",
+        "submitting": "Creating...",
+        "createFailed": "Something went wrong and the version could not be created. Please try again."
+      },
+      "delete": {
+        "title": "Delete Purpose",
+        "message": "Are you sure you want to delete \"{{name}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "confirm": "Delete Purpose",
+        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
+        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+      },
+      "versionDelete": {
+        "message": "Are you sure you want to delete version \"{{version}}\"?",
+        "note": "This action is permanent and cannot be undone.",
+        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+      },
+      "emptySearch": "No purposes match this search."
     },
     "details": {
       "definition": "વ્યાખ્યા",
@@ -389,7 +473,8 @@
       "noSchema": "આ સંસ્કરણ માટે કોઈ સ્કીમા ગોઠવેલ નથી.",
       "noPurposeElements": "હજુ સુધી કોઈ ઘટકો ઉમેરવામાં આવ્યા નથી. હેતુ બનાવવા માટે ઓછામાં ઓછું એક ઘટક ઉમેરો.",
       "noVersions": "કોઈ સંસ્કરણ ઉપલબ્ધ નથી.",
-      "versionsLoadFailed": "અત્યારે સંસ્કરણ ઇતિહાસ લોડ કરવામાં અસમર્થ."
+      "versionsLoadFailed": "અત્યારે સંસ્કરણ ઇતિહાસ લોડ કરવામાં અસમર્થ.",
+      "setLatestFailed": "Unable to set this version as the latest. Please try again."
     },
     "validation": {
       "duplicateElements": "દરેક ઘટક માત્ર એક જ વાર સમાવિષ્ટ કરી શકાય છે.",
@@ -851,5 +936,10 @@
         "close": "બંધ કરો"
       }
     }
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "previous": "Previous",
+    "next": "Next"
   }
 }
