@@ -6,7 +6,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run security:verify",
+    "build": "tsc -b && vite build && npm run security:verify && npm run generate:shell",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
@@ -16,9 +16,11 @@
     "format:check": "prettier . --check",
     "security:audit": "node scripts/audit-production-dependencies.mjs",
     "security:verify": "node scripts/verify-production-security.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:shell": "node scripts/generate-jsp-shell.mjs"
   },
   "dependencies": {
+    "@asgardeo/auth-spa": "3.1.2",
     "@tanstack/react-query": "5.96.2",
     "@wso2/oxygen-ui": "0.8.3",
     "@wso2/oxygen-ui-icons-react": "0.13.0",

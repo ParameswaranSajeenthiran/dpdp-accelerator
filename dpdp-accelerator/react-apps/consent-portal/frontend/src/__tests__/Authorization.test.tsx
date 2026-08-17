@@ -20,7 +20,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import useAuthorization from '../features/auth/useAuthorization'
 import ScopeGuard from '../features/auth/ScopeGuard'
-import { PORTAL_SCOPES } from '../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../utils/scopes'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
 import firstAuthorizedPath from '../features/auth/authorizationRoutes'
 
@@ -28,12 +28,12 @@ function AuthorizationProbe(): React.JSX.Element {
   const { hasScope, hasAnyScope, hasAllScopes } = useAuthorization()
   return (
     <>
-      <span>{String(hasScope(PORTAL_SCOPES.ELEMENTS_READ))}</span>
+      <span>{String(hasScope(REQUIRED_SCOPES.ELEMENTS_READ))}</span>
       <span>
-        {String(hasAnyScope([PORTAL_SCOPES.ELEMENTS_WRITE, PORTAL_SCOPES.CONSENTS_READ_SELF]))}
+        {String(hasAnyScope([REQUIRED_SCOPES.ELEMENTS_WRITE, REQUIRED_SCOPES.CONSENTS_READ_SELF]))}
       </span>
       <span>
-        {String(hasAllScopes([PORTAL_SCOPES.ELEMENTS_READ, PORTAL_SCOPES.CONSENTS_READ_SELF]))}
+        {String(hasAllScopes([REQUIRED_SCOPES.ELEMENTS_READ, REQUIRED_SCOPES.CONSENTS_READ_SELF]))}
       </span>
     </>
   )
@@ -41,18 +41,20 @@ function AuthorizationProbe(): React.JSX.Element {
 
 describe('frontend authorization', () => {
   it('selects the first authorized destination in stable navigation order', () => {
-    expect(firstAuthorizedPath([PORTAL_SCOPES.ELEMENTS_READ, PORTAL_SCOPES.PURPOSES_READ])).toBe(
-      '/purposes',
+    expect(
+      firstAuthorizedPath([...REQUIRED_SCOPES.ELEMENTS_READ, ...REQUIRED_SCOPES.PURPOSES_READ]),
+    ).toBe('/purposes')
+    expect(firstAuthorizedPath([...REQUIRED_SCOPES.CONSENTS_READ_SELF])).toBe('/dashboard')
+    expect(firstAuthorizedPath([...REQUIRED_SCOPES.CONSENTS_READ_ANY])).toBe(
+      '/administration/consents',
     )
-    expect(firstAuthorizedPath([PORTAL_SCOPES.CONSENTS_READ_SELF])).toBe('/dashboard')
-    expect(firstAuthorizedPath([PORTAL_SCOPES.CONSENTS_READ_ANY])).toBe('/administration/consents')
     expect(firstAuthorizedPath([])).toBeUndefined()
   })
 
   it('provides typed single, any, and all scope checks', () => {
     render(
       <TestAuthorizationProvider
-        scopes={[PORTAL_SCOPES.ELEMENTS_READ, PORTAL_SCOPES.CONSENTS_READ_SELF]}
+        scopes={[REQUIRED_SCOPES.ELEMENTS_READ, REQUIRED_SCOPES.CONSENTS_READ_SELF]}
       >
         <AuthorizationProbe />
       </TestAuthorizationProvider>,
@@ -63,8 +65,8 @@ describe('frontend authorization', () => {
 
   it('renders guarded content only with the required scope', () => {
     const { rerender } = render(
-      <TestAuthorizationProvider scopes={[PORTAL_SCOPES.ELEMENTS_READ]}>
-        <ScopeGuard scope={PORTAL_SCOPES.ELEMENTS_WRITE}>
+      <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.ELEMENTS_READ]}>
+        <ScopeGuard scope={REQUIRED_SCOPES.ELEMENTS_WRITE}>
           <span>Write control</span>
         </ScopeGuard>
       </TestAuthorizationProvider>,
@@ -73,9 +75,9 @@ describe('frontend authorization', () => {
 
     rerender(
       <TestAuthorizationProvider
-        scopes={[PORTAL_SCOPES.ELEMENTS_READ, PORTAL_SCOPES.ELEMENTS_WRITE]}
+        scopes={[REQUIRED_SCOPES.ELEMENTS_READ, REQUIRED_SCOPES.ELEMENTS_WRITE]}
       >
-        <ScopeGuard scope={PORTAL_SCOPES.ELEMENTS_WRITE}>
+        <ScopeGuard scope={REQUIRED_SCOPES.ELEMENTS_WRITE}>
           <span>Write control</span>
         </ScopeGuard>
       </TestAuthorizationProvider>,

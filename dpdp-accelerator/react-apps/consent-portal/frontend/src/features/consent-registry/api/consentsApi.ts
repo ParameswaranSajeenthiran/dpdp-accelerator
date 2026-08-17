@@ -20,52 +20,121 @@ import type {
   ConsentDetail,
   ConsentListQueryParams,
   ConsentSearchResponse,
+  ConsentSummary,
 } from '../../../types/consent'
-import { apiRequest } from '../../../utils/apiClient'
+import { APIError, apiRequest, apiRequestOptionalContent } from '../../../utils/apiClient'
+
+/** The Identity Server's self-service consent API. */
+const SELF_CONSENTS = '/api/users/v1/me/consents'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
+/** Matches the page size the Identity Server list endpoint will serve at once. */
+const MAX_FETCH = 200
+const DEFAULT_PAGE_SIZE = 10
+
+function consentPath(consentID: string, suffix = ''): string {
+  return `${SELF_CONSENTS}/${encodeURIComponent(consentID)}${suffix}`
+}
+
+/** The upstream filter takes a single state; the UI sends a comma separated list. */
+function firstValue(value?: string): string | undefined {
+  const first = value?.split(',')[0]?.trim()
+  return first ? first : undefined
+}
+
+function summaryAsDetail(summary: ConsentSummary): ConsentDetail {
+  return { ...summary, purposes: [] }
+}
+
+/**
+ * Lists the signed in user's consents.
+ *
+ * The Identity Server returns a cursor based array of
+ * {@code {id, serviceId, state, timestamp}} with no grand total and no offset
+ * support, while the table wants an offset page of full records. Over-fetch by
+ * one page, slice locally, then expand each row on the page with a detail
+ * lookup.
+ */
 export async function fetchMyConsents(
   params: ConsentListQueryParams,
 ): Promise<ConsentSearchResponse> {
-  return apiRequest<ConsentSearchResponse>('/me/consents', {
+  const limit = params.limit > 0 ? params.limit : DEFAULT_PAGE_SIZE
+  const offset = Math.max(0, params.offset)
+
+  const summaries = await apiRequest<ConsentSummary[]>(SELF_CONSENTS, {
     method: 'GET',
     query: {
-      consentStatuses: params.consentStatuses,
-      serviceId: params.serviceId,
-      limit: params.limit,
-      offset: params.offset,
+      limit: Math.min(offset + limit + 1, MAX_FETCH),
+      serviceId: params.serviceId ? params.serviceId : undefined,
+      state: firstValue(params.consentStatuses),
     },
   })
+
+  const page = summaries.slice(offset, offset + limit)
+  const data = await Promise.all(
+    page.map(async (summary) => {
+      try {
+        return await fetchMyConsentByID(summary.id)
+      } catch {
+        // One failed lookup must not blank the whole page.
+        return summaryAsDetail(summary)
+      }
+    }),
+  )
+
+  return {
+    data,
+    metadata: {
+      // Cursor based upstream: this counts what has been seen, not the total.
+      total: summaries.length,
+      offset,
+      count: data.length,
+      limit,
+    },
+  }
 }
 
 export async function fetchMyConsentByID(consentID: string): Promise<ConsentDetail> {
-  return apiRequest<ConsentDetail>(`/me/consents/${encodeURIComponent(consentID)}`, {
-    method: 'GET',
-  })
+  return apiRequest<ConsentDetail>(consentPath(consentID), { method: 'GET' })
 }
 
-/** Approves the whole consent. Per element selection no longer exists. */
-export async function approveMyConsent(consentID: string): Promise<unknown> {
-  return apiRequest<unknown>(`/me/consents/${encodeURIComponent(consentID)}/approve`, {
+/**
+ * Approves or rejects a consent as a whole - the Identity Server has no per
+ * element authorization.
+ *
+ * The server accepts authorize on a consent in any state, which would move an
+ * already revoked or expired consent back to active. A withdrawal has to stay
+ * final, so only a pending consent is authorizable.
+ */
+async function authorizeMyConsent(consentID: string, state: 'APPROVED' | 'REJECTED') {
+  const consent = await fetchMyConsentByID(consentID)
+  if (consent.state !== 'PENDING') {
+    throw new APIError(
+      409,
+      'INVALID_CONSENT_STATE',
+      `Only a pending consent can be approved or rejected; this consent is ${consent.state}.`,
+    )
+  }
+
+  await apiRequestOptionalContent(consentPath(consentID, '/authorize'), {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({}),
+    body: JSON.stringify({ state }),
   })
+  return { status: 'OK' }
+}
+
+export async function approveMyConsent(consentID: string): Promise<unknown> {
+  return authorizeMyConsent(consentID, 'APPROVED')
 }
 
 export async function rejectMyConsent(consentID: string): Promise<unknown> {
-  return apiRequest<unknown>(`/me/consents/${encodeURIComponent(consentID)}/reject`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({}),
-  })
+  return authorizeMyConsent(consentID, 'REJECTED')
 }
 
 export async function revokeMyConsent(consentID: string): Promise<unknown> {
-  return apiRequest<unknown>(`/me/consents/${encodeURIComponent(consentID)}/revoke`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({}),
-  })
+  // The Identity Server answers revoke with an empty body.
+  await apiRequestOptionalContent(consentPath(consentID, '/revoke'), { method: 'POST' })
+  return { status: 'OK' }
 }

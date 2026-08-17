@@ -24,7 +24,7 @@ import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/ox
 import AppSidebar from '../components/layout/sidebar/AppSidebar'
 import i18n from '../i18n/i18n'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
-import { PORTAL_SCOPES } from '../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../utils/scopes'
 
 function LocationProbe(): React.JSX.Element {
   const location = useLocation()
@@ -43,7 +43,7 @@ describe('AppSidebar', () => {
         <CssBaseline />
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/consents']}>
-            <TestAuthorizationProvider scopes={Object.values(PORTAL_SCOPES)}>
+            <TestAuthorizationProvider scopes={Object.values(REQUIRED_SCOPES)}>
               <Routes>
                 <Route
                   path="*"
@@ -84,7 +84,7 @@ describe('AppSidebar', () => {
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/purposes']}>
-            <TestAuthorizationProvider scopes={[PORTAL_SCOPES.PURPOSES_READ]}>
+            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.PURPOSES_READ]}>
               <AppSidebar collapsed={false} />
             </TestAuthorizationProvider>
           </MemoryRouter>
@@ -104,7 +104,7 @@ describe('AppSidebar', () => {
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/administration/consents']}>
-            <TestAuthorizationProvider scopes={[PORTAL_SCOPES.CONSENTS_READ_ANY]}>
+            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.CONSENTS_READ_ANY]}>
               <Routes>
                 <Route
                   path="*"

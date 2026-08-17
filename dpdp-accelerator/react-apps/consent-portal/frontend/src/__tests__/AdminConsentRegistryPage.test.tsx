@@ -24,15 +24,26 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import AdminConsentRegistryPage from '../features/admin-consents/AdminConsentRegistryPage'
 import i18n from '../i18n/i18n'
-import { PORTAL_SCOPES } from '../utils/portalScopes'
+import type { AdminConsentListQueryParams } from '../types/consent'
+import { REQUIRED_SCOPES } from '../utils/scopes'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
 
-const fetchMock = vi.fn()
+const adminConsentsApi = vi.hoisted(() => ({
+  fetchAdminConsents: vi.fn(),
+  fetchAdminConsentByID: vi.fn(),
+  revokeAdminConsent: vi.fn(),
+}))
+
+vi.mock('../features/admin-consents/api/adminConsentsApi', () => adminConsentsApi)
+
+const NEXT_LINK = {
+  rel: 'next',
+  href: 'https://localhost:9443/api/identity/consent-mgt/v2.0/consents?limit=10&after=Mg==',
+}
 
 afterEach(() => {
   cleanup()
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
 function renderAdminPage(initialEntry = '/administration/consents'): void {
@@ -44,7 +55,7 @@ function renderAdminPage(initialEntry = '/administration/consents'): void {
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={[initialEntry]}>
-            <TestAuthorizationProvider scopes={[PORTAL_SCOPES.CONSENTS_READ_ANY]}>
+            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.CONSENTS_READ_ANY]}>
               <Routes>
                 <Route path="/administration/consents" element={<AdminConsentRegistryPage />} />
               </Routes>
@@ -56,30 +67,25 @@ function renderAdminPage(initialEntry = '/administration/consents'): void {
   )
 }
 
+/** The list parameters the page asked the consent management API for. */
+function listParams(index = 0): AdminConsentListQueryParams {
+  return adminConsentsApi.fetchAdminConsents.mock.calls[index]?.[0] as AdminConsentListQueryParams
+}
+
 describe('AdminConsentRegistryPage', () => {
   it('renders the native Consents envelope and labels subjects as users', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        totalResults: 2,
-        links: [
-          {
-            rel: 'next',
-            href: 'https://localhost:9443/api/identity/consent-mgt/v2.0/consents?limit=10&after=Mg==',
-          },
-        ],
-        Consents: [
-          {
-            id: 'db0759de-c098-4f44-b78d-6718226db8b2',
-            subjectId: 'admin',
-            serviceId: 'dpdp-portal-spike',
-            state: 'PENDING',
-            timestamp: 1785833928316,
-          },
-        ],
-      }),
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 2,
+      links: [NEXT_LINK],
+      Consents: [
+        {
+          id: 'db0759de-c098-4f44-b78d-6718226db8b2',
+          subjectId: 'admin',
+          serviceId: 'dpdp-portal-spike',
+          state: 'PENDING',
+          timestamp: 1785833928316,
+        },
+      ],
     })
 
     renderAdminPage()
@@ -89,35 +95,29 @@ describe('AdminConsentRegistryPage', () => {
     expect(screen.getByRole('columnheader', { name: 'User' })).toBeInTheDocument()
     expect(screen.getByText('Pending')).toBeInTheDocument()
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
-    expect(url.pathname).toBe('/api/consents')
-    expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '10' })
+    expect(listParams()).toEqual({
+      limit: 10,
+      after: undefined,
+      before: undefined,
+      subjectId: undefined,
+      serviceId: undefined,
+      state: undefined,
+    })
   })
 
   it('pages forward with the after cursor taken from links', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        totalResults: 2,
-        links: [
-          {
-            rel: 'next',
-            href: 'https://localhost:9443/api/identity/consent-mgt/v2.0/consents?limit=10&after=Mg==',
-          },
-        ],
-        Consents: [
-          {
-            id: 'consent-1',
-            subjectId: 'admin',
-            serviceId: 'dpdp-portal',
-            state: 'ACTIVE',
-            timestamp: 1785833928316,
-          },
-        ],
-      }),
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 2,
+      links: [NEXT_LINK],
+      Consents: [
+        {
+          id: 'consent-1',
+          subjectId: 'admin',
+          serviceId: 'dpdp-portal',
+          state: 'ACTIVE',
+          timestamp: 1785833928316,
+        },
+      ],
     })
 
     renderAdminPage()
@@ -129,47 +129,39 @@ describe('AdminConsentRegistryPage', () => {
     fireEvent.click(nextButton)
 
     await waitFor(() => {
-      const cursors = fetchMock.mock.calls.map(([requestUrl]) =>
-        new URL(String(requestUrl)).searchParams.get('after'),
+      const cursors = adminConsentsApi.fetchAdminConsents.mock.calls.map(
+        ([params]) => (params as AdminConsentListQueryParams).after,
       )
       expect(cursors).toContain('Mg==')
     })
   })
 
   it('uses the consent details endpoint for a Consent ID search', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        id: 'consent/123',
-        subjectId: 'admin',
-        serviceId: 'dpdp-portal',
-        state: 'ACTIVE',
-        timestamp: 1785833928316,
-        purposes: [
-          {
-            id: 'purpose-1',
-            name: 'marketing-spike',
-            type: 'CONSENT',
-            versionId: 'version-1',
-            version: '1.0.0',
-            elements: [],
-          },
-        ],
-        authorizations: [],
-      }),
+    adminConsentsApi.fetchAdminConsentByID.mockResolvedValue({
+      id: 'consent/123',
+      subjectId: 'admin',
+      serviceId: 'dpdp-portal',
+      state: 'ACTIVE',
+      timestamp: 1785833928316,
+      purposes: [
+        {
+          id: 'purpose-1',
+          name: 'marketing-spike',
+          type: 'CONSENT',
+          versionId: 'version-1',
+          version: '1.0.0',
+          elements: [],
+        },
+      ],
+      authorizations: [],
     })
 
     renderAdminPage('/administration/consents?consentId=consent%2F123')
 
     expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
-    expect(url.pathname).toBe('/api/consents/consent%2F123')
-    expect(Object.fromEntries(url.searchParams)).toEqual({})
+    // A Consent ID search reads the one consent instead of listing.
+    expect(adminConsentsApi.fetchAdminConsentByID).toHaveBeenCalledWith('consent/123')
+    expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
     expect(screen.getByRole('link', { name: 'View' })).toHaveAttribute(
       'href',
       '/administration/consents/consent%2F123',

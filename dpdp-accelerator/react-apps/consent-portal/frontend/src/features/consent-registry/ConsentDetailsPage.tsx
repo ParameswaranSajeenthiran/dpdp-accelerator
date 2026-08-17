@@ -50,7 +50,7 @@ import {
   isConsentRejectableState,
   isConsentRevokableState,
 } from './utils/statusChip'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import {
   useAdminConsentDetailQuery,
   useAdminRevokeConsentMutation,
@@ -102,8 +102,8 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState<boolean>(false)
   const [revocationDialogOpen, setRevocationDialogOpen] = useState<boolean>(false)
   const { hasScope } = useAuthorization()
-  const canWriteSelf = hasScope(PORTAL_SCOPES.CONSENTS_WRITE_SELF)
-  const canWriteAny = hasScope(PORTAL_SCOPES.CONSENTS_WRITE_ANY)
+  const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
+  const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
   const consentDetailQuery = variant === 'admin' ? adminConsentDetailQuery : selfConsentDetailQuery
   const backPath = variant === 'admin' ? '/administration/consents' : '/consents'
   const revokePending =

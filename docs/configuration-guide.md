@@ -4,57 +4,86 @@ Complete this after installing the accelerator and starting the Identity
 Server — see [`setup-guide.md`](setup-guide.md) if you haven't done that yet.
 This is the last step before the portal is ready to use.
 
-## 1. Register the OAuth application
+The portal is a single page application. It has no backend of its own: it
+signs the user in with OpenID Connect and calls the Identity Server's consent
+management APIs directly, the same way the built-in My Account application
+works. That means there is **no client secret to configure and no
+configuration file to edit** — registering the application is the whole job.
 
-In the Console (`https://<host>:9443/console`):
+## 1. Register the application
 
-1. **Applications → New Application → Standard-Based Application**.
-2. Name: `DPDP Consent Portal`. Protocol: **OpenID Connect**.
-3. Authorized redirect URL: `https://<host>:9443/consent-portal/auth/callback`
-4. Open the new application's **Protocol** tab and enable the **Code** and
-   **Refresh Token** grant types.
-5. On the same tab, under **Access Token**, set **Type** to **JWT**.
-6. Note the **Client ID** and **Client Secret** on the same tab — you'll need
-   them in step 5.
-7. Set the Application role type as Organization.
+With the Identity Server running:
 
-## 2. Skip the consent screen and request the username claim
-
-1. **Advanced** tab → enable **Skip login consent** and **Skip logout
-   consent**.
-2. **User Attributes** tab → add `http://wso2.org/claims/username` as a
-   mandatory requested claim, so the portal can display the signed-in
-   user's name.
-
-## 3. Authorize the consent management APIs
-
-On the **API Authorization** tab, authorize all three resources below,
-selecting **all scopes** for each and policy **RBAC**:
-
-- Consent Management — Consents
-- Consent Management — Purposes
-- Consent Management — Elements
-
-## 4. Create the portal roles
-
-In **User Management → Roles → New Role**, create two organization-wide
-roles (Audience: **Organization**):
-
-1. `dpdp-consent-admin` — Permissions: every scope authorized in step 3.
-2. `dpdp-consent-user` — No permissions assigned yet.
-
-Assign users to `dpdp-consent-admin` from **User Management → Users →
-*user* → Roles** to grant them portal administration access.
-
-## 5. Add the client credentials to the portal configuration
-
-Edit `<IS_HOME>/repository/conf/dpdp-portal.properties`:
-
-```properties
-oauth.client.id=<Client ID>
-oauth.client.secret=<Client Secret>
+```sh
+sh bin/create-portal-app.sh
 ```
 
-## 6. Restart
+The script registers an application called **DPDP Consent Portal** with the
+client id `DPDP_CONSENT_PORTAL` and configures it the way a browser
+application has to be configured:
 
-Restart the Identity Server, then open `https://<host>:9443/consent-portal/`.
+| Setting | Value | Why |
+|---|---|---|
+| Public client | enabled | A single page application cannot keep a secret. |
+| PKCE | mandatory | Proves the authorization code was requested by this app. |
+| Access token binding | `cookie` | Ties the token to a cookie the page cannot read. |
+| Validate token bindings | enabled | A token lifted out of the browser is rejected. |
+| Revoke tokens on logout | enabled | Signing out invalidates the tokens immediately. |
+
+It also authorizes the three consent management APIs (RBAC) and creates two
+roles: `dpdp-consent-admin`, holding every consent management scope, and
+`dpdp-consent-user`, which carries none.
+
+The script reads its defaults from
+`repository/conf/configure.properties`. Point it elsewhere with `-b`, and
+override the credentials with `-u` and `-p`:
+
+```sh
+sh bin/create-portal-app.sh -b https://localhost:9444
+```
+
+## 2. Grant administration access
+
+Everyone who can sign in manages their own consents — that needs no role.
+
+To let someone administer *other people's* consents and edit the purpose and
+element catalog, assign them `dpdp-consent-admin` in the Console under
+**User Management → Users → *user* → Roles**.
+
+## 3. Open the portal
+
+`https://<host>:9443/consent-portal/`
+
+No restart is needed.
+
+## Multi-tenant deployment
+
+The same deployed application serves every tenant, at
+`https://<host>:9443/t/<tenant>/consent-portal/`. The accelerator's
+`deployment.toml` enables this with
+
+```toml
+[tenant_context.rewrite]
+custom_webapps = ["/consent-portal/"]
+```
+
+which lets the Identity Server's tenant rewrite valve resolve
+`/t/<tenant>/consent-portal/...` to the deployed webapp with that tenant as
+the request's tenant context. Consents, catalog data, roles and sessions are
+all partitioned per tenant by the server.
+
+Each tenant needs its own registration of the application, all of them sharing
+the `DPDP_CONSENT_PORTAL` client id. For a tenant created under **Tenants** in
+the super-tenant Console, run the same script as that tenant's administrator:
+
+```sh
+sh bin/create-portal-app.sh -b https://<host>:9443 \
+   -t wso2.com -u admin@wso2.com -p '<password>'
+```
+
+Then assign `dpdp-consent-admin` to the tenant's administrators and open
+`https://<host>:9443/t/wso2.com/consent-portal/`.
+
+> Registering the application at tenant creation time, the way My Account is
+> provisioned, needs a server extension and is not part of this accelerator
+> yet; run the script once per tenant instead.

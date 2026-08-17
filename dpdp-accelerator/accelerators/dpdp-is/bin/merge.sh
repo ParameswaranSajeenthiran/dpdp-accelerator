@@ -39,14 +39,6 @@ fi
 
 WEBAPPS_PATH="${WSO2_IS_HOME}/repository/deployment/server/webapps"
 PORTAL_PATH="${WEBAPPS_PATH}/consent-portal"
-PORTAL_PROPERTIES="${WSO2_IS_HOME}/repository/conf/dpdp-portal.properties"
-BACKUP_PROPERTIES="/tmp/dpdp-portal.properties.$$"
-
-# Preserve the deployment's own portal configuration across an upgrade.
-if [ -f "${PORTAL_PROPERTIES}" ]; then
-  echo "Backing up existing dpdp-portal.properties"
-  cp "${PORTAL_PROPERTIES}" "${BACKUP_PROPERTIES}"
-fi
 
 if [ -d "${PORTAL_PATH}" ]; then
   # A stale exploded webapp from an older accelerator version would be
@@ -58,11 +50,5 @@ rm -f "${WEBAPPS_PATH}/consent-portal.war"
 
 echo "Copying accelerator artifacts"
 cp -r "${ACCELERATOR_HOME}"/carbon-home/* "${WSO2_IS_HOME}/"
-
-if [ -f "${BACKUP_PROPERTIES}" ]; then
-  echo "Restoring dpdp-portal.properties"
-  cp "${BACKUP_PROPERTIES}" "${PORTAL_PROPERTIES}"
-  rm -f "${BACKUP_PROPERTIES}"
-fi
 
 printf '\nMerge complete. Next: sh bin/configure.sh %s\n\n' "${WSO2_IS_HOME}"

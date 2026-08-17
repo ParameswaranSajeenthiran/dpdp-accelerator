@@ -21,12 +21,15 @@ import type {
   AdminConsentListResponse,
   ConsentDetail,
 } from '../../../types/consent'
-import { apiRequest } from '../../../utils/apiClient'
+import { apiRequest, apiRequestOptionalContent } from '../../../utils/apiClient'
+
+/** The Identity Server's consent management (administrative) API. */
+const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
 
 export async function fetchAdminConsents(
   params: AdminConsentListQueryParams,
 ): Promise<AdminConsentListResponse> {
-  return apiRequest<AdminConsentListResponse>('/api/consents', {
+  return apiRequest<AdminConsentListResponse>(`${CONSENT_MGT_V2}/consents`, {
     method: 'GET',
     query: {
       limit: params.limit,
@@ -40,15 +43,17 @@ export async function fetchAdminConsents(
 }
 
 export async function fetchAdminConsentByID(consentID: string): Promise<ConsentDetail> {
-  return apiRequest<ConsentDetail>(`/api/consents/${encodeURIComponent(consentID)}`, {
-    method: 'GET',
-  })
+  return apiRequest<ConsentDetail>(
+    `${CONSENT_MGT_V2}/consents/${encodeURIComponent(consentID)}`,
+    { method: 'GET' },
+  )
 }
 
 export async function revokeAdminConsent(consentID: string): Promise<unknown> {
-  return apiRequest<unknown>(`/api/consents/${encodeURIComponent(consentID)}/revoke`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
-  })
+  // The Identity Server answers revoke with an empty body.
+  await apiRequestOptionalContent(
+    `${CONSENT_MGT_V2}/consents/${encodeURIComponent(consentID)}/revoke`,
+    { method: 'POST' },
+  )
+  return { status: 'OK' }
 }

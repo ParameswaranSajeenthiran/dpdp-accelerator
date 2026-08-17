@@ -16,43 +16,81 @@
  * under the License.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchCurrentUser } from '../features/auth/api/currentUserApi'
-import { PORTAL_SCOPES } from '../utils/portalScopes'
+import { IS_SCOPES } from '../utils/scopes'
 
-const apiClientMocks = vi.hoisted(() => ({
-  apiRequest: vi.fn(),
+const authMocks = vi.hoisted(() => ({
+  getBasicUser: vi.fn(),
+  isAuthEnabled: vi.fn<() => boolean>(),
 }))
 
-vi.mock('../utils/apiClient', () => apiClientMocks)
+vi.mock('../utils/authClient', () => authMocks)
+
+beforeEach(() => {
+  authMocks.isAuthEnabled.mockReturnValue(true)
+})
 
 afterEach(() => {
   vi.clearAllMocks()
 })
 
 describe('current-user API', () => {
-  it('returns a typed current user from GET /me', async () => {
-    apiClientMocks.apiRequest.mockResolvedValue({
-      userId: 'user-1',
-      organizationId: 'org-1',
-      scopes: [PORTAL_SCOPES.CONSENTS_READ_SELF],
+  it('maps the SDK session onto the portal current user', async () => {
+    authMocks.getBasicUser.mockResolvedValue({
+      sub: 'user-1',
+      username: 'admin@acme.com',
+      tenantDomain: 'acme.com',
+      allowedScopes: `openid ${IS_SCOPES.LOGIN} ${IS_SCOPES.CONSENT_VIEW}`,
     })
 
     await expect(fetchCurrentUser()).resolves.toEqual({
       userId: 'user-1',
-      organizationId: 'org-1',
-      scopes: [PORTAL_SCOPES.CONSENTS_READ_SELF],
+      organizationId: 'acme.com',
+      scopes: ['openid', IS_SCOPES.LOGIN, IS_SCOPES.CONSENT_VIEW],
     })
-    expect(apiClientMocks.apiRequest).toHaveBeenCalledWith('/me', { method: 'GET' })
   })
 
-  it('rejects unknown scopes and malformed identity data', async () => {
-    apiClientMocks.apiRequest.mockResolvedValue({
-      userId: 'user-1',
-      organizationId: '',
-      scopes: ['portal:unknown'],
+  it('falls back to the username and the super tenant', async () => {
+    // No sub and no tenantDomain: an unqualified super-tenant session.
+    authMocks.getBasicUser.mockResolvedValue({
+      username: 'admin',
+      allowedScopes: IS_SCOPES.LOGIN,
     })
 
-    await expect(fetchCurrentUser()).rejects.toThrow('invalid current-user response')
+    await expect(fetchCurrentUser()).resolves.toEqual({
+      userId: 'admin',
+      organizationId: 'carbon.super',
+      scopes: [IS_SCOPES.LOGIN],
+    })
+  })
+
+  it('treats a session without scopes as granting nothing', async () => {
+    authMocks.getBasicUser.mockResolvedValue({ sub: 'user-1', tenantDomain: 'acme.com' })
+
+    await expect(fetchCurrentUser()).resolves.toMatchObject({ scopes: [] })
+  })
+
+  it('fails when there is no authenticated session', async () => {
+    authMocks.getBasicUser.mockResolvedValue(undefined)
+
+    await expect(fetchCurrentUser()).rejects.toThrow('no authenticated session')
+  })
+
+  it('fails when the session carries no subject', async () => {
+    authMocks.getBasicUser.mockResolvedValue({ sub: '  ', username: '', allowedScopes: '' })
+
+    await expect(fetchCurrentUser()).rejects.toThrow('the authenticated session has no subject')
+  })
+
+  it('returns a fully scoped development user when authentication is disabled', async () => {
+    authMocks.isAuthEnabled.mockReturnValue(false)
+
+    await expect(fetchCurrentUser()).resolves.toEqual({
+      userId: 'anonymous',
+      organizationId: 'carbon.super',
+      scopes: Object.values(IS_SCOPES),
+    })
+    expect(authMocks.getBasicUser).not.toHaveBeenCalled()
   })
 })

@@ -16,10 +16,9 @@
  * under the License.
  */
 
-import type { PortalScope } from '../utils/portalScopes'
-
 export interface CurrentUser {
   userId: string
   organizationId: string
-  scopes: PortalScope[]
+  /** Identity Server scopes granted to this session, as the token carries them. */
+  scopes: string[]
 }

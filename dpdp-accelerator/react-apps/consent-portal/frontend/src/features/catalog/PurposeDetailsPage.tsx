@@ -54,7 +54,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { APIError } from '../../utils/apiClient'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from './components/DetailGrid'
 import PurposeDeleteDialog from './components/PurposeDeleteDialog'
@@ -78,7 +78,7 @@ function PurposeDetailsPage(): React.JSX.Element {
   const detail = detailQuery.data
   const versions = versionsQuery.data?.Versions ?? []
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.PURPOSES_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.PURPOSES_WRITE)
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [versionFormOpen, setVersionFormOpen] = useState(false)

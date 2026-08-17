@@ -23,40 +23,85 @@
 
     <display-name>consent-portal</display-name>
 
-    <!-- Defaults; override via <IS_HOME>/repository/conf/dpdp-portal.properties. -->
-    <context-param>
-        <param-name>identity.server.base.url</param-name>
-        <param-value>https://localhost:9443</param-value>
-    </context-param>
-    <context-param>
-        <param-name>identity.server.internal.base.url</param-name>
-        <param-value>https://localhost:9443</param-value>
-    </context-param>
-    <context-param>
-        <param-name>oauth.client.id</param-name>
-        <param-value></param-value>
-    </context-param>
-    <context-param>
-        <param-name>oauth.client.secret</param-name>
-        <param-value></param-value>
-    </context-param>
-    <context-param>
-        <param-name>oauth.scopes</param-name>
-        <param-value>openid profile internal_login internal_consent_mgt_consent_view internal_consent_mgt_consent_create internal_consent_mgt_consent_update internal_consent_mgt_purpose_view internal_consent_mgt_purpose_create internal_consent_mgt_purpose_update internal_consent_mgt_purpose_delete internal_consent_mgt_element_view internal_consent_mgt_element_create internal_consent_mgt_element_delete</param-value>
-    </context-param>
-    <context-param>
-        <param-name>cookie.secure</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    <context-param>
-        <param-name>org.id.claim</param-name>
-        <param-value>org_handle</param-value>
-    </context-param>
+    <!--
+      The portal is a single page application that talks to the Identity
+      Server's own REST APIs; the only server side code is the shell below,
+      laid out the same way the My Account application is.
+
+      index.jsp   the shell, and the page the Identity Server redirects back
+                  to after authentication. It forwards an incoming
+                  authorization code to /authenticate rather than letting it
+                  reach page script.
+      home.jsp    /authenticate - parks the code in the HTTP session and
+                  serves the shell again.
+      auth.jsp    /auth - hands the parked code to the application once, then
+                  clears it so a reload cannot replay it.
+
+      All three are generated from the built shell by
+      frontend/scripts/generate-jsp-shell.mjs.
+    -->
+    <servlet>
+        <servlet-name>index</servlet-name>
+        <jsp-file>/index.jsp</jsp-file>
+    </servlet>
+    <servlet>
+        <servlet-name>authenticate</servlet-name>
+        <jsp-file>/home.jsp</jsp-file>
+    </servlet>
+    <servlet>
+        <servlet-name>auth</servlet-name>
+        <jsp-file>/auth.jsp</jsp-file>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>authenticate</servlet-name>
+        <url-pattern>/authenticate</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>auth</servlet-name>
+        <url-pattern>/auth</url-pattern>
+    </servlet-mapping>
 
     <!--
-      Client-side routes are served by SpaServlet, which is mapped at the
-      context root. No 404 error-page fallback is used: it would answer a
-      deep link with an error status, and it would turn a missing API route
-      into an HTML page instead of the JSON envelope the SPA expects.
+      Everything the container should serve as a file has to be mapped
+      explicitly, because the shell below claims every remaining path. Add a
+      mapping here for any new file the build emits at the root of the webapp.
     -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/assets/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/favicon/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/deployment.config.json</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/wso2-logo.png</url-pattern>
+    </servlet-mapping>
+
+    <!--
+      Client side routes such as /consents are not files on disk, so the shell
+      answers every unmatched path and lets the router take over. The error
+      page covers the same ground for anything the container rejects first.
+    -->
+    <servlet-mapping>
+        <servlet-name>index</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/index.jsp</location>
+    </error-page>
+
+    <mime-mapping>
+        <extension>json</extension>
+        <mime-type>application/json</mime-type>
+    </mime-mapping>
+
 </web-app>

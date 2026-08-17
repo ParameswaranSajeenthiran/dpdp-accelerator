@@ -52,13 +52,13 @@ sh bin/configure.sh <IS_HOME>
 
 Edit `repository/conf/configure.properties` first if your hostname, port,
 administrator credentials or database differ from the defaults. This step
-installs `deployment.toml`, writes `dpdp-portal.properties`, and applies the
-consent schema migration.
+installs `deployment.toml` and applies the consent schema migration.
 
 > **`deployment.toml` is replaced, not merged.** The accelerator ships a
 > complete file — `repository/resources/wso2is-7.3.0-deployment.toml`, the
 > stock Identity Server 7.3.0 configuration plus the accelerator's own
-> settings. Your existing file is copied to `deployment.toml.bak-<timestamp>`
+> settings, including the `[tenant_context.rewrite]` entry that serves the
+> portal tenant-qualified at `/t/<tenant>/consent-portal/`. Your existing file is copied to `deployment.toml.bak-<timestamp>`
 > first; re-apply any local customisation from that backup before starting
 > the server. To target a different Identity Server version, add a template
 > beside the shipped one and point `PRODUCT_CONF_PATH` at it.

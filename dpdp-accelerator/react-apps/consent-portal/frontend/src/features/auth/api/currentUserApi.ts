@@ -17,33 +17,42 @@
  */
 
 import type { CurrentUser } from '../../../types/auth'
-import { apiRequest } from '../../../utils/apiClient'
-import { isPortalScope } from '../../../utils/portalScopes'
+import { getBasicUser, isAuthEnabled } from '../../../utils/authClient'
+import { tenantFromPath } from '../../../utils/basePath'
+import { IS_SCOPES, parseScopes } from '../../../utils/scopes'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
+const SUPER_TENANT = 'carbon.super'
 
-function parseCurrentUser(value: unknown): CurrentUser {
-  if (
-    !isRecord(value) ||
-    typeof value.userId !== 'string' ||
-    !value.userId.trim() ||
-    typeof value.organizationId !== 'string' ||
-    !value.organizationId.trim() ||
-    !Array.isArray(value.scopes) ||
-    !value.scopes.every(isPortalScope)
-  ) {
-    throw new Error('invalid current-user response')
+/**
+ * The signed-in user, taken from the session the auth SDK holds.
+ *
+ * `allowedScopes` is what the Identity Server actually granted this session,
+ * and that is what the UI gates on - a user without the consent management
+ * scopes never sees those areas.
+ */
+export async function fetchCurrentUser(): Promise<CurrentUser> {
+  if (!isAuthEnabled()) {
+    // Development only: authentication is switched off, so nothing is gated.
+    return {
+      userId: 'anonymous',
+      organizationId: tenantFromPath() ?? SUPER_TENANT,
+      scopes: Object.values(IS_SCOPES),
+    }
+  }
+
+  const user = await getBasicUser()
+  if (!user) {
+    throw new Error('no authenticated session')
+  }
+
+  const userId = (user.sub ?? user.username ?? '').trim()
+  if (!userId) {
+    throw new Error('the authenticated session has no subject')
   }
 
   return {
-    userId: value.userId,
-    organizationId: value.organizationId,
-    scopes: value.scopes,
+    userId,
+    organizationId: user.tenantDomain?.trim() || tenantFromPath() || SUPER_TENANT,
+    scopes: parseScopes(user.allowedScopes),
   }
-}
-
-export async function fetchCurrentUser(): Promise<CurrentUser> {
-  return parseCurrentUser(await apiRequest<unknown>('/me', { method: 'GET' }))
 }

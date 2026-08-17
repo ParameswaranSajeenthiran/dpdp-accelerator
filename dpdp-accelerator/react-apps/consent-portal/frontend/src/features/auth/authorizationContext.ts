@@ -18,13 +18,14 @@
 
 import { createContext } from 'react'
 import type { CurrentUser } from '../../types/auth'
-import type { PortalScope } from '../../utils/portalScopes'
+import type { ScopeRequirement } from '../../utils/scopes'
 
 export interface AuthorizationContextValue {
   currentUser: CurrentUser
-  hasScope: (scope: PortalScope) => boolean
-  hasAnyScope: (scopes: readonly PortalScope[]) => boolean
-  hasAllScopes: (scopes: readonly PortalScope[]) => boolean
+  /** True when the session holds any one of the requirement's scopes. */
+  hasScope: (requirement: ScopeRequirement) => boolean
+  hasAnyScope: (requirements: readonly ScopeRequirement[]) => boolean
+  hasAllScopes: (requirements: readonly ScopeRequirement[]) => boolean
 }
 
 const AuthorizationContext = createContext<AuthorizationContextValue | undefined>(undefined)

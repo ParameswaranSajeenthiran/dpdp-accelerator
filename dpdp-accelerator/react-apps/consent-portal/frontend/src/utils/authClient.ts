@@ -16,170 +16,233 @@
  * under the License.
  */
 
+import {
+  AsgardeoSPAClient,
+  Storage,
+  type BasicUserInfo,
+  type HttpRequestConfig,
+  type HttpResponse,
+} from '@asgardeo/auth-spa'
+
+import { runtimeBasePath, serverBaseUrl } from './basePath'
+
+/**
+ * OIDC authentication for the portal, the way the Identity Server's own SPAs
+ * do it: an authorization-code flow with PKCE against a public client, with
+ * the tokens held by the SDK's web worker rather than by page script.
+ *
+ * There is no backend of our own - the SPA talks to the Identity Server
+ * directly, so every API call goes through {@link httpRequest} to have the
+ * worker attach the access token.
+ */
+
 export type UserProfile = Record<string, unknown>
 
-interface LogoutResponse {
-  logoutUrl: string
+/** Shape of the runtime configuration served beside the app. */
+interface DeploymentConfig {
+  clientID: string
+  scope: string[]
 }
 
-let refreshPromise: Promise<void> | undefined
-
-function envCookieName(key: string, fallback: string): string {
-  return (import.meta.env[key] as string | undefined) || fallback
+/** The authorization-code handoff published by auth.jsp. */
+interface AuthHandoff {
+  authCode: string
+  sessionState: string
+  state: string
 }
 
-function apiURL(path: string): string {
-  const baseURL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
-  const normalizedBase = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL
-  // Resolve same-origin bases such as "/consent-portal" to an absolute URL.
-  return new URL(`${normalizedBase}${path}`, window.location.origin).toString()
-}
+const DEFAULT_CLIENT_ID = 'DPDP_CONSENT_PORTAL'
 
-function httpURL(value: string): URL {
-  const url = new URL(value)
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error('navigation URL must use http or https')
+const DEFAULT_SCOPE: string[] = [
+  'openid',
+  'profile',
+  'internal_login',
+  'internal_consent_mgt_consent_view',
+  'internal_consent_mgt_consent_create',
+  'internal_consent_mgt_consent_update',
+  'internal_consent_mgt_purpose_view',
+  'internal_consent_mgt_purpose_create',
+  'internal_consent_mgt_purpose_update',
+  'internal_consent_mgt_purpose_delete',
+  'internal_consent_mgt_element_view',
+  'internal_consent_mgt_element_create',
+  'internal_consent_mgt_element_delete',
+]
+
+let initPromise: Promise<void> | undefined
+
+function spaClient(): AsgardeoSPAClient {
+  const instance = AsgardeoSPAClient.getInstance()
+  if (!instance) {
+    throw new Error('the authentication client is unavailable')
   }
-  return url
-}
-
-function allowedNavigationOrigins(): Set<string> {
-  const origins = new Set([httpURL(apiURL('/')).origin])
-  if (window.location.origin) {
-    origins.add(window.location.origin)
-  }
-
-  const configured = import.meta.env.VITE_AUTH_LOGOUT_ALLOWED_ORIGINS as string | undefined
-  const configuredOrigins = configured
-    ?.split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-
-  configuredOrigins?.forEach((origin) => {
-    try {
-      origins.add(httpURL(origin).origin)
-    } catch {
-      // Invalid configured entries fail closed without disabling valid origins.
-    }
-  })
-
-  return origins
-}
-
-function navigate(value: string): void {
-  const url = httpURL(value)
-  if (!allowedNavigationOrigins().has(url.origin)) {
-    throw new Error('navigation URL origin is not allowed')
-  }
-  window.location.assign(url.toString())
+  return instance
 }
 
 export function isAuthEnabled(): boolean {
   return import.meta.env.VITE_AUTH_ENABLED === 'true'
 }
 
-export function readCookie(name: string): string | undefined {
-  const prefix = `${encodeURIComponent(name)}=`
-  const value = document.cookie
-    .split(';')
-    .map((item) => item.trim())
-    .find((item) => item.startsWith(prefix))
-  if (value) {
-    try {
-      return decodeURIComponent(value.slice(prefix.length))
-    } catch {
+async function loadDeploymentConfig(): Promise<DeploymentConfig> {
+  const fallback: DeploymentConfig = { clientID: DEFAULT_CLIENT_ID, scope: DEFAULT_SCOPE }
+  try {
+    const response = await fetch(`${runtimeBasePath()}/deployment.config.json`, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    })
+    if (!response.ok) {
+      return fallback
+    }
+    const config = (await response.json()) as Partial<DeploymentConfig>
+    return {
+      clientID: config.clientID?.trim() || fallback.clientID,
+      scope: Array.isArray(config.scope) && config.scope.length ? config.scope : fallback.scope,
+    }
+  } catch {
+    // A missing or unparseable config is not fatal - the defaults describe the
+    // application the accelerator's create-portal-app.sh registers.
+    return fallback
+  }
+}
+
+/**
+ * Initialises the SDK once per page load. The Identity Server base is
+ * tenant-qualified, so the same build serves every tenant.
+ */
+export async function initAuth(): Promise<void> {
+  if (!initPromise) {
+    initPromise = (async () => {
+      const config = await loadDeploymentConfig()
+      const appHome = `${window.location.origin}${runtimeBasePath()}/`
+      await spaClient().initialize({
+        baseUrl: serverBaseUrl(),
+        clientID: config.clientID,
+        enablePKCE: true,
+        resourceServerURLs: [serverBaseUrl()],
+        scope: config.scope,
+        signInRedirectURL: appHome,
+        signOutRedirectURL: appHome,
+        storage: Storage.WebWorker,
+      })
+    })().catch((error: unknown) => {
+      // Let the next attempt retry instead of caching the failure.
+      initPromise = undefined
+      throw error
+    })
+  }
+  return initPromise
+}
+
+/**
+ * Reads the one-shot authorization code that home.jsp parked in the HTTP
+ * session, so the code is never taken from the browser URL. Absent in dev,
+ * where Vite serves the app without the JSPs.
+ */
+async function readAuthHandoff(): Promise<AuthHandoff | undefined> {
+  try {
+    const response = await fetch(`${runtimeBasePath()}/auth`, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    })
+    if (!response.ok) {
       return undefined
     }
-  }
-  return undefined
-}
-
-export function getAccessTokenPart1(): string | undefined {
-  return readCookie(envCookieName('VITE_AUTH_ACCESS_TOKEN_PART1_COOKIE', 'portal-at-p1'))
-}
-
-function getRefreshTokenPart1(): string | undefined {
-  return readCookie(envCookieName('VITE_AUTH_REFRESH_TOKEN_PART1_COOKIE', 'portal-rt-p1'))
-}
-
-function getIDToken(): string | undefined {
-  const part1 = readCookie(envCookieName('VITE_AUTH_ID_TOKEN_PART1_COOKIE', 'portal-id-p1'))
-  const part2 = readCookie(envCookieName('VITE_AUTH_ID_TOKEN_PART2_COOKIE', 'portal-id-p2'))
-  return part1 && part2 ? part1 + part2 : undefined
-}
-
-export function isAuthenticated(): boolean {
-  return !isAuthEnabled() || Boolean(getAccessTokenPart1())
-}
-
-export function getUserProfile(): UserProfile | undefined {
-  const idToken = getIDToken()
-  if (!idToken) {
-    return undefined
-  }
-  const segments = idToken.split('.')
-  if (segments.length !== 3) {
-    return undefined
-  }
-  try {
-    const normalized = segments[1].replace(/-/g, '+').replace(/_/g, '/')
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
-    const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0))
-    return JSON.parse(new TextDecoder().decode(bytes)) as UserProfile
+    const body = (await response.text()).trim()
+    if (!body) {
+      return undefined
+    }
+    const handoff = JSON.parse(body) as Partial<AuthHandoff>
+    return handoff.authCode
+      ? {
+          authCode: handoff.authCode,
+          sessionState: handoff.sessionState ?? '',
+          state: handoff.state ?? '',
+        }
+      : undefined
   } catch {
     return undefined
   }
 }
 
-export function login(): void {
-  navigate(apiURL('/auth/login'))
-}
-
-export function refreshSession(): Promise<void> {
-  if (refreshPromise) {
-    return refreshPromise
+export async function isAuthenticated(): Promise<boolean> {
+  if (!isAuthEnabled()) {
+    return true
   }
-  refreshPromise = (async () => {
-    const refreshPart = getRefreshTokenPart1()
-    if (!refreshPart) {
-      throw new Error('refresh token is unavailable')
-    }
-    const body = new URLSearchParams({ refresh_token: refreshPart })
-    const response = await fetch(apiURL('/auth/refresh'), {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    })
-    if (!response.ok) {
-      throw new Error('session refresh failed')
-    }
-  })().finally(() => {
-    refreshPromise = undefined
-  })
-  return refreshPromise
+  await initAuth()
+  return (await spaClient().isAuthenticated()) ?? false
 }
 
-export async function logout(): Promise<void> {
-  const accessPart = getAccessTokenPart1()
-  if (!accessPart) {
-    login()
+/**
+ * Completes an in-flight sign-in, or starts one.
+ *
+ * Returns true when the session is ready. Returns false when the browser is
+ * being redirected to the Identity Server, in which case the caller should
+ * render nothing and let the navigation happen.
+ */
+export async function ensureSignedIn(): Promise<boolean> {
+  if (!isAuthEnabled()) {
+    return true
+  }
+  await initAuth()
+  const client = spaClient()
+  if (await client.isAuthenticated()) {
+    return true
+  }
+
+  const handoff = await readAuthHandoff()
+  if (handoff) {
+    await client.signIn(
+      { callOnlyOnRedirect: false },
+      handoff.authCode,
+      handoff.sessionState,
+      handoff.state,
+    )
+    return (await client.isAuthenticated()) ?? false
+  }
+
+  // No pending code: hand over to the Identity Server. In dev the SDK picks
+  // the code up from the redirect's query parameters instead.
+  await client.signIn()
+  return (await client.isAuthenticated()) ?? false
+}
+
+/** Starts a fresh sign-in, discarding any half-finished session. */
+export async function login(): Promise<void> {
+  if (!isAuthEnabled()) {
     return
   }
-  const response = await fetch(apiURL('/auth/logout'), {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${accessPart}`,
-    },
-  })
-  if (!response.ok) {
-    throw new Error('logout failed')
+  await initAuth()
+  await spaClient().signIn()
+}
+
+/** Ends the Identity Server session; token revocation is done server-side. */
+export async function logout(): Promise<void> {
+  if (!isAuthEnabled()) {
+    return
   }
-  const payload = (await response.json()) as LogoutResponse
-  if (!payload.logoutUrl) {
-    throw new Error('logout URL is unavailable')
+  await initAuth()
+  await spaClient().signOut()
+}
+
+export async function getBasicUser(): Promise<BasicUserInfo | undefined> {
+  await initAuth()
+  return spaClient().getBasicUserInfo()
+}
+
+/** Claims from the ID token, used for the profile menu. */
+export async function getUserProfile(): Promise<UserProfile | undefined> {
+  if (!isAuthEnabled()) {
+    return undefined
   }
-  navigate(payload.logoutUrl)
+  await initAuth()
+  return (await spaClient().getDecodedIDToken()) as UserProfile | undefined
+}
+
+/**
+ * Performs an authenticated request. With worker-held tokens the page cannot
+ * read the access token, so the worker attaches it on our behalf.
+ */
+export async function httpRequest(config: HttpRequestConfig): Promise<HttpResponse | undefined> {
+  await initAuth()
+  return spaClient().httpRequest(config)
 }

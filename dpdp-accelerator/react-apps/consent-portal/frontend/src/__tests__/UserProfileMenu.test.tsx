@@ -24,7 +24,7 @@ import UserProfileMenu from '../components/layout/main-layout/UserProfileMenu'
 import i18n from '../i18n/i18n'
 
 const authMocks = vi.hoisted(() => ({
-  getUserProfile: vi.fn<() => Record<string, unknown> | undefined>(),
+  getUserProfile: vi.fn<() => Promise<Record<string, unknown> | undefined>>(),
   logout: vi.fn<() => Promise<void>>(),
 }))
 
@@ -35,9 +35,7 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-function renderMenu(profile?: Record<string, unknown>): void {
-  authMocks.getUserProfile.mockReturnValue(profile)
-  authMocks.logout.mockResolvedValue()
+function renderComponent(): void {
   render(
     <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
       <I18nextProvider i18n={i18n}>
@@ -45,7 +43,19 @@ function renderMenu(profile?: Record<string, unknown>): void {
       </I18nextProvider>
     </OxygenUIThemeProvider>,
   )
-  fireEvent.click(screen.getByRole('button', { name: 'Account' }))
+}
+
+/**
+ * Renders the menu and opens it. The claims are fetched asynchronously, so
+ * wait for the resolved name before opening the menu, otherwise the assertions
+ * race the effect that loads them.
+ */
+async function renderMenu(profile?: Record<string, unknown>): Promise<void> {
+  authMocks.getUserProfile.mockResolvedValue(profile)
+  authMocks.logout.mockResolvedValue()
+  renderComponent()
+  await waitFor(() => expect(authMocks.getUserProfile).toHaveBeenCalled())
+  fireEvent.click(await screen.findByRole('button', { name: 'Account' }))
 }
 
 describe('UserProfileMenu', () => {
@@ -55,51 +65,51 @@ describe('UserProfileMenu', () => {
     [{ given_name: 'Ada', family_name: 'Lovelace' }, 'Ada Lovelace'],
     [{ preferred_username: 'preferred', username: 'username' }, 'preferred'],
     [{ username: 'username' }, 'username'],
-  ])('resolves the display name from claims in priority order', (profile, expectedName) => {
-    renderMenu(profile)
+  ])('resolves the display name from claims in priority order', async (profile, expectedName) => {
+    await renderMenu(profile)
 
-    expect(screen.getByText(expectedName)).toBeInTheDocument()
+    expect(await screen.findByText(expectedName)).toBeInTheDocument()
   })
 
-  it('uses email and avatar claims', () => {
-    renderMenu({
+  it('uses email and avatar claims', async () => {
+    await renderMenu({
       name: 'Portal User',
       email: 'user@example.com',
       picture: 'https://example.com/u.png',
     })
 
-    expect(screen.getByText('user@example.com')).toBeInTheDocument()
+    expect(await screen.findByText('user@example.com')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Portal User' })).toHaveAttribute(
       'src',
       'https://example.com/u.png',
     )
   })
 
-  it('falls back to subject when email is unavailable', () => {
-    renderMenu({ name: 'Portal User', sub: 'user-1' })
+  it('falls back to subject when email is unavailable', async () => {
+    await renderMenu({ name: 'Portal User', sub: 'user-1' })
 
-    expect(screen.getByText('user-1')).toBeInTheDocument()
+    expect(await screen.findByText('user-1')).toBeInTheDocument()
   })
 
-  it('shows translated fallbacks when profile claims are unavailable', () => {
-    renderMenu()
+  it('shows translated fallbacks when profile claims are unavailable', async () => {
+    await renderMenu()
 
-    expect(screen.getByText('Unknown user')).toBeInTheDocument()
+    expect(await screen.findByText('Unknown user')).toBeInTheDocument()
     expect(screen.getByText('No email available')).toBeInTheDocument()
   })
 
-  it('renders untrusted profile claims as text rather than executable markup', () => {
+  it('renders untrusted profile claims as text rather than executable markup', async () => {
     const payload = '<img src=x onerror=alert(1)>'
-    renderMenu({ name: payload, email: '<script>alert(1)</script>' })
+    await renderMenu({ name: payload, email: '<script>alert(1)</script>' })
 
-    expect(screen.getByText(payload)).toBeInTheDocument()
+    expect(await screen.findByText(payload)).toBeInTheDocument()
     expect(screen.getByText('<script>alert(1)</script>')).toBeInTheDocument()
     expect(document.querySelector('script')).not.toBeInTheDocument()
     expect(document.querySelector('img[src="x"]')).not.toBeInTheDocument()
   })
 
   it('shows a translated logout error and allows retry', async () => {
-    renderMenu({ name: 'Portal User', email: 'user@example.com' })
+    await renderMenu({ name: 'Portal User', email: 'user@example.com' })
     authMocks.logout.mockRejectedValueOnce(new Error('logout failed')).mockResolvedValueOnce()
 
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
@@ -114,9 +124,9 @@ describe('UserProfileMenu', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
   })
 
-  it('preserves the displayed profile while logout clears token cookies', async () => {
+  it('keeps the profile on screen while a sign-out is in flight', async () => {
     let completeLogout: (() => void) | undefined
-    authMocks.getUserProfile.mockReturnValue({
+    authMocks.getUserProfile.mockResolvedValue({
       name: 'Portal User',
       email: 'user@example.com',
     })
@@ -125,19 +135,15 @@ describe('UserProfileMenu', () => {
         completeLogout = resolve
       }),
     )
-    render(
-      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-        <I18nextProvider i18n={i18n}>
-          <UserProfileMenu />
-        </I18nextProvider>
-      </OxygenUIThemeProvider>,
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Account' }))
+    renderComponent()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Account' }))
+    expect(await screen.findByText('Portal User')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
 
-    authMocks.getUserProfile.mockReturnValue(undefined)
+    // The claims live in component state, so a pending sign-out must not blank
+    // the menu while the browser is still on the page.
     fireEvent.click(screen.getByRole('button', { name: 'Account' }))
-
     expect(screen.getByText('Portal User')).toBeInTheDocument()
     expect(screen.queryByText('Unknown user')).not.toBeInTheDocument()
 

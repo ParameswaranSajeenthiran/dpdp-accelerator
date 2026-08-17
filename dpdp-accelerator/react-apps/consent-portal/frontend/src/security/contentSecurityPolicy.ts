@@ -31,7 +31,8 @@ function httpOrigin(value: string): string {
 }
 
 function connectSrc(apiBaseURL: string): string {
-  // A relative or empty base means the BFF is same-origin: 'self' covers it.
+  // A relative or empty base means the Identity Server APIs are same-origin
+  // (the portal is deployed inside it): 'self' covers them.
   if (!apiBaseURL || apiBaseURL.startsWith('/')) {
     return "connect-src 'self'"
   }
@@ -47,6 +48,9 @@ export function contentSecurityPolicy(options: ContentSecurityPolicyOptions): st
     // exception with a style nonce when the static host supports per-request HTML.
     "style-src 'self' 'unsafe-inline'",
     connectSrc(options.apiBaseURL),
+    // The auth SDK keeps tokens in a web worker it starts from a blob URL, so
+    // the page never holds an access token.
+    "worker-src 'self' blob:",
     "img-src 'self' data:",
     "font-src 'self'",
     "object-src 'none'",
