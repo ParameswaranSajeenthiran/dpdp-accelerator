@@ -24,13 +24,13 @@
     "ariaLabel": "ᱢᱩᱬᱩᱛ ᱱᱮᱵᱷᱤᱜᱮᱥᱚᱱ",
     "dashboard": "ᱰᱮᱥᱵᱳᱨᱰ",
     "consent": "ᱥᱟᱹᱢᱟᱹᱛᱤ",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "ᱤᱧᱟᱹᱜ ᱨᱟᱹᱡᱤ ᱠᱚ",
+    "pendingConsents": "ᱤᱧᱟᱹᱜ ᱵᱟᱝ ᱯᱩᱨᱟᱹᱣ ᱟᱠᱟᱱ ᱨᱟᱹᱡᱤ ᱠᱚ ᱾",
     "catalog": "ᱢᱮᱱᱮᱛ",
     "purposes": "ᱩᱫᱽᱫᱮᱥ",
     "elements": "ᱮᱞᱤᱢᱮᱱᱴ",
     "administration": "ᱥᱟᱥᱚᱱ",
-    "adminConsents": "All Consents",
+    "adminConsents": "ᱥᱟᱱᱟᱢ ᱨᱟᱡᱤ",
     "nominations": "ᱱᱳᱢᱤᱱᱮᱥᱚᱱ",
     "nomineeActivation": "ᱱᱳᱢᱤᱱᱤ ᱮᱠᱴᱤᱵᱷᱮᱥᱚᱱ",
     "myComplaints": "ᱤᱧᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "ᱟᱢᱟᱜ ᱡᱚᱛᱚ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱴᱟᱭᱤᱯ ᱞᱮᱠᱟᱛᱮ ᱦᱟᱹᱴᱤᱧ ᱟᱠᱟᱱᱟ",
     "noTypes": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱴᱟᱭᱤᱯ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
     "viewPending": "ᱡᱚᱛᱚ ᱵᱟᱹᱠᱤ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱧᱮᱞ ᱢᱮ",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "ᱥᱮᱵᱟ ᱞᱮᱠᱟᱛᱮ ᱨᱟᱹᱡᱤ ᱨᱮᱭᱟᱜ ᱵᱷᱟᱸᱜᱚᱲ ᱾",
+    "serviceBreakdownSubtitle": "ᱟᱢᱟᱜ ᱡᱚᱛᱚ ᱨᱟᱹᱡᱤ ᱠᱚ ᱥᱮᱵᱟ ᱠᱷᱚᱡᱽ ᱠᱟᱛᱮᱫ ᱜᱟᱫᱮᱞ ᱟᱠᱟᱱᱟ ᱾",
+    "noServices": "ᱱᱤᱛ ᱦᱚᱸ ᱡᱟᱦᱟᱱ ᱥᱮᱵᱟ ᱵᱟᱝ ᱧᱟᱢᱚᱜ ᱠᱟᱱᱟ ᱾"
   },
   "adminConsents": {
     "title": "ᱥᱟᱹᱢᱟᱹᱛᱤ",
@@ -87,10 +87,10 @@
       "groupIds": "ᱜᱩᱴ ID ᱠᱚ",
       "commaSeparatedUsers": "ᱟᱭᱢᱟ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID ᱠᱚᱢᱟ (,) ᱛᱮ ᱵᱷᱮᱜᱟᱨ ᱢᱮ",
       "active": "ᱪᱟᱹᱞᱩ ᱯᱷᱤᱞᱴᱚᱨ ᱠᱚ",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "ᱥᱮᱵᱟ",
+      "removeConsentIdForState": "ᱨᱟᱥᱴᱨᱤᱭᱚ ᱯᱷᱤᱞᱴᱟᱨ ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱟᱭ ᱰᱤ ᱯᱷᱤᱞᱴᱟᱨ ᱚᱪᱚᱜ ᱢᱮ ᱾",
+      "propertyFilterLabel": "ᱥᱟᱹᱠᱭᱟᱹᱛ ᱥᱚᱢᱯᱚᱛᱛᱤ",
+      "removeConsentIdForSubject": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱟᱭᱰᱤ ᱯᱷᱤᱞᱴᱟᱨ ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱟᱭᱰᱤ ᱯᱷᱤᱞᱴᱟᱨ ᱚᱪᱚᱜ ᱢᱮ ᱾"
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "ᱤᱵᱷᱮᱱᱴ ᱴᱟᱭᱤᱯ",
         "date": "ᱢᱟᱹᱦᱤᱛ",
         "time": "ᱚᱠᱛᱚ",
-        "state": "State"
+        "state": "ᱯᱚᱱᱚᱛ"
       },
       "lifecycle": {
         "tableAriaLabel": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱞᱟᱭᱤᱯᱷᱥᱟᱭᱠᱮᱞ",
@@ -162,14 +162,14 @@
         "required": "ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ",
         "optional": "ᱚᱯᱥᱚᱱᱮᱞ"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "ᱥᱮᱵᱟ",
+      "elementCount": "{{count}} ᱮᱞᱤᱢᱮᱱᱴ ᱾",
+      "elementCount_one": "{{count}} ᱮᱞᱤᱢᱮᱱᱴ",
+      "elementCount_other": "{{count}} ᱮᱞᱤᱢᱮᱱᱴ ᱾",
+      "noAuthorizations": "ᱱᱚᱣᱟ ᱨᱮ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱱ ᱟᱹᱭᱫᱟᱹᱨ ᱨᱮᱠᱚᱨᱰ ᱵᱟᱝ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱾",
+      "noElements": "ᱱᱚᱣᱟ ᱡᱚᱥ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱩᱯᱟᱫᱟᱱ ᱥᱮᱞᱮᱫ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾",
+      "noPurposes": "ᱱᱚᱶᱟ ᱨᱮ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱡᱚᱥ ᱥᱮᱞᱮᱫ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾",
+      "noProperties": "ᱱᱚᱣᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱥᱚᱢᱯᱚᱛᱤ ᱥᱮᱞᱮᱫ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾"
     },
     "actions": {
       "view": "ᱧᱮᱞ ᱢᱮ",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} ᱨᱮ {{elementLabel}} ᱞᱟᱹᱜᱤᱫ ᱟᱹᱭᱫᱟᱹᱨᱤ ᱵᱚᱫᱚᱞ ᱢᱮ",
         "loading": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱵᱤᱵᱚᱨᱚᱱ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
         "noMandatory": "ᱱᱚᱣᱟ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱞᱟᱹᱠᱛᱤᱭᱟᱱ ᱪᱮᱫ ᱦᱚᱸ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "ᱥᱟᱹᱠᱭᱟᱹᱛ ᱮᱢᱚᱜ ᱢᱟᱱᱟᱣ ᱢᱮ ᱾",
+        "message": "ᱟᱢ ᱪᱮᱫ ᱴᱷᱤᱠᱟᱹᱱ ᱢᱮᱱᱟᱢᱟ ᱡᱮ ᱟᱢ ᱱᱚᱶᱟ ᱨᱮᱵᱮᱱ ᱫᱚ ᱢᱟᱱᱟᱣ ᱥᱟᱱᱟᱭᱮᱫ ᱢᱮᱭᱟ ?",
+        "note": "ᱱᱚᱣᱟ ᱨᱮᱵᱮᱱ ᱫᱟᱨᱟᱭᱛᱮ ᱱᱮᱦᱚᱨ ᱟᱠᱟᱱ ᱡᱚᱛᱚ ᱡᱚᱥ ᱟᱨ ᱩᱯᱟᱫᱟᱱ ᱞᱟᱹᱜᱤᱫ ᱜᱨᱟᱱᱴ ᱢᱟᱱᱟᱣ ᱦᱩᱭᱩᱜᱼᱟ ᱾"
       },
       "rejection": {
         "title": "ᱵᱟᱹᱜᱤᱭᱟᱜ ᱴᱷᱟᱹᱣᱠᱟᱹᱭ ᱢᱮ",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ ᱯᱷᱤᱞᱴᱚᱨ",
       "clear": "ᱡᱚᱛᱚ ᱥᱟᱯᱷᱟᱭ ᱢᱮ",
       "clearAriaLabel": "ᱡᱚᱛᱚ ᱯᱷᱤᱞᱴᱚᱨ ᱥᱟᱯᱷᱟᱭ ᱢᱮ",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "ᱥᱮᱵᱟ ᱞᱮᱠᱟᱛᱮ ᱯᱟᱸᱡᱟᱭ ᱢᱮ ᱾",
+      "state": "ᱯᱚᱱᱚᱛ"
     },
     "messages": {
       "loading": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱠᱚ ᱞᱳᱰ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
@@ -269,8 +269,8 @@
         "updated": "ᱟᱯᱰᱮᱴ ᱟᱠᱟᱱᱟ",
         "expiration": "ᱪᱟᱵᱟᱜ ᱢᱟᱹᱦᱤᱛ",
         "actions": "ᱠᱟᱹᱢᱤ ᱠᱚ",
-        "service": "Service",
-        "state": "State"
+        "service": "ᱥᱮᱵᱟ",
+        "state": "ᱯᱚᱱᱚᱛ"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "ᱧᱮᱞ ᱢᱮ",
       "viewElement": "{{name}} ᱧᱮᱞ ᱢᱮ",
       "viewPurpose": "{{name}} ᱧᱮᱞ ᱢᱮ",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "ᱟᱹᱨᱩᱯᱷᱮᱨᱟᱣ ᱥᱮᱞᱮᱫ ᱢᱮ ᱾",
+      "reset": "ᱫᱚᱲᱦᱟ ᱞᱟᱹᱜᱤᱫ ᱾",
+      "search": "ᱛᱚᱞᱟᱥ ᱢᱮ",
+      "setLatest": "ᱡᱚᱛᱚᱠᱷᱚᱱ ᱱᱟᱣᱟ ᱞᱮᱠᱟᱛᱮ ᱛᱷᱟᱯᱚᱱ ᱢᱮ ᱾"
     },
     "fields": {
       "actions": "ᱠᱟᱹᱢᱤ ᱠᱚ",
@@ -328,7 +328,7 @@
       "schema": "ᱥᱠᱤᱢᱟ",
       "type": "ᱴᱟᱭᱤᱯ",
       "version": "ᱵᱷᱚᱨᱥᱚᱱ",
-      "latestVersion": "Latest version"
+      "latestVersion": "ᱱᱟᱣᱟᱱ ᱨᱟᱫᱟ ᱾"
     },
     "help": {
       "commaSeparatedGroups": "ᱟᱭᱢᱟ ᱜᱩᱴ ID ᱠᱚᱢᱟ (,) ᱛᱮ ᱵᱷᱮᱜᱟᱨ ᱢᱮ",
@@ -374,22 +374,22 @@
         "nameLabel": "ᱧᱩᱛᱩᱢ",
         "nameRequired": "ᱧᱩᱛᱩᱢ ᱞᱟᱹᱠᱛᱤᱭᱟᱱᱟᱜ ᱠᱟᱱᱟ।",
         "displayNameLabel": "ᱩᱫᱩᱜ ᱧᱩᱛᱩᱢ",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "ᱢᱤᱫᱴᱟᱝ ᱵᱤᱥᱮᱥ ᱢᱮᱥᱤᱱ ᱪᱤᱱᱦᱟᱹᱭᱤᱡ, ᱫᱟᱹᱭᱠᱟᱹ ᱞᱮᱠᱟᱛᱮ \"ᱤᱢᱮᱞᱼᱮᱰᱨᱮᱥ\" ᱾",
+        "submitting": "ᱵᱮᱱᱟᱣᱚᱜ ᱠᱟᱱᱟ...",
+        "duplicateName": "\"{{name}}\" ᱧᱩᱛᱩᱢᱟᱱ ᱢᱤᱫᱴᱟᱝ ᱮᱞᱤᱢᱮᱱᱴ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱮᱴᱟᱜ ᱧᱩᱛᱩᱢ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱾",
+        "createFailed": "ᱠᱤᱪᱷᱩ ᱦᱤᱲᱤᱡ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱩᱯᱟᱫᱟᱱ ᱵᱟᱝ ᱵᱮᱱᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾",
+        "propertyDuplicateKey": "ᱱᱚᱣᱟ ᱪᱟᱵᱤ ᱫᱚ ᱢᱤᱫ ᱠᱷᱚᱱ ᱰᱷᱮᱨ ᱫᱷᱟᱣ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱾ ᱢᱤᱢᱤᱫ ᱫᱷᱚᱱ ᱞᱟᱹᱜᱤᱫ ᱮᱴᱟᱜ ᱪᱟᱵᱤ ᱵᱮᱵᱷᱟᱨ ᱢᱮ ᱾",
+        "propertyKeyRequired": "ᱢᱤᱫᱴᱟᱝ ᱠᱤ ᱥᱮᱞᱮᱫ ᱢᱮ, ᱵᱟᱝᱠᱷᱟᱱ ᱱᱚᱣᱟ ᱜᱚᱱᱚᱝ ᱫᱚ ᱵᱟᱝ ᱥᱮᱵᱷ ᱦᱩᱭᱩᱜᱼᱟ ᱾"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "ᱮᱞᱤᱢᱮᱱᱴ ᱢᱤᱥᱟᱹᱣ ᱢᱮ ᱾",
+        "message": "ᱟᱢ ᱪᱮᱫ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱡᱮ ᱟᱢ \"{{name}}\" ᱢᱤᱥᱟᱹᱣ ᱥᱟᱱᱟᱭᱮᱫ ᱢᱮᱭᱟ ?",
+        "note": "ᱱᱚᱣᱟ ᱠᱟᱹᱢᱤ ᱫᱚ ᱛᱷᱟᱹᱭᱤ ᱜᱮᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱹᱛᱤᱞ ᱜᱟᱱᱚᱜᱼᱟ ᱾",
+        "confirm": "ᱮᱞᱤᱢᱮᱱᱴ ᱢᱤᱥᱟᱹᱣ ᱢᱮ ᱾",
+        "conflict": "ᱱᱚᱣᱟ ᱛᱟᱛᱛᱚᱵᱽ ᱫᱚ ᱵᱟᱝ ᱢᱩᱪᱟᱹᱫ ᱜᱟᱱᱚᱜᱼᱟ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱣᱟ ᱫᱚ ᱱᱤᱛᱦᱚᱸ ᱢᱤᱫ ᱥᱮ ᱟᱨᱦᱚᱸ ᱵᱮᱵᱷᱟᱨᱚᱜ ᱠᱟᱱᱟ ᱾ ᱯᱩᱭᱞᱩ ᱚᱱᱟ ᱡᱚᱥ ᱠᱚ ᱠᱷᱚᱱ ᱚᱱᱟ ᱫᱚ ᱚᱪᱚᱜ ᱢᱮ ᱾",
+        "deleteFailed": "ᱠᱤᱪᱷᱩ ᱦᱤᱲᱤᱡ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱩᱯᱟᱫᱟᱱ ᱫᱚ ᱵᱟᱝ ᱢᱩᱪᱟᱹᱫ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "ᱡᱟᱦᱟᱱ ᱩᱯᱟᱫᱟᱱ \"{{term}}\" ᱥᱟᱶ ᱵᱟᱝ ᱢᱮᱥᱟᱜᱼᱟ ᱾"
     },
     "purposes": {
       "add": "ᱩᱫᱽᱫᱮᱥ ᱡᱚᱲᱟᱣ ᱢᱮ",
@@ -419,38 +419,38 @@
         "typeLabel": "ᱴᱟᱭᱤᱯ",
         "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ",
         "elementsLabel": "ᱮᱞᱤᱢᱮᱱᱴ ᱠᱚ",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "ᱞᱮᱠᱟ ᱞᱟᱹᱠᱛᱤᱜᱼᱟ ᱾",
+        "typeHelp": "ᱡᱚᱥ ᱨᱮᱭᱟᱜ ᱞᱮᱠᱟ, ᱡᱮᱞᱮᱠᱟ \"ᱯᱚᱞᱤᱥᱤ\" ᱾",
+        "versionRequired": "ᱟᱹᱨᱩ ᱞᱟᱹᱠᱛᱤ ᱢᱮᱱᱟᱜᱼᱟ ᱾",
+        "versionHelp": "ᱢᱤᱫᱴᱟᱝ ᱵᱷᱟᱨᱥᱚᱱ ᱩᱯᱨᱩᱢ ᱞᱟᱹᱜᱤᱫ, ᱡᱮᱞᱮᱠᱟ \"v1\"᱾",
+        "submitting": "ᱵᱮᱱᱟᱣᱚᱜ ᱠᱟᱱᱟ...",
+        "createFailed": "ᱠᱤᱪᱷᱩ ᱦᱩᱲᱟᱹᱜ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱡᱚᱥ ᱵᱟᱝ ᱵᱮᱱᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾"
       },
       "versionForm": {
         "versionLabel": "ᱵᱷᱚᱨᱥᱚᱱ",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "ᱥᱚᱝᱥᱠᱚᱨᱚᱱ ᱥᱮᱞᱮᱫ ᱢᱮ ᱾",
+        "versionRequired": "ᱟᱹᱨᱩ ᱞᱟᱹᱠᱛᱤ ᱢᱮᱱᱟᱜᱼᱟ ᱾",
+        "versionDuplicate": "ᱱᱚᱣᱟ ᱡᱚᱥ ᱨᱮᱭᱟᱜ ᱱᱚᱣᱟ ᱧᱩᱛᱩᱢ ᱛᱮ ᱢᱤᱫᱴᱟᱝ ᱨᱟᱫᱟ ᱢᱮᱱᱟᱜᱼᱟ᱾",
+        "versionHelp": "ᱢᱤᱫᱴᱟᱝ ᱵᱷᱟᱨᱥᱚᱱ ᱪᱤᱱᱦᱟᱹᱭᱤᱡ, ᱡᱮᱞᱮᱠᱟ \"v2\"᱾",
+        "setAsLatestLabel": "ᱱᱟᱣᱟᱱ ᱨᱟᱫᱟ ᱞᱮᱠᱟᱛᱮ ᱛᱷᱟᱯᱚᱱ ᱢᱮ ᱾",
+        "submitting": "ᱵᱮᱱᱟᱣᱚᱜ ᱠᱟᱱᱟ...",
+        "createFailed": "ᱠᱤᱪᱷᱩ ᱦᱩᱲᱟᱹᱜ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱟᱹᱨᱩ ᱫᱚ ᱵᱟᱝ ᱵᱮᱱᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "ᱡᱚᱥ ᱢᱤᱥᱟᱹᱣ ᱢᱮ ᱾",
+        "message": "ᱟᱢ ᱪᱮᱫ ᱴᱷᱤᱠ ᱜᱮᱭᱟ ᱡᱮ ᱟᱢ \"{{name}}\" ᱢᱤᱥᱟᱹᱣ ᱥᱟᱱᱟᱭᱮᱫ ᱢᱮᱭᱟ ?",
+        "note": "ᱱᱚᱣᱟ ᱠᱟᱹᱢᱤ ᱫᱚ ᱛᱷᱟᱹᱭᱤ ᱜᱮᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱹᱛᱤᱞ ᱜᱟᱱᱚᱜᱼᱟ ᱾",
+        "confirm": "ᱡᱚᱥ ᱢᱤᱥᱟᱹᱣ ᱢᱮ ᱾",
+        "conflict": "ᱱᱚᱣᱟ ᱡᱚᱥ ᱫᱚ ᱵᱟᱝ ᱠᱚ ᱢᱩᱪᱟᱹᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱪᱮᱫᱟᱜ ᱥᱮ ᱱᱚᱣᱟ ᱫᱚ ᱱᱤᱛᱦᱚᱸ ᱢᱤᱫ ᱥᱮ ᱟᱭᱢᱟ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱦᱚᱛᱮᱛᱮ ᱞᱟᱹᱭ ᱟᱠᱟᱱᱟ ᱾",
+        "deleteFailed": "ᱠᱤᱪᱷᱩ ᱦᱩᱲᱟᱹᱜ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱡᱚᱥ ᱫᱚ ᱵᱟᱝ ᱢᱩᱪᱟᱹᱫ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "ᱟᱢ ᱪᱮᱫ ᱴᱷᱤᱠ ᱢᱮᱱᱮᱫ ᱢᱮᱭᱟ ᱡᱮ ᱟᱢ \"{{version}}\" ᱨᱮᱭᱟᱜ ᱵᱷᱟᱨᱥᱚᱱ ᱫᱚᱢ ᱢᱤᱥᱟᱹᱣ ᱥᱟᱱᱟᱭᱮᱫ ᱢᱮᱭᱟ ?",
+        "note": "ᱱᱚᱣᱟ ᱠᱟᱹᱢᱤ ᱫᱚ ᱛᱷᱟᱹᱭᱤ ᱜᱮᱭᱟ ᱟᱨ ᱵᱟᱝ ᱵᱟᱹᱛᱤᱞ ᱜᱟᱱᱚᱜᱼᱟ ᱾",
+        "deleteFailed": "ᱠᱤᱪᱷᱩ ᱦᱩᱲᱟᱹᱜ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱵᱷᱟᱨᱥᱚᱱ ᱫᱚ ᱵᱟᱝ ᱵᱟᱹᱛᱤᱞ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱾ ᱫᱟᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾",
+        "latestBlocked": "ᱱᱟᱦᱟᱜ ᱨᱟᱫᱟ ᱫᱚ ᱵᱟᱝ ᱢᱤᱪᱷᱟᱹᱣ ᱜᱟᱱᱚᱜᱼᱟ ᱾ ᱮᱴᱟᱜ ᱢᱤᱫᱴᱟᱝ ᱨᱟᱫᱟ ᱫᱚ ᱯᱩᱭᱞᱩ ᱱᱟᱦᱟᱜ ᱞᱮᱠᱟᱛᱮ ᱛᱷᱟᱯᱚᱱ ᱢᱮ ᱾"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "ᱱᱚᱣᱟ ᱛᱚᱞᱟᱥ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱡᱚᱥ ᱵᱟᱝ ᱢᱮᱞᱚᱜᱼᱟ ᱾"
     },
     "details": {
       "definition": "ᱢᱮᱱᱮᱛ",
@@ -476,7 +476,7 @@
       "noPurposeElements": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱮᱞᱤᱢᱮᱱᱴ ᱵᱟᱝ ᱡᱚᱲᱟᱣ ᱟᱠᱟᱱᱟ।",
       "noVersions": "ᱡᱟᱦᱟᱸᱱᱟᱜ ᱵᱷᱚᱨᱥᱚᱱ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
       "versionsLoadFailed": "ᱵᱷᱚᱨᱥᱚᱱ ᱱᱟᱜᱟᱢ ᱞᱳᱰ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ।",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "ᱱᱚᱣᱟ ᱨᱟᱫᱟ ᱫᱚ ᱱᱟᱦᱟᱜ ᱞᱮᱠᱟᱛᱮ ᱵᱟᱝ ᱫᱚᱦᱚ ᱜᱟᱱᱚᱜ ᱠᱟᱱᱟ ᱾ ᱫᱚᱭᱟ ᱠᱟᱛᱮᱫ ᱟᱨᱦᱚᱸ ᱠᱩᱨᱩᱢᱩᱴᱩᱭ ᱢᱮ ᱾"
     },
     "validation": {
       "duplicateElements": "ᱢᱤᱫᱴᱟᱹᱝ ᱮᱞᱤᱢᱮᱱᱴ ᱢᱤᱫ ᱫᱷᱟᱣ ᱜᱮ ᱥᱮᱞᱮᱫ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ।",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "ᱥᱟᱠᱟᱢ ᱯᱤᱪᱷᱤ ᱛᱷᱟᱹᱨᱤ ᱠᱚ",
+    "previous": "ᱢᱟᱲᱟᱝ ᱨᱮᱱ ᱾",
+    "next": "ᱛᱟᱭᱚᱢ ᱫᱟᱨᱟᱢ ᱾"
   }
 }

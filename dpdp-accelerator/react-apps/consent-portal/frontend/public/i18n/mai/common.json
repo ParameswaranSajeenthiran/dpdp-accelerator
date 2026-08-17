@@ -24,13 +24,13 @@
     "ariaLabel": "मुख्य नेविगेशन",
     "dashboard": "डैशबोर्ड",
     "consent": "सहमति",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "हमर सहमति",
+    "pendingConsents": "हमर लंबित सहमति सभ",
     "catalog": "परिभाषा सभ",
     "purposes": "उद्देश्य सभ",
     "elements": "तत्व सभ",
     "administration": "प्रशासन",
-    "adminConsents": "All Consents",
+    "adminConsents": "सब सहमति",
     "nominations": "नामांकन",
     "nomineeActivation": "नामांकित व्यक्ति सक्रियण",
     "myComplaints": "हमर शिकायत सभ",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "प्रकार द्वारा समूहबद्ध अहाँक सभ सहमति",
     "noTypes": "अखनि कोनहु सहमति प्रकार उपलब्ध नहि अछि।",
     "viewPending": "सभ लंबित सहमति देखू",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "सेवा अनुसार सहमति भंग",
+    "serviceBreakdownSubtitle": "अहाँक सभ सहमति अनुरोधित सेवा द्वारा समूहीकृत अछि।",
+    "noServices": "एखन धरि कोनो सेवा उपलब्ध नहि अछि।"
   },
   "adminConsents": {
     "title": "सहमति सभ",
@@ -87,10 +87,10 @@
       "groupIds": "समूह आईडी",
       "commaSeparatedUsers": "अनेक उपयोगकर्ता आईडी केँ कॉमा सँ अलग करू",
       "active": "सक्रिय फ़िल्टर",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "सेवा",
+      "removeConsentIdForState": "राज्य फिल्टरक उपयोग करबाक लेल सहमति आईडी फिल्टर हटा दिअ।",
+      "propertyFilterLabel": "सहमति संपत्ति",
+      "removeConsentIdForSubject": "यूजर आईडी फिल्टरक उपयोग करबाक लेल सहमति आईडी फिल्टर हटा दिअ।"
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "घटना प्रकार",
         "date": "तिथि",
         "time": "समय",
-        "state": "State"
+        "state": "राज्य"
       },
       "lifecycle": {
         "tableAriaLabel": "सहमति जीवनचक्र",
@@ -162,14 +162,14 @@
         "required": "आवश्यक",
         "optional": "वैकल्पिक"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "सेवा",
+      "elementCount": "{{count}} टा तत्व",
+      "elementCount_one": "{{count}} तत्व",
+      "elementCount_other": "{{count}} टा तत्व",
+      "noAuthorizations": "एहि सहमति लेल कोनो अधिकार दर्ज नहि अछि।",
+      "noElements": "एहि उद्देश्यसँ कोनो तत्व सम्बन्धित नहि अछि।",
+      "noPurposes": "एहि सहमति सँ कोनो उद्देश्य सम्बन्धित नहि अछि।",
+      "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।"
     },
     "actions": {
       "view": "देखू",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} मे {{elementLabel}} लेल अनुमति बदलू",
         "loading": "सहमति विवरण लोड भऽ रहल अछि...",
         "noMandatory": "अहि सहमति लेल कोनहु अनिवार्य आवश्यकता नहि अछि।",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "सहमति स्वीकृत करू",
+        "message": "की अहाँ निश्चित छी जे अहाँ ई सहमति मंजूर करय चाहैत छी?",
+        "note": "एहि सहमति द्वारा अनुरोध कएल गेल प्रत्येक उद्देश्य आ तत्वक लेल अनुदान स्वीकृत कएल जा रहल अछि।"
       },
       "rejection": {
         "title": "अस्वीकृतिका पुष्टि करू",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "अंतिम तिथि फ़िल्टर",
       "clear": "सभ साफ़ करू",
       "clearAriaLabel": "सभ फ़िल्टर साफ़ करू",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "सेवा द्वारा खोजू",
+      "state": "राज्य"
     },
     "messages": {
       "loading": "सहमति सभ लोड भऽ रहल अछि...",
@@ -269,8 +269,8 @@
         "updated": "अद्यतन कएल गेल",
         "expiration": "समाप्ति",
         "actions": "कार्रवाई सभ",
-        "service": "Service",
-        "state": "State"
+        "service": "सेवा",
+        "state": "राज्य"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "देखू",
       "viewElement": "{{name}} देखू",
       "viewPurpose": "{{name}} देखू",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "संशोधन जोड़ू",
+      "reset": "पुन: सेट करू",
+      "search": "खोजू",
+      "setLatest": "नवीनतमक रूपमे सेट करू"
     },
     "fields": {
       "actions": "कार्रवाई सभ",
@@ -328,7 +328,7 @@
       "schema": "स्कीमा",
       "type": "प्रकार",
       "version": "संस्करण",
-      "latestVersion": "Latest version"
+      "latestVersion": "नवीनतम संस्करण"
     },
     "help": {
       "commaSeparatedGroups": "अनेक समूह आईडी केँ कॉमा सँ अलग करू",
@@ -374,22 +374,22 @@
         "nameLabel": "नाम",
         "nameRequired": "नाम आवश्यक अछि।",
         "displayNameLabel": "प्रदर्शित नाम",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "एकटा अद्वितीय मशीन पहिचानकर्ता, उदाहरण लेल \"ईमेल-एड्रेस\"।",
+        "submitting": "बनाओल जा रहल अछि...",
+        "duplicateName": "{{name}} नामक एकटा तत्व पहिने सँ मौजूद अछि। एकटा अलग नाम चुनु।",
+        "createFailed": "किछु गड़बड़ भेल आ तत्व नहि बनाओल जा सकल। कृपया फेर प्रयास करू।",
+        "propertyDuplicateKey": "ई चाभी एक सँ बेसी बेर प्रयोग कएल जाइत अछि। प्रत्येक गुणक लेल एक अलग चाभी प्रयोग करू।",
+        "propertyKeyRequired": "एकटा कुंजी जोड़ू, वा ई मान सुरक्षित नहि कयल जायत।"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "एलिमेंट हटाऊ",
+        "message": "की अहाँ निश्चित छी जे अहाँ \"{{name}}\" केँ हटाबय चाहैत छी?",
+        "note": "ई क्रिया स्थायी अछि आ एकरा पूर्ववत नहि कएल जा सकैत अछि।",
+        "confirm": "एलिमेंट हटाऊ",
+        "conflict": "ई तत्व केँ हटाओल नहि जा सकैत अछि किएक कि ई अखनो एक या एक सँ अधिक उद्देश्य द्वारा उपयोग कएल जा रहल अछि। पहिने एकरा ओहि उद्देश्य सँ हटाउ।",
+        "deleteFailed": "किछु गड़बड़ भेल आ तत्व केँ हटाओल नहि जा सकल। कृपया फेर प्रयास करू।"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "कोनो तत्व \"{{term}}\" सँ मेल नहि खा रहल अछि।"
     },
     "purposes": {
       "add": "उद्देश्य जोड़ू",
@@ -419,38 +419,38 @@
         "typeLabel": "प्रकार",
         "versionLabel": "संस्करण",
         "elementsLabel": "तत्व सभ",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "टाइप करब आवश्यक अछि।",
+        "typeHelp": "उद्देश्यक प्रकार, जेना \"नीति\"।",
+        "versionRequired": "संस्करणक आवश्यकता अछि।",
+        "versionHelp": "एकटा संस्करण पहिचानकर्ता, जेना कि \"v1\"।",
+        "submitting": "बनाओल जा रहल अछि...",
+        "createFailed": "किछु गड़बड़ भेल आ उद्देश्य नहि बनाओल जा सकल। कृपया फेर प्रयास करू।"
       },
       "versionForm": {
         "versionLabel": "संस्करण",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "संस्करण जोड़ू",
+        "versionRequired": "संस्करणक आवश्यकता अछि।",
+        "versionDuplicate": "एहि उद्देश्यक लेल पहिनहिसँ एहि नामक एकटा संस्करण अछि।",
+        "versionHelp": "एकटा संस्करण पहिचानकर्ता, जेना कि \"v2\"।",
+        "setAsLatestLabel": "नवीनतम संस्करणक रूप मे सेट करू",
+        "submitting": "बनाओल जा रहल अछि...",
+        "createFailed": "किछु गड़बड़ भेल आ संस्करण नहि बनाओल जा सकल। कृपया फेर प्रयास करू।"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "उद्देश्य हटाऊ",
+        "message": "की अहाँ निश्चित छी जे अहाँ \"{{name}}\" केँ हटाबय चाहैत छी?",
+        "note": "ई क्रिया स्थायी अछि आ एकरा पूर्ववत नहि कएल जा सकैत अछि।",
+        "confirm": "उद्देश्य हटाऊ",
+        "conflict": "एहि उद्देश्यकेँ हटाओल नहि जा सकैत अछि किएक तँ एकर सन्दर्भ एखनहु एक वा एकसँ बेसी सहमति द्वारा कयल जा रहल अछि।",
+        "deleteFailed": "किछु गड़बड़ भेल आ उद्देश्य हटाओल नहि जा सकल। कृपया फेर प्रयास करू।"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "की अहाँ निश्चित छी जे अहाँ संस्करण \"{{version}}\" हटाबय चाहैत छी?",
+        "note": "ई क्रिया स्थायी अछि आ एकरा पूर्ववत नहि कएल जा सकैत अछि।",
+        "deleteFailed": "किछु गड़बड़ भेल आ संस्करण हटाओल नहि जा सकल। कृपया फेर प्रयास करू।",
+        "latestBlocked": "नवीनतम संस्करण के हटाओल नहि जा सकैत अछि। पहिने दोसर संस्करण के नवीनतम के रूप में सेट करू।"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "एहि खोज सँ कोनो उद्देश्य मेल नहि खा रहल अछि।"
     },
     "details": {
       "definition": "परिभाषा",
@@ -476,7 +476,7 @@
       "noPurposeElements": "अखनि तक कोनहु तत्व नहि जोड़ल गेल अछि। उद्देश्य बनाबै लेल कम सँ कम एक तत्व जोड़ू।",
       "noVersions": "कोनहु संस्करण उपलब्ध नहि अछि।",
       "versionsLoadFailed": "अखनि संस्करण इतिहास लोड करै मे असमर्थ।",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "एहि संस्करणकेँ नवीनतम रूपमे सेट करबामे असमर्थ छी। कृपया फेर प्रयास करू।"
     },
     "validation": {
       "duplicateElements": "प्रत्येक तत्व केँ केवल एक बेर शामिल कएल जा सकैत अछि।",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "प्रति पृष्ठ पंक्ति",
+    "previous": "पिछला",
+    "next": "अगिला"
   }
 }

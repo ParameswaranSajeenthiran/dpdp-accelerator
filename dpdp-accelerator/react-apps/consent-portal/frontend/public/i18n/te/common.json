@@ -24,13 +24,13 @@
     "ariaLabel": "ప్రాథమిక నావిగేషన్",
     "dashboard": "డ్యాష్‌బోర్డ్",
     "consent": "సమ్మతి",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "నా అంగీకారాలు",
+    "pendingConsents": "నా పెండింగ్ అంగీకారాలు",
     "catalog": "నిర్వచనాలు",
     "purposes": "ప్రయోజనాలు",
     "elements": "అంశాలు",
     "administration": "నిర్వహణ",
-    "adminConsents": "All Consents",
+    "adminConsents": "అన్ని అంగీకారాలు",
     "nominations": "నామినేషన్లు",
     "nomineeActivation": "నామినీ యాక్టివేషన్",
     "myComplaints": "నా ఫిర్యాదులు",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "మీ అన్ని సమ్మతులు రకం వారీగా సమూహం చేయబడ్డాయి",
     "noTypes": "సమ్మతి రకాలు ఇంకా అందుబాటులో లేవు.",
     "viewPending": "పెండింగ్‌లో ఉన్న అన్ని సమ్మతులను వీక్షించండి",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "సేవల వారీగా సమ్మతి విచ్ఛిన్నం",
+    "serviceBreakdownSubtitle": "మీ అభ్యర్థన సేవ ద్వారా వర్గీకరించబడిన మీ సమ్మతి పత్రాలన్నీ.",
+    "noServices": "ఇంకా సేవలు అందుబాటులో లేవు."
   },
   "adminConsents": {
     "title": "సమ్మతులు",
@@ -87,10 +87,10 @@
       "groupIds": "గ్రూప్ IDలు",
       "commaSeparatedUsers": "బహుళ వినియోగదారు IDలను కామాలతో వేరు చేయండి",
       "active": "క్రియాశీల ఫిల్టర్‌లు",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "సేవ",
+      "removeConsentIdForState": "రాష్ట్ర ఫిల్టర్‌ను ఉపయోగించడానికి సమ్మతి ID ఫిల్టర్‌ను తీసివేయండి.",
+      "propertyFilterLabel": "సమ్మతి ఆస్తి",
+      "removeConsentIdForSubject": "యూజర్ ఐడి ఫిల్టర్‌ను ఉపయోగించడానికి కన్సెంట్ ఐడి ఫిల్టర్‌ను తీసివేయండి."
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "ఈవెంట్ రకం",
         "date": "తేదీ",
         "time": "సమయం",
-        "state": "State"
+        "state": "రాష్ట్రం"
       },
       "lifecycle": {
         "tableAriaLabel": "సమ్మతి జీవితచక్రం",
@@ -162,14 +162,14 @@
         "required": "తప్పనిసరి",
         "optional": "ఐచ్ఛికం"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "సేవ",
+      "elementCount": "{{count}} అంశాలు",
+      "elementCount_one": "{{count}} మూలకం",
+      "elementCount_other": "{{count}} అంశాలు",
+      "noAuthorizations": "ఈ సమ్మతి కోసం ఎటువంటి అనుమతులు నమోదు చేయబడలేదు.",
+      "noElements": "ఈ ఉద్దేశ్యంతో ఏ అంశాలు అనుబంధించబడలేదు.",
+      "noPurposes": "ఈ సమ్మతితో ఎటువంటి ఉద్దేశాలు ముడిపడి లేవు.",
+      "noProperties": "ఈ సమ్మతితో ఎటువంటి ఆస్తులు అనుబంధించబడలేదు."
     },
     "actions": {
       "view": "వీక్షించు",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}}లో {{elementLabel}} కోసం అనుమతిని టోగుల్ చేయి",
         "loading": "సమ్మతి వివరాలు లోడ్ అవుతున్నాయి...",
         "noMandatory": "ఈ సమ్మతి కోసం తప్పనిసరి అవసరాలు ఏవీ లేవు.",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "సమ్మతిని ఆమోదించండి",
+        "message": "మీరు ఈ సమ్మతిని ఆమోదించాలనుకుంటున్నారని ఖచ్చితంగా అనుకుంటున్నారా?",
+        "note": "ఈ సమ్మతి ద్వారా అభ్యర్థించిన ప్రతి ఉద్దేశ్యం మరియు అంశానికి గ్రాంట్‌లను ఆమోదిస్తుంది."
       },
       "rejection": {
         "title": "తిరస్కరణను నిర్ధారించండి",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "ముగింపు తేదీ ఫిల్టర్",
       "clear": "అన్నీ క్లియర్ చేయి",
       "clearAriaLabel": "అన్ని ఫిల్టర్‌లను క్లియర్ చేయి",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "సేవల ద్వారా వెతకండి",
+      "state": "రాష్ట్రం"
     },
     "messages": {
       "loading": "సమ్మతులు లోడ్ అవుతున్నాయి...",
@@ -269,8 +269,8 @@
         "updated": "నవీకరించబడింది",
         "expiration": "గడువు ముగింపు",
         "actions": "చర్యలు",
-        "service": "Service",
-        "state": "State"
+        "service": "సేవ",
+        "state": "రాష్ట్రం"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "వీక్షించు",
       "viewElement": "{{name}} వీక్షించు",
       "viewPurpose": "{{name}} వీక్షించు",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "వెర్షన్‌ను చేర్చు",
+      "reset": "పునరుద్ధరించు",
+      "search": "వెతకండి",
+      "setLatest": "తాజాదిగా సెట్ చేయండి"
     },
     "fields": {
       "actions": "చర్యలు",
@@ -328,7 +328,7 @@
       "schema": "స్కీమా (Schema)",
       "type": "రకం",
       "version": "వెర్షన్",
-      "latestVersion": "Latest version"
+      "latestVersion": "తాజా వెర్షన్"
     },
     "help": {
       "commaSeparatedGroups": "బహుళ గ్రూప్ IDలను కామాలతో వేరు చేయండి",
@@ -374,22 +374,22 @@
         "nameLabel": "పేరు",
         "nameRequired": "పేరు తప్పనిసరి.",
         "displayNameLabel": "ప్రదర్శన పేరు",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "ఒక ప్రత్యేకమైన యంత్ర గుర్తింపు, ఉదాహరణకు \"email-address\".",
+        "submitting": "సృష్టిస్తోంది...",
+        "duplicateName": "{{name}} పేరుతో ఒక మూలకం ఇప్పటికే ఉంది. వేరే పేరును ఎంచుకోండి.",
+        "createFailed": "ఏదో తప్పు జరిగింది మరియు మూలకాన్ని సృష్టించలేకపోయాము. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "propertyDuplicateKey": "ఈ కీ ఒకటి కంటే ఎక్కువసార్లు ఉపయోగించబడింది. ప్రతి ఆస్తికి వేర్వేరు కీని ఉపయోగించండి.",
+        "propertyKeyRequired": "ఒక కీని జోడించండి, లేకపోతే ఈ విలువ సేవ్ చేయబడదు."
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "మూలకాన్ని తొలగించు",
+        "message": "మీరు నిజంగా \"{{name}}\" ను తొలగించాలనుకుంటున్నారా?",
+        "note": "ఈ చర్య శాశ్వతమైనది మరియు దీనిని రద్దు చేయలేము.",
+        "confirm": "మూలకాన్ని తొలగించు",
+        "conflict": "ఈ మూలకాన్ని తొలగించలేము ఎందుకంటే ఇది ఇంకా ఒకటి లేదా అంతకంటే ఎక్కువ ప్రయోజనాల కోసం ఉపయోగించబడుతోంది. మొదట వాటి నుండి తొలగించండి.",
+        "deleteFailed": "ఏదో తప్పు జరిగింది మరియు మూలకాన్ని తొలగించలేకపోయాము. దయచేసి మళ్ళీ ప్రయత్నించండి."
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "\"{{term}}\"తో సరిపోయే అంశాలు ఏమీ లేవు."
     },
     "purposes": {
       "add": "ప్రయోజనాన్ని జోడించు",
@@ -419,38 +419,38 @@
         "typeLabel": "రకం",
         "versionLabel": "వెర్షన్",
         "elementsLabel": "అంశాలు",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "టైప్ అవసరం.",
+        "typeHelp": "ఉద్దేశం యొక్క రకం, ఉదాహరణకు \"పాలసీ\".",
+        "versionRequired": "వెర్షన్ అవసరం.",
+        "versionHelp": "ఒక వెర్షన్ ఐడెంటిఫైయర్, ఉదాహరణకు \"v1\".",
+        "submitting": "సృష్టిస్తోంది...",
+        "createFailed": "ఏదో తప్పు జరిగింది మరియు ఉద్దేశ్యం సృష్టించబడలేదు. దయచేసి మళ్ళీ ప్రయత్నించండి."
       },
       "versionForm": {
         "versionLabel": "వెర్షన్",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "వెర్షన్‌ను చేర్చు",
+        "versionRequired": "వెర్షన్ అవసరం.",
+        "versionDuplicate": "ఈ ఉద్దేశ్యం ఇప్పటికే ఈ పేరుతో ఒక వెర్షన్‌ను కలిగి ఉంది.",
+        "versionHelp": "ఒక వెర్షన్ ఐడెంటిఫైయర్, ఉదాహరణకు \"v2\".",
+        "setAsLatestLabel": "తాజా వెర్షన్‌గా సెట్ చేయండి",
+        "submitting": "సృష్టిస్తోంది...",
+        "createFailed": "ఏదో తప్పు జరిగింది మరియు వెర్షన్‌ను సృష్టించలేకపోయాము. దయచేసి మళ్ళీ ప్రయత్నించండి."
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "ఉద్దేశ్యాన్ని తొలగించు",
+        "message": "మీరు నిజంగా \"{{name}}\" ను తొలగించాలనుకుంటున్నారా?",
+        "note": "ఈ చర్య శాశ్వతమైనది మరియు దీనిని రద్దు చేయలేము.",
+        "confirm": "ఉద్దేశ్యాన్ని తొలగించు",
+        "conflict": "ఈ ఉద్దేశాన్ని తొలగించలేము ఎందుకంటే ఇది ఇంకా ఒకటి లేదా అంతకంటే ఎక్కువ సమ్మతుల ద్వారా సూచించబడుతుంది.",
+        "deleteFailed": "ఏదో తప్పు జరిగింది మరియు ఉద్దేశ్యాన్ని తొలగించలేకపోయాము. దయచేసి మళ్ళీ ప్రయత్నించండి."
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "మీరు నిజంగా \"{{version}}\" సంస్కరణను తొలగించాలనుకుంటున్నారా?",
+        "note": "ఈ చర్య శాశ్వతమైనది మరియు దీనిని రద్దు చేయలేము.",
+        "deleteFailed": "ఏదో తప్పు జరిగింది మరియు వెర్షన్‌ను తొలగించలేకపోయాము. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+        "latestBlocked": "తాజా వెర్షన్‌ను తొలగించలేము. మరొక వెర్షన్‌ను మొదట తాజా వెర్షన్‌గా సెట్ చేయండి."
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "ఈ శోధనకు సరిపోయే ఉద్దేశ్యాలు ఏవీ లేవు."
     },
     "details": {
       "definition": "నిర్వచనం",
@@ -476,7 +476,7 @@
       "noPurposeElements": "ఇంకా ఎలాంటి అంశాలు జోడించబడలేదు. ప్రయోజనాన్ని సృష్టించడానికి కనీసం ఒక అంశాన్ని జోడించండి.",
       "noVersions": "ఎలాంటి వెర్షన్‌లు అందుబాటులో లేవు.",
       "versionsLoadFailed": "ప్రస్తుతం వెర్షన్ చరిత్రను లోడ్ చేయడం సాధ్యపడలేదు.",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "ఈ వెర్షన్‌ను తాజా వెర్షన్‌గా సెట్ చేయలేకపోయాము. దయచేసి మళ్లీ ప్రయత్నించండి."
     },
     "validation": {
       "duplicateElements": "ప్రతి అంశం ఒక్కసారి మాత్రమే చేర్చబడాలి.",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "పేజీకి వరుసలు",
+    "previous": "మునుపటి",
+    "next": "తరువాత"
   }
 }

@@ -24,13 +24,13 @@
     "ariaLabel": "প্রাথমিক নেভিগেশন",
     "dashboard": "ড্যাশবোর্ড",
     "consent": "সম্মতি",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "আমার সম্মতিসমূহ",
+    "pendingConsents": "আমার অমীমাংসিত সম্মতিসমূহ",
     "catalog": "সংজ্ঞাসমূহ",
     "purposes": "উদ্দেশ্যসমূহ",
     "elements": "উপাদানসমূহ",
     "administration": "প্রশাসন",
-    "adminConsents": "All Consents",
+    "adminConsents": "সকল সম্মতি",
     "nominations": "মনোনয়ন",
     "nomineeActivation": "নমিনি সক্রিয়করণ",
     "myComplaints": "আমার অভিযোগ",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "প্রকার অনুসারে আপনার সমস্ত সম্মতি",
     "noTypes": "এখনও কোনো সম্মতির প্রকার উপলব্ধ নেই।",
     "viewPending": "সমস্ত বিবেচনাধীন সম্মতি দেখুন",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "পরিষেবা অনুযায়ী সম্মতির বিভাজন",
+    "serviceBreakdownSubtitle": "আপনার সমস্ত সম্মতি, অনুরোধ করা পরিষেবা অনুসারে শ্রেণীবদ্ধ করা হল।",
+    "noServices": "এখনো কোনো পরিষেবা উপলব্ধ নেই।"
   },
   "adminConsents": {
     "title": "সম্মতিসমূহ",
@@ -87,10 +87,10 @@
       "groupIds": "গ্রুপ আইডি",
       "commaSeparatedUsers": "একাধিক ব্যবহারকারী আইডি কমা দিয়ে আলাদা করুন",
       "active": "সক্রিয় ফিল্টারসমূহ",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "পরিষেবা",
+      "removeConsentIdForState": "স্টেট ফিল্টার ব্যবহার করার জন্য সম্মতি আইডি ফিল্টারটি সরান।",
+      "propertyFilterLabel": "সম্মতি সম্পত্তি",
+      "removeConsentIdForSubject": "ইউজার আইডি ফিল্টার ব্যবহার করার জন্য কনসেন্ট আইডি ফিল্টারটি সরান।"
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "ইভেন্টের প্রকার",
         "date": "তারিখ",
         "time": "সময়",
-        "state": "State"
+        "state": "রাজ্য"
       },
       "lifecycle": {
         "tableAriaLabel": "সম্মতির জীবনচক্র",
@@ -162,14 +162,14 @@
         "required": "প্রয়োজনীয়",
         "optional": "ঐচ্ছিক"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "পরিষেবা",
+      "elementCount": "{{count}}টি উপাদান",
+      "elementCount_one": "{{count}} টি উপাদান",
+      "elementCount_other": "{{count}}টি উপাদান",
+      "noAuthorizations": "এই সম্মতির জন্য কোন অনুমোদন নথিভুক্ত করা হয়নি।",
+      "noElements": "এই উদ্দেশ্যের সাথে কোনো উপাদান যুক্ত নেই।",
+      "noPurposes": "এই সম্মতির সঙ্গে কোনো উদ্দেশ্য যুক্ত নেই।",
+      "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।"
     },
     "actions": {
       "view": "দেখুন",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} এর মধ্যে {{elementLabel}} এর জন্য অনুমতি টগল করুন",
         "loading": "সম্মতির বিবরণ লোড হচ্ছে...",
         "noMandatory": "এই সম্মতির জন্য কোনো বাধ্যতামূলক প্রয়োজনীয়তা নেই।",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "সম্মতি অনুমোদন করুন",
+        "message": "আপনি কি নিশ্চিত যে আপনি এই সম্মতি অনুমোদন করতে চান?",
+        "note": "এই সম্মতির মাধ্যমে অনুরোধ করা প্রতিটি উদ্দেশ্য এবং উপাদানের জন্য অনুদান অনুমোদন করা হচ্ছে।"
       },
       "rejection": {
         "title": "প্রত্যাখ্যান নিশ্চিত করুন",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "শেষের তারিখ ফিল্টার",
       "clear": "সব মুছুন",
       "clearAriaLabel": "সমস্ত ফিল্টার মুছুন",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "পরিষেবা অনুসারে অনুসন্ধান করুন",
+      "state": "রাজ্য"
     },
     "messages": {
       "loading": "সম্মতিসমূহ লোড হচ্ছে...",
@@ -269,8 +269,8 @@
         "updated": "আপডেট হয়েছে",
         "expiration": "মেয়াদ শেষ",
         "actions": "অ্যাকশন",
-        "service": "Service",
-        "state": "State"
+        "service": "পরিষেবা",
+        "state": "রাজ্য"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "দেখুন",
       "viewElement": "{{name}} দেখুন",
       "viewPurpose": "{{name}} দেখুন",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "সংস্করণ যোগ করুন",
+      "reset": "পুনরায় সেট করুন",
+      "search": "অনুসন্ধান করুন",
+      "setLatest": "সর্বশেষ হিসাবে সেট করুন"
     },
     "fields": {
       "actions": "অ্যাকশন",
@@ -328,7 +328,7 @@
       "schema": "স্কিমা",
       "type": "প্রকার",
       "version": "সংস্করণ",
-      "latestVersion": "Latest version"
+      "latestVersion": "সর্বশেষ সংস্করণ"
     },
     "help": {
       "commaSeparatedGroups": "একাধিক গ্রুপ আইডি কমা দিয়ে আলাদা করুন",
@@ -374,22 +374,22 @@
         "nameLabel": "নাম",
         "nameRequired": "নাম প্রয়োজন।",
         "displayNameLabel": "প্রদর্শনের নাম",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "একটি অনন্য মেশিন শনাক্তকারী, উদাহরণস্বরূপ \"ইমেল-ঠিকানা\"।",
+        "submitting": "তৈরি করা হচ্ছে...",
+        "duplicateName": "{{name}} নামের একজন উপাদান ইতিমধ্যেই বিদ্যমান। অন্য একটি নাম নির্বাচন করুন।",
+        "createFailed": "কিছু ভুল হয়েছে এবং উপাদানটি তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "propertyDuplicateKey": "এই কীটি একাধিকবার ব্যবহৃত হয়েছে। প্রতিটি বৈশিষ্ট্যের জন্য একটি ভিন্ন কী ব্যবহার করুন।",
+        "propertyKeyRequired": "একটি চাবি যোগ করুন, অথবা এই মানটি সংরক্ষণ করা হবে না।"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "উপাদান মুছুন",
+        "message": "আপনি কি নিশ্চিত যে আপনি \"{{name}}\"-কে মুছতে চান?",
+        "note": "এই কাজটা স্থায়ী এবং এটা আর পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।",
+        "confirm": "উপাদান মুছুন",
+        "conflict": "এই উপাদানটি মুছে ফেলা যাবে না কারণ এটি এখনও এক বা একাধিক উদ্দেশ্যে ব্যবহৃত হচ্ছে। প্রথমে সেই উদ্দেশ্যগুলো থেকে এটি সরান।",
+        "deleteFailed": "কিছু ভুল হয়েছে এবং উপাদানটি মুছে ফেলা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "কোনো উপাদানের সাথে \"{{term}}\"-এর মিল নেই।"
     },
     "purposes": {
       "add": "উদ্দেশ্য যোগ করুন",
@@ -419,38 +419,38 @@
         "typeLabel": "প্রকার",
         "versionLabel": "সংস্করণ",
         "elementsLabel": "উপাদানসমূহ",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "টাইপ করা আবশ্যক।",
+        "typeHelp": "উদ্দেশ্যের ধরন, যেমন \"নীতি\"।",
+        "versionRequired": "সংস্করণ প্রয়োজন।",
+        "versionHelp": "একটি সংস্করণ শনাক্তকারী, যেমন \"v1\"।",
+        "submitting": "তৈরি করা হচ্ছে...",
+        "createFailed": "কিছু ভুল হয়েছে এবং উদ্দেশ্যটি তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
       },
       "versionForm": {
         "versionLabel": "সংস্করণ",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "সংস্করণ যোগ করুন",
+        "versionRequired": "সংস্করণ প্রয়োজন।",
+        "versionDuplicate": "এই উদ্দেশ্যে ইতিমধ্যেই এই নামের একটি সংস্করণ রয়েছে।",
+        "versionHelp": "একটি সংস্করণ শনাক্তকারী, যেমন \"v2\"।",
+        "setAsLatestLabel": "সর্বশেষ সংস্করণ হিসেবে সেট করুন।",
+        "submitting": "তৈরি করা হচ্ছে...",
+        "createFailed": "কিছু ভুল হয়েছে এবং সংস্করণটি তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "উদ্দেশ্য মুছুন",
+        "message": "আপনি কি নিশ্চিত যে আপনি \"{{name}}\"-কে মুছতে চান?",
+        "note": "এই কাজটা স্থায়ী এবং এটা আর পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।",
+        "confirm": "উদ্দেশ্য মুছুন",
+        "conflict": "এই উদ্দেশ্যটি মুছে ফেলা যাবে না কারণ এটি এখনও এক বা একাধিক সম্মতির দ্বারা উল্লেখ করা হয়।",
+        "deleteFailed": "কিছু ভুল হয়েছে এবং উদ্দেশ্যটি মুছে ফেলা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "আপনি কি নিশ্চিত যে আপনি \"{{version}} সংস্করণটি মুছে ফেলতে চান?",
+        "note": "এই কাজটা স্থায়ী এবং এটা আর পূর্বাবস্থায় ফেরানো যাবে না।",
+        "deleteFailed": "কিছু ভুল হয়েছে এবং সংস্করণটি মুছে ফেলা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        "latestBlocked": "সর্বশেষ সংস্করণটি মোছা যাবে না। অন্য একটি সংস্করণকে প্রথমে সর্বশেষ হিসেবে সেট করুন।"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "এই অনুসন্ধানের সাথে কোন উদ্দেশ্য মেলে না।"
     },
     "details": {
       "definition": "সংজ্ঞা",
@@ -476,7 +476,7 @@
       "noPurposeElements": "এখনও কোনো উপাদান যোগ করা হয়নি। উদ্দেশ্য তৈরি করতে কমপক্ষে একটি উপাদান যোগ করুন।",
       "noVersions": "কোনো সংস্করণ উপলব্ধ নেই।",
       "versionsLoadFailed": "এই মুহূর্তে সংস্করণের ইতিহাস লোড করা যাচ্ছে না।",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "এই সংস্করণটিকে সর্বশেষ হিসাবে সেট করতে অক্ষম। অনুগ্রহ করে আবার চেষ্টা করুন।"
     },
     "validation": {
       "duplicateElements": "প্রতিটি উপাদান শুধুমাত্র একবার অন্তর্ভুক্ত করা যেতে পারে।",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "প্রতি পৃষ্ঠায় সারি",
+    "previous": "আগের",
+    "next": "পরবর্তী"
   }
 }

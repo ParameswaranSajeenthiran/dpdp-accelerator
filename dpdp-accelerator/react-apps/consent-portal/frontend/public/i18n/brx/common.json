@@ -24,13 +24,13 @@
     "ariaLabel": "गुबै नेभिगेसन",
     "dashboard": "ड्यासबोर्ड",
     "consent": "गनायथि",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "आंनि गनायथिफोर",
+    "pendingConsents": "आंनि थाबथानाय गनायथिफोर",
     "catalog": "बेजायफोर",
     "purposes": "थांखिफोर",
     "elements": "बाहागोफोर",
     "administration": "सालायनाय",
-    "adminConsents": "All Consents",
+    "adminConsents": "गासैबो गनायथिनायफोर",
     "nominations": "मुं फोरमायनाय",
     "nomineeActivation": "मुं फोरमायग्राखौ सोलिहोनाय",
     "myComplaints": "आंनि अजतफोर",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "नोंथांनि गासै गनायथिफोरखौ रोखोम बादि राननाय जाबाय",
     "noTypes": "दासिम जेबो गनायथिनि रोखोम गैया।",
     "viewPending": "गासै नेनानाव थानाय गनायथिफोरखौ नाय",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "सिबिथाय बायदियै गनायथि बायनाय",
+    "serviceBreakdownSubtitle": "नोंथांनि गासैबो गनायथिफोरखौ आर'ज खालामनाय सिबिथाइजों ज' खालामनाय जादों।",
+    "noServices": "दासिमबो जेबो सिबिथायफोर गैया।"
   },
   "adminConsents": {
     "title": "गनायथिफोर",
@@ -87,10 +87,10 @@
       "groupIds": "हान्जा ID फोर",
       "commaSeparatedUsers": "बां बाहायग्रा ID फोरखौ कमा (,) जों आलादा खालाम",
       "active": "सोलिफुनाय फिल्टरफोर",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "सिबिथाइ",
+      "removeConsentIdForState": "रायजोनि फिल्टारखौ बाहायनो थाखाय गनायथि आइ.डि. फिल्टारखौ बोखार।",
+      "propertyFilterLabel": "गनायथि सम्फथि",
+      "removeConsentIdForSubject": "इउजार आइ.डि. फिल्टारखौ बाहायनो थाखाय कन्सेन्ट आइ.डि. फिल्टारखौ बोखार।"
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "जाथायनि रोखोम",
         "date": "अक्ट'",
         "time": "सम",
-        "state": "State"
+        "state": "रायजो"
       },
       "lifecycle": {
         "tableAriaLabel": "गनायथिनि जिउ-चक्र",
@@ -162,14 +162,14 @@
         "required": "गोनांथार",
         "optional": "खुसिबादै"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "सिबिथाइ",
+      "elementCount": "{{count}} गुदिमुवाफोर",
+      "elementCount_one": "{{count}} गुदिमुवा",
+      "elementCount_other": "{{count}} गुदिमुवाफोर",
+      "noAuthorizations": "बे गनायथिनि थाखाय जेबो गनायथि लिरनाय गैया।",
+      "noElements": "बे थांखिजों जेबो गुदिमुवाफोर सोमोन्दो गैया।",
+      "noPurposes": "बे गनायथिजों जेबो थांखिफोर सोमोन्दो गैया।",
+      "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।"
     },
     "actions": {
       "view": "नाय",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} आव {{elementLabel}} नि थाखाय गोहो सोलाय",
         "loading": "गनायथिनि गुवारै विवरण लोड खालामफुगासिनो...",
         "noMandatory": "बे गनायथिनि थाखाय जेबो गोनांथार बाहागो गैया।",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "गनायथि हो",
+        "message": "नों थारैनो बे गनायथिखौ गनायथि होनो लुगैयो नामा?",
+        "note": "बे गनायथिजों खावलायजानाय मोनफ्रोमबो थांखि आरो गुदिमुवाखौ गनायथि होनाय।"
       },
       "rejection": {
         "title": "नेवसिनायखौ थि खालाम",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "जोबनाय अक्ट' फिल्टर",
       "clear": "गासै बोखार",
       "clearAriaLabel": "गासै फिल्टरफोरखौ बोखार",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "सिबिथायजों नागिर",
+      "state": "रायजो"
     },
     "messages": {
       "loading": "गनायथिफोरखौ लोड खालामफुगासिनो...",
@@ -269,8 +269,8 @@
         "updated": "अपडेट खालामबाय",
         "expiration": "सम जोबनाय",
         "actions": "हाबाफोर",
-        "service": "Service",
-        "state": "State"
+        "service": "सिबिथाइ",
+        "state": "रायजो"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "नाय",
       "viewElement": "{{name}} खौ नाय",
       "viewPurpose": "{{name}} खौ नाय",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "सोलायनाय दाजाबदेर",
+      "reset": "रिसेट",
+      "search": "नायहर",
+      "setLatest": "गोदानसिन महरै थि खालाम।"
     },
     "fields": {
       "actions": "हाबाफोर",
@@ -328,7 +328,7 @@
       "schema": "स्कीमा",
       "type": "रोखोम",
       "version": "भार्जन",
-      "latestVersion": "Latest version"
+      "latestVersion": "गोदानसिन रोखोम"
     },
     "help": {
       "commaSeparatedGroups": "बां हान्जा ID फोरखौ कमा (,) जों आलादा खालाम",
@@ -374,22 +374,22 @@
         "nameLabel": "मुं",
         "nameRequired": "मुं गोनांथार।",
         "displayNameLabel": "दिन्थिनाय मुं",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "मोनसे जुनिया मेसिन सिनायथिगिरि, बिदिन्थि महरै \"email-address\"।",
+        "submitting": "सोरजिखांनाय...",
+        "duplicateName": "{{name}} मुंनि मोनसे गुदिमुवाया सिगांनिफ्रायनो दंसै। गुबुन मुं सायख'।",
+        "createFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो बे गुदिमुवाखौ सोरजिनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।",
+        "propertyDuplicateKey": "बे कि (key) खौ खेबसेनि बांसिन बाहायनाय जायो। मोनफ्रोमबो प्रपार्टिनि थाखाय गुबुन गुबुन कि (key) बाहाय।",
+        "propertyKeyRequired": "मोनसे कि दाजाबदेर, नङाब्ला बे बेसेना सेव जानाय नङा।"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "एलिमेन्टखौ बोखार।",
+        "message": "नोंथाङा थारैनो \"{{name}}\" खौ डिलिट खालामनो लुगैयो नामा?",
+        "note": "बे हाबाया अरायथा आरो बेखौ फोजोबनो हाया।",
+        "confirm": "एलिमेन्टखौ बोखार।",
+        "conflict": "बे गुदिमुवाखौ बोखारनो हाया मानोना बेखौ दासिमबो मोनसे एबा गोबां थांखिफोरनि थाखाय बाहायनाय जायो। बेखौ सिगां बै थांखिफोरनिफ्राय बोखार।",
+        "deleteFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो बे गुदिमुवाखौ बोखारनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "{{term}} जों जेबो गुदिमुवा गोरोबलाया।"
     },
     "purposes": {
       "add": "थांखि सोदेर",
@@ -419,38 +419,38 @@
         "typeLabel": "रोखोम",
         "versionLabel": "भार्जन",
         "elementsLabel": "बाहागोफोर",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "टाइप खालामनाया गोनां।",
+        "typeHelp": "थांखिनि रोखोम, बिदिन्थि महरै \"पलिचि\"।",
+        "versionRequired": "रोखोमनि गोनांथि दं।",
+        "versionHelp": "मोनसे रोखोम सिनायथिगिरि, बिदिन्थि महरै \"v1\"।",
+        "submitting": "सोरजिखांनाय...",
+        "createFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो थांखिखौ सोरजिनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।"
       },
       "versionForm": {
         "versionLabel": "भार्जन",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "सोलायनाय दाजाबदेर",
+        "versionRequired": "रोखोमनि गोनांथि दं।",
+        "versionDuplicate": "बे थांखिनि सिगांनिफ्रायनो बे मुंजों मोनसे रोखोम दं।",
+        "versionHelp": "मोनसे रोखोम सिनायथिगिरि, बिदिन्थि महरै \"v2\"।",
+        "setAsLatestLabel": "गोदानसिन रोखोम महरै थि खालाम।",
+        "submitting": "सोरजिखांनाय...",
+        "createFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो रोखोमखौ सोरजिनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "थांखिखौ बोखार।",
+        "message": "नोंथाङा थारैनो \"{{name}}\" खौ डिलिट खालामनो लुगैयो नामा?",
+        "note": "बे हाबाया अरायथा आरो बेखौ फोजोबनो हाया।",
+        "confirm": "थांखिखौ बोखार।",
+        "conflict": "बे थांखिखौ बोखारनो हाया मानोना बेयो दासिमबो सासे एबा गोबां गनायथिजों मुंख'जायो।",
+        "deleteFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो थांखिखौ बोखारनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "नोंथाङा थारैनो \"{{version}} भार्जनखौ डिलिट खालामनो लुगैदों नामा?",
+        "note": "बे हाबाया अरायथा आरो बेखौ फोजोबनो हाया।",
+        "deleteFailed": "माबा मोनसे गोरोन्थि जादोंमोन आरो बे रोखोमखौ बोखारनो हायाखैमोन। अन्नानै फिन खेबसे नाजाफिन।",
+        "latestBlocked": "गोदानसिन रोखोमखौ बोखारनो हाया। गुबुन मोनसे रोखोमखौ गिबियाव गोदानसिन महरै थि खालाम।"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "बे नागिरनायजों जेबो थांखिफोरा मिलाया।"
     },
     "details": {
       "definition": "बेजाय",
@@ -476,7 +476,7 @@
       "noPurposeElements": "दासिम जेबो बाहागो सोदेराखै। थांखि सोर्जिनो कम्तिआव मोनसे बाहागो सोदेर।",
       "noVersions": "जेबो भार्जन थाहाथाव नङा।",
       "versionsLoadFailed": "दा भार्जन जारिमिनखौ लोड खालामनो हायाखै।",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "बे रोखोमखौ गोदानसिन महरै थि खालामनो हायाखै। अन्नानै फिन खेबसेबाव नाजा।"
     },
     "validation": {
       "duplicateElements": "मोनफ्रोम बाहागोखौ खेबसेल' सोदेरनो हागोन।",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "मोनफ्रोम बिलाइयाव सारिफोर",
+    "previous": "सिगांनि",
+    "next": "उननि"
   }
 }

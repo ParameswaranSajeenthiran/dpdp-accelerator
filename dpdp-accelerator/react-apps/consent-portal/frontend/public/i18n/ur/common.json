@@ -24,13 +24,13 @@
     "ariaLabel": "بنیادی نیویگیشن",
     "dashboard": "ڈیش بورڈ",
     "consent": "رضامندی",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "میری رضامندیاں",
+    "pendingConsents": "میری زیر التوا منظوریوں",
     "catalog": "تعریفات",
     "purposes": "مقاصد",
     "elements": "عناصر",
     "administration": "انتظامیہ",
-    "adminConsents": "All Consents",
+    "adminConsents": "تمام رضامندیاں",
     "nominations": "نامزدگیاں",
     "nomineeActivation": "نامزد فرد کی فعال کاری",
     "myComplaints": "میری شکایتیں",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "قسم کے لحاظ سے آپ کی تمام رضامندیاں",
     "noTypes": "ابھی تک رضامندی کی کوئی قسم دستیاب نہیں ہے۔",
     "viewPending": "تمام زیر التواء رضامندیاں دیکھیں",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "خدمت کے لحاظ سے رضامندی کی شکست",
+    "serviceBreakdownSubtitle": "آپ کی تمام رضامندیاں درخواست کردہ سروس کے لحاظ سے گروپ کی گئی ہیں۔",
+    "noServices": "ابھی تک کوئی سروس دستیاب نہیں ہے۔"
   },
   "adminConsents": {
     "title": "رضامندیاں",
@@ -87,10 +87,10 @@
       "groupIds": "گروپ IDs",
       "commaSeparatedUsers": "متعدد صارف IDs کو کوما (,) سے الگ کریں",
       "active": "فعال فلٹرز",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "خدمت",
+      "removeConsentIdForState": "ریاستی فلٹر استعمال کرنے کے لیے رضامندی شناختی فلٹر ہٹا دیں۔",
+      "propertyFilterLabel": "رضامندی کی جائیداد",
+      "removeConsentIdForSubject": "یوزر آئی ڈی فلٹر استعمال کرنے کے لیے کنسنٹ آئی ڈی فلٹر ہٹا دیں۔"
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "تقریب کی قسم",
         "date": "تاریخ",
         "time": "وقت",
-        "state": "State"
+        "state": "ریاست"
       },
       "lifecycle": {
         "tableAriaLabel": "رضامندی کا لائف سائیکل",
@@ -162,14 +162,14 @@
         "required": "ضروری",
         "optional": "اختیاری"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "خدمت",
+      "elementCount": "{{count}} عناصر",
+      "elementCount_one": "{{count}} عنصر",
+      "elementCount_other": "{{count}} عناصر",
+      "noAuthorizations": "اس رضامندی کے لیے کوئی اجازت نامے درج نہیں ہیں۔",
+      "noElements": "اس مقصد کے ساتھ کوئی عناصر منسلک نہیں ہیں۔",
+      "noPurposes": "اس رضامندی سے کوئی مقاصد وابستہ نہیں ہیں۔",
+      "noProperties": "اس رضامندی سے کوئی جائیداد منسلک نہیں ہے۔"
     },
     "actions": {
       "view": "دیکھیں",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} میں {{elementLabel}} کے لیے اجازت کی حالت بدلیں",
         "loading": "رضامندی کی تفصیلات لوڈ ہو رہی ہیں...",
         "noMandatory": "اس رضامندی کے لیے کوئی لازمی ضروریات نہیں ہیں۔",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "رضامندی منظور کریں۔",
+        "message": "کیا آپ واقعی اس رضامندی کی منظوری دینا چاہتی ہیں؟",
+        "note": "اس رضامندی کے ذریعے درخواست کردہ ہر مقصد اور عنصر کے لیے گرانٹس کی منظوری۔"
       },
       "rejection": {
         "title": "مسترد کرنے کی تصدیق کریں",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "آخری تاریخ کا فلٹر",
       "clear": "سب صاف کریں",
       "clearAriaLabel": "تمام فلٹرز صاف کریں",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "سروس کے ذریعے تلاش کریں۔",
+      "state": "ریاست"
     },
     "messages": {
       "loading": "رضامندیاں لوڈ ہو رہی ہیں...",
@@ -269,8 +269,8 @@
         "updated": "اپ ڈیٹ شدہ",
         "expiration": "میعاد ختم ہونے کی تاریخ",
         "actions": "اقدامات",
-        "service": "Service",
-        "state": "State"
+        "service": "خدمت",
+        "state": "ریاست"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "دیکھیں",
       "viewElement": "{{name}} دیکھیں",
       "viewPurpose": "{{name}} دیکھیں",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "اضافہ کریں ورژن",
+      "reset": "دوبارہ ترتیب دیں",
+      "search": "تلاش کریں",
+      "setLatest": "تازہ ترین کے طور پر سیٹ کریں۔"
     },
     "fields": {
       "actions": "اقدامات",
@@ -328,7 +328,7 @@
       "schema": "اسکیما",
       "type": "قسم",
       "version": "ورژن",
-      "latestVersion": "Latest version"
+      "latestVersion": "تازہ ترین ورژن"
     },
     "help": {
       "commaSeparatedGroups": "متعدد گروپ IDs کو کوما (,) سے الگ کریں",
@@ -374,22 +374,22 @@
         "nameLabel": "نام",
         "nameRequired": "نام ضروری ہے۔",
         "displayNameLabel": "ڈسپلے کا نام",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "ایک منفرد مشین شناخت کنندہ، مثال کے طور پر \"ای میل-ایڈریس\"۔",
+        "submitting": "تخلیق ہو رہی ہے...",
+        "duplicateName": "{{name}} نام کا ایک عنصر پہلے سے موجود ہے۔ ایک مختلف نام منتخب کریں۔",
+        "createFailed": "کچھ غلط ہوا اور عنصر نہیں بنایا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔",
+        "propertyDuplicateKey": "یہ کلید ایک سے زیادہ بار استعمال ہوتی ہے۔ ہر پراپرٹی کے لیے ایک مختلف کلید استعمال کریں۔",
+        "propertyKeyRequired": "ایک کلید شامل کریں، ورنہ یہ قدر محفوظ نہیں ہوگی۔"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "عنصر حذف کریں",
+        "message": "کیا آپ کو یقین ہے کہ آپ \"{{name}}\" کو حذف کرنا چاہتی ہیں؟",
+        "note": "یہ عمل مستقل ہے اور اسے کالعدم نہیں کیا جا سکتا۔",
+        "confirm": "عنصر حذف کریں",
+        "conflict": "اس عنصر کو حذف نہیں کیا جا سکتا کیونکہ یہ اب بھی ایک یا زیادہ مقاصد کے لیے استعمال ہوتا ہے۔ پہلے اسے ان مقاصد سے ہٹائیں۔",
+        "deleteFailed": "کچھ غلط ہوا اور عنصر کو حذف نہیں کیا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "کوئی بھی عنصر \"{{term}} سے میل نہیں کھاتا۔"
     },
     "purposes": {
       "add": "مقصد شامل کریں",
@@ -419,38 +419,38 @@
         "typeLabel": "قسم",
         "versionLabel": "ورژن",
         "elementsLabel": "عناصر",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "ٹائپ کرنا ضروری ہے۔",
+        "typeHelp": "مقصد کی قسم، مثلاً \"پالیسی\"۔",
+        "versionRequired": "ورژن درکار ہے۔",
+        "versionHelp": "ایک ورژن شناخت کنندہ، مثلاً \"v1\"۔",
+        "submitting": "تخلیق ہو رہی ہے...",
+        "createFailed": "کچھ غلط ہوا اور مقصد پیدا نہیں کیا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔"
       },
       "versionForm": {
         "versionLabel": "ورژن",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "اضافہ کریں ورژن",
+        "versionRequired": "ورژن درکار ہے۔",
+        "versionDuplicate": "اس مقصد کا پہلے سے ہی اس نام کے ساتھ ایک ورژن موجود ہے۔",
+        "versionHelp": "ایک ورژن شناخت کنندہ، مثلاً \"v2\"۔",
+        "setAsLatestLabel": "تازہ ترین ورژن کے طور پر سیٹ کریں۔",
+        "submitting": "تخلیق ہو رہی ہے...",
+        "createFailed": "کچھ غلط ہوا اور ورژن نہیں بنایا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "مقصد حذف کریں",
+        "message": "کیا آپ کو یقین ہے کہ آپ \"{{name}}\" کو حذف کرنا چاہتی ہیں؟",
+        "note": "یہ عمل مستقل ہے اور اسے کالعدم نہیں کیا جا سکتا۔",
+        "confirm": "مقصد حذف کریں",
+        "conflict": "اس مقصد کو حذف نہیں کیا جاسکتا کیونکہ اس کا حوالہ اب بھی ایک یا زیادہ رضامندیوں سے دیا جاتا ہے۔",
+        "deleteFailed": "کچھ غلط ہوا اور مقصد کو حذف نہیں کیا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "کیا آپ واقعی ورژن \"{{version}}\" کو حذف کرنا چاہتی ہیں؟",
+        "note": "یہ عمل مستقل ہے اور اسے کالعدم نہیں کیا جا سکتا۔",
+        "deleteFailed": "کچھ غلط ہوا اور ورژن کو حذف نہیں کیا جا سکا۔ براہ کرم دوبارہ کوشش کریں۔",
+        "latestBlocked": "تازہ ترین ورژن کو حذف نہیں کیا جا سکتا۔ پہلے کسی اور ورژن کو تازہ ترین کے طور پر سیٹ کریں۔"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "اس تلاش سے کوئی مقصد مطابقت نہیں رکھتا۔"
     },
     "details": {
       "definition": "تعریف",
@@ -476,7 +476,7 @@
       "noPurposeElements": "ابھی تک کوئی عنصر شامل نہیں کیا گیا۔ مقصد بنانے کے لیے کم از کم ایک عنصر شامل کریں۔",
       "noVersions": "کوئی ورژن دستیاب نہیں ہے۔",
       "versionsLoadFailed": "اس وقت ورژن ہسٹری لوڈ کرنے میں ناکامی ہوئی۔",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "اس ورژن کو تازہ ترین کے طور پر سیٹ کرنے سے قاصر ہیں۔ براہ کرم دوبارہ کوشش کریں۔"
     },
     "validation": {
       "duplicateElements": "ہر عنصر کو صرف ایک بار شامل کیا جا سکتا ہے۔",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "فی صفحہ قطاریں",
+    "previous": "پچھلا",
+    "next": "اگلا"
   }
 }

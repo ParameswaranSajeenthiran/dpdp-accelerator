@@ -24,13 +24,13 @@
     "ariaLabel": "प्राथमिक नेव्हिगेशन",
     "dashboard": "डॅशबोर्ड",
     "consent": "संमती",
-    "allConsents": "My Consents",
-    "pendingConsents": "My Pending Consents",
+    "allConsents": "माझ्या संमती",
+    "pendingConsents": "माझ्या प्रलंबित संमती",
     "catalog": "व्याख्या",
     "purposes": "उद्देश",
     "elements": "घटक",
     "administration": "प्रशासन",
-    "adminConsents": "All Consents",
+    "adminConsents": "सर्व संमती",
     "nominations": "नामांकने",
     "nomineeActivation": "नॉमिनी सक्रियकरण",
     "myComplaints": "माझ्या तक्रारी",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "तुमच्या सर्व संमती प्रकारानुसार गटबद्ध केल्या आहेत",
     "noTypes": "अद्याप कोणतेही संमती प्रकार उपलब्ध नाहीत.",
     "viewPending": "सर्व प्रलंबित संमती पहा",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "सेवेनुसार संमती भंग",
+    "serviceBreakdownSubtitle": "तुमच्या सर्व संमती, मागणी केलेल्या सेवेनुसार गटबद्ध केल्या आहेत.",
+    "noServices": "अद्याप कोणतीही सेवा उपलब्ध नाही."
   },
   "adminConsents": {
     "title": "संमती",
@@ -87,10 +87,10 @@
       "groupIds": "गट आयडी",
       "commaSeparatedUsers": "अनेक वापरकर्ता आयडी स्वल्पविरामाने वेगळे करा",
       "active": "सक्रिय फिल्टर्स",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
-      "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "serviceId": "सेवा",
+      "removeConsentIdForState": "राज्य फिल्टर वापरण्यासाठी संमती आयडी फिल्टर काढा.",
+      "propertyFilterLabel": "संमती मालमत्ता",
+      "removeConsentIdForSubject": "युजर आयडी फिल्टर वापरण्यासाठी संमती आयडी फिल्टर काढून टाका."
     }
   },
   "consentRegistry": {
@@ -140,7 +140,7 @@
         "eventType": "इव्हेंटचा प्रकार",
         "date": "तारीख",
         "time": "वेळ",
-        "state": "State"
+        "state": "राज्य"
       },
       "lifecycle": {
         "tableAriaLabel": "संमती जीवनचक्र",
@@ -162,14 +162,14 @@
         "required": "आवश्यक",
         "optional": "पर्यायी"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "service": "सेवा",
+      "elementCount": "{{count}} घटक",
+      "elementCount_one": "{{count}} घटक",
+      "elementCount_other": "{{count}} घटक",
+      "noAuthorizations": "या संमतीसाठी कोणतीही अधिकृतता नोंदवली जात नाही.",
+      "noElements": "या उद्देशाशी कोणतेही घटक संबंधित नाहीत.",
+      "noPurposes": "या संमतीशी कोणतेही उद्देश जोडलेले नाहीत.",
+      "noProperties": "या संमतीशी कोणतेही गुणधर्म संबंधित नाहीत."
     },
     "actions": {
       "view": "पहा",
@@ -195,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} मधील {{elementLabel}} साठी परवानगी टॉगल करा",
         "loading": "संमती तपशील लोड होत आहेत...",
         "noMandatory": "या संमतीसाठी कोणत्याही अनिवार्य आवश्यकता नाहीत.",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "संमती मंजूर करा",
+        "message": "तुम्ही ही संमती मंजूर करू इच्छिता याची तुम्हाला खात्री आहे का?",
+        "note": "या संमतीद्वारे विनंती केलेल्या प्रत्येक उद्देश आणि घटकांसाठी अनुदान मंजूर करणे."
       },
       "rejection": {
         "title": "नकार निश्चित करा",
@@ -242,8 +242,8 @@
       "endDateAriaLabel": "अंतिम तारीख फिल्टर",
       "clear": "सर्व साफ करा",
       "clearAriaLabel": "सर्व फिल्टर साफ करा",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "सेवेनुसार शोधा",
+      "state": "राज्य"
     },
     "messages": {
       "loading": "संमती लोड होत आहेत...",
@@ -269,8 +269,8 @@
         "updated": "अपडेट केले",
         "expiration": "कालबाह्य",
         "actions": "कृती",
-        "service": "Service",
-        "state": "State"
+        "service": "सेवा",
+        "state": "राज्य"
       }
     }
   },
@@ -294,10 +294,10 @@
       "view": "पहा",
       "viewElement": "{{name}} पहा",
       "viewPurpose": "{{name}} पहा",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "आवृत्ती जोडा",
+      "reset": "पुनर्सेट करा",
+      "search": "शोध",
+      "setLatest": "नवीनतम म्हणून सेट करा"
     },
     "fields": {
       "actions": "कृती",
@@ -328,7 +328,7 @@
       "schema": "स्कीमा",
       "type": "प्रकार",
       "version": "आवृत्ती",
-      "latestVersion": "Latest version"
+      "latestVersion": "नवीनतम आवृत्ती"
     },
     "help": {
       "commaSeparatedGroups": "अनेक गट आयडी स्वल्पविरामाने वेगळे करा",
@@ -374,22 +374,22 @@
         "nameLabel": "नाव",
         "nameRequired": "नाव आवश्यक आहे.",
         "displayNameLabel": "प्रदर्शित नाव",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "एक अद्वितीय मशीन आयडेंटिफायर, उदाहरणार्थ \"ईमेल-अ‍ॅड्रेस\".",
+        "submitting": "तयार करत आहे...",
+        "duplicateName": "{{name}} नावाचे एक घटक आधीपासूनच अस्तित्वात आहे. दुसरे नाव निवडा.",
+        "createFailed": "काहीतरी गडबड झाली आणि घटक तयार करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+        "propertyDuplicateKey": "ही किल्ली एकापेक्षा जास्त वेळा वापरली जाते. प्रत्येक गुणधर्मासाठी वेगळी किल्ली वापरा.",
+        "propertyKeyRequired": "एक की जोडा, अन्यथा हे मूल्य जतन केले जाणार नाही."
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "घटक हटवा",
+        "message": "तुम्ही \"{{name}}\" नक्की डिलीट करू इच्छिता?",
+        "note": "ही कृती कायमस्वरूपी आहे आणि पूर्ववत केली जाऊ शकत नाही.",
+        "confirm": "घटक हटवा",
+        "conflict": "हे घटक हटवता येणार नाही कारण ते अजूनही एक किंवा अधिक उद्देशांसाठी वापरले जात आहे. ते प्रथम त्या उद्देशांमधून काढून टाका.",
+        "deleteFailed": "काहीतरी गडबड झाली आणि घटक हटवता आला नाही. कृपया पुन्हा प्रयत्न करा."
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "{{term}} शी जुळणारे कोणतेही घटक नाहीत."
     },
     "purposes": {
       "add": "उद्देश जोडा",
@@ -419,38 +419,38 @@
         "typeLabel": "प्रकार",
         "versionLabel": "आवृत्ती",
         "elementsLabel": "घटक",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "प्रकार आवश्यक आहे.",
+        "typeHelp": "उद्देश्याचा प्रकार, उदा. \"धोरण\".",
+        "versionRequired": "आवृत्ती आवश्यक आहे.",
+        "versionHelp": "एक आवृत्ती ओळखकर्ता, उदा. \"v1\".",
+        "submitting": "तयार करत आहे...",
+        "createFailed": "काहीतरी गडबड झाली आणि उद्देश तयार करता आला नाही. कृपया पुन्हा प्रयत्न करा."
       },
       "versionForm": {
         "versionLabel": "आवृत्ती",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "आवृत्ती जोडा",
+        "versionRequired": "आवृत्ती आवश्यक आहे.",
+        "versionDuplicate": "या उद्देशासाठी या नावाची आवृत्ती आधीच आहे.",
+        "versionHelp": "एक आवृत्ती ओळखकर्ता, उदा. \"v2\".",
+        "setAsLatestLabel": "नवीनतम आवृत्ती म्हणून सेट करा.",
+        "submitting": "तयार करत आहे...",
+        "createFailed": "काहीतरी गडबड झाली आणि आवृत्ती तयार करता आली नाही. कृपया पुन्हा प्रयत्न करा."
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "हेतू हटवा",
+        "message": "तुम्ही \"{{name}}\" नक्की डिलीट करू इच्छिता?",
+        "note": "ही कृती कायमस्वरूपी आहे आणि पूर्ववत केली जाऊ शकत नाही.",
+        "confirm": "हेतू हटवा",
+        "conflict": "हा उद्देश वगळता येणार नाही कारण तो अजूनही एक किंवा अधिक संमतीद्वारे संदर्भित आहे.",
+        "deleteFailed": "काहीतरी गडबड झाली आणि उद्देश हटवता आला नाही. कृपया पुन्हा प्रयत्न करा."
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "तुम्ही नक्की खात्री बाळगता की तुम्हाला \"{{version}} ही आवृत्ती हटवायची आहे?\"",
+        "note": "ही कृती कायमस्वरूपी आहे आणि पूर्ववत केली जाऊ शकत नाही.",
+        "deleteFailed": "काहीतरी गडबड झाली आणि आवृत्ती हटवता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+        "latestBlocked": "नवीनतम आवृत्ती हटवता येत नाही. दुसरी आवृत्ती प्रथम नवीनतम म्हणून सेट करा."
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "या शोधाशी जुळणारे कोणतेही उद्देश नाहीत."
     },
     "details": {
       "definition": "व्याख्या",
@@ -476,7 +476,7 @@
       "noPurposeElements": "अद्याप कोणतेही घटक जोडलेले नाहीत. उद्देश तयार करण्यासाठी किमान एक घटक जोडा.",
       "noVersions": "कोणत्याही आवृत्त्या उपलब्ध नाहीत.",
       "versionsLoadFailed": "सध्या आवृत्ती इतिहास लोड करण्यात अक्षम.",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "ही आवृत्ती नवीनतम म्हणून सेट करणे शक्य नाही. कृपया पुन्हा प्रयत्न करा."
     },
     "validation": {
       "duplicateElements": "प्रत्येक घटक केवळ एकदाच समाविष्ट केला जाऊ शकतो.",
@@ -940,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "प्रति पान ओळी",
+    "previous": "मागील",
+    "next": "पुढे"
   }
 }
