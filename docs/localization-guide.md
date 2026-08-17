@@ -14,7 +14,7 @@ nothing needs to be configured on the server for that to work.
 
 After running `merge.sh` (see `setup-guide.md`), each language's files are at:
 
-```
+```text
 <IS_HOME>/repository/deployment/server/webapps/consent-portal/i18n/<lang-code>/
 ├── common.json    # the portal's own UI text (buttons, labels, messages)
 └── catalog.json   # wording for Purposes and Elements created in this deployment
@@ -61,18 +61,21 @@ translated:
 }
 ```
 
+**Purposes can only have their `description` translated; Elements can have
+both `displayName` and `description`.
+
 To add a translation for an Element or Purpose:
 
 1. Open `catalog.json` for the target language.
-2. Add an entry under `elements` (or `purposes`) keyed by the item's exact
-   name, with a translated `displayName` and/or `description`:
+2. Add an entry keyed by the item's exact name — `displayName` and/or
+   `description` under `elements`, `description` only under `purposes`:
 
    ```json
    {
-     "purposes": {    
-        "marketing_via_email@v1": {
-          "description": "ईमेल के माध्यम से मार्केटिंग"
-        }
+     "purposes": {
+       "marketing_via_email@v1": {
+         "description": "ईमेल के माध्यम से मार्केटिंग"
+       }
      },
      "elements": {
        "email-address": {
@@ -86,9 +89,10 @@ To add a translation for an Element or Purpose:
    The key must match the item's name **exactly**, character for character.
 
 3. For a Purpose whose wording differs between versions, key that version
-   specifically as `name@version` (for example `"marketing-consent@v2"`)
+   specifically as `name@version` (for example `"marketing_via_email@v2"`)
    instead of just `name`. If a Purpose has no version-specific entry, its
-   plain `name` entry (if any) applies to every version.
+   plain `name` entry (if any) applies to every version. Elements are never
+   versioned, so this only applies under `purposes`.
 4. Save. No restart needed.
 
 **Until a language has an entry for a given item, that's expected** — readers

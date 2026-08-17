@@ -32,7 +32,16 @@ import { useTranslation } from 'react-i18next'
 
 export type CatalogKind = 'purposes' | 'elements'
 
-/** The fields every purpose and element carries on both the catalog and consent APIs. */
+/**
+ * The fields an Element carries on both the catalog and consent APIs.
+ *
+ * Purposes do not get a `displayName` here: nothing in this system ever
+ * collects one for a Purpose -- not the create/edit form, not the Identity
+ * Server's API response -- so a Purpose has no English wording to translate
+ * a display name *from*. `PurposeCatalogItem` below reflects that by leaving
+ * the field out entirely, rather than leaving it optional and unused, so a
+ * Purpose can't accidentally be given one that would silently go nowhere.
+ */
 export interface CatalogItem {
   name: string
   version?: string
@@ -40,8 +49,15 @@ export interface CatalogItem {
   description?: string | null
 }
 
+/** What a Purpose actually has to translate: a description, nothing else. */
+export type PurposeCatalogItem = Omit<CatalogItem, 'displayName'>
+
 export interface CatalogTextResult {
   displayName: string
+  description: string | undefined
+}
+
+export interface PurposeCatalogTextResult {
   description: string | undefined
 }
 
@@ -57,13 +73,22 @@ function usable(value: string | undefined): string | undefined {
   return value?.trim() || undefined
 }
 
-export function useCatalogText(): (kind: CatalogKind, item: CatalogItem) => CatalogTextResult {
+/**
+ * Overloaded so a `'purposes'` lookup can neither take nor return a
+ * `displayName` -- see the comment on `CatalogItem` for why.
+ */
+export interface CatalogTextResolver {
+  (kind: 'elements', item: CatalogItem): CatalogTextResult
+  (kind: 'purposes', item: PurposeCatalogItem): PurposeCatalogTextResult
+}
+
+export function useCatalogText(): CatalogTextResolver {
   // Subscribing to the catalog namespace is what re-renders call sites when the
   // language changes; the bundle itself is read directly below.
   const { i18n } = useTranslation('catalog')
   const { language } = i18n
 
-  return useCallback(
+  const resolve = useCallback(
     (kind: CatalogKind, item: CatalogItem): CatalogTextResult => {
       const bundle = i18n.getResourceBundle(language, 'catalog') as CatalogBundle | undefined
       const entries = bundle?.[kind]
@@ -82,4 +107,6 @@ export function useCatalogText(): (kind: CatalogKind, item: CatalogItem) => Cata
     },
     [i18n, language],
   )
+
+  return resolve as CatalogTextResolver
 }
