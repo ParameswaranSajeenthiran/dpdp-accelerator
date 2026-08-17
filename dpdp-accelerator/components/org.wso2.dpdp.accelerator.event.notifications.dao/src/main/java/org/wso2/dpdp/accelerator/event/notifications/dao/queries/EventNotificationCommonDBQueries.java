@@ -415,7 +415,7 @@ public class EventNotificationCommonDBQueries {
 
     // ORG_DELIVERY Queries (UNION BASE)
     public String getGetOrgDeliveriesUnionBaseQuery() {
-        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
+        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD " +
                 "FROM WEBHOOK_DELIVERY d " +
@@ -424,7 +424,7 @@ public class EventNotificationCommonDBQueries {
                 "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
                 "WHERE s.ORG_ID = ? " +
                 "UNION ALL " +
-                "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
+                "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD " +
                 "FROM POLL_DELIVERY p " +
@@ -435,7 +435,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetSubscriptionDeliveriesUnionBaseQuery() {
-        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
+        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD "
                 + "FROM WEBHOOK_DELIVERY d "
@@ -444,7 +444,7 @@ public class EventNotificationCommonDBQueries {
                 + "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID "
                 + "WHERE d.SUBSCRIPTION_ID = ? AND s.ORG_ID = ? "
                 + "UNION ALL "
-                + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
+                + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD "
                 + "FROM POLL_DELIVERY p "
@@ -455,12 +455,12 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetSubscriptionDeliveryByIdQuery() {
-        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
+        return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD "
                 + "FROM WEBHOOK_DELIVERY d JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE d.SUBSCRIPTION_ID = ? AND d.DELIVERY_ID = ? AND s.ORG_ID = ? "
                 + "UNION ALL "
-                + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
+                + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD "
                 + "FROM POLL_DELIVERY p JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE p.SUBSCRIPTION_ID = ? AND p.DELIVERY_ID = ? AND s.ORG_ID = ?";

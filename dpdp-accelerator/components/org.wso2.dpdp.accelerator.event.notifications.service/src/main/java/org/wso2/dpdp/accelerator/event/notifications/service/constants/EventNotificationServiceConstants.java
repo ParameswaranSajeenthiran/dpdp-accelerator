@@ -41,6 +41,7 @@ public class EventNotificationServiceConstants {
     public static final String ERROR_CODE_RESOURCE_NOT_FOUND = "CS-4040";
     public static final String ERROR_CODE_TOPIC_NOT_FOUND = "CS-4041";
     public static final String ERROR_CODE_DELIVERY_NOT_FOUND = "CS-4042";
+    public static final String ERROR_CODE_EVENT_NOT_FOUND = "CS-4043";
     public static final String ERROR_CODE_RESOURCE_EXISTS = "CS-4090";
     public static final String ERROR_CODE_WEBHOOK_VERIFICATION_FAILED = "CS-4220";
     public static final String ERROR_CODE_EVENT_PUBLISH_FAILED = "CS-5001";
@@ -53,6 +54,7 @@ public class EventNotificationServiceConstants {
     public static final String ERROR_TITLE_RESOURCE_NOT_FOUND = "Resource not found";
     public static final String ERROR_TITLE_TOPIC_NOT_FOUND = "Topic not found";
     public static final String ERROR_TITLE_DELIVERY_NOT_FOUND = "Delivery not found";
+    public static final String ERROR_TITLE_EVENT_NOT_FOUND = "Event not found";
     public static final String ERROR_TITLE_RESOURCE_EXISTS = "Resource already exists";
     public static final String ERROR_TITLE_DUPLICATE_SUBSCRIPTION = "Duplicate subscription";
     public static final String ERROR_TITLE_TOPIC_ALREADY_EXISTS = "Topic already exists";
@@ -73,6 +75,9 @@ public class EventNotificationServiceConstants {
     public static final String ORG_ID_MISSING_ERROR_MSG = "Organization ID is required.";
     public static final String GROUP_ID_MISSING_ERROR_MSG = "Group ID is required.";
     public static final String SUBSCRIPTION_ID_MISSING_ERROR_MSG = "Subscription ID is required.";
+    public static final String DELIVERY_ID_MISSING_ERROR_MSG = "Delivery ID is required.";
+    public static final String EVENT_ID_MISSING_ERROR_MSG = "Event ID is required.";
+    public static final String EVENT_NOT_FOUND_ERROR_MSG = "No event exists with the specified ID for this organization.";
     public static final String SUBSCRIPTION_NOT_FOUND_ERROR_MSG = "No subscription exists with the specified ID for this organization.";
     public static final String DELIVERY_NOT_FOUND_ERROR_MSG = "No delivery exists with the specified ID for this subscription.";
     public static final String ONLY_STALE_SUBSCRIPTIONS_VERIFIABLE_ERROR_MSG = "Only subscriptions in 'stale' state can be re-verified.";

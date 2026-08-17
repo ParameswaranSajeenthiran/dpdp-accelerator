@@ -25,6 +25,8 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import javax.ws.rs.core.Response;
@@ -92,30 +94,72 @@ public class EventEndpointTest {
     }
 
     @Test
-    public void searchEvent_returns200WithDtoBody() {
-        PaginatedResult<EventDTO> page = new PaginatedResult<>(
-                Collections.singletonList(new EventDTO("evt-1", "org1", "g1", "topic-id-1", "{}",
-                        Collections.emptyList(), null, null)),
+    public void listEvents_returns200WithDtoBody() {
+        PaginatedResult<SubscriptionDeliveryDTO> page = new PaginatedResult<>(
+                Collections.singletonList(new SubscriptionDeliveryDTO("dlv-1", "evt-1", "sub-1", "grp-1", "topic-1", "DELIVERED",
+                        "webhook", 1710000000000L)),
                 1);
-        when(eventHandler.searchEvents(eq("org1"), eq("search"), eq(10), eq(0))).thenReturn(page);
+        when(eventHandler.listOrgDeliveries(eq("org1"), eq("DELIVERED"), eq("sub-1"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0)))
+                .thenReturn(page);
 
-        Response response = eventEndpoint.searchEvents("org1", "search", 10, 0);
+        Response response = eventEndpoint.listEvents("org1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), page);
-        verify(eventHandler, times(1)).searchEvents("org1", "search", 10, 0);
+        verify(eventHandler, times(1)).listOrgDeliveries("org1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
     }
 
     @Test
-    public void searchEvent_propagatesHandlerException() {
-        when(eventHandler.searchEvents(anyString(), any(), anyInt(), anyInt()))
+    public void listEvents_propagatesHandlerException() {
+        when(eventHandler.listOrgDeliveries(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("boom"));
 
         try {
-            eventEndpoint.searchEvents("org1", "search", 10, 0);
+            eventEndpoint.listEvents("org1", null, null, null, null, "search", 10, 0);
             org.testng.Assert.fail("Expected RuntimeException");
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");
         }
+    }
+
+    @Test
+    public void getDeliveryHistory_returns200WithDtoBody() {
+        SubscriptionEventHistoryDTO dto = new SubscriptionEventHistoryDTO();
+        dto.setDeliveryId("dlv-1");
+        dto.setEventId("evt-1");
+        when(eventHandler.getDeliveryHistory(eq("org1"), eq("dlv-1"))).thenReturn(dto);
+
+        Response response = eventEndpoint.getDeliveryHistory("org1", "dlv-1");
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        assertEquals(response.getEntity(), dto);
+        verify(eventHandler, times(1)).getDeliveryHistory("org1", "dlv-1");
+    }
+
+    @Test
+    public void getEvent_returns200WithDtoBody() {
+        EventDTO dto = new EventDTO("evt-1", "org1", "g1", "topic-1", "{}", Collections.emptyList(), null, null);
+        when(eventHandler.getEventById(eq("org1"), eq("evt-1"))).thenReturn(dto);
+
+        Response response = eventEndpoint.getEvent("org1", "evt-1");
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        assertEquals(response.getEntity(), dto);
+        verify(eventHandler, times(1)).getEventById("org1", "evt-1");
+    }
+
+    @Test
+    public void getEventDeliveries_returns200WithDtoBody() {
+        PaginatedResult<SubscriptionDeliveryDTO> page = new PaginatedResult<>(
+                Collections.singletonList(new SubscriptionDeliveryDTO("dlv-1", "evt-1", "topic-1", "DELIVERED",
+                        "webhook", 1710000000000L)),
+                1);
+        when(eventHandler.getEventDeliveries(eq("org1"), eq("evt-1"), eq(20), eq(0))).thenReturn(page);
+
+        Response response = eventEndpoint.getEventDeliveries("org1", "evt-1", 20, 0);
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        assertEquals(response.getEntity(), page);
+        verify(eventHandler, times(1)).getEventDeliveries("org1", "evt-1", 20, 0);
     }
 }

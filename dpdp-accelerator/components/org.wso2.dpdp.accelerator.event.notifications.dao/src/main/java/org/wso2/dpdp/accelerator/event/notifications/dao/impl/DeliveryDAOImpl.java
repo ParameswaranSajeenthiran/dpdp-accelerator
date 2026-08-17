@@ -40,6 +40,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -732,7 +733,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<SubscriptionDeliverySummary> listOrgDeliveries(String orgId, String statusFilter,
-            String subscriptionIdFilter, String purposesFilter, String search, int limit, int offset, int[] totalOut) {
+            String subscriptionIdFilter, String groupIdFilter, String purposesFilter, String search, int limit, int offset, int[] totalOut) {
         List<SubscriptionDeliverySummary> list = new ArrayList<>();
         StringBuilder outerWhere = new StringBuilder();
         List<Object> outerParams = new ArrayList<>();
@@ -749,10 +750,36 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             outerParams.add(subscriptionIdFilter.trim());
         }
 
+        if (groupIdFilter != null && !groupIdFilter.trim().isEmpty()) {
+            outerWhere.append(outerWhere.length() == 0 ? " WHERE " : " AND ");
+            outerWhere.append("GROUP_ID = ?");
+            outerParams.add(groupIdFilter.trim());
+        }
+
+        if (purposesFilter != null && !purposesFilter.trim().isEmpty()) {
+            String[] purposeTokens = purposesFilter.split(",");
+            List<String> validTokens = new ArrayList<>();
+            for (String token : purposeTokens) {
+                if (token != null && !token.trim().isEmpty()) {
+                    validTokens.add(token.trim().toLowerCase());
+                }
+            }
+            if (!validTokens.isEmpty()) {
+                outerWhere.append(outerWhere.length() == 0 ? " WHERE " : " AND ");
+                outerWhere.append("EVENT_ID IN (SELECT EVENT_ID FROM EVENT_PURPOSE WHERE LOWER(PURPOSE_NAME) IN (");
+                for (int i = 0; i < validTokens.size(); i++) {
+                    outerWhere.append(i == 0 ? "?" : ", ?");
+                    outerParams.add(validTokens.get(i));
+                }
+                outerWhere.append("))");
+            }
+        }
+
         if (search != null && !search.trim().isEmpty()) {
             outerWhere.append(outerWhere.length() == 0 ? " WHERE " : " AND ");
-            outerWhere.append("(LOWER(DELIVERY_ID) LIKE ? OR LOWER(EVENT_ID) LIKE ? OR LOWER(TOPIC_NAME) LIKE ?)");
+            outerWhere.append("(LOWER(DELIVERY_ID) LIKE ? OR LOWER(EVENT_ID) LIKE ? OR LOWER(GROUP_ID) LIKE ? OR LOWER(TOPIC_NAME) LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
+            outerParams.add(term);
             outerParams.add(term);
             outerParams.add(term);
             outerParams.add(term);
@@ -791,7 +818,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                     ps.setObject(paramIdx++, p);
                 }
                 ps.setInt(paramIdx++, limit);
-                ps.setInt(paramIdx, offset);
+                ps.setInt(paramIdx++, offset);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -845,11 +872,71 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         }
     }
 
+    @Override
+    public List<SubscriptionDeliverySummary> listEventDeliveries(String orgId, String eventId, int limit, int offset, int[] totalOut) {
+        if (orgId == null || orgId.trim().isEmpty() || eventId == null || eventId.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SubscriptionDeliverySummary> list = new ArrayList<>();
+        StringBuilder outerWhere = new StringBuilder(" WHERE EVENT_ID = ?");
+        List<Object> outerParams = new ArrayList<>(Collections.singletonList(eventId.trim()));
+
+        try (Connection conn = DBUtils.getConnection()) {
+            EventNotificationCommonDBQueries queries = getQueries(conn);
+            StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
+            List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
+
+            String wrappedSql = "SELECT * FROM (" + unionSql + ") AS u" + outerWhere;
+            String countSql = "SELECT COUNT(*) FROM (" + wrappedSql + ") AS c";
+            String pageSql = wrappedSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
+
+            if (totalOut != null && totalOut.length > 0) {
+                try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
+                    int paramIdx = 1;
+                    for (Object p : unionParams) {
+                        countPs.setObject(paramIdx++, p);
+                    }
+                    for (Object p : outerParams) {
+                        countPs.setObject(paramIdx++, p);
+                    }
+                    try (ResultSet rs = countPs.executeQuery()) {
+                        if (rs.next()) {
+                            totalOut[0] = rs.getInt(1);
+                        }
+                    }
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
+                int paramIdx = 1;
+                for (Object p : unionParams) {
+                    ps.setObject(paramIdx++, p);
+                }
+                for (Object p : outerParams) {
+                    ps.setObject(paramIdx++, p);
+                }
+                ps.setInt(paramIdx++, limit);
+                ps.setInt(paramIdx++, offset);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(mapSummary(rs));
+                    }
+                }
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
+        }
+    }
+
     private SubscriptionDeliverySummary mapSummary(ResultSet rs) throws SQLException {
         return new SubscriptionDeliverySummary(
                 rs.getString("DELIVERY_ID"),
                 rs.getString("EVENT_ID"),
                 rs.getString("SUBSCRIPTION_ID"),
+                rs.getString("GROUP_ID"),
                 rs.getString("TOPIC_NAME"),
                 rs.getString("CURRENT_STATUS"),
                 rs.getString("DELIVERY_MODE"),

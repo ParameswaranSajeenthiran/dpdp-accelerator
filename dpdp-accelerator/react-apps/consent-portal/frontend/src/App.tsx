@@ -29,6 +29,8 @@ import PurposeListPage from './features/catalog/PurposeListPage'
 import SubscriptionsPage from './features/events/SubscriptionsPage'
 import SubscriptionDetailsPage from './features/events/SubscriptionDetailsPage'
 import TopicsPage from './features/events/TopicsPage'
+import EventsPage from './features/events/EventsPage'
+import EventDetailsPage from './features/events/EventDetailsPage'
 import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegistryPage'
 import ConsentDetailsPage from './features/consent-registry/ConsentDetailsPage'
 import ConsentRegistryPage from './features/consent-registry/ConsentRegistryPage'
@@ -188,6 +190,14 @@ function App(): React.JSX.Element {
             }
           />
           <Route
+            path="/events"
+            element={
+              <AuthorizedRoute scope={PORTAL_SCOPES.EVENTS_READ}>
+                <EventsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
             path="/events/topics"
             element={
               <AuthorizedRoute scope={PORTAL_SCOPES.EVENT_TOPICS_READ}>
@@ -208,6 +218,14 @@ function App(): React.JSX.Element {
             element={
               <AuthorizedRoute scope={PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ}>
                 <SubscriptionDetailsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/:id"
+            element={
+              <AuthorizedRoute scope={PORTAL_SCOPES.EVENTS_READ}>
+                <EventDetailsPage />
               </AuthorizedRoute>
             }
           />

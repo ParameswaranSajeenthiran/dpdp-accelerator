@@ -25,6 +25,8 @@ public class SubscriptionDeliveryDTO {
 
     private String deliveryId;
     private String eventId;
+    private String subscriptionId;
+    private String groupId;
     private String topic;
     private String currentStatus;
     private String deliveryMode;
@@ -41,6 +43,39 @@ public class SubscriptionDeliveryDTO {
         this.currentStatus = currentStatus;
         this.deliveryMode = deliveryMode;
         this.occurredAt = occurredAt;
+    }
+
+    public SubscriptionDeliveryDTO(String deliveryId, String eventId, String subscriptionId, String topic,
+            String currentStatus, String deliveryMode, long occurredAt) {
+        this(deliveryId, eventId, subscriptionId, null, topic, currentStatus, deliveryMode, occurredAt);
+    }
+
+    public SubscriptionDeliveryDTO(String deliveryId, String eventId, String subscriptionId, String groupId,
+            String topic, String currentStatus, String deliveryMode, long occurredAt) {
+        this.deliveryId = deliveryId;
+        this.eventId = eventId;
+        this.subscriptionId = subscriptionId;
+        this.groupId = groupId;
+        this.topic = topic;
+        this.currentStatus = currentStatus;
+        this.deliveryMode = deliveryMode;
+        this.occurredAt = occurredAt;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(String subscriptionId) {
+        this.subscriptionId = subscriptionId;
     }
 
     public String getDeliveryId() {

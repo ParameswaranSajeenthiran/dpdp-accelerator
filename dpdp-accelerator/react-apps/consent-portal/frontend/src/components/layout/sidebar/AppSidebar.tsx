@@ -17,7 +17,7 @@
  */
 
 import { Sidebar } from '@wso2/oxygen-ui'
-import { BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
+import { Activity, BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'
@@ -77,6 +77,13 @@ const EVENT_ITEMS: SidebarItem[] = [
     icon: <BellRing size={18} />,
     requiredScope: PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ,
   },
+    {
+    id: 'events',
+    labelKey: 'sidebar.events',
+    path: '/events',
+    icon: <Activity size={18} />,
+    requiredScope: PORTAL_SCOPES.EVENTS_READ,
+  },
 ]
 
 const CATALOG_ITEMS: SidebarItem[] = [
@@ -131,6 +138,10 @@ function mapPathToMenuId(pathname: string, search: string): string {
 
   if (pathname.startsWith('/events/subscriptions')) {
     return 'subscriptions'
+  }
+
+  if (pathname.startsWith('/events')) {
+    return 'events'
   }
 
   if (pathname.startsWith('/purposes')) {

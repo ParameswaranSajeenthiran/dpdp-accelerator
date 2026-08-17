@@ -30,6 +30,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
@@ -67,6 +68,8 @@ public class EventPublishServiceImplTest {
     private EventDAO eventDAO;
     private TopicDAO topicDAO;
     private EventFanOutService fanOutService;
+    private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
+    private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
     private EventPublishServiceImpl publishService;
 
     @BeforeMethod
@@ -74,7 +77,9 @@ public class EventPublishServiceImplTest {
         eventDAO = mock(EventDAO.class);
         topicDAO = mock(TopicDAO.class);
         fanOutService = mock(EventFanOutService.class);
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService);
+        deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
+        deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO);
     }
 
     @Test
@@ -362,5 +367,108 @@ public class EventPublishServiceImplTest {
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "db down");
         }
+    }
+
+    @Test
+    public void listOrgDeliveries_happyPath() {
+        org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary summary =
+                new org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary(
+                        "dlv-1", "evt-1", "sub-1", "topic-1", "DELIVERED", "webhook",
+                        new Timestamp(1710000000000L), new Timestamp(1710000000000L), "{}");
+        when(deliveryDAO.listOrgDeliveries(eq("org1"), eq("DELIVERED"), eq("sub-1"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0), any(int[].class)))
+                .thenAnswer(invocation -> {
+                    int[] total = invocation.getArgument(8);
+                    total[0] = 1;
+                    return Collections.singletonList(summary);
+                });
+
+        PaginatedResult<org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO> result =
+                publishService.listOrgDeliveries("org1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
+
+        assertNotNull(result);
+        assertEquals(result.getTotal(), 1);
+        assertEquals(result.getItems().size(), 1);
+        assertEquals(result.getItems().get(0).getDeliveryId(), "dlv-1");
+    }
+
+    @Test
+    public void listOrgDeliveries_missingOrgId_throws() {
+        try {
+            publishService.listOrgDeliveries(" ", null, null, null, null, 10, 0);
+            fail("Expected EventNotificationException");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 400);
+        }
+    }
+
+    @Test
+    public void getDeliveryHistory_happyPath() {
+        org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary summary =
+                new org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary(
+                        "dlv-1", "evt-1", "sub-1", "topic-1", "DELIVERED", "webhook",
+                        new Timestamp(1710000000000L), new Timestamp(1710000000000L), "{}");
+        when(deliveryDAO.getOrgDeliveryById("org1", "dlv-1")).thenReturn(Optional.of(summary));
+        when(deliveryDAO.getWebhookDeliveryAudits("dlv-1", "org1")).thenReturn(Collections.emptyList());
+
+        org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO dto =
+                publishService.getDeliveryHistory("org1", "dlv-1");
+
+        assertNotNull(dto);
+        assertEquals(dto.getDeliveryId(), "dlv-1");
+        assertEquals(dto.getEventId(), "evt-1");
+    }
+
+    @Test
+    public void getDeliveryHistory_notFound_throws404() {
+        when(deliveryDAO.getOrgDeliveryById("org1", "dlv-1")).thenReturn(Optional.empty());
+
+        try {
+            publishService.getDeliveryHistory("org1", "dlv-1");
+            fail("Expected EventNotificationException");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 404);
+        }
+    }
+
+    @Test
+    public void getEventById_happyPath() {
+        Timestamp now = new Timestamp(1710000000000L);
+        Event event = new Event("evt-1", "org1", "group-1", "top-1", "{\"msg\":\"hi\"}", now);
+        event.setPurposes(Arrays.asList("marketing"));
+        when(eventDAO.getEventById("evt-1", "org1")).thenReturn(Optional.of(event));
+        when(topicDAO.getTopicById("top-1", "org1")).thenReturn(Optional.of(new Topic("top-1", "org1", "consent.granted", "desc", "active")));
+
+        EventDTO dto = publishService.getEventById("org1", "evt-1");
+        assertNotNull(dto);
+        assertEquals(dto.getEventId(), "evt-1");
+        assertEquals(dto.getTopic(), "consent.granted");
+        assertEquals(dto.getPurposes(), Arrays.asList("marketing"));
+    }
+
+    @Test
+    public void getEventById_notFound_throws404() {
+        when(eventDAO.getEventById("evt-1", "org1")).thenReturn(Optional.empty());
+
+        try {
+            publishService.getEventById("org1", "evt-1");
+            fail("Expected EventNotificationException");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 404);
+        }
+    }
+
+    @Test
+    public void getEventDeliveries_happyPath() {
+        org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary summary =
+                new org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary(
+                        "dlv-1", "evt-1", "sub-1", "consent.granted", "DELIVERED", "webhook",
+                        new Timestamp(1710000000000L), new Timestamp(1710000000000L), "{}");
+        when(deliveryDAO.listEventDeliveries(eq("org1"), eq("evt-1"), anyInt(), anyInt(), any(int[].class)))
+                .thenReturn(Collections.singletonList(summary));
+
+        PaginatedResult<SubscriptionDeliveryDTO> result = publishService.getEventDeliveries("org1", "evt-1", 10, 0);
+        assertNotNull(result);
+        assertEquals(result.getItems().size(), 1);
+        assertEquals(result.getItems().get(0).getDeliveryId(), "dlv-1");
     }
 }

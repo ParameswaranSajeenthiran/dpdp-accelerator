@@ -21,6 +21,8 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import javax.ws.rs.Consumes;
@@ -29,17 +31,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * JAX-RS endpoint for event publication and search.
- *
- * <p>{@code POST /events} persists + fans out a single event. {@code GET /events}
- * performs a paginated, search-only list. The {@code GET /events/{deliveryId}/history}
- * operation is still scheduled for a follow-up once the poll-mode fan-out lands.</p>
+ * JAX-RS endpoint for event publication, delivery listing, and delivery audit history.
  */
 @Path("/events")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -66,12 +65,47 @@ public class EventEndpoint {
     }
 
     @GET
-    public Response searchEvents(
+    public Response listEvents(
             @HeaderParam("org-id") String orgId,
+            @QueryParam("status") String status,
+            @QueryParam("subscriptionId") String subscriptionId,
+            @QueryParam("groupId") String groupId,
+            @QueryParam("purposes") String purposes,
             @QueryParam("search") String search,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
-        PaginatedResult<EventDTO> result = eventHandler.searchEvents(orgId, search, limit, offset);
+        PaginatedResult<SubscriptionDeliveryDTO> result = eventHandler.listOrgDeliveries(
+                orgId, status, subscriptionId, groupId, purposes, search, limit, offset);
+        return Response.ok(result).build();
+    }
+
+    @GET
+    @Path("/{deliveryId}/history")
+    public Response getDeliveryHistory(
+            @HeaderParam("org-id") String orgId,
+            @PathParam("deliveryId") String deliveryId) {
+        SubscriptionEventHistoryDTO dto = eventHandler.getDeliveryHistory(orgId, deliveryId);
+        return Response.ok(dto).build();
+    }
+
+    @GET
+    @Path("/{eventId}")
+    public Response getEvent(
+            @HeaderParam("org-id") String orgId,
+            @PathParam("eventId") String eventId) {
+        EventDTO dto = eventHandler.getEventById(orgId, eventId);
+        return Response.ok(dto).build();
+    }
+
+    @GET
+    @Path("/{eventId}/deliveries")
+    public Response getEventDeliveries(
+            @HeaderParam("org-id") String orgId,
+            @PathParam("eventId") String eventId,
+            @QueryParam("limit") @DefaultValue("20") int limit,
+            @QueryParam("offset") @DefaultValue("0") int offset) {
+        PaginatedResult<SubscriptionDeliveryDTO> result = eventHandler.getEventDeliveries(
+                orgId, eventId, limit, offset);
         return Response.ok(result).build();
     }
 }

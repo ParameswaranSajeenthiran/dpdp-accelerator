@@ -130,13 +130,14 @@ describe('AppSidebar', () => {
     expect(screen.getByText('/administration/consents')).toBeInTheDocument()
   })
 
-  it('renders and navigates to events topics and subscriptions', () => {
+  it('renders and navigates to events list, topics, and subscriptions', () => {
     render(
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/events/subscriptions']}>
             <TestAuthorizationProvider
               scopes={[
+                PORTAL_SCOPES.EVENTS_READ,
                 PORTAL_SCOPES.EVENT_TOPICS_READ,
                 PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ,
               ]}
@@ -158,7 +159,7 @@ describe('AppSidebar', () => {
       </OxygenUIThemeProvider>,
     )
 
-    expect(screen.getByText('Events')).toBeInTheDocument()
+    expect(screen.getAllByText('Events').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Topics')).toBeInTheDocument()
     expect(screen.getByText('Subscriptions')).toBeInTheDocument()
     expect(screen.getByText('/events/subscriptions')).toBeInTheDocument()

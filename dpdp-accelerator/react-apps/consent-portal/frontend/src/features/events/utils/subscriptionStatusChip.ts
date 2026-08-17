@@ -21,9 +21,16 @@ export type SubscriptionChipColor = 'success' | 'warning' | 'error' | 'default'
 export function getSubscriptionStatusChipColor(status: string): SubscriptionChipColor {
   switch (status.toUpperCase()) {
     case 'ACTIVE':
+    case 'DELIVERED':
+    case 'COMPLETED':
+    case 'ACKNOWLEDGED':
       return 'success'
     case 'PENDING':
+    case 'IN_FLIGHT':
       return 'warning'
+    case 'FAILED':
+    case 'ERR':
+    case 'EXPIRED':
     case 'STALE':
       return 'error'
     case 'DELETED':

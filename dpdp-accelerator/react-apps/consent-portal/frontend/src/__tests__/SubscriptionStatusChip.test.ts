@@ -31,8 +31,14 @@ import {
 describe('Subscription domain helpers & status chips', () => {
   it('maps subscription statuses to appropriate chip colors', () => {
     expect(getSubscriptionStatusChipColor('ACTIVE')).toBe('success')
+    expect(getSubscriptionStatusChipColor('DELIVERED')).toBe('success')
+    expect(getSubscriptionStatusChipColor('COMPLETED')).toBe('success')
+    expect(getSubscriptionStatusChipColor('ACKNOWLEDGED')).toBe('success')
     expect(getSubscriptionStatusChipColor('PENDING')).toBe('warning')
+    expect(getSubscriptionStatusChipColor('IN_FLIGHT')).toBe('warning')
     expect(getSubscriptionStatusChipColor('STALE')).toBe('error')
+    expect(getSubscriptionStatusChipColor('FAILED')).toBe('error')
+    expect(getSubscriptionStatusChipColor('EXPIRED')).toBe('error')
     expect(getSubscriptionStatusChipColor('DELETED')).toBe('default')
     expect(getSubscriptionStatusChipColor('UNKNOWN')).toBe('default')
   })

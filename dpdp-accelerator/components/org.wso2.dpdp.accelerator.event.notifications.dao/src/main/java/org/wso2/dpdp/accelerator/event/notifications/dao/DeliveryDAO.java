@@ -119,7 +119,52 @@ public interface DeliveryDAO {
 
     Optional<SubscriptionDeliverySummary> getSubscriptionDeliveryById(String orgId, String subscriptionId, String deliveryId);
 
-    List<SubscriptionDeliverySummary> listOrgDeliveries(String orgId, String statusFilter, String subscriptionIdFilter, String purposesFilter, String search, int limit, int offset, int[] totalOut);
+    /**
+     * Paginated list of event deliveries across the organisation.
+     *
+     * @param orgId organisation identifier.
+     * @param statusFilter optional delivery status filter.
+     * @param subscriptionIdFilter optional subscription filter.
+     * @param purposesFilter optional comma-separated purposes filter.
+     * @param search optional free-text search term.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @param totalOut 1-element array to receive the total matching row count.
+     * @return list of delivery summaries.
+     */
+    default List<SubscriptionDeliverySummary> listOrgDeliveries(String orgId, String statusFilter,
+            String subscriptionIdFilter, String purposesFilter, String search, int limit, int offset, int[] totalOut) {
+        return listOrgDeliveries(orgId, statusFilter, subscriptionIdFilter, null, purposesFilter, search, limit, offset, totalOut);
+    }
+
+    /**
+     * Paginated list of event deliveries across the organisation with group filter support.
+     *
+     * @param orgId organisation identifier.
+     * @param statusFilter optional delivery status filter.
+     * @param subscriptionIdFilter optional subscription filter.
+     * @param groupIdFilter optional consumer group ID filter.
+     * @param purposesFilter optional comma-separated purposes filter.
+     * @param search optional free-text search term.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @param totalOut 1-element array to receive the total matching row count.
+     * @return list of delivery summaries.
+     */
+    List<SubscriptionDeliverySummary> listOrgDeliveries(String orgId, String statusFilter,
+            String subscriptionIdFilter, String groupIdFilter, String purposesFilter, String search, int limit, int offset, int[] totalOut);
 
     Optional<SubscriptionDeliverySummary> getOrgDeliveryById(String orgId, String deliveryId);
+
+    /**
+     * Paginated list of deliveries generated for a specific published event.
+     *
+     * @param orgId organisation identifier.
+     * @param eventId event identifier.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @param totalOut 1-element array to receive the total matching row count.
+     * @return list of delivery summaries.
+     */
+    List<SubscriptionDeliverySummary> listEventDeliveries(String orgId, String eventId, int limit, int offset, int[] totalOut);
 }

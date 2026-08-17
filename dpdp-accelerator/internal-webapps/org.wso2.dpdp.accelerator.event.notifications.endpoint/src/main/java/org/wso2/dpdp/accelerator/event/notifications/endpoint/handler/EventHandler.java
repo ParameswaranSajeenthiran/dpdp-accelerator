@@ -23,6 +23,8 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.List;
@@ -64,5 +66,30 @@ public class EventHandler {
                 : EventNotificationCommonConstants.DEFAULT_LIMIT;
         int off = offset != null && offset >= 0 ? offset : 0;
         return eventPublishService.searchEvents(orgId, search, lim, off);
+    }
+
+    public PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
+            String subscriptionId, String groupId, String purposes, String search, Integer limit, Integer offset) {
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
+        int off = offset != null && offset >= 0 ? offset : 0;
+        return eventPublishService.listOrgDeliveries(orgId, status, subscriptionId, groupId, purposes, search, lim, off);
+    }
+
+    public SubscriptionEventHistoryDTO getDeliveryHistory(String orgId, String deliveryId) {
+        return eventPublishService.getDeliveryHistory(orgId, deliveryId);
+    }
+
+    public EventDTO getEventById(String orgId, String eventId) {
+        return eventPublishService.getEventById(orgId, eventId);
+    }
+
+    public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, Integer limit, Integer offset) {
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
+        int off = offset != null && offset >= 0 ? offset : 0;
+        return eventPublishService.getEventDeliveries(orgId, eventId, lim, off);
     }
 }

@@ -37,6 +37,9 @@ public class EventDTO {
     private Timestamp occurredAt;
     private Timestamp createdAt;
 
+    private String topic;
+    private int deliveriesCount;
+
     public EventDTO() {
     }
 
@@ -50,6 +53,22 @@ public class EventDTO {
         this.purposes = purposes;
         this.occurredAt = occurredAt;
         this.createdAt = createdAt;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public int getDeliveriesCount() {
+        return deliveriesCount;
+    }
+
+    public void setDeliveriesCount(int deliveriesCount) {
+        this.deliveriesCount = deliveriesCount;
     }
 
     public String getEventId() {

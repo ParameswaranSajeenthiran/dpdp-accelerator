@@ -25,6 +25,7 @@ public class SubscriptionDeliverySummary {
     private String deliveryId;
     private String eventId;
     private String subscriptionId;
+    private String groupId;
     private String topicName;
     private String currentStatus;
     private String deliveryMode;
@@ -38,15 +39,31 @@ public class SubscriptionDeliverySummary {
     public SubscriptionDeliverySummary(String deliveryId, String eventId, String subscriptionId,
                                        String topicName, String currentStatus, String deliveryMode,
                                        Timestamp occurredAt, Timestamp createdAt, String payload) {
+        this(deliveryId, eventId, subscriptionId, null, topicName, currentStatus, deliveryMode, occurredAt, createdAt, payload);
+    }
+
+    public SubscriptionDeliverySummary(String deliveryId, String eventId, String subscriptionId,
+                                       String groupId, String topicName, String currentStatus,
+                                       String deliveryMode, Timestamp occurredAt, Timestamp createdAt,
+                                       String payload) {
         this.deliveryId = deliveryId;
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
+        this.groupId = groupId;
         this.topicName = topicName;
         this.currentStatus = currentStatus;
         this.deliveryMode = deliveryMode;
         this.occurredAt = occurredAt;
         this.createdAt = createdAt;
         this.payload = payload;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     public String getDeliveryId() {

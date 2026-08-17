@@ -165,7 +165,7 @@ function buildBreadcrumbItems(
   if (subscriptionDetailsMatch) {
     return [
       { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events/subscriptions', isCurrent: false },
+      { label: eventsLabel, path: '/events', isCurrent: false },
       { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: false },
       {
         label: safeDecodeURIComponent(subscriptionDetailsMatch[1]),
@@ -178,7 +178,7 @@ function buildBreadcrumbItems(
   if (pathname.startsWith('/events/subscriptions')) {
     return [
       { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events/subscriptions', isCurrent: false },
+      { label: eventsLabel, path: '/events', isCurrent: false },
       { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: true },
     ]
   }
@@ -186,8 +186,15 @@ function buildBreadcrumbItems(
   if (pathname.startsWith('/events/topics')) {
     return [
       { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events/topics', isCurrent: false },
+      { label: eventsLabel, path: '/events', isCurrent: false },
       { label: topicsLabel, path: '/events/topics', isCurrent: true },
+    ]
+  }
+
+  if (pathname.startsWith('/events')) {
+    return [
+      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: eventsLabel, path: '/events', isCurrent: true },
     ]
   }
 

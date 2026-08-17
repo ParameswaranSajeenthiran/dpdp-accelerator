@@ -23,23 +23,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryAttemptDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,6 +86,12 @@ public class EventPublishServiceImpl implements EventPublishService {
     @Reference
     private EventFanOutService eventFanOutService;
 
+    @Reference
+    private DeliveryDAO deliveryDAO;
+
+    @Reference
+    private DeliveryAckDAO deliveryAckDAO;
+
     public EventPublishServiceImpl() {
     }
 
@@ -82,6 +99,15 @@ public class EventPublishServiceImpl implements EventPublishService {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
+    }
+
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
+            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO) {
+        this.eventDAO = eventDAO;
+        this.topicDAO = topicDAO;
+        this.eventFanOutService = eventFanOutService;
+        this.deliveryDAO = deliveryDAO;
+        this.deliveryAckDAO = deliveryAckDAO;
     }
 
     @Override
@@ -243,6 +269,208 @@ public class EventPublishServiceImpl implements EventPublishService {
             dtoList.add(mapToDTO(event));
         }
         return new PaginatedResult<>(dtoList, daoResult.getTotal());
+    }
+
+    @Override
+    public PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
+            String subscriptionId, String groupId, String purposes, String search, int limit, int offset) {
+        if (orgId == null || orgId.trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
+        }
+        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
+                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
+        int off = (offset < 0) ? 0 : offset;
+        int[] totalOut = new int[1];
+
+        List<SubscriptionDeliverySummary> summaries = deliveryDAO.listOrgDeliveries(
+                orgId.trim(), status, subscriptionId, groupId, purposes, search, lim, off, totalOut);
+
+        List<SubscriptionDeliveryDTO> dtoList = new ArrayList<>();
+        for (SubscriptionDeliverySummary summary : summaries) {
+            dtoList.add(new SubscriptionDeliveryDTO(
+                    summary.getDeliveryId(),
+                    summary.getEventId(),
+                    summary.getSubscriptionId(),
+                    summary.getGroupId(),
+                    summary.getTopicName(),
+                    summary.getCurrentStatus() != null ? summary.getCurrentStatus()
+                            : EventNotificationServiceConstants.STATUS_PENDING,
+                    summary.getDeliveryMode() != null ? summary.getDeliveryMode()
+                            : EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE,
+                    summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
+                            : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime()
+                                    : System.currentTimeMillis())));
+        }
+        return new PaginatedResult<>(dtoList, totalOut[0]);
+    }
+
+    @Override
+    public SubscriptionEventHistoryDTO getDeliveryHistory(String orgId, String deliveryId) {
+        if (orgId == null || orgId.trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
+        }
+        if (deliveryId == null || deliveryId.trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG, 400);
+        }
+
+        Optional<SubscriptionDeliverySummary> summaryOpt = deliveryDAO.getOrgDeliveryById(orgId.trim(), deliveryId.trim());
+        if (summaryOpt.isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
+                    EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
+                    EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
+        }
+
+        SubscriptionDeliverySummary summary = summaryOpt.get();
+        String mode = summary.getDeliveryMode() != null ? summary.getDeliveryMode()
+                : EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE;
+
+        SubscriptionEventHistoryDTO dto = new SubscriptionEventHistoryDTO();
+        dto.setDeliveryId(summary.getDeliveryId());
+        dto.setEventId(summary.getEventId());
+        dto.setTopic(summary.getTopicName());
+        dto.setDeliveryMode(mode);
+        dto.setCurrentStatus(summary.getCurrentStatus() != null ? summary.getCurrentStatus()
+                : EventNotificationServiceConstants.STATUS_PENDING);
+        dto.setOccurredAt(summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
+                : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime() : System.currentTimeMillis()));
+
+        if (EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE.equalsIgnoreCase(mode)) {
+            Optional<WebhookDelivery> whOpt = deliveryDAO.getWebhookDeliveryById(deliveryId.trim(), orgId.trim());
+            if (whOpt.isPresent()) {
+                WebhookDelivery wh = whOpt.get();
+                if (wh.getNextRetryAt() != null) {
+                    dto.setNextRetryAt(wh.getNextRetryAt().getTime());
+                }
+            }
+
+            Optional<WebhookDeliveryAck> ackOpt = deliveryAckDAO.getDeliveryAckByDeliveryId(deliveryId.trim());
+            if (ackOpt.isPresent()) {
+                WebhookDeliveryAck ack = ackOpt.get();
+                dto.setCompletionStatus(
+                        ack.getCompletionStatus() != null ? ack.getCompletionStatus()
+                                : DeliveryStatus.COMPLETED.getValue());
+                dto.setCompletionEvidence(ack.getCompletionEvidence());
+            }
+
+            List<WebhookDeliveryAudit> audits = deliveryDAO.getWebhookDeliveryAudits(deliveryId.trim(), orgId.trim());
+            List<SubscriptionDeliveryAttemptDTO> history = new ArrayList<>();
+            int attemptNum = 1;
+            for (WebhookDeliveryAudit audit : audits) {
+                String auditStatus;
+                Integer httpStatus = null;
+                String respCode = audit.getResponseCode();
+                if (respCode != null) {
+                    try {
+                        int code = Integer.parseInt(respCode);
+                        httpStatus = code;
+                        auditStatus = (code >= 200 && code < 300) ? DeliveryStatus.DELIVERED.getValue()
+                                : DeliveryStatus.FAILED.getValue();
+                    } catch (NumberFormatException e) {
+                        auditStatus = DeliveryStatus.FAILED.getValue();
+                    }
+                } else {
+                    auditStatus = DeliveryStatus.FAILED.getValue();
+                }
+
+                history.add(new SubscriptionDeliveryAttemptDTO(
+                        attemptNum++,
+                        auditStatus,
+                        audit.getAttemptAt() != null ? audit.getAttemptAt().getTime()
+                                : (audit.getCreatedAt() != null ? audit.getCreatedAt().getTime()
+                                        : System.currentTimeMillis()),
+                        httpStatus,
+                        (httpStatus != null && httpStatus >= 200 && httpStatus < 300) ? null : respCode));
+            }
+            dto.setHistory(history);
+        } else {
+            dto.setHistory(Collections.emptyList());
+        }
+
+        return dto;
+    }
+
+    @Override
+    public EventDTO getEventById(String orgId, String eventId) {
+        if (orgId == null || orgId.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
+                    400);
+        }
+        if (eventId == null || eventId.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,
+                    400);
+        }
+        Optional<Event> eventOpt = eventDAO.getEventById(eventId.trim(), orgId.trim());
+        if (!eventOpt.isPresent()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
+                    EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
+                    String.format(EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, eventId.trim()),
+                    404);
+        }
+        Event event = eventOpt.get();
+        EventDTO dto = mapToDTO(event);
+        if (event.getTopicId() != null) {
+            Optional<Topic> topicOpt = topicDAO.getTopicById(event.getTopicId(), orgId.trim());
+            if (topicOpt.isPresent()) {
+                dto.setTopic(topicOpt.get().getName());
+            } else {
+                dto.setTopic(event.getTopicId());
+            }
+        }
+        int[] totalOut = new int[1];
+        deliveryDAO.listEventDeliveries(orgId.trim(), eventId.trim(), 1, 0, totalOut);
+        dto.setDeliveriesCount(totalOut[0]);
+        return dto;
+    }
+
+    @Override
+    public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit, int offset) {
+        if (orgId == null || orgId.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
+                    400);
+        }
+        if (eventId == null || eventId.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,
+                    400);
+        }
+        int safeLimit = Math.max(1, limit);
+        int safeOffset = Math.max(0, offset);
+        int[] totalOut = new int[1];
+        List<SubscriptionDeliverySummary> summaries = deliveryDAO.listEventDeliveries(
+                orgId.trim(), eventId.trim(), safeLimit, safeOffset, totalOut);
+
+        List<SubscriptionDeliveryDTO> dtos = new ArrayList<>();
+        for (SubscriptionDeliverySummary summary : summaries) {
+            SubscriptionDeliveryDTO dto = new SubscriptionDeliveryDTO(
+                    summary.getDeliveryId(),
+                    summary.getEventId(),
+                    summary.getSubscriptionId(),
+                    summary.getGroupId(),
+                    summary.getTopicName(),
+                    summary.getCurrentStatus(),
+                    summary.getDeliveryMode(),
+                    summary.getOccurredAt() != null ? summary.getOccurredAt().getTime() : 0L);
+            dtos.add(dto);
+        }
+        return new PaginatedResult<SubscriptionDeliveryDTO>(dtos, totalOut[0]);
     }
 
     private EventDTO mapToDTO(Event event) {

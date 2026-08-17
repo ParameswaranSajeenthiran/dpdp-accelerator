@@ -19,6 +19,8 @@
 package org.wso2.dpdp.accelerator.event.notifications.service;
 
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.List;
@@ -67,4 +69,68 @@ public interface EventPublishService {
      * @return the matching page plus the total count.
      */
     PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset);
+
+    /**
+     * Paginated list of event deliveries across the organisation with optional status,
+     * subscription, purposes, and search filters.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param status optional delivery status filter.
+     * @param subscriptionId optional subscription filter.
+     * @param purposes optional comma-separated purposes filter.
+     * @param search optional search string matching delivery ID, event ID, or topic.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @return paginated list of deliveries.
+     */
+    default PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
+            String subscriptionId, String purposes, String search, int limit, int offset) {
+        return listOrgDeliveries(orgId, status, subscriptionId, null, purposes, search, limit, offset);
+    }
+
+    /**
+     * Paginated list of event deliveries across the organisation with optional status,
+     * subscription, group ID, purposes, and search filters.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param status optional delivery status filter.
+     * @param subscriptionId optional subscription filter.
+     * @param groupId optional group ID filter.
+     * @param purposes optional comma-separated purposes filter.
+     * @param search optional search string matching delivery ID, event ID, or topic.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @return paginated list of deliveries.
+     */
+    PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
+            String subscriptionId, String groupId, String purposes, String search, int limit, int offset);
+
+    /**
+     * Fetches delivery audit history and completion details for a specific delivery instance.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param deliveryId the delivery identifier (required).
+     * @return the delivery history including attempts and completion evidence.
+     */
+    SubscriptionEventHistoryDTO getDeliveryHistory(String orgId, String deliveryId);
+
+    /**
+     * Fetches detailed information for a specific published event by ID.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param eventId the event identifier (required).
+     * @return the event details including payload, purposes, topic name, and delivery count.
+     */
+    EventDTO getEventById(String orgId, String eventId);
+
+    /**
+     * Fetches the downstream subscriber deliveries generated for a specific published event.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param eventId the event identifier (required).
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @return paginated list of subscriber deliveries.
+     */
+    PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit, int offset);
 }
