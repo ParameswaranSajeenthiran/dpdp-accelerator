@@ -37,6 +37,7 @@ import {
 } from '@wso2/oxygen-ui'
 import { ChevronRight } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
+import { useCatalogText } from '../../../../i18n/catalogText'
 import type { ConsentPurpose } from '../../../../types/consent'
 
 interface ConsentPurposesSectionProps {
@@ -45,6 +46,7 @@ interface ConsentPurposesSectionProps {
 
 function ConsentPurposesSection({ purposes }: ConsentPurposesSectionProps): React.JSX.Element {
   const { t } = useTranslation('common')
+  const catalogText = useCatalogText()
 
   return (
     <Card sx={{ boxShadow: 1 }}>
@@ -125,14 +127,17 @@ function ConsentPurposesSection({ purposes }: ConsentPurposesSectionProps): Reac
                         </TableCell>
                       </TableRow>
                     ) : null}
-                    {purpose.elements.map((element) => (
-                      <TableRow key={element.id}>
-                        <TableCell>
-                          <Box component="code">{element.name}</Box>
-                        </TableCell>
-                        <TableCell>{element.displayName ?? '-'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {purpose.elements.map((element) => {
+                      const { displayName } = catalogText('elements', element)
+                      return (
+                        <TableRow key={element.id}>
+                          <TableCell>
+                            <Box component="code">{element.name}</Box>
+                          </TableCell>
+                          <TableCell>{displayName}</TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>

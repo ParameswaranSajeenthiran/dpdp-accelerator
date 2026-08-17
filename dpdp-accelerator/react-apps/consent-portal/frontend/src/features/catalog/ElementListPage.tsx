@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import CursorPaginationFooter from '../../components/CursorPaginationFooter'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { useCatalogText } from '../../i18n/catalogText'
 import type { CursorPageParams } from '../../types/catalog'
 import { APIError } from '../../utils/apiClient'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
@@ -50,6 +51,7 @@ import { getCursorPageParams, toCatalogSearchParams } from './utils/catalogSearc
 
 function ElementListPage(): React.JSX.Element {
   const { t } = useTranslation('common')
+  const catalogText = useCatalogText()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const params = useMemo(() => getCursorPageParams(searchParams), [searchParams])
@@ -153,38 +155,41 @@ function ElementListPage(): React.JSX.Element {
                       ))}
                     </TableRow>
                   ))
-                : rows.map((element) => (
-                    <TableRow
-                      hover
-                      key={element.id}
-                      tabIndex={0}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => openElement(element.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') openElement(element.id)
-                      }}
-                    >
-                      <TableCell>
-                        <Typography component="code" variant="body2" fontWeight={600} noWrap>
-                          {element.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" noWrap>
-                          {element.displayName ?? '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          color={element.description ? 'text.primary' : 'text.secondary'}
-                          title={element.description}
-                        >
-                          {element.description ?? t('catalog.values.noDescription')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                : rows.map((element) => {
+                    const { displayName, description } = catalogText('elements', element)
+                    return (
+                      <TableRow
+                        hover
+                        key={element.id}
+                        tabIndex={0}
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => openElement(element.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') openElement(element.id)
+                        }}
+                      >
+                        <TableCell>
+                          <Typography component="code" variant="body2" fontWeight={600} noWrap>
+                            {element.name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" noWrap>
+                            {displayName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            color={description ? 'text.primary' : 'text.secondary'}
+                            title={description}
+                          >
+                            {description ?? t('catalog.values.noDescription')}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
               {query.isError ? (
                 <TableRow>
                   <TableCell colSpan={3} align="center" sx={{ py: 8 }}>

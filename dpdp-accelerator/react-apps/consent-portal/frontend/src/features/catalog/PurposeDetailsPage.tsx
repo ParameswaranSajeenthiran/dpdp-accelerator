@@ -53,6 +53,7 @@ import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { useCatalogText } from '../../i18n/catalogText'
 import { APIError } from '../../utils/apiClient'
 import { PORTAL_SCOPES } from '../../utils/portalScopes'
 import useAuthorization from '../auth/useAuthorization'
@@ -71,6 +72,7 @@ import {
 
 function PurposeDetailsPage(): React.JSX.Element {
   const { t } = useTranslation('common')
+  const catalogText = useCatalogText()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const detailQuery = usePurposeQuery(id)
@@ -133,6 +135,15 @@ function PurposeDetailsPage(): React.JSX.Element {
     properties: detail.properties,
   }
   const existingVersions = versions.map((version) => version.version)
+
+  // The overview card shows the latest version's wording, so it's looked up
+  // the same way: a `name@version` entry for that version, falling back to
+  // the shared `name` entry.
+  const { description: purposeDescription } = catalogText('purposes', {
+    name: detail.name,
+    version: detail.latestVersion?.version,
+    description: detail.description,
+  })
 
   // A 409 here has one well-known cause -- the purpose is still referenced by
   // a consent -- so it gets a precise, actionable message regardless of the
@@ -232,7 +243,7 @@ function PurposeDetailsPage(): React.JSX.Element {
                 {
                   icon: <AlignLeft size={14} />,
                   label: t('catalog.fields.description'),
-                  value: detail.description ?? '-',
+                  value: purposeDescription ?? '-',
                 },
               ]}
             />
@@ -319,6 +330,8 @@ function PurposeDetailsPage(): React.JSX.Element {
                 ) : null}
                 {detail.elements.map((element) => {
                   const elementPath = `/elements/${encodeURIComponent(element.id)}`
+                  const { displayName: elementDisplayName, description: elementDescription } =
+                    catalogText('elements', element)
 
                   return (
                     <TableRow key={element.id} hover>
@@ -330,14 +343,14 @@ function PurposeDetailsPage(): React.JSX.Element {
                             fontWeight={600}
                             underline="none"
                           >
-                            {element.displayName ?? element.name}
+                            {elementDisplayName}
                           </Link>
                           <Typography variant="caption" color="text.secondary">
                             <Box component="code">{element.name}</Box>
                           </Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell>{element.description ?? '-'}</TableCell>
+                      <TableCell>{elementDescription ?? '-'}</TableCell>
                       <TableCell>
                         <Chip
                           size="small"
@@ -428,6 +441,11 @@ function PurposeDetailsPage(): React.JSX.Element {
                   ) : null}
                   {versions.map((version) => {
                     const isLatest = detail.latestVersion?.id === version.id
+                    const { description: versionDescription } = catalogText('purposes', {
+                      name: detail.name,
+                      version: version.version,
+                      description: version.description,
+                    })
 
                     return (
                       <TableRow hover key={version.id}>
@@ -439,7 +457,7 @@ function PurposeDetailsPage(): React.JSX.Element {
                             ) : null}
                           </Stack>
                         </TableCell>
-                        <TableCell>{version.description ?? '-'}</TableCell>
+                        <TableCell>{versionDescription ?? '-'}</TableCell>
                         {canWrite ? (
                           <TableCell align="right">
                             <Stack direction="row" spacing={0.5} justifyContent="flex-end">

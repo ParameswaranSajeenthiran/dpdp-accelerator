@@ -69,7 +69,11 @@ To add a translation for an Element or Purpose:
 
    ```json
    {
-     "purposes": {},
+     "purposes": {    
+        "marketing_via_email@v1": {
+          "description": "ईमेल के माध्यम से मार्केटिंग"
+        }
+     },
      "elements": {
        "email-address": {
          "displayName": "ईमेल पता",
