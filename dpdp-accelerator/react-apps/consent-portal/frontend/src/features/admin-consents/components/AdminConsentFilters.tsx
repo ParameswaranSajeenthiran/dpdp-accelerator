@@ -148,7 +148,7 @@ export default function AdminConsentFilters({
             <TextField
               size="small"
               fullWidth
-              label={t('adminConsents.filters.subjectId')}
+              label={t('consentRegistry.details.table.user')}
               value={draft.subjectId}
               disabled={Boolean(filters.consentId)}
               sx={{ '& .MuiInputBase-root': { height: MAIN_FILTER_HEIGHT } }}
@@ -218,14 +218,6 @@ export default function AdminConsentFilters({
             <TextField
               size="small"
               fullWidth
-              label={t('consentRegistry.details.table.user')}
-              helperText={t('adminConsents.filters.subjectIdHelp')}
-              value={draft.subjectId}
-              onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
-            />
-            <TextField
-              size="small"
-              fullWidth
               label={t('adminConsents.filters.serviceId')}
               value={draft.serviceId}
               onChange={(event) => setDraft({ ...draft, serviceId: event.target.value })}
@@ -233,8 +225,8 @@ export default function AdminConsentFilters({
             <TextField
               size="small"
               fullWidth
-              label={t('adminConsents.filters.purposeId')}
-              helperText={t('adminConsents.filters.purposeIdHelp')}
+              label={t('catalog.fields.purpose')}
+              helperText={t('catalog.fields.purposeId')}
               value={draft.purposeId}
               onChange={(event) => setDraft({ ...draft, purposeId: event.target.value })}
             />
@@ -248,14 +240,14 @@ export default function AdminConsentFilters({
               <TextField
                 size="small"
                 fullWidth
-                label={t('adminConsents.filters.propertyKey')}
+                label={t('catalog.fields.propertyKey')}
                 value={draft.propertyKey}
                 onChange={(event) => setDraft({ ...draft, propertyKey: event.target.value })}
               />
               <TextField
                 size="small"
                 fullWidth
-                label={t('adminConsents.filters.propertyValue')}
+                label={t('catalog.fields.propertyValue')}
                 value={draft.propertyValue}
                 onChange={(event) => setDraft({ ...draft, propertyValue: event.target.value })}
               />

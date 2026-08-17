@@ -47,7 +47,7 @@ function ConsentPropertiesSection({
       <CardHeader
         title={
           <Typography variant="h5" fontWeight={600}>
-            {t('consentRegistry.details.section.properties')}
+            {t('catalog.fields.properties')}
           </Typography>
         }
         sx={{ pb: 1 }}
@@ -59,11 +59,9 @@ function ConsentPropertiesSection({
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, width: '35%' }}>
-                  {t('catalog.elementForm.propertyKeyLabel')}
+                  {t('catalog.fields.propertyKey')}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t('catalog.elementForm.propertyValueLabel')}
-                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t('catalog.fields.propertyValue')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

@@ -24,13 +24,13 @@
     "ariaLabel": "गुबै नेभिगेसन",
     "dashboard": "ड्यासबोर्ड",
     "consent": "गनायथि",
-    "allConsents": "गासै गनायथिफोर",
-    "pendingConsents": "नेनानाव थानाय गनायथिफोर",
+    "allConsents": "My Consents",
+    "pendingConsents": "My Pending Consents",
     "catalog": "बेजायफोर",
     "purposes": "थांखिफोर",
     "elements": "बाहागोफोर",
     "administration": "सालायनाय",
-    "adminConsents": "गनायथिफोर",
+    "adminConsents": "All Consents",
     "nominations": "मुं फोरमायनाय",
     "nomineeActivation": "मुं फोरमायग्राखौ सोलिहोनाय",
     "myComplaints": "आंनि अजतफोर",
@@ -87,9 +87,10 @@
       "groupIds": "हान्जा ID फोर",
       "commaSeparatedUsers": "बां बाहायग्रा ID फोरखौ कमा (,) जों आलादा खालाम",
       "active": "सोलिफुनाय फिल्टरफोर",
-      "subjectIdHelp": "Username of the data subject",
       "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
+      "propertyFilterLabel": "Consent property",
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
     }
   },
   "consentRegistry": {
@@ -167,7 +168,8 @@
       "elementCount_other": "{{count}} elements",
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "noPurposes": "No purposes are associated with this consent.",
+      "noProperties": "No properties are associated with this consent."
     },
     "actions": {
       "view": "नाय",

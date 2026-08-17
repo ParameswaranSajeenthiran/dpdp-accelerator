@@ -24,13 +24,13 @@
     "ariaLabel": "ಪ್ರಾಥಮಿಕ ನ್ಯಾವಿಗೇಷನ್",
     "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
     "consent": "ಸಮ್ಮತಿ",
-    "allConsents": "ಎಲ್ಲಾ ಸಮ್ಮತಿಗಳು",
-    "pendingConsents": "ಬಾಕಿ ಉಳಿದಿರುವ ಸಮ್ಮತಿಗಳು",
+    "allConsents": "My Consents",
+    "pendingConsents": "My Pending Consents",
     "catalog": "ವ್ಯಾಖ್ಯಾನಗಳು",
     "purposes": "ಉದ್ದೇಶಗಳು",
     "elements": "ಅಂಶಗಳು",
     "administration": "ಆಡಳಿತ",
-    "adminConsents": "ಸಮ್ಮತಿಗಳು",
+    "adminConsents": "All Consents",
     "nominations": "ನಾಮನಿರ್ದೇಶನಗಳು",
     "nomineeActivation": "ನಾಮಿನಿ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ",
     "myComplaints": "ನನ್ನ ದೂರುಗಳು",
@@ -87,9 +87,10 @@
       "groupIds": "ಗುಂಪು ID ಗಳು",
       "commaSeparatedUsers": "ಅಲ್ಪವಿರಾಮಗಳೊಂದಿಗೆ ಬಹು ಬಳಕೆದಾರ ID ಗಳನ್ನು ಪ್ರತ್ಯೇಕಿಸಿ",
       "active": "ಸಕ್ರಿಯ ಫಿಲ್ಟರ್‌ಗಳು",
-      "subjectIdHelp": "Username of the data subject",
       "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
+      "propertyFilterLabel": "Consent property",
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
     }
   },
   "consentRegistry": {
@@ -167,7 +168,8 @@
       "elementCount_other": "{{count}} elements",
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "noPurposes": "No purposes are associated with this consent.",
+      "noProperties": "No properties are associated with this consent."
     },
     "actions": {
       "view": "ವೀಕ್ಷಿಸಿ",

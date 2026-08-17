@@ -24,13 +24,13 @@
     "ariaLabel": "முதன்மை வழிகாட்டி",
     "dashboard": "முகப்புப்பலகை",
     "consent": "சம்மதம்",
-    "allConsents": "அனைத்து சம்மதங்கள்",
-    "pendingConsents": "நிலுவையிலுள்ள சம்மதங்கள்",
+    "allConsents": "My Consents",
+    "pendingConsents": "My Pending Consents",
     "catalog": "வரையறைகள்",
     "purposes": "நோக்கங்கள்",
     "elements": "கூறுகள்",
     "administration": "நிர்வாகம்",
-    "adminConsents": "சம்மதங்கள்",
+    "adminConsents": "All Consents",
     "nominations": "நியமனங்கள்",
     "nomineeActivation": "நியமன நபர் செயல்படுத்துதல்",
     "myComplaints": "எனது புகார்கள்",
@@ -87,9 +87,10 @@
       "groupIds": "குழு ஐடிகள்",
       "commaSeparatedUsers": "பல பயனர் ஐடிகளை கற்புள்ளி (comma) மூலம் பிரிக்கவும்",
       "active": "செயலில் உள்ள வடிகட்டிகள்",
-      "subjectIdHelp": "Username of the data subject",
       "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
+      "propertyFilterLabel": "Consent property",
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
     }
   },
   "consentRegistry": {
@@ -167,7 +168,8 @@
       "elementCount_other": "{{count}} elements",
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "noPurposes": "No purposes are associated with this consent.",
+      "noProperties": "No properties are associated with this consent."
     },
     "actions": {
       "view": "பார்",

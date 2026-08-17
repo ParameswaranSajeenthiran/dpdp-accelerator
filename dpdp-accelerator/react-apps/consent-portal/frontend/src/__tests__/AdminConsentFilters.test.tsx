@@ -73,13 +73,13 @@ describe('administrative consent filters', () => {
     expect(getAdminConsentFilters(new URLSearchParams('subjectId=admin')).subjectId).toBe('admin')
   })
 
-  it('searches by User ID directly from the main row', () => {
+  it('searches by User directly from the main row', () => {
     const onFilterChange = vi.fn()
     renderFilters(EMPTY_ADMIN_CONSENT_FILTERS, onFilterChange)
 
     expect(screen.getByPlaceholderText('Search by consent ID')).toBeInTheDocument()
 
-    const subjectId = screen.getByRole('textbox', { name: 'User ID' })
+    const subjectId = screen.getByRole('textbox', { name: 'User' })
     expect(subjectId).toBeEnabled()
 
     fireEvent.change(subjectId, { target: { value: ' admin ' } })
@@ -110,7 +110,7 @@ describe('administrative consent filters', () => {
     expect(purposeId).toBeEnabled()
     expect(propertyKey).toBeEnabled()
     expect(propertyValue).toBeEnabled()
-    expect(screen.queryByRole('textbox', { name: 'User ID' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'User' })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /element/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: /group/i })).not.toBeInTheDocument()
 
@@ -149,7 +149,7 @@ describe('administrative consent filters', () => {
     renderFilters({ ...EMPTY_ADMIN_CONSENT_FILTERS, consentId: 'consent-123' })
 
     const advancedFiltersButton = screen.getByRole('button', { name: 'Advanced filters' })
-    const subjectId = screen.getByRole('textbox', { name: 'User ID' })
+    const subjectId = screen.getByRole('textbox', { name: 'User' })
     const stateSelect = screen.getByRole('combobox', { name: 'State' })
     expect(advancedFiltersButton).toBeDisabled()
     expect(subjectId).toBeDisabled()

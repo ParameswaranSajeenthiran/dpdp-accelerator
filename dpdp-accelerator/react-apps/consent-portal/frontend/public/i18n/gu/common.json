@@ -24,13 +24,13 @@
     "ariaLabel": "મુખ્ય નેવિગેશન",
     "dashboard": "ડેશબોર્ડ",
     "consent": "સંમતિ",
-    "allConsents": "તમામ સંમતિઓ",
-    "pendingConsents": "પેન્ડિંગ સંમતિઓ",
+    "allConsents": "My Consents",
+    "pendingConsents": "My Pending Consents",
     "catalog": "વ્યાખ્યાઓ",
     "purposes": "હેતુઓ",
     "elements": "ઘટકો",
     "administration": "વહીવટ",
-    "adminConsents": "સંમતિઓ",
+    "adminConsents": "All Consents",
     "nominations": "નામાંકનો",
     "nomineeActivation": "નામાંકિત સક્રિયકરણ",
     "myComplaints": "મારી ફરિયાદો",
@@ -87,9 +87,10 @@
       "groupIds": "જૂથ ID",
       "commaSeparatedUsers": "બહુવિધ વપરાશકર્તા IDને અલ્પવિરામથી અલગ કરો",
       "active": "સક્રિય ફિલ્ટર્સ",
-      "subjectIdHelp": "Username of the data subject",
       "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
+      "propertyFilterLabel": "Consent property",
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
     }
   },
   "consentRegistry": {
@@ -167,7 +168,8 @@
       "elementCount_other": "{{count}} elements",
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "noPurposes": "No purposes are associated with this consent.",
+      "noProperties": "No properties are associated with this consent."
     },
     "actions": {
       "view": "જુઓ",

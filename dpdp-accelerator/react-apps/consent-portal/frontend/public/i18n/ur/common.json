@@ -24,13 +24,13 @@
     "ariaLabel": "بنیادی نیویگیشن",
     "dashboard": "ڈیش بورڈ",
     "consent": "رضامندی",
-    "allConsents": "تمام رضامندیاں",
-    "pendingConsents": "زیر التواء رضامندیاں",
+    "allConsents": "My Consents",
+    "pendingConsents": "My Pending Consents",
     "catalog": "تعریفات",
     "purposes": "مقاصد",
     "elements": "عناصر",
     "administration": "انتظامیہ",
-    "adminConsents": "رضامندیاں",
+    "adminConsents": "All Consents",
     "nominations": "نامزدگیاں",
     "nomineeActivation": "نامزد فرد کی فعال کاری",
     "myComplaints": "میری شکایتیں",
@@ -87,9 +87,10 @@
       "groupIds": "گروپ IDs",
       "commaSeparatedUsers": "متعدد صارف IDs کو کوما (,) سے الگ کریں",
       "active": "فعال فلٹرز",
-      "subjectIdHelp": "Username of the data subject",
       "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
+      "propertyFilterLabel": "Consent property",
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
     }
   },
   "consentRegistry": {
@@ -167,7 +168,8 @@
       "elementCount_other": "{{count}} elements",
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "noPurposes": "No purposes are associated with this consent.",
+      "noProperties": "No properties are associated with this consent."
     },
     "actions": {
       "view": "دیکھیں",

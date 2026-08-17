@@ -66,7 +66,7 @@ describe('AppSidebar', () => {
 
     expect(screen.getByRole('complementary')).toBeInTheDocument()
     expect(screen.getByRole('navigation')).toBeInTheDocument()
-    expect(screen.getByText('Consents')).toBeInTheDocument()
+    expect(screen.getByText('All Consents')).toBeInTheDocument()
     expect(screen.getByText('/consents')).toBeInTheDocument()
     const navigationText = screen.getByRole('navigation').textContent ?? ''
     expect(navigationText.indexOf('Administration')).toBeLessThan(
