@@ -29,6 +29,10 @@ public class EventQueryBuilder {
 
     private final String orgId;
     private String search;
+    private String topic;
+    private String status;
+    private String groupId;
+    private String purposes;
 
     public EventQueryBuilder(String orgId) {
         this.orgId = orgId;
@@ -36,6 +40,26 @@ public class EventQueryBuilder {
 
     public EventQueryBuilder setSearch(String search) {
         this.search = search;
+        return this;
+    }
+
+    public EventQueryBuilder setTopic(String topic) {
+        this.topic = topic;
+        return this;
+    }
+
+    public EventQueryBuilder setStatus(String status) {
+        this.status = status;
+        return this;
+    }
+
+    public EventQueryBuilder setGroupId(String groupId) {
+        this.groupId = groupId;
+        return this;
+    }
+
+    public EventQueryBuilder setPurposes(String purposes) {
+        this.purposes = purposes;
         return this;
     }
 
@@ -80,9 +104,45 @@ public class EventQueryBuilder {
         List<Object> params = new ArrayList<>();
         params.add(orgId);
 
+        if (topic != null && !topic.trim().isEmpty() && !"all".equalsIgnoreCase(topic.trim())) {
+            sql.append(" AND LOWER(t.NAME) = ?");
+            params.add(topic.trim().toLowerCase());
+        }
+
+        if (groupId != null && !groupId.trim().isEmpty()) {
+            sql.append(" AND e.GROUP_ID = ?");
+            params.add(groupId.trim());
+        }
+
+        if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status.trim())) {
+            sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.EVENT_ID = e.EVENT_ID AND LOWER(wd.STATUS) = ?) "
+                    + "OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.EVENT_ID = e.EVENT_ID AND LOWER(pd.STATUS) = ?))");
+            String statusParam = status.trim().toLowerCase();
+            params.add(statusParam);
+            params.add(statusParam);
+        }
+
+        if (purposes != null && !purposes.trim().isEmpty()) {
+            String[] tokens = purposes.split(",");
+            List<String> valid = new ArrayList<>();
+            for (String token : tokens) {
+                if (token != null && !token.trim().isEmpty()) {
+                    valid.add(token.trim().toLowerCase());
+                }
+            }
+            if (!valid.isEmpty()) {
+                sql.append(" AND e.EVENT_ID IN (SELECT ep.EVENT_ID FROM EVENT_PURPOSE ep WHERE LOWER(ep.PURPOSE_NAME) IN (");
+                for (int i = 0; i < valid.size(); i++) {
+                    sql.append(i == 0 ? "?" : ", ?");
+                    params.add(valid.get(i));
+                }
+                sql.append("))");
+            }
+        }
+
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (LOWER(e.EVENT_ID) LIKE ? OR LOWER(e.GROUP_ID) LIKE ? "
-                    + "OR LOWER(e.TOPIC_ID) LIKE ? OR LOWER(e.PAYLOAD) LIKE ?)");
+                    + "OR LOWER(t.NAME) LIKE ? OR LOWER(e.PAYLOAD) LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);

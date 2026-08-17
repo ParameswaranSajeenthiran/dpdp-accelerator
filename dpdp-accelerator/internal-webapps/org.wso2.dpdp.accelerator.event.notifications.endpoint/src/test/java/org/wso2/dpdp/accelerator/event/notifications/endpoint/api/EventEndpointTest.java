@@ -95,27 +95,29 @@ public class EventEndpointTest {
 
     @Test
     public void listEvents_returns200WithDtoBody() {
-        PaginatedResult<SubscriptionDeliveryDTO> page = new PaginatedResult<>(
-                Collections.singletonList(new SubscriptionDeliveryDTO("dlv-1", "evt-1", "sub-1", "grp-1", "topic-1", "DELIVERED",
-                        "webhook", 1710000000000L)),
-                1);
-        when(eventHandler.listOrgDeliveries(eq("org1"), eq("DELIVERED"), eq("sub-1"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0)))
+        EventDTO eventDTO = new EventDTO("evt-1", "org1", "grp-1", "topic-1", "{}",
+                Collections.singletonList("marketing"), null, null);
+        eventDTO.setTopic("topic-1");
+        eventDTO.setDeliveriesCount(1);
+        PaginatedResult<EventDTO> page = new PaginatedResult<>(
+                Collections.singletonList(eventDTO), 1);
+        when(eventHandler.searchEvents(eq("org1"), eq("topic-1"), eq("DELIVERED"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0)))
                 .thenReturn(page);
 
-        Response response = eventEndpoint.listEvents("org1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
+        Response response = eventEndpoint.listEvents("org1", "topic-1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), page);
-        verify(eventHandler, times(1)).listOrgDeliveries("org1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
+        verify(eventHandler, times(1)).searchEvents("org1", "topic-1", "DELIVERED", "grp-1", "marketing", "search", 10, 0);
     }
 
     @Test
     public void listEvents_propagatesHandlerException() {
-        when(eventHandler.listOrgDeliveries(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+        when(eventHandler.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("boom"));
 
         try {
-            eventEndpoint.listEvents("org1", null, null, null, null, "search", 10, 0);
+            eventEndpoint.listEvents("org1", null, null, null, null, null, "search", 10, 0);
             org.testng.Assert.fail("Expected RuntimeException");
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");

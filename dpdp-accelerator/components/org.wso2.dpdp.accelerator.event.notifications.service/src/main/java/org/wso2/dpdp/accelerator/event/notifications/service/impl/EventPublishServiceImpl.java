@@ -255,6 +255,12 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     @Override
     public PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset) {
+        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+    }
+
+    @Override
+    public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -263,7 +269,8 @@ public class EventPublishServiceImpl implements EventPublishService {
         int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
                 : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
         int off = (offset < 0) ? 0 : offset;
-        PaginatedDAOResult<Event> daoResult = eventDAO.searchEvents(orgId.trim(), search, lim, off);
+        PaginatedDAOResult<Event> daoResult = eventDAO.searchEvents(
+                orgId.trim(), topic, status, groupId, purposes, search, lim, off);
         List<EventDTO> dtoList = new ArrayList<>();
         for (Event event : daoResult.getItems()) {
             dtoList.add(mapToDTO(event));
@@ -477,19 +484,17 @@ public class EventPublishServiceImpl implements EventPublishService {
         if (event == null) {
             return null;
         }
-        return new EventDTO(
+        EventDTO dto = new EventDTO(
                 event.getEventId(),
                 event.getOrgId(),
                 event.getGroupId(),
                 event.getTopicId(),
                 event.getPayload(),
                 event.getPurposes(),
-                // The DAO model only stores CREATED_AT; map it to both occurredAt and createdAt
-                // for API symmetry with the publishEvent response. Consumers that need a
-                // distinct
-                // occurred-at timestamp can populate it on EVENT_PURPOSE or on a future schema
-                // column.
                 event.getCreatedAt(),
                 event.getCreatedAt());
+        dto.setTopic(event.getTopic());
+        dto.setDeliveriesCount(event.getDeliveriesCount());
+        return dto;
     }
 }

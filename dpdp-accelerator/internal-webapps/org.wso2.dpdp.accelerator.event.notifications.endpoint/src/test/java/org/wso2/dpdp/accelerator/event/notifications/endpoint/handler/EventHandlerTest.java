@@ -107,29 +107,42 @@ public class EventHandlerTest {
     @Test
     public void searchEvents_clampsAndForwardsToService() {
         PaginatedResult<EventDTO> daoResult = new PaginatedResult<>(Collections.<EventDTO>emptyList(), 0);
-        when(eventPublishService.searchEvents(anyString(), any(), anyInt(), anyInt())).thenReturn(daoResult);
+        when(eventPublishService.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(daoResult);
 
         PaginatedResult<EventDTO> result = eventHandler.searchEvents("org1", "search", 10000, -5);
 
         assertNotNull(result);
-        verify(eventPublishService, times(1)).searchEvents("org1", "search",
+        verify(eventPublishService, times(1)).searchEvents("org1", null, null, null, null, "search",
                 EventNotificationCommonConstants.MAX_LIMIT, 0);
     }
 
     @Test
+    public void searchEvents_withAllFilters_forwardsToService() {
+        PaginatedResult<EventDTO> daoResult = new PaginatedResult<>(Collections.<EventDTO>emptyList(), 0);
+        when(eventPublishService.searchEvents(eq("org1"), eq("t1"), eq("DELIVERED"), eq("g1"), eq("purposes"), eq("search"), anyInt(), anyInt()))
+                .thenReturn(daoResult);
+
+        PaginatedResult<EventDTO> result = eventHandler.searchEvents("org1", "t1", "DELIVERED", "g1", "purposes", "search", 10, 0);
+
+        assertNotNull(result);
+        verify(eventPublishService, times(1)).searchEvents("org1", "t1", "DELIVERED", "g1", "purposes", "search", 10, 0);
+    }
+
+    @Test
     public void searchEvents_nullLimit_defaultsToDefaultLimit() {
-        when(eventPublishService.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventPublishService.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedResult<>(Collections.<EventDTO>emptyList(), 0));
 
         eventHandler.searchEvents("org1", "search", null, null);
 
-        verify(eventPublishService, times(1)).searchEvents("org1", "search",
+        verify(eventPublishService, times(1)).searchEvents("org1", null, null, null, null, "search",
                 EventNotificationCommonConstants.DEFAULT_LIMIT, 0);
     }
 
     @Test
     public void searchEvents_serviceThrows_propagates() {
-        when(eventPublishService.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventPublishService.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("boom"));
 
         try {

@@ -275,10 +275,14 @@ public class EventPublishServiceImplTest {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         Event e1 = new Event("evt-1", "org1", "g1", "topic-id-1", "{\"k\":\"v1\"}", now);
         e1.setPurposes(Arrays.asList("marketing"));
+        e1.setTopic("consent-events");
+        e1.setDeliveriesCount(2);
         Event e2 = new Event("evt-2", "org1", null, "topic-id-1", "{\"k\":\"v2\"}", now);
         e2.setPurposes(Collections.emptyList());
+        e2.setTopic("consent-events");
+        e2.setDeliveriesCount(0);
         PaginatedDAOResult<Event> daoResult = new PaginatedDAOResult<>(Arrays.asList(e1, e2), 2);
-        when(eventDAO.searchEvents(eq("org1"), eq("k"), anyInt(), anyInt())).thenReturn(daoResult);
+        when(eventDAO.searchEvents(eq("org1"), any(), any(), any(), any(), eq("k"), anyInt(), anyInt())).thenReturn(daoResult);
 
         PaginatedResult<EventDTO> result = publishService.searchEvents("org1", "k", 10, 0);
 
@@ -286,10 +290,22 @@ public class EventPublishServiceImplTest {
         assertEquals(result.getTotal(), 2);
         assertEquals(result.getItems().size(), 2);
         assertEquals(result.getItems().get(0).getEventId(), "evt-1");
+        assertEquals(result.getItems().get(0).getTopic(), "consent-events");
+        assertEquals(result.getItems().get(0).getDeliveriesCount(), 2);
         assertEquals(result.getItems().get(0).getPurposes(), Arrays.asList("marketing"));
         assertEquals(result.getItems().get(0).getPayload(), "{\"k\":\"v1\"}");
         assertEquals(result.getItems().get(1).getEventId(), "evt-2");
         assertEquals(result.getItems().get(1).getPurposes(), Collections.emptyList());
+    }
+
+    @Test
+    public void searchEvents_withAllFilters_forwardsToDao() {
+        when(eventDAO.searchEvents(eq("org1"), eq("topic1"), eq("DELIVERED"), eq("grp1"), eq("marketing"), eq("search1"), eq(10), eq(0)))
+                .thenReturn(new PaginatedDAOResult<>(Collections.emptyList(), 0));
+
+        PaginatedResult<EventDTO> result = publishService.searchEvents("org1", "topic1", "DELIVERED", "grp1", "marketing", "search1", 10, 0);
+        assertNotNull(result);
+        verify(eventDAO, times(1)).searchEvents("org1", "topic1", "DELIVERED", "grp1", "marketing", "search1", 10, 0);
     }
 
     @Test(expectedExceptions = EventNotificationException.class)
@@ -304,48 +320,48 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void searchEvents_limitClampedToMaxLimit() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedDAOResult<>(Collections.<Event>emptyList(), 0));
 
         publishService.searchEvents("org1", null, 10000, 0);
 
-        verify(eventDAO, times(1)).searchEvents("org1", null,
+        verify(eventDAO, times(1)).searchEvents("org1", null, null, null, null, null,
                 EventNotificationCommonConstants.MAX_LIMIT, 0);
     }
 
     @Test
     public void searchEvents_offsetNegative_treatedAsZero() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedDAOResult<>(Collections.<Event>emptyList(), 0));
 
         publishService.searchEvents("org1", null, 10, -5);
 
-        verify(eventDAO, times(1)).searchEvents("org1", null, 10, 0);
+        verify(eventDAO, times(1)).searchEvents("org1", null, null, null, null, null, 10, 0);
     }
 
     @Test
     public void searchEvents_nullSearch_daoReceivesNull() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedDAOResult<>(Collections.<Event>emptyList(), 0));
 
         publishService.searchEvents("org1", null, 10, 0);
 
-        verify(eventDAO, times(1)).searchEvents("org1", null, 10, 0);
+        verify(eventDAO, times(1)).searchEvents("org1", null, null, null, null, null, 10, 0);
     }
 
     @Test
     public void searchEvents_orgIdIsTrimmedBeforeDaoCall() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedDAOResult<>(Collections.<Event>emptyList(), 0));
 
         publishService.searchEvents("  org1  ", "search", 10, 0);
 
-        verify(eventDAO, times(1)).searchEvents("org1", "search", 10, 0);
+        verify(eventDAO, times(1)).searchEvents("org1", null, null, null, null, "search", 10, 0);
     }
 
     @Test
     public void searchEvents_emptyResult_isValidPaginatedResult() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedDAOResult<>(Collections.<Event>emptyList(), 0));
 
         PaginatedResult<EventDTO> result = publishService.searchEvents("org1", "no-match", 10, 0);
@@ -358,7 +374,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void searchEvents_daoThrows_propagates() {
-        when(eventDAO.searchEvents(anyString(), any(), anyInt(), anyInt()))
+        when(eventDAO.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("db down"));
 
         try {

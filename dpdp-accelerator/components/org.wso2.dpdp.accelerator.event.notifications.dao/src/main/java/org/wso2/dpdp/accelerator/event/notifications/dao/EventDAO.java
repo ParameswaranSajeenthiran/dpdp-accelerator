@@ -59,5 +59,10 @@ public interface EventDAO {
 
     boolean hasActiveEventsForTopic(String topicId);
 
-    PaginatedDAOResult<Event> searchEvents(String orgId, String search, int limit, int offset);
+    PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset);
+
+    default PaginatedDAOResult<Event> searchEvents(String orgId, String search, int limit, int offset) {
+        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+    }
 }

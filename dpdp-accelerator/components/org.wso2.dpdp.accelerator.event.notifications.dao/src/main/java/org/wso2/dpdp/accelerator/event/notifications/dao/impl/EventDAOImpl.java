@@ -159,9 +159,15 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public PaginatedDAOResult<Event> searchEvents(String orgId, String search, int limit, int offset) {
+    public PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset) {
         List<Event> events = new ArrayList<>();
-        EventQueryBuilder builder = new EventQueryBuilder(orgId).setSearch(search);
+        EventQueryBuilder builder = new EventQueryBuilder(orgId)
+                .setTopic(topic)
+                .setStatus(status)
+                .setGroupId(groupId)
+                .setPurposes(purposes)
+                .setSearch(search);
 
         int total = 0;
         try (Connection conn = DBUtils.getConnection()) {
@@ -214,13 +220,24 @@ public class EventDAOImpl implements EventDAO {
     }
 
     private Event mapEvent(ResultSet rs) throws SQLException {
-        return new Event(
+        Event event = new Event(
                 rs.getString("EVENT_ID"),
                 rs.getString("ORG_ID"),
                 rs.getString("GROUP_ID"),
                 rs.getString("TOPIC_ID"),
                 rs.getString("PAYLOAD"),
                 rs.getTimestamp("CREATED_AT"));
+        try {
+            event.setTopic(rs.getString("TOPIC_NAME"));
+        } catch (SQLException ignored) {
+            // Column may not be present in all query projections
+        }
+        try {
+            event.setDeliveriesCount(rs.getInt("DELIVERIES_COUNT"));
+        } catch (SQLException ignored) {
+            // Column may not be present in all query projections
+        }
+        return event;
     }
 
     /**

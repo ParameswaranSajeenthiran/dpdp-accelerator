@@ -31,6 +31,9 @@ public class Event {
     private Timestamp createdAt;
     private List<String> purposes;
 
+    private String topic;
+    private int deliveriesCount;
+
     public Event() {
     }
 
@@ -41,6 +44,22 @@ public class Event {
         this.topicId = topicId;
         this.payload = payload;
         this.createdAt = createdAt;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public int getDeliveriesCount() {
+        return deliveriesCount;
+    }
+
+    public void setDeliveriesCount(int deliveriesCount) {
+        this.deliveriesCount = deliveriesCount;
     }
 
     public String getEventId() {

@@ -237,12 +237,18 @@ public class EventNotificationCommonDBQueries {
      * search WHERE clause and the pagination clause; no dialect override is needed.
      */
     public String getListEventsBaseQuery() {
-        return "SELECT e.EVENT_ID, e.ORG_ID, e.GROUP_ID, e.TOPIC_ID, e.PAYLOAD, e.CREATED_AT " +
-                "FROM EVENT e WHERE e.ORG_ID = ?";
+        return "SELECT e.EVENT_ID, e.ORG_ID, e.GROUP_ID, e.TOPIC_ID, t.NAME AS TOPIC_NAME, e.PAYLOAD, e.CREATED_AT, " +
+                "((SELECT COUNT(*) FROM WEBHOOK_DELIVERY wd WHERE wd.EVENT_ID = e.EVENT_ID) + " +
+                "(SELECT COUNT(*) FROM POLL_DELIVERY pd WHERE pd.EVENT_ID = e.EVENT_ID)) AS DELIVERIES_COUNT " +
+                "FROM EVENT e " +
+                "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
+                "WHERE e.ORG_ID = ?";
     }
 
     public String getCountEventsBaseQuery() {
-        return "SELECT COUNT(*) FROM EVENT e WHERE e.ORG_ID = ?";
+        return "SELECT COUNT(*) FROM EVENT e " +
+                "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
+                "WHERE e.ORG_ID = ?";
     }
 
     public String getGetPurposesByEventIdsTemplate() {

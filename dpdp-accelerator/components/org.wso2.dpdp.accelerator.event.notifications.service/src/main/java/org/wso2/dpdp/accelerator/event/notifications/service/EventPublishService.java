@@ -68,7 +68,26 @@ public interface EventPublishService {
      * @param offset row offset; negative values are treated as 0.
      * @return the matching page plus the total count.
      */
-    PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset);
+    default PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset) {
+        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+    }
+
+    /**
+     * Paginated list of events across the organisation with optional topic, status,
+     * group ID, purposes, and search filters.
+     *
+     * @param orgId the organisation identifier (required).
+     * @param topic optional topic name filter.
+     * @param status optional delivery status filter.
+     * @param groupId optional group ID filter.
+     * @param purposes optional comma-separated purposes filter.
+     * @param search optional search string matching event ID, group ID, topic, or payload.
+     * @param limit page size.
+     * @param offset pagination offset.
+     * @return paginated list of events.
+     */
+    PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset);
 
     /**
      * Paginated list of event deliveries across the organisation with optional status,

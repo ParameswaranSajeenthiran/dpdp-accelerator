@@ -67,6 +67,7 @@ public class EventEndpoint {
     @GET
     public Response listEvents(
             @HeaderParam("org-id") String orgId,
+            @QueryParam("topic") String topic,
             @QueryParam("status") String status,
             @QueryParam("subscriptionId") String subscriptionId,
             @QueryParam("groupId") String groupId,
@@ -74,8 +75,8 @@ public class EventEndpoint {
             @QueryParam("search") String search,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
-        PaginatedResult<SubscriptionDeliveryDTO> result = eventHandler.listOrgDeliveries(
-                orgId, status, subscriptionId, groupId, purposes, search, limit, offset);
+        PaginatedResult<EventDTO> result = eventHandler.searchEvents(
+                orgId, topic, status, groupId, purposes, search, limit, offset);
         return Response.ok(result).build();
     }
 
