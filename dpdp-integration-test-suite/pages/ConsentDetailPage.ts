@@ -97,9 +97,6 @@ export class ConsentDetailPage {
   }
 
   dialogTitle(action: keyof typeof CONFIRM_LABEL): Locator {
-    // exact: true - MUI Dialog also exposes the whole DialogTitle's concatenated text (title +
-    // message + consent id) as an outer heading for its own aria-labelledby wiring, which would
-    // otherwise also match a plain substring search for the title text alone.
     return this.page.getByRole('heading', { name: DIALOG_TITLE[action], exact: true })
   }
 

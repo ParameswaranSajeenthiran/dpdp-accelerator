@@ -32,16 +32,10 @@ export class ConsentRegistryPage {
   }
 
   async goto(): Promise<void> {
-    // No leading slash: with baseURL "https://host/consent-portal/", a leading-slash relative
-    // goto() replaces the whole base path per WHATWG URL resolution (-> "https://host/consents",
-    // outside the portal entirely) instead of appending to it.
     await this.page.goto('consents')
   }
 
   rowByConsentId(consentId: string): Locator {
-    // The rendered row shows only a truncated consent id, so it's targeted by the
-    // data-consent-id attribute ConsentRegistryTable.tsx stamps on every <TableRow> rather than
-    // by visible text.
     return this.table.locator(`tr[data-consent-id="${consentId}"]`)
   }
 

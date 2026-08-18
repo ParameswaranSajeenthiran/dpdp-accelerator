@@ -16,12 +16,12 @@
  * under the License.
  */
 
-import { test, expect, hasSecondDataPrincipal } from '../../../fixtures/auth.fixtures'
-import { ConsentDetailPage } from '../../../pages/ConsentDetailPage'
-import { ConsentRegistryPage } from '../../../pages/ConsentRegistryPage'
-import { authStateFile, env } from '../../../utils/env'
-import { seedConsent } from '../../../utils/consentSetup'
-import { uniqueServiceId } from '../../../utils/testData'
+import { test, expect, hasSecondDataPrincipal } from '../../fixtures/auth.fixtures'
+import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
+import { ConsentRegistryPage } from '../../pages/ConsentRegistryPage'
+import { authStateFile, env } from '../../utils/env'
+import { seedConsent } from '../../utils/consentSetup'
+import { uniqueServiceId } from '../../utils/testData'
 
 /**
  * Only Consent creation goes through the admin API (see utils/consentSetup.ts - it has no create
@@ -32,8 +32,8 @@ import { uniqueServiceId } from '../../../utils/testData'
  * data-principal persona needs no extra role for any of this.
  */
 test.describe('Consent self-service registry (UI)', () => {
-  test.describe('happy paths', () => {
-    test('approving a Pending consent from the list moves it to Active', async ({
+  test.describe('Happy paths', () => {
+    test('02.01.01 - Approving a Pending consent from the list moves it to Active', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -60,7 +60,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(registryPage.rowByConsentId(consentId)).toContainText('Active')
     })
 
-    test('rejecting a Pending consent from its detail page moves it to Rejected', async ({
+    test('02.01.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -86,7 +86,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(dataPrincipalPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
     })
 
-    test('revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
+    test('02.01.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -114,7 +114,7 @@ test.describe('Consent self-service registry (UI)', () => {
       ).toHaveCount(0)
     })
 
-    test('approving from the detail page works the same way as from the list', async ({
+    test('02.01.04 - Approving from the detail page works the same way as from the list', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -136,7 +136,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(dataPrincipalPage.getByText('Active', { exact: true })).toBeVisible()
     })
 
-    test('the detail page renders subject, service, and purpose/element structure', async ({
+    test('02.01.05 - The detail page renders subject, service, and purpose/element structure', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -160,7 +160,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(detailPage.elementRow(elementDisplayName)).toBeVisible()
     })
 
-    test('the state filter narrows the list to only the selected state', async ({
+    test('02.01.06 - The state filter narrows the list to only the selected state', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -199,7 +199,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(registryPage.serviceSearch).toHaveValue('')
     })
 
-    test('searching by the exact service id finds the matching consent', async ({
+    test('02.01.07 - Searching by the exact service id finds the matching consent', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -222,8 +222,8 @@ test.describe('Consent self-service registry (UI)', () => {
     })
   })
 
-  test.describe('validation violations', () => {
-    test('an unknown consent id shows the load-failed message with a way back to the registry', async ({
+  test.describe('Validation violations', () => {
+    test('02.01.08 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
       dataPrincipalPage,
     }) => {
       const detailPage = new ConsentDetailPage(dataPrincipalPage, 'self')
@@ -233,7 +233,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(dataPrincipalPage).toHaveURL(/\/consents$/)
     })
 
-    test('a Rejected consent offers no approve, reject, or revoke action on its detail page', async ({
+    test('02.01.09 - A Rejected consent offers no approve, reject, or revoke action on its detail page', async ({
       dataPrincipalPage,
       consentAdminPage,
       consentAdminConsentApi,
@@ -254,7 +254,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(dataPrincipalPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
     })
 
-    test('a service filter matching nothing shows the empty-results message', async ({
+    test('02.01.10 - A service filter matching nothing shows the empty-results message', async ({
       dataPrincipalPage,
     }) => {
       const registryPage = new ConsentRegistryPage(dataPrincipalPage)
@@ -263,7 +263,7 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(registryPage.emptyStateMessage).toBeVisible()
     })
 
-    test("a different Data Principal cannot open another user's consent by its URL", async ({
+    test("02.01.11 - A different Data Principal cannot open another user's consent by its URL", async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,

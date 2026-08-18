@@ -136,16 +136,17 @@ async function getOrCreatePurposeWithElements(
  * never-auto-reset environment, meant to be run deliberately and on demand to (re-)populate a
  * realistic-looking demo dataset:
  *
- *   npx playwright test seed-demo-data.spec.ts
+ *   npx playwright test tests/99-demo-data/99.01-seed-demo-data.spec.ts
  *
- * The functional tests in tests/consents/consents-ui/ clean up whatever they create themselves
+ * The functional tests in tests/01-consent-catalog-management/ and tests/02-consent-lifecycle/
+ * clean up whatever they create themselves
  * (see fixtures/auth.fixtures.ts's ConsentCleanupTracker), so this dataset is the only thing that
  * persists in the environment across runs - idempotent by design (each Element/Purpose is looked
  * up by name first, created through the real admin UI forms only if missing), so rerunning it
  * never duplicates anything.
  */
 test.describe('Seed Consent environment', () => {
-  test('seed a rich demo dataset (20 elements, 20 purposes)', async ({
+  test('99.01.01 - Seed a rich demo dataset (20 elements, 20 purposes)', async ({
     consentAdminPage,
     consentAdminConsentApi,
   }) => {

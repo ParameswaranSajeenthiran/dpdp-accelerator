@@ -2,8 +2,7 @@
 
 Playwright-based integration tests that run against a **real, already-deployed** WSO2 Identity
 Server with the DPDP accelerator merged in - the same topology real users hit, with real OAuth2
-logins. There is no fake IdP and no embedded server here: this suite drives the real Identity
-Server login form and calls the real BFF APIs.
+logins.
 
 ## Layout
 
@@ -13,12 +12,19 @@ clients/              API clients (ConsentApiClient wraps the consent-mgt v2 con
 fixtures/             Reusable authenticated "states" (Data Principal, Consent Admin, ...)
 pages/                Page Objects for the portal UI
 tests/
-└── consents/
-    └── consents-ui/   Browser journeys for Consents, Purposes and Elements. Purpose and Element
-                        management has no create/edit UI in this accelerator today (the catalog
-                        is read-only), so those and every Consent are seeded through the admin
-                        API - see tests/consents/plan.md - and only the real UI's read/act
-                        surface is driven and asserted on.
+├── plan.md                        Full test plan: what each spec covers, personas, known gaps.
+├── 01-consent-catalog-management/ Elements and Purposes catalog UI (01.01-elements.spec.ts,
+│                                   01.02-purposes.spec.ts) - admin defines what personal data
+│                                   exists and why.
+├── 02-consent-lifecycle/          Actual Consent records and their approve/reject/revoke
+│                                   transitions (02.01-self-service-registry.spec.ts,
+│                                   02.02-admin-registry.spec.ts). Consents have no create UI at
+│                                   all, so they're seeded through the admin API - see
+│                                   tests/plan.md - and only the real UI's read/act surface is
+│                                   driven and asserted on.
+└── 99-demo-data/                  On-demand only, not part of the regression suite
+                                    (99.01-seed-demo-data.spec.ts,
+                                    99.02-consent-lifecycle-demo.spec.ts).
 utils/                 Env/config loading, auth-storage helpers, test data generators
 ```
 
@@ -37,7 +43,7 @@ utils/                 Env/config loading, auth-storage helpers, test data gener
    it via the Console app). This one role grants every `internal_consent_mgt_*` scope at once
    (view, create, update, delete across consents, purposes and elements), so a single persona
    both drives the admin consent registry UI and seeds Purposes/Elements/Consents via the API
-   for `tests/consents/consents-ui`.
+   for `tests/01-consent-catalog-management` and `tests/02-consent-lifecycle`.
 4. Node.js 18+.
 
 ## Setup
@@ -53,10 +59,10 @@ npx playwright install chromium
 ## Running
 
 ```sh
-./run-e2e.sh                     # everything
-./run-e2e.sh tests/consents      # one layer
-npm run test:consents-ui         # equivalent npm script form
-npm run report                   # open the last HTML report
+./run-e2e.sh                                    # everything
+./run-e2e.sh tests/02-consent-lifecycle          # one category
+npm run test:consent-lifecycle                  # equivalent npm script form
+npm run report                                  # open the last HTML report
 ```
 
 ### UI mode
@@ -67,9 +73,9 @@ failed ones, and stepping through what the browser actually did. Any of these wo
 (`run-e2e.sh` forwards its arguments straight to `npx playwright test`, so `--ui` passes through):
 
 ```sh
-npm run test:ui                       # everything, in UI mode
-./run-e2e.sh --ui                     # same, via run-e2e.sh
-npx playwright test tests/consents --ui   # one layer, in UI mode
+npm run test:ui                                        # everything, in UI mode
+./run-e2e.sh --ui                                      # same, via run-e2e.sh
+npx playwright test tests/02-consent-lifecycle --ui    # one category, in UI mode
 ```
 
 The sidebar only lists spec files under `testDir` (`tests/`, per `playwright.config.ts`) - if a
@@ -108,6 +114,6 @@ to enable them; otherwise they report as skipped (not failed) with that reason.
 
 ## Known gaps
 
-- `tests/consents/consents-ui/` covers only the UI layer, per this round's scope. There is no
-  `consents-server-api`/`consents-bff-api` layer yet, and Purpose/Element authoring has no UI to
-  test until that's built - see `tests/consents/plan.md`.
+- `tests/01-consent-catalog-management/` and `tests/02-consent-lifecycle/` cover only the UI
+  layer, per this round's scope. There is no `consents-server-api`/`consents-bff-api` layer yet,
+  and Purpose/Element authoring has no UI to test until that's built - see `tests/plan.md`.

@@ -17,11 +17,11 @@
  */
 
 import type { Page } from '@playwright/test'
-import { test, expect, type ConsentCleanupTracker } from '../../../fixtures/auth.fixtures'
-import { ElementDetailPage } from '../../../pages/ElementDetailPage'
-import { ElementFormDialog } from '../../../pages/ElementFormDialog'
-import { ElementListPage } from '../../../pages/ElementListPage'
-import { uniqueElementName } from '../../../utils/testData'
+import { test, expect, type ConsentCleanupTracker } from '../../fixtures/auth.fixtures'
+import { ElementDetailPage } from '../../pages/ElementDetailPage'
+import { ElementFormDialog } from '../../pages/ElementFormDialog'
+import { ElementListPage } from '../../pages/ElementListPage'
+import { uniqueElementName } from '../../utils/testData'
 
 /**
  * Every Element in this file is created through the real "Add Element" UI form - Consent is the
@@ -50,8 +50,8 @@ async function createElementViaUi(page: Page, tracker: ConsentCleanupTracker): P
 }
 
 test.describe('Element catalog (UI)', () => {
-  test.describe('happy paths', () => {
-    test('creates an element through the Add Element form with a display name, description, and property', async ({
+  test.describe('Happy paths', () => {
+    test('01.01.01 - Creates an element through the Add Element form with a display name, description, and property', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -90,7 +90,7 @@ test.describe('Element catalog (UI)', () => {
 
   
 
-    test('the list renders and its rows-per-page control accepts a new page size without erroring', async ({
+    test('01.01.02 - The list renders and its rows-per-page control accepts a new page size without erroring', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -106,7 +106,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(listPage.table).toBeVisible()
     })
 
-    test('the rows-per-page control caps the number of rendered rows at the selected size', async ({
+    test('01.01.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -127,8 +127,8 @@ test.describe('Element catalog (UI)', () => {
     })
   })
 
-  test.describe('validation violations', () => {
-    test('an unknown element id shows the load-failed message with a way back to the list', async ({
+  test.describe('Validation violations', () => {
+    test('01.01.04 - An unknown element id shows the load-failed message with a way back to the list', async ({
       consentAdminPage,
     }) => {
       const detailPage = new ElementDetailPage(consentAdminPage)
@@ -138,7 +138,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(consentAdminPage).toHaveURL(/\/elements$/)
     })
 
-    test('leaving name empty shows the required-field error and blocks submission', async ({
+    test('01.01.05 - Leaving name empty shows the required-field error and blocks submission', async ({
       consentAdminPage,
     }) => {
       const listPage = new ElementListPage(consentAdminPage)
@@ -153,7 +153,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(dialog.root).toBeVisible()
     })
 
-    test('creating an element with a name that already exists shows the duplicate-name message', async ({
+    test('01.01.06 - Creating an element with a name that already exists shows the duplicate-name message', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -184,7 +184,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(dialog.root).toBeVisible()
     })
 
-    test('a property value with no key blocks submission until the key is filled in or the row is removed', async ({
+    test('01.01.07 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
       consentAdminPage,
     }) => {
       const listPage = new ElementListPage(consentAdminPage)

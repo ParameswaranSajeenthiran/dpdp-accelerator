@@ -29,8 +29,6 @@ export class LoginPage {
   constructor(private readonly page: Page) {}
 
   async signIn(persona: Persona): Promise<void> {
-    // A first-run "cookie/privacy notice" banner sometimes covers the form; harmless to skip
-    // if it isn't there.
     const dismissBanner = this.page.getByRole('button', { name: 'Got it' })
     if (await dismissBanner.isVisible().catch(() => false)) {
       await dismissBanner.click()

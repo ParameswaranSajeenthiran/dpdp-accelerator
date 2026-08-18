@@ -17,15 +17,15 @@
  */
 
 import type { Page } from '@playwright/test'
-import { test, expect } from '../../../fixtures/auth.fixtures'
-import type { ConsentApiClient } from '../../../clients/ConsentApiClient'
-import { ConsentDetailPage } from '../../../pages/ConsentDetailPage'
-import { ConsentRegistryPage } from '../../../pages/ConsentRegistryPage'
-import { ElementFormDialog } from '../../../pages/ElementFormDialog'
-import { ElementListPage } from '../../../pages/ElementListPage'
-import { PurposeFormDialog } from '../../../pages/PurposeFormDialog'
-import { PurposeListPage } from '../../../pages/PurposeListPage'
-import { env } from '../../../utils/env'
+import { test, expect } from '../../fixtures/auth.fixtures'
+import type { ConsentApiClient } from '../../clients/ConsentApiClient'
+import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
+import { ConsentRegistryPage } from '../../pages/ConsentRegistryPage'
+import { ElementFormDialog } from '../../pages/ElementFormDialog'
+import { ElementListPage } from '../../pages/ElementListPage'
+import { PurposeFormDialog } from '../../pages/PurposeFormDialog'
+import { PurposeListPage } from '../../pages/PurposeListPage'
+import { env } from '../../utils/env'
 
 interface CatalogElement {
   id: string
@@ -116,7 +116,7 @@ async function getOrCreatePurpose(
  * "Marketing Communications" purpose every time the flow is rehearsed.
  */
 test.describe('Full consent lifecycle (demo dataset)', () => {
-  test('a customer consents to Marketing Communications, then approves and revokes it themselves', async ({
+  test('99.02.01 - A customer consents to Marketing Communications, then approves and revokes it themselves', async ({
     consentAdminPage,
     consentAdminConsentApi,
     dataPrincipalPage,

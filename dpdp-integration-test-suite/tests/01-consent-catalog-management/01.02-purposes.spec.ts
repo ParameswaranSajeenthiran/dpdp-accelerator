@@ -16,11 +16,11 @@
  * under the License.
  */
 
-import { test, expect } from '../../../fixtures/auth.fixtures'
-import { PurposeDetailPage } from '../../../pages/PurposeDetailPage'
-import { PurposeFormDialog } from '../../../pages/PurposeFormDialog'
-import { PurposeListPage } from '../../../pages/PurposeListPage'
-import { uniquePurposeName } from '../../../utils/testData'
+import { test, expect } from '../../fixtures/auth.fixtures'
+import { PurposeDetailPage } from '../../pages/PurposeDetailPage'
+import { PurposeFormDialog } from '../../pages/PurposeFormDialog'
+import { PurposeListPage } from '../../pages/PurposeListPage'
+import { uniquePurposeName } from '../../utils/testData'
 
 /**
  * Every Purpose (and every Element it needs) in this file is created through the real "Add
@@ -30,8 +30,8 @@ import { uniquePurposeName } from '../../../utils/testData'
  * fixtures/auth.fixtures.ts's ConsentCleanupTracker.
  */
 test.describe('Purpose catalog (UI)', () => {
-  test.describe('happy paths', () => {
-    test('creates a purpose through the Add Purpose form with a realistic mix of mandatory and optional elements', async ({
+  test.describe('Happy paths', () => {
+    test('01.02.01 - Creates a purpose through the Add Purpose form with a realistic mix of mandatory and optional elements', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -74,7 +74,7 @@ test.describe('Purpose catalog (UI)', () => {
       await expect(listPage.rowByName(purposeName)).toBeVisible()
     })
 
-    test('a purpose with no elements and no properties shows the catalog empty-state messages', async ({
+    test('01.02.02 - A purpose with no elements and no properties shows the catalog empty-state messages', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -97,7 +97,7 @@ test.describe('Purpose catalog (UI)', () => {
       ).toBeVisible()
     })
 
-    test('the rows-per-page control accepts a new page size without erroring', async ({
+    test('01.02.03 - The rows-per-page control accepts a new page size without erroring', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -121,8 +121,8 @@ test.describe('Purpose catalog (UI)', () => {
     })
   })
 
-  test.describe('validation violations', () => {
-    test('an unknown purpose id shows the load-failed message with a way back to the list', async ({
+  test.describe('Validation violations', () => {
+    test('01.02.04 - An unknown purpose id shows the load-failed message with a way back to the list', async ({
       consentAdminPage,
     }) => {
       const detailPage = new PurposeDetailPage(consentAdminPage)
@@ -132,7 +132,7 @@ test.describe('Purpose catalog (UI)', () => {
       await expect(consentAdminPage).toHaveURL(/\/purposes$/)
     })
 
-    test('leaving name, type, and version empty shows all three required-field errors and blocks submission', async ({
+    test('01.02.05 - Leaving name, type, and version empty shows all three required-field errors and blocks submission', async ({
       consentAdminPage,
     }) => {
       const listPage = new PurposeListPage(consentAdminPage)
@@ -152,7 +152,7 @@ test.describe('Purpose catalog (UI)', () => {
       await expect(dialog.root).toBeVisible()
     })
 
-    test('a property value with no key blocks submission until the key is filled in or the row is removed', async ({
+    test('01.02.06 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
       consentAdminPage,
     }) => {
       const listPage = new PurposeListPage(consentAdminPage)

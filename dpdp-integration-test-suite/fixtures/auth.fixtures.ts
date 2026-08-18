@@ -32,9 +32,9 @@ import { authStateFile, env } from '../utils/env'
 /**
  * A place for a test to register the id of an Element or Purpose it created through the UI, so
  * it gets deleted again once the test finishes - without this, every regression run only adds
- * data (see tests/consents/plan.md on tolerating a persistent environment). The one deliberate
+ * data (see tests/plan.md on tolerating a persistent environment). The one deliberate
  * exception is the realistic demo dataset (see utils/consentCleanup.ts's RICH exports,
- * consent-lifecycle-demo.spec.ts, and seed-demo-data.spec.ts's seed test) - that's meant to stay
+ * 99.02-consent-lifecycle-demo.spec.ts, and 99.01-seed-demo-data.spec.ts's seed test) - that's meant to stay
  * in the environment permanently as a realistic backdrop, so nothing in this suite ever tracks it
  * here.
  */
@@ -93,11 +93,6 @@ export const test = base.extend<Fixtures>({
       trackElement: (id) => elementIds.push(id),
       trackPurpose: (id) => purposeIds.push(id),
     })
-    // Purposes first: an Element referenced by a Purpose 409s on delete. Both tolerate failure -
-    // a 409 here just means something else (typically a Consent) still needs it, which the
-    // consent-mgt v2 API has no way to force through (Consents can only be revoked, never
-    // deleted) - so it's left in place rather than treated as a test failure.
-    // Sequential cleanup, not perf-sensitive.
     for (const id of purposeIds) {
       await consentAdminConsentApi.deletePurpose(id).catch(() => undefined)
     }

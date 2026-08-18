@@ -24,8 +24,8 @@ export function uniqueMarker(label: string): string {
   return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-// consents-ui tests create real Purposes/Elements/Consents through the admin API as setup for
-// what the UI is actually being tested on (see tests/consents/plan.md notes on why
+// Catalog-management/lifecycle tests create real Purposes/Elements/Consents through the admin API as setup for
+// what the UI is actually being tested on (see tests/plan.md notes on why
 // Purpose/Element authoring itself has no UI to drive) - unique names keep those records
 // distinguishable from whatever prior runs left in the shared environment.
 export function uniquePurposeName(): string {

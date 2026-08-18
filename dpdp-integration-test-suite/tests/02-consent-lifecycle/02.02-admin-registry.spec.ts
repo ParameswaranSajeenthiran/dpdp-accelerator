@@ -16,12 +16,12 @@
  * under the License.
  */
 
-import { test, expect } from '../../../fixtures/auth.fixtures'
-import { AdminConsentRegistryPage } from '../../../pages/AdminConsentRegistryPage'
-import { ConsentDetailPage } from '../../../pages/ConsentDetailPage'
-import { env } from '../../../utils/env'
-import { seedConsent } from '../../../utils/consentSetup'
-import { uniqueServiceId } from '../../../utils/testData'
+import { test, expect } from '../../fixtures/auth.fixtures'
+import { AdminConsentRegistryPage } from '../../pages/AdminConsentRegistryPage'
+import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
+import { env } from '../../utils/env'
+import { seedConsent } from '../../utils/consentSetup'
+import { uniqueServiceId } from '../../utils/testData'
 
 /**
  * The admin registry (/administration/consents) only ever offers Revoke, never Approve/Reject -
@@ -32,8 +32,8 @@ import { uniqueServiceId } from '../../../utils/testData'
  * created through the real admin UI forms first, on this same consentAdminPage.
  */
 test.describe('Admin consent registry (UI)', () => {
-  test.describe('happy paths', () => {
-    test('a consent created via the API appears in the admin list with its subject', async ({
+  test.describe('Happy paths', () => {
+    test('02.02.01 - A consent created via the API appears in the admin list with its subject', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -50,13 +50,13 @@ test.describe('Admin consent registry (UI)', () => {
       await registryPage.goto()
       // The unfiltered list is sorted oldest-first with no way to jump pages, so a freshly
       // created row is found by its own id rather than by browsing - see
-      // tests/consents/plan.md.
+      // tests/plan.md.
       await registryPage.searchByConsentId(consentId)
       await expect(registryPage.rowByConsentId(consentId)).toContainText(env.dataPrincipal.username)
       await expect(registryPage.rowByConsentId(consentId)).toContainText(serviceId)
     })
 
-    test('admin can revoke an Active consent from the list', async ({
+    test('02.02.02 - Admin can revoke an Active consent from the list', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -78,7 +78,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(registryPage.rowByConsentId(consentId)).toContainText('Revoked')
     })
 
-    test('filtering by the exact consent id shows only that consent and disables the state filter', async ({
+    test('02.02.03 - Filtering by the exact consent id shows only that consent and disables the state filter', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -107,7 +107,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(registryPage.stateFilter).toBeDisabled()
     })
 
-    test('the advanced subject and service filters narrow the list', async ({
+    test('02.02.04 - The advanced subject and service filters narrow the list', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -134,7 +134,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(consentAdminPage.getByPlaceholder('Search by consent ID')).toHaveValue('')
     })
 
-    test('the admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
+    test('02.02.05 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -155,8 +155,8 @@ test.describe('Admin consent registry (UI)', () => {
     })
   })
 
-  test.describe('validation violations', () => {
-    test('the admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
+  test.describe('Validation violations', () => {
+    test('02.02.06 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -178,7 +178,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(row.getByRole('button', { name: 'Revoke' })).toHaveCount(0)
     })
 
-    test('the admin detail page offers no action at all for a Pending consent', async ({
+    test('02.02.07 - The admin detail page offers no action at all for a Pending consent', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -198,7 +198,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(consentAdminPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
     })
 
-    test('an unknown consent id shows the load-failed message with a way back to the registry', async ({
+    test('02.02.08 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
       consentAdminPage,
     }) => {
       const detailPage = new ConsentDetailPage(consentAdminPage, 'admin')

@@ -68,22 +68,13 @@ export class PurposeFormDialog {
    * searching for specific just-created elements by name. The picker only fetches its first
    * 200 elements (oldest first, see PurposeElementPicker.tsx), so a freshly created one is not
    * guaranteed to be among them once the shared environment has accumulated more than that -
-   * the same class of gap as the catalog lists' own pagination (see tests/consents/plan.md).
+   * the same class of gap as the catalog lists' own pagination (see tests/plan.md).
    * Returns the selected elements' label text, in selection order, for the caller to assert
    * against. A single-element purpose is just `addElements([true])`.
    */
   async addElements(mandatoryFlags: boolean[]): Promise<string[]> {
     const labels: string[] = []
     for (let index = 0; index < mandatoryFlags.length; index += 1) {
-      // Two MUI Autocomplete defaults that aren't obvious from a first read of the docs,
-      // confirmed empirically:
-      // - The popup closes on every selection, even with `multiple` (`disableCloseOnSelect`
-      //   defaults to false) - so it has to be reopened before each pick, not just once.
-      // - Already-selected options are NOT removed or reordered in the dropdown
-      //   (`filterSelectedOptions` defaults to false, and PurposeElementPicker.tsx doesn't set
-      //   it) - so picking by `.first()` repeatedly just re-toggles the same item. Picking by a
-      //   fixed `.nth(index)` instead is what actually advances through distinct elements.
-      // Each click/selection must land before the next query - not run concurrently.
       await this.elementsPicker.click()
       const option = this.page.getByRole('option').nth(index)
       labels.push((await option.textContent())?.trim() ?? '')

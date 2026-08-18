@@ -1,10 +1,11 @@
 # Consents, Purposes & Elements — Test Plan
 
-Documents what actually runs today under `tests/consents/`: 4 functional spec files (34 tests)
-in `consents-ui/`, one demo-journey spec (1 test, also in `consents-ui/` but not part of the
-regression suite), and one seed-only spec (1 non-functional operation) one level up. Scope for
-this round is the UI layer only — no `consents-server-api`/`consents-bff-api` layer yet (see
-`README.md`).
+Documents what actually runs today across three categories under `tests/`: 4 functional spec
+files (32 tests) split between `01-consent-catalog-management/` (Elements, Purposes) and
+`02-consent-lifecycle/` (self-service and admin consent registries), plus `99-demo-data/` holding
+one demo-journey spec (1 test) and one seed-only spec (1 non-functional operation) — neither part
+of the regression suite. Scope for this round is the UI layer only — no
+`consents-server-api`/`consents-bff-api` layer yet (see `README.md`).
 
 > **Note:** `authorization.spec.ts` (route-authorization checks for a Data Principal hitting
 > `/purposes`, `/elements`, `/administration/consents` without the consent-admin role) is not
@@ -20,7 +21,7 @@ this round is the UI layer only — no `consents-server-api`/`consents-bff-api` 
 | **Element** | Real "Add Element" UI form, every time | `ElementFormDialog.tsx` is a real create form, gated on `PORTAL_SCOPES.ELEMENTS_WRITE`. Same UI-first approach as Purpose, including pagination-seeding tests that just need N rows to exist. |
 
 Every Purpose/Element a seeded Consent depends on (`utils/consentSetup.ts`'s `seedConsent`, and
-the demo dataset helpers in `consent-lifecycle-demo.spec.ts`/`seed-demo-data.spec.ts`) is created
+the demo dataset helpers in `99.02-consent-lifecycle-demo.spec.ts`/`99.01-seed-demo-data.spec.ts`) is created
 through these same real admin UI forms on the `consentAdminPage` fixture, not the admin API —
 only the Consent itself, at the end, goes through `consentAdminConsentApi.createConsent`.
 
@@ -34,16 +35,15 @@ only the Consent itself, at the end, goes through `consentAdminConsentApi.create
 
 ---
 
-## `catalog-elements.spec.ts` — Element catalog (UI)
+## `01-consent-catalog-management/01.01-elements.spec.ts` — Element catalog (UI)
 
 Every Element here is created through the real "Add Element" form, including setup-only ones
 (via the file's own `createElementViaUi` helper) — there is no API-seeding path left in this file.
 
 **Happy paths**
 1. Create an element through the Add Element form (name, display name, description, one custom property) → redirects to detail page → description and property value shown; findable via list search by name.
-2. An element created through the UI is still shown correctly when its detail page is opened via a direct link (navigate away, then straight back to the URL, as a bookmark/shared link would).
-3. List renders with at least one row; rows-per-page control accepts 25 without erroring.
-4. The rows-per-page control caps the number of rendered rows at the selected size (seeds 11 elements via the UI, selects a page size of 10, asserts exactly 10 render and a next page is available).
+2. List renders with at least one row; rows-per-page control accepts 25 without erroring.
+3. The rows-per-page control caps the number of rendered rows at the selected size (seeds 11 elements via the UI, selects a page size of 10, asserts exactly 10 render and a next page is available).
 
 **Validation / violations**
 1. Unknown element id → load-failed message, Back button returns to `/elements`.
@@ -51,23 +51,22 @@ Every Element here is created through the real "Add Element" form, including set
 3. Creating an element whose name already exists (first created through the UI, then the same name resubmitted) → duplicate-name message: `An element named "<name>" already exists. Choose a different name.`; dialog stays open, no duplicate created.
 4. A property row with a value but no key → "Add a key, or this value will not be saved." shown; Create button disabled until fixed or the row is removed.
 
-## `catalog-purposes.spec.ts` — Purpose catalog (UI)
+## `01-consent-catalog-management/01.02-purposes.spec.ts` — Purpose catalog (UI)
 
 Every Purpose (and every Element it needs) here is created through the real "Add Purpose"/"Add
 Element" forms — no API-seeding path left in this file either.
 
 **Happy paths**
 1. Create a purpose through the Add Purpose form (name, type, version, description, two mandatory elements, one optional element, one custom property) → redirects to detail page → elements shown as Mandatory/Optional as configured, property value shown, and the new name is findable via list search.
-2. A purpose created through the UI (with one mandatory element, itself created through the UI first) shows that element as Mandatory and its version marked Latest.
-3. A purpose created with no elements and no properties shows both catalog empty-state messages ("No custom properties.", "No elements are configured for this purpose.").
-4. The rows-per-page control accepts a new page size (25) without erroring; previous-page button disabled on page 1.
+2. A purpose created with no elements and no properties shows both catalog empty-state messages ("No custom properties.", "No elements are configured for this purpose.").
+3. The rows-per-page control accepts a new page size (25) without erroring; previous-page button disabled on page 1.
 
 **Validation / violations**
 1. Unknown purpose id → load-failed message, Back button returns to `/purposes`.
 2. Name, Type, and Version all left empty → all three "is required." errors shown; dialog stays open, nothing submitted.
 3. A property row with a value but no key → "Add a key, or this value will not be saved." shown; Create button disabled until fixed or the row is removed.
 
-## `consent-self-service.spec.ts` — Consent self-service registry (UI, Data Principal)
+## `02-consent-lifecycle/02.01-self-service-registry.spec.ts` — Consent self-service registry (UI, Data Principal)
 
 Every consent here is seeded via `seedConsent(consentAdminPage, consentAdminConsentApi, ...)` -
 its Element and Purpose are created through the real admin UI forms, only the Consent itself via
@@ -89,12 +88,12 @@ the admin API. This file only drives the Data Principal's own read/approve/rejec
 3. A service-id search matching nothing shows the empty-results message.
 4. A different Data Principal cannot open another user's consent by guessing its URL — load-failed message instead. *(Skips itself if `TEST_DATA_PRINCIPAL_2_USERNAME`/`PASSWORD` aren't set.)*
 
-## `consent-admin-registry.spec.ts` — Admin consent registry (UI, Consent Admin)
+## `02-consent-lifecycle/02.02-admin-registry.spec.ts` — Admin consent registry (UI, Consent Admin)
 
 Covers `/administration/consents`, `/administration/consents/:id`. This surface only ever offers
 Revoke — never Approve/Reject, by design (`ConsentRegistryTable`'s `canApprove` prop is never
 passed here; `ConsentDetailsPage` only computes approve/reject for `variant === 'self'`). Same
-seeding approach as `consent-self-service.spec.ts` — Element/Purpose via the admin UI, Consent via
+seeding approach as `02.01-self-service-registry.spec.ts` — Element/Purpose via the admin UI, Consent via
 the admin API, all on the `consentAdminPage` fixture.
 
 **Happy paths**
@@ -111,7 +110,7 @@ the admin API, all on the `consentAdminPage` fixture.
 
 ---
 
-## `consent-lifecycle-demo.spec.ts` — Full consent lifecycle (demo dataset)
+## `99-demo-data/99.02-consent-lifecycle-demo.spec.ts` — Full consent lifecycle (demo dataset)
 
 **Not a regression test** — one long, realistic user journey rather than an isolated unit of
 behavior, meant to be rehearsed as a demo of the whole feature end to end: a business defines the
@@ -165,13 +164,13 @@ Step-by-step trace of what the single test in this file actually does, in execut
 
 **End-to-end state transition:** *(none)* → **Pending** (step 5) → **Active** (step 9) → **Revoked** (step 11).
 
-## `seed-demo-data.spec.ts` (`tests/consents/`, outside `consents-ui/`)
+## `99-demo-data/99.01-seed-demo-data.spec.ts`
 
 **Not part of the functional test suite** — a single on-demand operation for this shared,
 never-auto-reset environment, run explicitly rather than as part of a normal suite run:
 
 ```sh
-npx playwright test seed-demo-data.spec.ts
+npx playwright test tests/99-demo-data/99.01-seed-demo-data.spec.ts
 ```
 
 - **seed a rich demo dataset (20 elements, 20 purposes)**: ensures 20 realistic Elements, 20

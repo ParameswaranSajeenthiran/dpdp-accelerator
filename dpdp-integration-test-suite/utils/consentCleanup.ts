@@ -24,7 +24,7 @@ export interface NamedRecord {
 }
 
 /**
- * The realistic demo dataset tests/consents/seed-demo-data.spec.ts's "seed a rich demo dataset"
+ * The realistic demo dataset tests/99-demo-data/99.01-seed-demo-data.spec.ts's "seed a rich demo dataset"
  * test creates.
  */
 export const RICH_ELEMENTS: CreateElementBody[] = [
