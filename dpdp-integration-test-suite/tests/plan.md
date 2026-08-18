@@ -184,16 +184,3 @@ npx playwright test tests/99-demo-data/99.01-seed-demo-data.spec.ts
   dataset never gets swept.
 
 ---
-
-## Known gaps / not covered here
-
-- No route-authorization coverage right now — `authorization.spec.ts` is absent from the working
-  tree (see the note at the top of this document).
-- No API-layer test suite for consents/purposes/elements yet (`consents-server-api` /
-  `consents-bff-api`).
-- No account exists with partial consent-mgt scopes, so the *positive* direction of the
-  authorization boundary (e.g. Purposes access without admin-consent-registry access) can't be
-  proven even once `authorization.spec.ts` is back — only that a fully-unprivileged account is
-  denied everywhere.
-- Element/Purpose max-length or invalid-character validation, if any exists in the UI, isn't
-  covered — only required-field and duplicate-name violations are.
