@@ -40,6 +40,14 @@ describe('frontend content security policy', () => {
     expect(policy).not.toContain("'unsafe-eval'")
   })
 
+  it('allows the data URIs the build inlines its fonts as', () => {
+    const policy = contentSecurityPolicy({ apiBaseURL: '' })
+
+    // Without this every @font-face fails to load and the app falls back to
+    // the system sans-serif.
+    expect(policy).toContain("font-src 'self' data:")
+  })
+
   it('keeps the temporary Emotion exception limited to styles', () => {
     const policy = contentSecurityPolicy({ apiBaseURL: 'http://localhost:8080' })
 

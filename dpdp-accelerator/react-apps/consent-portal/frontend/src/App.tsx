@@ -20,7 +20,7 @@ import { Box, Button, CircularProgress, Stack, Typography } from '@wso2/oxygen-u
 import { CircleAlert } from '@wso2/oxygen-ui-icons-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import MainLayout from './components/layout/main-layout/MainLayout'
 import ElementDetailsPage from './features/catalog/ElementDetailsPage'
 import ElementListPage from './features/catalog/ElementListPage'
@@ -35,7 +35,7 @@ import useAuthorization from './features/auth/useAuthorization'
 import firstAuthorizedPath from './features/auth/authorizationRoutes'
 import NoAccessPage from './features/auth/NoAccessPage'
 import useCurrentUserQuery from './features/auth/hooks/useCurrentUserQuery'
-import { ensureSignedIn, isAuthEnabled } from './utils/authClient'
+import { ensureSignedIn, isAuthEnabled, takeReturnPath } from './utils/authClient'
 import { REQUIRED_SCOPES, type ScopeRequirement } from './utils/scopes'
 import { APIError } from './utils/apiClient'
 
@@ -45,6 +45,9 @@ import { APIError } from './utils/apiClient'
  * `ensureSignedIn` either completes a sign-in that is already in flight (the
  * authorization code handed over by the shell) or sends the browser to the
  * Identity Server, in which case there is nothing to draw.
+ *
+ * Sign-in always returns to the application home, so a session established
+ * here may have started on another route. Restoring it is the last step.
  */
 function AuthenticationGate({
   children,
@@ -52,6 +55,7 @@ function AuthenticationGate({
   children: React.JSX.Element
 }): React.JSX.Element | null {
   const { t } = useTranslation('common')
+  const navigate = useNavigate()
   const [sessionReady, setSessionReady] = useState(false)
   const [sessionFailed, setSessionFailed] = useState(false)
   const currentUserQuery = useCurrentUserQuery(sessionReady)
@@ -62,6 +66,10 @@ function AuthenticationGate({
       try {
         const ready = await ensureSignedIn()
         if (!cancelled && ready) {
+          const returnPath = takeReturnPath()
+          if (returnPath) {
+            navigate(returnPath, { replace: true })
+          }
           setSessionReady(true)
         }
       } catch {
@@ -73,7 +81,7 @@ function AuthenticationGate({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [navigate])
 
   if (sessionFailed) {
     return (

@@ -61,8 +61,11 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
+  sessionStorage.clear()
+  window.history.replaceState({}, '', '/')
 })
 
 describe('authClient initialisation', () => {
@@ -77,8 +80,9 @@ describe('authClient initialisation', () => {
       baseUrl: window.location.origin,
       clientID: 'DPDP_CONSENT_PORTAL',
       enablePKCE: true,
-      signInRedirectURL: `${window.location.origin}/consent-portal/`,
-      signOutRedirectURL: `${window.location.origin}/consent-portal/`,
+      // Unslashed: the slashed form costs a 302 back to this one.
+      signInRedirectURL: `${window.location.origin}/consent-portal`,
+      signOutRedirectURL: `${window.location.origin}/consent-portal`,
       storage: 'webWorker',
     })
     expect(config.resourceServerURLs).toEqual([window.location.origin])
@@ -169,6 +173,64 @@ describe('signing in', () => {
   })
 
   it('redirects to the Identity Server when the shell is absent, as in dev', async () => {
+    const { ensureSignedIn } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).resolves.toBe(false)
+    expect(sdk.signIn).toHaveBeenCalledWith()
+  })
+})
+
+describe('returning to the requested route', () => {
+  it('remembers the route, relative to the base, before leaving for the server', async () => {
+    window.history.replaceState({}, '', '/consent-portal/consents?status=ACTIVE')
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(takeReturnPath()).toBe('/consents?status=ACTIVE')
+  })
+
+  it('strips the tenant prefix so the router can navigate by the route alone', async () => {
+    window.history.replaceState({}, '', '/t/wso2.com/consent-portal/purposes/42')
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(takeReturnPath()).toBe('/purposes/42')
+  })
+
+  it('records nothing when the sign-in starts from the application home', async () => {
+    window.history.replaceState({}, '', '/consent-portal/')
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(takeReturnPath()).toBeUndefined()
+  })
+
+  it('hands the route over exactly once', async () => {
+    window.history.replaceState({}, '', '/consent-portal/elements')
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(takeReturnPath()).toBe('/elements')
+    expect(takeReturnPath()).toBeUndefined()
+  })
+
+  it('discards a stored value that would navigate off site', async () => {
+    sessionStorage.setItem('consent-portal.returnPath', '//evil.example/consents')
+    const { takeReturnPath } = await loadAuthClient()
+
+    expect(takeReturnPath()).toBeUndefined()
+    expect(sessionStorage.getItem('consent-portal.returnPath')).toBeNull()
+  })
+
+  it('completes the sign-in even when session storage is unavailable', async () => {
+    window.history.replaceState({}, '', '/consent-portal/consents')
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage disabled')
+    })
     const { ensureSignedIn } = await loadAuthClient()
 
     await expect(ensureSignedIn()).resolves.toBe(false)

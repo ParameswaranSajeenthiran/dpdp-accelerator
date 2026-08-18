@@ -52,7 +52,9 @@ export function contentSecurityPolicy(options: ContentSecurityPolicyOptions): st
     // the page never holds an access token.
     "worker-src 'self' blob:",
     "img-src 'self' data:",
-    "font-src 'self'",
+    // The build inlines its web fonts as data URIs rather than shipping them as
+    // separate files, so 'self' alone blocks every one of them.
+    "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'none'",
     "form-action 'self'",

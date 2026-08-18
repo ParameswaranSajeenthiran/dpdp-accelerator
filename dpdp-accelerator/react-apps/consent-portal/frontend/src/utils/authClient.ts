@@ -53,6 +53,9 @@ interface AuthHandoff {
 
 const DEFAULT_CLIENT_ID = 'DPDP_CONSENT_PORTAL'
 
+/** Where the route being visited is kept across the trip to the Identity Server. */
+const RETURN_PATH_KEY = 'consent-portal.returnPath'
+
 const DEFAULT_SCOPE: string[] = [
   'openid',
   'profile',
@@ -113,7 +116,10 @@ export async function initAuth(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
       const config = await loadDeploymentConfig()
-      const appHome = `${window.location.origin}${runtimeBasePath()}/`
+      // No trailing slash: the server answers "/consent-portal/" with a 302 to
+      // the unslashed form, so asking for the slashed one costs an extra round
+      // trip on every sign-in. My Account registers the unslashed form too.
+      const appHome = `${window.location.origin}${runtimeBasePath()}`
       await spaClient().initialize({
         baseUrl: serverBaseUrl(),
         clientID: config.clientID,
@@ -164,6 +170,45 @@ async function readAuthHandoff(): Promise<AuthHandoff | undefined> {
   }
 }
 
+/**
+ * Records the route being visited before the browser leaves for the Identity
+ * Server. Sign-in always returns to the registered redirect URI - the
+ * application home - so without this a reload on any other route lands the
+ * user back at the default page.
+ *
+ * The route is stored relative to {@link runtimeBasePath}, which is what the
+ * router navigates by, and only ever a path: never a token.
+ */
+function rememberReturnPath(): void {
+  try {
+    const base = runtimeBasePath()
+    const { pathname, search } = window.location
+    const route = pathname.startsWith(base) ? pathname.slice(base.length) : pathname
+    const target = `${route.startsWith('/') ? route : `/${route}`}${search}`
+    if (target === '/') {
+      return
+    }
+    sessionStorage.setItem(RETURN_PATH_KEY, target)
+  } catch {
+    // Storage can be unavailable or full; returning to the default page is a
+    // far better outcome than failing the sign-in.
+  }
+}
+
+/**
+ * The remembered route, handed over once and then forgotten. Anything that is
+ * not a local path is discarded - a stored "//host" would navigate off site.
+ */
+export function takeReturnPath(): string | undefined {
+  try {
+    const saved = sessionStorage.getItem(RETURN_PATH_KEY)
+    sessionStorage.removeItem(RETURN_PATH_KEY)
+    return saved?.startsWith('/') && !saved.startsWith('//') ? saved : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export async function isAuthenticated(): Promise<boolean> {
   if (!isAuthEnabled()) {
     return true
@@ -202,6 +247,7 @@ export async function ensureSignedIn(): Promise<boolean> {
 
   // No pending code: hand over to the Identity Server. In dev the SDK picks
   // the code up from the redirect's query parameters instead.
+  rememberReturnPath()
   await client.signIn()
   return (await client.isAuthenticated()) ?? false
 }
@@ -212,6 +258,7 @@ export async function login(): Promise<void> {
     return
   }
   await initAuth()
+  rememberReturnPath()
   await spaClient().signIn()
 }
 
