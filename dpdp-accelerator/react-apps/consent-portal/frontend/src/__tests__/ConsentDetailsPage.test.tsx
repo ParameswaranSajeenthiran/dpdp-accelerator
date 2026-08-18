@@ -159,6 +159,26 @@ describe('ConsentDetailsPage content', () => {
     expect(screen.getByText('dpdp-portal')).toBeInTheDocument()
   })
 
+  it('renders consent properties in a key/value table', async () => {
+    renderConsentDetailsPage('ACTIVE', Object.values(REQUIRED_SCOPES), {
+      properties: { dataCategory: 'financial', region: 'EU' },
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Properties' })).toBeInTheDocument()
+    expect(screen.getByText('dataCategory')).toBeInTheDocument()
+    expect(screen.getByText('financial')).toBeInTheDocument()
+    expect(screen.getByText('region')).toBeInTheDocument()
+    expect(screen.getByText('EU')).toBeInTheDocument()
+  })
+
+  it('shows an empty state when a consent has no properties', async () => {
+    renderConsentDetailsPage('ACTIVE')
+
+    expect(
+      await screen.findByText('No properties are associated with this consent.'),
+    ).toBeInTheDocument()
+  })
+
   it('lists authorizations by username with their state', async () => {
     renderConsentDetailsPage('ACTIVE')
 

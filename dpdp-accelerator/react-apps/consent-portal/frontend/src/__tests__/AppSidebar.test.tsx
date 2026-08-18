@@ -43,7 +43,10 @@ describe('AppSidebar', () => {
         <CssBaseline />
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/consents']}>
-            <TestAuthorizationProvider scopes={Object.values(REQUIRED_SCOPES)}>
+            <TestAuthorizationProvider
+              scopes={Object.values(REQUIRED_SCOPES)}
+              hideSelfConsentsForAdmins={false}
+            >
               <Routes>
                 <Route
                   path="*"
@@ -63,14 +66,14 @@ describe('AppSidebar', () => {
 
     expect(screen.getByRole('complementary')).toBeInTheDocument()
     expect(screen.getByRole('navigation')).toBeInTheDocument()
-    expect(screen.getByText('Consent')).toBeInTheDocument()
+    expect(screen.getByText('All Consents')).toBeInTheDocument()
     expect(screen.getByText('/consents')).toBeInTheDocument()
     const navigationText = screen.getByRole('navigation').textContent ?? ''
     expect(navigationText.indexOf('Administration')).toBeLessThan(
       navigationText.indexOf('Definitions'),
     )
 
-    fireEvent.click(screen.getByText('Pending Consents'))
+    fireEvent.click(screen.getByText('My Pending Consents'))
 
     expect(screen.getByText('/consents?state=PENDING')).toBeInTheDocument()
 
@@ -93,7 +96,7 @@ describe('AppSidebar', () => {
     )
 
     expect(screen.getByText('Purposes')).toBeInTheDocument()
-    expect(screen.queryByText('Consent')).not.toBeInTheDocument()
+    expect(screen.queryByText('Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
     expect(screen.queryByText('Elements')).not.toBeInTheDocument()
     expect(screen.queryByText('Administration')).not.toBeInTheDocument()
@@ -123,10 +126,52 @@ describe('AppSidebar', () => {
     )
 
     expect(screen.getByText('Administration')).toBeInTheDocument()
-    expect(screen.getByText('Consents')).toBeInTheDocument()
-    expect(screen.queryByText('Consent')).not.toBeInTheDocument()
-    expect(screen.queryByText('All Consents')).not.toBeInTheDocument()
+    expect(screen.getByText('All Consents')).toBeInTheDocument()
+    expect(screen.queryByText('Consents')).not.toBeInTheDocument()
+    expect(screen.queryByText('My Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
     expect(screen.getByText('/administration/consents')).toBeInTheDocument()
+  })
+
+  it('hides self-service consents for admins when hideSelfConsentsForAdmins is true', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/administration/consents']}>
+            <TestAuthorizationProvider
+              scopes={[REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.CONSENTS_READ_ANY]}
+              hideSelfConsentsForAdmins
+            >
+              <AppSidebar collapsed={false} />
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.getByText('All Consents')).toBeInTheDocument()
+    expect(screen.queryByText('My Consents')).not.toBeInTheDocument()
+    expect(screen.queryByText('My Pending Consents')).not.toBeInTheDocument()
+    expect(screen.queryByText('Consents')).not.toBeInTheDocument()
+  })
+
+  it('still shows self-service consents for a non-admin even when hideSelfConsentsForAdmins is true', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/consents']}>
+            <TestAuthorizationProvider
+              scopes={[REQUIRED_SCOPES.CONSENTS_READ_SELF]}
+              hideSelfConsentsForAdmins
+            >
+              <AppSidebar collapsed={false} />
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.getByText('My Consents')).toBeInTheDocument()
+    expect(screen.getByText('My Pending Consents')).toBeInTheDocument()
   })
 })

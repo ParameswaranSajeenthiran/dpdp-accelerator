@@ -23,12 +23,18 @@ import { IS_SCOPES } from '../utils/scopes'
 const authMocks = vi.hoisted(() => ({
   getBasicUser: vi.fn(),
   isAuthEnabled: vi.fn<() => boolean>(),
+  loadDeploymentConfig: vi.fn(),
 }))
 
 vi.mock('../utils/authClient', () => authMocks)
 
 beforeEach(() => {
   authMocks.isAuthEnabled.mockReturnValue(true)
+  authMocks.loadDeploymentConfig.mockResolvedValue({
+    clientID: 'DPDP_CONSENT_PORTAL',
+    hideSelfConsentsForAdmins: true,
+    scope: [],
+  })
 })
 
 afterEach(() => {
@@ -47,7 +53,23 @@ describe('current-user API', () => {
     await expect(fetchCurrentUser()).resolves.toEqual({
       userId: 'user-1',
       organizationId: 'acme.com',
+      hideSelfConsentsForAdmins: true,
       scopes: ['openid', IS_SCOPES.LOGIN, IS_SCOPES.CONSENT_VIEW],
+    })
+  })
+
+  it('takes the self-consent visibility choice from the deployment configuration', async () => {
+    // Not part of the session: a deployment decides it, and used to reach the
+    // portal through the backend's /me response.
+    authMocks.loadDeploymentConfig.mockResolvedValue({
+      clientID: 'DPDP_CONSENT_PORTAL',
+      hideSelfConsentsForAdmins: false,
+      scope: [],
+    })
+    authMocks.getBasicUser.mockResolvedValue({ sub: 'user-1', allowedScopes: IS_SCOPES.LOGIN })
+
+    await expect(fetchCurrentUser()).resolves.toMatchObject({
+      hideSelfConsentsForAdmins: false,
     })
   })
 
@@ -61,6 +83,7 @@ describe('current-user API', () => {
     await expect(fetchCurrentUser()).resolves.toEqual({
       userId: 'admin',
       organizationId: 'carbon.super',
+      hideSelfConsentsForAdmins: true,
       scopes: [IS_SCOPES.LOGIN],
     })
   })
@@ -89,6 +112,7 @@ describe('current-user API', () => {
     await expect(fetchCurrentUser()).resolves.toEqual({
       userId: 'anonymous',
       organizationId: 'carbon.super',
+      hideSelfConsentsForAdmins: true,
       scopes: Object.values(IS_SCOPES),
     })
     expect(authMocks.getBasicUser).not.toHaveBeenCalled()

@@ -1,5 +1,6 @@
 {
   "clientID": "DPDP_CONSENT_PORTAL",
+  "hideSelfConsentsForAdmins": true,
   "scope": [
     "openid",
     "profile",

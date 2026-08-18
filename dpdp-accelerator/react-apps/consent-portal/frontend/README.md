@@ -129,24 +129,25 @@ src/
 
 ## Internationalization
 
-This project uses `i18next` and `react-i18next` for UI translations.
+This project uses `i18next` and `react-i18next` for UI translations, covering
+English plus the 22 languages of the Eighth Schedule to the Constitution of
+India. Translations are fetched at run time from `public/i18n/<lang>/`, not
+bundled into the JS.
 
-- Add locale resources under `src/i18n/resources/<locale>/`.
-- Keep keys grouped by namespace (for example `common`) and feature intent (`app`, `forms`, `buttons`).
-- In components, use `useTranslation` and keys instead of hardcoded user-facing text.
-- Keep accessibility labels and user-visible messages localized as well.
+- Add keys to `public/i18n/en/common.json` and mirror them into every other
+  language's `common.json` (English text as a placeholder is fine pending
+  translation). `npm run i18n:verify` and `src/__tests__/I18nKeys.test.ts`
+  enforce this at build time.
+- In components, use `useTranslation('common')` and keys instead of
+  hardcoded user-facing text.
+- `catalog.json` holds wording for Purposes/Elements administrators create at
+  run time (see `src/i18n/catalogText.ts`) and is intentionally allowed to be
+  incomplete — it's excluded from the build-time check.
 
-Example:
-
-```tsx
-import { useTranslation } from 'react-i18next'
-
-function Example(): React.JSX.Element {
-  const { t } = useTranslation('common')
-
-  return <h1>{t('app.title')}</h1>
-}
-```
+For operating a live deployment (correcting wording, localizing a Purpose or
+Element without a rebuild), see
+[`docs/localization-guide.md`](../../../../docs/localization-guide.md) at the
+repository root.
 
 ## CI
 

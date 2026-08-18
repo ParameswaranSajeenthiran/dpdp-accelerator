@@ -34,7 +34,12 @@ const adminConsentsApi = vi.hoisted(() => ({
   revokeAdminConsent: vi.fn(),
 }))
 
-vi.mock('../features/admin-consents/api/adminConsentsApi', () => adminConsentsApi)
+// The network calls are stubbed, but the filter builder is pure and the page
+// depends on the string it produces - keep the real one.
+vi.mock('../features/admin-consents/api/adminConsentsApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../features/admin-consents/api/adminConsentsApi')>()),
+  ...adminConsentsApi,
+}))
 
 const NEXT_LINK = {
   rel: 'next',
@@ -103,6 +108,37 @@ describe('AdminConsentRegistryPage', () => {
       serviceId: undefined,
       state: undefined,
     })
+  })
+
+  it('renders purpose names from rows the api expanded with a detail lookup', async () => {
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 1,
+      links: [],
+      Consents: [
+        {
+          id: 'db0759de-c098-4f44-b78d-6718226db8b2',
+          subjectId: 'admin',
+          serviceId: 'dpdp-portal-spike',
+          state: 'ACTIVE',
+          timestamp: 1785833928316,
+          purposes: [
+            {
+              id: 'purpose-1',
+              name: 'marketing-spike',
+              type: 'CONSENT',
+              versionId: 'version-1',
+              version: '1.0.0',
+              elements: [],
+            },
+          ],
+        },
+      ],
+    })
+
+    renderAdminPage()
+
+    expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Purposes' })).toBeInTheDocument()
   })
 
   it('pages forward with the after cursor taken from links', async () => {

@@ -123,10 +123,17 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { hasScope } = useAuthorization()
+  const { currentUser, hasScope } = useAuthorization()
+
+  // An admin's own consents are still reachable directly by URL -- this only
+  // declutters the sidebar, it is not an access control boundary.
+  const hideSelfConsents =
+    currentUser.hideSelfConsentsForAdmins && hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
 
   const dashboardItems = DASHBOARD_ITEMS.filter((item) => hasScope(item.requiredScope))
-  const consentItems = CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
+  const consentItems = hideSelfConsents
+    ? []
+    : CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const catalogItems = CATALOG_ITEMS.filter((item) => hasScope(item.requiredScope))
   const administrationItems = ADMINISTRATION_ITEMS.filter((item) => hasScope(item.requiredScope))
   const visibleItems = [...dashboardItems, ...consentItems, ...catalogItems, ...administrationItems]

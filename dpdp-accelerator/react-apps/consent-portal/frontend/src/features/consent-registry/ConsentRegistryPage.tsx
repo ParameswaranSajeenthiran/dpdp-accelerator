@@ -127,7 +127,7 @@ function ConsentRegistryPage(): React.JSX.Element {
         <Stack spacing={1}>
           <HeaderBreadcrumbs />
           <Typography variant="h4" fontWeight={700}>
-            {t('consentRegistry.title')}
+            {filters.state === 'PENDING' ? t('sidebar.pendingConsents') : t('sidebar.allConsents')}
           </Typography>
         </Stack>
 

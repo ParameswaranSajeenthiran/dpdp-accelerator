@@ -18,6 +18,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildConsentPropertyFilter,
   fetchAdminConsentByID,
   fetchAdminConsents,
   revokeAdminConsent,
@@ -83,6 +84,55 @@ describe('administrative consent API', () => {
       limit: '10',
       before: 'MQ==',
     })
+  })
+
+  it('passes purposeId and a custom property filter to the consent management API', async () => {
+    respondWith({ totalResults: 0, links: [], Consents: [] })
+
+    await fetchAdminConsents({
+      limit: 10,
+      purposeId: 'purpose-1',
+      filter: 'properties.dataCategory eq "personal"',
+    })
+
+    expect(Object.fromEntries(new URL(sentRequest().url).searchParams)).toEqual({
+      limit: '10',
+      purposeId: 'purpose-1',
+      filter: 'properties.dataCategory eq "personal"',
+    })
+  })
+
+  it('builds a properties.<key> eq "<value>" filter only when both key and value are set', () => {
+    expect(buildConsentPropertyFilter('dataCategory', 'personal')).toBe(
+      'properties.dataCategory eq "personal"',
+    )
+    expect(buildConsentPropertyFilter(' region ', ' EU ')).toBe('properties.region eq "EU"')
+    expect(buildConsentPropertyFilter('dataCategory', '')).toBeUndefined()
+    expect(buildConsentPropertyFilter('', 'personal')).toBeUndefined()
+  })
+
+  it('expands each row with a detail lookup, keeping the summary when one fails', async () => {
+    // The Identity Server's list rows carry no purposes; the table shows them.
+    const summaries = [
+      { id: 'consent-1', subjectId: 'alice', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
+      { id: 'consent-2', subjectId: 'bob', serviceId: 'svc', state: 'ACTIVE', timestamp: 2 },
+    ]
+    transport.httpRequest
+      .mockResolvedValueOnce({
+        status: 200,
+        data: { totalResults: 2, links: [], Consents: summaries },
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: { ...summaries[0], purposes: [{ id: 'p1', name: 'marketing' }] },
+      })
+      .mockRejectedValueOnce(new Error('detail lookup failed'))
+
+    const response = await fetchAdminConsents({ limit: 10 })
+
+    expect(response.Consents[0]?.purposes).toEqual([{ id: 'p1', name: 'marketing' }])
+    expect(response.Consents[1]).toEqual(summaries[1])
+    expect(response.totalResults).toBe(2)
   })
 
   it('reads next and previous cursors out of the returned links', () => {

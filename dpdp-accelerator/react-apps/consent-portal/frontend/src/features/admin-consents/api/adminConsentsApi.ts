@@ -22,14 +22,42 @@ import type {
   ConsentDetail,
 } from '../../../types/consent'
 import { apiRequest, apiRequestOptionalContent } from '../../../utils/apiClient'
+import { escapeFilterValue } from '../../../utils/filterGrammar'
 
 /** The Identity Server's consent management (administrative) API. */
 const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
 
+/**
+ * Builds a `properties.<key> eq "<value>"` filter, the Identity Server's
+ * dot-notation search over a consent's custom properties. Both key and
+ * value are required -- a lone key or value can't be searched.
+ */
+export function buildConsentPropertyFilter(key: string, value: string): string | undefined {
+  const trimmedKey = key.trim()
+  const trimmedValue = value.trim()
+  return trimmedKey && trimmedValue
+    ? `properties.${trimmedKey} eq "${escapeFilterValue(trimmedValue)}"`
+    : undefined
+}
+
+export async function fetchAdminConsentByID(consentID: string): Promise<ConsentDetail> {
+  return apiRequest<ConsentDetail>(`${CONSENT_MGT_V2}/consents/${encodeURIComponent(consentID)}`, {
+    method: 'GET',
+  })
+}
+
+/**
+ * Lists consents across users.
+ *
+ * The Identity Server's list rows carry no purposes, so each row on the page
+ * is expanded with a detail lookup - the table shows which purposes a consent
+ * covers. The lookups run together, and a row whose lookup fails keeps its
+ * summary rather than blanking the page.
+ */
 export async function fetchAdminConsents(
   params: AdminConsentListQueryParams,
 ): Promise<AdminConsentListResponse> {
-  return apiRequest<AdminConsentListResponse>(`${CONSENT_MGT_V2}/consents`, {
+  const response = await apiRequest<AdminConsentListResponse>(`${CONSENT_MGT_V2}/consents`, {
     method: 'GET',
     query: {
       limit: params.limit,
@@ -38,15 +66,28 @@ export async function fetchAdminConsents(
       subjectId: params.subjectId,
       serviceId: params.serviceId,
       state: params.state,
+      purposeId: params.purposeId,
+      filter: params.filter,
     },
   })
-}
 
-export async function fetchAdminConsentByID(consentID: string): Promise<ConsentDetail> {
-  return apiRequest<ConsentDetail>(
-    `${CONSENT_MGT_V2}/consents/${encodeURIComponent(consentID)}`,
-    { method: 'GET' },
+  const summaries = response.Consents ?? []
+  if (summaries.length === 0) {
+    return response
+  }
+
+  const consents = await Promise.all(
+    summaries.map(async (summary) => {
+      try {
+        return await fetchAdminConsentByID(summary.id)
+      } catch {
+        // One failed lookup must not blank the whole page.
+        return summary
+      }
+    }),
   )
+
+  return { ...response, Consents: consents }
 }
 
 export async function revokeAdminConsent(consentID: string): Promise<unknown> {

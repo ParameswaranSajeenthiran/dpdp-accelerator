@@ -75,6 +75,15 @@
         <servlet-name>default</servlet-name>
         <url-pattern>/favicon/*</url-pattern>
     </servlet-mapping>
+    <!--
+      Translations are fetched over HTTP at run time. Without this mapping the
+      shell below would answer them with HTML and every language would silently
+      fall back to its raw message keys.
+    -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/i18n/*</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>/deployment.config.json</url-pattern>

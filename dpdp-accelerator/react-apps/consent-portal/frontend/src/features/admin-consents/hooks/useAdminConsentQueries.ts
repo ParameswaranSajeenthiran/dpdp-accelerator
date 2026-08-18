@@ -36,6 +36,7 @@ import { getNextCursor, getPreviousCursor } from '../../../utils/cursorPaginatio
 import { normalizeConsentState } from '../../consent-registry/utils/statusChip'
 import { toConsentRow } from '../../consent-registry/hooks/useConsentQueries'
 import {
+  buildConsentPropertyFilter,
   fetchAdminConsentByID,
   fetchAdminConsents,
   revokeAdminConsent,
@@ -60,6 +61,7 @@ function toAdminConsentRow(consent: ConsentSummary): ConsentRecord {
     serviceId: consent.serviceId,
     state: normalizedState,
     timestamp: consent.timestamp,
+    purposes: consent.purposes?.map((purpose) => purpose.name),
   }
 }
 
@@ -75,6 +77,8 @@ function toListParams(
     subjectId: filters.subjectId || undefined,
     serviceId: filters.serviceId || undefined,
     state: filters.state === 'All' ? undefined : filters.state,
+    purposeId: filters.purposeId || undefined,
+    filter: buildConsentPropertyFilter(filters.propertyKey, filters.propertyValue),
   }
 }
 

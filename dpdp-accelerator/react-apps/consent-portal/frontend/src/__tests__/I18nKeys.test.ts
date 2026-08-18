@@ -16,8 +16,16 @@
  * under the License.
  */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import commonEn from '../i18n/resources/en/common'
+
+// Translations moved off a compiled TS resource onto runtime-fetched JSON;
+// reading the file directly keeps this test independent of any test-only
+// i18n wiring.
+const commonEn: unknown = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, '../../public/i18n/en/common.json'), 'utf8'),
+)
 
 const sourceFiles = import.meta.glob<string>(
   ['../**/*.{ts,tsx}', '!../**/*.test.{ts,tsx}', '!../__tests__/**'],

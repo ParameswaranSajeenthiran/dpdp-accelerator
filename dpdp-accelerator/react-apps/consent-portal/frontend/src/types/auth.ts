@@ -21,4 +21,10 @@ export interface CurrentUser {
   organizationId: string
   /** Identity Server scopes granted to this session, as the token carries them. */
   scopes: string[]
+  /**
+   * Whether the self-service consent navigation is hidden from users who can
+   * also administer other people's consents. Deployment configuration rather
+   * than anything the session carries - see deployment.config.json.
+   */
+  hideSelfConsentsForAdmins: boolean
 }

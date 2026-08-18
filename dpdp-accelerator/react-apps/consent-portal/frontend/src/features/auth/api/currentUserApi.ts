@@ -17,7 +17,7 @@
  */
 
 import type { CurrentUser } from '../../../types/auth'
-import { getBasicUser, isAuthEnabled } from '../../../utils/authClient'
+import { getBasicUser, isAuthEnabled, loadDeploymentConfig } from '../../../utils/authClient'
 import { tenantFromPath } from '../../../utils/basePath'
 import { IS_SCOPES, parseScopes } from '../../../utils/scopes'
 
@@ -29,13 +29,21 @@ const SUPER_TENANT = 'carbon.super'
  * `allowedScopes` is what the Identity Server actually granted this session,
  * and that is what the UI gates on - a user without the consent management
  * scopes never sees those areas.
+ *
+ * `hideSelfConsentsForAdmins` is not part of the session at all: it is a
+ * deployment choice, and used to reach the portal through the backend's /me
+ * response. It now comes from the deployment configuration served beside the
+ * application.
  */
 export async function fetchCurrentUser(): Promise<CurrentUser> {
+  const config = await loadDeploymentConfig()
+
   if (!isAuthEnabled()) {
     // Development only: authentication is switched off, so nothing is gated.
     return {
       userId: 'anonymous',
       organizationId: tenantFromPath() ?? SUPER_TENANT,
+      hideSelfConsentsForAdmins: config.hideSelfConsentsForAdmins,
       scopes: Object.values(IS_SCOPES),
     }
   }
@@ -53,6 +61,7 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
   return {
     userId,
     organizationId: user.tenantDomain?.trim() || tenantFromPath() || SUPER_TENANT,
+    hideSelfConsentsForAdmins: config.hideSelfConsentsForAdmins,
     scopes: parseScopes(user.allowedScopes),
   }
 }

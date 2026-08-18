@@ -31,6 +31,7 @@ import type {
   PurposeVersionSummary,
 } from '../../../types/catalog'
 import { apiRequest, apiRequestNoContent } from '../../../utils/apiClient'
+import { escapeFilterValue } from '../../../utils/filterGrammar'
 
 /** The Identity Server's consent management (administrative) API. */
 const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
@@ -43,11 +44,6 @@ function toCursorQuery(params: CursorPageParams): Record<string, string | number
     after: params.after,
     before: params.before,
   }
-}
-
-/** Quotes and escapes a value for the Identity Server's SCIM-style filter grammar. */
-function escapeFilterValue(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
 /**

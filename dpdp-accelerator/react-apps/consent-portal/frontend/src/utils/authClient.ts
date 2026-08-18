@@ -39,9 +39,15 @@ import { runtimeBasePath, serverBaseUrl } from './basePath'
 export type UserProfile = Record<string, unknown>
 
 /** Shape of the runtime configuration served beside the app. */
-interface DeploymentConfig {
+export interface DeploymentConfig {
   clientID: string
   scope: string[]
+  /**
+   * Whether to hide the self-service consent navigation from users who can
+   * also administer other people's consents. Purely a presentation choice -
+   * an administrator's own consents stay reachable by URL.
+   */
+  hideSelfConsentsForAdmins: boolean
 }
 
 /** The authorization-code handoff published by auth.jsp. */
@@ -86,8 +92,12 @@ export function isAuthEnabled(): boolean {
   return import.meta.env.VITE_AUTH_ENABLED === 'true'
 }
 
-async function loadDeploymentConfig(): Promise<DeploymentConfig> {
-  const fallback: DeploymentConfig = { clientID: DEFAULT_CLIENT_ID, scope: DEFAULT_SCOPE }
+async function readDeploymentConfig(): Promise<DeploymentConfig> {
+  const fallback: DeploymentConfig = {
+    clientID: DEFAULT_CLIENT_ID,
+    hideSelfConsentsForAdmins: true,
+    scope: DEFAULT_SCOPE,
+  }
   try {
     const response = await fetch(`${runtimeBasePath()}/deployment.config.json`, {
       credentials: 'same-origin',
@@ -99,6 +109,10 @@ async function loadDeploymentConfig(): Promise<DeploymentConfig> {
     const config = (await response.json()) as Partial<DeploymentConfig>
     return {
       clientID: config.clientID?.trim() || fallback.clientID,
+      hideSelfConsentsForAdmins:
+        typeof config.hideSelfConsentsForAdmins === 'boolean'
+          ? config.hideSelfConsentsForAdmins
+          : fallback.hideSelfConsentsForAdmins,
       scope: Array.isArray(config.scope) && config.scope.length ? config.scope : fallback.scope,
     }
   } catch {
@@ -106,6 +120,23 @@ async function loadDeploymentConfig(): Promise<DeploymentConfig> {
     // application the accelerator's create-portal-app.sh registers.
     return fallback
   }
+}
+
+let configPromise: Promise<DeploymentConfig> | undefined
+
+/**
+ * The deployment configuration, fetched once per page load. Both the SDK setup
+ * and the presentation choices the portal reads from it share this one read.
+ */
+export async function loadDeploymentConfig(): Promise<DeploymentConfig> {
+  if (!configPromise) {
+    configPromise = readDeploymentConfig().catch((error: unknown) => {
+      // Let the next caller retry rather than caching the failure.
+      configPromise = undefined
+      throw error
+    })
+  }
+  return configPromise
 }
 
 /**
