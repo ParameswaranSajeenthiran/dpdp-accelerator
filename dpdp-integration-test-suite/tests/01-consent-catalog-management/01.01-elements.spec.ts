@@ -51,7 +51,7 @@ async function createElementViaUi(page: Page, tracker: ConsentCleanupTracker): P
 
 test.describe('Element catalog (UI)', () => {
   test.describe('Happy paths', () => {
-    test('01.01.01 - Creates an element through the Add Element form with a display name, description, and property', async ({
+    test('01.01.01 - Creates an element through the Add Element form with a display name, description, and properties', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -60,27 +60,41 @@ test.describe('Element catalog (UI)', () => {
       await listPage.openCreateDialog()
 
       const elementName = uniqueElementName()
+      const properties: [string, string][] = [
+        ['dataCategory', 'personal'],
+        ['sensitivity', 'high'],
+        ['retentionPeriod', '90 days'],
+      ]
       const dialog = new ElementFormDialog(consentAdminPage)
       await dialog.fill({
         name: elementName,
         displayName: 'Shipping Address',
         description: 'Address used to ship physical orders.',
       })
-      await dialog.addProperty('dataCategory', 'personal')
+      for (const [key, value] of properties) {
+        await dialog.addProperty(key, value)
+      }
       await dialog.submit()
 
       // On success the dialog closes and navigates straight to the new element's detail page.
       await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
       const match = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())
-      if (match) {
-        consentCleanupTracker.trackElement(match[1])
+      if (!match) {
+        throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
       }
+      const elementId = match[1]
+      consentCleanupTracker.trackElement(elementId)
+
       const detailPage = new ElementDetailPage(consentAdminPage)
+      await expect(detailPage.elementIdValue(elementId)).toBeVisible()
       await expect(detailPage.heading('Shipping Address')).toBeVisible()
+      await expect(detailPage.nameValue(elementName)).toBeVisible()
       await expect(
         consentAdminPage.getByText('Address used to ship physical orders.'),
       ).toBeVisible()
-      await expect(consentAdminPage.getByText('personal', { exact: true })).toBeVisible()
+      for (const [key, value] of properties) {
+        await expect(detailPage.propertyRow(key)).toContainText(value)
+      }
 
       // Also findable back on the list via the new name search.
       await listPage.goto()
@@ -125,10 +139,57 @@ test.describe('Element catalog (UI)', () => {
       await expect(listPage.rows).toHaveCount(10)
       await expect(listPage.nextPageButton).toBeEnabled()
     })
+
+    test('01.01.04 - Searching by a partial name still finds the matching element', async ({
+      consentAdminPage,
+      consentCleanupTracker,
+    }) => {
+      const elementName = uniqueElementName()
+      const listPage = new ElementListPage(consentAdminPage)
+      await listPage.goto()
+      await listPage.openCreateDialog()
+
+      const dialog = new ElementFormDialog(consentAdminPage)
+      await dialog.fill({ name: elementName })
+      await dialog.submit()
+      await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
+      const match = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())
+      if (match) {
+        consentCleanupTracker.trackElement(match[1])
+      }
+
+      // Only the timestamp segment of the generated `element-<timestamp>-<random>` name - proves
+      // the search matches on a substring (the API filter is `name co "..."`), not just an exact
+      // full-name match like the create-flow test above already covers.
+      const partialName = elementName.slice(elementName.indexOf('-') + 1, elementName.lastIndexOf('-'))
+      await listPage.goto()
+      await listPage.searchByName(partialName)
+      await expect(listPage.rowByName(elementName)).toBeVisible()
+    })
+
+    test('01.01.05 - Resetting the search clears the filter and shows the unfiltered list again', async ({
+      consentAdminPage,
+      consentCleanupTracker,
+    }) => {
+      // Seeded so there's a guaranteed row to reappear once the filter is cleared.
+      await createElementViaUi(consentAdminPage, consentCleanupTracker)
+
+      const listPage = new ElementListPage(consentAdminPage)
+      await listPage.goto()
+      const searchTerm = `no-such-element-${Date.now().toString()}`
+      await listPage.searchByName(searchTerm)
+      // The empty-results placeholder is itself a <TableRow>, so it's the row count staying at 1
+      // (not 0) plus this message that together prove the search actually filtered the list.
+      await expect(consentAdminPage.getByText(`No elements match "${searchTerm}".`)).toBeVisible()
+
+      await listPage.resetSearch()
+      await expect(listPage.nameSearch).toHaveValue('')
+      await expect(listPage.rows.first()).toBeVisible()
+    })
   })
 
   test.describe('Validation violations', () => {
-    test('01.01.04 - An unknown element id shows the load-failed message with a way back to the list', async ({
+    test('01.01.06 - An unknown element id shows the load-failed message with a way back to the list', async ({
       consentAdminPage,
     }) => {
       const detailPage = new ElementDetailPage(consentAdminPage)
@@ -138,7 +199,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(consentAdminPage).toHaveURL(/\/elements$/)
     })
 
-    test('01.01.05 - Leaving name empty shows the required-field error and blocks submission', async ({
+    test('01.01.07 - Leaving name empty shows the required-field error and blocks submission', async ({
       consentAdminPage,
     }) => {
       const listPage = new ElementListPage(consentAdminPage)
@@ -153,7 +214,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(dialog.root).toBeVisible()
     })
 
-    test('01.01.06 - Creating an element with a name that already exists shows the duplicate-name message', async ({
+    test('01.01.08 - Creating an element with a name that already exists shows the duplicate-name message', async ({
       consentAdminPage,
       consentCleanupTracker,
     }) => {
@@ -184,7 +245,7 @@ test.describe('Element catalog (UI)', () => {
       await expect(dialog.root).toBeVisible()
     })
 
-    test('01.01.07 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
+    test('01.01.09 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
       consentAdminPage,
     }) => {
       const listPage = new ElementListPage(consentAdminPage)
@@ -197,6 +258,18 @@ test.describe('Element catalog (UI)', () => {
 
       await expect(dialog.root.getByText('Add a key, or this value will not be saved.')).toBeVisible()
       await expect(dialog.createButton).toBeDisabled()
+    })
+
+    test('01.01.10 - A search with no matches shows the empty-results message', async ({
+      consentAdminPage,
+    }) => {
+      const listPage = new ElementListPage(consentAdminPage)
+      await listPage.goto()
+
+      const searchTerm = `no-such-element-${Date.now().toString()}`
+      await listPage.searchByName(searchTerm)
+
+      await expect(consentAdminPage.getByText(`No elements match "${searchTerm}".`)).toBeVisible()
     })
   })
 })

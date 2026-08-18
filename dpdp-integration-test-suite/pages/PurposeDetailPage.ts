@@ -18,10 +18,11 @@
 
 import { type Locator, type Page } from '@playwright/test'
 
-/** PurposeDetailsPage.tsx - a single Purpose's fields, elements and version history. */
+/** PurposeDetailsPage.tsx - a single Purpose's fields, properties, elements and version history. */
 export class PurposeDetailPage {
   readonly elementsTable: Locator
   readonly versionsTable: Locator
+  readonly propertiesTable: Locator
   readonly loadFailedMessage: Locator
   readonly backButton: Locator
 
@@ -33,6 +34,10 @@ export class PurposeDetailPage {
     this.versionsTable = page
       .locator('.MuiCard-root')
       .filter({ has: page.getByRole('heading', { name: 'Version history' }) })
+      .getByRole('table')
+    this.propertiesTable = page
+      .locator('.MuiCard-root')
+      .filter({ has: page.getByRole('heading', { name: 'Properties' }) })
       .getByRole('table')
     this.loadFailedMessage = page.getByText('Unable to load purposes right now.')
     this.backButton = page.getByRole('button', { name: 'Back to purposes' })
@@ -53,5 +58,24 @@ export class PurposeDetailPage {
 
   versionRow(version: string): Locator {
     return this.versionsTable.getByRole('row', { name: new RegExp(version) })
+  }
+
+  /** A property row, matched by its key. */
+  propertyRow(key: string): Locator {
+    return this.propertiesTable.getByRole('row', { name: new RegExp(key) })
+  }
+
+  /**
+   * The machine `name` field's rendered value - scoped to a <code> element since the same text
+   * also appears as the page heading and the current-page breadcrumb, which would make a bare
+   * page.getByText(name) ambiguous. See the identical pattern in ElementDetailPage.nameValue.
+   */
+  nameValue(name: string): Locator {
+    return this.page.locator('code').filter({ hasText: name })
+  }
+
+  /** The Purpose ID shown (and copyable) in the card header above the name/type/version/description fields. */
+  purposeIdValue(id: string): Locator {
+    return this.page.getByText(id, { exact: true })
   }
 }

@@ -66,6 +66,11 @@ export class PurposeListPage {
     return this.table.getByRole('row', { name: new RegExp(name) })
   }
 
+  /** Data rows only - scoped to tbody so the header row is never counted as a result. */
+  get rows(): Locator {
+    return this.table.locator('tbody').getByRole('row')
+  }
+
   async openByName(name: string): Promise<void> {
     await this.rowByName(name).click()
   }

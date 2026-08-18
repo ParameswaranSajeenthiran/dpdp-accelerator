@@ -20,10 +20,15 @@ import { type Locator, type Page } from '@playwright/test'
 
 /** ElementDetailsPage.tsx - a single Element's fields (id, name, display name, description). */
 export class ElementDetailPage {
+  readonly propertiesTable: Locator
   readonly loadFailedMessage: Locator
   readonly backButton: Locator
 
   constructor(private readonly page: Page) {
+    this.propertiesTable = page
+      .locator('.MuiCard-root')
+      .filter({ has: page.getByRole('heading', { name: 'Properties' }) })
+      .getByRole('table')
     this.loadFailedMessage = page.getByText('Unable to load elements right now.')
     this.backButton = page.getByRole('button', { name: 'Back to elements' })
   }
@@ -35,5 +40,24 @@ export class ElementDetailPage {
 
   heading(name: string): Locator {
     return this.page.getByRole('heading', { name })
+  }
+
+  /** A property row, matched by its key - see the identical pattern in PurposeDetailPage.elementRow. */
+  propertyRow(key: string): Locator {
+    return this.propertiesTable.getByRole('row', { name: new RegExp(key) })
+  }
+
+  /**
+   * The machine `name` field's rendered value - scoped to a <code> element since the same text
+   * also appears (as the current-page breadcrumb) elsewhere on this page, which would make a
+   * bare page.getByText(name) ambiguous.
+   */
+  nameValue(name: string): Locator {
+    return this.page.locator('code').filter({ hasText: name })
+  }
+
+  /** The Element ID shown (and copyable) in the card header above the name/displayName/description fields. */
+  elementIdValue(id: string): Locator {
+    return this.page.getByText(id, { exact: true })
   }
 }

@@ -1,7 +1,7 @@
 # Consents, Purposes & Elements — Test Plan
 
 Documents what actually runs today across three categories under `tests/`: 4 functional spec
-files (32 tests) split between `01-consent-catalog-management/` (Elements, Purposes) and
+files (39 tests) split between `01-consent-catalog-management/` (Elements, Purposes) and
 `02-consent-lifecycle/` (self-service and admin consent registries), plus `99-demo-data/` holding
 one demo-journey spec (1 test) and one seed-only spec (1 non-functional operation) — neither part
 of the regression suite. Scope for this round is the UI layer only — no
@@ -41,15 +41,18 @@ Every Element here is created through the real "Add Element" form, including set
 (via the file's own `createElementViaUi` helper) — there is no API-seeding path left in this file.
 
 **Happy paths**
-1. Create an element through the Add Element form (name, display name, description, one custom property) → redirects to detail page → description and property value shown; findable via list search by name.
+1. Create an element through the Add Element form (name, display name, description, three custom properties) → redirects to detail page → server-issued element id, name, display name (as the heading), description, and every property's key/value pair all shown; findable via list search by name.
 2. List renders with at least one row; rows-per-page control accepts 25 without erroring.
 3. The rows-per-page control caps the number of rendered rows at the selected size (seeds 11 elements via the UI, selects a page size of 10, asserts exactly 10 render and a next page is available).
+4. Searching by only a substring of the name (the middle timestamp segment of the generated `element-<timestamp>-<random>` name) still finds the element — the API filter is `name co "..."` (contains), not an exact match.
+5. After a search that matches nothing, clicking Reset clears the search box and the previously-seeded element reappears in the unfiltered list.
 
 **Validation / violations**
 1. Unknown element id → load-failed message, Back button returns to `/elements`.
 2. Name left empty → "Name is required." shown; dialog stays open.
 3. Creating an element whose name already exists (first created through the UI, then the same name resubmitted) → duplicate-name message: `An element named "<name>" already exists. Choose a different name.`; dialog stays open, no duplicate created.
 4. A property row with a value but no key → "Add a key, or this value will not be saved." shown; Create button disabled until fixed or the row is removed.
+5. A search matching no elements → `No elements match "<term>".` shown.
 
 ## `01-consent-catalog-management/01.02-purposes.spec.ts` — Purpose catalog (UI)
 
@@ -57,14 +60,18 @@ Every Purpose (and every Element it needs) here is created through the real "Add
 Element" forms — no API-seeding path left in this file either.
 
 **Happy paths**
-1. Create a purpose through the Add Purpose form (name, type, version, description, two mandatory elements, one optional element, one custom property) → redirects to detail page → elements shown as Mandatory/Optional as configured, property value shown, and the new name is findable via list search.
+1. Create a purpose through the Add Purpose form (name, type, version, description, two mandatory elements, one optional element, three custom properties) → redirects to detail page → server-issued purpose id, name (heading and DetailGrid), type, the "v1" version row, description, elements shown as Mandatory/Optional as configured, and every property's key/value pair all shown; findable via list search by name.
 2. A purpose created with no elements and no properties shows both catalog empty-state messages ("No custom properties.", "No elements are configured for this purpose.").
 3. The rows-per-page control accepts a new page size (25) without erroring; previous-page button disabled on page 1.
+4. Searching by only a substring of the name still finds the purpose — the API filter is `name co "..."` (contains), not an exact match.
+5. Filtering by an exact, unique type value finds only the purpose created with that type — type is matched exactly (`eq`), not as a substring.
+6. After a search that matches nothing, clicking Reset clears both the name and type filters and the previously-seeded purpose reappears in the unfiltered list.
 
 **Validation / violations**
 1. Unknown purpose id → load-failed message, Back button returns to `/purposes`.
 2. Name, Type, and Version all left empty → all three "is required." errors shown; dialog stays open, nothing submitted.
 3. A property row with a value but no key → "Add a key, or this value will not be saved." shown; Create button disabled until fixed or the row is removed.
+4. A search matching no purposes → "No purposes match this search." shown.
 
 ## `02-consent-lifecycle/02.01-self-service-registry.spec.ts` — Consent self-service registry (UI, Data Principal)
 
