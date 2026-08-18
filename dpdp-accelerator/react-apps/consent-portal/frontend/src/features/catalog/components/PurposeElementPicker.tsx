@@ -89,7 +89,7 @@ function PurposeElementPicker({
         }}
         renderInput={(params) => (
           // eslint-disable-next-line react/jsx-props-no-spreading -- MUI's Autocomplete requires forwarding all of `params`
-          <TextField {...params} label={t('catalog.purposeForm.elementsLabel')} />
+          <TextField {...params} label={t('catalog.purposes.form.elementsLabel')} />
         )}
       />
 

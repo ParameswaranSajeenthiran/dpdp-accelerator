@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import i18n from '../i18n/i18n'
+
 const EMPTY_DATE_PLACEHOLDER = '-'
 // Values below this threshold are treated as epoch seconds, not milliseconds.
 // The cutoff is before all expected consent timestamps.
@@ -48,8 +50,11 @@ export function formatEpochTimestamp(
     return EMPTY_DATE_PLACEHOLDER
   }
 
+  // Defaults to the active portal language rather than the browser's own
+  // locale, so a reader who switched the UI to Hindi also gets Hindi-
+  // formatted dates and times, not just translated labels around them.
   return new Date(epochMilliseconds).toLocaleString(
-    locales,
+    locales ?? i18n.language,
     options ?? DEFAULT_DATE_TIME_FORMAT_OPTIONS,
   )
 }
@@ -69,5 +74,8 @@ export function formatIsoDateTime(
     return EMPTY_DATE_PLACEHOLDER
   }
 
-  return parsedDate.toLocaleString(locales, options ?? DEFAULT_DATE_TIME_FORMAT_OPTIONS)
+  return parsedDate.toLocaleString(
+    locales ?? i18n.language,
+    options ?? DEFAULT_DATE_TIME_FORMAT_OPTIONS,
+  )
 }

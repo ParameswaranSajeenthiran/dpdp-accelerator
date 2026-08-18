@@ -37,6 +37,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import CursorPaginationFooter from '../../components/CursorPaginationFooter'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { useCatalogText } from '../../i18n/catalogText'
 import type { CursorPageParams } from '../../types/catalog'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
 import { PORTAL_SCOPES } from '../../utils/portalScopes'
@@ -50,6 +51,7 @@ import { getCursorPageParams, toCatalogSearchParams } from './utils/catalogSearc
 
 function PurposeListPage(): React.JSX.Element {
   const { t } = useTranslation('common')
+  const catalogText = useCatalogText()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const params = useMemo(() => getCursorPageParams(searchParams), [searchParams])
@@ -75,7 +77,7 @@ function PurposeListPage(): React.JSX.Element {
   // cause for a create failure here, so any error gets the generic message
   // rather than surfacing raw server text.
   const createErrorMessage = createMutation.error
-    ? t('catalog.purposeForm.createFailed')
+    ? t('catalog.purposes.form.createFailed')
     : undefined
 
   // Paging must keep the active search; only a new search resets to page one.
@@ -134,7 +136,7 @@ function PurposeListPage(): React.JSX.Element {
               sx={{ flexShrink: 0 }}
               onClick={() => setCreateOpen(true)}
             >
-              {t('catalog.actions.addPurpose')}
+              {t('catalog.purposes.add')}
             </Button>
           ) : null}
         </Stack>
@@ -174,47 +176,54 @@ function PurposeListPage(): React.JSX.Element {
                       ))}
                     </TableRow>
                   ))
-                : rows.map((purpose) => (
-                    <TableRow
-                      hover
-                      key={purpose.id}
-                      tabIndex={0}
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => openPurpose(purpose.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') openPurpose(purpose.id)
-                      }}
-                    >
-                      <TableCell>
-                        <Typography component="code" variant="body2" fontWeight={600} noWrap>
-                          {purpose.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip size="small" variant="outlined" label={purpose.type} />
-                      </TableCell>
-                      <TableCell>
-                        {purpose.latestVersion ? (
-                          <Chip
-                            size="small"
-                            color="primary"
-                            label={purpose.latestVersion.version}
-                          />
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          color={purpose.description ? 'text.primary' : 'text.secondary'}
-                          title={purpose.description}
-                        >
-                          {purpose.description ?? t('catalog.values.noDescription')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                : rows.map((purpose) => {
+                    const { description } = catalogText('purposes', {
+                      name: purpose.name,
+                      version: purpose.latestVersion?.version,
+                      description: purpose.description,
+                    })
+                    return (
+                      <TableRow
+                        hover
+                        key={purpose.id}
+                        tabIndex={0}
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => openPurpose(purpose.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') openPurpose(purpose.id)
+                        }}
+                      >
+                        <TableCell>
+                          <Typography component="code" variant="body2" fontWeight={600} noWrap>
+                            {purpose.name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip size="small" variant="outlined" label={purpose.type} />
+                        </TableCell>
+                        <TableCell>
+                          {purpose.latestVersion ? (
+                            <Chip
+                              size="small"
+                              color="primary"
+                              label={purpose.latestVersion.version}
+                            />
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            color={description ? 'text.primary' : 'text.secondary'}
+                            title={description}
+                          >
+                            {description ?? t('catalog.values.noDescription')}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
               {query.isError ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 8 }}>

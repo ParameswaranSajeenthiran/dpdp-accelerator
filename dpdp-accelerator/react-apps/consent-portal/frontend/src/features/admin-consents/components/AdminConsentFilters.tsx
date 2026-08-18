@@ -205,7 +205,7 @@ export default function AdminConsentFilters({
             <TextField
               size="small"
               fullWidth
-              label={t('adminConsents.filters.subjectId')}
+              label={t('consentRegistry.details.table.user')}
               helperText={t('adminConsents.filters.subjectIdHelp')}
               value={draft.subjectId}
               onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
