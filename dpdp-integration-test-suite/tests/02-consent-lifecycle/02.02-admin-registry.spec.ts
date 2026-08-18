@@ -134,7 +134,45 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(consentAdminPage.getByPlaceholder('Search by consent ID')).toHaveValue('')
     })
 
-    test('02.02.05 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
+    test('02.02.05 - Combining the state filter with the advanced subject/service filters narrows the list further', async ({
+      consentAdminPage,
+      consentAdminConsentApi,
+      consentCleanupTracker,
+    }) => {
+      // Unlike the Consent ID filter (which disables the state filter - see the test above), the
+      // subject/service filters don't - confirmed in AdminConsentFilters.tsx: only
+      // `filters.consentId` disables it. Both seeded under the same unique service id and
+      // narrowed to it first, so the state filter's effect is checked within a controlled
+      // two-row set instead of the full, ever-growing unfiltered list.
+      const serviceId = uniqueServiceId()
+      const pending = await seedConsent(
+        consentAdminPage,
+        consentAdminConsentApi,
+        consentCleanupTracker,
+        env.dataPrincipal.username,
+        'PENDING',
+        serviceId,
+      )
+      const active = await seedConsent(
+        consentAdminPage,
+        consentAdminConsentApi,
+        consentCleanupTracker,
+        env.dataPrincipal.username,
+        'ACTIVE',
+        serviceId,
+      )
+
+      const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+      await registryPage.goto()
+      await registryPage.filterBySubjectAndService(env.dataPrincipal.username, serviceId)
+      await expect(registryPage.stateFilter).toBeEnabled()
+      await registryPage.filterByState('Pending')
+
+      await expect(registryPage.rowByConsentId(pending.consentId)).toBeVisible()
+      await expect(registryPage.rowByConsentId(active.consentId)).toHaveCount(0)
+    })
+
+    test('02.02.06 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -156,7 +194,7 @@ test.describe('Admin consent registry (UI)', () => {
   })
 
   test.describe('Validation violations', () => {
-    test('02.02.06 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
+    test('02.02.07 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -178,7 +216,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(row.getByRole('button', { name: 'Revoke' })).toHaveCount(0)
     })
 
-    test('02.02.07 - The admin detail page offers no action at all for a Pending consent', async ({
+    test('02.02.08 - The admin detail page offers no action at all for a Pending consent', async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -198,7 +236,7 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(consentAdminPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
     })
 
-    test('02.02.08 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
+    test('02.02.09 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
       consentAdminPage,
     }) => {
       const detailPage = new ConsentDetailPage(consentAdminPage, 'admin')
@@ -206,6 +244,36 @@ test.describe('Admin consent registry (UI)', () => {
       await expect(detailPage.loadFailedMessage).toBeVisible()
       await detailPage.backButton.click()
       await expect(consentAdminPage).toHaveURL(/\/administration\/consents$/)
+    })
+
+    test('02.02.10 - Searching by a non-existent consent id shows the load-failed message, not the empty-results one', async ({
+      consentAdminPage,
+    }) => {
+      // Unlike subjectId/serviceId (which go through the real list-filter API), a Consent ID
+      // search does a direct GET-by-ID (see useAdminConsentListQuery in
+      // useAdminConsentQueries.ts) - confirmed by actually running this: a non-existent id 404s,
+      // which the query surfaces as a load failure, never as "no results". A truncated/partial
+      // id would 404 the same way, so there's no separate "partial match" case to test here,
+      // unlike serviceId's real substring-vs-exact distinction (see the equivalent self-service
+      // test).
+      const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+      await registryPage.goto()
+      await registryPage.searchByConsentId('00000000-0000-0000-0000-000000000000')
+      await expect(registryPage.loadFailedMessage).toBeVisible()
+    })
+
+    test('02.02.11 - A subject/service filter matching nothing shows the empty-results message', async ({
+      consentAdminPage,
+    }) => {
+      // Unlike Consent ID (see the test above), subjectId/serviceId go through the real
+      // list-filter API, so a non-match here legitimately produces "no results", not an error.
+      const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+      await registryPage.goto()
+      await registryPage.filterBySubjectAndService(
+        `no-such-subject-${Date.now().toString()}`,
+        `no-such-service-${Date.now().toString()}`,
+      )
+      await expect(registryPage.emptyStateMessage).toBeVisible()
     })
   })
 })

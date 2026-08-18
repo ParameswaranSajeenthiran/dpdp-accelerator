@@ -88,4 +88,14 @@ export class AdminConsentRegistryPage {
   get emptyStateMessage(): Locator {
     return this.page.getByText('No consents found for the selected filters.')
   }
+
+  /**
+   * Shown by the registry TABLE itself (distinct from ConsentDetailPage.loadFailedMessage) when
+   * a Consent ID search 404s - useAdminConsentListQuery does a direct GET-by-ID for consentId
+   * (not a list filter like subjectId/serviceId), so a non-existent id surfaces as a load
+   * failure, never as "no results".
+   */
+  get loadFailedMessage(): Locator {
+    return this.page.getByText('Unable to load consents right now.')
+  }
 }

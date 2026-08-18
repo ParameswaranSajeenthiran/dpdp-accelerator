@@ -1,16 +1,12 @@
 # Consents, Purposes & Elements — Test Plan
 
-Documents what actually runs today across three categories under `tests/`: 4 functional spec
-files (39 tests) split between `01-consent-catalog-management/` (Elements, Purposes) and
-`02-consent-lifecycle/` (self-service and admin consent registries), plus `99-demo-data/` holding
-one demo-journey spec (1 test) and one seed-only spec (1 non-functional operation) — neither part
-of the regression suite. Scope for this round is the UI layer only — no
+Documents what actually runs today across four categories under `tests/`: 6 functional spec
+files (48 tests) split between `01-consent-catalog-management/` (Elements, Purposes),
+`02-consent-lifecycle/` (self-service and admin consent registries), and `03-authorization/`
+(route-level access control, sidebar visibility per persona), plus `99-demo-data/` holding one
+demo-journey spec (1 test) and one seed-only spec (1 non-functional operation) — neither part of
+the regression suite. Scope for this round is the UI layer only — no
 `consents-server-api`/`consents-bff-api` layer yet (see `README.md`).
-
-> **Note:** `authorization.spec.ts` (route-authorization checks for a Data Principal hitting
-> `/purposes`, `/elements`, `/administration/consents` without the consent-admin role) is not
-> currently present in the working tree. If it comes back, its 3 tests slot back in unchanged —
-> see git history for its last content.
 
 ## Creation strategy per entity
 
@@ -86,14 +82,15 @@ the admin API. This file only drives the Data Principal's own read/approve/rejec
 3. Revoking an Active consent from the list moves it to Revoked and the Revoke action disappears from that row.
 4. Approving from the detail page works the same as approving from the list.
 5. Detail page renders subject, service, and expandable purpose → element structure.
-6. State filter (e.g. "Pending") narrows the list to matching rows only; Clear resets the service search box.
+6. State filter (e.g. "Pending") narrows the list to matching rows only; Clear resets both the service search box and the state filter itself back to "All" (re-checked by re-narrowing to the same service id, since the unbounded unfiltered list can't be asserted against directly in this shared environment).
 7. Searching by exact service id finds the matching consent.
 
 **Validation / violations**
 1. Unknown consent id → load-failed message, Back returns to `/consents`.
 2. A Rejected consent's detail page offers no Approve/Reject/Revoke action.
 3. A service-id search matching nothing shows the empty-results message.
-4. A different Data Principal cannot open another user's consent by guessing its URL — load-failed message instead. *(Skips itself if `TEST_DATA_PRINCIPAL_2_USERNAME`/`PASSWORD` aren't set.)*
+4. A service search for only a substring of a real service id finds nothing — the `serviceId` filter is an exact match against the server, not a substring/contains match, confirmed empirically (a direct API call with a substring returned zero results).
+5. A different Data Principal cannot open another user's consent by guessing its URL — load-failed message instead. *(Skips itself if `TEST_DATA_PRINCIPAL_2_USERNAME`/`PASSWORD` aren't set.)*
 
 ## `02-consent-lifecycle/02.02-admin-registry.spec.ts` — Admin consent registry (UI, Consent Admin)
 
@@ -108,12 +105,15 @@ the admin API, all on the `consentAdminPage` fixture.
 2. Admin can revoke an Active consent from the list.
 3. Filtering by exact consent id shows only that consent and disables the state filter.
 4. Advanced subject + service filters narrow the list; both render as active filter chips; Clear resets them.
-5. Admin detail page for an Active consent shows Revoke but never Approve or Reject.
+5. Combining the state filter with the advanced subject/service filters narrows the list further — unlike Consent ID, subject/service don't disable the state filter (only `filters.consentId` does, per `AdminConsentFilters.tsx`).
+6. Admin detail page for an Active consent shows Revoke but never Approve or Reject.
 
 **Validation / violations**
 1. A Pending consent's list row shows no Approve action and no Revoke action.
 2. A Pending consent's admin detail page offers no action at all.
 3. Unknown consent id → load-failed message, Back returns to `/administration/consents`.
+4. Searching by a non-existent Consent ID shows the *load-failed* message, not the empty-results one — a Consent ID search does a direct GET-by-ID (`useAdminConsentListQuery`), not a list filter like subjectId/serviceId, so a non-existent id 404s rather than legitimately returning zero results. Confirmed by actually running the test — the original assumption (partial/no-match id → empty-results message) was wrong.
+5. A subject/service filter matching nothing shows the empty-results message — these do go through the real list-filter API, so a non-match here is a legitimate "no results", unlike Consent ID above.
 
 ---
 

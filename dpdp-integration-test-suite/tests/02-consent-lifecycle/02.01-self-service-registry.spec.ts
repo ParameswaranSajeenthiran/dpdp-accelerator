@@ -197,6 +197,13 @@ test.describe('Consent self-service registry (UI)', () => {
 
       await registryPage.clearFilters()
       await expect(registryPage.serviceSearch).toHaveValue('')
+
+      // Re-narrow to just these two seeded consents to check the state filter was actually reset
+      // to "All" too, not just the service box - the unfiltered list itself is unbounded and
+      // paginated in this shared environment, so a specific row's visibility there can't be
+      // asserted reliably (same caveat as browsing vs. searching by id elsewhere in this suite).
+      await registryPage.searchByService(serviceId)
+      await expect(registryPage.rowByConsentId(active.consentId)).toBeVisible()
     })
 
     test('02.01.07 - Searching by the exact service id finds the matching consent', async ({
@@ -263,7 +270,32 @@ test.describe('Consent self-service registry (UI)', () => {
       await expect(registryPage.emptyStateMessage).toBeVisible()
     })
 
-    test("02.01.11 - A different Data Principal cannot open another user's consent by its URL", async ({
+    test('02.01.11 - A service search for only a partial match finds nothing', async ({
+      dataPrincipalPage,
+      consentAdminPage,
+      consentAdminConsentApi,
+      consentCleanupTracker,
+    }) => {
+      const { serviceId } = await seedConsent(
+        consentAdminPage,
+        consentAdminConsentApi,
+        consentCleanupTracker,
+        env.dataPrincipal.username,
+        'ACTIVE',
+      )
+
+      // The serviceId filter is an exact match against the server, not a substring/contains match
+      // like the Elements/Purposes catalog's name search - confirmed empirically (a direct API
+      // call with a substring returned zero results), not documented anywhere.
+      const partialServiceId = serviceId.slice(serviceId.indexOf('-') + 1, serviceId.lastIndexOf('-'))
+
+      const registryPage = new ConsentRegistryPage(dataPrincipalPage)
+      await registryPage.goto()
+      await registryPage.searchByService(partialServiceId)
+      await expect(registryPage.emptyStateMessage).toBeVisible()
+    })
+
+    test("02.01.12 - A different Data Principal cannot open another user's consent by its URL", async ({
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
