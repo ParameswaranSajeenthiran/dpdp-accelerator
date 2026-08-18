@@ -95,6 +95,42 @@ describe('AdminConsentRegistryPage', () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '10' })
   })
 
+  it('renders purpose names when the BFF has expanded list rows with detail', async () => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        totalResults: 1,
+        links: [],
+        Consents: [
+          {
+            id: 'db0759de-c098-4f44-b78d-6718226db8b2',
+            subjectId: 'admin',
+            serviceId: 'dpdp-portal-spike',
+            state: 'ACTIVE',
+            timestamp: 1785833928316,
+            purposes: [
+              {
+                id: 'purpose-1',
+                name: 'marketing-spike',
+                type: 'CONSENT',
+                versionId: 'version-1',
+                version: '1.0.0',
+                elements: [],
+              },
+            ],
+          },
+        ],
+      }),
+    })
+
+    renderAdminPage()
+
+    expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Purposes' })).toBeInTheDocument()
+  })
+
   it('pages forward with the after cursor taken from links', async () => {
     vi.stubGlobal('fetch', fetchMock)
     fetchMock.mockResolvedValue({

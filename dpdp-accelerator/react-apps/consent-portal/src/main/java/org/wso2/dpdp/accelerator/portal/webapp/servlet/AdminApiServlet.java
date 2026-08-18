@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.portal.webapp.servlet;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +27,9 @@ import org.wso2.dpdp.accelerator.portal.webapp.client.IdentityServerClient;
 import org.wso2.dpdp.accelerator.portal.webapp.util.HttpUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 import javax.servlet.annotation.WebServlet;
@@ -89,6 +94,11 @@ public class AdminApiServlet extends AbstractProxyServlet {
                 + (query == null || query.isEmpty() ? "" : "?" + query);
 
         try {
+            if ("GET".equals(method) && ("/consents".equals(upstreamPath) || "/consents/".equals(upstreamPath))) {
+                listConsents(response, client, target);
+                return;
+            }
+
             IdentityServerClient.Result result;
             switch (method) {
                 case "GET":
@@ -125,6 +135,50 @@ public class AdminApiServlet extends AbstractProxyServlet {
             Thread.currentThread().interrupt();
             sendUpstreamFailure(response);
         }
+    }
+
+    /**
+     * The administrative consent list returns bare summaries with no purposes,
+     * unlike the self-service list which already expands each row. Each row on
+     * the page is expanded here with a concurrent detail lookup, mirroring
+     * {@code MyConsentsServlet#listConsents}, so purpose names show up in the
+     * admin list too.
+     */
+    private void listConsents(HttpServletResponse response, IdentityServerClient client, String target)
+            throws IOException, InterruptedException {
+
+        IdentityServerClient.Result listResult = client.get(target);
+        if (!listResult.isSuccess()) {
+            relayError(listResult, response);
+            return;
+        }
+
+        ObjectNode body = (ObjectNode) HttpUtil.mapper().readTree(listResult.getBody());
+        ArrayNode consents = body.withArray("Consents");
+        if (consents.isEmpty()) {
+            relay(listResult, response);
+            return;
+        }
+
+        List<CompletableFuture<IdentityServerClient.Result>> lookups = new ArrayList<>();
+        for (JsonNode consent : consents) {
+            lookups.add(client.getAsync(
+                    IdentityServerClient.CONSENT_MGT_V2_API + "/consents/" + consent.path("id").asText()));
+        }
+
+        ArrayNode enriched = HttpUtil.mapper().createArrayNode();
+        for (int i = 0; i < lookups.size(); i++) {
+            IdentityServerClient.Result detail = lookups.get(i).join();
+            if (detail.isSuccess()) {
+                enriched.add(HttpUtil.mapper().readTree(detail.getBody()));
+            } else {
+                // Fall back to the summary so one failed lookup cannot blank the page.
+                LOG.warn("Consent detail lookup failed with status " + detail.getStatus());
+                enriched.add(consents.get(i));
+            }
+        }
+        body.set("Consents", enriched);
+        HttpUtil.sendJson(response, HttpServletResponse.SC_OK, body);
     }
 
     /**

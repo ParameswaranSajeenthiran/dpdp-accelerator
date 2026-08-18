@@ -48,6 +48,7 @@ public final class PortalConfig {
     public static final String IDENTITY_SERVER_INTERNAL_BASE_URL = "identity.server.internal.base.url";
     public static final String OAUTH_CLIENT_ID = "oauth.client.id";
     public static final String OAUTH_CLIENT_SECRET = "oauth.client.secret";
+    public static final String HIDE_SELF_CONSENTS_FOR_ADMINS = "hide.self.consents.for.admins";
     public static final String OAUTH_SCOPES = "oauth.scopes";
     public static final String COOKIE_SECURE = "cookie.secure";
     public static final String ORG_ID_CLAIM = "org.id.claim";
@@ -114,6 +115,17 @@ public final class PortalConfig {
     public String getClientSecret() {
 
         return get(OAUTH_CLIENT_SECRET);
+    }
+
+    /**
+     * Whether users who can see the administrative consent view should have
+     * the self-service "My Consents" / "My Pending Consents" navigation
+     * hidden. Defaults to true: an admin's own consents are still reachable
+     * directly, this only declutters the sidebar.
+     */
+    public boolean isSelfConsentsHiddenForAdmins() {
+
+        return Boolean.parseBoolean(get(HIDE_SELF_CONSENTS_FOR_ADMINS, "true"));
     }
 
     public String getScopes() {

@@ -20,9 +20,36 @@ After running `merge.sh` (see `setup-guide.md`), each language's files are at:
 └── catalog.json   # wording for Purposes and Elements created in this deployment
 ```
 
-`<lang-code>` is one of: `en`, `hi`, `as`, `bn`, `brx`, `doi`, `gu`, `kn`, `ks`,
-`kok`, `mai`, `ml`, `mni`, `mr`, `ne`, `or`, `pa`, `sa`, `sat`, `sd`, `ta`,
-`te`, `ur`.
+Use this table to map the languages.
+
+| Code | Language | Native name |
+|------|----------|-------------|
+| `en` | English | English |
+| `hi` | Hindi | हिन्दी |
+| `as` | Assamese | অসমীয়া |
+| `bn` | Bengali | বাংলা |
+| `brx` | Bodo | बड़ो |
+| `doi` | Dogri | डोगरी |
+| `gu` | Gujarati | ગુજરાતી |
+| `kn` | Kannada | ಕನ್ನಡ |
+| `ks` | Kashmiri | کٲشُر |
+| `kok` | Konkani | कोंकणी |
+| `mai` | Maithili | मैथिली |
+| `ml` | Malayalam | മലയാളം |
+| `mni` | Manipuri (Meitei) | মৈতৈলোন্ |
+| `mr` | Marathi | मराठी |
+| `ne` | Nepali | नेपाली |
+| `or` | Odia | ଓଡ଼ିଆ |
+| `pa` | Punjabi | ਪੰਜਾਬੀ |
+| `sa` | Sanskrit | संस्कृतम् |
+| `sat` | Santali | ᱥᱟᱱᱛᱟᱲᱤ |
+| `sd` | Sindhi | سنڌي |
+| `ta` | Tamil | தமிழ் |
+| `te` | Telugu | తెలుగు |
+| `ur` | Urdu | اردو |
+
+This is the same list the portal's language switcher uses
+(`public/i18n/meta.json`)
 
 These are plain JSON files served directly by the Identity Server — editing
 one in place takes effect immediately, with no server restart. If a browser

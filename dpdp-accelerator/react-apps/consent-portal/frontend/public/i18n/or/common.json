@@ -24,13 +24,13 @@
     "ariaLabel": "ପ୍ରାଥମିକ ନେଭିଗେସନ୍",
     "dashboard": "ଡ୍ୟାସବୋର୍ଡ",
     "consent": "ସମ୍ମତି",
-    "allConsents": "ସମସ୍ତ ସମ୍ମତି",
-    "pendingConsents": "ବକେୟା ସମ୍ମତି",
+    "allConsents": "ମୋର ସମ୍ମତି",
+    "pendingConsents": "ମୋର ଅପେକ୍ଷାରତ ସମ୍ମତିଗୁଡ଼ିକ",
     "catalog": "ବ୍ୟାଖ୍ୟାଗୁଡ଼ିକ",
     "purposes": "ଉଦ୍ଦେଶ୍ୟଗୁଡ଼ିକ",
     "elements": "ଉପାଦାନଗୁଡ଼ିକ",
     "administration": "ପ୍ରଶାସନ",
-    "adminConsents": "ସମ୍ମତିଗୁଡ଼ିକ",
+    "adminConsents": "ସମସ୍ତ ସମ୍ମତି",
     "nominations": "ନାମାଙ୍କନ",
     "nomineeActivation": "ନୋମିନୀ ସକ୍ରିୟକରଣ",
     "myComplaints": "ମୋର ଅଭିଯୋଗ",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "ଆପଣଙ୍କର ସମସ୍ତ ସମ୍ମତି ପ୍ରକାର ଅନୁଯାୟୀ ବର୍ଗୀକୃତ",
     "noTypes": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସମ୍ମତି ପ୍ରକାର ଉପଲବ୍ଧ ନାହିଁ.",
     "viewPending": "ସମସ୍ତ ବକେୟା ସମ୍ମତି ଦେଖନ୍ତୁ",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "ସେବା ଅନୁସାରେ ସମ୍ମତି ଭଙ୍ଗ",
+    "serviceBreakdownSubtitle": "ଆପଣଙ୍କର ସମସ୍ତ ସମ୍ମତି ଅନୁରୋଧ ସେବା ଦ୍ୱାରା ଗୋଷ୍ଠୀଭୁକ୍ତ କରାଯାଇଛି |",
+    "noServices": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସେବା ଉପଲବ୍ଧ ନାହିଁ।"
   },
   "adminConsents": {
     "title": "ସମ୍ମତିଗୁଡ଼ିକ",
@@ -87,9 +87,10 @@
       "groupIds": "ଗ୍ରୁପ୍ ID ଗୁଡ଼ିକ",
       "commaSeparatedUsers": "ଏକାଧିକ ଉପଯୋଗକର୍ତ୍ତା ID କୁ କମା ଦ୍ୱାରା ଅଲଗା କରନ୍ତୁ",
       "active": "ସକ୍ରିୟ ଫିଲ୍ଟର୍",
-      "subjectIdHelp": "Username of the data subject",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "serviceId": "ସେବା",
+      "removeConsentIdForState": "ରାଜ୍ୟ ଫିଲ୍ଟର୍ ବ୍ୟବହାର କରିବାକୁ ସମ୍ମତି ID ଫିଲ୍ଟର୍ ଅପସାରଣ କରନ୍ତୁ |",
+      "propertyFilterLabel": "ସମ୍ମତି ସମ୍ପତ୍ତି",
+      "removeConsentIdForSubject": "ଉପଭୋକ୍ତା ID ଫିଲ୍ଟର୍ ବ୍ୟବହାର କରିବା ପାଇଁ ସମ୍ମତି ID ଫିଲ୍ଟର୍ ହଟାନ୍ତୁ।"
     }
   },
   "consentRegistry": {
@@ -139,7 +140,7 @@
         "eventType": "ଇଭେଣ୍ଟ ପ୍ରକାର",
         "date": "ତାରିଖ",
         "time": "ସମୟ",
-        "state": "State"
+        "state": "ରାଜ୍ୟ"
       },
       "lifecycle": {
         "tableAriaLabel": "ସମ୍ମତି ଜୀବନଚକ୍ର",
@@ -161,13 +162,14 @@
         "required": "ଆବଶ୍ୟକ",
         "optional": "ଇଚ୍ଛାଧୀନ"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "service": "ସେବା",
+      "elementCount": "{{count}} ଉପାଦାନଗୁଡ଼ିକ",
+      "elementCount_one": "{{count}} ଉପାଦାନ",
+      "elementCount_other": "{{count}} ଉପାଦାନଗୁଡ଼ିକ",
+      "noAuthorizations": "ଏହି ସମ୍ମତି ପାଇଁ କୌଣସି ଅନୁମତି ରେକର୍ଡ କରାଯାଇ ନାହିଁ।",
+      "noElements": "ଏହି ଉଦ୍ଦେଶ୍ୟ ସହିତ କୌଣସି ଉପାଦାନ ଜଡିତ ନାହିଁ।",
+      "noPurposes": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ଉଦ୍ଦେଶ୍ୟ ଜଡ଼ିତ ନାହିଁ।",
+      "noProperties": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ସମ୍ପତ୍ତି ଜଡ଼ିତ ନାହିଁ।"
     },
     "actions": {
       "view": "ଦେଖନ୍ତୁ",
@@ -193,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} ରେ {{elementLabel}} ପାଇଁ ଅନୁମତି ଟୋଗଲ୍ କରନ୍ତୁ",
         "loading": "ସମ୍ମତି ବିବରଣୀ ଲୋଡ୍ ହେଉଛି...",
         "noMandatory": "ଏହି ସମ୍ମତି ପାଇଁ କୌଣସି ବାଧ୍ୟତାମୂଳକ ଆବଶ୍ୟକତା ନାହିଁ.",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "ଅନୁମୋଦନ ସମ୍ମତିକୁ ମଞ୍ଜୁର କରନ୍ତୁ |",
+        "message": "ଆପଣ ନିଶ୍ଚିତ କି ଆପଣ ଏହି ସମ୍ମତିକୁ ଅନୁମୋଦନ କରିବାକୁ ଚାହୁଁଛନ୍ତି?",
+        "note": "ଏହି ସମ୍ମତି ଦ୍ୱାରା ଅନୁରୋଧ କରାଯାଇଥିବା ପ୍ରତ୍ୟେକ ଉଦ୍ଦେଶ୍ୟ ଏବଂ ଉପାଦାନ ପାଇଁ ଅନୁଦାନ ମଞ୍ଜୁର କରାଯାଉଛି।"
       },
       "rejection": {
         "title": "ପ୍ରତ୍ୟାଖ୍ୟାନ ନିଶ୍ଚିତ କରନ୍ତୁ",
@@ -240,8 +242,8 @@
       "endDateAriaLabel": "ଶେଷ ତାରିଖ ଫିଲ୍ଟର୍",
       "clear": "ସବୁ ସଫା କରନ୍ତୁ",
       "clearAriaLabel": "ସମସ୍ତ ଫିଲ୍ଟର୍ ସଫା କରନ୍ତୁ",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "ସେବା ଅନୁସାରେ ଖୋଜନ୍ତୁ |",
+      "state": "ରାଜ୍ୟ"
     },
     "messages": {
       "loading": "ସମ୍ମତିଗୁଡ଼ିକ ଲୋଡ୍ ହେଉଛି...",
@@ -267,8 +269,8 @@
         "updated": "ଅପଡେଟ୍ ହୋଇଛି",
         "expiration": "ମିଆଦ ଶେଷ",
         "actions": "କାର୍ଯ୍ୟଗୁଡ଼ିକ",
-        "service": "Service",
-        "state": "State"
+        "service": "ସେବା",
+        "state": "ରାଜ୍ୟ"
       }
     }
   },
@@ -292,10 +294,10 @@
       "view": "ଦେଖନ୍ତୁ",
       "viewElement": "{{name}} ଦେଖନ୍ତୁ",
       "viewPurpose": "{{name}} ଦେଖନ୍ତୁ",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "ସଂସ୍କରଣ ଯୋଡନ୍ତୁ",
+      "reset": "ପୁନଃ ସେଟ୍ କରନ୍ତୁ",
+      "search": "ସନ୍ଧାନ କରନ୍ତୁ",
+      "setLatest": "ସର୍ବଶେଷ ଭାବରେ ସେଟ୍ କରନ୍ତୁ |"
     },
     "fields": {
       "actions": "କାର୍ଯ୍ୟଗୁଡ଼ିକ",
@@ -326,7 +328,7 @@
       "schema": "ସ୍କିମା (Schema)",
       "type": "ପ୍ରକାର",
       "version": "ସଂସ୍କରଣ",
-      "latestVersion": "Latest version"
+      "latestVersion": "ନୂତନ ସଂସ୍କରଣ"
     },
     "help": {
       "commaSeparatedGroups": "ଏକାଧିକ ଗ୍ରୁପ୍ ID କୁ କମା ଦ୍ୱାରା ଅଲଗା କରନ୍ତୁ",
@@ -372,22 +374,22 @@
         "nameLabel": "ନାମ",
         "nameRequired": "ନାମ ଆବଶ୍ୟକ ଅଟେ.",
         "displayNameLabel": "ପ୍ରଦର୍ଶନ ନାମ",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "ଏକ ଅନନ୍ୟ ମେସିନ୍ ପରିଚୟକାରୀ, ଉଦାହରଣ ସ୍ୱରୂପ \"email-address\"।",
+        "submitting": "ସୃଷ୍ଟି କରାଯାଉଛି...",
+        "duplicateName": "{{name}} ନାମକ ଏକ ଉପାଦାନ ପୂର୍ବରୁ ବିଦ୍ୟମାନ ଅଛି। ଏକ ଭିନ୍ନ ନାମ ବାଛନ୍ତୁ।",
+        "createFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ଉପାଦାନଟି ସୃଷ୍ଟି ହୋଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "propertyDuplicateKey": "ଏହି କି (key) ଏକାଧିକ ଥର ବ୍ୟବହୃତ ହୋଇଛି। ପ୍ରତ୍ୟେକ ପ୍ରପର୍ଟି ପାଇଁ ଏକ ଭିନ୍ନ କି (key) ବ୍ୟବହାର କରନ୍ତୁ।",
+        "propertyKeyRequired": "ଏକ କୀ ଯୋଡ଼ନ୍ତୁ, ନଚେତ୍ ଏହି ମୂଲ୍ୟ ସେଭ୍ ହେବ ନାହିଁ।"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "ଉପାଦାନକୁ ଡିଲିଟ୍ କରନ୍ତୁ",
+        "message": "ଆପଣ ନିଶ୍ଚିତ କି ଆପଣ \"{{name}}\" କୁ ଡିଲିଟ୍ କରିବାକୁ ଚାହୁଁଛନ୍ତି?",
+        "note": "ଏହି କାର୍ଯ୍ୟଟି ସ୍ଥାୟୀ ଏବଂ ଏହାକୁ ପୂର୍ବାବସ୍ଥାକୁ ଫେରାଇ ନିଆଯାଇପାରିବ ନାହିଁ।",
+        "confirm": "ଉପାଦାନକୁ ଡିଲିଟ୍ କରନ୍ତୁ",
+        "conflict": "ଏହି ଉପାଦାନଟିକୁ ଅପସାରଣ କରାଯାଇପାରିବ ନାହିଁ କାରଣ ଏହା ଏବେବି ଏକ ବା ଏକାଧିକ ଉଦ୍ଦେଶ୍ୟରେ ବ୍ୟବହୃତ ହେଉଛି। ପ୍ରଥମେ ଏହାକୁ ସେହି ଉଦ୍ଦେଶ୍ୟଗୁଡ଼ିକରୁ ବାହାର କରନ୍ତୁ।",
+        "deleteFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ଉପାଦାନଟିକୁ ଡିଲିଟ୍ କରିହେଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "କୌଣସି ଉପାଦାନ \"{{term}}\" ସହିତ ମେଳ ଖାଉ ନାହିଁ।"
     },
     "purposes": {
       "add": "ଉଦ୍ଦେଶ୍ୟ ଯୋଡନ୍ତୁ",
@@ -417,38 +419,38 @@
         "typeLabel": "ପ୍ରକାର",
         "versionLabel": "ସଂସ୍କରଣ",
         "elementsLabel": "ଉପାଦାନଗୁଡ଼ିକ",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "ଟାଇପ୍ କରିବା ଆବଶ୍ୟକ।",
+        "typeHelp": "ଉଦ୍ଦେଶ୍ୟର ପ୍ରକାର, ଉଦାହରଣ ସ୍ୱରୂପ \"ନୀତି\"।",
+        "versionRequired": "ସଂସ୍କରଣ ଆବଶ୍ୟକ।",
+        "versionHelp": "ଏକ ସଂସ୍କରଣ ପରିଚୟକାରୀ, ଉଦାହରଣ ସ୍ୱରୂପ \"v1\"।",
+        "submitting": "ତିଆରି କରାଯାଉଛି...",
+        "createFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ଉଦ୍ଦେଶ୍ୟ ସୃଷ୍ଟି କରାଯାଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।"
       },
       "versionForm": {
         "versionLabel": "ସଂସ୍କରଣ",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "ସଂସ୍କରଣ ଯୋଡନ୍ତୁ",
+        "versionRequired": "ସଂସ୍କରଣ ଆବଶ୍ୟକ।",
+        "versionDuplicate": "ଏହି ଉଦ୍ଦେଶ୍ୟର ଏହି ନାମ ସହିତ ପୂର୍ବରୁ ଏକ ସଂସ୍କରଣ ଅଛି।",
+        "versionHelp": "ଏକ ସଂସ୍କରଣ ପରିଚୟକାରୀ, ଉଦାହରଣ ସ୍ୱରୂପ \"v2\"।",
+        "setAsLatestLabel": "ନୂତନ ସଂସ୍କରଣ ଭାବରେ ସେଟ୍ କରନ୍ତୁ |",
+        "submitting": "ତିଆରି କରାଯାଉଛି...",
+        "createFailed": "କିଛି ଭୁଲ୍ ହେଲା ଏବଂ ସଂସ୍କରଣ ତିଆରି କରାଯାଇପାରିଲା ନାହିଁ | ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ |"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "ଉଦ୍ଦେଶ୍ୟ ଲିଭାନ୍ତୁ",
+        "message": "ଆପଣ ନିଶ୍ଚିତ କି ଆପଣ \"{{name}}\" କୁ ଡିଲିଟ୍ କରିବାକୁ ଚାହୁଁଛନ୍ତି?",
+        "note": "ଏହି କାର୍ଯ୍ୟଟି ସ୍ଥାୟୀ ଏବଂ ଏହାକୁ ପୂର୍ବାବସ୍ଥାକୁ ଫେରାଇ ଆଣିହେବ ନାହିଁ।",
+        "confirm": "ଉଦ୍ଦେଶ୍ୟ ଲିଭାନ୍ତୁ",
+        "conflict": "ଏହି ଉଦ୍ଦେଶ୍ୟକୁ ଉଚ୍ଛେଦ କରାଯାଇପାରିବ ନାହିଁ କାରଣ ଏହା ଏବେବି ଏକ କିମ୍ବା ଏକାଧିକ ସମ୍ମତି ଦ୍ୱାରା ଉଲ୍ଲେଖ କରାଯାଇଛି।",
+        "deleteFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ଉଦ୍ଦେଶ୍ୟକୁ ଡିଲିଟ୍ କରିହେଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "ଆପଣ ନିଶ୍ଚିତ କି ଆପଣ \"{{version}} ସଂସ୍କରଣ\" କୁ ଡିଲିଟ୍ କରିବାକୁ ଚାହୁଁଛନ୍ତି?",
+        "note": "ଏହି କାର୍ଯ୍ୟଟି ସ୍ଥାୟୀ ଏବଂ ଏହାକୁ ପୂର୍ବାବସ୍ଥାକୁ ଫେରାଇ ନିଆଯାଇପାରିବ ନାହିଁ।",
+        "deleteFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ସଂସ୍କରଣଟିକୁ ଡିଲିଟ୍ କରିହେଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+        "latestBlocked": "ନୂତନ ସଂସ୍କରଣଟିକୁ ଡିଲିଟ୍ କରାଯାଇପାରିବ ନାହିଁ। ଅନ୍ୟ ଏକ ସଂସ୍କରଣକୁ ପ୍ରଥମ ନୂତନ ସଂସ୍କରଣ ଭାବରେ ସେଟ୍ କରନ୍ତୁ।"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "ଏହି ସନ୍ଧାନ ସହିତ କୌଣସି ଉଦ୍ଦେଶ୍ୟ ମେଳ ଖାଉ ନାହିଁ।"
     },
     "details": {
       "definition": "ବ୍ୟାଖ୍ୟା",
@@ -474,7 +476,7 @@
       "noPurposeElements": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଉପାଦାନ ଯୋଡା ଯାଇନାହିଁ. ଉଦ୍ଦେଶ୍ୟ ସୃଷ୍ଟି କରିବାକୁ ଅତିକମରେ ଗୋଟିଏ ଉପାଦାନ ଯୋଡନ୍ତୁ.",
       "noVersions": "କୌଣସି ସଂସ୍କରଣ ଉପଲବ୍ଧ ନାହିଁ.",
       "versionsLoadFailed": "ବର୍ତ୍ତମାନ ସଂସ୍କରଣ ଇତିହାସ ଲୋଡ୍ କରିବାରେ ଅସମର୍ଥ.",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "ଏହି ସଂସ୍କରଣକୁ ସର୍ବଶେଷ ଭାବରେ ସେଟ୍ କରିବାରେ ଅସମର୍ଥ। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।"
     },
     "validation": {
       "duplicateElements": "ପ୍ରତ୍ୟେକ ଉପାଦାନ କେବଳ ଥରେ ଅନ୍ତର୍ଭୁକ୍ତ କରାଯାଇପାରିବ.",
@@ -938,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "ପୃଷ୍ଠା ପ୍ରତି ଧାଡ଼ି",
+    "previous": "ପୂର୍ବ",
+    "next": "ପରବର୍ତ୍ତୀ"
   }
 }

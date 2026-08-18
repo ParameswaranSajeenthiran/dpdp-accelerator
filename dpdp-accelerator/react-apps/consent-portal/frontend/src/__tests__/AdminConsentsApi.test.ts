@@ -18,6 +18,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildConsentPropertyFilter,
   fetchAdminConsentByID,
   fetchAdminConsents,
   revokeAdminConsent,
@@ -75,6 +76,32 @@ describe('administrative consent API', () => {
       limit: '10',
       before: 'MQ==',
     })
+  })
+
+  it('passes purposeId and a custom property filter to the BFF', async () => {
+    mockJSONResponse({ totalResults: 0, links: [], Consents: [] })
+
+    await fetchAdminConsents({
+      limit: 10,
+      purposeId: 'purpose-1',
+      filter: 'properties.dataCategory eq "personal"',
+    })
+
+    const [requestUrl] = fetchMock.mock.calls[0] ?? []
+    expect(Object.fromEntries(new URL(String(requestUrl)).searchParams)).toEqual({
+      limit: '10',
+      purposeId: 'purpose-1',
+      filter: 'properties.dataCategory eq "personal"',
+    })
+  })
+
+  it('builds a properties.<key> eq "<value>" filter only when both key and value are set', () => {
+    expect(buildConsentPropertyFilter('dataCategory', 'personal')).toBe(
+      'properties.dataCategory eq "personal"',
+    )
+    expect(buildConsentPropertyFilter(' region ', ' EU ')).toBe('properties.region eq "EU"')
+    expect(buildConsentPropertyFilter('dataCategory', '')).toBeUndefined()
+    expect(buildConsentPropertyFilter('', 'personal')).toBeUndefined()
   })
 
   it('reads next and previous cursors out of the returned links', async () => {

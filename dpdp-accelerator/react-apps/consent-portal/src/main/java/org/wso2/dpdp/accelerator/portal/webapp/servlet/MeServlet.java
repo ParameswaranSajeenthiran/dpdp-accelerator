@@ -72,6 +72,7 @@ public class MeServlet extends HttpServlet {
         ObjectNode body = HttpUtil.mapper().createObjectNode();
         body.put("userId", user.getUserId());
         body.put("organizationId", user.getOrganizationId() == null ? "carbon.super" : user.getOrganizationId());
+        body.put("hideSelfConsentsForAdmins", config.isSelfConsentsHiddenForAdmins());
         ArrayNode scopes = body.putArray("scopes");
         ScopeMapper.toPortalScopes(user.getScopes()).forEach(scopes::add);
         HttpUtil.sendJson(response, HttpServletResponse.SC_OK, body);

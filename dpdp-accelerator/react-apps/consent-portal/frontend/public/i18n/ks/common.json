@@ -24,13 +24,13 @@
     "ariaLabel": "اہم نِویگیشَن",
     "dashboard": "ڈیش بورڈ",
     "consent": "رضامندی",
-    "allConsents": "تمامی رضامندیہِ",
-    "pendingConsents": "مُعَلَّق رضامندیہِ",
+    "allConsents": "میٲنۍ رضامندی",
+    "pendingConsents": "میٚون زیرِ غور رضامندی",
     "catalog": "تَعریفات",
     "purposes": "مقاصِد",
     "elements": "عَناصِر",
     "administration": "اِنتِظامِیہ",
-    "adminConsents": "رضامندیہِ",
+    "adminConsents": "سٲری رٲضی",
     "nominations": "نامزَدگِیہِ",
     "nomineeActivation": "نامزَد شَخصَس اِفتاہ/فَعّال کَرُن",
     "myComplaints": "مَیانی شِکایات",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "تُہنٛزِ تمام رضامندیہِ قِسمَس طابِق تَقسیم کَرنہٕ آمِت",
     "noTypes": "کانہہ تہِ رضامندی قِسم چھُنہٕ وُنِی مَوجود۔",
     "viewPending": "ساری مُعَلَّق رضامندیہِ وُچھیو",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "خدمتہٕ حسابہٕ رضامندی ہُنٛد ٹوٹُن",
+    "serviceBreakdownSubtitle": "تُہٕنٛدۍ تمام رضامندِی چھِ درخواست کَرنہٕ آمٕژ خٔدماتَن مُطٲبِق گروپ کَرنہٕ آمٕژ۔",
+    "noServices": "کانٛہہ تہِ خٔدمات چھِنہٕ وٗنیُک تام دٔستیاب۔"
   },
   "adminConsents": {
     "title": "رضامندیہِ",
@@ -87,9 +87,10 @@
       "groupIds": "گروپ آئی ڈی",
       "commaSeparatedUsers": "مُتَعَدِّد صارف آئی ڈی کاما (,) سِیِتھ الگ کِریو",
       "active": "فَعّال فِلتَر",
-      "subjectIdHelp": "Username of the data subject",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "serviceId": "خدمت",
+      "removeConsentIdForState": "رِیاستی فلٹر استعمال کرنہٕ خٲطرٕ کٔڑِو رضامندی ہُنٛد آیی ڈی فلٹر۔",
+      "propertyFilterLabel": "رضامندی ہٕنٛز جٲیِداد",
+      "removeConsentIdForSubject": "یوزر آیی ڈی فلٹر استعمال کرنہٕ خٲطرٕ کٔڑِو کنسنٹ آیی ڈی فلٹر۔"
     }
   },
   "consentRegistry": {
@@ -139,7 +140,7 @@
         "eventType": "ایوینٹ قِسم",
         "date": "تاریخ",
         "time": "وَقت",
-        "state": "State"
+        "state": "رِیاسَتھ"
       },
       "lifecycle": {
         "tableAriaLabel": "رضامندی سائیکل",
@@ -161,13 +162,14 @@
         "required": "لازمی",
         "optional": "اِختیاری"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "service": "خدمت",
+      "elementCount": "{{count}} عنٲصر",
+      "elementCount_one": "{{count}} عنصر",
+      "elementCount_other": "{{count}} عنٲصر",
+      "noAuthorizations": "امہ رضامندی خٲطرٕ چھنہٕ کانٛہہ اجازت نامہٕ درج کرنہٕ آمت۔",
+      "noElements": "امہِ مقصدس سۭتۍ چھنہٕ کانٛہہ تہِ عنصر وابستہٕ۔",
+      "noPurposes": "امہِ رضامندی سۭتۍ چھنہٕ کانٛہہ مقصد وابستہٕ۔",
+      "noProperties": "امہ رضامندی سۭتۍ چھنہٕ کانٛہہ خاصیت وابستہٕ۔"
     },
     "actions": {
       "view": "وُچھیو",
@@ -193,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} مَنٛز {{elementLabel}} باپَتھ اِجازَت بَدلِیو",
         "loading": "رضامندی تَفصِیلات لوڈ گَچھان...",
         "noMandatory": "اَتھ رضامندی مَنٛز چھنہٕ کانہہ لازمی ضَرورَت۔",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "رضامندی منظور کٔرِو۔",
+        "message": "کیاہ ژٕ چھِکھ پوٗرٕ پٲٹھۍ یِژھان زِ ژٕ کٔرِو یہِ رضامندی منظور؟",
+        "note": "امہِ رضامندی ہندِ ذریعہٕ منگنہٕ آمٕتہِ پرٛیتھ مقصد تہٕ عنصرٕ خٲطرٕ گرانٹ منظور کران۔"
       },
       "rejection": {
         "title": "رد کَرنٕچ تَصدِیق کِریو",
@@ -240,8 +242,8 @@
       "endDateAriaLabel": "آخری تاریخ فِلتَر",
       "clear": "ساری صاف کِریو",
       "clearAriaLabel": "ساری فِلتَر صاف کِریو",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "سروسہِ سٕتہِ ژھٲرِو",
+      "state": "رِیاسَتھ"
     },
     "messages": {
       "loading": "رضامندیہِ لوڈ گَچھان...",
@@ -267,8 +269,8 @@
         "updated": "اپڈیٹ",
         "expiration": "میعاد ختم",
         "actions": "اِقدامات",
-        "service": "Service",
-        "state": "State"
+        "service": "خدمت",
+        "state": "رِیاسَتھ"
       }
     }
   },
@@ -292,10 +294,10 @@
       "view": "وُچھیو",
       "viewElement": "وُچھیو {{name}}",
       "viewPurpose": "وُچھیو {{name}}",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "اِضٲفی ؤرجَن شٲمِل کٔرِو",
+      "reset": "دوبارٕ سیٹ کٔرِو",
+      "search": "تلاش کٔرِو",
+      "setLatest": "تازٕ ترین پٲٹھۍ سیٹ کٔرِو۔"
     },
     "fields": {
       "actions": "اِقدامات",
@@ -326,7 +328,7 @@
       "schema": "سکِیما",
       "type": "قِسم",
       "version": "ورژن",
-      "latestVersion": "Latest version"
+      "latestVersion": "تازٕ ترین ورژن"
     },
     "help": {
       "commaSeparatedGroups": "مُتَعَدِّد گروپ آئی ڈی کاما (,) سِیِتھ الگ کِریو",
@@ -372,22 +374,22 @@
         "nameLabel": "ناو",
         "nameRequired": "ناو چھُ لازمی۔",
         "displayNameLabel": "وُچھن وول ناو",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "اکھ منفرد مشین شناخت کرن وول، مِثالے \"ای میل-ایڈریس\"۔",
+        "submitting": "بناونہٕ یِوان...",
+        "duplicateName": "\"{{name}}\" ناوُک اکھ عنصر چھُ گۄڈَے موٗجوٗد۔ اکھ بیٛاکھ ناو ژٲرِو۔",
+        "createFailed": "کٲنٛہہ گٔیہ غلط تہٕ عنصر ہیٚکہِ نہٕ بناونہٕ یِتھ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوٗشش۔",
+        "propertyDuplicateKey": "یہِ کُنٛجی چھےٚ اَکہِ کھۄتہٕ زیٛادٕ لَٹہِ اِستعمال گَژھان۔ پرٛٮ۪تھ کٲم خٲطرٕ کٔرِو اَکھ مُختٔلِف کُنٛجی اِستعمال۔",
+        "propertyKeyRequired": "اکھ کُنجی کٔرِو شٲمِل، یا یہِ قۭمتھ یی نہٕ بچاونہٕ۔"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "عنصر حذف کٔرِو",
+        "message": "کیاہ ژٕ چھکھ پوٗرٕ پٲٹھۍ یژھان زِ ژٕ کٔرِو \"{{name}}\" حذف؟",
+        "note": "یہِ عملہٕ چھٗ  مٗستقل تہٕ یہِ ہیٚکہِ نہٕ واپس اننہٕ یِتھ ۔",
+        "confirm": "عنصر حذف کٔرِو",
+        "conflict": "یہِ عنصر ہیٚکہِ نہٕ حذف کَرنہٕ یِتھ تِکیٛازِ یہِ چھُ وُنہِ تہِ اَکہِ یا زیٛادٕ مقصدَن خٲطرٕ اِستعمال گژھان۔ گۄڈٕ کٔرِو یہِ تِمَن مقصدَن منٛزٕ ہٹاو۔",
+        "deleteFailed": "کٲنٛہہ گٔژھ غلط تہٕ عنصر آو نہٕ حذف کرنہٕ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوشش۔"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "کانٛہہ تہِ عنصر چھُنہٕ \"{{term}}\" سۭتۍ میلان۔"
     },
     "purposes": {
       "add": "مَقصَد شامِل کِریو",
@@ -417,38 +419,38 @@
         "typeLabel": "قِسم",
         "versionLabel": "ورژن",
         "elementsLabel": "عَناصِر",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "ٹایپ چھُ ضروٗری۔",
+        "typeHelp": "مقصدُک قٕسٕم، مِثالے \"پالیسی\"۔",
+        "versionRequired": "ورجن چھُ ضروٗری۔",
+        "versionHelp": "اکھ ورژن شناخت کرن وول، مِثالے \"v1\"۔",
+        "submitting": "بناونہٕ یِوان...",
+        "createFailed": "کٲنٛہہ گٔیہ غلط تہٕ مقصد ہیٚکو نہٕ بناوتھ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوٗشش۔"
       },
       "versionForm": {
         "versionLabel": "ورژن",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "اِضٲفی ؤرِش شٲمِل کٔرِو",
+        "versionRequired": "ورجن چھُ ضروٗری۔",
+        "versionDuplicate": "امہِ مقصدس چھٗ گۄڈیہ امہِ ناوٗك اكھ صوُرت ۔",
+        "versionHelp": "اکھ ورژن شناخت کرن وول، مِثالے \"v2\"۔",
+        "setAsLatestLabel": "تازٕ ترین ورجن پٲٹھۍ سیٹ کٔرِو۔",
+        "submitting": "بناونہٕ یِوان...",
+        "createFailed": "کٮ۪نٛہہ گٔیہِ غلط تہٕ ؤرجن ہیٚکہِ نہٕ بناونہٕ یِتھ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوٗشش۔"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "مقصد حذف کٔرِو",
+        "message": "کیاہ ژٕ چھکھ پوٗرٕ پٲٹھۍ یژھان زِ ژٕ کٔرِو \"{{name}}\" حذف؟",
+        "note": "یہِ عملہٕ چھٗ مٗستقل تہٕ یہِ ہیكہِ نہٕ  واپس نِنہٕ یِتھ ۔",
+        "confirm": "مقصد حذف کٔرِو",
+        "conflict": "یہ مقصد ہیکو نہٕ حذف کٔرتھ تکیاز یہ چھ وٕنہ تہ اکہ یا زیادٕ رضامندی سۭتۍ حوالہٕ دنہٕ یوان۔",
+        "deleteFailed": "کٲنٛہہ گٔیہ غلط تہٕ مقصد ہٮ۪کو نہٕ حذف کٔرِتھ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوشش۔"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "کیاہ چھُکھ توہہِ یٔقیٖنی زِ توہہِ چھِو ورژن \"{{version}}\" حذف کرُن یژھان؟",
+        "note": "یہِ عملہٕ چھٗ مٗستقل تہٕ یہِ ہیكہِ نہٕ  واپس نِنہٕ یِتھ ۔",
+        "deleteFailed": "کٲنٛہہ گٔیہ غلط تہٕ ورژن ہٮ۪کو نہٕ حذف کٔرِتھ۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوشش۔",
+        "latestBlocked": "تازٕ ترین ورژن ہیکو نہٕ حذف کٔرتھ۔ بیٛاکھ ورژن کٔرِو گۄڈٕ تازہ ترین قٲیِم۔"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "کانٛہہ تہِ مقصد چھُنہٕ اَتھ تلاشَس سۭتۍ مِلان۔"
     },
     "details": {
       "definition": "تَعریف",
@@ -474,7 +476,7 @@
       "noPurposeElements": "کانہہ تہِ عُنصُر چھُنہٕ شامِل۔ مَقصَد بَناوَن باپَتھ کِریو کم از کم اَکھ عُنصُر شامِل۔",
       "noVersions": "کانہہ تہِ ورژن چھُنہٕ مَوجود۔",
       "versionsLoadFailed": "ورژن تَوارِیخ لوڈ گَچھنَس مَنٛز آئِیہِ ناکامی۔",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "یہِ ؤرجن چھُنہٕ تازہ ترین قٲیِم کَرنہٕ یِوان۔ مہربٲنی کٔرِتھ کٔرِو دوبارٕ کوٗشش۔"
     },
     "validation": {
       "duplicateElements": "پریتھ عُنصُر ہیکِ صِرف اَکہِ لَٹہِ شامِل گَچھیتھ۔",
@@ -938,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "فی صَفہٕ قطارٕ",
+    "previous": "پٔتِم",
+    "next": "اَمہِ پتہٕ"
   }
 }

@@ -24,13 +24,13 @@
     "ariaLabel": "प्राथमिक-सञ्चालनम्",
     "dashboard": "नियन्त्रणपट्टिका",
     "consent": "सहमतिः",
-    "allConsents": "सर्वाः सहमतयः",
-    "pendingConsents": "लम्बमानाः सहमतयः",
+    "allConsents": "मम अनुमतयः",
+    "pendingConsents": "मम प्रतीक्षिताः अनुमतयः",
     "catalog": "परिभाषाः",
     "purposes": "उद्देश्यानि",
     "elements": "तत्त्वानि",
     "administration": "प्रशासनम्",
-    "adminConsents": "सहमतयः",
+    "adminConsents": "सर्वे अनुमतयः",
     "nominations": "नामांकनानि",
     "nomineeActivation": "नामित-सक्रियनम्",
     "myComplaints": "मम आक्षेपाः",
@@ -72,9 +72,9 @@
     "typeBreakdownSubtitle": "प्रकारानुसारं भवतः सर्वाः सहमतयः",
     "noTypes": "अद्यापि केऽपि सहमति-प्रकाराः उपलब्धाः न सन्ति।",
     "viewPending": "सर्वाः लम्बमानाः सहमतयः पश्यन्तु",
-    "serviceBreakdown": "Consent breakdown by service",
-    "serviceBreakdownSubtitle": "All of your consents grouped by requesting service",
-    "noServices": "No services are available yet."
+    "serviceBreakdown": "सेवानुसारं संमतिभङ्गः",
+    "serviceBreakdownSubtitle": "भवत्याः सर्वाः अनुमतयः सेवायाः याचया समूहीकृताः।",
+    "noServices": "अद्यापि कापि सेवा उपलभ्यते इति न।"
   },
   "adminConsents": {
     "title": "सहमतयः",
@@ -87,9 +87,10 @@
       "groupIds": "समूह-परिचयाः",
       "commaSeparatedUsers": "एकाधिक-उपयोक्तृ-परिचयान् अल्पविरामेन पृथक् कुर्वन्तु",
       "active": "सक्रियाः शोधकाः",
-      "subjectIdHelp": "Username of the data subject",
-      "serviceId": "Service",
-      "removeConsentIdForState": "Remove the Consent ID filter to use the state filter."
+      "serviceId": "सेवा",
+      "removeConsentIdForState": "राज्य-शोधकस्य उपयोगार्थं संमति-अभिज्ञान-शोधकम् निष्कासय।",
+      "propertyFilterLabel": "अनुमोदनसम्पत्तिः",
+      "removeConsentIdForSubject": "उपयोक्तृ-अभिज्ञान-अन्तराधिकारम् उपयोक्तुं संमति-अभिज्ञान-अन्तराधिकारम् निष्कासयतु।"
     }
   },
   "consentRegistry": {
@@ -139,7 +140,7 @@
         "eventType": "घटना-प्रकारः",
         "date": "दिनाङ्कः",
         "time": "समयः",
-        "state": "State"
+        "state": "राज्यम्"
       },
       "lifecycle": {
         "tableAriaLabel": "सहमति-जीवनचक्रम्",
@@ -161,13 +162,14 @@
         "required": "आवश्यकम्",
         "optional": "वैकल्पिकम्"
       },
-      "service": "Service",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
-      "noAuthorizations": "No authorizations are recorded for this consent.",
-      "noElements": "No elements are associated with this purpose.",
-      "noPurposes": "No purposes are associated with this consent."
+      "service": "सेवा",
+      "elementCount": "{{count}} तत्त्वानि",
+      "elementCount_one": "{{count}} तत्त्वम्",
+      "elementCount_other": "{{count}} तत्त्वानि",
+      "noAuthorizations": "अस्याः संमत्याः कृते किमपि अनुमोदनं न अभिलेखितम्।",
+      "noElements": "अनेन प्रयोजनार्थं न केपि तत्त्वानि सम्बद्धाः सन्ति।",
+      "noPurposes": "अनेन संमत्या सह कापि उद्देशः सम्बद्धा नास्ति।",
+      "noProperties": "अनेन संमत्या सह कापि सम्पत्तिः सम्बद्धा नास्ति।"
     },
     "actions": {
       "view": "पश्यन्तु",
@@ -193,9 +195,9 @@
         "toggleWithDetails": "{{purposeLabel}} मध्ये {{elementLabel}} कृते अनुमतिं परिवर्तयन्तु",
         "loading": "सहमति-विवरणं भार्यते...",
         "noMandatory": "अस्यै सहमत्यै कापि अनिवार्य-आवश्यकता नास्ति।",
-        "confirm": "Approve Consent",
-        "message": "Are you sure you want to approve this consent?",
-        "note": "Approving grants every purpose and element requested by this consent."
+        "confirm": "अनुमतिं स्वीकरोतु।",
+        "message": "किं भवती निश्चितं एतत् अनुमोदनं कर्तुम् इच्छति?",
+        "note": "अनेन संमत्या प्रार्थितं सर्वं प्रयोजनं तत्त्वं च अनुमोदयन्ती।"
       },
       "rejection": {
         "title": "अस्वीकारं प्रमाणीकुरुत",
@@ -240,8 +242,8 @@
       "endDateAriaLabel": "समाप्ति-दिनाङ्क-शोधकः",
       "clear": "सर्वं मार्जयन्तु",
       "clearAriaLabel": "सर्वान् शोधकान् मार्जयन्तु",
-      "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "serviceSearchPlaceholder": "सेवायाः अन्वेषणम्",
+      "state": "राज्यम्"
     },
     "messages": {
       "loading": "सहमतयः भार्यन्ते...",
@@ -267,8 +269,8 @@
         "updated": "अद्यतनीकृतम्",
         "expiration": "समाप्तिः",
         "actions": "कार्याणि",
-        "service": "Service",
-        "state": "State"
+        "service": "सेवा",
+        "state": "राज्यम्"
       }
     }
   },
@@ -292,10 +294,10 @@
       "view": "पश्यन्तु",
       "viewElement": "{{name}} पश्यन्तु",
       "viewPurpose": "{{name}} पश्यन्तु",
-      "addVersion": "Add Version",
-      "reset": "Reset",
-      "search": "Search",
-      "setLatest": "Set as latest"
+      "addVersion": "संस्करणं योजय।",
+      "reset": "पुनर्स्थापनम्",
+      "search": "अन्वेषणम्",
+      "setLatest": "नवीनतमरूपेण स्थाप्यताम्।"
     },
     "fields": {
       "actions": "कार्याणि",
@@ -326,7 +328,7 @@
       "schema": "रूपरेखा",
       "type": "प्रकारः",
       "version": "संस्करणम्",
-      "latestVersion": "Latest version"
+      "latestVersion": "नवीनतमं संस्करणम्"
     },
     "help": {
       "commaSeparatedGroups": "एकाधिक-समूह-परिचयान् अल्पविरामेन पृथक् कुर्वन्तु",
@@ -372,22 +374,22 @@
         "nameLabel": "नाम",
         "nameRequired": "नाम आवश्यकम् अस्ति।",
         "displayNameLabel": "प्रदर्शित-नाम",
-        "nameHelp": "A unique machine identifier, for example \"email-address\".",
-        "submitting": "Creating...",
-        "duplicateName": "An element named \"{{name}}\" already exists. Choose a different name.",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
-        "propertyDuplicateKey": "This key is used more than once. Use a different key for each property.",
-        "propertyKeyRequired": "Add a key, or this value will not be saved."
+        "nameHelp": "एकं विशिष्टं यन्त्र-अभिज्ञापकं, यथा \"ईमेल्-अड्रेस\"।",
+        "submitting": "सृजति...",
+        "duplicateName": "{{name}} इति नाम्ना एकं तत्त्वं पूर्वमेव विद्यते। भिन्नं नाम चिनुत।",
+        "createFailed": "किञ्चित् त्रुटितं, तत् तत्त्वं निर्मातुं न शक्यते स्म। कृपया पुनः प्रयत्स्व।",
+        "propertyDuplicateKey": "इयं कुञ्चिका एकवारं अधिकं प्रयुज्यते। प्रत्येकस्य गुणधर्मस्य कृते भिन्नकुञ्चिकां उपयुज्यताम्।",
+        "propertyKeyRequired": "कुञ्चिकां योजयतु, अन्यथा एतत् मूल्यं न रक्षितं भविष्यति।"
       },
       "delete": {
-        "title": "Delete Element",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Element",
-        "conflict": "This element can't be deleted because it's still used by one or more purposes. Remove it from those purposes first.",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "title": "घटकं निष्कासय।",
+        "message": "किं भवती निश्चितं \"{{name}}\" इत्येतत् निष्कासयितुम् इच्छति?",
+        "note": "एषा क्रिया शाश्वती अस्ति, अपेक्षया च न निवारयितुं शक्यते।",
+        "confirm": "घटकं निष्कासय।",
+        "conflict": "इदं तत्त्वं न निष्कासनीयम्, यतो हि इदम् एकस्य वा अधिकस्य वा प्रयोजनस्य कृते उपयुज्यते। तत् प्रथमं तेभ्यः प्रयोजनभ्यः निष्कासय।",
+        "deleteFailed": "किञ्चित् त्रुटितं, तत् तत्त्वं च न निष्कासितुं शक्यते स्म। कृपया पुनः प्रयत्स्व।"
       },
-      "emptySearch": "No elements match \"{{term}}\"."
+      "emptySearch": "\"{{term}}\" इत्यनेन सह न कापि तत्त्वानि मेलन्ति।"
     },
     "purposes": {
       "add": "उद्देश्यं योजयन्तु",
@@ -417,38 +419,38 @@
         "typeLabel": "प्रकारः",
         "versionLabel": "संस्करणम्",
         "elementsLabel": "तत्त्वानि",
-        "typeRequired": "Type is required.",
-        "typeHelp": "Type of the purpose, e.g. \"Policy\".",
-        "versionRequired": "Version is required.",
-        "versionHelp": "A version identifier, e.g. \"v1\".",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "typeRequired": "प्रकारः अपेक्षितः।",
+        "typeHelp": "उद्देश्यस्य प्रकारः, यथा \"नीतिः\"।",
+        "versionRequired": "संस्करणम् आवश्यकम्।",
+        "versionHelp": "संस्करण-सूचकः, यथा \"v1\"।",
+        "submitting": "सृजति...",
+        "createFailed": "किञ्चित् त्रुटितं, उद्देश्यं च निर्मातुं न शक्यते स्म। कृपया पुनः प्रयत्स्व।"
       },
       "versionForm": {
         "versionLabel": "संस्करणम्",
-        "title": "Add Version",
-        "versionRequired": "Version is required.",
-        "versionDuplicate": "This purpose already has a version with this name.",
-        "versionHelp": "A version identifier, e.g. \"v2\".",
-        "setAsLatestLabel": "Set as the latest version",
-        "submitting": "Creating...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "title": "संस्करणं योजय।",
+        "versionRequired": "संस्करणम् आवश्यकम्।",
+        "versionDuplicate": "अस्य उद्देश्यस्य नाम्नः संस्करणं पूर्वमेव वर्तते।",
+        "versionHelp": "संस्करण-परिचायकः, यथा \"v2\"।",
+        "setAsLatestLabel": "नवीनतमसंस्करणरूपेण स्थाप्यताम्।",
+        "submitting": "सृजति...",
+        "createFailed": "किञ्चित् त्रुटितं, संस्करणं निर्मातुं न शक्यते स्म। कृपया पुनः प्रयत्स्व।"
       },
       "delete": {
-        "title": "Delete Purpose",
-        "message": "Are you sure you want to delete \"{{name}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "confirm": "Delete Purpose",
-        "conflict": "This purpose can't be deleted because it's still referenced by one or more consents.",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "title": "उद्देश्यं विलोप्यताम्।",
+        "message": "किं भवती निश्चितं \"{{name}}\" इत्येतत् निष्कासयितुम् इच्छति?",
+        "note": "एषा क्रिया शाश्वती अस्ति, अपेक्षया च न निवारयितुं शक्यते।",
+        "confirm": "उद्देश्यं विलोप्यताम्।",
+        "conflict": "एषः उद्देश्यः न विलोपयितुं शक्यते यतः अद्यापि एकः वा अधिकाः अनुमत्याः सन्दर्भ्यन्ते।",
+        "deleteFailed": "किञ्चित् त्रुटितम्, उद्देश्यं च न विलोपयितुं शक्यते स्म। कृपया पुनः प्रयत्स्व।"
       },
       "versionDelete": {
-        "message": "Are you sure you want to delete version \"{{version}}\"?",
-        "note": "This action is permanent and cannot be undone.",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
-        "latestBlocked": "The latest version cannot be deleted. Set another version as latest first."
+        "message": "किं भवती निश्चितं संस्करणं \"{{version}}\" निष्कासयितुम् इच्छति?",
+        "note": "एषा क्रिया शाश्वती अस्ति, अपेक्षया च न निवारयितुं शक्यते।",
+        "deleteFailed": "किञ्चित् त्रुटितम्, संस्करणं च न निष्कासितुं शक्यते स्म। कृपया पुनः प्रयत्स्व।",
+        "latestBlocked": "नवीनतमं संस्करणं नाशयितुं न शक्यते। अपरं संस्करणं प्रथमं नवीनतमं यथा स्थापय।"
       },
-      "emptySearch": "No purposes match this search."
+      "emptySearch": "अस्याः अन्वेषणस्य कृते कोऽपि उद्देश्यः न मेलति।"
     },
     "details": {
       "definition": "परिभाषा",
@@ -474,7 +476,7 @@
       "noPurposeElements": "अद्यापि कानिपि तत्त्वानि न योजितानि। उद्देश्यं निर्मातुं न्यूनतमम् एकं तत्त्वं योजयन्तु।",
       "noVersions": "कानिचिदपि संस्करणाणि उपलब्धानि न सन्ति।",
       "versionsLoadFailed": "इदानीं संस्करण-इतिहासं भारयितुम् असमर्थः।",
-      "setLatestFailed": "Unable to set this version as the latest. Please try again."
+      "setLatestFailed": "इदं संस्करणं नवीनतमरूपेण स्थापयितुं न शक्यते। कृपया पुनः प्रयत्स्व।"
     },
     "validation": {
       "duplicateElements": "प्रत्येकं तत्त्वं केवलम् एकवारमेव समावेशयितुं शक्यते।",
@@ -938,8 +940,8 @@
     }
   },
   "pagination": {
-    "rowsPerPage": "Rows per page",
-    "previous": "Previous",
-    "next": "Next"
+    "rowsPerPage": "पृष्ठानुसारं पङ्क्तयः",
+    "previous": "पूर्वम्",
+    "next": "अग्रे"
   }
 }

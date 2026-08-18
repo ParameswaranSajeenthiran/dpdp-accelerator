@@ -121,7 +121,7 @@ describe('MainLayout', () => {
       'href',
       '/administration/consents',
     )
-    expect(within(breadcrumbs).getByText('Consents')).toHaveAttribute('aria-current', 'page')
+    expect(within(breadcrumbs).getByText('All Consents')).toHaveAttribute('aria-current', 'page')
   })
 
   it('decodes administrative consent IDs in breadcrumbs', () => {
@@ -129,11 +129,28 @@ describe('MainLayout', () => {
 
     const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
     expect(within(breadcrumbs).getByRole('link', { name: 'Administration' })).toBeInTheDocument()
-    expect(within(breadcrumbs).getByRole('link', { name: 'Consents' })).toHaveAttribute(
+    expect(within(breadcrumbs).getByRole('link', { name: 'All Consents' })).toHaveAttribute(
       'href',
       '/administration/consents',
     )
     expect(within(breadcrumbs).getByText('consent/123?draft')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+  })
+
+  it('shows My Consents for the self-service registry without a state filter', () => {
+    renderHeaderBreadcrumbs('/consents')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('My Consents')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('shows My Pending Consents for the self-service registry filtered to pending', () => {
+    renderHeaderBreadcrumbs('/consents?state=PENDING')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('My Pending Consents')).toHaveAttribute(
       'aria-current',
       'page',
     )
