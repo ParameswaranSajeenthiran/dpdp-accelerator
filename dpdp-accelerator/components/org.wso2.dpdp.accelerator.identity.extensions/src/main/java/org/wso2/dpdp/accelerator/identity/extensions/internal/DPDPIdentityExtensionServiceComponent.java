@@ -37,6 +37,7 @@ import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
@@ -171,5 +172,21 @@ public class DPDPIdentityExtensionServiceComponent {
     protected void unsetRealmService(RealmService realmService) {
 
         DPDPIdentityExtensionDataHolder.getInstance().setRealmService(null);
+    }
+
+    @Reference(
+            service = DPDPConfigurationService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConfigurationService"
+    )
+    protected void setConfigurationService(DPDPConfigurationService configurationService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(configurationService);
+    }
+
+    protected void unsetConfigurationService(DPDPConfigurationService configurationService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
     }
 }

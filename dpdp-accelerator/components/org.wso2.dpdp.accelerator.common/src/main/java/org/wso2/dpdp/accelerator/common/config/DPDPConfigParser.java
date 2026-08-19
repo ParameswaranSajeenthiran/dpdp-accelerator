@@ -1,0 +1,124 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.wso2.dpdp.accelerator.common.config;
+
+import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.OMException;
+import org.apache.axiom.om.impl.builder.StAXOMBuilder;
+import org.wso2.carbon.utils.CarbonUtils;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Stack;
+
+import javax.xml.stream.XMLStreamException;
+
+/**
+ * Config parser for {@code dpdp-accelerator.xml}. Mirrors the Financial Services accelerator's
+ * {@code FinancialServicesConfigParser}: read the XML file once into a flat,
+ * dot-joined-key {@code Map<String, Object>}, then expose typed getters with defaults over it.
+ */
+public final class DPDPConfigParser {
+
+    private static final Object LOCK = new Object();
+    private static DPDPConfigParser parser;
+
+    private final Map<String, Object> configuration = new HashMap<>();
+
+    private DPDPConfigParser() {
+
+        buildConfiguration();
+    }
+
+    public static DPDPConfigParser getInstance() {
+
+        synchronized (LOCK) {
+            if (parser == null) {
+                parser = new DPDPConfigParser();
+            }
+        }
+        return parser;
+    }
+
+    public Map<String, Object> getConfiguration() {
+
+        return Collections.unmodifiableMap(configuration);
+    }
+
+    private void buildConfiguration() {
+
+        File configXml = new File(CarbonUtils.getCarbonConfigDirPath(), DPDPCommonConstants.CONFIG_FILE_NAME);
+        try (InputStream inStream = openConfigFile(configXml)) {
+            StAXOMBuilder builder = new StAXOMBuilder(inStream);
+            readChildElements(builder.getDocumentElement(), new Stack<>());
+        } catch (IOException | XMLStreamException | OMException e) {
+            throw new DPDPCommonRuntimeException("Error occurred while building configuration from "
+                    + DPDPCommonConstants.CONFIG_FILE_NAME, e);
+        }
+    }
+
+    private InputStream openConfigFile(File configXml) throws IOException {
+
+        if (!configXml.exists()) {
+            throw new FileNotFoundException("DPDP accelerator configuration not found at: " + configXml);
+        }
+        return Files.newInputStream(configXml.toPath());
+    }
+
+    private void readChildElements(OMElement parent, Stack<String> nameStack) {
+
+        for (Iterator<OMElement> children = parent.getChildElements(); children.hasNext();) {
+            OMElement element = children.next();
+            nameStack.push(element.getLocalName());
+            String text = element.getText();
+            if (text != null && !text.trim().isEmpty()) {
+                configuration.put(String.join(".", nameStack), text.trim());
+            }
+            readChildElements(element, nameStack);
+            nameStack.pop();
+        }
+    }
+
+    private Optional<String> getConfigurationAsString(String key) {
+
+        return Optional.ofNullable((String) configuration.get(key));
+    }
+
+    public boolean isConsentPortalProvisioningEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public String getConsentPortalClientId() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_CLIENT_ID)
+                .orElse("DPDP_CONSENT_PORTAL");
+    }
+}

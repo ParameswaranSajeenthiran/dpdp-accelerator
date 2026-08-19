@@ -24,10 +24,11 @@ import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 
 /**
  * Singleton holder for the OSGi services this module's listener needs, populated by
- * {@link DPDPPortalExtensionsServiceComponent}.
+ * {@link DPDPIdentityExtensionServiceComponent}.
  */
 public final class DPDPIdentityExtensionDataHolder {
 
@@ -39,6 +40,7 @@ public final class DPDPIdentityExtensionDataHolder {
     private APIResourceManager apiResourceManager;
     private RoleManagementService roleManagementService;
     private RealmService realmService;
+    private DPDPConfigurationService configurationService;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -107,5 +109,15 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setRealmService(RealmService realmService) {
 
         this.realmService = realmService;
+    }
+
+    public DPDPConfigurationService getConfigurationService() {
+
+        return configurationService;
+    }
+
+    public void setConfigurationService(DPDPConfigurationService configurationService) {
+
+        this.configurationService = configurationService;
     }
 }

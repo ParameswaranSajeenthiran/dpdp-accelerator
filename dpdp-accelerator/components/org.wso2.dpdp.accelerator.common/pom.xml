@@ -27,23 +27,12 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.wso2.dpdp.accelerator.identity.extensions</artifactId>
-    <name>WSO2 DPDP Accelerator - Identity Extensions</name>
-    <description>Identity Server side extensions for the DPDP accelerator</description>
+    <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
+    <name>WSO2 DPDP Accelerator - Common</name>
+    <description>Generic configuration and shared utilities for the DPDP accelerator</description>
     <packaging>bundle</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon</groupId>
-            <artifactId>org.wso2.carbon.core</artifactId>
-            <version>${carbon.kernel.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.utils</artifactId>
@@ -51,63 +40,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon</groupId>
-            <artifactId>org.wso2.carbon.user.core</artifactId>
-            <version>${carbon.user.core.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon</groupId>
-            <artifactId>org.wso2.carbon.user.api</artifactId>
-            <version>${carbon.user.api.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.commons</groupId>
-            <artifactId>org.wso2.carbon.tenant.common</artifactId>
-            <version>${carbon.tenant.common.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.application.common</artifactId>
-            <version>${carbon.identity.application.common.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.core</artifactId>
-            <version>${carbon.identity.core.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.application.mgt</artifactId>
-            <version>${carbon.identity.application.mgt.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.role.v2.mgt.core</artifactId>
-            <version>${carbon.identity.role.mgt.core.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.api.resource.mgt</artifactId>
-            <version>${carbon.identity.api.resource.mgt.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
-            <artifactId>org.wso2.carbon.identity.oauth</artifactId>
-            <version>${carbon.identity.inbound.auth.oauth.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.organization.management.core</groupId>
-            <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
-            <version>${carbon.identity.organization.mgt.service.version}</version>
+            <groupId>org.apache.ws.commons.axiom.wso2</groupId>
+            <artifactId>axiom</artifactId>
+            <version>${axiom.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -158,7 +93,6 @@
                         <exclude>**/*Constants.class</exclude>
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
-                        <exclude>**/*TenantMgtListener.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -205,42 +139,19 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Private-Package>
-                            org.wso2.dpdp.accelerator.identity.extensions.internal
+                            org.wso2.dpdp.accelerator.common.internal
                         </Private-Package>
                         <Export-Package>
-                            !org.wso2.dpdp.accelerator.identity.extensions.internal,
-                            org.wso2.dpdp.accelerator.identity.extensions.*;version="${project.version}",
+                            !org.wso2.dpdp.accelerator.common.internal,
+                            org.wso2.dpdp.accelerator.common.*;version="${project.version}",
                         </Export-Package>
                         <Import-Package>
-                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
-
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.component.annotations;version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.logging;version="${commons.logging.imp.pkg.version.range}",
-
-                            org.wso2.carbon.context.*;version="${carbon.kernel.version}",
-                            org.wso2.carbon.utils.multitenancy;version="${carbon.kernel.version}",
-                            org.wso2.carbon.user.core;version="${carbon.user.core.version}",
-                            org.wso2.carbon.user.core.service;version="${carbon.user.core.version}",
-                            org.wso2.carbon.user.api;version="0",
-
-                            org.wso2.carbon.stratos.common.beans;version="${carbon.tenant.common.version}",
-                            org.wso2.carbon.stratos.common.exception;version="${carbon.tenant.common.version}",
-                            org.wso2.carbon.stratos.common.listeners;version="${carbon.tenant.common.version}",
-
-                            org.wso2.carbon.identity.application.common.model;version="${carbon.identity.application.common.version}",
-                            org.wso2.carbon.identity.application.common;version="${carbon.identity.application.common.version}",
-                            org.wso2.carbon.identity.application.mgt;version="${carbon.identity.application.mgt.version}",
-                            org.wso2.carbon.identity.role.v2.mgt.core;version="${carbon.identity.role.mgt.core.version}",
-                            org.wso2.carbon.identity.role.v2.mgt.core.model;version="${carbon.identity.role.mgt.core.version}",
-                            org.wso2.carbon.identity.role.v2.mgt.core.exception;version="${carbon.identity.role.mgt.core.version}",
-                            org.wso2.carbon.identity.api.resource.mgt;version="${carbon.identity.api.resource.mgt.version}",
-                            org.wso2.carbon.identity.oauth;version="${carbon.identity.inbound.auth.oauth.version}",
-                            org.wso2.carbon.identity.oauth.dto;version="${carbon.identity.inbound.auth.oauth.version}",
-                            org.wso2.carbon.identity.core.util;version="${carbon.identity.core.version}",
-                            org.wso2.carbon.identity.organization.management.service.util;version="${carbon.identity.organization.mgt.service.version}",
-                            org.wso2.carbon.identity.organization.management.service.exception;version="${carbon.identity.organization.mgt.service.version}",
+                            org.apache.axiom.*;version="0",
+                            org.wso2.carbon.utils;version="${carbon.kernel.version}",
                             *
                         </Import-Package>
                         <_dsannotations>*</_dsannotations>

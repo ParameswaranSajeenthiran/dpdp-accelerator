@@ -56,6 +56,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
 
     private static final String TENANT_DOMAIN = "tenant-a.com";
     private static final String APPLICATION_ID = "app-1234";
+    private static final String CLIENT_ID = "DPDP_CONSENT_PORTAL";
 
     @Mock
     private ApplicationManagementService applicationManagementService;
@@ -111,13 +112,13 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         String callbackUrl = "https://localhost:9443/t/" + TENANT_DOMAIN + "/consent-portal,"
                 + "https://localhost:9443/t/" + TENANT_DOMAIN + "/consent-portal/";
 
-        DPDPConsentPortalAppProvisioningUtil.registerOAuthApplication(TENANT_DOMAIN, callbackUrl);
+        DPDPConsentPortalAppProvisioningUtil.registerOAuthApplication(TENANT_DOMAIN, callbackUrl, CLIENT_ID);
 
         ArgumentCaptor<OAuthConsumerAppDTO> dtoCaptor = ArgumentCaptor.forClass(OAuthConsumerAppDTO.class);
         verify(oAuthAdminService).registerOAuthApplicationData(dtoCaptor.capture());
         OAuthConsumerAppDTO dto = dtoCaptor.getValue();
         assertEquals(dto.getApplicationName(), DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME);
-        assertEquals(dto.getOauthConsumerKey(), DPDPConsentPortalAppProvisioningUtil.CLIENT_ID);
+        assertEquals(dto.getOauthConsumerKey(), CLIENT_ID);
         assertEquals(dto.getCallbackUrl(), callbackUrl);
         assertTrue(dto.getPkceMandatory());
         assertEquals(dto.getTokenBindingType(), "cookie");
@@ -136,7 +137,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         when(applicationManagementService.createApplication(any(ServiceProvider.class), eq(TENANT_DOMAIN),
                 eq("admin"))).thenReturn(APPLICATION_ID);
 
-        String applicationId = DPDPConsentPortalAppProvisioningUtil.createApplication(tenantInfoBean);
+        String applicationId = DPDPConsentPortalAppProvisioningUtil.createApplication(tenantInfoBean, CLIENT_ID);
 
         assertEquals(applicationId, APPLICATION_ID);
 
@@ -145,7 +146,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         ServiceProvider serviceProvider = spCaptor.getValue();
         assertEquals(serviceProvider.getApplicationName(), DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME);
         assertEquals(serviceProvider.getInboundAuthenticationConfig().getInboundAuthenticationRequestConfigs()[0]
-                .getInboundAuthKey(), DPDPConsentPortalAppProvisioningUtil.CLIENT_ID);
+                .getInboundAuthKey(), CLIENT_ID);
         assertTrue(serviceProvider.getLocalAndOutBoundAuthenticationConfig().isSkipConsent());
         assertTrue(serviceProvider.getLocalAndOutBoundAuthenticationConfig().isSkipLogoutConsent());
     }

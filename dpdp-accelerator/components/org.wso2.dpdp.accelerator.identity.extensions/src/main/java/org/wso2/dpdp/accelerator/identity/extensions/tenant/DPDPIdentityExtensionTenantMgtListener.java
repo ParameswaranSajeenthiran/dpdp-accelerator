@@ -25,6 +25,7 @@ import org.wso2.carbon.identity.organization.management.service.util.Organizatio
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
+import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.List;
 
@@ -51,12 +52,32 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
         }
     }
 
+    @Override
+    public void onTenantUpdate(TenantInfoBean tenantInfoBean) {
+
+        // A failure here must not block the tenant update the admin actually asked for. This
+        // also doubles as the recovery path: if the portal application was deleted, deleting it
+        // and then updating the tenant (through this same hook) recreates it and its roles,
+        // since provisionTenant()'s own existence check will now see nothing there.
+        try {
+            provisionTenant(tenantInfoBean);
+        } catch (Exception e) {
+            LOG.error("Error provisioning the DPDP Consent Portal for tenant: "
+                    + tenantInfoBean.getTenantDomain(), e);
+        }
+    }
+
     /**
      * Provisions the portal application and its roles for one tenant. Shared between
-     * {@link #onTenantCreate} and the service component's own super-tenant bootstrap, since
-     * {@code onTenantCreate} never fires for the super tenant.
+     * {@link #onTenantCreate}, {@link #onTenantUpdate}, and the service component's own
+     * super-tenant bootstrap, since {@code onTenantCreate} never fires for the super tenant.
      */
     public static void provisionTenant(TenantInfoBean tenantInfoBean) throws Exception {
+
+        if (!DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
+                .isConsentPortalProvisioningEnabled()) {
+            return;
+        }
 
         String tenantDomain = tenantInfoBean.getTenantDomain();
         if (DPDPConsentPortalAppProvisioningUtil.applicationExists(tenantDomain)) {
@@ -79,11 +100,6 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }
-    }
-
-    @Override
-    public void onTenantUpdate(TenantInfoBean tenantInfoBean) {
-
     }
 
     @Override

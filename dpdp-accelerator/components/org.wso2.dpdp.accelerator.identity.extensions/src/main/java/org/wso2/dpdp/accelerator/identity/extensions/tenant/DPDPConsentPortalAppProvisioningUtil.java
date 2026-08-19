@@ -55,7 +55,6 @@ import java.util.List;
 public final class DPDPConsentPortalAppProvisioningUtil {
 
     static final String APPLICATION_NAME = "DPDP Consent Portal";
-    static final String CLIENT_ID = "DPDP_CONSENT_PORTAL";
     private static final String USERNAME_CLAIM_URI = "http://wso2.org/claims/username";
     private static final String AUTHORIZED_API_POLICY = "RBAC";
     private static final String[] GRANT_TYPES = {"authorization_code", "refresh_token"};
@@ -79,8 +78,10 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             IdentityApplicationManagementException {
 
         String tenantDomain = tenantInfoBean.getTenantDomain();
-        registerOAuthApplication(tenantDomain, buildCallbackUrl(tenantDomain));
-        return createApplication(tenantInfoBean);
+        String clientId = DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
+                .getConsentPortalClientId();
+        registerOAuthApplication(tenantDomain, buildCallbackUrl(tenantDomain), clientId);
+        return createApplication(tenantInfoBean, clientId);
     }
 
     public static List<String> authorizeConsentManagementAPIs(String applicationId, String tenantDomain)
@@ -110,12 +111,12 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         return authorizedScopeNames;
     }
 
-    static void registerOAuthApplication(String tenantDomain, String callbackUrl)
+    static void registerOAuthApplication(String tenantDomain, String callbackUrl, String clientId)
             throws IdentityOAuthAdminException {
 
         OAuthConsumerAppDTO dto = new OAuthConsumerAppDTO();
         dto.setApplicationName(APPLICATION_NAME);
-        dto.setOauthConsumerKey(CLIENT_ID);
+        dto.setOauthConsumerKey(clientId);
         dto.setOauthConsumerSecret(OAuthUtil.getRandomNumber());
         dto.setCallbackUrl(callbackUrl);
         dto.setGrantTypes(String.join(" ", GRANT_TYPES));
@@ -143,7 +144,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         return portalUrl + "," + portalUrl + "/";
     }
 
-    static String createApplication(TenantInfoBean tenantInfoBean)
+    static String createApplication(TenantInfoBean tenantInfoBean, String clientId)
             throws IdentityApplicationManagementException {
 
         ServiceProvider serviceProvider = new ServiceProvider();
@@ -151,7 +152,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         serviceProvider.setDescription("Self-service and administrative portal for DPDP consent management.");
 
         InboundAuthenticationRequestConfig requestConfig = new InboundAuthenticationRequestConfig();
-        requestConfig.setInboundAuthKey(CLIENT_ID);
+        requestConfig.setInboundAuthKey(clientId);
         requestConfig.setInboundAuthType("oauth2");
         requestConfig.setInboundConfigType("standardAPP");
         InboundAuthenticationConfig inboundAuthenticationConfig = new InboundAuthenticationConfig();
