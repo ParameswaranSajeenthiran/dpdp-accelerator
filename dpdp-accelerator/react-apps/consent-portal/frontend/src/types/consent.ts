@@ -76,9 +76,9 @@ export interface ConsentDetail {
 /**
  * Consents returned by the administrative list endpoint.
  *
- * The Identity Server's raw list rows carry no purposes; the BFF expands
- * each row with a detail lookup before this reaches the SPA, so `purposes`
- * is present in practice even though the upstream summary lacks it.
+ * The Identity Server's raw list rows carry no purposes; `fetchAdminConsents`
+ * expands each row on the page with a detail lookup, so `purposes` is present
+ * in practice - except on a row whose lookup failed.
  */
 export interface ConsentSummary {
   id: string
@@ -137,7 +137,8 @@ export interface ConsentSearchResponse {
 export interface ConsentListQueryParams {
   limit: number
   offset: number
-  consentStatuses?: string
+  /** One state, or undefined for all: the filter is a single-select. */
+  state?: ConsentState
   serviceId?: string
 }
 

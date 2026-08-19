@@ -35,7 +35,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AdminConsentRegistryFilters } from '../../../types/consent'
 import { CONSENT_STATES } from '../../../types/consent'
-import { getConsentStateLabelKey } from '../../consent-registry/utils/statusChip'
+import { getConsentStateLabelKey } from '../../my-consents/utils/statusChip'
 import {
   EMPTY_ADMIN_CONSENT_FILTERS,
   normalizeAdminConsentFilters,

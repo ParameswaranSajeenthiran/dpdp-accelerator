@@ -25,6 +25,7 @@ import App from './App'
 import i18n, { i18nReady } from './i18n/i18n'
 import LocaleProvider from './i18n/LocaleProvider'
 import queryClient from './utils/queryClient'
+import { runtimeBasePath } from './utils/basePath'
 
 const rootElement = document.getElementById('root')
 
@@ -41,7 +42,9 @@ createRoot(rootElement).render(
     <I18nextProvider i18n={i18n}>
       <LocaleProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          {/* Detected at runtime: the same build is served at /consent-portal
+              and at /t/<tenant>/consent-portal. */}
+          <BrowserRouter basename={runtimeBasePath()}>
             <App />
           </BrowserRouter>
         </QueryClientProvider>

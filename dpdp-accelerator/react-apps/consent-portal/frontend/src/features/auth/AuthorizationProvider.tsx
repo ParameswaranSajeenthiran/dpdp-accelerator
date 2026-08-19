@@ -18,7 +18,7 @@
 
 import { useCallback, useMemo, type ReactNode } from 'react'
 import type { CurrentUser } from '../../types/auth'
-import type { PortalScope } from '../../utils/portalScopes'
+import type { ScopeRequirement } from '../../utils/scopes'
 import AuthorizationContext from './authorizationContext'
 
 interface AuthorizationProviderProps {
@@ -30,20 +30,20 @@ export function AuthorizationProvider({
   currentUser,
   children,
 }: AuthorizationProviderProps): React.JSX.Element {
-  const grantedScopes = useMemo(
-    () => new Set<PortalScope>(currentUser.scopes),
-    [currentUser.scopes],
-  )
+  const grantedScopes = useMemo(() => new Set<string>(currentUser.scopes), [currentUser.scopes])
   const hasScope = useCallback(
-    (scope: PortalScope): boolean => grantedScopes.has(scope),
+    (requirement: ScopeRequirement): boolean =>
+      requirement.some((scope) => grantedScopes.has(scope)),
     [grantedScopes],
   )
   const hasAnyScope = useCallback(
-    (scopes: readonly PortalScope[]): boolean => scopes.some((scope) => grantedScopes.has(scope)),
+    (requirements: readonly ScopeRequirement[]): boolean =>
+      requirements.some((requirement) => requirement.some((scope) => grantedScopes.has(scope))),
     [grantedScopes],
   )
   const hasAllScopes = useCallback(
-    (scopes: readonly PortalScope[]): boolean => scopes.every((scope) => grantedScopes.has(scope)),
+    (requirements: readonly ScopeRequirement[]): boolean =>
+      requirements.every((requirement) => requirement.some((scope) => grantedScopes.has(scope))),
     [grantedScopes],
   )
   const value = useMemo(

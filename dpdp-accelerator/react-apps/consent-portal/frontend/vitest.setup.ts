@@ -16,6 +16,10 @@
  * under the License.
  */
 
+/* eslint-disable max-classes-per-file -- this file is the test environment's
+   collection of unrelated browser stubs; each is one class and they have no
+   reason to live in separate files. */
+
 import '@testing-library/jest-dom/vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -53,6 +57,39 @@ vi.mock('i18next-http-backend', () => ({
   },
 }))
 
+/*
+ * jsdom implements neither web workers nor object URLs, and the auth SDK
+ * builds its worker from a blob while its module is being evaluated. Stub
+ * both so importing anything that reaches the SDK does not blow up; tests
+ * that care about authentication mock the SDK itself.
+ */
+if (typeof globalThis.Worker === 'undefined') {
+  class WorkerStub implements Partial<Worker> {
+    public onmessage: ((this: Worker, event: MessageEvent) => unknown) | null = null
+
+    public onerror: ((this: AbstractWorker, event: ErrorEvent) => unknown) | null = null
+
+    public postMessage(): void {}
+
+    public terminate(): void {}
+
+    public addEventListener(): void {}
+
+    public removeEventListener(): void {}
+
+    public dispatchEvent(): boolean {
+      return false
+    }
+  }
+
+  globalThis.Worker = WorkerStub as unknown as typeof Worker
+}
+
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = () => 'blob:test'
+  URL.revokeObjectURL = () => {}
+}
+
 beforeEach(() => {
-  vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8080')
+  vi.stubEnv('VITE_AUTH_ENABLED', 'true')
 })

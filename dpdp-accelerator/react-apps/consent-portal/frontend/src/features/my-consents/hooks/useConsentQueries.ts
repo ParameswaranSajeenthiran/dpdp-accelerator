@@ -30,7 +30,7 @@ import {
   fetchMyConsents,
   rejectMyConsent,
   revokeMyConsent,
-} from '../api/consentsApi'
+} from '../api/myConsentsApi'
 import { normalizeConsentState } from '../utils/statusChip'
 import type {
   ConsentDetail,
@@ -69,7 +69,7 @@ function toListParams(
   rowsPerPage: number,
 ): ConsentListQueryParams {
   return {
-    consentStatuses: filters.state === 'All' ? undefined : filters.state,
+    state: filters.state === 'All' ? undefined : filters.state,
     serviceId: filters.serviceId.trim() || undefined,
     limit: rowsPerPage,
     offset: page * rowsPerPage,

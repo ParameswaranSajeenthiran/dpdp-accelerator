@@ -40,7 +40,7 @@ import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcr
 import { useCatalogText } from '../../i18n/catalogText'
 import type { CursorPageParams } from '../../types/catalog'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import { buildPurposeFilter } from './api/catalogApi'
 import PurposeFormDialog from './components/PurposeFormDialog'
@@ -69,7 +69,7 @@ function PurposeListPage(): React.JSX.Element {
     [query.data],
   )
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.PURPOSES_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.PURPOSES_WRITE)
   const [createOpen, setCreateOpen] = useState(false)
   const createMutation = useCreatePurposeMutation()
 

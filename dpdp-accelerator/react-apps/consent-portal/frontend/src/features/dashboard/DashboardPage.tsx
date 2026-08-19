@@ -37,7 +37,7 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { ConsentDetail } from '../../types/consent'
 import { formatEpochTimestamp } from '../../utils/dateTime'
-import { normalizeConsentState } from '../consent-registry/utils/statusChip'
+import { normalizeConsentState } from '../my-consents/utils/statusChip'
 import useDashboardConsentsQuery from './hooks/useDashboardConsentsQuery'
 
 const ATTENTION_ITEM_LIMIT = 5

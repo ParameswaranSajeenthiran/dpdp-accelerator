@@ -18,11 +18,12 @@
 
 import type { ReactNode } from 'react'
 import { AuthorizationProvider } from '../features/auth/AuthorizationProvider'
-import type { PortalScope } from '../utils/portalScopes'
+import type { ScopeRequirement } from '../utils/scopes'
 
 interface TestAuthorizationProviderProps {
   children: ReactNode
-  scopes: PortalScope[]
+  /** Areas to grant; every scope each area accepts is put in the session. */
+  scopes: ScopeRequirement[]
   hideSelfConsentsForAdmins?: boolean
 }
 
@@ -36,7 +37,7 @@ function TestAuthorizationProvider({
       currentUser={{
         userId: 'test-user',
         organizationId: 'test-org',
-        scopes,
+        scopes: scopes.flatMap((requirement) => [...requirement]),
         hideSelfConsentsForAdmins: hideSelfConsentsForAdmins ?? false,
       }}
     >

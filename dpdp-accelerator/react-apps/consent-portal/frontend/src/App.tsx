@@ -18,47 +18,96 @@
 
 import { Box, Button, CircularProgress, Stack, Typography } from '@wso2/oxygen-ui'
 import { CircleAlert } from '@wso2/oxygen-ui-icons-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import MainLayout from './components/layout/main-layout/MainLayout'
 import ElementDetailsPage from './features/catalog/ElementDetailsPage'
 import ElementListPage from './features/catalog/ElementListPage'
 import PurposeDetailsPage from './features/catalog/PurposeDetailsPage'
 import PurposeListPage from './features/catalog/PurposeListPage'
 import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegistryPage'
-import ConsentDetailsPage from './features/consent-registry/ConsentDetailsPage'
-import ConsentRegistryPage from './features/consent-registry/ConsentRegistryPage'
+import ConsentDetailsPage from './features/my-consents/ConsentDetailsPage'
+import ConsentRegistryPage from './features/my-consents/ConsentRegistryPage'
 import DashboardPage from './features/dashboard/DashboardPage'
 import { AuthorizationProvider } from './features/auth/AuthorizationProvider'
 import useAuthorization from './features/auth/useAuthorization'
 import firstAuthorizedPath from './features/auth/authorizationRoutes'
 import NoAccessPage from './features/auth/NoAccessPage'
 import useCurrentUserQuery from './features/auth/hooks/useCurrentUserQuery'
-import { isAuthEnabled, isAuthenticated, login } from './utils/authClient'
-import { PORTAL_SCOPES, type PortalScope } from './utils/portalScopes'
+import { ensureSignedIn, isAuthEnabled, takeReturnPath } from './utils/authClient'
+import { REQUIRED_SCOPES, type ScopeRequirement } from './utils/scopes'
 import { APIError } from './utils/apiClient'
 
+/**
+ * Establishes the OIDC session before anything else renders.
+ *
+ * `ensureSignedIn` either completes a sign-in that is already in flight (the
+ * authorization code handed over by the shell) or sends the browser to the
+ * Identity Server, in which case there is nothing to draw.
+ *
+ * Sign-in always returns to the application home, so a session established
+ * here may have started on another route. Restoring it is the last step.
+ */
 function AuthenticationGate({
   children,
 }: {
   children: React.JSX.Element
 }): React.JSX.Element | null {
   const { t } = useTranslation('common')
-  const cookieAuthenticated = isAuthenticated()
-  const currentUserQuery = useCurrentUserQuery(cookieAuthenticated)
+  const navigate = useNavigate()
+  const [sessionReady, setSessionReady] = useState(false)
+  const [sessionFailed, setSessionFailed] = useState(false)
+  const currentUserQuery = useCurrentUserQuery(sessionReady)
 
   useEffect(() => {
-    if (!cookieAuthenticated) {
-      login()
+    let cancelled = false
+    void (async () => {
+      try {
+        const ready = await ensureSignedIn()
+        if (!cancelled && ready) {
+          const returnPath = takeReturnPath()
+          if (returnPath) {
+            navigate(returnPath, { replace: true })
+          }
+          setSessionReady(true)
+        }
+      } catch {
+        if (!cancelled) {
+          setSessionFailed(true)
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-  }, [cookieAuthenticated])
+  }, [navigate])
 
-  if (!cookieAuthenticated) {
-    return null
+  if (sessionFailed) {
+    return (
+      <Box
+        sx={{
+          alignItems: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          minHeight: '100dvh',
+          p: 4,
+        }}
+      >
+        <Stack spacing={2} alignItems="center" sx={{ textAlign: 'center' }}>
+          <CircleAlert size={40} aria-hidden="true" />
+          <Typography variant="h4" fontWeight={700}>
+            {t('authorization.loadFailed')}
+          </Typography>
+          <Button variant="outlined" onClick={() => window.location.reload()}>
+            {t('authorization.tryAgain')}
+          </Button>
+        </Stack>
+      </Box>
+    )
   }
 
-  if (currentUserQuery.isPending) {
+  if (!sessionReady || currentUserQuery.isPending) {
     return (
       <Box sx={{ display: 'grid', minHeight: '100vh', placeItems: 'center' }}>
         <CircularProgress aria-label={t('authorization.loading')} />
@@ -106,7 +155,7 @@ function AuthorizedRoute({
   scope,
   children,
 }: {
-  scope: PortalScope
+  scope: ScopeRequirement
   children: React.JSX.Element
 }): React.JSX.Element {
   const { currentUser, hasScope } = useAuthorization()
@@ -131,7 +180,7 @@ function App(): React.JSX.Element {
           <Route
             path="/dashboard"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.CONSENTS_READ_SELF}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.CONSENTS_READ_SELF}>
                 <DashboardPage />
               </AuthorizedRoute>
             }
@@ -139,7 +188,7 @@ function App(): React.JSX.Element {
           <Route
             path="/consents"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.CONSENTS_READ_SELF}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.CONSENTS_READ_SELF}>
                 <ConsentRegistryPage />
               </AuthorizedRoute>
             }
@@ -147,7 +196,7 @@ function App(): React.JSX.Element {
           <Route
             path="/consents/:id"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.CONSENTS_READ_SELF}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.CONSENTS_READ_SELF}>
                 <ConsentDetailsPage />
               </AuthorizedRoute>
             }
@@ -155,7 +204,7 @@ function App(): React.JSX.Element {
           <Route
             path="/purposes"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.PURPOSES_READ}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.PURPOSES_READ}>
                 <PurposeListPage />
               </AuthorizedRoute>
             }
@@ -163,7 +212,7 @@ function App(): React.JSX.Element {
           <Route
             path="/purposes/:id"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.PURPOSES_READ}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.PURPOSES_READ}>
                 <PurposeDetailsPage />
               </AuthorizedRoute>
             }
@@ -171,7 +220,7 @@ function App(): React.JSX.Element {
           <Route
             path="/elements"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.ELEMENTS_READ}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.ELEMENTS_READ}>
                 <ElementListPage />
               </AuthorizedRoute>
             }
@@ -179,7 +228,7 @@ function App(): React.JSX.Element {
           <Route
             path="/elements/:id"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.ELEMENTS_READ}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.ELEMENTS_READ}>
                 <ElementDetailsPage />
               </AuthorizedRoute>
             }
@@ -187,7 +236,7 @@ function App(): React.JSX.Element {
           <Route
             path="/administration/consents"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.CONSENTS_READ_ANY}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.CONSENTS_READ_ANY}>
                 <AdminConsentRegistryPage />
               </AuthorizedRoute>
             }
@@ -195,7 +244,7 @@ function App(): React.JSX.Element {
           <Route
             path="/administration/consents/:id"
             element={
-              <AuthorizedRoute scope={PORTAL_SCOPES.CONSENTS_READ_ANY}>
+              <AuthorizedRoute scope={REQUIRED_SCOPES.CONSENTS_READ_ANY}>
                 <ConsentDetailsPage variant="admin" />
               </AuthorizedRoute>
             }

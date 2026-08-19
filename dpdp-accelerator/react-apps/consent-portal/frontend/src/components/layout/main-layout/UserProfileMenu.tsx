@@ -17,7 +17,7 @@
  */
 
 import { Alert, Button, Snackbar, UserMenu } from '@wso2/oxygen-ui'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getUserProfile, logout } from '../../../utils/authClient'
 
@@ -46,7 +46,24 @@ function UserProfileMenu(): React.JSX.Element {
   const { t } = useTranslation('common')
   const [logoutFailed, setLogoutFailed] = useState(false)
   const [logoutPending, setLogoutPending] = useState(false)
-  const [claims] = useState<UserClaims>(() => getUserProfile() ?? {})
+  const [claims, setClaims] = useState<UserClaims>({})
+
+  useEffect(() => {
+    let cancelled = false
+    // A failure here is not worth interrupting the page for: the menu falls
+    // back to the unknown-user labels.
+    void getUserProfile()
+      .then((profile) => {
+        if (!cancelled && profile) {
+          setClaims(profile)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const name = displayName(claims, t('layout.userMenu.unknownUser'))
   const email = claim(claims, 'email') ?? claim(claims, 'sub') ?? t('layout.userMenu.noEmail')
   const avatar = claim(claims, 'picture')

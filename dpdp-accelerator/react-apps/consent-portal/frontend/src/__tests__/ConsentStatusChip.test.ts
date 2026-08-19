@@ -25,7 +25,7 @@ import {
   isConsentApprovableState,
   isConsentRejectableState,
   isConsentRevokableState,
-} from '../features/consent-registry/utils/statusChip'
+} from '../features/my-consents/utils/statusChip'
 import { CONSENT_AUTHORIZATION_STATES, CONSENT_STATES, isConsentState } from '../types/consent'
 
 // Translations moved off a compiled TS resource onto runtime-fetched JSON;

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run security:verify && npm run i18n:verify",
+    "build": "tsc -b && vite build && npm run security:verify && npm run i18n:verify && npm run generate:shell",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
@@ -17,9 +17,11 @@
     "security:audit": "node scripts/audit-production-dependencies.mjs",
     "security:verify": "node scripts/verify-production-security.mjs",
     "i18n:verify": "node scripts/verify-i18n-completeness.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:shell": "node scripts/generate-jsp-shell.mjs"
   },
   "dependencies": {
+    "@asgardeo/auth-spa": "3.1.2",
     "@emotion/cache": "11.14.0",
     "@emotion/react": "11.14.0",
     "@tanstack/react-query": "5.96.2",

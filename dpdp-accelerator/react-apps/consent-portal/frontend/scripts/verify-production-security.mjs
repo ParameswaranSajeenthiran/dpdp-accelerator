@@ -17,7 +17,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { join, relative, resolve, sep } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
 const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8')
@@ -73,12 +73,34 @@ const forbiddenSinks = [
   [/\bsessionStorage\b/, 'sessionStorage'],
 ]
 
+/**
+ * Web storage is banned so that no credential can ever reach it. The auth
+ * client is exempted for `sessionStorage` alone: it records the route the user
+ * asked for across the redirect to the Identity Server, because sign-in always
+ * returns to the registered redirect URI. A path is not a credential, and the
+ * tokens stay in the SDK's web worker. localStorage remains banned everywhere.
+ */
+const allowedSinks = new Map([['src/utils/authClient.ts', new Set(['sessionStorage'])]])
+
+/** Exemptions are written with forward slashes; Windows reports backslashes. */
+const asKey = (path) => relative(root, path).split(sep).join('/')
+
 for (const path of productionSources) {
   const source = readFileSync(path, 'utf8')
+  const relativePath = asKey(path)
+  const allowed = allowedSinks.get(relativePath) ?? new Set()
   for (const [pattern, sink] of forbiddenSinks) {
-    if (pattern.test(source)) {
-      failures.push(`${relative(root, path)} contains forbidden sink ${sink}`)
+    if (pattern.test(source) && !allowed.has(sink)) {
+      failures.push(`${relativePath} contains forbidden sink ${sink}`)
     }
+  }
+}
+
+// An exemption for a file that no longer exists is an exemption nobody is
+// reading; fail rather than let it rot into a silent hole.
+for (const path of allowedSinks.keys()) {
+  if (!productionSources.some((source) => asKey(source) === path)) {
+    failures.push(`sink exemption for ${path} refers to a file that is no longer built`)
   }
 }
 

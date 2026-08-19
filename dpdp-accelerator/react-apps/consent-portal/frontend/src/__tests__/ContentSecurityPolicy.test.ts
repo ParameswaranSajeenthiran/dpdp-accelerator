@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest'
 import { contentSecurityPolicy, staticHeadersFile } from '../security/contentSecurityPolicy'
 
 describe('frontend content security policy', () => {
-  it('restricts executable content and connects only to the exact BFF origin', () => {
+  it('restricts executable content and connects only to the exact API origin', () => {
     const policy = contentSecurityPolicy({
       apiBaseURL: 'https://bff.example.com/api',
       upgradeInsecureRequests: true,
@@ -29,6 +29,8 @@ describe('frontend content security policy', () => {
     expect(policy).toContain("default-src 'self'")
     expect(policy).toContain("script-src 'self'")
     expect(policy).toContain("connect-src 'self' https://bff.example.com")
+    // The auth SDK holds the tokens in a worker it builds from a blob.
+    expect(policy).toContain("connect-src 'self' https://bff.example.com; worker-src 'self' blob:")
     expect(policy).toContain("object-src 'none'")
     expect(policy).toContain("base-uri 'none'")
     expect(policy).toContain("frame-ancestors 'none'")
@@ -36,6 +38,14 @@ describe('frontend content security policy', () => {
     expect(policy).toContain('upgrade-insecure-requests')
     expect(policy).not.toContain("script-src 'self' 'unsafe-inline'")
     expect(policy).not.toContain("'unsafe-eval'")
+  })
+
+  it('allows the data URIs the build inlines its fonts as', () => {
+    const policy = contentSecurityPolicy({ apiBaseURL: '' })
+
+    // Without this every @font-face fails to load and the app falls back to
+    // the system sans-serif.
+    expect(policy).toContain("font-src 'self' data:")
   })
 
   it('keeps the temporary Emotion exception limited to styles', () => {
@@ -54,7 +64,7 @@ describe('frontend content security policy', () => {
     expect(policy).not.toContain('frame-ancestors')
   })
 
-  it('rejects non-HTTP BFF origins', () => {
+  it('rejects non-HTTP API origins', () => {
     expect(() => contentSecurityPolicy({ apiBaseURL: `javascript${':'}alert(1)` })).toThrow(
       'must use the http or https scheme',
     )

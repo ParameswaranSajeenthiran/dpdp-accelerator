@@ -25,25 +25,35 @@ import {
 } from '../features/admin-consents/api/adminConsentsApi'
 import { getNextCursor, getPreviousCursor } from '../utils/cursorPagination'
 
-const fetchMock = vi.fn()
+const transport = vi.hoisted(() => ({
+  httpRequest: vi.fn(),
+  login: vi.fn(),
+}))
+
+vi.mock('../utils/authClient', () => ({
+  httpRequest: transport.httpRequest,
+  isAuthEnabled: () => true,
+  login: transport.login,
+}))
+
+const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
 
 afterEach(() => {
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
-function mockJSONResponse(payload: unknown = {}): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => payload,
-  })
+function respondWith(payload: unknown, status = 200): void {
+  transport.httpRequest.mockResolvedValue({ status, data: payload })
+}
+
+/** The request config the api handed to the auth SDK. */
+function sentRequest(index = 0): { url: string; method?: string; data?: unknown } {
+  return transport.httpRequest.mock.calls[index]?.[0] as ReturnType<typeof sentRequest>
 }
 
 describe('administrative consent API', () => {
-  it('passes the supported cursor and filter parameters to the BFF', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Consents: [] })
+  it('sends the supported cursor and filter parameters to the consent management API', async () => {
+    respondWith({ totalResults: 0, links: [], Consents: [] })
 
     await fetchAdminConsents({
       limit: 25,
@@ -53,9 +63,8 @@ describe('administrative consent API', () => {
       state: 'ACTIVE',
     })
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
-    expect(url.pathname).toBe('/api/consents')
+    const url = new URL(sentRequest().url)
+    expect(url.pathname).toBe(`${CONSENT_MGT_V2}/consents`)
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '25',
       after: 'Mg==',
@@ -63,23 +72,22 @@ describe('administrative consent API', () => {
       serviceId: 'dpdp-portal',
       state: 'ACTIVE',
     })
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(sentRequest().method).toBe('GET')
   })
 
   it('sends a before cursor when paging backwards and omits unset filters', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Consents: [] })
+    respondWith({ totalResults: 0, links: [], Consents: [] })
 
     await fetchAdminConsents({ limit: 10, before: 'MQ==' })
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    expect(Object.fromEntries(new URL(String(requestUrl)).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(sentRequest().url).searchParams)).toEqual({
       limit: '10',
       before: 'MQ==',
     })
   })
 
-  it('passes purposeId and a custom property filter to the BFF', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Consents: [] })
+  it('passes purposeId and a custom property filter to the consent management API', async () => {
+    respondWith({ totalResults: 0, links: [], Consents: [] })
 
     await fetchAdminConsents({
       limit: 10,
@@ -87,8 +95,7 @@ describe('administrative consent API', () => {
       filter: 'properties.dataCategory eq "personal"',
     })
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    expect(Object.fromEntries(new URL(String(requestUrl)).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(sentRequest().url).searchParams)).toEqual({
       limit: '10',
       purposeId: 'purpose-1',
       filter: 'properties.dataCategory eq "personal"',
@@ -104,7 +111,31 @@ describe('administrative consent API', () => {
     expect(buildConsentPropertyFilter('', 'personal')).toBeUndefined()
   })
 
-  it('reads next and previous cursors out of the returned links', async () => {
+  it('expands each row with a detail lookup, keeping the summary when one fails', async () => {
+    // The Identity Server's list rows carry no purposes; the table shows them.
+    const summaries = [
+      { id: 'consent-1', subjectId: 'alice', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
+      { id: 'consent-2', subjectId: 'bob', serviceId: 'svc', state: 'ACTIVE', timestamp: 2 },
+    ]
+    transport.httpRequest
+      .mockResolvedValueOnce({
+        status: 200,
+        data: { totalResults: 2, links: [], Consents: summaries },
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: { ...summaries[0], purposes: [{ id: 'p1', name: 'marketing' }] },
+      })
+      .mockRejectedValueOnce(new Error('detail lookup failed'))
+
+    const response = await fetchAdminConsents({ limit: 10 })
+
+    expect(response.Consents[0]?.purposes).toEqual([{ id: 'p1', name: 'marketing' }])
+    expect(response.Consents[1]).toEqual(summaries[1])
+    expect(response.totalResults).toBe(2)
+  })
+
+  it('reads next and previous cursors out of the returned links', () => {
     const links = [
       {
         rel: 'next',
@@ -123,30 +154,24 @@ describe('administrative consent API', () => {
   })
 
   it('loads encoded consent details without extra query parameters', async () => {
-    mockJSONResponse({ id: 'consent/123' })
+    respondWith({ id: 'consent/123' })
 
     await fetchAdminConsentByID('consent/123')
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
-    expect(url.pathname).toBe('/api/consents/consent%2F123')
+    const url = new URL(sentRequest().url)
+    expect(url.pathname).toBe(`${CONSENT_MGT_V2}/consents/consent%2F123`)
     expect(Object.fromEntries(url.searchParams)).toEqual({})
   })
 
-  it('revokes with an empty JSON body', async () => {
-    mockJSONResponse({ status: 'OK' })
+  it('revokes with no request body and reports success', async () => {
+    // The Identity Server answers revoke with 204 and no body.
+    respondWith(undefined, 204)
 
-    await revokeAdminConsent('consent-123')
+    await expect(revokeAdminConsent('consent-123')).resolves.toEqual({ status: 'OK' })
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(String(requestUrl)).toContain('/api/consents/consent-123/revoke')
-    expect(requestInit).toMatchObject({
-      method: 'POST',
-      credentials: 'include',
-      body: JSON.stringify({}),
-    })
-    expect(new Headers(requestInit?.headers as HeadersInit).get('Content-Type')).toBe(
-      'application/json',
-    )
+    const request = sentRequest()
+    expect(new URL(request.url).pathname).toBe(`${CONSENT_MGT_V2}/consents/consent-123/revoke`)
+    expect(request.method).toBe('POST')
+    expect(request.data).toBeUndefined()
   })
 })

@@ -22,11 +22,11 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { AdminConsentRegistryFilters } from '../../types/consent'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
-import ConsentRegistryTable from '../consent-registry/components/ConsentRegistryTable'
-import ConsentRevocationDialog from '../consent-registry/components/ConsentRevocationDialog'
-import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from '../consent-registry/constants'
+import ConsentRegistryTable from '../my-consents/components/ConsentRegistryTable'
+import ConsentRevocationDialog from '../my-consents/components/ConsentRevocationDialog'
+import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from '../my-consents/constants'
 import AdminConsentFilters from './components/AdminConsentFilters'
 import {
   useAdminConsentListQuery,
@@ -90,7 +90,7 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
   const consentListQuery = useAdminConsentListQuery(filters, rowsPerPage, cursor)
   const revokeMutation = useAdminRevokeConsentMutation()
   const { hasScope } = useAuthorization()
-  const canWriteAny = hasScope(PORTAL_SCOPES.CONSENTS_WRITE_ANY)
+  const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
 
   const updateParams = (
     nextFilters: AdminConsentRegistryFilters,

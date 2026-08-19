@@ -40,7 +40,7 @@ import { useCatalogText } from '../../i18n/catalogText'
 import type { CursorPageParams } from '../../types/catalog'
 import { APIError } from '../../utils/apiClient'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import { buildElementNameFilter } from './api/catalogApi'
 import ElementFormDialog from './components/ElementFormDialog'
@@ -59,7 +59,7 @@ function ElementListPage(): React.JSX.Element {
   const query = useElementsQuery({ ...params, filter: buildElementNameFilter(nameSearch) })
   const rows = query.data?.Elements ?? []
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.ELEMENTS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.ELEMENTS_WRITE)
   const [createOpen, setCreateOpen] = useState(false)
   const createMutation = useCreateElementMutation()
 

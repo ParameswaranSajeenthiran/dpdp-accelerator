@@ -19,6 +19,7 @@
 import i18n from 'i18next'
 import HttpBackend from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
+import { runtimeBasePath } from '../utils/basePath'
 import { applyLanguageSideEffects, DEFAULT_LANGUAGE, readStoredLanguage } from './languages'
 
 /**
@@ -40,7 +41,7 @@ import { applyLanguageSideEffects, DEFAULT_LANGUAGE, readStoredLanguage } from '
  * create at run time. English is the complete set; every other language falls
  * back to English for any key it is missing.
  */
-const loadPath = `${import.meta.env.BASE_URL}i18n/{{lng}}/{{ns}}.json`.replace(/([^:])\/\//g, '$1/')
+const loadPath = `${runtimeBasePath()}/i18n/{{lng}}/{{ns}}.json`
 
 const initialLanguage = readStoredLanguage()
 

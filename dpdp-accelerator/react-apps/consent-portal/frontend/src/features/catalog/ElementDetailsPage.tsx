@@ -41,7 +41,7 @@ import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { useCatalogText } from '../../i18n/catalogText'
 import { APIError } from '../../utils/apiClient'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from './components/DetailGrid'
 import ElementDeleteDialog from './components/ElementDeleteDialog'
@@ -72,7 +72,7 @@ function ElementDetailsPage(): React.JSX.Element {
   const detailQuery = useElementQuery(id)
   const detail = detailQuery.data
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.ELEMENTS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.ELEMENTS_WRITE)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const deleteMutation = useDeleteElementMutation()
   const propertyEntries = Object.entries(detail?.properties ?? {})

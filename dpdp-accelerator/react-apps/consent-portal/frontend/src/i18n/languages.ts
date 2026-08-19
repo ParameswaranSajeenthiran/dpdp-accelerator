@@ -16,6 +16,8 @@
  * under the License.
  */
 
+import { runtimeBasePath } from '../utils/basePath'
+
 /**
  * Languages offered by the portal.
  *
@@ -112,7 +114,8 @@ export function setAvailableLanguages(languages: LanguageMeta[]): void {
  * languages it shipped with, not refuse to start.
  */
 export async function loadLanguageCatalogue(): Promise<void> {
-  const url = `${import.meta.env.BASE_URL}i18n/meta.json`.replace(/([^:])\/\//g, '$1/')
+  // Runtime base path, so a tenant-qualified deployment reads its own copy.
+  const url = `${runtimeBasePath()}/i18n/meta.json`
 
   try {
     const response = await fetch(url)

@@ -31,7 +31,7 @@ import type {
   ConsentState,
 } from '../../types/consent'
 import { isConsentState } from '../../types/consent'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import {
   useApproveConsentMutation,
@@ -110,7 +110,7 @@ function ConsentRegistryPage(): React.JSX.Element {
   const approveMutation = useApproveConsentMutation()
   const revokeMutation = useRevokeConsentMutation()
   const { hasScope } = useAuthorization()
-  const canWriteSelf = hasScope(PORTAL_SCOPES.CONSENTS_WRITE_SELF)
+  const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const isTableLoading = consentListQuery.isPending || consentListQuery.isPlaceholderData
 
   const updateParams = (

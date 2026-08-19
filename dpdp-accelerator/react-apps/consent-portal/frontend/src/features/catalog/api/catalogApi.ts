@@ -33,6 +33,9 @@ import type {
 import { apiRequest, apiRequestNoContent } from '../../../utils/apiClient'
 import { escapeFilterValue } from '../../../utils/filterGrammar'
 
+/** The Identity Server's consent management (administrative) API. */
+const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
+
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 function toCursorQuery(params: CursorPageParams): Record<string, string | number | undefined> {
@@ -72,20 +75,20 @@ export function buildPurposeFilter(name: string, type: string): string | undefin
 }
 
 export function fetchElements(params: ElementListQueryParams): Promise<ElementListResponse> {
-  return apiRequest<ElementListResponse>('/api/consent-elements', {
+  return apiRequest<ElementListResponse>(`${CONSENT_MGT_V2}/elements`, {
     method: 'GET',
     query: { ...toCursorQuery(params), filter: params.filter },
   })
 }
 
 export function fetchElement(elementId: string): Promise<CatalogElement> {
-  return apiRequest<CatalogElement>(`/api/consent-elements/${encodeURIComponent(elementId)}`, {
+  return apiRequest<CatalogElement>(`${CONSENT_MGT_V2}/elements/${encodeURIComponent(elementId)}`, {
     method: 'GET',
   })
 }
 
 export function createElement(payload: ElementInput): Promise<CatalogElement> {
-  return apiRequest<CatalogElement>('/api/consent-elements', {
+  return apiRequest<CatalogElement>(`${CONSENT_MGT_V2}/elements`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(payload),
@@ -93,26 +96,26 @@ export function createElement(payload: ElementInput): Promise<CatalogElement> {
 }
 
 export function deleteElement(elementId: string): Promise<void> {
-  return apiRequestNoContent(`/api/consent-elements/${encodeURIComponent(elementId)}`, {
+  return apiRequestNoContent(`${CONSENT_MGT_V2}/elements/${encodeURIComponent(elementId)}`, {
     method: 'DELETE',
   })
 }
 
 export function fetchPurposes(params: PurposeListQueryParams): Promise<PurposeListResponse> {
-  return apiRequest<PurposeListResponse>('/api/consent-purposes', {
+  return apiRequest<PurposeListResponse>(`${CONSENT_MGT_V2}/purposes`, {
     method: 'GET',
     query: { ...toCursorQuery(params), filter: params.filter },
   })
 }
 
 export function fetchPurpose(purposeId: string): Promise<PurposeDetail> {
-  return apiRequest<PurposeDetail>(`/api/consent-purposes/${encodeURIComponent(purposeId)}`, {
+  return apiRequest<PurposeDetail>(`${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}`, {
     method: 'GET',
   })
 }
 
 export function createPurpose(payload: PurposeInput): Promise<PurposeDetail> {
-  return apiRequest<PurposeDetail>('/api/consent-purposes', {
+  return apiRequest<PurposeDetail>(`${CONSENT_MGT_V2}/purposes`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(payload),
@@ -120,7 +123,7 @@ export function createPurpose(payload: PurposeInput): Promise<PurposeDetail> {
 }
 
 export function deletePurpose(purposeId: string): Promise<void> {
-  return apiRequestNoContent(`/api/consent-purposes/${encodeURIComponent(purposeId)}`, {
+  return apiRequestNoContent(`${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}`, {
     method: 'DELETE',
   })
 }
@@ -130,7 +133,7 @@ export function fetchPurposeVersions(
   params: CursorPageParams,
 ): Promise<PurposeVersionListResponse> {
   return apiRequest<PurposeVersionListResponse>(
-    `/api/consent-purposes/${encodeURIComponent(purposeId)}/versions`,
+    `${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}/versions`,
     { method: 'GET', query: toCursorQuery(params) },
   )
 }
@@ -140,21 +143,21 @@ export function createPurposeVersion(
   payload: PurposeVersionInput,
 ): Promise<PurposeVersionSummary> {
   return apiRequest<PurposeVersionSummary>(
-    `/api/consent-purposes/${encodeURIComponent(purposeId)}/versions`,
+    `${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}/versions`,
     { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) },
   )
 }
 
 export function setLatestPurposeVersion(purposeId: string, versionId: string): Promise<void> {
   return apiRequestNoContent(
-    `/api/consent-purposes/${encodeURIComponent(purposeId)}/versions/latest`,
+    `${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}/versions/latest`,
     { method: 'PUT', headers: jsonHeaders, body: JSON.stringify({ id: versionId }) },
   )
 }
 
 export function deletePurposeVersion(purposeId: string, versionId: string): Promise<void> {
   return apiRequestNoContent(
-    `/api/consent-purposes/${encodeURIComponent(purposeId)}/versions/${encodeURIComponent(versionId)}`,
+    `${CONSENT_MGT_V2}/purposes/${encodeURIComponent(purposeId)}/versions/${encodeURIComponent(versionId)}`,
     { method: 'DELETE' },
   )
 }
