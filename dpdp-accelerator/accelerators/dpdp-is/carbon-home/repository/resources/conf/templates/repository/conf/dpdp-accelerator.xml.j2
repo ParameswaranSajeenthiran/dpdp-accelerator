@@ -19,10 +19,10 @@
 
 <DPDPAccelerator xmlns="http://wso2.org/projects/carbon/dpdp-accelerator.xml">
     <ConsentPortal>
-        {% if dpdp_accelerator.consent_portal.enabled is defined %}
-        <Enabled>{{dpdp_accelerator.consent_portal.enabled}}</Enabled>
+        {% if dpdp_accelerator.consent_portal.auto_provisioning_enabled is defined %}
+        <AutoProvisioningEnabled>{{dpdp_accelerator.consent_portal.auto_provisioning_enabled}}</AutoProvisioningEnabled>
         {% else %}
-        <Enabled>true</Enabled>
+        <AutoProvisioningEnabled>true</AutoProvisioningEnabled>
         {% endif %}
         {% if dpdp_accelerator.consent_portal.client_id is defined %}
         <ClientId>{{dpdp_accelerator.consent_portal.client_id}}</ClientId>

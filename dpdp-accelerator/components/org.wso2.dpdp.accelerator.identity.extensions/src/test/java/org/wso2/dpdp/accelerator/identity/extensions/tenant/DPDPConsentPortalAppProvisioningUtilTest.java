@@ -107,10 +107,23 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
     // pieces with real logic worth testing, and neither touches that static call.
 
     @Test
+    public void toRegexCallbackEscapesDotsAndAllowsOptionalTrailingSlash() {
+
+        String result = DPDPConsentPortalAppProvisioningUtil
+                .toRegexCallback("https://localhost:9443/t/tenant-a.com/consent-portal");
+
+        assertEquals(result, "regexp=(https://localhost:9443/t/tenant-a\\.com/consent-portal/?)");
+        // The specific regression this guards against: Pattern.quote()'s \Q...\E wrapping
+        // is confirmed (by direct testing against a live tenant) to break this validator.
+        assertFalse(result.contains("\\Q"));
+        assertFalse(result.contains(","));
+    }
+
+    @Test
     public void registerOAuthApplicationSetsExpectedOAuthAppFields() throws Exception {
 
-        String callbackUrl = "https://localhost:9443/t/" + TENANT_DOMAIN + "/consent-portal,"
-                + "https://localhost:9443/t/" + TENANT_DOMAIN + "/consent-portal/";
+        String callbackUrl = DPDPConsentPortalAppProvisioningUtil.toRegexCallback(
+                "https://localhost:9443/t/" + TENANT_DOMAIN + "/consent-portal");
 
         DPDPConsentPortalAppProvisioningUtil.registerOAuthApplication(TENANT_DOMAIN, callbackUrl, CLIENT_ID);
 

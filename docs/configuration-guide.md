@@ -30,18 +30,59 @@ with no operator step and no REST call involved:
 
 It also authorizes the three consent management APIs (RBAC) and creates two
 roles: `dpdp-consent-admin`, holding every consent management scope, and
-`dpdp-consent-user`, which carries none.
+`dpdp-consent-user`, which carries none. Provisioning checks each of these —
+application, and each role — individually and only creates what's missing, so
+it's always safe to re-run (see [Recovering a broken tenant](#3-recovering-a-broken-tenant)
+below).
 
-## 2. Grant administration access
+## 2. Change or turn off the auto-provisioning
 
-Everyone who can sign in manages their own consents — that needs no role.
+Two settings in `deployment.toml` control this, under `[dpdp_accelerator.consent_portal]`:
 
-To let someone administer *other people's* consents and edit the purpose and
-element catalog, assign them `dpdp-consent-admin` in the Console under
-**User Management → Users → *user* → Roles**. Roles belong to one tenant, so
-do this in each tenant that needs an administrator.
+```toml
+[dpdp_accelerator.consent_portal]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_PORTAL"
+```
 
-## 3. Open the portal
+| Setting | Default | Change it if... |
+|---|---|---|
+| `auto_provisioning_enabled` | `true` | You want to manage the application and its roles by hand instead. Set to `false`. This only turns off the automatic *creation* of the application and roles — it does not disable the portal or sign-in. |
+| `client_id` | `DPDP_CONSENT_PORTAL` | You're changing it, you **must** also update `clientID` in the deployed portal's own `deployment.config.json` — the two have to match or sign-in breaks. |
+
+Edit the value in the accelerator's
+`repository/resources/wso2is-7.3.0-deployment.toml` before running
+`configure.sh` (see [`setup-guide.md`](setup-guide.md)), or directly in
+`<IS_HOME>/repository/conf/deployment.toml` afterwards. Either way, restart
+the server for the change to take effect.
+
+## 3. Recovering a broken tenant
+
+If a tenant's portal application or roles get deleted or corrupted, restore
+them without a server restart:
+
+1. In the Console, delete the **DPDP Consent Portal** application for that
+   tenant (Roles are left alone even if the application is gone — deleting
+   them too is optional, but harmless, since provisioning recreates whatever
+   it doesn't find).
+2. Update any property of the tenant (Console → **Tenant Management** → the
+   tenant → **Update**).
+
+Saving the update re-runs provisioning for that tenant, recreating the
+application and any missing role.
+
+## 4. Assign portal roles
+
+Every user of the portal needs one of these two roles, assigned in the
+Console under **User Management → Users → *user* → Roles**. Roles belong to
+one tenant, so do this in each tenant.
+
+| Role | Assign to | Grants |
+|---|---|---|
+| `dpdp-consent-user` | Regular users | Managing their own consents. |
+| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog. |
+
+## 5. Open the portal
 
 | Tenant | URL |
 |---|---|

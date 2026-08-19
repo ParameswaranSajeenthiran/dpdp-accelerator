@@ -120,7 +120,7 @@ public final class DPDPConfigParser {
 
     public boolean isConsentPortalProvisioningEnabled() {
 
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_ENABLED)
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED)
                 .map(Boolean::parseBoolean).orElse(true);
     }
 

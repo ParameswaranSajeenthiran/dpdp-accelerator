@@ -55,13 +55,22 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
         for (String scopeName : authorizedScopeNames) {
             adminPermissions.add(new Permission(scopeName));
         }
-        roleManagementService.addRole(ADMIN_ROLE, Collections.emptyList(), Collections.emptyList(),
-                adminPermissions, ROLE_AUDIENCE, applicationId, tenantDomain);
-        LOG.debug("Created role '" + ADMIN_ROLE + "' with " + adminPermissions.size()
-                + " permission(s) for application: " + applicationId);
+        createRoleIfNotExists(roleManagementService, ADMIN_ROLE, adminPermissions, applicationId, tenantDomain);
+        createRoleIfNotExists(roleManagementService, USER_ROLE, Collections.emptyList(), applicationId,
+                tenantDomain);
+    }
 
-        roleManagementService.addRole(USER_ROLE, Collections.emptyList(), Collections.emptyList(),
-                Collections.emptyList(), ROLE_AUDIENCE, applicationId, tenantDomain);
-        LOG.debug("Created role '" + USER_ROLE + "' for application: " + applicationId);
+    private static void createRoleIfNotExists(RoleManagementService roleManagementService, String roleName,
+            List<Permission> permissions, String applicationId, String tenantDomain) throws Exception {
+
+        if (roleManagementService.isExistingRoleName(roleName, ROLE_AUDIENCE, applicationId, tenantDomain)) {
+            LOG.debug("Role '" + roleName + "' already exists for application: " + applicationId
+                    + "; leaving it as is.");
+            return;
+        }
+        roleManagementService.addRole(roleName, Collections.emptyList(), Collections.emptyList(), permissions,
+                ROLE_AUDIENCE, applicationId, tenantDomain);
+        LOG.debug("Created role '" + roleName + "' with " + permissions.size() + " permission(s) for application: "
+                + applicationId);
     }
 }

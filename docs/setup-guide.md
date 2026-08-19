@@ -6,7 +6,7 @@ registers the portal application.
 
 ## Prerequisites
 
-- JDK 11 or later on the PATH
+- JDK 21 or later on the PATH
 - Maven 3.6.3+ and Node.js 20.19+ (or 22.12+) with npm, only if building the
   accelerator from source
 
@@ -61,7 +61,10 @@ installs `deployment.toml` and applies the consent schema migration.
 > portal tenant-qualified at `/t/<tenant>/consent-portal/`. Your existing file is copied to `deployment.toml.bak-<timestamp>`
 > first; re-apply any local customisation from that backup before starting
 > the server. To target a different Identity Server version, add a template
-> beside the shipped one and point `PRODUCT_CONF_PATH` at it.
+> beside the shipped one and point `PRODUCT_CONF_PATH` at it. It also carries
+> the `[dpdp_accelerator.consent_portal]` section that controls the portal's
+> auto-provisioning — edit it here if you want different values from the
+> start; see [`configuration-guide.md`](configuration-guide.md#2-change-or-turn-off-the-auto-provisioning).
 
 ## 6. Start the Identity Server
 

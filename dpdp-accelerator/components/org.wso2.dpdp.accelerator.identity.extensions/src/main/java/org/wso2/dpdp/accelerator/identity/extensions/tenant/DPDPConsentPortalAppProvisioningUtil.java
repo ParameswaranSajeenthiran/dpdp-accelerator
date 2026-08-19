@@ -143,11 +143,17 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         String path = MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)
                 ? "/consent-portal"
                 : "/t/" + tenantDomain + "/consent-portal";
-        String portalUrl = IdentityUtil.getServerURL(path, true, false);
-        // Comma-separated exact URLs, not a "regexp=(...)" pattern: this field's regex
-        // support is unconfirmed at this API layer, exact-match is not. Both the with- and
-        // without-trailing-slash forms are registered since the SPA uses both.
-        return portalUrl + "," + portalUrl + "/";
+        return toRegexCallback(IdentityUtil.getServerURL(path, true, false));
+    }
+
+    /**
+     * Wraps a portal URL as a "regexp=(...)" callback matching it with or without a
+     * trailing slash.
+     */
+    static String toRegexCallback(String portalUrl) {
+
+        String escapedUrl = portalUrl.replace(".", "\\.");
+        return "regexp=(" + escapedUrl + "/?)";
     }
 
     static String createApplication(TenantInfoBean tenantInfoBean, String clientId)
