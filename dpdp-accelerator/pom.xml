@@ -36,9 +36,10 @@
           <module>components/org.wso2.dpdp.accelerator.common</module>
           <module>internal-webapps/org.wso2.dpdp.accelerator.consent.mgt.endpoint</module>
 
-      Both directories are currently empty; see their README files.
+      internal-webapps/ is currently empty; see its README file.
     -->
     <modules>
         <module>react-apps</module>
+        <module>components/org.wso2.dpdp.accelerator.identity.extensions</module>
     </modules>
 </project>

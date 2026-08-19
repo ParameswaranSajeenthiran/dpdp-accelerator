@@ -205,6 +205,23 @@
         <servlet.api.version>4.0.1</servlet.api.version>
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
+        <jacoco.version>0.8.11</jacoco.version>
+
+        <carbon.kernel.version>4.12.34</carbon.kernel.version>
+        <carbon.user.core.version>4.12.34</carbon.user.core.version>
+        <carbon.user.api.version>4.12.34</carbon.user.api.version>
+        <carbon.tenant.common.version>4.14.4</carbon.tenant.common.version>
+        <carbon.identity.application.common.version>7.10.156</carbon.identity.application.common.version>
+        <carbon.identity.core.version>7.10.156</carbon.identity.core.version>
+        <carbon.identity.application.mgt.version>7.10.156</carbon.identity.application.mgt.version>
+        <carbon.identity.role.mgt.core.version>7.10.156</carbon.identity.role.mgt.core.version>
+        <carbon.identity.api.resource.mgt.version>7.10.156</carbon.identity.api.resource.mgt.version>
+        <carbon.identity.inbound.auth.oauth.version>7.4.99</carbon.identity.inbound.auth.oauth.version>
+        <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
+        <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
+        <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
+        <commons.logging.imp.pkg.version.range>[1.2.0, 2.0.0)</commons.logging.imp.pkg.version.range>
+        <maven.bundle.plugin.version>5.1.9</maven.bundle.plugin.version>
 
         <maven.war.plugin.version>3.3.2</maven.war.plugin.version>
         <exec.maven.plugin.version>3.1.0</exec.maven.plugin.version>

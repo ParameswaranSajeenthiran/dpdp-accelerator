@@ -19,8 +19,10 @@ pom.xml.releaseBackup
 **/frontend/npm/
 npm-debug.log*
 
-# Accelerator overlay: the exploded webapp is generated at package time.
+# Accelerator overlay: the exploded webapp and OSGi bundle jars are generated
+# at package time.
 **/carbon-home/repository/deployment/server/webapps/
+**/carbon-home/repository/components/dropins/
 
 # IDE
 .idea/

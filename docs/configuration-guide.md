@@ -2,47 +2,23 @@
 
 Complete this after installing the accelerator and starting the Identity
 Server — see [`setup-guide.md`](setup-guide.md) if you haven't done that yet.
-This is the last step before the portal is ready to use.
 
 The portal is a single page application. It has no backend of its own: it
 signs the user in with OpenID Connect and calls the Identity Server's consent
 management APIs directly, the same way the built-in My Account application
-works. That means there is **no client secret to configure and no
-configuration file to edit** — registering the application is the whole job.
+works. There is **no client secret to configure and nothing to register** —
+the application is provisioned automatically, the same way My Account is.
 
 One deployed application serves every tenant, at
 `https://<host>:9443/consent-portal/` for the super tenant and
-`https://<host>:9443/t/<tenant>/consent-portal/` for the rest. Each tenant
-needs its own registration, and all of them share the client id
-`DPDP_CONSENT_PORTAL`, so run the steps below **once per tenant**.
+`https://<host>:9443/t/<tenant>/consent-portal/` for the rest, all sharing the
+client id `DPDP_CONSENT_PORTAL`.
 
-## 1. Register the application
+## 1. The application is provisioned automatically
 
-With the Identity Server running, for the super tenant:
-
-```sh
-bash bin/create-portal-app.sh
-```
-
-and for each additional tenant, as an administrator of that tenant:
-
-```sh
-bash bin/create-portal-app.sh -t wso2.com -u admin -p '<password>'
-```
-
-`-u` may be given bare or fully qualified: a tenant administrator has to
-authenticate as `user@tenant`, and the script appends the tenant domain when
-it is missing. The script reads its defaults from
-`repository/conf/configure.properties`; point it at a different server with
-`-b`:
-
-```sh
-bash bin/create-portal-app.sh -b https://localhost:9444
-```
-
-It registers an application called **DPDP Consent Portal** with the client id
-`DPDP_CONSENT_PORTAL` and configures it the way a browser application has to
-be configured:
+The moment a tenant exists — including the super tenant, on first server
+startup — the accelerator registers **DPDP Consent Portal** in it directly,
+with no operator step and no REST call involved:
 
 | Setting | Value | Why |
 |---|---|---|
@@ -55,18 +31,6 @@ be configured:
 It also authorizes the three consent management APIs (RBAC) and creates two
 roles: `dpdp-consent-admin`, holding every consent management scope, and
 `dpdp-consent-user`, which carries none.
-
-Re-running it against a tenant that is already registered is safe: the
-application is updated in place, and the `dpdp-consent-admin` role has its
-permissions brought back in line without disturbing its members.
-
-> **Why a script rather than the Console.** Every tenant's registration has to
-> carry the same client id, because the portal reads one `deployment.config.json`
-> that all tenants share. The Console generates the client id itself and shows
-> it read-only, so it cannot produce a fixed one; pinning it needs the dynamic
-> client registration API, which is what the script calls. Registering the
-> application at tenant creation time, the way My Account is provisioned, would
-> remove this step altogether and is the intended replacement for the script.
 
 ## 2. Grant administration access
 

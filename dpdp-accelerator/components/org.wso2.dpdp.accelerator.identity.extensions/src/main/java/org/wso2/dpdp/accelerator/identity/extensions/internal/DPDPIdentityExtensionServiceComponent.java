@@ -1,0 +1,175 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.wso2.dpdp.accelerator.identity.extensions.internal;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
+import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
+import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
+
+/**
+ * Registers {@link DPDPIdentityExtensionTenantMgtListener} for future tenants, and provisions
+ * the super tenant directly here since {@code onTenantCreate} never fires for it.
+ */
+@Component(
+        name = "org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionServiceComponent",
+        immediate = true
+)
+public class DPDPIdentityExtensionServiceComponent {
+
+    private static final Log LOG = LogFactory.getLog(DPDPIdentityExtensionServiceComponent.class);
+
+    @Activate
+    protected void activate(ComponentContext context) {
+
+        BundleContext bundleContext = context.getBundleContext();
+        bundleContext.registerService(TenantMgtListener.class, new DPDPIdentityExtensionTenantMgtListener(), null);
+
+        try {
+            TenantInfoBean superTenant = new TenantInfoBean();
+            superTenant.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
+            superTenant.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+            superTenant.setAdmin(DPDPIdentityExtensionDataHolder.getInstance().getRealmService()
+                    .getBootstrapRealm().getRealmConfiguration().getAdminUserName());
+            DPDPIdentityExtensionTenantMgtListener.provisionTenant(superTenant);
+        } catch (Exception e) {
+            LOG.error("Error provisioning the DPDP Consent Portal for the super tenant.", e);
+        }
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext context) {
+
+    }
+
+    @Reference(
+            service = ApplicationManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApplicationManagementService"
+    )
+    protected void setApplicationManagementService(ApplicationManagementService applicationManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setApplicationManagementService(applicationManagementService);
+    }
+
+    protected void unsetApplicationManagementService(ApplicationManagementService applicationManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setApplicationManagementService(null);
+    }
+
+    @Reference(
+            service = OAuthAdminServiceImpl.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetOAuthAdminService"
+    )
+    protected void setOAuthAdminService(OAuthAdminServiceImpl oAuthAdminService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setOAuthAdminService(oAuthAdminService);
+    }
+
+    protected void unsetOAuthAdminService(OAuthAdminServiceImpl oAuthAdminService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setOAuthAdminService(null);
+    }
+
+    @Reference(
+            service = AuthorizedAPIManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetAuthorizedAPIManagementService"
+    )
+    protected void setAuthorizedAPIManagementService(AuthorizedAPIManagementService authorizedAPIManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance()
+                .setAuthorizedAPIManagementService(authorizedAPIManagementService);
+    }
+
+    protected void unsetAuthorizedAPIManagementService(
+            AuthorizedAPIManagementService authorizedAPIManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setAuthorizedAPIManagementService(null);
+    }
+
+    @Reference(
+            service = APIResourceManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetAPIResourceManager"
+    )
+    protected void setAPIResourceManager(APIResourceManager apiResourceManager) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setApiResourceManager(apiResourceManager);
+    }
+
+    protected void unsetAPIResourceManager(APIResourceManager apiResourceManager) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setApiResourceManager(null);
+    }
+
+    @Reference(
+            service = RoleManagementService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRoleManagementService"
+    )
+    protected void setRoleManagementService(RoleManagementService roleManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(roleManagementService);
+    }
+
+    protected void unsetRoleManagementService(RoleManagementService roleManagementService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(null);
+    }
+
+    @Reference(
+            name = "realm.service",
+            service = RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService"
+    )
+    protected void setRealmService(RealmService realmService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setRealmService(realmService);
+    }
+
+    protected void unsetRealmService(RealmService realmService) {
+
+        DPDPIdentityExtensionDataHolder.getInstance().setRealmService(null);
+    }
+}

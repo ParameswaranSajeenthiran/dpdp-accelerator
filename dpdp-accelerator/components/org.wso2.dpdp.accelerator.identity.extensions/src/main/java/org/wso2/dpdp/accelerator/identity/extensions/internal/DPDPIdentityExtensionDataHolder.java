@@ -1,0 +1,111 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.wso2.dpdp.accelerator.identity.extensions.internal;
+
+import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.user.core.service.RealmService;
+
+/**
+ * Singleton holder for the OSGi services this module's listener needs, populated by
+ * {@link DPDPPortalExtensionsServiceComponent}.
+ */
+public final class DPDPIdentityExtensionDataHolder {
+
+    private static final DPDPIdentityExtensionDataHolder INSTANCE = new DPDPIdentityExtensionDataHolder();
+
+    private ApplicationManagementService applicationManagementService;
+    private OAuthAdminServiceImpl oAuthAdminService;
+    private AuthorizedAPIManagementService authorizedAPIManagementService;
+    private APIResourceManager apiResourceManager;
+    private RoleManagementService roleManagementService;
+    private RealmService realmService;
+
+    private DPDPIdentityExtensionDataHolder() {
+
+    }
+
+    public static DPDPIdentityExtensionDataHolder getInstance() {
+
+        return INSTANCE;
+    }
+
+    public ApplicationManagementService getApplicationManagementService() {
+
+        return applicationManagementService;
+    }
+
+    public void setApplicationManagementService(ApplicationManagementService applicationManagementService) {
+
+        this.applicationManagementService = applicationManagementService;
+    }
+
+    public OAuthAdminServiceImpl getOAuthAdminService() {
+
+        return oAuthAdminService;
+    }
+
+    public void setOAuthAdminService(OAuthAdminServiceImpl oAuthAdminService) {
+
+        this.oAuthAdminService = oAuthAdminService;
+    }
+
+    public AuthorizedAPIManagementService getAuthorizedAPIManagementService() {
+
+        return authorizedAPIManagementService;
+    }
+
+    public void setAuthorizedAPIManagementService(AuthorizedAPIManagementService authorizedAPIManagementService) {
+
+        this.authorizedAPIManagementService = authorizedAPIManagementService;
+    }
+
+    public APIResourceManager getApiResourceManager() {
+
+        return apiResourceManager;
+    }
+
+    public void setApiResourceManager(APIResourceManager apiResourceManager) {
+
+        this.apiResourceManager = apiResourceManager;
+    }
+
+    public RoleManagementService getRoleManagementService() {
+
+        return roleManagementService;
+    }
+
+    public void setRoleManagementService(RoleManagementService roleManagementService) {
+
+        this.roleManagementService = roleManagementService;
+    }
+
+    public RealmService getRealmService() {
+
+        return realmService;
+    }
+
+    public void setRealmService(RealmService realmService) {
+
+        this.realmService = realmService;
+    }
+}
