@@ -41,14 +41,16 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
     @Override
     public void onTenantCreate(TenantInfoBean tenantInfoBean) throws StratosException {
 
+        String tenantDomain = sanitize(tenantInfoBean.getTenantDomain());
         try {
             if (OrganizationManagementUtil.isOrganization(tenantInfoBean.getTenantId())) {
+                LOG.debug("Skipping DPDP Consent Portal provisioning for organization tenant: " + tenantDomain);
                 return;
             }
             provisionTenant(tenantInfoBean);
         } catch (Exception e) {
-            throw new StratosException("Error provisioning the DPDP Consent Portal for tenant: "
-                    + tenantInfoBean.getTenantDomain(), e);
+            LOG.error("Error provisioning the DPDP Consent Portal for tenant: " + tenantDomain, e);
+            throw new StratosException("Error provisioning the DPDP Consent Portal for tenant: " + tenantDomain, e);
         }
     }
 
@@ -63,7 +65,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             provisionTenant(tenantInfoBean);
         } catch (Exception e) {
             LOG.error("Error provisioning the DPDP Consent Portal for tenant: "
-                    + tenantInfoBean.getTenantDomain(), e);
+                    + sanitize(tenantInfoBean.getTenantDomain()), e);
         }
     }
 
@@ -74,13 +76,17 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
      */
     public static void provisionTenant(TenantInfoBean tenantInfoBean) throws Exception {
 
+        String tenantDomain = sanitize(tenantInfoBean.getTenantDomain());
+
         if (!DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
                 .isConsentPortalProvisioningEnabled()) {
+            LOG.debug("DPDP Consent Portal provisioning is disabled; skipping tenant: " + tenantDomain);
             return;
         }
 
-        String tenantDomain = tenantInfoBean.getTenantDomain();
         if (DPDPConsentPortalAppProvisioningUtil.applicationExists(tenantDomain)) {
+            LOG.debug("The DPDP Consent Portal application already exists for tenant: " + tenantDomain
+                    + "; skipping provisioning.");
             return;
         }
 
@@ -96,10 +102,15 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
 
-            LOG.debug("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
+            LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }
+    }
+
+    private static String sanitize(String value) {
+
+        return value == null ? null : value.replaceAll("[\r\n]", "");
     }
 
     @Override

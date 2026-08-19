@@ -21,6 +21,8 @@ package org.wso2.dpdp.accelerator.common.config;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMException;
 import org.apache.axiom.om.impl.builder.StAXOMBuilder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
@@ -46,6 +48,7 @@ import javax.xml.stream.XMLStreamException;
  */
 public final class DPDPConfigParser {
 
+    private static final Log LOG = LogFactory.getLog(DPDPConfigParser.class);
     private static final Object LOCK = new Object();
     private static DPDPConfigParser parser;
 
@@ -54,6 +57,8 @@ public final class DPDPConfigParser {
     private DPDPConfigParser() {
 
         buildConfiguration();
+        LOG.debug("Loaded " + DPDPCommonConstants.CONFIG_FILE_NAME + " with " + configuration.size()
+                + " configured value(s).");
     }
 
     public static DPDPConfigParser getInstance() {
@@ -78,6 +83,9 @@ public final class DPDPConfigParser {
             StAXOMBuilder builder = new StAXOMBuilder(inStream);
             readChildElements(builder.getDocumentElement(), new Stack<>());
         } catch (IOException | XMLStreamException | OMException e) {
+            LOG.error("Error occurred while building configuration from " + DPDPCommonConstants.CONFIG_FILE_NAME
+                    + ". If this accelerator was upgraded in place, re-run bin/merge.sh so the template that "
+                    + "renders this file is present.", e);
             throw new DPDPCommonRuntimeException("Error occurred while building configuration from "
                     + DPDPCommonConstants.CONFIG_FILE_NAME, e);
         }

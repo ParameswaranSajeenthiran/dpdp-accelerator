@@ -57,6 +57,7 @@ public class DPDPIdentityExtensionServiceComponent {
 
         BundleContext bundleContext = context.getBundleContext();
         bundleContext.registerService(TenantMgtListener.class, new DPDPIdentityExtensionTenantMgtListener(), null);
+        LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
 
         try {
             TenantInfoBean superTenant = new TenantInfoBean();
@@ -73,6 +74,7 @@ public class DPDPIdentityExtensionServiceComponent {
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
+        LOG.debug("DPDP Identity Extensions component deactivated.");
     }
 
     @Reference(
@@ -83,11 +85,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setApplicationManagementService(ApplicationManagementService applicationManagementService) {
 
+        LOG.debug("Setting the Application Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setApplicationManagementService(applicationManagementService);
     }
 
     protected void unsetApplicationManagementService(ApplicationManagementService applicationManagementService) {
 
+        LOG.debug("Unsetting the Application Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setApplicationManagementService(null);
     }
 
@@ -99,11 +103,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setOAuthAdminService(OAuthAdminServiceImpl oAuthAdminService) {
 
+        LOG.debug("Setting the OAuth Admin Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setOAuthAdminService(oAuthAdminService);
     }
 
     protected void unsetOAuthAdminService(OAuthAdminServiceImpl oAuthAdminService) {
 
+        LOG.debug("Unsetting the OAuth Admin Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setOAuthAdminService(null);
     }
 
@@ -115,6 +121,7 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setAuthorizedAPIManagementService(AuthorizedAPIManagementService authorizedAPIManagementService) {
 
+        LOG.debug("Setting the Authorized API Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance()
                 .setAuthorizedAPIManagementService(authorizedAPIManagementService);
     }
@@ -122,6 +129,7 @@ public class DPDPIdentityExtensionServiceComponent {
     protected void unsetAuthorizedAPIManagementService(
             AuthorizedAPIManagementService authorizedAPIManagementService) {
 
+        LOG.debug("Unsetting the Authorized API Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setAuthorizedAPIManagementService(null);
     }
 
@@ -133,11 +141,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setAPIResourceManager(APIResourceManager apiResourceManager) {
 
+        LOG.debug("Setting the API Resource Manager.");
         DPDPIdentityExtensionDataHolder.getInstance().setApiResourceManager(apiResourceManager);
     }
 
     protected void unsetAPIResourceManager(APIResourceManager apiResourceManager) {
 
+        LOG.debug("Unsetting the API Resource Manager.");
         DPDPIdentityExtensionDataHolder.getInstance().setApiResourceManager(null);
     }
 
@@ -149,11 +159,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setRoleManagementService(RoleManagementService roleManagementService) {
 
+        LOG.debug("Setting the Role Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(roleManagementService);
     }
 
     protected void unsetRoleManagementService(RoleManagementService roleManagementService) {
 
+        LOG.debug("Unsetting the Role Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(null);
     }
 
@@ -166,11 +178,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setRealmService(RealmService realmService) {
 
+        LOG.debug("Setting the Realm Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setRealmService(realmService);
     }
 
     protected void unsetRealmService(RealmService realmService) {
 
+        LOG.debug("Unsetting the Realm Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setRealmService(null);
     }
 
@@ -182,11 +196,13 @@ public class DPDPIdentityExtensionServiceComponent {
     )
     protected void setConfigurationService(DPDPConfigurationService configurationService) {
 
+        LOG.debug("Setting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(configurationService);
     }
 
     protected void unsetConfigurationService(DPDPConfigurationService configurationService) {
 
+        LOG.debug("Unsetting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
     }
 }

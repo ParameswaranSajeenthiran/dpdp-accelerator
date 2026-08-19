@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
 import org.wso2.carbon.identity.application.common.model.APIResource;
@@ -54,6 +56,7 @@ import java.util.List;
  */
 public final class DPDPConsentPortalAppProvisioningUtil {
 
+    private static final Log LOG = LogFactory.getLog(DPDPConsentPortalAppProvisioningUtil.class);
     static final String APPLICATION_NAME = "DPDP Consent Portal";
     private static final String USERNAME_CLAIM_URI = "http://wso2.org/claims/username";
     private static final String AUTHORIZED_API_POLICY = "RBAC";
@@ -103,6 +106,8 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             AuthorizedAPI authorizedAPI = new AuthorizedAPI(applicationId, apiResource.getId(),
                     AUTHORIZED_API_POLICY, scopes, apiResource.getType());
             authorizedAPIManagementService.addAuthorizedAPI(applicationId, authorizedAPI, tenantDomain);
+            LOG.debug("Authorized API '" + identifier + "' (" + scopes.size() + " scope(s)) for application: "
+                    + applicationId);
 
             for (Scope scope : scopes) {
                 authorizedScopeNames.add(scope.getName());
@@ -114,6 +119,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     static void registerOAuthApplication(String tenantDomain, String callbackUrl, String clientId)
             throws IdentityOAuthAdminException {
 
+        LOG.debug("Registering the OAuth2 application '" + clientId + "' for tenant: " + tenantDomain);
         OAuthConsumerAppDTO dto = new OAuthConsumerAppDTO();
         dto.setApplicationName(APPLICATION_NAME);
         dto.setOauthConsumerKey(clientId);
@@ -147,6 +153,8 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     static String createApplication(TenantInfoBean tenantInfoBean, String clientId)
             throws IdentityApplicationManagementException {
 
+        LOG.debug("Creating the DPDP Consent Portal service provider for tenant: "
+                + tenantInfoBean.getTenantDomain());
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setApplicationName(APPLICATION_NAME);
         serviceProvider.setDescription("Self-service and administrative portal for DPDP consent management.");
