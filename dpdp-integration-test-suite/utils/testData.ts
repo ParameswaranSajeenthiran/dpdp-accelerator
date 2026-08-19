@@ -39,3 +39,70 @@ export function uniqueElementName(): string {
 export function uniqueServiceId(): string {
   return uniqueMarker('service')
 }
+
+// Realistic-looking labels for tests/03-consents/ - the same style of data as the persistent demo
+// dataset (see utils/consentCleanup.ts's RICH_ELEMENTS/RICH_PURPOSES), but picked per-call and
+// stamped with uniqueMarker so records made by this suite's disposable, per-test setup (created
+// and torn down via seedConsent - never looked up by name first, unlike the demo seed script)
+// never collide with each other or with the persistent dataset in this shared environment.
+export interface ElementProfile {
+  slug: string
+  displayName: string
+  description: string
+}
+
+export const ELEMENT_PROFILES: ElementProfile[] = [
+  { slug: 'email_address', displayName: 'Email Address', description: 'Used to send account and service notifications.' },
+  { slug: 'phone_number', displayName: 'Phone Number', description: 'Used for SMS notifications and two-factor verification.' },
+  { slug: 'shipping_address', displayName: 'Shipping Address', description: 'Delivery address used for order fulfillment.' },
+  { slug: 'date_of_birth', displayName: 'Date of Birth', description: 'Used to verify age eligibility.' },
+  { slug: 'payment_card_details', displayName: 'Payment Card Details', description: 'Used to process purchases and refunds.' },
+  { slug: 'employment_status', displayName: 'Employment Status', description: 'Used for credit and eligibility assessments.' },
+  { slug: 'loyalty_card_number', displayName: 'Loyalty Card Number', description: 'Used to track and redeem loyalty program rewards.' },
+]
+
+export interface PurposeProfile {
+  name: string
+  type: string
+  description: string
+}
+
+export const PURPOSE_PROFILES: PurposeProfile[] = [
+  { name: 'Order Fulfillment', type: 'Operational', description: 'Consent to use delivery details to fulfil and ship customer orders.' },
+  { name: 'Marketing Communications', type: 'Marketing', description: 'Consent to send promotional offers and product updates.' },
+  { name: 'Fraud Prevention', type: 'Security', description: 'Consent to analyze account activity to detect fraudulent transactions.' },
+  { name: 'Customer Support', type: 'Operational', description: 'Consent to access account details when providing support assistance.' },
+  { name: 'Payment Processing', type: 'Financial', description: 'Consent to process payments and issue refunds for purchases.' },
+  { name: 'Loyalty Program Enrollment', type: 'Marketing', description: 'Consent to enroll in the loyalty rewards program.' },
+]
+
+export const SERVICE_NAMES = [
+  'mobile-banking-app',
+  'food-delivery-app',
+  'loyalty-rewards-app',
+  'health-tracker-app',
+  'travel-booking-app',
+  'insurance-portal',
+]
+
+function pick<T>(pool: T[]): T {
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+/** A random realistic Element profile, its slug stamped unique for this call. */
+export function randomElementProfile(): ElementProfile & { name: string } {
+  const profile = pick(ELEMENT_PROFILES)
+  const marker = uniqueMarker(profile.slug)
+  return { ...profile, name: marker, displayName: `${profile.displayName} ${marker}` }
+}
+
+/** A random realistic Purpose profile, its name stamped unique for this call. */
+export function randomPurposeProfile(): PurposeProfile {
+  const profile = pick(PURPOSE_PROFILES)
+  return { ...profile, name: `${profile.name} ${uniqueMarker('purpose')}` }
+}
+
+/** A random realistic service id, stamped unique for this call. */
+export function randomServiceId(): string {
+  return `${pick(SERVICE_NAMES)}-${uniqueMarker('svc')}`
+}

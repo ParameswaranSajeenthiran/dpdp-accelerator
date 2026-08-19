@@ -20,10 +20,17 @@ import { defineConfig, devices } from '@playwright/test'
 import { env } from './utils/env'
 
 // No webServer entry: this suite targets a real, already-running WSO2 IS + accelerator
-// deployment (configured via defaults.env / .env), not something this config starts itself.
+// deployment (configured via .env.example / .env), not something this config starts itself.
 export default defineConfig({
   testDir: 'tests',
   fullyParallel: true,
+  // Every test authenticates as one of a couple of shared IS accounts (ctizen1, dpdp.testuser),
+  // and IS enforces a single active session per account. fixtures/auth.fixtures.ts's
+  // getPersonaState logs each persona in at most once per run (via a file-based cross-process
+  // cache under .auth/, guarded by a lock only for the brief moment of that one login) precisely
+  // so that multiple workers don't each log in independently and keep invalidating each other's
+  // sessions - see that file for the full mechanism. No `workers` override is needed here as a
+  // result; Playwright's own CPU-based default applies.
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: [['html', { open: 'never' }]],

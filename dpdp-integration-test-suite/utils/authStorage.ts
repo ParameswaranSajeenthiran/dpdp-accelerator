@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { readFileSync } from 'node:fs'
+import type { BrowserContext } from '@playwright/test'
 
 // Matches react-apps/consent-portal PortalConstants.java / frontend authClient.ts's split-token
 // cookie contract: part 1 is readable and becomes the Authorization header, part 2 is HttpOnly
@@ -29,34 +29,29 @@ export interface AuthHeaders {
   Cookie: string
 }
 
-interface StorageStateCookie {
-  name: string
-  value: string
-}
+/**
+ * The exact shape `BrowserContext.storageState()` returns (and `browser.newContext({storageState})`
+ * accepts back) when called with no `path`. fixtures/auth.fixtures.ts's getPersonaState is the
+ * one place that persists this, JSON-serialized as-is, to `.auth/<persona>.json`.
+ */
+export type PersonaStorageState = Awaited<ReturnType<BrowserContext['storageState']>>
 
-interface StorageState {
-  cookies: StorageStateCookie[]
-}
-
-function readCookie(storageStatePath: string, name: string): string {
-  const state = JSON.parse(readFileSync(storageStatePath, 'utf-8')) as StorageState
+function readCookie(state: PersonaStorageState, name: string): string {
   const cookie = state.cookies.find((candidate) => candidate.name === name)
   if (!cookie) {
-    throw new Error(
-      `Cookie "${name}" was not found in ${storageStatePath}. Re-run global setup - login may have failed.`,
-    )
+    throw new Error(`Cookie "${name}" was not found in the persona's session state - login may have failed.`)
   }
   return cookie.value
 }
 
 /**
- * Reads a Playwright storageState file produced by global-setup.ts's real login and turns it
+ * Turns an in-memory storageState object (from a real login driven in fixtures/auth.fixtures.ts)
  * into the two headers a raw (non-browser) API call needs to authenticate as that persona
  * against the BFF, which expects the split-token contract (Authorization: part 1, Cookie: part 2).
  */
-export function authHeadersFromStorageState(storageStatePath: string): AuthHeaders {
+export function authHeadersFromStorageState(state: PersonaStorageState): AuthHeaders {
   return {
-    Authorization: `Bearer ${readCookie(storageStatePath, ACCESS_TOKEN_PART1_COOKIE)}`,
-    Cookie: `${ACCESS_TOKEN_PART2_COOKIE}=${readCookie(storageStatePath, ACCESS_TOKEN_PART2_COOKIE)}`,
+    Authorization: `Bearer ${readCookie(state, ACCESS_TOKEN_PART1_COOKIE)}`,
+    Cookie: `${ACCESS_TOKEN_PART2_COOKIE}=${readCookie(state, ACCESS_TOKEN_PART2_COOKIE)}`,
   }
 }

@@ -19,17 +19,17 @@
 import { config as loadDotenv } from 'dotenv'
 import path from 'node:path'
 
-// defaults.env is committed and carries non-secret defaults; a gitignored .env overrides it
+// .env.example is committed and carries non-secret defaults; a gitignored .env overrides it
 // with the real per-environment values (credentials, non-default hosts). Loaded in this order
-// so defaults.env always applies first and .env only overrides what it actually sets.
-loadDotenv({ path: path.resolve(import.meta.dirname, '..', 'defaults.env') })
+// so .env.example always applies first and .env only overrides what it actually sets.
+loadDotenv({ path: path.resolve(import.meta.dirname, '..', '.env.example') })
 loadDotenv({ path: path.resolve(import.meta.dirname, '..', '.env'), override: true })
 
 function required(name: string): string {
   const value = process.env[name]
   if (!value) {
     throw new Error(
-      `Missing required environment variable "${name}". Copy defaults.env to .env and fill it in - see README.md.`,
+      `Missing required environment variable "${name}". Copy .env.example to .env and fill it in - see README.md.`,
     )
   }
   return value
@@ -64,7 +64,6 @@ export const env = {
   portalNavigationBaseUrl: `${rawPortalBaseUrl}/`,
   identityServerBaseUrl: trimTrailingSlash(required('IS_BASE_URL')),
   ignoreHttpsErrors: (process.env.IGNORE_HTTPS_ERRORS ?? 'true') === 'true',
-  authStateDir: path.resolve(import.meta.dirname, '..', process.env.AUTH_STATE_DIR ?? '.auth'),
 
   dataPrincipal: {
     username: required('TEST_DATA_PRINCIPAL_USERNAME'),
@@ -112,8 +111,3 @@ export function consentElementsApiUrl(path: string): string {
 }
 
 export type PersonaName = 'data-principal' | 'data-principal-2' | 'consent-admin'
-
-/** Where global-setup.ts saves (and fixtures/tests read back) a persona's real login session. */
-export function authStateFile(persona: PersonaName): string {
-  return path.join(env.authStateDir, `${persona}.json`)
-}

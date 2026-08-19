@@ -17,7 +17,7 @@
 # under the License.
 #
 # Single local entrypoint: installs dependencies if needed, then runs the suite against
-# whatever real environment is configured in .env (see defaults.env and README.md). Unlike a
+# whatever real environment is configured in .env (see .env.example and README.md). Unlike a
 # self-contained suite, this script does not start or stop any server - the target environment
 # is expected to already be running.
 
@@ -27,8 +27,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
 if [ ! -f .env ]; then
-  echo "No .env found. Copy defaults.env to .env and fill in the test account credentials first:" >&2
-  echo "  cp defaults.env .env" >&2
+  echo "No .env found. Copy .env.example to .env and fill in the test account credentials first:" >&2
+  echo "  cp .env.example .env" >&2
   exit 1
 fi
 

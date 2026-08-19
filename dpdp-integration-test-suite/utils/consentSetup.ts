@@ -23,7 +23,7 @@ import { ElementFormDialog } from '../pages/ElementFormDialog'
 import { ElementListPage } from '../pages/ElementListPage'
 import { PurposeFormDialog } from '../pages/PurposeFormDialog'
 import { PurposeListPage } from '../pages/PurposeListPage'
-import { uniqueElementName, uniquePurposeName, uniqueServiceId } from './testData'
+import { randomElementProfile, randomPurposeProfile, randomServiceId } from './testData'
 
 export interface SeededConsent {
   consentId: string
@@ -64,27 +64,37 @@ export async function seedConsent(
   tracker: ConsentCleanupTracker,
   subjectId: string,
   state: 'ACTIVE' | 'REJECTED' | 'PENDING',
-  serviceId: string = uniqueServiceId(),
+  serviceId: string = randomServiceId(),
 ): Promise<SeededConsent> {
-  const elementName = uniqueElementName()
-  const elementDisplayName = `Test Element ${elementName}`
+  const element = randomElementProfile()
+  const elementDisplayName = element.displayName
 
   const elementListPage = new ElementListPage(adminPage)
   await elementListPage.goto()
   await elementListPage.openCreateDialog()
   const elementDialog = new ElementFormDialog(adminPage)
-  await elementDialog.fill({ name: elementName, displayName: elementDisplayName })
+  await elementDialog.fill({
+    name: element.name,
+    displayName: elementDisplayName,
+    description: element.description,
+  })
   await elementDialog.submit()
   await expect(adminPage).toHaveURL(/\/elements\/[^/]+$/)
   const elementId = idFromDetailUrl(adminPage.url(), 'elements')
   tracker.trackElement(elementId)
 
-  const purposeName = uniquePurposeName()
+  const purpose = randomPurposeProfile()
+  const purposeName = purpose.name
   const purposeListPage = new PurposeListPage(adminPage)
   await purposeListPage.goto()
   await purposeListPage.openCreateDialog()
   const purposeDialog = new PurposeFormDialog(adminPage)
-  await purposeDialog.fill({ name: purposeName, type: 'Marketing', version: 'v1' })
+  await purposeDialog.fill({
+    name: purposeName,
+    type: purpose.type,
+    version: 'v1',
+    description: purpose.description,
+  })
   await purposeDialog.submit()
   await expect(adminPage).toHaveURL(/\/purposes\/[^/]+$/)
   const purposeId = idFromDetailUrl(adminPage.url(), 'purposes')

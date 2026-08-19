@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { Persona } from '../utils/env'
 
 /**
@@ -26,7 +26,15 @@ import type { Persona } from '../utils/env'
  * correctly constructs that URL (client id, PKCE challenge, requested scopes, state).
  */
 export class LoginPage {
-  constructor(private readonly page: Page) {}
+  readonly errorMessage: Locator
+
+  constructor(private readonly page: Page) {
+    // Rendered by the login.do JSP only after a failed attempt redirects back to itself with
+    // authFailure=true - confirmed empirically (see fixtures/auth.fixtures.ts's
+    // loginAndCaptureState, the one place this locator is actually exercised), not documented
+    // anywhere.
+    this.errorMessage = this.page.getByTestId('login-page-error-message')
+  }
 
   async signIn(persona: Persona): Promise<void> {
     const dismissBanner = this.page.getByRole('button', { name: 'Got it' })

@@ -16,13 +16,19 @@
  * under the License.
  */
 
+import { rm } from 'node:fs/promises'
+import path from 'node:path'
+
 /**
  * This suite runs against a real, persistent environment: consents/purposes/elements created by
  * tests stay in the real database (there is no per-run reset - see utils/testData.ts for why
- * tests are written to tolerate that instead). There is deliberately nothing to clean up here: global-setup
- * always logs in fresh on the next run rather than trusting a possibly-expired saved session, so
- * the .auth/ storageState files it leaves behind are just its last output, not suite state.
+ * tests are written to tolerate that instead) - deliberately not cleaned up here.
+ *
+ * `.auth/` is different: fixtures/auth.fixtures.ts's getPersonaState caches each persona's login
+ * there so every test/worker can reuse it, and it's removed here so the next run always starts
+ * with a fresh login rather than silently reusing a session left over from this one.
  */
-export default function globalTeardown(): void {
+export default async function globalTeardown(): Promise<void> {
+  await rm(path.resolve(import.meta.dirname, '.auth'), { recursive: true, force: true })
   console.log('DPDP integration test suite run finished.')
 }

@@ -6,8 +6,10 @@
   "scripts": {
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:consent-catalog-management": "playwright test tests/01-consent-catalog-management",
-    "test:consent-lifecycle": "playwright test tests/02-consent-lifecycle",
+    "test:elements": "playwright test tests/01-elements",
+    "test:purposes": "playwright test tests/02-purposes",
+    "test:consents": "playwright test tests/03-consents",
+    "test:authorization": "playwright test tests/04-authorization",
     "test:demo-data": "playwright test tests/99-demo-data",
     "report": "playwright show-report"
   },

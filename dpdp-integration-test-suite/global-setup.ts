@@ -16,11 +16,7 @@
  * under the License.
  */
 
-import { mkdirSync } from 'node:fs'
-import { chromium } from '@playwright/test'
-import { LoginPage } from './pages/LoginPage'
-import { authHeadersFromStorageState } from './utils/authStorage'
-import { authStateFile, consentPurposesApiUrl, env, type Persona, type PersonaName } from './utils/env'
+import { env } from './utils/env'
 
 // Node's global fetch (unlike Playwright's own browser/request APIs) has no per-call option to
 // ignore an untrusted certificate - it only honors this process-wide env var. The shipped
@@ -31,11 +27,11 @@ if (env.ignoreHttpsErrors) {
 }
 
 /**
- * Runs once before the whole suite. This is a real environment (no fake IdP to inject tokens
- * into), so the only way to get an authenticated session is to actually drive the Identity
- * Server's login form once per persona - done here, up front, rather than in every test, and
- * the resulting storageState is what fixtures/auth.fixtures.ts and utils/authStorage.ts reuse
- * for the rest of the run.
+ * Runs once before the whole suite, in Playwright's own separate globalSetup process. This only
+ * checks that the target environment is actually up - it does NOT log any persona in. Login
+ * happens lazily instead, the first time any test in the run actually needs a given persona - see
+ * fixtures/auth.fixtures.ts's getPersonaState, which caches the result to a file under `.auth/`
+ * so every worker process can reuse it without needing to log in itself.
  */
 async function checkReachable(url: string, label: string): Promise<void> {
   try {
@@ -51,103 +47,9 @@ async function checkReachable(url: string, label: string): Promise<void> {
   }
 }
 
-/**
- * WSO2 IS invalidates a session when the same account logs in again elsewhere (e.g. a real
- * browser tab left open, or a previous Playwright run's session that never got closed) - which
- * shows up as unexplained timeouts partway through a run. `/api/users/v1/me/sessions` is IS's own
- * self-service session-management API: plain HTTP Basic auth with the account's own credentials
- * is enough (verified live - no OAuth token, no special role needed), and DELETE terminates every
- * active session for that account, including ones from a real browser. This only clears sessions
- * that already existed before this run starts - it can't stop a *new* login (e.g. someone signing
- * into the portal manually) from colliding with this run's own session once it's underway.
- */
-async function terminateAllSessions(persona: Persona): Promise<void> {
-  const credentials = Buffer.from(`${persona.username}:${persona.password}`).toString('base64')
-  try {
-    const response = await fetch(`${env.identityServerBaseUrl}/api/users/v1/me/sessions`, {
-      method: 'DELETE',
-      headers: { Authorization: `Basic ${credentials}` },
-      signal: AbortSignal.timeout(10_000),
-    })
-    if (response.status !== 204) {
-      console.warn(
-        `Could not terminate ${persona.username}'s existing sessions (status ${String(response.status)}) - proceeding anyway.`,
-      )
-    }
-  } catch (error) {
-    console.warn(
-      `Could not terminate ${persona.username}'s existing sessions - proceeding anyway. Cause: ${(error as Error).message}`,
-    )
-  }
-}
-
-async function loginAndSave(persona: Persona, personaName: PersonaName): Promise<void> {
-  const browser = await chromium.launch()
-  const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
-  const page = await context.newPage()
-
-  await page.goto(`${env.portalBaseUrl}/`, { waitUntil: 'networkidle' })
-  await new LoginPage(page).signIn(persona)
-
-  // The callback redirect chain lands back on the SPA; wait for the BFF's own session probe to
-  // succeed as proof the login actually completed (a wrong password re-renders the same IS
-  // login form instead of navigating anywhere, which this would time out on).
-  await page.waitForResponse(
-    (response) => response.url().endsWith('/me') && response.status() === 200,
-    { timeout: 30_000 },
-  )
-
-  await context.storageState({ path: authStateFile(personaName) })
-  await browser.close()
-}
-
-/**
- * A successful login only proves the consent-admin persona's credentials are valid, not that the
- * account actually holds the `dpdp-consent-admin` role - that role assignment is a manual Console
- * step (see docs/configuration-guide.md step 4) that's easy to forget for a freshly created test
- * account. Without this check, a missing role surfaces as dozens of unrelated, confusing
- * assertion failures scattered across the suite (every seeded Purpose/Element/Consent creation
- * silently 401s/403s) instead of one clear error naming the actual problem, right at setup.
- */
-async function verifyConsentAdminAuthorized(): Promise<void> {
-  const headers = authHeadersFromStorageState(authStateFile('consent-admin'))
-  const response = await fetch(consentPurposesApiUrl(''), {
-    headers: { ...headers },
-    signal: AbortSignal.timeout(10_000),
-  })
-  if (response.status === 401 || response.status === 403) {
-    throw new Error(
-      `TEST_CONSENT_ADMIN_USERNAME ("${env.consentAdmin.username}") logged in successfully but ` +
-        `is not authorized for the consent-management admin API (got ${String(response.status)} ` +
-        `from ${consentPurposesApiUrl('')}). Assign this account the dpdp-consent-admin role in ` +
-        `the Console - see docs/configuration-guide.md step 4.`,
-    )
-  }
-}
-
 export default async function globalSetup(): Promise<void> {
-  mkdirSync(env.authStateDir, { recursive: true })
-
   // The same endpoint the BFF's TokenValidator itself depends on (identity.server.internal.base.url
   // + /oauth2/jwks) - reachability here is a direct precondition for every login this suite does.
   await checkReachable(`${env.identityServerBaseUrl}/oauth2/jwks`, 'Identity Server')
   await checkReachable(`${env.portalBaseUrl}/`, 'Consent portal')
-
-  await terminateAllSessions(env.dataPrincipal)
-  await loginAndSave(env.dataPrincipal, 'data-principal')
-
-  await terminateAllSessions(env.consentAdmin)
-  await loginAndSave(env.consentAdmin, 'consent-admin')
-  await verifyConsentAdminAuthorized()
-
-  const secondPrincipal = env.secondDataPrincipal()
-  if (secondPrincipal) {
-    await terminateAllSessions(secondPrincipal)
-    await loginAndSave(secondPrincipal, 'data-principal-2')
-  } else {
-    console.log(
-      'TEST_DATA_PRINCIPAL_2_USERNAME/PASSWORD not set - ownership-isolation tests that need a ' +
-        'second real user will skip themselves.',
-    )
-  }
 }
