@@ -157,6 +157,23 @@ describe('signing in', () => {
     )
   })
 
+  it('fails rather than reporting a redirect when the handoff leaves no session', async () => {
+    // Nothing navigates on this path, so a false here would leave the caller
+    // waiting on a redirect that is never coming.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith('/consent-portal/auth')
+          ? jsonResponse({ authCode: 'code-1', sessionState: '', state: '' })
+          : new Response('', { status: 404 }),
+      ),
+    )
+    sdk.isAuthenticated.mockResolvedValue(false)
+    const { ensureSignedIn } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).rejects.toThrow('without establishing a session')
+  })
+
   it('ignores an empty handoff and starts a fresh sign-in', async () => {
     vi.stubGlobal(
       'fetch',

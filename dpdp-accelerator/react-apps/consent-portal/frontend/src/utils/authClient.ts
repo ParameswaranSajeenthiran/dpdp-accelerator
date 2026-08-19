@@ -251,9 +251,10 @@ export async function isAuthenticated(): Promise<boolean> {
 /**
  * Completes an in-flight sign-in, or starts one.
  *
- * Returns true when the session is ready. Returns false when the browser is
- * being redirected to the Identity Server, in which case the caller should
- * render nothing and let the navigation happen.
+ * Returns true when the session is ready, and false only when the browser is
+ * on its way to the Identity Server - the caller should draw nothing and let
+ * the navigation happen. Anything else throws, so a caller waiting on the
+ * redirect never waits on something that is not coming.
  */
 export async function ensureSignedIn(): Promise<boolean> {
   if (!isAuthEnabled()) {
@@ -273,7 +274,14 @@ export async function ensureSignedIn(): Promise<boolean> {
       handoff.sessionState,
       handoff.state,
     )
-    return (await client.isAuthenticated()) ?? false
+    if (await client.isAuthenticated()) {
+      return true
+    }
+    // Nothing is navigating on this path, so returning false would leave the
+    // caller waiting for a redirect that never comes. A token exchange that
+    // fails outright rejects before this; reaching here means it resolved
+    // without a usable session - an expiry already in the past, say.
+    throw new Error('the sign-in completed without establishing a session')
   }
 
   // No pending code: hand over to the Identity Server. In dev the SDK picks

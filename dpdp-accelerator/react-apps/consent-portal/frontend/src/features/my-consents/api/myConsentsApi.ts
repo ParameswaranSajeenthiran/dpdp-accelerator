@@ -37,12 +37,6 @@ function consentPath(consentID: string, suffix = ''): string {
   return `${SELF_CONSENTS}/${encodeURIComponent(consentID)}${suffix}`
 }
 
-/** The upstream filter takes a single state; the UI sends a comma separated list. */
-function firstValue(value?: string): string | undefined {
-  const first = value?.split(',')[0]?.trim()
-  return first ? first : undefined
-}
-
 function summaryAsDetail(summary: ConsentSummary): ConsentDetail {
   return { ...summary, purposes: [] }
 }
@@ -67,7 +61,7 @@ export async function fetchMyConsents(
     query: {
       limit: Math.min(offset + limit + 1, MAX_FETCH),
       serviceId: params.serviceId ? params.serviceId : undefined,
-      state: firstValue(params.consentStatuses),
+      state: params.state,
     },
   })
 

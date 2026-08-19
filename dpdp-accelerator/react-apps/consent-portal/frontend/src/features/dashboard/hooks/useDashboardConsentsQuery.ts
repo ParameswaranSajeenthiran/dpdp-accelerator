@@ -18,7 +18,7 @@
 
 import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 import type { ConsentDetail } from '../../../types/consent'
-import { fetchMyConsents } from '../../consent-registry/api/consentsApi'
+import { fetchMyConsents } from '../../my-consents/api/myConsentsApi'
 
 const DASHBOARD_PAGE_SIZE = 100
 const DASHBOARD_MAX_PAGES = 20

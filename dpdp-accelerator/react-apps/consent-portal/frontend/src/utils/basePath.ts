@@ -28,15 +28,25 @@
 
 const CONTEXT_SEGMENT = '/consent-portal'
 
-/** "/t/<tenant>/consent-portal" under a tenant, "/consent-portal" otherwise. */
-export function runtimeBasePath(pathname: string = window.location.pathname): string {
-  const match = pathname.match(/^(\/t\/[^/]+)?\/consent-portal(?:\/|$)/)
-  return match ? `${match[1] ?? ''}${CONTEXT_SEGMENT}` : CONTEXT_SEGMENT
-}
+/**
+ * Matches a tenant-qualified path, capturing the tenant.
+ *
+ * The tenant is limited to the characters a domain can hold. It goes on to be
+ * spliced into OAuth and API URLs, and anything looser - a percent-encoded dot
+ * segment, say - would let the path the page was loaded from reshape where
+ * those requests are addressed.
+ */
+const TENANT_PATH = /^\/t\/([A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?)\/consent-portal(?:\/|$)/
 
 /** The tenant domain from a tenant-qualified URL, or undefined for the super tenant. */
 export function tenantFromPath(pathname: string = window.location.pathname): string | undefined {
-  return pathname.match(/^\/t\/([^/]+)\/consent-portal(?:\/|$)/)?.[1]
+  return pathname.match(TENANT_PATH)?.[1]
+}
+
+/** "/t/<tenant>/consent-portal" under a tenant, "/consent-portal" otherwise. */
+export function runtimeBasePath(pathname: string = window.location.pathname): string {
+  const tenant = tenantFromPath(pathname)
+  return tenant ? `/t/${tenant}${CONTEXT_SEGMENT}` : CONTEXT_SEGMENT
 }
 
 /**

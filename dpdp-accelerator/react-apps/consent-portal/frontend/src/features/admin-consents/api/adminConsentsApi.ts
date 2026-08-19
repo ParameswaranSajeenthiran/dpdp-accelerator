@@ -53,6 +53,9 @@ export async function fetchAdminConsentByID(consentID: string): Promise<ConsentD
  * is expanded with a detail lookup - the table shows which purposes a consent
  * covers. The lookups run together, and a row whose lookup fails keeps its
  * summary rather than blanking the page.
+ *
+ * The expansion goes away once the list endpoint returns purposes itself:
+ * https://github.com/wso2/dpdp-accelerator/issues/23
  */
 export async function fetchAdminConsents(
   params: AdminConsentListQueryParams,

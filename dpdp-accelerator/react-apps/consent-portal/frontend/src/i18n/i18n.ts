@@ -41,9 +41,6 @@ import { applyLanguageSideEffects, DEFAULT_LANGUAGE, readStoredLanguage } from '
  * create at run time. English is the complete set; every other language falls
  * back to English for any key it is missing.
  */
-// Detected at run time rather than baked in: the same build is served at
-// /consent-portal and at /t/<tenant>/consent-portal, and the translations sit
-// beside the application in both.
 const loadPath = `${runtimeBasePath()}/i18n/{{lng}}/{{ns}}.json`
 
 const initialLanguage = readStoredLanguage()

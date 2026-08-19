@@ -17,7 +17,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { join, relative, resolve, sep } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
 const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8')
@@ -82,9 +82,12 @@ const forbiddenSinks = [
  */
 const allowedSinks = new Map([['src/utils/authClient.ts', new Set(['sessionStorage'])]])
 
+/** Exemptions are written with forward slashes; Windows reports backslashes. */
+const asKey = (path) => relative(root, path).split(sep).join('/')
+
 for (const path of productionSources) {
   const source = readFileSync(path, 'utf8')
-  const relativePath = relative(root, path)
+  const relativePath = asKey(path)
   const allowed = allowedSinks.get(relativePath) ?? new Set()
   for (const [pattern, sink] of forbiddenSinks) {
     if (pattern.test(source) && !allowed.has(sink)) {
@@ -96,7 +99,7 @@ for (const path of productionSources) {
 // An exemption for a file that no longer exists is an exemption nobody is
 // reading; fail rather than let it rot into a silent hole.
 for (const path of allowedSinks.keys()) {
-  if (!productionSources.some((source) => relative(root, source) === path)) {
+  if (!productionSources.some((source) => asKey(source) === path)) {
     failures.push(`sink exemption for ${path} refers to a file that is no longer built`)
   }
 }

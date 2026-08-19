@@ -22,7 +22,7 @@ import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/ox
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import ConsentDetailsPage from '../features/consent-registry/ConsentDetailsPage'
+import ConsentDetailsPage from '../features/my-consents/ConsentDetailsPage'
 import i18n from '../i18n/i18n'
 import type { ConsentDetail } from '../types/consent'
 import { APIError } from '../utils/apiClient'
@@ -37,7 +37,7 @@ const consentsApi = vi.hoisted(() => ({
   fetchMyConsents: vi.fn(),
 }))
 
-vi.mock('../features/consent-registry/api/consentsApi', () => consentsApi)
+vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
 const CONSENT_ID = '06168ee0-f82a-4b0f-87ea-2a37600ec3f2'
 

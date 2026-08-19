@@ -53,6 +53,26 @@ describe('tenantFromPath', () => {
     expect(tenantFromPath('/consent-portal/consents')).toBeUndefined()
     expect(tenantFromPath('/')).toBeUndefined()
   })
+
+  it('rejects anything that is not shaped like a domain', () => {
+    // The value is spliced into API and OAuth URLs, so a dot segment or an
+    // encoded separator must not survive to redirect them elsewhere.
+    expect(tenantFromPath('/t/%2e%2e/consent-portal/')).toBeUndefined()
+    expect(tenantFromPath('/t/..%2f/consent-portal/')).toBeUndefined()
+    expect(tenantFromPath('/t/-acme.com/consent-portal/')).toBeUndefined()
+    expect(tenantFromPath('/t/acme.com-/consent-portal/')).toBeUndefined()
+    expect(tenantFromPath('/t/a b.com/consent-portal/')).toBeUndefined()
+  })
+
+  it('accepts the domain forms a tenant really takes', () => {
+    expect(tenantFromPath('/t/acme.com/consent-portal/')).toBe('acme.com')
+    expect(tenantFromPath('/t/sub.acme-corp.co.uk/consent-portal/')).toBe('sub.acme-corp.co.uk')
+    expect(tenantFromPath('/t/a/consent-portal/')).toBe('a')
+  })
+
+  it('ignores a malformed tenant when deriving the base path', () => {
+    expect(runtimeBasePath('/t/%2e%2e/consent-portal/')).toBe('/consent-portal')
+  })
 })
 
 describe('tenantPathSegment', () => {

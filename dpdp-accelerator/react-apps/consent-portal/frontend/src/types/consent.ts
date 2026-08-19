@@ -137,7 +137,8 @@ export interface ConsentSearchResponse {
 export interface ConsentListQueryParams {
   limit: number
   offset: number
-  consentStatuses?: string
+  /** One state, or undefined for all: the filter is a single-select. */
+  state?: ConsentState
   serviceId?: string
 }
 

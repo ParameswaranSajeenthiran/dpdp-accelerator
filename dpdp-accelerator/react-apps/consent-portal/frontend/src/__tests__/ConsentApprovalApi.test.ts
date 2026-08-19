@@ -22,7 +22,7 @@ import {
   fetchMyConsents,
   rejectMyConsent,
   revokeMyConsent,
-} from '../features/consent-registry/api/consentsApi'
+} from '../features/my-consents/api/myConsentsApi'
 import { APIError } from '../utils/apiClient'
 
 const transport = vi.hoisted(() => ({
@@ -91,7 +91,7 @@ describe('self-service consent API', () => {
     const page = await fetchMyConsents({
       limit: 2,
       offset: 1,
-      consentStatuses: 'PENDING,ACTIVE',
+      state: 'PENDING',
       serviceId: 'dpdp-portal',
     })
 

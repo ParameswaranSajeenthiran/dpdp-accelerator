@@ -28,11 +28,13 @@
 # same arrangement My Account and Console use. Run once per tenant; safe to
 # re-run.
 #
+# Bash, not sh: this uses arrays, BASH_SOURCE and source.
+#
 # Usage:
-#   sh bin/create-portal-app.sh                       # super tenant
-#   sh bin/create-portal-app.sh -b https://localhost:9444
-#   sh bin/create-portal-app.sh -t wso2.com \
-#      -u admin@wso2.com -p '<password>'              # a tenant
+#   bash bin/create-portal-app.sh                       # super tenant
+#   bash bin/create-portal-app.sh -b https://localhost:9444
+#   bash bin/create-portal-app.sh -t wso2.com \
+#        -u admin@wso2.com -p '<password>'              # a tenant
 
 set -e
 
@@ -105,10 +107,38 @@ case "${TENANT}:${ADMIN_USER}" in
   *) ADMIN_USER="${ADMIN_USER}@${TENANT}" ;;
 esac
 
+# An array, not a string: a scalar would be word-split at every call site, so a
+# password containing a space would authenticate as a different user and report
+# an unhelpful 401.
 # -k is required because the shipped Identity Server certificate is self-signed.
-CURL="curl -sk -u ${ADMIN_USER}:${ADMIN_PASS}"
+CURL=(curl -sk -u "${ADMIN_USER}:${ADMIN_PASS}")
 
 json() { python3 -c "import json,sys; d=json.load(sys.stdin); print($1)" 2>/dev/null || true; }
+
+# Sends a request that changes something and stops the run if it is refused.
+# Without this a rejected call is invisible: the step prints its progress line
+# and the script goes on to report "Done" having configured nothing.
+send_mutation() {
+  local description="$1"
+  local also_ok="$2"
+  shift 2
+  local status
+  status=$("${CURL[@]}" -o /dev/null -w '%{http_code}' "$@") || status=000
+  case "${status}" in
+    2*) return ;;
+  esac
+  if [ -n "${also_ok}" ] && [ "${status}" = "${also_ok}" ]; then
+    return
+  fi
+  echo "ERROR: ${description} failed (HTTP ${status})."
+  exit 2
+}
+
+mutate() { send_mutation "$1" "" "${@:2}"; }
+
+# For creates the server treats as one-shot: 409 is it saying the thing is
+# already there, which is what a second run should find.
+mutate_or_exists() { send_mutation "$1" 409 "${@:2}"; }
 
 echo "Identity Server : ${BASE}"
 echo "Tenant          : ${TENANT}"
@@ -120,7 +150,7 @@ echo
 # password does not read as a wrong URL.
 # curl already reports 000 when it cannot connect, so do not add a fallback
 # of our own here or the two run together.
-STATUS=$(${CURL} -o /dev/null -w '%{http_code}' "${API}/api/server/v1/api-resources?limit=1" 2>/dev/null) || true
+STATUS=$("${CURL[@]}" -o /dev/null -w '%{http_code}' "${API}/api/server/v1/api-resources?limit=1" 2>/dev/null) || true
 case "${STATUS:-000}" in
   2*) ;;
   000)
@@ -143,7 +173,7 @@ esac
 
 # ------------------------------------------------------------------ application
 echo "[1/5] Registering ${CLIENT_ID}"
-APP_ID=$(${CURL} --get --data-urlencode "filter=clientId eq ${CLIENT_ID}" \
+APP_ID=$("${CURL[@]}" --get --data-urlencode "filter=clientId eq ${CLIENT_ID}" \
   "${API}/api/server/v1/applications" | json "d['applications'][0]['id'] if d.get('applications') else ''")
 
 if [ -n "${APP_ID}" ]; then
@@ -163,14 +193,14 @@ print(json.dumps({
 }))
 PY
 )
-  DCR=$(${CURL} -H 'Content-Type: application/json' -d "${DCR_BODY}" \
+  DCR=$("${CURL[@]}" -H 'Content-Type: application/json' -d "${DCR_BODY}" \
     "${API}/api/identity/oauth2/dcr/v1.1/register")
   CREATED=$(echo "${DCR}" | json "d.get('client_id','')")
   if [ "${CREATED}" != "${CLIENT_ID}" ]; then
     echo "ERROR: registration failed: ${DCR}"
     exit 2
   fi
-  APP_ID=$(${CURL} --get --data-urlencode "filter=clientId eq ${CLIENT_ID}" \
+  APP_ID=$("${CURL[@]}" --get --data-urlencode "filter=clientId eq ${CLIENT_ID}" \
     "${API}/api/server/v1/applications" | json "d['applications'][0]['id']")
   echo "      Registered ${CLIENT_ID} (${APP_ID})"
 fi
@@ -208,23 +238,29 @@ print(json.dumps({
 }))
 PY
 )
-RESULT=$(${CURL} -X PUT -H 'Content-Type: application/json' -d "${OIDC_BODY}" \
-  "${API}/api/server/v1/applications/${APP_ID}/inbound-protocols/oidc")
-if [ -n "$(echo "${RESULT}" | json "d.get('code','')")" ]; then
-  echo "ERROR: could not configure the OAuth inbound: ${RESULT}"
-  exit 2
-fi
+# The body is wanted for the error message, so the status is appended to it
+# rather than replacing it as elsewhere.
+RESULT=$("${CURL[@]}" -X PUT -H 'Content-Type: application/json' -d "${OIDC_BODY}" \
+  -w '\n%{http_code}' "${API}/api/server/v1/applications/${APP_ID}/inbound-protocols/oidc")
+OIDC_STATUS="${RESULT##*$'\n'}"
+OIDC_RESPONSE="${RESULT%$'\n'*}"
+case "${OIDC_STATUS}" in
+  2*) ;;
+  *)
+    echo "ERROR: could not configure the OAuth inbound (HTTP ${OIDC_STATUS}): ${OIDC_RESPONSE}"
+    exit 2 ;;
+esac
 
 # A first-party self-care portal should not ask the user to consent to its own
 # scopes on every login. The username claim has to be requested explicitly or
 # the ID token carries only "sub" and the portal cannot name the signed-in user.
-${CURL} -X PATCH -H 'Content-Type: application/json' -d '{
+mutate "requesting the username claim" -X PATCH -H 'Content-Type: application/json' -d '{
     "advancedConfigurations": {"skipLoginConsent": true, "skipLogoutConsent": true},
     "claimConfiguration": {
       "dialect": "LOCAL",
       "requestedClaims": [{"claim": {"uri": "http://wso2.org/claims/username"}, "mandatory": true}]
     }
-  }' "${API}/api/server/v1/applications/${APP_ID}" -o /dev/null
+  }' "${API}/api/server/v1/applications/${APP_ID}"
 
 # ------------------------------------------------------------- API authorization
 echo "[3/5] Authorizing the consent management APIs"
@@ -234,7 +270,7 @@ for IDENTIFIER in \
   "/api/identity/consent-mgt/v2.0/purposes" \
   "/api/identity/consent-mgt/v2.0/elements"; do
 
-  RESOURCE=$(${CURL} --get --data-urlencode "filter=identifier eq ${IDENTIFIER}" \
+  RESOURCE=$("${CURL[@]}" --get --data-urlencode "filter=identifier eq ${IDENTIFIER}" \
     "${API}/api/server/v1/api-resources" | json "d['apiResources'][0]['id'] if d.get('apiResources') else ''")
   if [ -z "${RESOURCE}" ]; then
     echo "ERROR: API resource ${IDENTIFIER} is not registered."
@@ -242,13 +278,13 @@ for IDENTIFIER in \
     exit 2
   fi
 
-  SCOPES=$(${CURL} "${API}/api/server/v1/api-resources/${RESOURCE}" \
+  SCOPES=$("${CURL[@]}" "${API}/api/server/v1/api-resources/${RESOURCE}" \
     | json "json.dumps([s['name'] for s in d.get('scopes',[])])")
   ALL_SCOPES="${ALL_SCOPES}${SCOPES}"
 
   BODY=$(python3 -c "import json;print(json.dumps({'id':'${RESOURCE}','policyIdentifier':'RBAC','scopes':json.loads('''${SCOPES}''')}))")
-  ${CURL} -H 'Content-Type: application/json' -d "${BODY}" \
-    "${API}/api/server/v1/applications/${APP_ID}/authorized-apis" -o /dev/null
+  mutate_or_exists "authorizing ${IDENTIFIER}" -H 'Content-Type: application/json' -d "${BODY}" \
+    "${API}/api/server/v1/applications/${APP_ID}/authorized-apis"
   echo "      ${IDENTIFIER}"
 done
 
@@ -258,31 +294,54 @@ echo "[4/5] Creating the ${ADMIN_ROLE} role"
 # Identity Server only puts a scope in a token when the user holds a role that
 # grants it. Roles belong to an audience, so a same-named role on a different
 # application would never reach this application's tokens - match on the id.
-ROLE_ID=$(${CURL} --get --data-urlencode "filter=displayName eq ${ADMIN_ROLE}" \
+ROLE_ID=$("${CURL[@]}" --get --data-urlencode "filter=displayName eq ${ADMIN_ROLE}" \
   "${API}/scim2/v2/Roles" \
   | json "next((r['id'] for r in d.get('Resources',[]) if r.get('audience',{}).get('value')=='${APP_ID}'), '')")
 
+# Needed in both branches: to create the role, and to bring an existing one
+# back in line when a release adds a scope.
+PERMISSIONS=$(python3 -c "
+import json
+scopes = json.loads('''${ALL_SCOPES}'''.replace('][', ','))
+print(json.dumps([{'value': s} for s in scopes]))")
+
 if [ -n "${ROLE_ID}" ]; then
-  echo "      Role already exists (${ROLE_ID}); leaving its members unchanged."
+  # A patch naming only permissions leaves the role's users and groups alone,
+  # where replacing the whole role would drop them. Skipping the update instead
+  # would leave the role short of any scope added since it was created, which
+  # is the whole point of the script being re-runnable.
+  PATCH_BODY=$(python3 -c "
+import json
+print(json.dumps({
+  'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+  'Operations': [{'op': 'replace', 'path': 'permissions',
+                  'value': json.loads('''${PERMISSIONS}''')}],
+}))")
+  mutate "updating the ${ADMIN_ROLE} permissions" -X PATCH -H 'Content-Type: application/json' \
+    -d "${PATCH_BODY}" "${API}/scim2/v2/Roles/${ROLE_ID}"
+  echo "      Role already exists (${ROLE_ID}); permissions updated, members unchanged."
 else
   ROLE_BODY=$(python3 -c "
 import json
-scopes = json.loads('''${ALL_SCOPES}'''.replace('][', ','))
 print(json.dumps({
   'schemas': ['urn:ietf:params:scim:schemas:extension:2.0:Role'],
   'displayName': '${ADMIN_ROLE}',
   'audience': {'value': '${APP_ID}', 'type': 'application'},
-  'permissions': [{'value': s} for s in scopes],
+  'permissions': json.loads('''${PERMISSIONS}'''),
 }))")
-  ROLE_ID=$(${CURL} -H 'Content-Type: application/json' -d "${ROLE_BODY}" \
+  ROLE_ID=$("${CURL[@]}" -H 'Content-Type: application/json' -d "${ROLE_BODY}" \
     "${API}/scim2/v2/Roles" | json "d.get('id','')")
+  if [ -z "${ROLE_ID}" ]; then
+    echo "ERROR: could not create the ${ADMIN_ROLE} role."
+    exit 2
+  fi
   echo "      Created ${ADMIN_ROLE} (${ROLE_ID})"
 fi
 
 # Everyone who can sign in already manages their own consents, so this role
 # carries no permissions; it exists to group ordinary portal users.
 echo "[5/5] Creating the ${USER_ROLE} role"
-USER_ROLE_ID=$(${CURL} --get --data-urlencode "filter=displayName eq ${USER_ROLE}" \
+USER_ROLE_ID=$("${CURL[@]}" --get --data-urlencode "filter=displayName eq ${USER_ROLE}" \
   "${API}/scim2/v2/Roles" \
   | json "next((r['id'] for r in d.get('Resources',[]) if r.get('audience',{}).get('value')=='${APP_ID}'), '')")
 if [ -n "${USER_ROLE_ID}" ]; then
@@ -295,8 +354,8 @@ print(json.dumps({
   'displayName': '${USER_ROLE}',
   'audience': {'value': '${APP_ID}', 'type': 'application'},
 }))")
-  ${CURL} -H 'Content-Type: application/json' -d "${USER_ROLE_BODY}" \
-    "${API}/scim2/v2/Roles" -o /dev/null
+  mutate "creating the ${USER_ROLE} role" -H 'Content-Type: application/json' \
+    -d "${USER_ROLE_BODY}" "${API}/scim2/v2/Roles"
   echo "      Created ${USER_ROLE}"
 fi
 

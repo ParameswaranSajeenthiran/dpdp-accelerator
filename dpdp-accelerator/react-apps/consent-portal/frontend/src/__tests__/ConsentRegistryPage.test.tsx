@@ -22,7 +22,7 @@ import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/ox
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import ConsentRegistryPage from '../features/consent-registry/ConsentRegistryPage'
+import ConsentRegistryPage from '../features/my-consents/ConsentRegistryPage'
 import i18n from '../i18n/i18n'
 import type { ConsentListQueryParams } from '../types/consent'
 import { APIError } from '../utils/apiClient'
@@ -37,7 +37,7 @@ const consentsApi = vi.hoisted(() => ({
   revokeMyConsent: vi.fn(),
 }))
 
-vi.mock('../features/consent-registry/api/consentsApi', () => consentsApi)
+vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
 function CurrentLocation(): React.JSX.Element {
   const location = useLocation()
@@ -225,7 +225,7 @@ describe('ConsentRegistryPage', () => {
     await waitFor(() => expect(consentsApi.fetchMyConsents).toHaveBeenCalled())
 
     expect(listParams()).toEqual({
-      consentStatuses: 'PENDING',
+      state: 'PENDING',
       serviceId: 'dpdp-portal',
       limit: 25,
       offset: 50,
@@ -252,7 +252,7 @@ describe('ConsentRegistryPage', () => {
 
     await waitFor(() => expect(consentsApi.fetchMyConsents).toHaveBeenCalled())
 
-    expect(listParams().consentStatuses).toBeUndefined()
+    expect(listParams().state).toBeUndefined()
   })
 
   it('pages with next and previous instead of numbered pages', async () => {

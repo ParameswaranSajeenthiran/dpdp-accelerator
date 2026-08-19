@@ -33,8 +33,8 @@ import type {
 } from '../../../types/consent'
 import { isConsentState } from '../../../types/consent'
 import { getNextCursor, getPreviousCursor } from '../../../utils/cursorPagination'
-import { normalizeConsentState } from '../../consent-registry/utils/statusChip'
-import { toConsentRow } from '../../consent-registry/hooks/useConsentQueries'
+import { normalizeConsentState } from '../../my-consents/utils/statusChip'
+import { toConsentRow } from '../../my-consents/hooks/useConsentQueries'
 import {
   buildConsentPropertyFilter,
   fetchAdminConsentByID,
