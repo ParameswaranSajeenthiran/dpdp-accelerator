@@ -29,16 +29,9 @@
     <packaging>pom</packaging>
     <name>WSO2 DPDP Accelerator</name>
 
-    <!--
-      components/ and internal-webapps/ carry no aggregator pom of their own, so
-      each module inside them is listed here with its path prefix, for example:
-
-          <module>components/org.wso2.dpdp.accelerator.common</module>
-          <module>internal-webapps/org.wso2.dpdp.accelerator.consent.mgt.endpoint</module>
-
-      Both directories are currently empty; see their README files.
-    -->
     <modules>
         <module>react-apps</module>
+        <module>components/org.wso2.dpdp.accelerator.common</module>
+        <module>components/org.wso2.dpdp.accelerator.identity.extensions</module>
     </modules>
 </project>

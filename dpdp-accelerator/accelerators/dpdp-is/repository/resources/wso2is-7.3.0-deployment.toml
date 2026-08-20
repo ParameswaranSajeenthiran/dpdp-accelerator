@@ -125,3 +125,14 @@ http_method = "all"
 # require_super_tenant_in_urls is enabled.
 [tenant_context.rewrite]
 custom_webapps = ["/consent-portal/"]
+
+# Controls the DPDP Consent Portal application/role auto-provisioning that runs
+# on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
+# Set auto_provisioning_enabled = false to manage the application and roles by
+# hand instead - this does not disable the portal itself, only the automatic
+# creation of its application and roles.
+# client_id must match whatever the deployed portal's own configuration expects -
+# changing it here without updating that too will break sign-in.
+[dpdp_accelerator.consent_portal]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_PORTAL"

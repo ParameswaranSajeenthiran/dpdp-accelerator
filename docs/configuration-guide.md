@@ -2,47 +2,23 @@
 
 Complete this after installing the accelerator and starting the Identity
 Server — see [`setup-guide.md`](setup-guide.md) if you haven't done that yet.
-This is the last step before the portal is ready to use.
 
 The portal is a single page application. It has no backend of its own: it
 signs the user in with OpenID Connect and calls the Identity Server's consent
 management APIs directly, the same way the built-in My Account application
-works. That means there is **no client secret to configure and no
-configuration file to edit** — registering the application is the whole job.
+works. There is **no client secret to configure and nothing to register** —
+the application is provisioned automatically, the same way My Account is.
 
 One deployed application serves every tenant, at
 `https://<host>:9443/consent-portal/` for the super tenant and
-`https://<host>:9443/t/<tenant>/consent-portal/` for the rest. Each tenant
-needs its own registration, and all of them share the client id
-`DPDP_CONSENT_PORTAL`, so run the steps below **once per tenant**.
+`https://<host>:9443/t/<tenant>/consent-portal/` for the rest, all sharing the
+client id `DPDP_CONSENT_PORTAL`.
 
-## 1. Register the application
+## 1. The application is provisioned automatically
 
-With the Identity Server running, for the super tenant:
-
-```sh
-bash bin/create-portal-app.sh
-```
-
-and for each additional tenant, as an administrator of that tenant:
-
-```sh
-bash bin/create-portal-app.sh -t wso2.com -u admin -p '<password>'
-```
-
-`-u` may be given bare or fully qualified: a tenant administrator has to
-authenticate as `user@tenant`, and the script appends the tenant domain when
-it is missing. The script reads its defaults from
-`repository/conf/configure.properties`; point it at a different server with
-`-b`:
-
-```sh
-bash bin/create-portal-app.sh -b https://localhost:9444
-```
-
-It registers an application called **DPDP Consent Portal** with the client id
-`DPDP_CONSENT_PORTAL` and configures it the way a browser application has to
-be configured:
+The moment a tenant exists — including the super tenant, on first server
+startup — the accelerator registers **DPDP Consent Portal** in it directly,
+with no operator step and no REST call involved:
 
 | Setting | Value | Why |
 |---|---|---|
@@ -54,30 +30,59 @@ be configured:
 
 It also authorizes the three consent management APIs (RBAC) and creates two
 roles: `dpdp-consent-admin`, holding every consent management scope, and
-`dpdp-consent-user`, which carries none.
+`dpdp-consent-user`, which carries none. Provisioning checks each of these —
+application, and each role — individually and only creates what's missing, so
+it's always safe to re-run (see [Recovering a broken tenant](#3-recovering-a-broken-tenant)
+below).
 
-Re-running it against a tenant that is already registered is safe: the
-application is updated in place, and the `dpdp-consent-admin` role has its
-permissions brought back in line without disturbing its members.
+## 2. Change or turn off the auto-provisioning
 
-> **Why a script rather than the Console.** Every tenant's registration has to
-> carry the same client id, because the portal reads one `deployment.config.json`
-> that all tenants share. The Console generates the client id itself and shows
-> it read-only, so it cannot produce a fixed one; pinning it needs the dynamic
-> client registration API, which is what the script calls. Registering the
-> application at tenant creation time, the way My Account is provisioned, would
-> remove this step altogether and is the intended replacement for the script.
+Two settings in `deployment.toml` control this, under `[dpdp_accelerator.consent_portal]`:
 
-## 2. Grant administration access
+```toml
+[dpdp_accelerator.consent_portal]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_PORTAL"
+```
 
-Everyone who can sign in manages their own consents — that needs no role.
+| Setting | Default | Change it if... |
+|---|---|---|
+| `auto_provisioning_enabled` | `true` | You want to manage the application and its roles by hand instead. Set to `false`. This only turns off the automatic *creation* of the application and roles — it does not disable the portal or sign-in. |
+| `client_id` | `DPDP_CONSENT_PORTAL` | You're changing it, you **must** also update `clientID` in the deployed portal's own `deployment.config.json` — the two have to match or sign-in breaks. |
 
-To let someone administer *other people's* consents and edit the purpose and
-element catalog, assign them `dpdp-consent-admin` in the Console under
-**User Management → Users → *user* → Roles**. Roles belong to one tenant, so
-do this in each tenant that needs an administrator.
+Edit the value in the accelerator's
+`repository/resources/wso2is-7.3.0-deployment.toml` before running
+`configure.sh` (see [`setup-guide.md`](setup-guide.md)), or directly in
+`<IS_HOME>/repository/conf/deployment.toml` afterwards. Either way, restart
+the server for the change to take effect.
 
-## 3. Open the portal
+## 3. Recovering a broken tenant
+
+If a tenant's portal application or roles get deleted or corrupted, restore
+them without a server restart:
+
+1. In the Console, delete the **DPDP Consent Portal** application for that
+   tenant (Roles are left alone even if the application is gone — deleting
+   them too is optional, but harmless, since provisioning recreates whatever
+   it doesn't find).
+2. Update any property of the tenant (Console → **Tenant Management** → the
+   tenant → **Update**).
+
+Saving the update re-runs provisioning for that tenant, recreating the
+application and any missing role.
+
+## 4. Assign portal roles
+
+Every user of the portal needs one of these two roles, assigned in the
+Console under **User Management → Users → *user* → Roles**. Roles belong to
+one tenant, so do this in each tenant.
+
+| Role | Assign to | Grants |
+|---|---|---|
+| `dpdp-consent-user` | Regular users | Managing their own consents. |
+| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog. |
+
+## 5. Open the portal
 
 | Tenant | URL |
 |---|---|
