@@ -17,36 +17,22 @@
  */
 
 import { type Locator, type Page } from '@playwright/test'
+import { ConsentRegistryTable } from './ConsentRegistryTable'
 
 /** AdminConsentRegistryPage.tsx - the admin view of every subject's consents. */
-export class AdminConsentRegistryPage {
-  readonly table: Locator
+export class AdminConsentPage extends ConsentRegistryTable {
   readonly consentIdSearch: Locator
   readonly advancedFiltersButton: Locator
 
-  constructor(private readonly page: Page) {
-    this.table = page.getByRole('table', { name: 'Consent registry table' })
+  constructor(page: Page) {
+    super(page)
     this.consentIdSearch = page.getByPlaceholder('Search by consent ID')
     this.advancedFiltersButton = page.getByRole('button', { name: 'Advanced filters' })
   }
 
   async goto(): Promise<void> {
-    // No leading slash - see the comment in ConsentRegistryPage.goto() for why.
+    // No leading slash - see the comment in MyConsentPage.goto() for why.
     await this.page.goto('administration/consents')
-  }
-
-  rowByConsentId(consentId: string): Locator {
-    // Same underlying ConsentRegistryTable component as the self-service registry - see
-    // ConsentRegistryPage.rowByConsentId for why this targets the data attribute.
-    return this.table.locator(`tr[data-consent-id="${consentId}"]`)
-  }
-
-  async openByConsentId(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).click()
-  }
-
-  async revokeFromList(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }).click()
   }
 
   async searchByConsentId(consentId: string): Promise<void> {
@@ -83,10 +69,6 @@ export class AdminConsentRegistryPage {
 
   async clearAllFilters(): Promise<void> {
     await this.page.getByRole('button', { name: 'Clear all' }).click()
-  }
-
-  get emptyStateMessage(): Locator {
-    return this.page.getByText('No consents found for the selected filters.')
   }
 
   /**

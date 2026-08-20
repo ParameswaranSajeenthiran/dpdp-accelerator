@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { AdminConsentRegistryPage } from '../../pages/AdminConsentRegistryPage'
+import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
@@ -43,7 +43,7 @@ test.describe('Admin viewing Consents (UI)', () => {
       'ACTIVE',
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     // The unfiltered list is sorted oldest-first with no way to jump pages, so a freshly
     // created row is found by its own id rather than by browsing - see

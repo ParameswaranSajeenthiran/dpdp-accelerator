@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { AdminConsentRegistryPage } from '../../pages/AdminConsentRegistryPage'
+import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
@@ -51,7 +51,7 @@ test.describe('Admin searching Consents (UI)', () => {
       'ACTIVE',
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.searchByConsentId(first.consentId)
 
@@ -77,7 +77,7 @@ test.describe('Admin searching Consents (UI)', () => {
       serviceId,
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.filterBySubjectAndService(env.user.username, serviceId)
 
@@ -119,7 +119,7 @@ test.describe('Admin searching Consents (UI)', () => {
       serviceId,
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.filterBySubjectAndService(env.user.username, serviceId)
     await expect(registryPage.stateFilter).toBeEnabled()
@@ -141,7 +141,7 @@ test.describe('Admin searching Consents (UI)', () => {
     // id would 404 the same way, so there's no separate "partial match" case to test here,
     // unlike serviceId's real substring-vs-exact distinction (see the equivalent self-service
     // test).
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.searchByConsentId('00000000-0000-0000-0000-000000000000')
     await expect(registryPage.loadFailedMessage).toBeVisible()
@@ -154,7 +154,7 @@ test.describe('Admin searching Consents (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Unlike Consent ID (see the test above), subjectId/serviceId go through the real
     // list-filter API, so a non-match here legitimately produces "no results", not an error.
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.filterBySubjectAndService(
       `no-such-subject-${Date.now().toString()}`,

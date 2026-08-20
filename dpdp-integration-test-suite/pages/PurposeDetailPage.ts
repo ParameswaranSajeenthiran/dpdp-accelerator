@@ -44,7 +44,7 @@ export class PurposeDetailPage {
   }
 
   async goto(purposeId: string): Promise<void> {
-    // No leading slash - see the comment in ConsentRegistryPage.goto() for why.
+    // No leading slash - see the comment in MyConsentPage.goto() for why.
     await this.page.goto(`purposes/${purposeId}`)
   }
 

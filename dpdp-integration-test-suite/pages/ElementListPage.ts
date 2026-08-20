@@ -50,7 +50,7 @@ export class ElementListPage {
   }
 
   async goto(): Promise<void> {
-    // No leading slash - see the comment in ConsentRegistryPage.goto() for why.
+    // No leading slash - see the comment in MyConsentPage.goto() for why.
     await this.page.goto('elements')
   }
 

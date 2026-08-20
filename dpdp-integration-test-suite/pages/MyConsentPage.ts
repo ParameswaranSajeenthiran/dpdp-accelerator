@@ -18,15 +18,15 @@
 
 import { type Locator, type Page } from '@playwright/test'
 import { selectMuiOption } from '../utils/muiSelect'
+import { ConsentRegistryTable } from './ConsentRegistryTable'
 
 /** ConsentRegistryPage.tsx - a user's own "All Consents" list at /consents. */
-export class ConsentRegistryPage {
-  readonly table: Locator
+export class MyConsentPage extends ConsentRegistryTable {
   readonly serviceSearch: Locator
   readonly clearFiltersButton: Locator
 
-  constructor(private readonly page: Page) {
-    this.table = page.getByRole('table', { name: 'Consent registry table' })
+  constructor(page: Page) {
+    super(page)
     this.serviceSearch = page.getByPlaceholder('Search by service')
     this.clearFiltersButton = page.getByRole('button', { name: 'Clear all filters' })
   }
@@ -35,20 +35,8 @@ export class ConsentRegistryPage {
     await this.page.goto('consents')
   }
 
-  rowByConsentId(consentId: string): Locator {
-    return this.table.locator(`tr[data-consent-id="${consentId}"]`)
-  }
-
-  async openByConsentId(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).click()
-  }
-
   async approveFromList(consentId: string): Promise<void> {
     await this.rowByConsentId(consentId).getByRole('button', { name: 'Approve' }).click()
-  }
-
-  async revokeFromList(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }).click()
   }
 
   async searchByService(serviceId: string): Promise<void> {
@@ -62,9 +50,5 @@ export class ConsentRegistryPage {
 
   async clearFilters(): Promise<void> {
     await this.clearFiltersButton.click()
-  }
-
-  get emptyStateMessage(): Locator {
-    return this.page.getByText('No consents found for the selected filters.')
   }
 }

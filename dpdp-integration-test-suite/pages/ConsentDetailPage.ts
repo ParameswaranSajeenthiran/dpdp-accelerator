@@ -63,7 +63,7 @@ export class ConsentDetailPage {
 
   async goto(consentId: string): Promise<void> {
     const basePath = this.variant === 'admin' ? 'administration/consents' : 'consents'
-    // No leading slash - see the comment in ConsentRegistryPage.goto() for why.
+    // No leading slash - see the comment in MyConsentPage.goto() for why.
     await this.page.goto(`${basePath}/${consentId}`)
   }
 

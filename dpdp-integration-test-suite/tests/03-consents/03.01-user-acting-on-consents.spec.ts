@@ -18,7 +18,7 @@
 
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { ConsentRegistryPage } from '../../pages/ConsentRegistryPage'
+import { MyConsentPage } from '../../pages/MyConsentPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
@@ -46,7 +46,7 @@ test.describe('User acting on Consents (UI)', () => {
       'PENDING',
     )
 
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     // Filtered to this test's own unique service id - see the identical comment on the revoke
     // test below.
@@ -105,7 +105,7 @@ test.describe('User acting on Consents (UI)', () => {
       'ACTIVE',
     )
 
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     // Filtered to this test's own unique service id: the unfiltered list is sorted and paged,
     // and a persistent environment can easily push a freshly created row off the first page.

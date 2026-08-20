@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { AdminConsentRegistryPage } from '../../pages/AdminConsentRegistryPage'
+import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
@@ -45,7 +45,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       'ACTIVE',
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.searchByConsentId(consentId)
     await registryPage.revokeFromList(consentId)
@@ -91,7 +91,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       'PENDING',
     )
 
-    const registryPage = new AdminConsentRegistryPage(consentAdminPage)
+    const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
     await registryPage.searchByConsentId(consentId)
     const row = registryPage.rowByConsentId(consentId)

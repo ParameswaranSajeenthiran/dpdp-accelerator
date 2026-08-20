@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { ConsentRegistryPage } from '../../pages/ConsentRegistryPage'
+import { MyConsentPage } from '../../pages/MyConsentPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
@@ -56,7 +56,7 @@ test.describe('User searching Consents (UI)', () => {
       serviceId,
     )
 
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(serviceId)
     await registryPage.filterByState('Pending')
@@ -94,7 +94,7 @@ test.describe('User searching Consents (UI)', () => {
       serviceId,
     )
 
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
@@ -106,7 +106,7 @@ test.describe('User searching Consents (UI)', () => {
     browser,
   }) => {
     const userPage = await loginAsUser(browser)
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(`no-such-service-${Date.now().toString()}`)
     await expect(registryPage.emptyStateMessage).toBeVisible()
@@ -133,7 +133,7 @@ test.describe('User searching Consents (UI)', () => {
     // call with a substring returned zero results), not documented anywhere.
     const partialServiceId = serviceId.slice(serviceId.indexOf('-') + 1, serviceId.lastIndexOf('-'))
 
-    const registryPage = new ConsentRegistryPage(userPage)
+    const registryPage = new MyConsentPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(partialServiceId)
     await expect(registryPage.emptyStateMessage).toBeVisible()
