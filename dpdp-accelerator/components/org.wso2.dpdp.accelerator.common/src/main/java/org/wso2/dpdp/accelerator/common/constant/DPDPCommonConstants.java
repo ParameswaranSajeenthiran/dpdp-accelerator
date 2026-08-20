@@ -24,7 +24,6 @@ package org.wso2.dpdp.accelerator.common.constant;
 public final class DPDPCommonConstants {
 
     public static final String CONFIG_FILE_NAME = "dpdp-accelerator.xml";
-    public static final String CONFIG_QNAME = "http://wso2.org/projects/carbon/dpdp-accelerator.xml";
 
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";

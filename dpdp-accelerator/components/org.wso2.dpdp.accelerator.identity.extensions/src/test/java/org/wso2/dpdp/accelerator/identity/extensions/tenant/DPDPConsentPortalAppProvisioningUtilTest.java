@@ -105,11 +105,6 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertNull(DPDPConsentPortalAppProvisioningUtil.getApplicationId(TENANT_DOMAIN));
     }
 
-    // provisionApplication() itself is not exercised here: it computes the callback URL via
-    // IdentityUtil.getServerURL(...), which needs a live OSGi-wired Carbon core component and
-    // NPEs outside a running server. registerOAuthApplication/createApplication are the two
-    // pieces with real logic worth testing, and neither touches that static call.
-
     @Test
     public void toRegexCallbackEscapesDotsAndAllowsOptionalTrailingSlash() {
 
