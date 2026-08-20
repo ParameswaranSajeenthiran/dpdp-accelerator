@@ -31,7 +31,7 @@ import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
  * all - no persona in this suite's .env is scope-less, so that page isn't reachable here and
  * isn't covered below.
  *
- * The user persona (`ctizen1`, assigned the `dpdp-consent-user` role) holds only
+ * The user persona (`ctizen1`, plain `internal_login`) holds only
  * CONSENTS_READ_SELF/WRITE_SELF - not PURPOSES_READ, ELEMENTS_READ, or CONSENTS_READ_ANY - so it
  * is exactly the persona these routes are meant to keep out. Since CONSENTS_READ_SELF sits
  * first in firstAuthorizedPath's priority list, every one of these redirects lands on

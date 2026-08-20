@@ -48,8 +48,8 @@ async function checkReachable(url: string, label: string): Promise<void> {
 }
 
 export default async function globalSetup(): Promise<void> {
-  // The same endpoint the BFF's TokenValidator itself depends on (identity.server.internal.base.url
-  // + /oauth2/jwks) - reachability here is a direct precondition for every login this suite does.
+  // WSO2 IS's own JWKS endpoint - reachability here is a direct precondition for every login and
+  // every raw API call this suite makes, since access tokens are JWTs validated against it.
   await checkReachable(`${env.identityServerBaseUrl}/oauth2/jwks`, 'Identity Server')
   await checkReachable(`${env.portalBaseUrl}/`, 'Consent portal')
 }

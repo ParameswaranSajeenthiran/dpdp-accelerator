@@ -70,11 +70,11 @@ export const env = {
     password: required('TEST_USER_PASSWORD'),
   } satisfies Persona,
 
-  // Must be a real user assigned the dpdp-consent-admin role (created manually in the Console
-  // per docs/configuration-guide.md step 4; role membership itself is not automated - assign it
-  // via the Console app after creating the role). Grants every internal_consent_mgt_* scope, so
-  // this single persona both drives the admin consent registry UI and creates
-  // Purposes/Elements/Consents via the API as test setup for the UI layer.
+  // Must be a real user assigned the dpdp-consent-admin role (bin/create-portal-app.sh creates
+  // the role itself, but not its membership - see docs/configuration-guide.md, "Grant
+  // administration access", for assigning it to an account in the Console). Grants every
+  // internal_consent_mgt_* scope, so this single persona both drives the admin consent registry
+  // UI and creates Purposes/Elements/Consents via the API as test setup for the UI layer.
   consentAdmin: {
     username: required('TEST_CONSENT_ADMIN_USERNAME'),
     password: required('TEST_CONSENT_ADMIN_PASSWORD'),
@@ -92,22 +92,27 @@ export const env = {
   },
 }
 
-// The BFF's own consent routes (AdminApiServlet / MyConsentsServlet), proxied 1:1 to WSO2 IS's
-// consent-mgt v2 API - see clients/ConsentApiClient.ts for the full contract.
+// The portal has no backend of its own any more (see docs/configuration-guide.md) - the frontend
+// calls these WSO2 IS-native REST APIs directly from the browser, so tests do the same. Self-service
+// consents live under the User Consent Management API (org.wso2.carbon.identity.rest.api.user.consent.v1,
+// unversioned base); admin consents/purposes/elements live under consent-mgt v2
+// (org.wso2.carbon.identity.api.server.consent.management.v2, see clients/ConsentApiClient.ts for the
+// full contract). Both are super-tenant paths - a non-default tenant would need a `/t/<tenant>` prefix,
+// which this suite doesn't currently support.
 export function myConsentsApiUrl(path: string): string {
-  return `${env.portalBaseUrl}/me/consents${path}`
+  return `${env.identityServerBaseUrl}/api/users/v1/me/consents${path}`
 }
 
 export function adminConsentsApiUrl(path: string): string {
-  return `${env.portalBaseUrl}/api/consents${path}`
+  return `${env.identityServerBaseUrl}/api/identity/consent-mgt/v2.0/consents${path}`
 }
 
 export function consentPurposesApiUrl(path: string): string {
-  return `${env.portalBaseUrl}/api/consent-purposes${path}`
+  return `${env.identityServerBaseUrl}/api/identity/consent-mgt/v2.0/purposes${path}`
 }
 
 export function consentElementsApiUrl(path: string): string {
-  return `${env.portalBaseUrl}/api/consent-elements${path}`
+  return `${env.identityServerBaseUrl}/api/identity/consent-mgt/v2.0/elements${path}`
 }
 
 export type PersonaName = 'user' | 'user-2' | 'consent-admin'

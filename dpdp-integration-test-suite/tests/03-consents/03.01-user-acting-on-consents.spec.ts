@@ -27,8 +27,8 @@ import { seedConsent } from '../../utils/consentSetup'
  * (a Rejected consent offers none of these actions). Only Consent creation goes through the
  * admin API (see utils/consentSetup.ts - it has no create UI at all); the Element and Purpose
  * each seeded consent needs are created through the real admin "Add Element"/"Add Purpose"
- * forms. The `dpdp-consent-user` role the existing user persona is assigned already carries
- * portal:consents:{read,write}:self, so it needs no extra role for any of this.
+ * forms. `internal_login` alone (granted to every signed-in user, no role needed) is enough for
+ * both consent scopes here, so the existing user persona needs no extra role for any of this.
  */
 test.describe('User acting on Consents (UI)', () => {
   test('02.01.01 - Approving a Pending consent from the list moves it to Active', async ({

@@ -22,8 +22,9 @@ import type { Persona } from '../utils/env'
 /**
  * The real WSO2 Identity Server basic-auth login form (authenticationendpoint/login.do),
  * reached by following the portal's own OAuth2/PKCE authorize redirect - never hit directly
- * with hand-built authorize query params, since the portal's BFF (`/auth/login`) is what
- * correctly constructs that URL (client id, PKCE challenge, requested scopes, state).
+ * with hand-built authorize query params, since the portal's own auth SDK (@asgardeo/auth-spa,
+ * see fixtures/auth.fixtures.ts's ensureSignedIn) is what correctly constructs that URL (client
+ * id, PKCE challenge, requested scopes, state).
  */
 export class LoginPage {
   readonly errorMessage: Locator

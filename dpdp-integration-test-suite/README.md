@@ -17,18 +17,18 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 
 ## Prerequisites
 
-1. A running WSO2 Identity Server with the DPDP Accelerator is required.
+1. A running WSO2 Identity Server with the DPDP Accelerator, with the Consent Portal application
+   registered for your tenant (`bash bin/create-portal-app.sh`, see `docs/configuration-guide.md`).
    ```sh
    curl -sk https://<host>:9443/oauth2/jwks
    curl -sk https://<host>:9443/consent-portal/
    ```
-2. A real IS user account assigned the `dpdp-consent-user` role for the **User** persona
-   (see `docs/configuration-guide.md` step 4) — needed for the self-service consent registry
-   and negative authorization checks.
+2. A real IS user account for the **User** persona — no role needed; every signed-in user
+   manages their own consents.
 3. A real IS user account assigned the `dpdp-consent-admin` role for the **Consent Admin**
-   persona (see `docs/configuration-guide.md` step 4) — drives the admin UI and seeds
-   Purposes/Elements/Consents via the API for `tests/01-elements`, `tests/02-purposes`, and
-   `tests/03-consents`.
+   persona (see `docs/configuration-guide.md`, "Grant administration access") — drives the
+   admin UI and seeds Purposes/Elements/Consents via the API for `tests/01-elements`,
+   `tests/02-purposes`, and `tests/03-consents`.
 4. Node.js 18+.
 
 ## Setup
@@ -81,7 +81,7 @@ npx playwright test tests/03-consents --ui   # one category, in UI mode
 | --- | --- |
 | `tests/` | Spec files, grouped by feature area — see [Test categories](#test-categories) |
 | `pages/` | Page Objects for the portal UI — one class per screen or dialog |
-| `clients/` | `ConsentApiClient`, a typed wrapper over the BFF's consent-mgt v2 routes (`AdminApiServlet` / `MyConsentsServlet`) |
+| `clients/` | `ConsentApiClient`, a typed wrapper over WSO2 IS's own consent-mgt v2 and self-service consent REST APIs |
 | `fixtures/` | Authenticated personas (User, Consent Admin) and the test-data cleanup tracker |
 | `utils/` | Env/config loading, auth-storage helpers, unique test-data generators |
 

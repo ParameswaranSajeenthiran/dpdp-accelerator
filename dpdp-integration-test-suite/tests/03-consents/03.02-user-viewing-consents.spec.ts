@@ -23,6 +23,7 @@ import {
   hasSecondUser,
   loginAsUser,
   loginAsConsentAdmin,
+  pageForPersonaState,
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { env } from '../../utils/env'
@@ -99,17 +100,12 @@ test.describe('User viewing Consents (UI)', () => {
     // same file-based login cache as every other persona via getPersonaState, so this doesn't
     // log in again if any earlier test in the run already did.
     const secondPersonaState = await getPersonaState(browser, 'user-2', secondUser)
-    const otherContext = await browser.newContext({
-      storageState: secondPersonaState,
-      baseURL: env.portalNavigationBaseUrl,
-      ignoreHTTPSErrors: env.ignoreHttpsErrors,
-    })
-    const otherPage = await otherContext.newPage()
+    const otherPage = await pageForPersonaState(browser, secondPersonaState, secondUser)
     const otherDetailPage = new ConsentDetailPage(otherPage, 'self')
     await otherDetailPage.goto(consentId)
     await expect(otherDetailPage.loadFailedMessage).toBeVisible()
 
-    await otherContext.close()
+    await otherPage.context().close()
     await consentAdminPage.context().close()
   })
 })

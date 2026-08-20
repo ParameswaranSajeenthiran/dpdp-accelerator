@@ -78,24 +78,28 @@ export interface AdminConsentListParams {
 }
 
 export interface MyConsentListParams {
-  consentStatuses?: string
   serviceId?: string
+  state?: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'REVOKED' | 'EXPIRED'
+  purposeId?: string
+  purposeVersionId?: string
   limit?: number
-  offset?: number
+  after?: string
+  before?: string
 }
 
 /**
- * Wraps the BFF's consent-management contract - both the self-service surface
- * (`/me/consents/*`, backed by MyConsentsServlet, requiring the `dpdp-consent-user` role)
- * and the administrative surface (`/api/consents`, `/api/consent-purposes`,
- * `/api/consent-elements`, backed by AdminApiServlet, requiring the `dpdp-consent-admin` role).
- * Both surfaces are proxied 1:1 to WSO2 IS's own consent-mgt v2 API - see
- * consent-management-v2.yaml (bundled in
- * org.wso2.carbon.identity.api.server.consent.management.v2-*.jar) for the authoritative schema.
+ * Wraps two of WSO2 IS's own REST APIs, called directly (no backend proxy any more - see
+ * docs/configuration-guide.md): the self-service surface (`/api/users/v1/me/consents/*`, from
+ * org.wso2.carbon.identity.rest.api.user.consent.v1, needing only the `internal_login` scope every
+ * signed-in user already has - see consent.yaml bundled in that jar) and the administrative
+ * surface (`/api/identity/consent-mgt/v2.0/{consents,purposes,elements}`, from
+ * org.wso2.carbon.identity.api.server.consent.management.v2, needing the `internal_consent_mgt_*`
+ * scopes only the `dpdp-consent-admin` role carries - see consent-management-v2.yaml bundled in
+ * that jar).
  *
  * A single class serves both surfaces because the auth is just a header pair resolved from
- * whichever persona's storageState the caller passes in (see utils/authStorage.ts) - tests that
- * need to prove a user's token is rejected by the admin surface construct this client
+ * whichever persona's captured auth state the caller passes in (see utils/authStorage.ts) - tests
+ * that need to prove a user's token is rejected by the admin surface construct this client
  * with the user's headers and call an admin method directly.
  */
 export class ConsentApiClient {
@@ -125,17 +129,12 @@ export class ConsentApiClient {
     return this.request.get(myConsentsApiUrl(`/${consentId}`), { headers: this.headers() })
   }
 
-  async approveMyConsent(consentId: string): Promise<APIResponse> {
-    return this.request.post(myConsentsApiUrl(`/${consentId}/approve`), {
+  /** A PENDING consent transitions to ACTIVE once every listed authorizer has APPROVED, or to
+   * REJECTED as soon as any one of them REJECTs - see consent.yaml's authorize operation. */
+  async authorizeMyConsent(consentId: string, state: 'APPROVED' | 'REJECTED'): Promise<APIResponse> {
+    return this.request.post(myConsentsApiUrl(`/${consentId}/authorize`), {
       headers: this.headers({ 'Content-Type': 'application/json' }),
-      data: {},
-    })
-  }
-
-  async rejectMyConsent(consentId: string): Promise<APIResponse> {
-    return this.request.post(myConsentsApiUrl(`/${consentId}/reject`), {
-      headers: this.headers({ 'Content-Type': 'application/json' }),
-      data: {},
+      data: { state },
     })
   }
 

@@ -18,10 +18,10 @@
 
 import { mkdir, open, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { expect, test as base, type Browser, type Page } from '@playwright/test'
+import { test as base, type Browser, type Page, type Request } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { LoginPage } from '../pages/LoginPage'
-import { authHeadersFromStorageState, type PersonaStorageState } from '../utils/authStorage'
+import { authHeadersFromPersonaState, type PersonaAuthState } from '../utils/authStorage'
 import { consentPurposesApiUrl, env, type Persona, type PersonaName } from '../utils/env'
 
 /**
@@ -83,16 +83,15 @@ async function terminateAllSessions(persona: Persona): Promise<void> {
 /**
  * A successful login only proves the consent-admin persona's credentials are valid, not that the
  * account actually holds the `dpdp-consent-admin` role - that role assignment is a manual Console
- * step (see docs/configuration-guide.md step 4) that's easy to forget for a freshly created test
- * account. Without this check, a missing role surfaces as dozens of unrelated, confusing
- * assertion failures scattered across the suite (every seeded Purpose/Element/Consent creation
- * silently 401s/403s) instead of one clear error naming the actual problem, right at this
- * persona's one login for the run.
+ * step (see docs/configuration-guide.md, "Grant administration access") that's easy to forget for
+ * a freshly created test account. Without this check, a missing role surfaces as dozens of
+ * unrelated, confusing assertion failures scattered across the suite (every seeded
+ * Purpose/Element/Consent creation silently 401s/403s) instead of one clear error naming the
+ * actual problem, right at this persona's one login for the run.
  */
-async function verifyConsentAdminAuthorized(state: PersonaStorageState): Promise<void> {
-  const headers = authHeadersFromStorageState(state)
+async function verifyConsentAdminAuthorized(state: PersonaAuthState): Promise<void> {
   const response = await fetch(consentPurposesApiUrl(''), {
-    headers: { ...headers },
+    headers: { ...authHeadersFromPersonaState(state) },
     signal: AbortSignal.timeout(10_000),
   })
   if (response.status === 401 || response.status === 403) {
@@ -100,9 +99,59 @@ async function verifyConsentAdminAuthorized(state: PersonaStorageState): Promise
       `TEST_CONSENT_ADMIN_USERNAME ("${env.consentAdmin.username}") logged in successfully but ` +
         `is not authorized for the consent-management admin API (got ${String(response.status)} ` +
         `from ${consentPurposesApiUrl('')}). Assign this account the dpdp-consent-admin role in ` +
-        `the Console - see docs/configuration-guide.md step 4.`,
+        `the Console - see docs/configuration-guide.md, "Grant administration access".`,
     )
   }
+}
+
+/**
+ * Waits for `persona` to reach a signed-in state on `page`, filling in the real Identity Server
+ * login form if (and only if) it actually appears, and returns the request that proved sign-in
+ * completed. The portal has no backend of its own any more (see docs/configuration-guide.md): the
+ * SPA keeps its access token inside its auth SDK's own web worker, never in a cookie or anywhere
+ * else `storageState` or page JS can read directly (see utils/authStorage.ts) - so "signed in" has
+ * to be observed off the wire instead, as the first outgoing request that actually carries a
+ * `Bearer` token, which every authenticated view eventually makes.
+ *
+ * The login form itself only appears when there's no valid IS-side SSO session yet - the very
+ * first login of a run (see loginAndCaptureState), or if a persona's session was somehow
+ * invalidated - since a context reused from a cached `storageState` (see loginAs) already carries
+ * IS's own session cookies and the SPA's normal sign-in redirect is satisfied silently. Either way
+ * this polls for the form and fills it in at most once, racing that against the error banner a
+ * wrong password renders inline, same as a failed login always has here. `Promise.race` never
+ * cancels its loser, so the poll below just stops checking (not throws) once the request side has
+ * already settled, rather than surfacing a spurious rejection after the fact.
+ */
+async function ensureSignedIn(page: Page, persona: Persona): Promise<Request> {
+  const outcome = { settled: false }
+  const authenticatedRequest = page
+    .waitForRequest((request) => Boolean(request.headers().authorization?.startsWith('Bearer ')), {
+      timeout: 30_000,
+    })
+    .finally(() => {
+      outcome.settled = true
+    })
+
+  const loginPage = new LoginPage(page)
+  const formPoll = (async () => {
+    let submitted = false
+    while (!outcome.settled) {
+      if (!submitted && (await page.locator('#usernameUserInput').isVisible().catch(() => false))) {
+        submitted = true
+        await loginPage.signIn(persona)
+      }
+      if (await loginPage.errorMessage.isVisible().catch(() => false)) {
+        const message = (await loginPage.errorMessage.textContent())?.trim()
+        throw new Error(`Login failed for persona "${persona.username}": ${message ?? 'Login failed.'}`)
+      }
+      await new Promise((resolve) => {
+        setTimeout(resolve, 250)
+      })
+    }
+  })()
+  await Promise.race([authenticatedRequest, formPoll])
+
+  return authenticatedRequest
 }
 
 /**
@@ -113,55 +162,28 @@ async function verifyConsentAdminAuthorized(state: PersonaStorageState): Promise
  * separate browser just for this.
  *
  * This is the one place in the whole suite that actually exercises the real login page - every
- * other fixture/test just reuses the storageState captured here (see getPersonaState), so the
- * login form itself is verified as part of this already-existing flow rather than by a separate,
- * dedicated login test: the assertion below confirms the real form rendered, and the error-message
- * race below turns a bad password into an immediate, clear failure instead of the generic 30s
- * timeout waiting for a callback that a failed login never sends.
+ * other fixture/test just reuses the state captured here (see getPersonaState), so the login form
+ * itself is verified as part of this already-existing flow rather than by a separate, dedicated
+ * login test.
  */
-async function loginAndCaptureState(browser: Browser, persona: Persona): Promise<PersonaStorageState> {
+async function loginAndCaptureState(browser: Browser, persona: Persona): Promise<PersonaAuthState> {
   const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
   try {
     const page = await context.newPage()
-    const loginPage = new LoginPage(page)
-
     await page.goto(`${env.portalBaseUrl}/`, { waitUntil: 'networkidle' })
-    await expect(page.locator('#usernameUserInput')).toBeVisible()
-    await expect(page.locator('#password')).toBeVisible()
-    await expect(page.locator('#sign-in-button')).toBeVisible()
+    const authenticatedRequest = await ensureSignedIn(page, persona)
 
-    await loginPage.signIn(persona)
+    const authorization = authenticatedRequest.headers().authorization
+    if (!authorization) {
+      // ensureSignedIn's own wait predicate already requires this header to be present - this is
+      // just keeping TypeScript honest about headers() being a plain string-keyed record.
+      throw new Error(`No Authorization header found on persona "${persona.username}"'s sign-in request.`)
+    }
 
-    // The callback redirect chain lands back on the SPA; wait for the BFF's own session probe to
-    // succeed as proof the login actually completed (a wrong password re-renders the same IS
-    // login form instead of navigating anywhere, which this would time out on). Racing this
-    // against a *poll* for the error banner - rather than against `errorMessage.waitFor(...)`
-    // directly - matters on the happy path: `Promise.race` never cancels its loser, so a raced
-    // `waitFor` would keep running in the background after `/me` already won, only to time out on
-    // its own ~30s later and get recorded as a failed step in the trace/report even though it
-    // never affected the outcome. The poll below stops itself the instant either side settles.
-    const outcome = { settled: false }
-    const meResponse = page
-      .waitForResponse((response) => response.url().endsWith('/me') && response.status() === 200, {
-        timeout: 30_000,
-      })
-      .finally(() => {
-        outcome.settled = true
-      })
-    const errorPoll = (async () => {
-      while (!outcome.settled) {
-        if (await loginPage.errorMessage.isVisible().catch(() => false)) {
-          const message = (await loginPage.errorMessage.textContent())?.trim()
-          throw new Error(`Login failed for persona "${persona.username}": ${message ?? 'Login failed.'}`)
-        }
-        await new Promise((resolve) => {
-          setTimeout(resolve, 250)
-        })
-      }
-    })()
-    await Promise.race([meResponse, errorPoll])
-
-    return await context.storageState()
+    return {
+      storageState: await context.storageState(),
+      bearerToken: authorization.replace(/^Bearer\s+/i, ''),
+    }
   } finally {
     // Closed on every path, including a failed/timed-out login - without this, a misconfigured
     // persona leaks one browser context per attempt (and getPersonaState may retry this from
@@ -187,9 +209,9 @@ function lockFilePath(personaName: PersonaName): string {
   return path.join(AUTH_DIR, `${personaName}.lock`)
 }
 
-async function readCachedState(personaName: PersonaName): Promise<PersonaStorageState | undefined> {
+async function readCachedState(personaName: PersonaName): Promise<PersonaAuthState | undefined> {
   try {
-    return JSON.parse(await readFile(authFilePath(personaName), 'utf-8')) as PersonaStorageState
+    return JSON.parse(await readFile(authFilePath(personaName), 'utf-8')) as PersonaAuthState
   } catch {
     return undefined
   }
@@ -228,7 +250,7 @@ async function releaseLoginLock(personaName: PersonaName): Promise<void> {
  * its own test reports the real error; a test blocked here instead times out with the generic
  * message below - check the run for a failed login test first.
  */
-async function waitForCachedState(personaName: PersonaName): Promise<PersonaStorageState> {
+async function waitForCachedState(personaName: PersonaName): Promise<PersonaAuthState> {
   const deadline = Date.now() + 60_000
   while (Date.now() < deadline) {
     const cached = await readCachedState(personaName)
@@ -258,7 +280,7 @@ export async function getPersonaState(
   browser: Browser,
   personaName: PersonaName,
   persona: Persona,
-): Promise<PersonaStorageState> {
+): Promise<PersonaAuthState> {
   const cached = await readCachedState(personaName)
   if (cached) {
     return cached
@@ -290,25 +312,50 @@ export async function getPersonaState(
 }
 
 /**
- * Explicit, per-test alternative to a `userPage`/`consentAdminPage` fixture: each test
- * calls this itself instead of Playwright silently injecting an already-authenticated page. Still
- * goes through getPersonaState, so it's exactly as cheap as the old fixture was - the persona logs
- * in for real only the first time any test in the run calls this, every later call (from any test,
- * any file, any worker) just reuses the cached storageState. The caller owns the returned page's
- * context and must close it itself (`await page.context().close()`) once the test is done with it.
+ * Builds an already-authenticated page for a persona whose `PersonaAuthState` the caller already
+ * has - split out of `loginAs` below for the one place outside these fixtures that calls
+ * `getPersonaState` directly (the ownership-isolation test in
+ * `tests/03-consents/03.02-user-viewing-consents.spec.ts`, for `user-2`, which has no always-on
+ * fixture of its own). The caller owns the returned page's context and must close it itself
+ * (`await page.context().close()`) once done with it.
+ *
+ * Seeding the new context's `storageState` from the cached login only carries over IS's own SSO
+ * session cookies (and the token-binding cookie, see utils/authStorage.ts) - it can't carry over
+ * the actual access token, since that never lives anywhere but the *original* login's in-memory
+ * auth SDK worker (see ensureSignedIn). So every call still drives the SPA's normal sign-in
+ * redirect once; with a live SSO session already in the reused cookies, IS satisfies it silently
+ * (no visible form, no credentials re-entered) and the SPA ends up with its own fresh token.
  */
-async function loginAs(browser: Browser, personaName: PersonaName, persona: Persona): Promise<Page> {
-  const storageState = await getPersonaState(browser, personaName, persona)
+export async function pageForPersonaState(
+  browser: Browser,
+  personaState: PersonaAuthState,
+  persona: Persona,
+): Promise<Page> {
   // browser.newContext() here bypasses playwright.config.ts's `use` block entirely (that's only
   // auto-applied to the base test's own default context/page) - baseURL and ignoreHTTPSErrors have
   // to be passed explicitly or relative goto() calls break and the self-signed cert kills every
   // navigation.
   const context = await browser.newContext({
-    storageState,
+    storageState: personaState.storageState,
     baseURL: env.portalNavigationBaseUrl,
     ignoreHTTPSErrors: env.ignoreHttpsErrors,
   })
-  return context.newPage()
+  const page = await context.newPage()
+  await page.goto('/', { waitUntil: 'networkidle' })
+  await ensureSignedIn(page, persona)
+  return page
+}
+
+/**
+ * Explicit, per-test alternative to a `userPage`/`consentAdminPage` fixture: each test calls this
+ * itself instead of Playwright silently injecting an already-authenticated page. Still goes
+ * through getPersonaState, so it's exactly as cheap as a fixture would be - the persona logs in
+ * for real only the first time any test in the run calls this, every later call (from any test,
+ * any file, any worker) just reuses the cached state.
+ */
+async function loginAs(browser: Browser, personaName: PersonaName, persona: Persona): Promise<Page> {
+  const personaState = await getPersonaState(browser, personaName, persona)
+  return pageForPersonaState(browser, personaState, persona)
 }
 
 export async function loginAsUser(browser: Browser): Promise<Page> {
@@ -321,13 +368,13 @@ export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
 
 export const test = base.extend<Fixtures>({
   userConsentApi: async ({ browser, request }, use) => {
-    const storageState = await getPersonaState(browser, 'user', env.user)
-    await use(new ConsentApiClient(request, authHeadersFromStorageState(storageState)))
+    const personaState = await getPersonaState(browser, 'user', env.user)
+    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState)))
   },
 
   consentAdminConsentApi: async ({ browser, request }, use) => {
-    const storageState = await getPersonaState(browser, 'consent-admin', env.consentAdmin)
-    await use(new ConsentApiClient(request, authHeadersFromStorageState(storageState)))
+    const personaState = await getPersonaState(browser, 'consent-admin', env.consentAdmin)
+    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState)))
   },
 
   consentCleanupTracker: async ({ consentAdminConsentApi }, use) => {

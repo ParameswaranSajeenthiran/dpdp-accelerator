@@ -18,11 +18,14 @@
 
 import type { BrowserContext } from '@playwright/test'
 
-// Matches react-apps/consent-portal PortalConstants.java / frontend authClient.ts's split-token
-// cookie contract: part 1 is readable and becomes the Authorization header, part 2 is HttpOnly
-// and is sent as a plain Cookie header here since this client has no browser cookie jar.
-const ACCESS_TOKEN_PART1_COOKIE = 'portal-at-p1'
-const ACCESS_TOKEN_PART2_COOKIE = 'portal-at-p2'
+// The DPDP Consent Portal application is registered with `bindingType: cookie` /
+// `validateTokenBinding: true` (see bin/create-portal-app.sh) - WSO2 IS ties every access token to
+// an opaque value in this HttpOnly cookie and rejects a token replayed without it (see
+// CookieBasedTokenBinder in org.wso2.carbon.identity.oauth). The access token itself is never
+// readable by page JS either way (the SPA keeps it inside its auth SDK's web worker, see
+// fixtures/auth.fixtures.ts's loginAndCaptureState for how a test captures one anyway) - HttpOnly
+// only blocks `document.cookie`, not `BrowserContext.storageState()`, which still captures it.
+const ACCESS_TOKEN_BINDING_COOKIE = 'atbv'
 
 export interface AuthHeaders {
   Authorization: string
@@ -31,10 +34,20 @@ export interface AuthHeaders {
 
 /**
  * The exact shape `BrowserContext.storageState()` returns (and `browser.newContext({storageState})`
- * accepts back) when called with no `path`. fixtures/auth.fixtures.ts's getPersonaState is the
- * one place that persists this, JSON-serialized as-is, to `.auth/<persona>.json`.
+ * accepts back) when called with no `path`.
  */
 export type PersonaStorageState = Awaited<ReturnType<BrowserContext['storageState']>>
+
+/**
+ * Everything fixtures/auth.fixtures.ts's getPersonaState needs to authenticate as a persona
+ * outside the browser: the token-binding cookie (from storageState) plus the bearer token itself,
+ * which storageState never carries - see loginAndCaptureState for where this comes from. Persisted
+ * as-is, JSON-serialized, to `.auth/<persona>.json`.
+ */
+export interface PersonaAuthState {
+  storageState: PersonaStorageState
+  bearerToken: string
+}
 
 function readCookie(state: PersonaStorageState, name: string): string {
   const cookie = state.cookies.find((candidate) => candidate.name === name)
@@ -45,13 +58,14 @@ function readCookie(state: PersonaStorageState, name: string): string {
 }
 
 /**
- * Turns an in-memory storageState object (from a real login driven in fixtures/auth.fixtures.ts)
- * into the two headers a raw (non-browser) API call needs to authenticate as that persona
- * against the BFF, which expects the split-token contract (Authorization: part 1, Cookie: part 2).
+ * Turns a persona's captured auth state into the two headers a raw (non-browser) API call needs
+ * to authenticate as that persona against WSO2 IS directly: the bearer token, and the token-binding
+ * cookie IS checks it against (see ACCESS_TOKEN_BINDING_COOKIE above) - an HTTP client can send an
+ * arbitrary `Cookie` header same as a real browser would, `HttpOnly` notwithstanding.
  */
-export function authHeadersFromStorageState(state: PersonaStorageState): AuthHeaders {
+export function authHeadersFromPersonaState(state: PersonaAuthState): AuthHeaders {
   return {
-    Authorization: `Bearer ${readCookie(state, ACCESS_TOKEN_PART1_COOKIE)}`,
-    Cookie: `${ACCESS_TOKEN_PART2_COOKIE}=${readCookie(state, ACCESS_TOKEN_PART2_COOKIE)}`,
+    Authorization: `Bearer ${state.bearerToken}`,
+    Cookie: `${ACCESS_TOKEN_BINDING_COOKIE}=${readCookie(state.storageState, ACCESS_TOKEN_BINDING_COOKIE)}`,
   }
 }
