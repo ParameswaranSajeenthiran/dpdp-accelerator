@@ -34,7 +34,7 @@
     <name>WSO2 DPDP Event Notification - Endpoint Webapp</name>
     <description>
         Internal Carbon webapp exposing the Event Notification REST API.
-        Deployed as api#dpdp#event-notifications.war inside
+        Deployed as api#event-notifications.war inside
         repository/deployment/server/webapps/.
     </description>
 
@@ -134,7 +134,7 @@
                             <directory>src/main/webapp</directory>
                         </resource>
                     </webResources>
-                    <warName>api#dpdp#event-notifications</warName>
+                    <warName>api#event-notifications</warName>
                     <packagingExcludes>WEB-INF/lib/slf4j-api-*.jar</packagingExcludes>
                 </configuration>
             </plugin>

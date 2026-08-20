@@ -104,8 +104,8 @@
                                 </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal/"/>
-                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#dpdp#event-notifications.war"
-                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#event-notifications/"/>
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#event-notifications.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#event-notifications/"/>
                             </target>
                         </configuration>
                     </execution>

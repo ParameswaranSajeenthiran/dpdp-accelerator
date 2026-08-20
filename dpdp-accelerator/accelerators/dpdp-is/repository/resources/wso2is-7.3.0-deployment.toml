@@ -125,42 +125,42 @@ secure = "false"
 http_method = "all"
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/topics(.*)"
+context = "(.*)/api/event-notifications/topics(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "GET"
 scopes = ["portal:event-topics:read"]
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/topics(.*)"
+context = "(.*)/api/event-notifications/topics(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "POST,DELETE"
 scopes = ["portal:event-topics:write"]
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/subscriptions(.*)"
+context = "(.*)/api/event-notifications/subscriptions(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "GET"
 scopes = ["portal:event-subscriptions:read"]
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/subscriptions(.*)"
+context = "(.*)/api/event-notifications/subscriptions(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "POST,DELETE"
 scopes = ["portal:event-subscriptions:write"]
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/events(.*)"
+context = "(.*)/api/event-notifications/events(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "GET"
 scopes = ["portal:events:read"]
 
 [[resource.access_control]]
-context = "(.*)/api/dpdp/event-notifications/events(.*)"
+context = "(.*)/api/event-notifications/events(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"
 http_method = "POST"
@@ -173,4 +173,7 @@ max_retries = 5
 # max_verification_response_body_bytes = 4096  # Default. Max bytes read from a subscriber's verification response.
 
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/"]
+custom_webapps = [
+    "/consent-portal/",
+    "/api/event-notifications/"
+]
