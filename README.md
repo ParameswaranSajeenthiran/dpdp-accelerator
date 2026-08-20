@@ -27,3 +27,16 @@ installation.
   the consent portal application on a running Identity Server.
 - [`docs/localization-guide.md`](docs/localization-guide.md) — correcting UI
   wording and localizing Purposes/Elements on a running deployment.
+
+## Roles
+
+Assign every portal user one of these two roles per tenant (Console →
+**User Management → Users → *user* → Roles**):
+
+| Role | Assign to |
+|---|---|
+| `dpdp-consent-user` | Regular users, to manage their own consents. |
+| `dpdp-consent-admin` | Administrators, to manage other people's consents and the purpose/element catalog. |
+
+See [`docs/configuration-guide.md`](docs/configuration-guide.md#4-assign-portal-roles)
+for details.

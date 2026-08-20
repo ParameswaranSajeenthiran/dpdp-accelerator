@@ -109,7 +109,7 @@ async function readDeploymentConfig(): Promise<DeploymentConfig> {
     }
   } catch {
     // A missing or unparseable config is not fatal - the defaults describe the
-    // application the accelerator's create-portal-app.sh registers.
+    // application the accelerator provisions automatically for every tenant.
     return fallback
   }
 }

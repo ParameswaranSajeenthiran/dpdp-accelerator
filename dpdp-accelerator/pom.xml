@@ -31,6 +31,8 @@
 
     <modules>
         <module>react-apps</module>
+        <module>components/org.wso2.dpdp.accelerator.common</module>
+        <module>components/org.wso2.dpdp.accelerator.identity.extensions</module>
         <module>components/org.wso2.dpdp.accelerator.event.notifications.common</module>
         <module>components/org.wso2.dpdp.accelerator.event.notifications.dao</module>
         <module>components/org.wso2.dpdp.accelerator.event.notifications.service</module>
