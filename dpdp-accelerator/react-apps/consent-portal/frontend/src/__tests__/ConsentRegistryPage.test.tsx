@@ -16,18 +16,28 @@
  * under the License.
  */
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import ConsentRegistryPage from '../features/consent-registry/ConsentRegistryPage'
+import ConsentRegistryPage from '../features/my-consents/ConsentRegistryPage'
 import i18n from '../i18n/i18n'
+import type { ConsentListQueryParams } from '../types/consent'
+import { APIError } from '../utils/apiClient'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
-import { PORTAL_SCOPES } from '../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../utils/scopes'
 
-const fetchMock = vi.fn()
+const consentsApi = vi.hoisted(() => ({
+  fetchMyConsents: vi.fn(),
+  fetchMyConsentByID: vi.fn(),
+  approveMyConsent: vi.fn(),
+  rejectMyConsent: vi.fn(),
+  revokeMyConsent: vi.fn(),
+}))
+
+vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
 function CurrentLocation(): React.JSX.Element {
   const location = useLocation()
@@ -71,7 +81,7 @@ function renderConsentRegistryPage(queryClient: QueryClient, initialEntry = '/co
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={[initialEntry]}>
-            <TestAuthorizationProvider scopes={Object.values(PORTAL_SCOPES)}>
+            <TestAuthorizationProvider scopes={Object.values(REQUIRED_SCOPES)}>
               <Routes>
                 <Route
                   path="*"
@@ -92,21 +102,20 @@ function renderConsentRegistryPage(queryClient: QueryClient, initialEntry = '/co
 }
 
 function mockConsentSearch(data: unknown[], limit = 10): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => ({
-      data,
-      metadata: { total: data.length, offset: 0, count: data.length, limit },
-    }),
+  consentsApi.fetchMyConsents.mockResolvedValue({
+    data,
+    metadata: { total: data.length, offset: 0, count: data.length, limit },
   })
+}
+
+/** The list parameters the page asked the self-service API for. */
+function listParams(index = 0): ConsentListQueryParams {
+  return consentsApi.fetchMyConsents.mock.calls[index]?.[0] as ConsentListQueryParams
 }
 
 afterEach(() => {
   cleanup()
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
 describe('ConsentRegistryPage', () => {
@@ -115,7 +124,7 @@ describe('ConsentRegistryPage', () => {
 
     renderConsentRegistryPage(createQueryClient())
 
-    expect(await screen.findByRole('heading', { name: 'All Consents' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'My Consents' })).toBeInTheDocument()
     expect(screen.getByLabelText('Consent filters')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Search by service')).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'State' })).toBeInTheDocument()
@@ -142,12 +151,9 @@ describe('ConsentRegistryPage', () => {
   })
 
   it('shows an error message when consent fetch fails', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong.' }),
-    })
+    consentsApi.fetchMyConsents.mockRejectedValue(
+      new APIError(500, 'INTERNAL_SERVER_ERROR', 'Something went wrong.'),
+    )
 
     renderConsentRegistryPage(createQueryClient())
 
@@ -216,15 +222,27 @@ describe('ConsentRegistryPage', () => {
       '/consents?state=PENDING&serviceId=dpdp-portal&page=3&rowsPerPage=25',
     )
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    await waitFor(() => expect(consentsApi.fetchMyConsents).toHaveBeenCalled())
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    expect(Object.fromEntries(new URL(String(requestUrl)).searchParams)).toEqual({
-      consentStatuses: 'PENDING',
+    expect(listParams()).toEqual({
+      state: 'PENDING',
       serviceId: 'dpdp-portal',
-      limit: '25',
-      offset: '50',
+      limit: 25,
+      offset: 50,
     })
+  })
+
+  it('shows the pending title and breadcrumb when filtered to pending consents', async () => {
+    mockConsentSearch([])
+
+    renderConsentRegistryPage(createQueryClient(), '/consents?state=PENDING')
+
+    expect(await screen.findByRole('heading', { name: 'My Pending Consents' })).toBeInTheDocument()
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('My Pending Consents')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   it('ignores the removed CREATED status in the URL', async () => {
@@ -232,10 +250,9 @@ describe('ConsentRegistryPage', () => {
 
     renderConsentRegistryPage(createQueryClient(), '/consents?state=CREATED')
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    await waitFor(() => expect(consentsApi.fetchMyConsents).toHaveBeenCalled())
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    expect(new URL(String(requestUrl)).searchParams.get('consentStatuses')).toBeNull()
+    expect(listParams().state).toBeUndefined()
   })
 
   it('pages with next and previous instead of numbered pages', async () => {
@@ -255,10 +272,10 @@ describe('ConsentRegistryPage', () => {
       expect(screen.getByTestId('current-location')).toHaveTextContent('/consents?page=2')
     })
     await waitFor(() => {
-      const offsets = fetchMock.mock.calls.map(([requestUrl]) =>
-        new URL(String(requestUrl)).searchParams.get('offset'),
+      const offsets = consentsApi.fetchMyConsents.mock.calls.map(
+        ([params]) => (params as ConsentListQueryParams).offset,
       )
-      expect(offsets).toContain('10')
+      expect(offsets).toContain(10)
     })
   })
 

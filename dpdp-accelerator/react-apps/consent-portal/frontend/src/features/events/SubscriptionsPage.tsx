@@ -32,7 +32,7 @@ import {
   isDeliveryMode,
   isSubscriptionStatus,
 } from '../../types/subscription'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import SubscriptionDeleteDialog from './components/SubscriptionDeleteDialog'
 import SubscriptionFilters from './components/SubscriptionFilters'
@@ -133,7 +133,7 @@ export default function SubscriptionsPage(): React.JSX.Element {
   const verifyMutation = useVerifySubscriptionMutation()
 
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
   const isTableLoading = subscriptionsQuery.isPending || subscriptionsQuery.isPlaceholderData
 
   const updateParams = (

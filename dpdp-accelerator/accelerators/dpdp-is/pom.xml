@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.event.notifications.endpoint</artifactId>
+            <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
             <version>${project.version}</version>
             <type>war</type>
         </dependency>

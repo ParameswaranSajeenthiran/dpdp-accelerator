@@ -34,8 +34,8 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Single-delivery unit of work. Pulled off the {@link DeliveryDAO} batch by
@@ -59,7 +59,7 @@ import java.util.logging.Logger;
  */
 public class WebhookDeliveryTask implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(WebhookDeliveryTask.class.getName());
+    private static final Log LOG = LogFactory.getLog(WebhookDeliveryTask.class);
 
     // Constants kept here (not in EventNotificationCommonConstants) so they stay scoped to
     // outbound HTTP delivery and don't leak into the common module.
@@ -109,7 +109,7 @@ public class WebhookDeliveryTask implements Runnable {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            LOG.log(Level.WARNING, "Webhook delivery attempt failed for delivery ["
+            LOG.warn("Webhook delivery attempt failed for delivery ["
                     + delivery.getDeliveryId() + "]: " + e.getMessage(), e);
             recordFailure(RESPONSE_CODE_EXCEPTION, null);
             return;
@@ -179,7 +179,7 @@ public class WebhookDeliveryTask implements Runnable {
             try {
                 parsed = ENVELOPE_MAPPER.readTree(payload);
             } catch (Exception parseFailure) {
-                LOG.log(Level.WARNING, "Event payload for delivery [" + delivery.getDeliveryId()
+                LOG.warn("Event payload for delivery [" + delivery.getDeliveryId()
                         + "] was not parseable JSON; sending empty object under \"payload\".");
             }
             // readTree returns NullNode for the literal string "null"; coerce to {} so the
@@ -215,10 +215,10 @@ public class WebhookDeliveryTask implements Runnable {
                         + delivery.getEventId() + ", topic=" + topicName + ", attempt="
                         + updated.getAttemptCount() + ", status=" + httpStatus + "].");
             } else {
-                LOG.warning("recordSuccessfulAttempt returned false for delivery [" + delivery.getDeliveryId() + "].");
+                LOG.warn("recordSuccessfulAttempt returned false for delivery [" + delivery.getDeliveryId() + "].");
             }
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to record successful attempt for delivery [" + delivery.getDeliveryId()
+            LOG.warn("Failed to record successful attempt for delivery [" + delivery.getDeliveryId()
                     + "]: " + e.getMessage(), e);
         }
     }
@@ -241,10 +241,10 @@ public class WebhookDeliveryTask implements Runnable {
                     null);
             try {
                 deliveryDAO.recordPermanentFailure(audit, failed);
-                LOG.warning("Webhook delivery [" + delivery.getDeliveryId() + "] exhausted "
+                LOG.warn("Webhook delivery [" + delivery.getDeliveryId() + "] exhausted "
                         + maxRetries + " attempts; marked as failed (last response=" + responseCode + ").");
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to mark delivery [" + delivery.getDeliveryId()
+                LOG.error("Failed to mark delivery [" + delivery.getDeliveryId()
                         + "] as failed: " + e.getMessage(), e);
             }
             return;
@@ -261,11 +261,13 @@ public class WebhookDeliveryTask implements Runnable {
                         + " failed (response=" + responseCode + "); next retry at " + nextRetryAt
                         + " (~" + delaySeconds + "s).");
             } else {
-                LOG.fine("Webhook delivery [" + delivery.getDeliveryId()
-                        + "] was no longer in_flight; release was a no-op.");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Webhook delivery [" + delivery.getDeliveryId()
+                            + "] was no longer in_flight; release was a no-op.");
+                }
             }
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Failed to release webhook delivery [" + delivery.getDeliveryId()
+            LOG.error("Failed to release webhook delivery [" + delivery.getDeliveryId()
                     + "] for retry: " + e.getMessage(), e);
         }
     }

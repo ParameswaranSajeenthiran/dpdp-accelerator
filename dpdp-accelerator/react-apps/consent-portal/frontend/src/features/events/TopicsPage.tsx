@@ -24,7 +24,7 @@ import { useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { TopicFilters as TopicFiltersModel, TopicRecord, TopicStatus } from '../../types/topic'
 import { isTopicStatus } from '../../types/topic'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import TopicDeleteDialog from './components/TopicDeleteDialog'
 import TopicFilters from './components/TopicFilters'
@@ -106,7 +106,7 @@ export default function TopicsPage(): React.JSX.Element {
   const deleteMutation = useDeleteTopicMutation()
 
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.EVENT_TOPICS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.EVENT_TOPICS_WRITE)
   const isTableLoading = topicsQuery.isPending || topicsQuery.isPlaceholderData
 
   const updateParams = (

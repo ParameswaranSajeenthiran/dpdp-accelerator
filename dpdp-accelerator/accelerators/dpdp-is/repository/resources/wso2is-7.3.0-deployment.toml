@@ -107,13 +107,15 @@ enable_v2_api = true
 [console.flows.scopes]
 read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_purpose_view"]
 
-# The consent portal's BFF authenticates every request itself: it rejoins the
-# split access-token cookie halves and forwards the user's own token to the
-# Identity Server APIs, which then enforce that user's scopes. The server's
-# authentication valve must therefore not gate these paths. Webapp contexts that
-# are not listed here default to secured, which would reject the SPA's static
-# assets and the login and callback redirects before any servlet ran. The
-# pattern has no slash before the wildcard so the bare context path matches too.
+# The consent portal is a single page application: the browser loads the shell
+# and its assets before anyone has signed in, and the sign-in redirect comes
+# back to the same context. The server's authentication valve must therefore
+# not gate these paths. Webapp contexts that are not listed here default to
+# secured, which would reject the shell and the redirects outright. The pattern
+# has no slash before the wildcard so the bare context path matches too.
+#
+# Nothing is exposed by this: the portal holds no data of its own, and every
+# Identity Server API it calls enforces the user's own OAuth token.
 #
 # Entries here are merged with the Identity Server's built-in rules rather than
 # replacing them.
@@ -169,3 +171,6 @@ thread_pool_size = 4
 base_backoff_seconds = 5
 max_retries = 5
 # max_verification_response_body_bytes = 4096  # Default. Max bytes read from a subscriber's verification response.
+
+[tenant_context.rewrite]
+custom_webapps = ["/consent-portal/"]

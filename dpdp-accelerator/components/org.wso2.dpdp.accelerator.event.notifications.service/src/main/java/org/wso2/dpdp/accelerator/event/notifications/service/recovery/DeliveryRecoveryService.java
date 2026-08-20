@@ -35,8 +35,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Dedicated OSGi background recovery service for recovering overdue webhook
@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 @Component(service = DeliveryRecoveryService.class, immediate = true)
 public class DeliveryRecoveryService {
 
-    private static final Logger LOG = Logger.getLogger(DeliveryRecoveryService.class.getName());
+    private static final Log LOG = LogFactory.getLog(DeliveryRecoveryService.class);
 
     @Reference
     private SubscriptionDAO subscriptionDAO;
@@ -111,7 +111,7 @@ public class DeliveryRecoveryService {
         pool.shutdown();
         try {
             if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-                LOG.warning(name + " did not terminate within 5 s; forcing interrupt.");
+                LOG.warn(name + " did not terminate within 5 s; forcing interrupt.");
                 pool.shutdownNow();
             }
         } catch (InterruptedException ie) {
@@ -126,7 +126,7 @@ public class DeliveryRecoveryService {
             try {
                 recoverPendingSubscriptions();
             } catch (Exception e) {
-                LOG.log(Level.WARNING, "Error during pending subscription recovery run: " + e.getMessage(), e);
+                LOG.warn("Error during pending subscription recovery run: " + e.getMessage(), e);
             }
         }
 
@@ -141,8 +141,10 @@ public class DeliveryRecoveryService {
                         subscriptionService.retryVerification(sub.getOrgId(), sub.getSubscriptionId());
                         LOG.info("Recovered and re-verified pending subscription [" + sub.getSubscriptionId() + "].");
                     } catch (Exception e) {
-                        LOG.log(Level.FINE, "Recovery retry verification for subscription [" + sub.getSubscriptionId()
-                                + "] deferred: " + e.getMessage());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Recovery retry verification for subscription [" + sub.getSubscriptionId()
+                                    + "] deferred: " + e.getMessage());
+                        }
                     }
                 }
             }

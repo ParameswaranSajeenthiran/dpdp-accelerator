@@ -73,13 +73,13 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @Component(service = SubscriptionService.class, immediate = true)
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-    private static final Logger LOG = Logger.getLogger(SubscriptionServiceImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(SubscriptionServiceImpl.class);
 
     @Reference
     private SubscriptionDAO subscriptionDAO;
@@ -318,12 +318,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 int nextAttempt = attempt + 1;
                 int maxRetries = EventNotificationConfigParser.getInstance().getMaxRetries();
                 if (nextAttempt <= maxRetries) {
-                    LOG.log(Level.WARNING, "Webhook verification attempt " + (attempt + 1)
+                    LOG.warn("Webhook verification attempt " + (attempt + 1)
                             + " failed for subscription [" + subscriptionId + "]. Retrying. Reason: " + e.getMessage());
                     scheduleWebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, nextAttempt);
                 } else {
-                    LOG.log(Level.WARNING,
-                            "Exhausted all retries for subscription [" + subscriptionId + "]. Marking as STALE.");
+                    LOG.warn("Exhausted all retries for subscription [" + subscriptionId + "]. Marking as STALE.");
                     subscriptionDAO.updateSubscriptionStatus(subscriptionId, orgId,
                             SubscriptionStatus.PENDING.getValue(),
                             SubscriptionStatus.STALE.getValue());

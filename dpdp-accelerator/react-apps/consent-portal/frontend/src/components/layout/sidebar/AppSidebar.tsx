@@ -21,7 +21,7 @@ import { Activity, BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPl
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'
-import { PORTAL_SCOPES, type PortalScope } from '../../../utils/portalScopes'
+import { REQUIRED_SCOPES, type ScopeRequirement } from '../../../utils/scopes'
 
 interface AppSidebarProps {
   collapsed: boolean
@@ -32,7 +32,7 @@ interface SidebarItem {
   labelKey: string
   path: string
   icon: React.JSX.Element
-  requiredScope: PortalScope
+  requiredScope: ScopeRequirement
 }
 
 const DASHBOARD_ITEMS: SidebarItem[] = [
@@ -41,7 +41,7 @@ const DASHBOARD_ITEMS: SidebarItem[] = [
     labelKey: 'sidebar.dashboard',
     path: '/dashboard',
     icon: <House size={18} />,
-    requiredScope: PORTAL_SCOPES.CONSENTS_READ_SELF,
+    requiredScope: REQUIRED_SCOPES.CONSENTS_READ_SELF,
   },
 ]
 
@@ -51,14 +51,14 @@ const CONSENT_ITEMS: SidebarItem[] = [
     labelKey: 'sidebar.allConsents',
     path: '/consents',
     icon: <ShieldCheck size={18} />,
-    requiredScope: PORTAL_SCOPES.CONSENTS_READ_SELF,
+    requiredScope: REQUIRED_SCOPES.CONSENTS_READ_SELF,
   },
   {
     id: 'pending-consents',
     labelKey: 'sidebar.pendingConsents',
     path: '/consents?state=PENDING',
     icon: <Clock3 size={18} />,
-    requiredScope: PORTAL_SCOPES.CONSENTS_READ_SELF,
+    requiredScope: REQUIRED_SCOPES.CONSENTS_READ_SELF,
   },
 ]
 
@@ -68,21 +68,21 @@ const EVENT_ITEMS: SidebarItem[] = [
     labelKey: 'sidebar.topics',
     path: '/events/topics',
     icon: <Radio size={18} />,
-    requiredScope: PORTAL_SCOPES.EVENT_TOPICS_READ,
+    requiredScope: REQUIRED_SCOPES.EVENT_TOPICS_READ,
   },
   {
     id: 'subscriptions',
     labelKey: 'sidebar.subscriptions',
     path: '/events/subscriptions',
     icon: <BellRing size={18} />,
-    requiredScope: PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_READ,
+    requiredScope: REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ,
   },
-    {
+  {
     id: 'events',
     labelKey: 'sidebar.events',
     path: '/events',
     icon: <Activity size={18} />,
-    requiredScope: PORTAL_SCOPES.EVENTS_READ,
+    requiredScope: REQUIRED_SCOPES.EVENTS_READ,
   },
 ]
 
@@ -92,14 +92,14 @@ const CATALOG_ITEMS: SidebarItem[] = [
     labelKey: 'sidebar.purposes',
     path: '/purposes',
     icon: <Target size={18} />,
-    requiredScope: PORTAL_SCOPES.PURPOSES_READ,
+    requiredScope: REQUIRED_SCOPES.PURPOSES_READ,
   },
   {
     id: 'elements',
     labelKey: 'sidebar.elements',
     path: '/elements',
     icon: <Blocks size={18} />,
-    requiredScope: PORTAL_SCOPES.ELEMENTS_READ,
+    requiredScope: REQUIRED_SCOPES.ELEMENTS_READ,
   },
 ]
 
@@ -109,7 +109,7 @@ const ADMINISTRATION_ITEMS: SidebarItem[] = [
     labelKey: 'sidebar.adminConsents',
     path: '/administration/consents',
     icon: <ShieldPlus size={18} />,
-    requiredScope: PORTAL_SCOPES.CONSENTS_READ_ANY,
+    requiredScope: REQUIRED_SCOPES.CONSENTS_READ_ANY,
   },
 ]
 
@@ -159,10 +159,17 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { hasScope } = useAuthorization()
+  const { currentUser, hasScope } = useAuthorization()
+
+  // An admin's own consents are still reachable directly by URL -- this only
+  // declutters the sidebar, it is not an access control boundary.
+  const hideSelfConsents =
+    currentUser.hideSelfConsentsForAdmins && hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
 
   const dashboardItems = DASHBOARD_ITEMS.filter((item) => hasScope(item.requiredScope))
-  const consentItems = CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
+  const consentItems = hideSelfConsents
+    ? []
+    : CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const eventItems = EVENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const catalogItems = CATALOG_ITEMS.filter((item) => hasScope(item.requiredScope))
   const administrationItems = ADMINISTRATION_ITEMS.filter((item) => hasScope(item.requiredScope))

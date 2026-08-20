@@ -28,54 +28,22 @@
     <packaging>war</packaging>
     <name>WSO2 DPDP Accelerator - Consent Portal Webapp</name>
 
+    <!--
+      The webapp carries no Java of its own: it is the built single page
+      application plus the JSP shell that serves it. The servlet API is needed
+      only so the container can compile those JSPs.
+    -->
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <!--
-              Opted in here rather than inherited from the root, so the pom-only
-              aggregator modules are not analysed. failOnError makes a new
-              finding fail the build; findbugs-exclude.xml carries the reviewed
-              suppressions with the reason for each.
-            -->
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <configuration>
-                    <failOnError>true</failOnError>
-                    <excludeFilterFile>${project.basedir}/findbugs-exclude.xml</excludeFilterFile>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -114,7 +82,13 @@
                     <workingDirectory>frontend</workingDirectory>
                     <environmentVariables>
                         <CI>false</CI>
-                        <VITE_API_BASE_URL>${portal.context.path}</VITE_API_BASE_URL>
+                        <!--
+                          Deployed inside the Identity Server the APIs are
+                          same-origin and tenant-qualified, so the base is
+                          resolved from the browser URL at runtime rather than
+                          being baked in here.
+                        -->
+                        <VITE_IS_BASE_URL></VITE_IS_BASE_URL>
                         <VITE_BASE_PATH>${portal.context.path}/</VITE_BASE_PATH>
                         <VITE_AUTH_ENABLED>true</VITE_AUTH_ENABLED>
                         <!-- Sandbox npm caches inside the module to keep CI builds hermetic. -->

@@ -24,6 +24,9 @@ export const EMPTY_ADMIN_CONSENT_FILTERS: AdminConsentRegistryFilters = {
   consentId: '',
   subjectId: '',
   serviceId: '',
+  purposeId: '',
+  propertyKey: '',
+  propertyValue: '',
 }
 
 export function normalizeAdminConsentFilters(
@@ -34,6 +37,9 @@ export function normalizeAdminConsentFilters(
     consentId: filters.consentId.trim(),
     subjectId: filters.subjectId.trim(),
     serviceId: filters.serviceId.trim(),
+    purposeId: filters.purposeId.trim(),
+    propertyKey: filters.propertyKey.trim(),
+    propertyValue: filters.propertyValue.trim(),
   }
 }
 
@@ -45,5 +51,8 @@ export function getAdminConsentFilters(searchParams: URLSearchParams): AdminCons
     consentId: searchParams.get('consentId') ?? '',
     subjectId: searchParams.get('subjectId') ?? '',
     serviceId: searchParams.get('serviceId') ?? '',
+    purposeId: searchParams.get('purposeId') ?? '',
+    propertyKey: searchParams.get('propertyKey') ?? '',
+    propertyValue: searchParams.get('propertyValue') ?? '',
   })
 }

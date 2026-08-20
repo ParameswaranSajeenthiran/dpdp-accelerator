@@ -25,15 +25,15 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Common Database Connection utility for datasource resolution.
  */
 public class DBUtils {
 
-    private static final Logger LOG = Logger.getLogger(DBUtils.class.getName());
+    private static final Log LOG = LogFactory.getLog(DBUtils.class);
     private static volatile DataSource dataSource;
     private static volatile long lastJndiLookupFailedTime = 0L;
     private static final long JNDI_LOOKUP_COOLDOWN_MS = 10000L;
@@ -87,7 +87,9 @@ public class DBUtils {
                         }
                     } catch (Exception e) {
                         lastJndiLookupFailedTime = System.currentTimeMillis();
-                        LOG.log(Level.FINE, "JNDI lookup failed for [" + EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME + "], falling back to direct connection.", e);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("JNDI lookup failed for [" + EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME + "], falling back to direct connection.", e);
+                        }
                     }
                     if (dataSource == null) {
                         lastJndiLookupFailedTime = System.currentTimeMillis();

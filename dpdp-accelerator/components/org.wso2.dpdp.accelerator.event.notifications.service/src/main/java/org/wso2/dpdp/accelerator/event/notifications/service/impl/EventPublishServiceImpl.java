@@ -55,8 +55,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Default {@link EventPublishService} implementation.
@@ -73,7 +73,7 @@ import java.util.logging.Logger;
 @Component(service = EventPublishService.class, immediate = true)
 public class EventPublishServiceImpl implements EventPublishService {
 
-    private static final Logger LOG = Logger.getLogger(EventPublishServiceImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(EventPublishServiceImpl.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -139,7 +139,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         try {
             payloadJson = payload == null ? "{}" : objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            LOG.log(Level.SEVERE, "Failed to serialize event payload: " + e.getMessage(), e);
+            LOG.error("Failed to serialize event payload: " + e.getMessage(), e);
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
@@ -154,7 +154,9 @@ public class EventPublishServiceImpl implements EventPublishService {
         try {
             conn = DBUtils.getConnection();
         } catch (Exception e) {
-            LOG.log(Level.FINE, "Could not acquire connection from DBUtils: " + e.getMessage());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Could not acquire connection from DBUtils: " + e.getMessage());
+            }
         }
 
         if (conn != null) {
@@ -185,7 +187,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                     conn.rollback();
                 } catch (Exception ignored) {
                 }
-                LOG.log(Level.SEVERE, "Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
+                LOG.error("Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                         EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
@@ -217,7 +219,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             } catch (EventNotificationException e) {
                 throw e;
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
+                LOG.error("Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                         EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,

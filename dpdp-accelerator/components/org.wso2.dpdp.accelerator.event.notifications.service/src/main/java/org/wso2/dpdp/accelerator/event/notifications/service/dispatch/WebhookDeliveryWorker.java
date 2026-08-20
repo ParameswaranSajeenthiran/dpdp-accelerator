@@ -29,8 +29,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Batch driver for the webhook dispatch loop. One tick:
@@ -66,7 +66,7 @@ import java.util.logging.Logger;
  */
 public class WebhookDeliveryWorker implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(WebhookDeliveryWorker.class.getName());
+    private static final Log LOG = LogFactory.getLog(WebhookDeliveryWorker.class);
 
     private final DeliveryDAO deliveryDAO;
     private final Executor executor;
@@ -93,7 +93,7 @@ public class WebhookDeliveryWorker implements Runnable {
         try {
             runTick();
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Webhook delivery worker tick failed: " + e.getMessage(), e);
+            LOG.warn("Webhook delivery worker tick failed: " + e.getMessage(), e);
         }
     }
 
@@ -140,10 +140,8 @@ public class WebhookDeliveryWorker implements Runnable {
             }
             return deliveryDAO.getPendingWebhookDispatchContexts(limit);
         } catch (Exception e) {
-            LOG.log(Level.WARNING,
-                    "Failed to fetch " + (reclaim ? "stuck" : "pending") + " webhook deliveries: "
-                            + e.getMessage(),
-                    e);
+            LOG.warn("Failed to fetch " + (reclaim ? "stuck" : "pending") + " webhook deliveries: "
+                    + e.getMessage(), e);
             return Collections.emptyList();
         }
     }
@@ -184,7 +182,7 @@ public class WebhookDeliveryWorker implements Runnable {
                         httpClient));
                 submitted++;
             } catch (Exception e) {
-                LOG.log(Level.SEVERE, "Failed to submit WebhookDeliveryTask for delivery ["
+                LOG.error("Failed to submit WebhookDeliveryTask for delivery ["
                         + delivery.getDeliveryId() + "]: " + e.getMessage(), e);
                 markUnrecoverable(delivery, "executor rejected task");
             }
@@ -196,7 +194,7 @@ public class WebhookDeliveryWorker implements Runnable {
         try {
             return deliveryDAO.claimWebhookDelivery(deliveryId);
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "claimWebhookDelivery failed for [" + deliveryId + "]: "
+            LOG.warn("claimWebhookDelivery failed for [" + deliveryId + "]: "
                     + e.getMessage(), e);
             return false;
         }
@@ -206,7 +204,7 @@ public class WebhookDeliveryWorker implements Runnable {
         try {
             return deliveryDAO.claimStuckWebhookDelivery(deliveryId, cutoff);
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "claimStuckWebhookDelivery failed for [" + deliveryId + "]: "
+            LOG.warn("claimStuckWebhookDelivery failed for [" + deliveryId + "]: "
                     + e.getMessage(), e);
             return false;
         }
@@ -232,7 +230,7 @@ public class WebhookDeliveryWorker implements Runnable {
      * the FAILED status and the reason in the worker logs.
      */
     private void markUnrecoverable(WebhookDelivery delivery, String reason) {
-        LOG.warning("Marking webhook delivery [" + delivery.getDeliveryId() + "] unrecoverable: " + reason);
+        LOG.warn("Marking webhook delivery [" + delivery.getDeliveryId() + "] unrecoverable: " + reason);
         WebhookDelivery failed = new WebhookDelivery(
                 delivery.getDeliveryId(),
                 delivery.getSubscriptionId(),
@@ -246,7 +244,7 @@ public class WebhookDeliveryWorker implements Runnable {
         try {
             deliveryDAO.updateWebhookDeliveryStatus(failed);
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Failed to mark unrecoverable webhook delivery ["
+            LOG.error("Failed to mark unrecoverable webhook delivery ["
                     + delivery.getDeliveryId() + "] as failed: " + e.getMessage(), e);
         }
     }

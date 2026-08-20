@@ -20,7 +20,6 @@ import {
   Box,
   Button,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Popover,
@@ -36,7 +35,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AdminConsentRegistryFilters } from '../../../types/consent'
 import { CONSENT_STATES } from '../../../types/consent'
-import { getConsentStateLabelKey } from '../../consent-registry/utils/statusChip'
+import { getConsentStateLabelKey } from '../../my-consents/utils/statusChip'
 import {
   EMPTY_ADMIN_CONSENT_FILTERS,
   normalizeAdminConsentFilters,
@@ -59,7 +58,11 @@ export default function AdminConsentFilters({
   const [draft, setDraft] = useState(filters)
   const [filtersAnchor, setFiltersAnchor] = useState<HTMLElement | null>(null)
   const filtersOpen = Boolean(filtersAnchor)
-  const advancedFilterCount = [filters.subjectId, filters.serviceId].filter(Boolean).length
+  const advancedFilterCount = [
+    filters.serviceId,
+    filters.purposeId,
+    filters.propertyKey && filters.propertyValue ? 'set' : '',
+  ].filter(Boolean).length
 
   const applyFilters = (next: AdminConsentRegistryFilters): void => {
     const normalized = normalizeAdminConsentFilters(next)
@@ -75,7 +78,7 @@ export default function AdminConsentFilters({
   return (
     <Box component="section" aria-label={t('adminConsents.filters.sectionAriaLabel')}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <Box sx={{ position: 'relative', flex: 1, height: MAIN_FILTER_HEIGHT }}>
+        <Box sx={{ flex: 1, height: MAIN_FILTER_HEIGHT }}>
           <SearchBar
             size="small"
             fullWidth
@@ -85,59 +88,49 @@ export default function AdminConsentFilters({
             onKeyDown={(event) => {
               if (event.key === 'Enter') applyFilters(draft)
             }}
-            sx={{ '& .MuiInputBase-root': { height: MAIN_FILTER_HEIGHT, pr: 6 } }}
+            sx={{ '& .MuiInputBase-root': { height: MAIN_FILTER_HEIGHT } }}
           />
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              right: 4,
-              transform: 'translateY(-50%)',
-              pl: 0.5,
-              borderLeft: 1,
-              borderColor: 'divider',
-              display: 'flex',
-            }}
-          >
-            <Tooltip
-              title={
-                filters.consentId
-                  ? t('adminConsents.filters.removeConsentIdForAdvanced')
-                  : t('consentRegistry.filters.advanced')
-              }
+        </Box>
+
+        <Tooltip
+          title={filters.consentId ? t('adminConsents.filters.removeConsentIdForAdvanced') : ''}
+        >
+          <Box component="span" sx={{ position: 'relative', flexShrink: 0 }}>
+            <Button
+              variant={advancedFilterCount > 0 ? 'contained' : 'outlined'}
+              color={filtersOpen || advancedFilterCount > 0 ? 'primary' : 'inherit'}
+              startIcon={<ListFilter size={16} />}
+              disabled={Boolean(filters.consentId)}
+              aria-haspopup="dialog"
+              aria-expanded={filtersOpen}
+              sx={{
+                height: MAIN_FILTER_HEIGHT,
+                width: { xs: '100%', sm: 'auto' },
+                whiteSpace: 'nowrap',
+              }}
+              onClick={(event) => {
+                setDraft(filters)
+                setFiltersAnchor(event.currentTarget)
+              }}
             >
-              <Box component="span" sx={{ display: 'inline-flex' }}>
-                <IconButton
-                  size="small"
-                  color={filtersOpen ? 'primary' : 'default'}
-                  disabled={Boolean(filters.consentId)}
-                  aria-label={t('consentRegistry.filters.advanced')}
-                  aria-haspopup="dialog"
-                  aria-expanded={filtersOpen}
-                  onClick={(event) => {
-                    setDraft(filters)
-                    setFiltersAnchor(event.currentTarget)
-                  }}
-                >
-                  <ListFilter size={17} />
-                </IconButton>
-              </Box>
-            </Tooltip>
+              {t('consentRegistry.filters.advanced')}
+            </Button>
             {advancedFilterCount > 0 ? (
               <Box
                 component="span"
                 sx={{
                   position: 'absolute',
-                  top: -3,
-                  right: -3,
-                  minWidth: 16,
-                  height: 16,
+                  top: -6,
+                  right: -6,
+                  minWidth: 18,
+                  height: 18,
                   px: 0.4,
-                  borderRadius: 8,
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText',
+                  borderRadius: 9,
+                  bgcolor: 'error.main',
+                  color: 'error.contrastText',
                   fontSize: '0.625rem',
-                  lineHeight: '16px',
+                  fontWeight: 700,
+                  lineHeight: '18px',
                   textAlign: 'center',
                   pointerEvents: 'none',
                 }}
@@ -146,7 +139,27 @@ export default function AdminConsentFilters({
               </Box>
             ) : null}
           </Box>
-        </Box>
+        </Tooltip>
+
+        <Tooltip
+          title={filters.consentId ? t('adminConsents.filters.removeConsentIdForSubject') : ''}
+        >
+          <Box component="span" sx={{ width: { xs: '100%', sm: 200 }, flexShrink: 0 }}>
+            <TextField
+              size="small"
+              fullWidth
+              label={t('consentRegistry.details.table.user')}
+              value={draft.subjectId}
+              disabled={Boolean(filters.consentId)}
+              sx={{ '& .MuiInputBase-root': { height: MAIN_FILTER_HEIGHT } }}
+              onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') applyFilters(draft)
+              }}
+            />
+          </Box>
+        </Tooltip>
+
         <Tooltip
           title={filters.consentId ? t('adminConsents.filters.removeConsentIdForState') : ''}
         >
@@ -163,7 +176,7 @@ export default function AdminConsentFilters({
                 onChange={(event) =>
                   applyFilters({
                     ...filters,
-                    consentId: draft.consentId,
+                    ...draft,
                     state: event.target.value as AdminConsentRegistryFilters['state'],
                   })
                 }
@@ -205,19 +218,42 @@ export default function AdminConsentFilters({
             <TextField
               size="small"
               fullWidth
-              label={t('adminConsents.filters.subjectId')}
-              helperText={t('adminConsents.filters.subjectIdHelp')}
-              value={draft.subjectId}
-              onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
-            />
-            <TextField
-              size="small"
-              fullWidth
               label={t('adminConsents.filters.serviceId')}
               value={draft.serviceId}
               onChange={(event) => setDraft({ ...draft, serviceId: event.target.value })}
             />
+            <TextField
+              size="small"
+              fullWidth
+              label={t('catalog.fields.purpose')}
+              helperText={t('catalog.fields.purposeId')}
+              value={draft.purposeId}
+              onChange={(event) => setDraft({ ...draft, purposeId: event.target.value })}
+            />
           </Stack>
+
+          <Stack spacing={1}>
+            <Typography variant="caption" color="text.secondary">
+              {t('adminConsents.filters.propertyFilterLabel')}
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                size="small"
+                fullWidth
+                label={t('catalog.fields.propertyKey')}
+                value={draft.propertyKey}
+                onChange={(event) => setDraft({ ...draft, propertyKey: event.target.value })}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label={t('catalog.fields.propertyValue')}
+                value={draft.propertyValue}
+                onChange={(event) => setDraft({ ...draft, propertyValue: event.target.value })}
+              />
+            </Stack>
+          </Stack>
+
           <Stack
             direction="row"
             justifyContent="space-between"

@@ -33,9 +33,10 @@ import type {
 } from '../../../types/consent'
 import { isConsentState } from '../../../types/consent'
 import { getNextCursor, getPreviousCursor } from '../../../utils/cursorPagination'
-import { normalizeConsentState } from '../../consent-registry/utils/statusChip'
-import { toConsentRow } from '../../consent-registry/hooks/useConsentQueries'
+import { normalizeConsentState } from '../../my-consents/utils/statusChip'
+import { toConsentRow } from '../../my-consents/hooks/useConsentQueries'
 import {
+  buildConsentPropertyFilter,
   fetchAdminConsentByID,
   fetchAdminConsents,
   revokeAdminConsent,
@@ -60,6 +61,7 @@ function toAdminConsentRow(consent: ConsentSummary): ConsentRecord {
     serviceId: consent.serviceId,
     state: normalizedState,
     timestamp: consent.timestamp,
+    purposes: consent.purposes?.map((purpose) => purpose.name),
   }
 }
 
@@ -75,6 +77,8 @@ function toListParams(
     subjectId: filters.subjectId || undefined,
     serviceId: filters.serviceId || undefined,
     state: filters.state === 'All' ? undefined : filters.state,
+    purposeId: filters.purposeId || undefined,
+    filter: buildConsentPropertyFilter(filters.propertyKey, filters.propertyValue),
   }
 }
 

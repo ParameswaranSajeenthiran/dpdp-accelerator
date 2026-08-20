@@ -22,13 +22,22 @@ import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/ox
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import ConsentDetailsPage from '../features/consent-registry/ConsentDetailsPage'
+import ConsentDetailsPage from '../features/my-consents/ConsentDetailsPage'
 import i18n from '../i18n/i18n'
 import type { ConsentDetail } from '../types/consent'
-import { PORTAL_SCOPES, type PortalScope } from '../utils/portalScopes'
+import { APIError } from '../utils/apiClient'
+import { REQUIRED_SCOPES, type ScopeRequirement } from '../utils/scopes'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
 
-const fetchMock = vi.fn()
+const consentsApi = vi.hoisted(() => ({
+  fetchMyConsentByID: vi.fn(),
+  approveMyConsent: vi.fn(),
+  rejectMyConsent: vi.fn(),
+  revokeMyConsent: vi.fn(),
+  fetchMyConsents: vi.fn(),
+}))
+
+vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
 const CONSENT_ID = '06168ee0-f82a-4b0f-87ea-2a37600ec3f2'
 
@@ -63,18 +72,7 @@ function buildConsent(state: string, overrides: Partial<ConsentDetail> = {}): Co
   }
 }
 
-function renderConsentDetailsPage(
-  state: string,
-  scopes: PortalScope[] = Object.values(PORTAL_SCOPES),
-  overrides: Partial<ConsentDetail> = {},
-): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => buildConsent(state, overrides),
-  })
-
+function renderPage(scopes: ScopeRequirement[]): void {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   render(
@@ -95,10 +93,18 @@ function renderConsentDetailsPage(
   )
 }
 
+function renderConsentDetailsPage(
+  state: string,
+  scopes: ScopeRequirement[] = Object.values(REQUIRED_SCOPES),
+  overrides: Partial<ConsentDetail> = {},
+): void {
+  consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent(state, overrides))
+  renderPage(scopes)
+}
+
 afterEach(() => {
   cleanup()
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
 describe('ConsentDetailsPage lifecycle actions', () => {
@@ -119,7 +125,9 @@ describe('ConsentDetailsPage lifecycle actions', () => {
   })
 
   it('hides lifecycle actions without the consent write scope', async () => {
-    renderConsentDetailsPage('PENDING', [PORTAL_SCOPES.CONSENTS_READ_SELF])
+    // Self-service writes are gated on internal_login, which a session scoped
+    // to the catalogue alone does not carry.
+    renderConsentDetailsPage('PENDING', [REQUIRED_SCOPES.PURPOSES_READ])
 
     expect(await screen.findByRole('heading', { name: 'Consent Details' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
@@ -151,6 +159,26 @@ describe('ConsentDetailsPage content', () => {
     expect(screen.getByText('dpdp-portal')).toBeInTheDocument()
   })
 
+  it('renders consent properties in a key/value table', async () => {
+    renderConsentDetailsPage('ACTIVE', Object.values(REQUIRED_SCOPES), {
+      properties: { dataCategory: 'financial', region: 'EU' },
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Properties' })).toBeInTheDocument()
+    expect(screen.getByText('dataCategory')).toBeInTheDocument()
+    expect(screen.getByText('financial')).toBeInTheDocument()
+    expect(screen.getByText('region')).toBeInTheDocument()
+    expect(screen.getByText('EU')).toBeInTheDocument()
+  })
+
+  it('shows an empty state when a consent has no properties', async () => {
+    renderConsentDetailsPage('ACTIVE')
+
+    expect(
+      await screen.findByText('No properties are associated with this consent.'),
+    ).toBeInTheDocument()
+  })
+
   it('lists authorizations by username with their state', async () => {
     renderConsentDetailsPage('ACTIVE')
 
@@ -169,41 +197,13 @@ describe('ConsentDetailsPage content', () => {
     expect(screen.queryByText('View Resources')).not.toBeInTheDocument()
   })
 
-  it('surfaces the BFF message when approving a consent that is not PENDING', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockImplementation(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      if (init?.method === 'POST') {
-        return {
-          ok: false,
-          status: 409,
-          json: async () => ({
-            code: 'INVALID_CONSENT_STATE',
-            message: 'Consent is not in PENDING state.',
-          }),
-        }
-      }
-
-      return { ok: true, status: 200, json: async () => buildConsent('PENDING') }
-    })
-
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-
-    render(
-      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-        <CssBaseline />
-        <I18nextProvider i18n={i18n}>
-          <QueryClientProvider client={queryClient}>
-            <MemoryRouter initialEntries={[`/consents/${CONSENT_ID}`]}>
-              <TestAuthorizationProvider scopes={Object.values(PORTAL_SCOPES)}>
-                <Routes>
-                  <Route path="/consents/:id" element={<ConsentDetailsPage />} />
-                </Routes>
-              </TestAuthorizationProvider>
-            </MemoryRouter>
-          </QueryClientProvider>
-        </I18nextProvider>
-      </OxygenUIThemeProvider>,
+  it('surfaces the API message when approving a consent that is not PENDING', async () => {
+    consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent('PENDING'))
+    consentsApi.approveMyConsent.mockRejectedValue(
+      new APIError(409, 'INVALID_CONSENT_STATE', 'Consent is not in PENDING state.'),
     )
+
+    renderPage(Object.values(REQUIRED_SCOPES))
 
     fireEvent.click(await screen.findByRole('button', { name: 'Approve' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Approve Consent' }))
@@ -211,5 +211,6 @@ describe('ConsentDetailsPage content', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Consent is not in PENDING state.')
     })
+    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID)
   })
 })

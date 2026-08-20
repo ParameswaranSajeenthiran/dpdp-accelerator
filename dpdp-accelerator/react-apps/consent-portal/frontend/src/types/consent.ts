@@ -73,13 +73,20 @@ export interface ConsentDetail {
   properties?: Record<string, string>
 }
 
-/** Consents returned by the administrative list endpoint carry no purposes. */
+/**
+ * Consents returned by the administrative list endpoint.
+ *
+ * The Identity Server's raw list rows carry no purposes; `fetchAdminConsents`
+ * expands each row on the page with a detail lookup, so `purposes` is present
+ * in practice - except on a row whose lookup failed.
+ */
 export interface ConsentSummary {
   id: string
   subjectId: string
   serviceId: string
   state: ConsentState | string
   timestamp: number
+  purposes?: ConsentPurpose[]
 }
 
 /**
@@ -104,6 +111,9 @@ export interface ConsentRegistryFilters {
 export interface AdminConsentRegistryFilters extends ConsentRegistryFilters {
   consentId: string
   subjectId: string
+  purposeId: string
+  propertyKey: string
+  propertyValue: string
 }
 
 /**
@@ -127,7 +137,8 @@ export interface ConsentSearchResponse {
 export interface ConsentListQueryParams {
   limit: number
   offset: number
-  consentStatuses?: string
+  /** One state, or undefined for all: the filter is a single-select. */
+  state?: ConsentState
   serviceId?: string
 }
 
@@ -138,6 +149,8 @@ export interface AdminConsentListQueryParams {
   subjectId?: string
   serviceId?: string
   state?: string
+  purposeId?: string
+  filter?: string
 }
 
 export interface AdminConsentListResponse {

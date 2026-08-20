@@ -33,13 +33,13 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @Provider
 public class EventNotificationExceptionMapper implements ExceptionMapper<Throwable> {
 
-    private static final Logger log = Logger.getLogger(EventNotificationExceptionMapper.class.getName());
+    private static final Log log = LogFactory.getLog(EventNotificationExceptionMapper.class);
 
     @Override
     public Response toResponse(Throwable exception) {
@@ -67,26 +67,26 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
         }
 
         if (rootCause instanceof IllegalArgumentException) {
-            log.log(Level.WARNING, "Invalid request argument: " + rootCause.getMessage());
+            log.warn("Invalid request argument: " + rootCause.getMessage());
             return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4002", "Invalid request parameter", rootCause.getMessage());
         }
 
-        log.log(Level.SEVERE, "Unhandled exception in Event Notification endpoint", exception);
+        log.error("Unhandled exception in Event Notification endpoint", exception);
         return buildResponse(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "CS-5000", "Internal server error", "An unexpected error occurred.");
     }
 
     private Response handleEventNotificationException(EventNotificationException ex) {
         if (ex.getStatusCode() >= 500) {
-            log.log(Level.SEVERE, "Service error [" + ex.getCode() + "]: " + ex.getMessage(), ex);
+            log.error("Service error [" + ex.getCode() + "]: " + ex.getMessage(), ex);
         } else {
-            log.log(Level.WARNING, "Service error [" + ex.getCode() + "]: " + ex.getMessage());
+            log.warn("Service error [" + ex.getCode() + "]: " + ex.getMessage());
         }
         return buildResponse(ex.getStatusCode(), ex.getCode(), ex.getMessage(), ex.getDescription());
     }
 
     private Response handleWebApplicationException(WebApplicationException wae) {
         int status = wae.getResponse().getStatus();
-        log.log(Level.WARNING, "JAX-RS exception [" + status + "]: " + wae.getMessage());
+        log.warn("JAX-RS exception [" + status + "]: " + wae.getMessage());
         return buildResponse(status, "CS-" + status, wae.getMessage() != null ? wae.getMessage() : Response.Status.fromStatusCode(status).getReasonPhrase(), null);
     }
 
@@ -96,7 +96,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
                 .reduce((a, b) -> a + "; " + b)
                 .orElse(cve.getMessage());
 
-        log.log(Level.WARNING, "Validation failure: " + detail);
+        log.warn("Validation failure: " + detail);
         return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4003", "Request failed validation", detail);
     }
 
@@ -107,7 +107,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
             detail = "Unrecognized field '" + upe.getPropertyName() + "' in request payload.";
         }
 
-        log.log(Level.WARNING, "Malformed request payload: " + detail);
+        log.warn("Malformed request payload: " + detail);
         return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4001", "Malformed request payload", detail);
     }
 

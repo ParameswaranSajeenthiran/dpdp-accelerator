@@ -18,7 +18,7 @@
 
 import { Trash2 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
-import ConsentActionDialog from '../../consent-registry/components/ConsentActionDialog'
+import ConsentActionDialog from '../../my-consents/components/ConsentActionDialog'
 import type { SubscriptionRecord } from '../../../types/subscription'
 
 interface SubscriptionDeleteDialogProps {

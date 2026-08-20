@@ -27,25 +27,32 @@ import {
   verifySubscription,
 } from '../features/events/api/subscriptionsApi'
 
-const fetchMock = vi.fn()
+const transport = vi.hoisted(() => ({
+  httpRequest: vi.fn(),
+  login: vi.fn(),
+}))
+
+vi.mock('../utils/authClient', () => ({
+  httpRequest: transport.httpRequest,
+  isAuthEnabled: () => true,
+  login: transport.login,
+}))
 
 afterEach(() => {
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
-function mockJSONResponse(payload: unknown = {}): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => payload,
-  })
+function respondWith(payload: unknown, status = 200): void {
+  transport.httpRequest.mockResolvedValue({ status, data: payload })
+}
+
+function sentRequest(index = 0): { url: string; method?: string; data?: unknown } {
+  return transport.httpRequest.mock.calls[index]?.[0] as ReturnType<typeof sentRequest>
 }
 
 describe('subscriptionsApi', () => {
   it('calls fetchSubscriptions with search and pagination query parameters', async () => {
-    mockJSONResponse({ items: [], total: 0 })
+    respondWith({ items: [], total: 0 })
 
     await fetchSubscriptions({
       limit: 10,
@@ -54,8 +61,8 @@ describe('subscriptionsApi', () => {
       search: 'consent.revoke',
     })
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '10',
@@ -63,21 +70,22 @@ describe('subscriptionsApi', () => {
       status: 'active',
       search: 'consent.revoke',
     })
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(req.method).toBe('GET')
   })
 
   it('fetches a single subscription by ID with URI encoding', async () => {
-    mockJSONResponse({ subscriptionId: 'sub/123' })
+    respondWith({ subscriptionId: 'sub/123' })
 
     await fetchSubscriptionById('sub/123')
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub%2F123')
+    expect(req.method).toBe('GET')
   })
 
   it('posts a new subscription payload', async () => {
-    mockJSONResponse({ subscriptionId: 'sub-new', status: 'ACTIVE' })
+    respondWith({ subscriptionId: 'sub-new', status: 'ACTIVE' })
 
     const payload = {
       topic: 'consent.revoke',
@@ -91,59 +99,58 @@ describe('subscriptionsApi', () => {
 
     await createSubscription(payload)
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions')
-    expect(requestInit).toMatchObject({
-      method: 'POST',
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    })
+    expect(req.method).toBe('POST')
+    expect(JSON.parse(String(req.data))).toEqual(payload)
   })
 
   it('deletes a subscription by ID', async () => {
-    mockJSONResponse({ subscriptionId: 'sub-1', status: 'DELETED' })
+    respondWith({ subscriptionId: 'sub-1', status: 'DELETED' })
 
     await deleteSubscription('sub-1')
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1')
-    expect(requestInit).toMatchObject({ method: 'DELETE', credentials: 'include' })
+    expect(req.method).toBe('DELETE')
   })
 
   it('triggers verification on a subscription', async () => {
-    mockJSONResponse({ subscriptionId: 'sub-1', status: 'ACTIVE' })
+    respondWith({ subscriptionId: 'sub-1', status: 'ACTIVE' })
 
     await verifySubscription('sub-1')
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/verify')
-    expect(requestInit).toMatchObject({ method: 'POST', credentials: 'include' })
+    expect(req.method).toBe('POST')
   })
 
   it('fetches subscription delivery events with pagination', async () => {
-    mockJSONResponse({ items: [], total: 0 })
+    respondWith({ items: [], total: 0 })
 
     await fetchSubscriptionEvents('sub-1', { limit: 5, offset: 10 })
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/events')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '5',
       offset: '10',
     })
+    expect(req.method).toBe('GET')
   })
 
   it('fetches detailed delivery attempt history', async () => {
-    mockJSONResponse({ deliveryId: 'dlv-1', history: [] })
+    respondWith({ deliveryId: 'dlv-1', history: [] })
 
     await fetchSubscriptionEventHistory('sub-1', 'dlv-1')
 
-    const [requestUrl] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/events/dlv-1')
+    expect(req.method).toBe('GET')
   })
 })

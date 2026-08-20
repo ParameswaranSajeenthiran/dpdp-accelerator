@@ -36,8 +36,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Default {@link EventFanOutService} implementation.
@@ -63,7 +63,7 @@ import java.util.logging.Logger;
 @Component(service = EventFanOutService.class, immediate = true)
 public class EventFanOutServiceImpl implements EventFanOutService {
 
-    private static final Logger LOG = Logger.getLogger(EventFanOutServiceImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(EventFanOutServiceImpl.class);
 
     @Reference
     private SubscriptionDAO subscriptionDAO;
@@ -118,9 +118,11 @@ public class EventFanOutServiceImpl implements EventFanOutService {
                 queueWebhookDelivery(conn, subscription, event, now);
             } else {
                 // Poll-mode deferred to the poll endpoint slice.
-                LOG.log(Level.FINE, "Skipping poll-mode subscription [{0}] for event [{1}] — "
-                        + "poll-side fan-out not active in this slice.",
-                        new Object[] { subscription.getSubscriptionId(), event.getEventId() });
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Skipping poll-mode subscription [" + subscription.getSubscriptionId()
+                            + "] for event [" + event.getEventId()
+                            + "] — poll-side fan-out not active in this slice.");
+                }
             }
         }
     }
@@ -153,8 +155,10 @@ public class EventFanOutServiceImpl implements EventFanOutService {
                 ? deliveryDAO.addWebhookDelivery(conn, delivery)
                 : deliveryDAO.addWebhookDelivery(delivery);
         if (saved) {
-            LOG.log(Level.INFO, "Queued webhook delivery [{0}] for subscription [{1}] on event [{2}].",
-                    new Object[] { deliveryId, subscription.getSubscriptionId(), event.getEventId() });
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Queued webhook delivery [" + deliveryId + "] for subscription ["
+                        + subscription.getSubscriptionId() + "] on event [" + event.getEventId() + "].");
+            }
         } else {
             throw new org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException(
                     "Failed to queue webhook delivery for subscription [" + subscription.getSubscriptionId()

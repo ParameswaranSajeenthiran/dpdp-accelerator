@@ -39,8 +39,9 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { useCatalogText } from '../../i18n/catalogText'
 import { APIError } from '../../utils/apiClient'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from './components/DetailGrid'
 import ElementDeleteDialog from './components/ElementDeleteDialog'
@@ -58,19 +59,20 @@ function deleteErrorMessage(error: Error | null, t: (key: string) => string): st
     return undefined
   }
   if (error instanceof APIError && error.status === 409) {
-    return t('catalog.elementDelete.conflict')
+    return t('catalog.elements.delete.conflict')
   }
-  return t('catalog.elementDelete.deleteFailed')
+  return t('catalog.elements.delete.deleteFailed')
 }
 
 function ElementDetailsPage(): React.JSX.Element {
   const { t } = useTranslation('common')
+  const catalogText = useCatalogText()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const detailQuery = useElementQuery(id)
   const detail = detailQuery.data
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.ELEMENTS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.ELEMENTS_WRITE)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const deleteMutation = useDeleteElementMutation()
   const propertyEntries = Object.entries(detail?.properties ?? {})
@@ -102,6 +104,8 @@ function ElementDetailsPage(): React.JSX.Element {
     )
   }
 
+  const { displayName, description } = catalogText('elements', detail)
+
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
@@ -109,7 +113,7 @@ function ElementDetailsPage(): React.JSX.Element {
           <Stack spacing={1} minWidth={0}>
             <HeaderBreadcrumbs currentLabel={detail.name} />
             <Typography variant="h4" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>
-              {detail.displayName ?? detail.name}
+              {displayName}
             </Typography>
           </Stack>
           {canWrite ? (
@@ -164,12 +168,12 @@ function ElementDetailsPage(): React.JSX.Element {
                 {
                   icon: <TypeIcon size={14} />,
                   label: t('catalog.fields.displayName'),
-                  value: detail.displayName ?? '-',
+                  value: displayName,
                 },
                 {
                   icon: <AlignLeft size={14} />,
                   label: t('catalog.fields.description'),
-                  value: detail.description ?? '-',
+                  value: description ?? '-',
                 },
               ]}
             />
@@ -192,10 +196,10 @@ function ElementDetailsPage(): React.JSX.Element {
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700, width: '35%' }}>
-                      {t('catalog.elementForm.propertyKeyLabel')}
+                      {t('catalog.fields.propertyKey')}
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>
-                      {t('catalog.elementForm.propertyValueLabel')}
+                      {t('catalog.fields.propertyValue')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -223,7 +227,7 @@ function ElementDetailsPage(): React.JSX.Element {
 
       <ElementDeleteDialog
         open={deleteOpen}
-        elementName={detail.displayName ?? detail.name}
+        elementName={displayName}
         loading={deleteMutation.isPending}
         error={deleteErrorMessage(deleteMutation.error, t)}
         onClose={() => {

@@ -47,16 +47,16 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
   return (
     <Stack spacing={1.5}>
       <Typography variant="subtitle2" fontWeight={600}>
-        {t('catalog.elementForm.propertiesLabel')}
+        {t('catalog.fields.properties')}
       </Typography>
 
       {rows.map((row, index) => {
         const { duplicateKey, orphanedValue } = issues[index]
         let keyHelperText: string | undefined
         if (duplicateKey) {
-          keyHelperText = t('catalog.elementForm.propertyDuplicateKey')
+          keyHelperText = t('catalog.elements.form.propertyDuplicateKey')
         } else if (orphanedValue) {
-          keyHelperText = t('catalog.elementForm.propertyKeyRequired')
+          keyHelperText = t('catalog.elements.form.propertyKeyRequired')
         }
 
         return (
@@ -65,7 +65,7 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
             <TextField
               size="small"
               fullWidth
-              label={t('catalog.elementForm.propertyKeyLabel')}
+              label={t('catalog.fields.propertyKey')}
               error={duplicateKey || orphanedValue}
               helperText={keyHelperText}
               value={row.key}
@@ -75,7 +75,7 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
             <TextField
               size="small"
               fullWidth
-              label={t('catalog.elementForm.propertyValueLabel')}
+              label={t('catalog.fields.propertyValue')}
               value={row.value}
               disabled={disabled}
               onChange={(event) => updateRow(index, { value: event.target.value })}
@@ -83,7 +83,7 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
             <IconButton
               size="small"
               disabled={disabled}
-              aria-label={t('catalog.elementForm.removeProperty')}
+              aria-label={t('catalog.actions.removeProperty')}
               onClick={() => removeRow(index)}
             >
               <X size={16} />
@@ -100,7 +100,7 @@ function PropertyEditor({ rows, disabled, onChange }: PropertyEditorProps): Reac
         sx={{ alignSelf: 'flex-start' }}
         onClick={() => onChange([...rows, { ...EMPTY_PROPERTY_ROW }])}
       >
-        {t('catalog.elementForm.addProperty')}
+        {t('catalog.actions.addProperty')}
       </Button>
     </Stack>
   )

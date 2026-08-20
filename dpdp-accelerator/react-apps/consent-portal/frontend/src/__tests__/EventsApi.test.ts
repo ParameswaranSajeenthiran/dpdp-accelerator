@@ -25,25 +25,32 @@ import {
   publishEvent,
 } from '../features/events/api/eventsApi'
 
-const fetchMock = vi.fn()
+const transport = vi.hoisted(() => ({
+  httpRequest: vi.fn(),
+  login: vi.fn(),
+}))
+
+vi.mock('../utils/authClient', () => ({
+  httpRequest: transport.httpRequest,
+  isAuthEnabled: () => true,
+  login: transport.login,
+}))
 
 afterEach(() => {
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
-function mockJSONResponse(payload: unknown = {}): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => payload,
-  })
+function respondWith(payload: unknown, status = 200): void {
+  transport.httpRequest.mockResolvedValue({ status, data: payload })
+}
+
+function sentRequest(index = 0): { url: string; method?: string; data?: unknown } {
+  return transport.httpRequest.mock.calls[index]?.[0] as ReturnType<typeof sentRequest>
 }
 
 describe('eventsApi', () => {
   it('calls fetchEvents with search, status, topic, groupId, and pagination query parameters', async () => {
-    mockJSONResponse({ items: [], total: 0 })
+    respondWith({ items: [], total: 0 })
 
     await fetchEvents({
       limit: 10,
@@ -54,8 +61,8 @@ describe('eventsApi', () => {
       groupId: 'consumer-grp-1',
     })
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/events')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '10',
@@ -65,11 +72,11 @@ describe('eventsApi', () => {
       topic: 'consent-events',
       groupId: 'consumer-grp-1',
     })
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(req.method).toBe('GET')
   })
 
   it('fetches event delivery history by deliveryId', async () => {
-    mockJSONResponse({
+    respondWith({
       deliveryId: 'dlv-123',
       eventId: 'evt-1',
       topic: 'consent-events',
@@ -80,15 +87,15 @@ describe('eventsApi', () => {
 
     const result = await fetchEventDeliveryHistory('dlv-123')
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/events/dlv-123/history')
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(req.method).toBe('GET')
     expect(result.deliveryId).toBe('dlv-123')
   })
 
   it('posts a new event payload for publishing', async () => {
-    mockJSONResponse({ eventId: 'evt-1', topicId: 'topic-1' })
+    respondWith({ eventId: 'evt-1', topicId: 'topic-1' })
 
     const payload = {
       topicName: 'consent.revoke',
@@ -99,18 +106,15 @@ describe('eventsApi', () => {
 
     await publishEvent(payload)
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/events')
-    expect(requestInit).toMatchObject({
-      method: 'POST',
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    })
+    expect(req.method).toBe('POST')
+    expect(JSON.parse(String(req.data))).toEqual(payload)
   })
 
   it('fetches event details by eventId', async () => {
-    mockJSONResponse({
+    respondWith({
       eventId: 'evt-101',
       topic: 'consent.revoke',
       payload: '{"key":"val"}',
@@ -120,15 +124,15 @@ describe('eventsApi', () => {
 
     const result = await fetchEventById('evt-101')
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/events/evt-101')
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(req.method).toBe('GET')
     expect(result.eventId).toBe('evt-101')
   })
 
   it('fetches event downstream deliveries by eventId', async () => {
-    mockJSONResponse({
+    respondWith({
       items: [
         {
           deliveryId: 'dlv-1',
@@ -142,14 +146,14 @@ describe('eventsApi', () => {
 
     const result = await fetchEventDeliveries('evt-101', 10, 0)
 
-    const [requestUrl, requestInit] = fetchMock.mock.calls[0] ?? []
-    const url = new URL(String(requestUrl))
+    const req = sentRequest()
+    const url = new URL(req.url)
     expect(url.pathname).toBe('/api/event-notifications/events/evt-101/deliveries')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '10',
       offset: '0',
     })
-    expect(requestInit).toMatchObject({ method: 'GET', credentials: 'include' })
+    expect(req.method).toBe('GET')
     expect(result.items).toHaveLength(1)
   })
 })

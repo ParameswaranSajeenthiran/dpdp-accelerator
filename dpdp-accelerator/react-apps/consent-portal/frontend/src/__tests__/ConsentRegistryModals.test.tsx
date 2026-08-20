@@ -21,9 +21,9 @@ import { I18nextProvider } from 'react-i18next'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { OxygenTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import i18n from '../i18n/i18n'
-import ConsentApprovalDialog from '../features/consent-registry/components/ConsentApprovalDialog'
-import ConsentRejectionDialog from '../features/consent-registry/components/ConsentRejectionDialog'
-import ConsentRevocationDialog from '../features/consent-registry/components/ConsentRevocationDialog'
+import ConsentApprovalDialog from '../features/my-consents/components/ConsentApprovalDialog'
+import ConsentRejectionDialog from '../features/my-consents/components/ConsentRejectionDialog'
+import ConsentRevocationDialog from '../features/my-consents/components/ConsentRevocationDialog'
 
 function renderWithProviders(component: React.JSX.Element): void {
   render(

@@ -16,11 +16,11 @@
  * under the License.
  */
 
-import type { PortalScope } from '../../utils/portalScopes'
+import type { ScopeRequirement } from '../../utils/scopes'
 import useAuthorization from './useAuthorization'
 
 interface ScopeGuardProps {
-  scope: PortalScope
+  scope: ScopeRequirement
   children: React.JSX.Element
 }
 

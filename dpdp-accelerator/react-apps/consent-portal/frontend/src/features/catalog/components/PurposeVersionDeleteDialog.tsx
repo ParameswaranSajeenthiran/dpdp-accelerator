@@ -50,17 +50,17 @@ function PurposeVersionDeleteDialog({
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        {t('catalog.purposeVersionDelete.title')}
+        {t('catalog.actions.deleteVersion')}
       </DialogTitle>
 
       <DialogContent sx={{ p: 3 }}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error ? <Alert severity="error">{error}</Alert> : null}
           <Typography variant="body2">
-            {t('catalog.purposeVersionDelete.message', { version })}
+            {t('catalog.purposes.versionDelete.message', { version })}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('catalog.purposeVersionDelete.note')}
+            {t('catalog.purposes.versionDelete.note')}
           </Typography>
         </Stack>
       </DialogContent>
@@ -70,9 +70,7 @@ function PurposeVersionDeleteDialog({
           {t('catalog.actions.cancel')}
         </Button>
         <Button variant="contained" color="error" disabled={loading} onClick={onConfirm}>
-          {loading
-            ? t('catalog.purposeVersionDelete.deleting')
-            : t('catalog.purposeVersionDelete.confirm')}
+          {loading ? t('catalog.actions.deleting') : t('catalog.actions.deleteVersion')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,0 +1,80 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * The Identity Server scopes the portal runs on.
+ *
+ * The token carries the scopes the signed-in user's roles actually grant, so
+ * the UI hides whatever the server would refuse anyway. These are the server's
+ * own scope names - the portal does not invent a vocabulary of its own.
+ */
+export const IS_SCOPES = {
+  LOGIN: 'internal_login',
+  CONSENT_VIEW: 'internal_consent_mgt_consent_view',
+  CONSENT_CREATE: 'internal_consent_mgt_consent_create',
+  CONSENT_UPDATE: 'internal_consent_mgt_consent_update',
+  PURPOSE_VIEW: 'internal_consent_mgt_purpose_view',
+  PURPOSE_CREATE: 'internal_consent_mgt_purpose_create',
+  PURPOSE_UPDATE: 'internal_consent_mgt_purpose_update',
+  PURPOSE_DELETE: 'internal_consent_mgt_purpose_delete',
+  ELEMENT_VIEW: 'internal_consent_mgt_element_view',
+  ELEMENT_CREATE: 'internal_consent_mgt_element_create',
+  ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
+} as const
+
+export const EVENT_SCOPES = {
+  EVENT_SUBSCRIPTIONS_READ: 'portal:event-subscriptions:read',
+  EVENT_SUBSCRIPTIONS_WRITE: 'portal:event-subscriptions:write',
+  EVENT_TOPICS_READ: 'portal:event-topics:read',
+  EVENT_TOPICS_WRITE: 'portal:event-topics:write',
+  EVENTS_READ: 'portal:events:read',
+  EVENTS_WRITE: 'portal:events:write',
+} as const
+
+/** Any one of these scopes is enough to unlock the area it guards. */
+export type ScopeRequirement = readonly string[]
+
+/**
+ * What each area of the portal needs. Managing one's own consents only needs
+ * a login: the self-service API scopes every call to the caller.
+ */
+export const REQUIRED_SCOPES = {
+  CONSENTS_READ_SELF: [IS_SCOPES.LOGIN],
+  CONSENTS_WRITE_SELF: [IS_SCOPES.LOGIN],
+  CONSENTS_READ_ANY: [IS_SCOPES.CONSENT_VIEW],
+  CONSENTS_WRITE_ANY: [IS_SCOPES.CONSENT_UPDATE, IS_SCOPES.CONSENT_CREATE],
+  PURPOSES_READ: [IS_SCOPES.PURPOSE_VIEW],
+  PURPOSES_WRITE: [IS_SCOPES.PURPOSE_CREATE, IS_SCOPES.PURPOSE_UPDATE, IS_SCOPES.PURPOSE_DELETE],
+  ELEMENTS_READ: [IS_SCOPES.ELEMENT_VIEW],
+  ELEMENTS_WRITE: [IS_SCOPES.ELEMENT_CREATE, IS_SCOPES.ELEMENT_DELETE],
+  EVENT_SUBSCRIPTIONS_READ: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_READ],
+  EVENT_SUBSCRIPTIONS_WRITE: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_WRITE],
+  EVENT_TOPICS_READ: [EVENT_SCOPES.EVENT_TOPICS_READ],
+  EVENT_TOPICS_WRITE: [EVENT_SCOPES.EVENT_TOPICS_WRITE],
+  EVENTS_READ: [EVENT_SCOPES.EVENTS_READ],
+  EVENTS_WRITE: [EVENT_SCOPES.EVENTS_WRITE],
+} as const satisfies Record<string, ScopeRequirement>
+
+/** Splits the space separated scope string an access token carries. */
+export function parseScopes(granted: string | string[] | undefined): string[] {
+  if (!granted) {
+    return []
+  }
+  const values = Array.isArray(granted) ? granted : granted.split(/\s+/)
+  return values.map((scope) => scope.trim()).filter(Boolean)
+}

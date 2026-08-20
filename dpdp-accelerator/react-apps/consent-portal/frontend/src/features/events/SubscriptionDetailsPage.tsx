@@ -47,7 +47,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { formatEpochTimestamp } from '../../utils/dateTime'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import DetailGrid from '../catalog/components/DetailGrid'
 import SubscriptionDeleteDialog from './components/SubscriptionDeleteDialog'
@@ -72,7 +72,7 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
 
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
 
   const sub = detailQuery.data
 

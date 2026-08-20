@@ -16,11 +16,23 @@
  * under the License.
  */
 
-import { getAccessTokenPart1, isAuthEnabled, login, refreshSession } from './authClient'
+import type { HttpRequestConfig } from '@asgardeo/auth-spa'
+
+import { httpRequest, isAuthEnabled, login } from './authClient'
+import { serverBaseUrl } from './basePath'
+
+/**
+ * Calls the Identity Server REST APIs on behalf of the signed-in user.
+ *
+ * Requests go through the auth SDK so the web worker can attach the access
+ * token; the page itself never holds one. Identity Server error bodies
+ * ({@code {code, message, description}}) are normalised into {@link APIError}.
+ */
 
 export interface APIErrorPayload {
   code?: string
   message?: string
+  description?: string
 }
 
 export class APIError extends Error {
@@ -28,7 +40,7 @@ export class APIError extends Error {
 
   public readonly code: string
 
-  constructor(status: number, code: string, message: string) {
+  public constructor(status: number, code: string, message: string) {
     super(message)
     this.name = 'APIError'
     this.status = status
@@ -36,41 +48,35 @@ export class APIError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
+export interface RequestOptions {
+  method?: string
+  headers?: Record<string, string>
+  body?: string
   query?: Record<string, string | number | boolean | undefined>
 }
 
-function buildHeaders(headers?: HeadersInit): Headers {
-  const normalizedHeaders = new Headers(headers)
-
-  if (!normalizedHeaders.has('Accept')) {
-    normalizedHeaders.set('Accept', 'application/json')
-  }
-
-  const accessTokenPart = getAccessTokenPart1()
-  if (accessTokenPart && !normalizedHeaders.has('Authorization')) {
-    normalizedHeaders.set('Authorization', `Bearer ${accessTokenPart}`)
-  }
-
-  return normalizedHeaders
-}
+const DEFAULT_ERROR_CODE = 'API_REQUEST_FAILED'
 
 /**
- * Builds an absolute request URL from the configured API base URL and query params.
- *
- * The base URL may be absolute (cross-origin BFF) or a same-origin path such as
- * "/consent-portal" when the portal is served from the same webapp as the BFF.
+ * Where the Identity Server APIs live. In WAR production this is empty — the IS is
+ * same-origin and tenant-qualified. Set VITE_IS_BASE_URL during local dev
+ * to point at a remote IS instance.
  */
-function buildURL(path: string, query?: RequestOptions['query']): string {
-  const baseURL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+function apiBaseUrl(): string {
+  const configured = (import.meta.env.VITE_IS_BASE_URL as string | undefined) ?? ''
+  if (/^https?:\/\//i.test(configured)) {
+    return configured.endsWith('/') ? configured.slice(0, -1) : configured
+  }
+  return serverBaseUrl()
+}
 
+function buildURL(path: string, query?: RequestOptions['query']): string {
   if (/^https?:\/\//i.test(path)) {
     throw new Error(`apiClient path must be relative, received: "${path}"`)
   }
 
-  const normalizedBase = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const url = new URL(`${normalizedBase}${normalizedPath}`, window.location.origin)
+  const url = new URL(`${apiBaseUrl()}${normalizedPath}`, window.location.origin)
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
@@ -84,110 +90,138 @@ function buildURL(path: string, query?: RequestOptions['query']): string {
   return url.toString()
 }
 
-async function createAPIError(response: Response): Promise<APIError> {
-  let payload: APIErrorPayload | undefined
-
-  try {
-    payload = (await response.json()) as APIErrorPayload
-  } catch {
-    payload = undefined
-  }
-
-  return new APIError(
-    response.status,
-    payload?.code ?? 'API_REQUEST_FAILED',
-    payload?.message ?? `request failed with status ${response.status}`,
-  )
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 /**
- * Sends an API request and parses the response body as JSON.
- *
- * Use this helper for endpoints that always return a JSON payload.
+ * Identity Server errors carry a terse {@code message} (often just the HTTP
+ * reason) and the real detail in {@code description}; prefer the latter.
  */
-async function apiRequestInternal<T>(
-  path: string,
-  options: RequestOptions,
-  allowRefresh: boolean,
-): Promise<T> {
-  const { query, headers, ...requestInit } = options
-  const response = await fetch(buildURL(path, query), {
-    credentials: 'include',
-    ...requestInit,
-    headers: buildHeaders(headers),
-  })
+function payloadToError(status: number, payload: unknown): APIError {
+  let code = DEFAULT_ERROR_CODE
+  let message = `request failed with status ${status}`
 
-  if (response.status === 401 && allowRefresh && isAuthEnabled()) {
-    try {
-      await refreshSession()
-    } catch {
-      login()
-      throw await createAPIError(response)
+  if (isRecord(payload)) {
+    const body = payload as APIErrorPayload
+    if (typeof body.code === 'string' && body.code) {
+      code = body.code
     }
-    return apiRequestInternal<T>(path, options, false)
-  }
-  if (response.status === 401 && !allowRefresh && isAuthEnabled()) {
-    login()
-  }
-
-  if (!response.ok) {
-    throw await createAPIError(response)
+    if (typeof body.message === 'string' && body.message) {
+      message = body.message
+    }
+    if (typeof body.description === 'string' && body.description.trim()) {
+      message = body.description
+    }
   }
 
-  if (response.status === 204) {
-    throw new Error(
-      `apiRequest received a 204 No Content response for path "${path}". ` +
-        'Use apiRequestNoContent instead for endpoints that return no body.',
-    )
+  return new APIError(status, code, message)
+}
+
+interface RawResponse {
+  status: number
+  data: unknown
+}
+
+/** Normalises an SDK/axios rejection into a status plus parsed body. */
+function toRawResponse(error: unknown): RawResponse | undefined {
+  if (!isRecord(error)) {
+    return undefined
+  }
+  const response = (error as { response?: unknown }).response
+  if (!isRecord(response) || typeof (response as { status?: unknown }).status !== 'number') {
+    return undefined
+  }
+  return {
+    status: (response as { status: number }).status,
+    data: (response as { data?: unknown }).data,
+  }
+}
+
+async function send(path: string, options: RequestOptions): Promise<RawResponse> {
+  const url = buildURL(path, options.query)
+  const method = options.method ?? 'GET'
+  const headers: Record<string, string> = { Accept: 'application/json', ...options.headers }
+
+  if (!isAuthEnabled()) {
+    // Development affordance: no SDK session, plain same-origin call.
+    const response = await fetch(url, { method, headers, body: options.body })
+    const text = await response.text()
+    let data: unknown
+    try {
+      data = text ? JSON.parse(text) : undefined
+    } catch {
+      data = undefined
+    }
+    return { status: response.status, data }
   }
 
-  return (await response.json()) as T
+  try {
+    const response = await httpRequest({
+      data: options.body,
+      headers,
+      method: method as HttpRequestConfig['method'],
+      url,
+    })
+    if (!response) {
+      throw new APIError(502, DEFAULT_ERROR_CODE, 'the consent service did not respond')
+    }
+    return { status: response.status, data: response.data }
+  } catch (error) {
+    if (error instanceof APIError) {
+      throw error
+    }
+    const raw = toRawResponse(error)
+    if (!raw) {
+      throw new APIError(502, DEFAULT_ERROR_CODE, 'the consent service is unavailable')
+    }
+    return raw
+  }
+}
+
+async function requestRaw(path: string, options: RequestOptions): Promise<RawResponse> {
+  const raw = await send(path, options)
+
+  if (raw.status === 401 && isAuthEnabled()) {
+    // The SDK refreshes silently, so a 401 means the session is really gone.
+    void login()
+    throw payloadToError(raw.status, raw.data)
+  }
+
+  if (raw.status < 200 || raw.status >= 300) {
+    throw payloadToError(raw.status, raw.data)
+  }
+
+  return raw
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  return apiRequestInternal<T>(path, options, true)
-}
-
-/**
- * Sends an API request for endpoints that are expected to return no content.
- *
- * This helper is intended for APIs that commonly respond with HTTP 204.
- * If a successful response includes a payload unexpectedly, it is ignored.
- */
-async function apiRequestNoContentInternal(
-  path: string,
-  options: RequestOptions,
-  allowRefresh: boolean,
-): Promise<void> {
-  const { query, headers, ...requestInit } = options
-  const response = await fetch(buildURL(path, query), {
-    credentials: 'include',
-    ...requestInit,
-    headers: buildHeaders(headers),
-  })
-
-  if (response.status === 401 && allowRefresh && isAuthEnabled()) {
-    try {
-      await refreshSession()
-    } catch {
-      login()
-      throw await createAPIError(response)
-    }
-    await apiRequestNoContentInternal(path, options, false)
-    return
+  const raw = await requestRaw(path, options)
+  if (raw.data === undefined || raw.data === '') {
+    throw new APIError(
+      raw.status,
+      DEFAULT_ERROR_CODE,
+      'expected a response body; use apiRequestNoContent for empty responses',
+    )
   }
-  if (response.status === 401 && !allowRefresh && isAuthEnabled()) {
-    login()
-  }
-
-  if (!response.ok) {
-    throw await createAPIError(response)
-  }
+  return raw.data as T
 }
 
 export async function apiRequestNoContent(
   path: string,
   options: RequestOptions = {},
 ): Promise<void> {
-  return apiRequestNoContentInternal(path, options, true)
+  await requestRaw(path, options)
+}
+
+/**
+ * For endpoints the Identity Server answers with an empty body on success
+ * (revoke, authorize) where the caller still wants a value back.
+ */
+export async function apiRequestOptionalContent<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T | undefined> {
+  const raw = await requestRaw(path, options)
+  return raw.data === undefined || raw.data === '' ? undefined : (raw.data as T)
 }

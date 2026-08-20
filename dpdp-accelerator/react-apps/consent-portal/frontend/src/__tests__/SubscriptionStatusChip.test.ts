@@ -16,9 +16,10 @@
  * under the License.
  */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { getSubscriptionStatusChipColor } from '../features/events/utils/subscriptionStatusChip'
-import commonEn from '../i18n/resources/en/common'
 import {
   DELIVERY_MODES,
   PURPOSE_FILTER_MODES,
@@ -27,6 +28,16 @@ import {
   isPurposeFilterMode,
   isSubscriptionStatus,
 } from '../types/subscription'
+
+const commonEn: {
+  subscriptions: {
+    status: Record<string, string>
+    deliveryMode: Record<string, string>
+    filterType: Record<string, string>
+  }
+} = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, '../../public/i18n/en/common.json'), 'utf8'),
+)
 
 describe('Subscription domain helpers & status chips', () => {
   it('maps subscription statuses to appropriate chip colors', () => {

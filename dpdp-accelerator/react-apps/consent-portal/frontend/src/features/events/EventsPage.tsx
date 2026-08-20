@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { EventFilters as EventFiltersModel } from '../../types/event'
-import { PORTAL_SCOPES } from '../../utils/portalScopes'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import EventFilters from './components/EventFilters'
 import EventPublishDialog from './components/EventPublishDialog'
@@ -108,7 +108,7 @@ export default function EventsPage(): React.JSX.Element {
   const publishMutation = usePublishEventMutation()
 
   const { hasScope } = useAuthorization()
-  const canWrite = hasScope(PORTAL_SCOPES.EVENTS_WRITE)
+  const canWrite = hasScope(REQUIRED_SCOPES.EVENTS_WRITE)
   const isTableLoading = eventsQuery.isPending || eventsQuery.isPlaceholderData
 
   const updateParams = (

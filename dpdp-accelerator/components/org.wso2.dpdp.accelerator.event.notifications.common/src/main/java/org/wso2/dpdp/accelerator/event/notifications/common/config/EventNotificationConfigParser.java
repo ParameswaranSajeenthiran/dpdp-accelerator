@@ -22,7 +22,8 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Configuration parser for event notification settings.
@@ -35,7 +36,7 @@ import java.util.logging.Logger;
  */
 public class EventNotificationConfigParser {
 
-    private static final Logger LOG = Logger.getLogger(EventNotificationConfigParser.class.getName());
+    private static final Log LOG = LogFactory.getLog(EventNotificationConfigParser.class);
 
     private static volatile EventNotificationConfigParser instance;
     private final Map<String, Object> configurationMap = new ConcurrentHashMap<>();
@@ -108,7 +109,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(sysVal.trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid integer for System property " + sysKey + ": '" + sysVal + "', falling back to next tier.");
+                LOG.warn("Invalid integer for System property " + sysKey + ": '" + sysVal + "', falling back to next tier.");
             }
         }
         String envVal = System.getenv(envKey);
@@ -116,7 +117,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(envVal.trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid integer for Environment variable " + envKey + ": '" + envVal + "', falling back to default.");
+                LOG.warn("Invalid integer for Environment variable " + envKey + ": '" + envVal + "', falling back to default.");
             }
         }
         return defaultValue;
@@ -128,7 +129,7 @@ public class EventNotificationConfigParser {
             try {
                 return Long.parseLong(sysVal.trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid long for System property " + sysKey + ": '" + sysVal + "', falling back to next tier.");
+                LOG.warn("Invalid long for System property " + sysKey + ": '" + sysVal + "', falling back to next tier.");
             }
         }
         String envVal = System.getenv(envKey);
@@ -136,7 +137,7 @@ public class EventNotificationConfigParser {
             try {
                 return Long.parseLong(envVal.trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid long for Environment variable " + envKey + ": '" + envVal + "', falling back to default.");
+                LOG.warn("Invalid long for Environment variable " + envKey + ": '" + envVal + "', falling back to default.");
             }
         }
         return defaultValue;
@@ -168,7 +169,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid thread pool size in config map: '" + val + "'");
+                LOG.warn("Invalid thread pool size in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_THREAD_POOL_SIZE;
@@ -184,7 +185,7 @@ public class EventNotificationConfigParser {
             try {
                 return Long.parseLong(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid base backoff seconds in config map: '" + val + "'");
+                LOG.warn("Invalid base backoff seconds in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_BASE_BACKOFF_SECONDS;
@@ -198,7 +199,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid max retries in config map: '" + val + "'");
+                LOG.warn("Invalid max retries in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_MAX_RETRIES;
@@ -230,7 +231,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid delivery worker batch size in config map: '" + val + "'");
+                LOG.warn("Invalid delivery worker batch size in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_DELIVERY_WORKER_BATCH_SIZE;
@@ -244,7 +245,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid delivery worker poll seconds in config map: '" + val + "'");
+                LOG.warn("Invalid delivery worker poll seconds in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_DELIVERY_WORKER_POLL_SECONDS;
@@ -258,7 +259,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid stuck in-flight threshold in config map: '" + val + "'");
+                LOG.warn("Invalid stuck in-flight threshold in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS;
@@ -273,7 +274,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid max verification response body bytes in config map: '" + val + "'");
+                LOG.warn("Invalid max verification response body bytes in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES;
@@ -288,7 +289,7 @@ public class EventNotificationConfigParser {
             try {
                 return Integer.parseInt(((String) val).trim());
             } catch (NumberFormatException e) {
-                LOG.warning("Invalid pending subscription recovery threshold in config map: '" + val + "'");
+                LOG.warn("Invalid pending subscription recovery threshold in config map: '" + val + "'");
             }
         }
         return EventNotificationCommonConstants.DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS;

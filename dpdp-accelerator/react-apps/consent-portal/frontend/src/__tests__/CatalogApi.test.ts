@@ -20,25 +20,38 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as catalogApi from '../features/catalog/api/catalogApi'
 import { getNextCursor, getPreviousCursor } from '../utils/cursorPagination'
 
-const fetchMock = vi.fn()
+const transport = vi.hoisted(() => ({
+  httpRequest: vi.fn(),
+  login: vi.fn(),
+}))
+
+vi.mock('../utils/authClient', () => ({
+  httpRequest: transport.httpRequest,
+  isAuthEnabled: () => true,
+  login: transport.login,
+}))
+
+const CONSENT_MGT_V2 = '/api/identity/consent-mgt/v2.0'
 
 afterEach(() => {
-  fetchMock.mockReset()
-  vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
-function mockJSONResponse(payload: unknown): void {
-  vi.stubGlobal('fetch', fetchMock)
-  fetchMock.mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => payload,
-  })
+function respondWith(payload: unknown, status = 200): void {
+  transport.httpRequest.mockResolvedValue({ status, data: payload })
+}
+
+/** The request config the api handed to the auth SDK. */
+function sentRequest(): { url: string; method?: string; data?: unknown } {
+  return transport.httpRequest.mock.calls[0]?.[0] as ReturnType<typeof sentRequest>
 }
 
 function requestedUrl(): URL {
-  const [requestUrl] = fetchMock.mock.calls[0] ?? []
-  return new URL(String(requestUrl))
+  return new URL(sentRequest().url)
+}
+
+function requestBody(): unknown {
+  return JSON.parse(String(sentRequest().data))
 }
 
 describe('catalog API', () => {
@@ -52,14 +65,14 @@ describe('catalog API', () => {
         tenantDomain: 'carbon.super',
       },
     ]
-    mockJSONResponse({ totalResults: 1, links: [], Elements: elements })
+    respondWith({ totalResults: 1, links: [], Elements: elements })
 
     await expect(catalogApi.fetchElements({ limit: 10, after: 'Mg==' })).resolves.toEqual({
       totalResults: 1,
       links: [],
       Elements: elements,
     })
-    expect(requestedUrl().pathname).toBe('/api/consent-elements')
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/elements`)
     expect(Object.fromEntries(requestedUrl().searchParams)).toEqual({
       limit: '10',
       after: 'Mg==',
@@ -67,7 +80,7 @@ describe('catalog API', () => {
   })
 
   it('reads next and previous cursors out of an Elements response', async () => {
-    mockJSONResponse({
+    respondWith({
       totalResults: 2,
       links: [
         {
@@ -96,7 +109,7 @@ describe('catalog API', () => {
   })
 
   it('forwards the name filter as a query parameter when searching elements', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Elements: [] })
+    respondWith({ totalResults: 0, links: [], Elements: [] })
 
     await catalogApi.fetchElements({ limit: 10, filter: 'name co "email"' })
 
@@ -107,19 +120,19 @@ describe('catalog API', () => {
   })
 
   it('reads a single element by encoded id', async () => {
-    mockJSONResponse({ id: 'element/1', name: 'email-spike' })
+    respondWith({ id: 'element/1', name: 'email-spike' })
 
     await catalogApi.fetchElement('element/1')
 
-    expect(requestedUrl().pathname).toBe('/api/consent-elements/element%2F1')
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/elements/element%2F1`)
   })
 
   it('reads purposes with a before cursor', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Purposes: [] })
+    respondWith({ totalResults: 0, links: [], Purposes: [] })
 
     await catalogApi.fetchPurposes({ limit: 25, before: 'MQ==' })
 
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes')
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes`)
     expect(Object.fromEntries(requestedUrl().searchParams)).toEqual({
       limit: '25',
       before: 'MQ==',
@@ -127,7 +140,7 @@ describe('catalog API', () => {
   })
 
   it('reads a purpose with its mandatory element flags', async () => {
-    mockJSONResponse({
+    respondWith({
       id: '690eb7ef',
       name: 'marketing-spike',
       type: 'CONSENT',
@@ -139,12 +152,12 @@ describe('catalog API', () => {
 
     const purpose = await catalogApi.fetchPurpose('690eb7ef')
 
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/690eb7ef')
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes/690eb7ef`)
     expect(purpose.elements[0].mandatory).toBe(true)
   })
 
   it('reads purpose versions read-only', async () => {
-    mockJSONResponse({
+    respondWith({
       totalResults: 1,
       links: [],
       Versions: [{ id: 'cc689174', version: '1.0.0', description: 'Marketing comms' }],
@@ -152,7 +165,7 @@ describe('catalog API', () => {
 
     const versions = await catalogApi.fetchPurposeVersions('690eb7ef', { limit: 50 })
 
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/690eb7ef/versions')
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes/690eb7ef/versions`)
     expect(versions.Versions).toHaveLength(1)
   })
 
@@ -166,7 +179,7 @@ describe('catalog API', () => {
   })
 
   it('forwards the combined filter when searching purposes', async () => {
-    mockJSONResponse({ totalResults: 0, links: [], Purposes: [] })
+    respondWith({ totalResults: 0, links: [], Purposes: [] })
 
     await catalogApi.fetchPurposes({ limit: 10, filter: 'name co "ui" and type eq "Marketing"' })
 
@@ -177,7 +190,7 @@ describe('catalog API', () => {
   })
 
   it('creates a purpose with elements and properties', async () => {
-    mockJSONResponse({
+    respondWith({
       id: 'bfc68e5e',
       name: 'ui-verify-purpose',
       type: 'Marketing',
@@ -193,10 +206,9 @@ describe('catalog API', () => {
       properties: { lawfulBasis: 'consent' },
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes')
-    expect(requestInit).toMatchObject({ method: 'POST' })
-    expect(JSON.parse(String(requestInit.body))).toEqual({
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes`)
+    expect(sentRequest().method).toBe('POST')
+    expect(requestBody()).toEqual({
       name: 'ui-verify-purpose',
       type: 'Marketing',
       version: 'v1',
@@ -206,52 +218,47 @@ describe('catalog API', () => {
   })
 
   it('deletes a purpose by encoded id and expects no content', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+    respondWith(undefined, 204)
 
     await catalogApi.deletePurpose('purpose/1')
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/purpose%2F1')
-    expect(requestInit).toMatchObject({ method: 'DELETE' })
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes/purpose%2F1`)
+    expect(sentRequest().method).toBe('DELETE')
   })
 
   it('creates a purpose version, not inheriting anything by default', async () => {
-    mockJSONResponse({ id: '3efd4b26', version: 'v2', elements: [] })
+    respondWith({ id: '3efd4b26', version: 'v2', elements: [] })
 
     await catalogApi.createPurposeVersion('bfc68e5e', { version: 'v2', setAsLatest: true })
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/bfc68e5e/versions')
-    expect(requestInit).toMatchObject({ method: 'POST' })
-    expect(JSON.parse(String(requestInit.body))).toEqual({ version: 'v2', setAsLatest: true })
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes/bfc68e5e/versions`)
+    expect(sentRequest().method).toBe('POST')
+    expect(requestBody()).toEqual({ version: 'v2', setAsLatest: true })
   })
 
   it('sets a version as latest via PUT with the version id in the body', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+    respondWith(undefined, 204)
 
     await catalogApi.setLatestPurposeVersion('bfc68e5e', 'e8d303e4')
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/bfc68e5e/versions/latest')
-    expect(requestInit).toMatchObject({ method: 'PUT' })
-    expect(JSON.parse(String(requestInit.body))).toEqual({ id: 'e8d303e4' })
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/purposes/bfc68e5e/versions/latest`)
+    expect(sentRequest().method).toBe('PUT')
+    expect(requestBody()).toEqual({ id: 'e8d303e4' })
   })
 
   it('deletes a purpose version by encoded ids and expects no content', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+    respondWith(undefined, 204)
 
     await catalogApi.deletePurposeVersion('purpose/1', 'version/2')
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-purposes/purpose%2F1/versions/version%2F2')
-    expect(requestInit).toMatchObject({ method: 'DELETE' })
+    expect(requestedUrl().pathname).toBe(
+      `${CONSENT_MGT_V2}/purposes/purpose%2F1/versions/version%2F2`,
+    )
+    expect(sentRequest().method).toBe('DELETE')
   })
 
   it('creates an element with the given fields', async () => {
-    mockJSONResponse({
+    respondWith({
       id: 'e12b',
       name: 'gap-check-el',
       displayName: 'Gap Check',
@@ -266,10 +273,9 @@ describe('catalog API', () => {
       properties: { pii: 'true' },
     })
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-elements')
-    expect(requestInit).toMatchObject({ method: 'POST' })
-    expect(JSON.parse(String(requestInit.body))).toEqual({
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/elements`)
+    expect(sentRequest().method).toBe('POST')
+    expect(requestBody()).toEqual({
       name: 'gap-check-el',
       displayName: 'Gap Check',
       description: 'probe',
@@ -279,14 +285,12 @@ describe('catalog API', () => {
   })
 
   it('deletes an element by encoded id and expects no content', async () => {
-    vi.stubGlobal('fetch', fetchMock)
-    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+    respondWith(undefined, 204)
 
     await catalogApi.deleteElement('element/1')
 
-    const [, requestInit] = fetchMock.mock.calls[0] ?? []
-    expect(requestedUrl().pathname).toBe('/api/consent-elements/element%2F1')
-    expect(requestInit).toMatchObject({ method: 'DELETE' })
+    expect(requestedUrl().pathname).toBe(`${CONSENT_MGT_V2}/elements/element%2F1`)
+    expect(sentRequest().method).toBe('DELETE')
   })
 
   it('exposes exactly the element and purpose operations the catalog UI uses', () => {
