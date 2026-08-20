@@ -50,7 +50,8 @@
 
     <build>
         <plugins>
-            <!-- Clear the previous build's webapp overlay so removed files do not linger. -->
+            <!-- Clear the previous build's webapp and dropins overlay so removed/renamed files
+                 do not linger alongside the fresh ones the antrun step below copies in. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -66,6 +67,9 @@
                             <filesets>
                                 <fileset>
                                     <directory>carbon-home/repository/deployment/server/webapps</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>carbon-home/repository/components/dropins</directory>
                                 </fileset>
                             </filesets>
                         </configuration>

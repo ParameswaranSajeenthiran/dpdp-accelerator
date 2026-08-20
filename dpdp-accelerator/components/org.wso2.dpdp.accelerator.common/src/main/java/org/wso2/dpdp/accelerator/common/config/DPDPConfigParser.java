@@ -26,6 +26,9 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.securevault.SecretResolver;
+import org.wso2.securevault.SecretResolverFactory;
+import org.wso2.securevault.commons.MiscellaneousUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -42,9 +45,10 @@ import java.util.Stack;
 import javax.xml.stream.XMLStreamException;
 
 /**
- * Config parser for {@code dpdp-accelerator.xml}. Mirrors the Financial Services accelerator's
- * {@code FinancialServicesConfigParser}: read the XML file once into a flat,
- * dot-joined-key {@code Map<String, Object>}, then expose typed getters with defaults over it.
+ * Config parser for {@code dpdp-accelerator.xml}: reads the file once into a flat,
+ * dot-joined-key {@code Map<String, Object>}, then exposes typed getters with defaults over it.
+ * A value can be stored in the Secure Vault instead of in plain text, using the usual
+ * {@code svns:secretAlias="..."} attribute on its element.
  */
 public final class DPDPConfigParser {
 
@@ -53,6 +57,7 @@ public final class DPDPConfigParser {
     private static DPDPConfigParser parser;
 
     private final Map<String, Object> configuration = new HashMap<>();
+    private SecretResolver secretResolver;
 
     private DPDPConfigParser() {
 
@@ -81,7 +86,9 @@ public final class DPDPConfigParser {
         File configXml = new File(CarbonUtils.getCarbonConfigDirPath(), DPDPCommonConstants.CONFIG_FILE_NAME);
         try (InputStream inStream = openConfigFile(configXml)) {
             StAXOMBuilder builder = new StAXOMBuilder(inStream);
-            readChildElements(builder.getDocumentElement(), new Stack<>());
+            OMElement rootElement = builder.getDocumentElement();
+            secretResolver = SecretResolverFactory.create(rootElement, true);
+            readChildElements(rootElement, new Stack<>());
         } catch (IOException | XMLStreamException | OMException e) {
             LOG.error("Error occurred while building configuration from " + DPDPCommonConstants.CONFIG_FILE_NAME
                     + ". If this accelerator was upgraded in place, re-run bin/merge.sh so the template that "
@@ -106,7 +113,13 @@ public final class DPDPConfigParser {
             nameStack.push(element.getLocalName());
             String text = element.getText();
             if (text != null && !text.trim().isEmpty()) {
-                configuration.put(String.join(".", nameStack), text.trim());
+                text = text.trim();
+                if (secretResolver != null && secretResolver.isInitialized()) {
+                    // A no-op for elements without a secretAlias attribute - returns the
+                    // plain text unchanged.
+                    text = MiscellaneousUtil.resolve(element, secretResolver);
+                }
+                configuration.put(String.join(".", nameStack), text);
             }
             readChildElements(element, nameStack);
             nameStack.pop();

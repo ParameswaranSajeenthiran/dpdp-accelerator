@@ -17,7 +17,8 @@
  ~ under the License.
  -->
 
-<DPDPAccelerator xmlns="http://wso2.org/projects/carbon/dpdp-accelerator.xml">
+<DPDPAccelerator xmlns="http://wso2.org/projects/carbon/dpdp-accelerator.xml"
+                 xmlns:svns="http://org.wso2.securevault/configuration">
     <ConsentPortal>
         {% if dpdp_accelerator.consent_portal.auto_provisioning_enabled is defined %}
         <AutoProvisioningEnabled>{{dpdp_accelerator.consent_portal.auto_provisioning_enabled}}</AutoProvisioningEnabled>
