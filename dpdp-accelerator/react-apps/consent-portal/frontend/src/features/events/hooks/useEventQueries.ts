@@ -18,15 +18,11 @@
 
 import {
   keepPreviousData,
-  type UseMutationResult,
   type UseQueryResult,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from '@tanstack/react-query'
 import type {
   EventFilters,
-  EventInput,
   EventListQueryParams,
   EventRecord,
 } from '../../../types/event'
@@ -36,7 +32,6 @@ import {
   fetchEventDeliveries,
   fetchEventDeliveryHistory,
   fetchEvents,
-  publishEvent,
 } from '../api/eventsApi'
 
 export interface EventListResult {
@@ -130,16 +125,5 @@ export function useEventDeliveriesQuery(
     },
     enabled: Boolean(eventId),
     placeholderData: keepPreviousData,
-  })
-}
-
-export function usePublishEventMutation(): UseMutationResult<EventRecord, Error, EventInput> {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (payload: EventInput) => publishEvent(payload),
-    onSuccess: async (): Promise<void> => {
-      await queryClient.invalidateQueries({ queryKey: ['events'] })
-    },
   })
 }

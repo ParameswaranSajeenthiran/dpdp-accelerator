@@ -16,19 +16,15 @@
  * under the License.
  */
 
-import { Alert, Box, Button, Snackbar, Stack, Typography } from '@wso2/oxygen-ui'
-import { Plus } from '@wso2/oxygen-ui-icons-react'
-import { useMemo, useState } from 'react'
+import { Box, Stack, Typography } from '@wso2/oxygen-ui'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { EventFilters as EventFiltersModel } from '../../types/event'
-import { REQUIRED_SCOPES } from '../../utils/scopes'
-import useAuthorization from '../auth/useAuthorization'
 import EventFilters from './components/EventFilters'
-import EventPublishDialog from './components/EventPublishDialog'
 import EventTable from './components/EventTable'
-import { useEventsQuery, usePublishEventMutation } from './hooks/useEventQueries'
+import { useEventsQuery } from './hooks/useEventQueries'
 
 const DEFAULT_FILTERS: EventFiltersModel = {
   search: '',
@@ -97,18 +93,12 @@ export default function EventsPage(): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isPublishOpen, setIsPublishOpen] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
 
   const filters = useMemo(() => getFiltersFromSearchParams(searchParams), [searchParams])
   const page = useMemo(() => getPageFromSearchParams(searchParams), [searchParams])
   const rowsPerPage = useMemo(() => getRowsPerPageFromSearchParams(searchParams), [searchParams])
 
   const eventsQuery = useEventsQuery(filters, page, rowsPerPage)
-  const publishMutation = usePublishEventMutation()
-
-  const { hasScope } = useAuthorization()
-  const canWrite = hasScope(REQUIRED_SCOPES.EVENTS_WRITE)
   const isTableLoading = eventsQuery.isPending || eventsQuery.isPlaceholderData
 
   const updateParams = (
@@ -137,17 +127,6 @@ export default function EventsPage(): React.JSX.Element {
               {t('events.subtitle')}
             </Typography>
           </Stack>
-
-          {canWrite ? (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<Plus size={16} />}
-              onClick={() => setIsPublishOpen(true)}
-            >
-              {t('events.actions.publish')}
-            </Button>
-          ) : null}
         </Stack>
 
         <EventFilters
@@ -174,41 +153,6 @@ export default function EventsPage(): React.JSX.Element {
             navigate(`/events/${encodeURIComponent(event.eventId)}`)
           }}
         />
-
-        {isPublishOpen ? (
-          <EventPublishDialog
-            open
-            loading={publishMutation.isPending}
-            error={publishMutation.error?.message}
-            onClose={() => {
-              setIsPublishOpen(false)
-              publishMutation.reset()
-            }}
-            onSubmit={(payload) => {
-              publishMutation.mutate(payload, {
-                onSuccess: () => {
-                  setIsPublishOpen(false)
-                  setSnackbarMessage(t('events.dialog.publishSuccess'))
-                },
-              })
-            }}
-          />
-        ) : null}
-
-        <Snackbar
-          open={Boolean(snackbarMessage)}
-          autoHideDuration={4000}
-          onClose={() => setSnackbarMessage(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert
-            onClose={() => setSnackbarMessage(null)}
-            severity="success"
-            sx={{ width: '100%' }}
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
       </Stack>
     </Box>
   )
