@@ -39,7 +39,7 @@ test.describe('Admin viewing Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
@@ -49,7 +49,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     // created row is found by its own id rather than by browsing - see
     // tests/plan.md.
     await registryPage.searchByConsentId(consentId)
-    await expect(registryPage.rowByConsentId(consentId)).toContainText(env.dataPrincipal.username)
+    await expect(registryPage.rowByConsentId(consentId)).toContainText(env.user.username)
     await expect(registryPage.rowByConsentId(consentId)).toContainText(serviceId)
     await consentAdminPage.context().close()
   })

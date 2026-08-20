@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsDataPrincipal } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 
 /**
  * App.tsx's AuthorizedRoute wraps every protected route - both the list pages
@@ -31,7 +31,7 @@ import { test, expect, loginAsDataPrincipal } from '../../fixtures/auth.fixtures
  * all - no persona in this suite's .env is scope-less, so that page isn't reachable here and
  * isn't covered below.
  *
- * The Data Principal persona (`ctizen1`, plain internal_login) holds only
+ * The user persona (`ctizen1`, assigned the `dpdp-consent-user` role) holds only
  * CONSENTS_READ_SELF/WRITE_SELF - not PURPOSES_READ, ELEMENTS_READ, or CONSENTS_READ_ANY - so it
  * is exactly the persona these routes are meant to keep out. Since CONSENTS_READ_SELF sits
  * first in firstAuthorizedPath's priority list, every one of these redirects lands on
@@ -40,57 +40,57 @@ import { test, expect, loginAsDataPrincipal } from '../../fixtures/auth.fixtures
  * the resource actually exists is irrelevant here.
  */
 test.describe('Route-level access control (UI)', () => {
-  test('01.01.01 - A Data Principal navigating directly to /purposes is redirected to the dashboard', async ({
+  test('01.01.01 - A user navigating directly to /purposes is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('purposes')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('purposes')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 
-  test('01.01.02 - A Data Principal navigating directly to /elements is redirected to the dashboard', async ({
+  test('01.01.02 - A user navigating directly to /elements is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('elements')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('elements')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 
-  test('01.01.03 - A Data Principal navigating directly to /administration/consents is redirected to the dashboard', async ({
+  test('01.01.03 - A user navigating directly to /administration/consents is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('administration/consents')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('administration/consents')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 
-  test('01.01.04 - A Data Principal navigating directly to a Purpose detail page by link is redirected to the dashboard', async ({
+  test('01.01.04 - A user navigating directly to a Purpose detail page by link is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('purposes/00000000-0000-0000-0000-000000000000')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('purposes/00000000-0000-0000-0000-000000000000')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 
-  test('01.01.05 - A Data Principal navigating directly to an Element detail page by link is redirected to the dashboard', async ({
+  test('01.01.05 - A user navigating directly to an Element detail page by link is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('elements/00000000-0000-0000-0000-000000000000')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('elements/00000000-0000-0000-0000-000000000000')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 
-  test('01.01.06 - A Data Principal navigating directly to an admin Consent detail page by link is redirected to the dashboard', async ({
+  test('01.01.06 - A user navigating directly to an admin Consent detail page by link is redirected to the dashboard', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('administration/consents/00000000-0000-0000-0000-000000000000')
-    await expect(dataPrincipalPage).toHaveURL(/\/dashboard$/)
-    await dataPrincipalPage.context().close()
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('administration/consents/00000000-0000-0000-0000-000000000000')
+    await expect(userPage).toHaveURL(/\/dashboard$/)
+    await userPage.context().close()
   })
 })

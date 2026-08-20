@@ -44,7 +44,7 @@ export interface ConsentCleanupTracker {
 }
 
 interface Fixtures {
-  dataPrincipalConsentApi: ConsentApiClient
+  userConsentApi: ConsentApiClient
   consentAdminConsentApi: ConsentApiClient
   consentCleanupTracker: ConsentCleanupTracker
 }
@@ -251,8 +251,8 @@ async function waitForCachedState(personaName: PersonaName): Promise<PersonaStor
  * later call, from any fixture, any test, any worker, just reads the file this first call wrote.
  * Shared by every fixture below, and by the one place outside the fixtures that needs a persona
  * this suite has no always-on fixture for - the ownership-isolation test in
- * `tests/03-consents/03.02-data-principal-viewing-consents.spec.ts` calls this directly for
- * `data-principal-2`.
+ * `tests/03-consents/03.02-user-viewing-consents.spec.ts` calls this directly for
+ * `user-2`.
  */
 export async function getPersonaState(
   browser: Browser,
@@ -290,7 +290,7 @@ export async function getPersonaState(
 }
 
 /**
- * Explicit, per-test alternative to a `dataPrincipalPage`/`consentAdminPage` fixture: each test
+ * Explicit, per-test alternative to a `userPage`/`consentAdminPage` fixture: each test
  * calls this itself instead of Playwright silently injecting an already-authenticated page. Still
  * goes through getPersonaState, so it's exactly as cheap as the old fixture was - the persona logs
  * in for real only the first time any test in the run calls this, every later call (from any test,
@@ -311,8 +311,8 @@ async function loginAs(browser: Browser, personaName: PersonaName, persona: Pers
   return context.newPage()
 }
 
-export async function loginAsDataPrincipal(browser: Browser): Promise<Page> {
-  return loginAs(browser, 'data-principal', env.dataPrincipal)
+export async function loginAsUser(browser: Browser): Promise<Page> {
+  return loginAs(browser, 'user', env.user)
 }
 
 export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
@@ -320,8 +320,8 @@ export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
 }
 
 export const test = base.extend<Fixtures>({
-  dataPrincipalConsentApi: async ({ browser, request }, use) => {
-    const storageState = await getPersonaState(browser, 'data-principal', env.dataPrincipal)
+  userConsentApi: async ({ browser, request }, use) => {
+    const storageState = await getPersonaState(browser, 'user', env.user)
     await use(new ConsentApiClient(request, authHeadersFromStorageState(storageState)))
   },
 
@@ -350,13 +350,13 @@ export const test = base.extend<Fixtures>({
 export { expect } from '@playwright/test'
 
 /**
- * Ownership-isolation tests need a second, distinct real Data Principal account, which a real
+ * Ownership-isolation tests need a second, distinct real user account, which a real
  * environment can't fabricate on demand the way a stubbed IdP could. Those tests call this to
  * decide whether to run at all, and skip themselves with a clear reason when it's false. The
  * actual login-success check for this persona happens lazily on first use inside
  * `getPersonaState`, the same way every other persona's fixture implicitly relies on its own
  * login succeeding.
  */
-export function hasSecondDataPrincipal(): boolean {
-  return Boolean(env.secondDataPrincipal())
+export function hasSecondUser(): boolean {
+  return Boolean(env.secondUser())
 }

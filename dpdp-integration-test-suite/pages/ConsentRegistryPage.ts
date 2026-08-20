@@ -19,7 +19,7 @@
 import { type Locator, type Page } from '@playwright/test'
 import { selectMuiOption } from '../utils/muiSelect'
 
-/** ConsentRegistryPage.tsx - a Data Principal's own "All Consents" list at /consents. */
+/** ConsentRegistryPage.tsx - a user's own "All Consents" list at /consents. */
 export class ConsentRegistryPage {
   readonly table: Locator
   readonly serviceSearch: Locator

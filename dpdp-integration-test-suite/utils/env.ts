@@ -65,9 +65,9 @@ export const env = {
   identityServerBaseUrl: trimTrailingSlash(required('IS_BASE_URL')),
   ignoreHttpsErrors: (process.env.IGNORE_HTTPS_ERRORS ?? 'true') === 'true',
 
-  dataPrincipal: {
-    username: required('TEST_DATA_PRINCIPAL_USERNAME'),
-    password: required('TEST_DATA_PRINCIPAL_PASSWORD'),
+  user: {
+    username: required('TEST_USER_USERNAME'),
+    password: required('TEST_USER_PASSWORD'),
   } satisfies Persona,
 
   // Must be a real user assigned the dpdp-consent-admin role (created manually in the Console
@@ -81,13 +81,13 @@ export const env = {
   } satisfies Persona,
 
   /**
-   * Optional: a second Data Principal account, used only by ownership-isolation tests that
+   * Optional: a second user account, used only by ownership-isolation tests that
    * need two distinct real users. Those tests skip themselves when this isn't configured,
    * since a real environment can't fabricate extra user accounts the way a stubbed IdP could.
    */
-  secondDataPrincipal: (): Persona | undefined => {
-    const username = optional('TEST_DATA_PRINCIPAL_2_USERNAME')
-    const password = optional('TEST_DATA_PRINCIPAL_2_PASSWORD')
+  secondUser: (): Persona | undefined => {
+    const username = optional('TEST_USER_2_USERNAME')
+    const password = optional('TEST_USER_2_PASSWORD')
     return username && password ? { username, password } : undefined
   },
 }
@@ -110,4 +110,4 @@ export function consentElementsApiUrl(path: string): string {
   return `${env.portalBaseUrl}/api/consent-elements${path}`
 }
 
-export type PersonaName = 'data-principal' | 'data-principal-2' | 'consent-admin'
+export type PersonaName = 'user' | 'user-2' | 'consent-admin'

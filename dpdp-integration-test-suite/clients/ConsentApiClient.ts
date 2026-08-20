@@ -86,8 +86,8 @@ export interface MyConsentListParams {
 
 /**
  * Wraps the BFF's consent-management contract - both the self-service surface
- * (`/me/consents/*`, backed by MyConsentsServlet, granted to any authenticated user via
- * `internal_login`) and the administrative surface (`/api/consents`, `/api/consent-purposes`,
+ * (`/me/consents/*`, backed by MyConsentsServlet, requiring the `dpdp-consent-user` role)
+ * and the administrative surface (`/api/consents`, `/api/consent-purposes`,
  * `/api/consent-elements`, backed by AdminApiServlet, requiring the `dpdp-consent-admin` role).
  * Both surfaces are proxied 1:1 to WSO2 IS's own consent-mgt v2 API - see
  * consent-management-v2.yaml (bundled in
@@ -95,8 +95,8 @@ export interface MyConsentListParams {
  *
  * A single class serves both surfaces because the auth is just a header pair resolved from
  * whichever persona's storageState the caller passes in (see utils/authStorage.ts) - tests that
- * need to prove a Data Principal's token is rejected by the admin surface construct this client
- * with the data-principal's headers and call an admin method directly.
+ * need to prove a user's token is rejected by the admin surface construct this client
+ * with the user's headers and call an admin method directly.
  */
 export class ConsentApiClient {
   constructor(

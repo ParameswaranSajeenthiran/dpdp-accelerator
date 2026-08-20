@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsDataPrincipal, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ConsentRegistryPage } from '../../pages/ConsentRegistryPage'
 import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
@@ -25,15 +25,15 @@ import { randomServiceId } from '../../utils/testData'
 /**
  * The self-service registry's state filter and service search: narrowing, Clear, exact-match
  * semantics, and the no-match empty state. See
- * tests/02-consents/02.01-data-principal-acting-on-consents.spec.ts for approve/reject/revoke.
+ * tests/02-consents/02.01-user-acting-on-consents.spec.ts for approve/reject/revoke.
  */
-test.describe('Data Principal searching Consents (UI)', () => {
+test.describe('User searching Consents (UI)', () => {
   test('02.03.01 - The state filter narrows the list to only the selected state', async ({
     browser,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
+    const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Both seeded under the same unique service id and narrowed to it first, so the state
     // filter's effect is checked within a controlled two-row set instead of the full,
@@ -43,7 +43,7 @@ test.describe('Data Principal searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'PENDING',
       serviceId,
     )
@@ -51,12 +51,12 @@ test.describe('Data Principal searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
       serviceId,
     )
 
-    const registryPage = new ConsentRegistryPage(dataPrincipalPage)
+    const registryPage = new ConsentRegistryPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(serviceId)
     await registryPage.filterByState('Pending')
@@ -73,7 +73,7 @@ test.describe('Data Principal searching Consents (UI)', () => {
     // asserted reliably (same caveat as browsing vs. searching by id elsewhere in this suite).
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(active.consentId)).toBeVisible()
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
     await consentAdminPage.context().close()
   })
 
@@ -82,35 +82,35 @@ test.describe('Data Principal searching Consents (UI)', () => {
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
+    const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const serviceId = randomServiceId()
     const { consentId } = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
       serviceId,
     )
 
-    const registryPage = new ConsentRegistryPage(dataPrincipalPage)
+    const registryPage = new ConsentRegistryPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
     await consentAdminPage.context().close()
   })
 
   test('02.03.03 - A service filter matching nothing shows the empty-results message', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    const registryPage = new ConsentRegistryPage(dataPrincipalPage)
+    const userPage = await loginAsUser(browser)
+    const registryPage = new ConsentRegistryPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(`no-such-service-${Date.now().toString()}`)
     await expect(registryPage.emptyStateMessage).toBeVisible()
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
   })
 
   test('02.03.04 - A service search for only a partial match finds nothing', async ({
@@ -118,13 +118,13 @@ test.describe('Data Principal searching Consents (UI)', () => {
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
+    const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { serviceId } = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
@@ -133,11 +133,11 @@ test.describe('Data Principal searching Consents (UI)', () => {
     // call with a substring returned zero results), not documented anywhere.
     const partialServiceId = serviceId.slice(serviceId.indexOf('-') + 1, serviceId.lastIndexOf('-'))
 
-    const registryPage = new ConsentRegistryPage(dataPrincipalPage)
+    const registryPage = new ConsentRegistryPage(userPage)
     await registryPage.goto()
     await registryPage.searchByService(partialServiceId)
     await expect(registryPage.emptyStateMessage).toBeVisible()
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
     await consentAdminPage.context().close()
   })
 })

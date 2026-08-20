@@ -41,7 +41,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
@@ -65,7 +65,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
@@ -87,7 +87,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'PENDING',
     )
 
@@ -111,7 +111,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'PENDING',
     )
 

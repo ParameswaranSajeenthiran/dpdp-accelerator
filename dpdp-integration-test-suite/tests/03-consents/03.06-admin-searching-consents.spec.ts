@@ -40,14 +40,14 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
     const second = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
@@ -72,17 +72,17 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
       serviceId,
     )
 
     const registryPage = new AdminConsentRegistryPage(consentAdminPage)
     await registryPage.goto()
-    await registryPage.filterBySubjectAndService(env.dataPrincipal.username, serviceId)
+    await registryPage.filterBySubjectAndService(env.user.username, serviceId)
 
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
-    await expect(registryPage.activeFilterChip(`User: ${env.dataPrincipal.username}`)).toBeVisible()
+    await expect(registryPage.activeFilterChip(`User: ${env.user.username}`)).toBeVisible()
     await expect(registryPage.activeFilterChip(`Service: ${serviceId}`)).toBeVisible()
 
     await registryPage.clearAllFilters()
@@ -106,7 +106,7 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'PENDING',
       serviceId,
     )
@@ -114,14 +114,14 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
       serviceId,
     )
 
     const registryPage = new AdminConsentRegistryPage(consentAdminPage)
     await registryPage.goto()
-    await registryPage.filterBySubjectAndService(env.dataPrincipal.username, serviceId)
+    await registryPage.filterBySubjectAndService(env.user.username, serviceId)
     await expect(registryPage.stateFilter).toBeEnabled()
     await registryPage.filterByState('Pending')
 

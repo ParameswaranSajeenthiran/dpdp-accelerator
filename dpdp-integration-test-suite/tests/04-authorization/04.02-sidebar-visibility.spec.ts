@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsDataPrincipal, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AppSidebarPage } from '../../pages/AppSidebarPage'
 
 /**
@@ -28,12 +28,12 @@ import { AppSidebarPage } from '../../pages/AppSidebarPage'
  * (translated as "Consent", "Definitions", "Administration") are what distinguish personas.
  */
 test.describe('Sidebar navigation visibility (UI)', () => {
-  test("01.02.01 - A Data Principal's sidebar shows only the Dashboard and Consent sections", async ({
+  test("01.02.01 - A user's sidebar shows only the Dashboard and Consent sections", async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    await dataPrincipalPage.goto('dashboard')
-    const sidebar = new AppSidebarPage(dataPrincipalPage)
+    const userPage = await loginAsUser(browser)
+    await userPage.goto('dashboard')
+    const sidebar = new AppSidebarPage(userPage)
 
     await expect(sidebar.label('Dashboard')).toBeVisible()
     await expect(sidebar.label('Consent')).toBeVisible()
@@ -46,7 +46,7 @@ test.describe('Sidebar navigation visibility (UI)', () => {
     await expect(sidebar.label('Purposes')).toHaveCount(0)
     await expect(sidebar.label('Elements')).toHaveCount(0)
     await expect(sidebar.label('Administration')).toHaveCount(0)
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
   })
 
   test('01.02.02 - A Consent Admin\'s sidebar shows every section, including Definitions and Administration', async ({

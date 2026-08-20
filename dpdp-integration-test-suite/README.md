@@ -22,14 +22,12 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
    curl -sk https://<host>:9443/oauth2/jwks
    curl -sk https://<host>:9443/consent-portal/
    ```
-2. A real IS user account for the **Data Principal** persona with `dpdp-portal-user`  for the self-service consent registry and negative authorization
-   checks.
+2. A real IS user account assigned the `dpdp-consent-user` role for the **User** persona
+   (see `docs/configuration-guide.md` step 4) — needed for the self-service consent registry
+   and negative authorization checks.
 3. A real IS user account assigned the `dpdp-consent-admin` role for the **Consent Admin**
-   persona (created manually in the Console per `docs/configuration-guide.md` step 4 — role
-   membership is a manual step, assigned via the Console app). This role grants every
-   `internal_consent_mgt_*` scope at once (view/create/update/delete across consents, purposes,
-   and elements), so this single persona both drives the admin UI and seeds
-   Purposes/Elements/Consents via the API across `tests/01-elements`, `tests/02-purposes`, and
+   persona (see `docs/configuration-guide.md` step 4) — drives the admin UI and seeds
+   Purposes/Elements/Consents via the API for `tests/01-elements`, `tests/02-purposes`, and
    `tests/03-consents`.
 4. Node.js 18+.
 
@@ -37,7 +35,7 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 
 ```sh
 cp .env.example .env
-# edit .env: fill in TEST_DATA_PRINCIPAL_USERNAME/PASSWORD, TEST_CONSENT_ADMIN_USERNAME/PASSWORD,
+# edit .env: fill in TEST_USER_USERNAME/PASSWORD, TEST_CONSENT_ADMIN_USERNAME/PASSWORD,
 # and PORTAL_BASE_URL/IS_BASE_URL if not localhost:9443
 npm install
 npx playwright install chromium
@@ -84,7 +82,7 @@ npx playwright test tests/03-consents --ui   # one category, in UI mode
 | `tests/` | Spec files, grouped by feature area — see [Test categories](#test-categories) |
 | `pages/` | Page Objects for the portal UI — one class per screen or dialog |
 | `clients/` | `ConsentApiClient`, a typed wrapper over the BFF's consent-mgt v2 routes (`AdminApiServlet` / `MyConsentsServlet`) |
-| `fixtures/` | Authenticated personas (Data Principal, Consent Admin) and the test-data cleanup tracker |
+| `fixtures/` | Authenticated personas (User, Consent Admin) and the test-data cleanup tracker |
 | `utils/` | Env/config loading, auth-storage helpers, unique test-data generators |
 
 ## Test categories
@@ -97,7 +95,7 @@ responsible for.
 | --- | --- |
 | `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
 | `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
-| `03-consents/` | Consent records: Data Principal and admin registries (view/search/act), plus `03.07`, a `test.describe.serial` chain covering the full admin journey — create an Element, a Purpose, then a Consent — end to end |
+| `03-consents/` | Consent records: User and admin registries (view/search/act), plus `03.07`, a `test.describe.serial` chain covering the full admin journey — create an Element, a Purpose, then a Consent — end to end |
 | `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes |
 
 ## Operating principles

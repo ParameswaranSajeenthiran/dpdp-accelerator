@@ -20,8 +20,8 @@ import {
   test,
   expect,
   getPersonaState,
-  hasSecondDataPrincipal,
-  loginAsDataPrincipal,
+  hasSecondUser,
+  loginAsUser,
   loginAsConsentAdmin,
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
@@ -29,61 +29,61 @@ import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
- * A Data Principal's own consent detail page at /consents/:id: what it renders, the load-failed
- * path for an unknown id, and that a different Data Principal can't reach someone else's
+ * A user's own consent detail page at /consents/:id: what it renders, the load-failed
+ * path for an unknown id, and that a different user can't reach someone else's
  * consent by guessing its id. See
- * tests/02-consents/02.01-data-principal-acting-on-consents.spec.ts for approve/reject/revoke.
+ * tests/02-consents/02.01-user-acting-on-consents.spec.ts for approve/reject/revoke.
  */
-test.describe('Data Principal viewing Consents (UI)', () => {
+test.describe('User viewing Consents (UI)', () => {
   test('02.02.01 - The detail page renders subject, service, and purpose/element structure', async ({
     browser,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
+    const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId, purposeName, elementDisplayName, serviceId } = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
-    const detailPage = new ConsentDetailPage(dataPrincipalPage, 'self')
+    const detailPage = new ConsentDetailPage(userPage, 'self')
     await detailPage.goto(consentId)
-    await expect(dataPrincipalPage.getByText(env.dataPrincipal.username)).toBeVisible()
-    await expect(dataPrincipalPage.getByText(serviceId)).toBeVisible()
-    await expect(dataPrincipalPage.getByText('Not applicable')).toBeVisible()
+    await expect(userPage.getByText(env.user.username)).toBeVisible()
+    await expect(userPage.getByText(serviceId)).toBeVisible()
+    await expect(userPage.getByText('Not applicable')).toBeVisible()
 
     await detailPage.expandPurpose(purposeName)
     await expect(detailPage.elementRow(elementDisplayName)).toBeVisible()
-    await dataPrincipalPage.context().close()
+    await userPage.context().close()
     await consentAdminPage.context().close()
   })
 
   test('02.02.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
     browser,
   }) => {
-    const dataPrincipalPage = await loginAsDataPrincipal(browser)
-    const detailPage = new ConsentDetailPage(dataPrincipalPage, 'self')
+    const userPage = await loginAsUser(browser)
+    const detailPage = new ConsentDetailPage(userPage, 'self')
     await detailPage.goto('00000000-0000-0000-0000-000000000000')
     await expect(detailPage.loadFailedMessage).toBeVisible()
     await detailPage.backButton.click()
-    await expect(dataPrincipalPage).toHaveURL(/\/consents$/)
-    await dataPrincipalPage.context().close()
+    await expect(userPage).toHaveURL(/\/consents$/)
+    await userPage.context().close()
   })
 
-  test("02.02.03 - A different Data Principal cannot open another user's consent by its URL", async ({
+  test("02.02.03 - A different user cannot open another user's consent by its URL", async ({
     browser,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    test.skip(!hasSecondDataPrincipal(), 'TEST_DATA_PRINCIPAL_2_USERNAME/PASSWORD is not configured')
-    // hasSecondDataPrincipal() already confirmed this is set - the skip above guards it.
-    const secondDataPrincipal = env.secondDataPrincipal()
-    if (!secondDataPrincipal) {
-      throw new Error('Unreachable: hasSecondDataPrincipal() already checked this above.')
+    test.skip(!hasSecondUser(), 'TEST_USER_2_USERNAME/PASSWORD is not configured')
+    // hasSecondUser() already confirmed this is set - the skip above guards it.
+    const secondUser = env.secondUser()
+    if (!secondUser) {
+      throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
 
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -91,14 +91,14 @@ test.describe('Data Principal viewing Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.dataPrincipal.username,
+      env.user.username,
       'ACTIVE',
     )
 
     // No always-on fixture exists for this persona (it's only ever needed here) - shares the
     // same file-based login cache as every other persona via getPersonaState, so this doesn't
     // log in again if any earlier test in the run already did.
-    const secondPersonaState = await getPersonaState(browser, 'data-principal-2', secondDataPrincipal)
+    const secondPersonaState = await getPersonaState(browser, 'user-2', secondUser)
     const otherContext = await browser.newContext({
       storageState: secondPersonaState,
       baseURL: env.portalNavigationBaseUrl,
