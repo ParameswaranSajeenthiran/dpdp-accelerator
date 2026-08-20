@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.common.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -38,16 +39,24 @@ public class DPDPCommonServiceComponent {
 
     private static final Log LOG = LogFactory.getLog(DPDPCommonServiceComponent.class);
 
+    // Tracked so deactivate() can unregister it and avoid a duplicate on reactivation.
+    private ServiceRegistration<DPDPConfigurationService> configurationServiceRegistration;
+
     @Activate
     protected void activate(ComponentContext context) {
 
-        context.getBundleContext().registerService(DPDPConfigurationService.class.getName(),
-                new DPDPConfigurationServiceImpl(), null);
+        configurationServiceRegistration = context.getBundleContext().registerService(
+                DPDPConfigurationService.class, new DPDPConfigurationServiceImpl(), null);
         LOG.debug("DPDP common component is activated successfully.");
     }
 
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
+        if (configurationServiceRegistration != null) {
+            configurationServiceRegistration.unregister();
+            configurationServiceRegistration = null;
+        }
+        LOG.debug("DPDP common component is deactivated.");
     }
 }

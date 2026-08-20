@@ -71,10 +71,16 @@ public final class DPDPConsentPortalAppProvisioningUtil {
 
     }
 
-    public static boolean applicationExists(String tenantDomain) throws IdentityApplicationManagementException {
+    /**
+     * @return the existing application's resource ID, or {@code null} if it has not been
+     * created yet for this tenant.
+     */
+    public static String getApplicationId(String tenantDomain) throws IdentityApplicationManagementException {
 
-        return DPDPIdentityExtensionDataHolder.getInstance().getApplicationManagementService()
-                .getApplicationExcludingFileBasedSPs(APPLICATION_NAME, tenantDomain) != null;
+        ServiceProvider serviceProvider = DPDPIdentityExtensionDataHolder.getInstance()
+                .getApplicationManagementService().getApplicationExcludingFileBasedSPs(APPLICATION_NAME,
+                        tenantDomain);
+        return serviceProvider == null ? null : serviceProvider.getApplicationResourceId();
     }
 
     public static String provisionApplication(TenantInfoBean tenantInfoBean) throws IdentityOAuthAdminException,
@@ -87,6 +93,10 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         return createApplication(tenantInfoBean, clientId);
     }
 
+    /**
+     * Authorizes whichever of the three consent-mgt APIs aren't already authorized, and returns
+     * all their scope names. Checks first because re-authorizing an already-authorized API throws.
+     */
     public static List<String> authorizeConsentManagementAPIs(String applicationId, String tenantDomain)
             throws Exception {
 
@@ -102,12 +112,20 @@ public final class DPDPConsentPortalAppProvisioningUtil {
                         + ". Confirm [consent_mgt] enable_v2_api = true in this tenant's deployment.");
             }
 
-            List<Scope> scopes = apiResource.getScopes();
-            AuthorizedAPI authorizedAPI = new AuthorizedAPI(applicationId, apiResource.getId(),
-                    AUTHORIZED_API_POLICY, scopes, apiResource.getType());
-            authorizedAPIManagementService.addAuthorizedAPI(applicationId, authorizedAPI, tenantDomain);
-            LOG.debug("Authorized API '" + identifier + "' (" + scopes.size() + " scope(s)) for application: "
-                    + applicationId);
+            AuthorizedAPI existingAuthorization = authorizedAPIManagementService.getAuthorizedAPI(applicationId,
+                    apiResource.getId(), tenantDomain);
+            List<Scope> scopes;
+            if (existingAuthorization != null) {
+                scopes = existingAuthorization.getScopes();
+                LOG.debug("API '" + identifier + "' is already authorized for application: " + applicationId);
+            } else {
+                scopes = apiResource.getScopes();
+                AuthorizedAPI authorizedAPI = new AuthorizedAPI(applicationId, apiResource.getId(),
+                        AUTHORIZED_API_POLICY, scopes, apiResource.getType());
+                authorizedAPIManagementService.addAuthorizedAPI(applicationId, authorizedAPI, tenantDomain);
+                LOG.debug("Authorized API '" + identifier + "' (" + scopes.size() + " scope(s)) for application: "
+                        + applicationId);
+            }
 
             for (Scope scope : scopes) {
                 authorizedScopeNames.add(scope.getName());

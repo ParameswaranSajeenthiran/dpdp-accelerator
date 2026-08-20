@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.identity.extensions.internal;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -52,11 +53,15 @@ public class DPDPIdentityExtensionServiceComponent {
 
     private static final Log LOG = LogFactory.getLog(DPDPIdentityExtensionServiceComponent.class);
 
+    // Tracked so deactivate() can unregister it and avoid a duplicate on reactivation.
+    private ServiceRegistration<TenantMgtListener> tenantMgtListenerRegistration;
+
     @Activate
     protected void activate(ComponentContext context) {
 
         BundleContext bundleContext = context.getBundleContext();
-        bundleContext.registerService(TenantMgtListener.class, new DPDPIdentityExtensionTenantMgtListener(), null);
+        tenantMgtListenerRegistration = bundleContext.registerService(TenantMgtListener.class,
+                new DPDPIdentityExtensionTenantMgtListener(), null);
         LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
 
         try {
@@ -74,6 +79,10 @@ public class DPDPIdentityExtensionServiceComponent {
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
+        if (tenantMgtListenerRegistration != null) {
+            tenantMgtListenerRegistration.unregister();
+            tenantMgtListenerRegistration = null;
+        }
         LOG.debug("DPDP Identity Extensions component deactivated.");
     }
 

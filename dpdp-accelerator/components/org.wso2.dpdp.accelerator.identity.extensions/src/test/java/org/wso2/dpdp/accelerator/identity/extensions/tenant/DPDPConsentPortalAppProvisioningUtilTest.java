@@ -36,6 +36,7 @@ import org.wso2.carbon.identity.application.common.model.Scope;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -82,23 +84,25 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
     }
 
     @Test
-    public void applicationExistsReturnsTrueWhenAlreadyRegistered() throws Exception {
+    public void getApplicationIdReturnsTheResourceIdWhenAlreadyRegistered() throws Exception {
 
+        ServiceProvider serviceProvider = new ServiceProvider();
+        serviceProvider.setApplicationResourceId(APPLICATION_ID);
         when(applicationManagementService.getApplicationExcludingFileBasedSPs(
                 DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME, TENANT_DOMAIN))
-                .thenReturn(new ServiceProvider());
+                .thenReturn(serviceProvider);
 
-        assertTrue(DPDPConsentPortalAppProvisioningUtil.applicationExists(TENANT_DOMAIN));
+        assertEquals(DPDPConsentPortalAppProvisioningUtil.getApplicationId(TENANT_DOMAIN), APPLICATION_ID);
     }
 
     @Test
-    public void applicationExistsReturnsFalseWhenNotRegistered() throws Exception {
+    public void getApplicationIdReturnsNullWhenNotRegistered() throws Exception {
 
         when(applicationManagementService.getApplicationExcludingFileBasedSPs(
                 DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME, TENANT_DOMAIN))
                 .thenReturn(null);
 
-        assertFalse(DPDPConsentPortalAppProvisioningUtil.applicationExists(TENANT_DOMAIN));
+        assertNull(DPDPConsentPortalAppProvisioningUtil.getApplicationId(TENANT_DOMAIN));
     }
 
     // provisionApplication() itself is not exercised here: it computes the callback URL via
@@ -191,6 +195,48 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
                 "internal_consent_mgt_element_view"));
         verify(authorizedAPIManagementService, times(3)).addAuthorizedAPI(eq(APPLICATION_ID), any(AuthorizedAPI.class),
                 eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void authorizeConsentManagementAPIsSkipsApisAlreadyAuthorized() throws Exception {
+
+        Scope consentScope = mockScope("internal_consent_mgt_consent_view");
+        APIResource consentsResource = mockResource("res-consents", "/api/identity/consent-mgt/v2.0/consents",
+                Arrays.asList(consentScope));
+        Scope purposeScope = mockScope("internal_consent_mgt_purpose_view");
+        APIResource purposesResource = mockResource("res-purposes", "/api/identity/consent-mgt/v2.0/purposes",
+                Arrays.asList(purposeScope));
+        Scope elementScope = mockScope("internal_consent_mgt_element_view");
+        APIResource elementsResource = mockResource("res-elements", "/api/identity/consent-mgt/v2.0/elements",
+                Arrays.asList(elementScope));
+
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/identity/consent-mgt/v2.0/consents", TENANT_DOMAIN))
+                .thenReturn(consentsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/identity/consent-mgt/v2.0/purposes", TENANT_DOMAIN))
+                .thenReturn(purposesResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/identity/consent-mgt/v2.0/elements", TENANT_DOMAIN))
+                .thenReturn(elementsResource);
+
+        // "consents" is already authorized - it should be left alone, not re-added.
+        AuthorizedAPI existingAuthorization = mock(AuthorizedAPI.class);
+        when(existingAuthorization.getScopes()).thenReturn(Arrays.asList(consentScope));
+        when(authorizedAPIManagementService.getAuthorizedAPI(APPLICATION_ID, "res-consents", TENANT_DOMAIN))
+                .thenReturn(existingAuthorization);
+
+        List<String> scopes = DPDPConsentPortalAppProvisioningUtil
+                .authorizeConsentManagementAPIs(APPLICATION_ID, TENANT_DOMAIN);
+
+        assertEquals(scopes, Arrays.asList("internal_consent_mgt_consent_view", "internal_consent_mgt_purpose_view",
+                "internal_consent_mgt_element_view"));
+
+        ArgumentCaptor<AuthorizedAPI> authorizedApiCaptor = ArgumentCaptor.forClass(AuthorizedAPI.class);
+        verify(authorizedAPIManagementService, times(2)).addAuthorizedAPI(eq(APPLICATION_ID),
+                authorizedApiCaptor.capture(), eq(TENANT_DOMAIN));
+        List<String> reAuthorizedApiIds = new ArrayList<>();
+        for (AuthorizedAPI authorizedApi : authorizedApiCaptor.getAllValues()) {
+            reAuthorizedApiIds.add(authorizedApi.getAPIId());
+        }
+        assertFalse(reAuthorizedApiIds.contains("res-consents"));
     }
 
     @Test

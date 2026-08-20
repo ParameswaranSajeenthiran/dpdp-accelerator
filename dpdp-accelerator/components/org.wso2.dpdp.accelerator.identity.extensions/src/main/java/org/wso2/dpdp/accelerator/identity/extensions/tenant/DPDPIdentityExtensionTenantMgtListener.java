@@ -57,11 +57,14 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
     @Override
     public void onTenantUpdate(TenantInfoBean tenantInfoBean) {
 
-        // A failure here must not block the tenant update the admin actually asked for. This
-        // also doubles as the recovery path: if the portal application was deleted, deleting it
-        // and then updating the tenant (through this same hook) recreates it and its roles,
-        // since provisionTenant()'s own existence check will now see nothing there.
+        // Log and continue - a provisioning failure shouldn't block the tenant update itself.
+        // This is also the recovery path: re-run to fix whatever's missing.
         try {
+            if (OrganizationManagementUtil.isOrganization(tenantInfoBean.getTenantId())) {
+                LOG.debug("Skipping DPDP Consent Portal provisioning for organization tenant: "
+                        + sanitize(tenantInfoBean.getTenantDomain()));
+                return;
+            }
             provisionTenant(tenantInfoBean);
         } catch (Exception e) {
             LOG.error("Error provisioning the DPDP Consent Portal for tenant: "
@@ -70,9 +73,8 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
     }
 
     /**
-     * Provisions the portal application and its roles for one tenant. Shared between
-     * {@link #onTenantCreate}, {@link #onTenantUpdate}, and the service component's own
-     * super-tenant bootstrap, since {@code onTenantCreate} never fires for the super tenant.
+     * Creates the portal app, its API authorization and its roles for one tenant, or repairs
+     * whatever's missing if the app already exists. Safe to re-run since every step is idempotent.
      */
     public static void provisionTenant(TenantInfoBean tenantInfoBean) throws Exception {
 
@@ -84,12 +86,6 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             return;
         }
 
-        if (DPDPConsentPortalAppProvisioningUtil.applicationExists(tenantDomain)) {
-            LOG.debug("The DPDP Consent Portal application already exists for tenant: " + tenantDomain
-                    + "; skipping provisioning.");
-            return;
-        }
-
         PrivilegedCarbonContext.startTenantFlow();
         try {
             PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
@@ -97,7 +93,14 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             carbonContext.setTenantDomain(tenantDomain);
             carbonContext.setUsername(tenantInfoBean.getAdmin());
 
-            String applicationId = DPDPConsentPortalAppProvisioningUtil.provisionApplication(tenantInfoBean);
+            String applicationId = DPDPConsentPortalAppProvisioningUtil.getApplicationId(tenantDomain);
+            if (applicationId == null) {
+                applicationId = DPDPConsentPortalAppProvisioningUtil.provisionApplication(tenantInfoBean);
+            } else {
+                LOG.debug("The DPDP Consent Portal application already exists for tenant: " + tenantDomain
+                        + "; reconciling its API authorization and roles.");
+            }
+
             List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
