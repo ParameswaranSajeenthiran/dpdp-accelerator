@@ -17,17 +17,12 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 
 ## Prerequisites
 
-1. A running WSO2 Identity Server with the DPDP accelerator merged, configured, and the portal
-   app registered — see `docs/setup-guide.md` and `docs/configuration-guide.md` in the parent
-   repo for the `merge.sh` → `configure.sh` → start the server → register the OAuth app and
-   create the portal roles in the Console flow. Both of the following should respond before
-   continuing:
+1. A running WSO2 Identity Server with the DPDP Accelerator is required.
    ```sh
    curl -sk https://<host>:9443/oauth2/jwks
    curl -sk https://<host>:9443/consent-portal/
    ```
-2. A real IS user account for the **Data Principal** persona — no special role needed, plain
-   `internal_login` is enough for the self-service consent registry and negative authorization
+2. A real IS user account for the **Data Principal** persona with `dpdp-portal-user`  for the self-service consent registry and negative authorization
    checks.
 3. A real IS user account assigned the `dpdp-consent-admin` role for the **Consent Admin**
    persona (created manually in the Console per `docs/configuration-guide.md` step 4 — role

@@ -36,11 +36,7 @@ import { consentPurposesApiUrl, env, type Persona, type PersonaName } from '../u
 /**
  * A place for a test to register the id of an Element or Purpose it created through the UI, so
  * it gets deleted again once the test finishes - without this, every regression run only adds
- * data (see tests/plan.md on tolerating a persistent environment). The one deliberate
- * exception is the realistic demo dataset (see utils/consentCleanup.ts's RICH exports,
- * 99.02-consent-lifecycle-demo.spec.ts, and 99.01-seed-demo-data.spec.ts's seed test) - that's meant to stay
- * in the environment permanently as a realistic backdrop, so nothing in this suite ever tracks it
- * here.
+ * data.
  */
 export interface ConsentCleanupTracker {
   trackElement: (id: string) => void

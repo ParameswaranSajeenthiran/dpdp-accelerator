@@ -40,11 +40,10 @@ export function uniqueServiceId(): string {
   return uniqueMarker('service')
 }
 
-// Realistic-looking labels for tests/03-consents/ - the same style of data as the persistent demo
-// dataset (see utils/consentCleanup.ts's RICH_ELEMENTS/RICH_PURPOSES), but picked per-call and
-// stamped with uniqueMarker so records made by this suite's disposable, per-test setup (created
-// and torn down via seedConsent - never looked up by name first, unlike the demo seed script)
-// never collide with each other or with the persistent dataset in this shared environment.
+// Realistic-looking labels for tests/03-consents/ - picked per-call and stamped with
+// uniqueMarker so records made by this suite's disposable, per-test setup (created and torn down
+// via seedConsent) never collide with each other or with anything else left in this shared
+// environment.
 export interface ElementProfile {
   slug: string
   displayName: string
