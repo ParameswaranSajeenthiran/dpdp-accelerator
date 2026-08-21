@@ -138,25 +138,25 @@ components:
           schema:
             $ref: '#/components/schemas/ConsentHistoryResponseDTO'
     InvalidParameter:
-      description: 'limit or offset is out of range (error code DPDPCH-00003).'
+      description: 'limit or offset is out of range (error code CH-4001).'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorDTO'
     Forbidden:
-      description: 'The caller is authenticated but does not own this consent (error code DPDPCH-00002).'
+      description: 'The caller is authenticated but does not own this consent (error code CH-4031).'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorDTO'
     NotFound:
-      description: 'No history exists for this consent ID (error code DPDPCH-00001).'
+      description: 'No history exists for this consent ID (error code CH-4041).'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorDTO'
     ServerError:
-      description: 'Unexpected failure (error code DPDPCH-00004).'
+      description: 'Unexpected failure (error code CH-5001).'
       content:
         application/json:
           schema:
@@ -167,7 +167,7 @@ components:
       properties:
         code:
           type: string
-          description: 'One of the DPDPCH-000NN codes above.'
+          description: 'One of the CH-<HTTP status><sequence> codes above.'
         message:
           type: string
           description: 'The HTTP status reason phrase, e.g. "Not Found".'

@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception;
 
 /**
- * Carries the HTTP status and {@code DPDPCH-*} error code a resource method wants returned; the
+ * Carries the HTTP status and {@code CH-*} error code a resource method wants returned; the
  * actual response is built by {@link org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error.ConsentHistoryEndpointExceptionMapper}.
  */
 public class ConsentHistoryEndpointException extends RuntimeException {
