@@ -28,6 +28,22 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";
 
+    public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
+    public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";
+    public static final String EVENT_NOTIFICATIONS_MAX_RETRIES = "EventNotifications.MaxRetries";
+    public static final String EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL =
+            "EventNotifications.AllowHttpCallbackUrl";
+    public static final String EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE =
+            "EventNotifications.DeliveryWorkerBatchSize";
+    public static final String EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS =
+            "EventNotifications.DeliveryWorkerPollSeconds";
+    public static final String EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS =
+            "EventNotifications.StuckInFlightThresholdSeconds";
+    public static final String EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES =
+            "EventNotifications.MaxVerificationResponseBodyBytes";
+    public static final String EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS =
+            "EventNotifications.PendingSubscriptionRecoveryThresholdSeconds";
+
     private DPDPCommonConstants() {
 
     }

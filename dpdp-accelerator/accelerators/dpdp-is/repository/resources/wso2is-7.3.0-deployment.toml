@@ -188,3 +188,15 @@ custom_webapps = [
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# Event Notification Framework runtime settings.
+[dpdp_accelerator.event_notifications]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 5
+allow_http_callback_url = true
+delivery_worker_batch_size = 50
+delivery_worker_poll_seconds = 5
+stuck_inflight_threshold_seconds = 10
+max_verification_response_body_bytes = 4096
+pending_subscription_recovery_threshold_seconds = 60

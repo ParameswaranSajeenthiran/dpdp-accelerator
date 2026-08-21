@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.common.constants;
 
+
 /**
  * Common constant definitions for WSO2 DPDP Event Notification Framework.
  */
@@ -40,19 +41,6 @@ public class EventNotificationCommonConstants {
     public static final String ENV_JDBC_PASS = "ENF_DB_PASS";
 
     // Config Keys
-    public static final String CONFIG_THREAD_POOL_SIZE = "event_notifications.thread_pool_size";
-    public static final String CONFIG_BASE_BACKOFF_SECONDS = "event_notifications.base_backoff_seconds";
-    public static final String CONFIG_MAX_RETRIES = "event_notifications.max_retries";
-    public static final String CONFIG_ALLOW_HTTP_CALLBACK_URL = "event_notifications.allow_http_callback_url";
-    public static final String CONFIG_DELIVERY_WORKER_BATCH_SIZE = "event_notifications.delivery_worker_batch_size";
-    public static final String CONFIG_DELIVERY_WORKER_POLL_SECONDS = "event_notifications.delivery_worker_poll_seconds";
-    public static final String CONFIG_STUCK_INFLIGHT_THRESHOLD_SECONDS =
-            "event_notifications.stuck_inflight_threshold_seconds";
-    public static final String CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES =
-            "event_notifications.max_verification_response_body_bytes";
-    public static final String CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS =
-            "event_notifications.pending_subscription_recovery_threshold_seconds";
-
     // Defaults
     public static final int DEFAULT_THREAD_POOL_SIZE = 4;
     public static final long DEFAULT_BASE_BACKOFF_SECONDS = 5L;

@@ -96,3 +96,27 @@ configuration that makes the tenant-qualified URL resolve to the deployed
 webapp, so there is nothing to configure for multi-tenancy beyond registering
 each tenant above. Consents, catalog data, roles and sessions are all
 partitioned per tenant by the server.
+
+# Configuring Event Notifications
+
+Event Notification Framework runtime settings are configured in the same
+`deployment.toml` file under `[dpdp_accelerator.event_notifications]`. The
+accelerator provisions these values into `dpdp-accelerator.xml`; the ENF
+configuration component then maps them to the typed ENF configuration parser
+before the delivery services activate.
+
+```toml
+[dpdp_accelerator.event_notifications]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 5
+allow_http_callback_url = true
+delivery_worker_batch_size = 50
+delivery_worker_poll_seconds = 5
+stuck_inflight_threshold_seconds = 10
+max_verification_response_body_bytes = 4096
+pending_subscription_recovery_threshold_seconds = 60
+```
+
+These are server-wide runtime settings. Subscription `shared_secret` values
+remain per-subscription data and are not placed in `dpdp-accelerator.xml`.

@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.common.config;
 
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 
 import java.util.Map;
@@ -57,50 +59,66 @@ public class EventNotificationConfigParser {
     }
 
     private void loadConfigurations() {
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_THREAD_POOL_SIZE,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE,
                 resolveIntConfig("EVENT_NOTIFICATIONS_THREAD_POOL_SIZE",
-                        EventNotificationCommonConstants.CONFIG_THREAD_POOL_SIZE,
+                        "event_notifications.thread_pool_size",
                         EventNotificationCommonConstants.DEFAULT_THREAD_POOL_SIZE));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_BASE_BACKOFF_SECONDS,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS,
                 resolveLongConfig("EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS",
-                        EventNotificationCommonConstants.CONFIG_BASE_BACKOFF_SECONDS,
+                        "event_notifications.base_backoff_seconds",
                         EventNotificationCommonConstants.DEFAULT_BASE_BACKOFF_SECONDS));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_MAX_RETRIES,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_RETRIES,
                 resolveIntConfig("EVENT_NOTIFICATIONS_MAX_RETRIES",
-                        EventNotificationCommonConstants.CONFIG_MAX_RETRIES,
+                        "event_notifications.max_retries",
                         EventNotificationCommonConstants.DEFAULT_MAX_RETRIES));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_ALLOW_HTTP_CALLBACK_URL,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL,
                 resolveBooleanConfig("EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL",
-                        EventNotificationCommonConstants.CONFIG_ALLOW_HTTP_CALLBACK_URL,
+                        "event_notifications.allow_http_callback_url",
                         EventNotificationCommonConstants.DEFAULT_ALLOW_HTTP_CALLBACK_URL));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_BATCH_SIZE,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE,
                 resolveIntConfig("EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE",
-                        EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_BATCH_SIZE,
+                        "event_notifications.delivery_worker_batch_size",
                         EventNotificationCommonConstants.DEFAULT_DELIVERY_WORKER_BATCH_SIZE));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_POLL_SECONDS,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS,
                 resolveIntConfig("EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS",
-                        EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_POLL_SECONDS,
+                        "event_notifications.delivery_worker_poll_seconds",
                         EventNotificationCommonConstants.DEFAULT_DELIVERY_WORKER_POLL_SECONDS));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_STUCK_INFLIGHT_THRESHOLD_SECONDS,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS,
                 resolveIntConfig("EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS",
-                        EventNotificationCommonConstants.CONFIG_STUCK_INFLIGHT_THRESHOLD_SECONDS,
+                        "event_notifications.stuck_inflight_threshold_seconds",
                         EventNotificationCommonConstants.DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
                 resolveIntConfig("EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES",
-                        EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
+                        "event_notifications.max_verification_response_body_bytes",
                         EventNotificationCommonConstants.DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES));
 
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
                 resolveIntConfig("EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS",
-                        EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
+                        "event_notifications.pending_subscription_recovery_threshold_seconds",
                         EventNotificationCommonConstants.DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS));
+
+        loadCarbonConfiguration();
+    }
+
+    private void loadCarbonConfiguration() {
+        try {
+            Map<String, Object> carbonConfiguration = DPDPConfigParser.getInstance().getConfiguration();
+            carbonConfiguration.forEach((key, value) -> {
+                if (key.startsWith("EventNotifications.")) {
+                    configurationMap.put(key, value);
+                }
+            });
+        } catch (RuntimeException | LinkageError e) {
+            LOG.warn("Unable to load dpdp-accelerator.xml for Event Notification configuration; "
+                    + "using system, environment, or default values.", e);
+        }
     }
 
     private int resolveIntConfig(String envKey, String sysKey, int defaultValue) {
@@ -162,7 +180,7 @@ public class EventNotificationConfigParser {
     }
 
     public int getThreadPoolSize() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_THREAD_POOL_SIZE);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -176,7 +194,7 @@ public class EventNotificationConfigParser {
     }
 
     public long getBaseBackoffSeconds() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_BASE_BACKOFF_SECONDS);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS);
         if (val instanceof Long) {
             return (Long) val;
         } else if (val instanceof Integer) {
@@ -192,7 +210,7 @@ public class EventNotificationConfigParser {
     }
 
     public int getMaxRetries() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_MAX_RETRIES);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_RETRIES);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -210,7 +228,7 @@ public class EventNotificationConfigParser {
     }
 
     public boolean isAllowHttpCallbackUrl() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_ALLOW_HTTP_CALLBACK_URL);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL);
         if (val instanceof Boolean) {
             return (Boolean) val;
         } else if (val instanceof String) {
@@ -220,11 +238,11 @@ public class EventNotificationConfigParser {
     }
 
     public void setAllowHttpCallbackUrl(boolean allowHttp) {
-        configurationMap.put(EventNotificationCommonConstants.CONFIG_ALLOW_HTTP_CALLBACK_URL, allowHttp);
+        configurationMap.put(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL, allowHttp);
     }
 
     public int getDeliveryWorkerBatchSize() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_BATCH_SIZE);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -238,7 +256,7 @@ public class EventNotificationConfigParser {
     }
 
     public int getDeliveryWorkerPollSeconds() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_DELIVERY_WORKER_POLL_SECONDS);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -252,7 +270,7 @@ public class EventNotificationConfigParser {
     }
 
     public int getStuckInFlightThresholdSeconds() {
-        Object val = configurationMap.get(EventNotificationCommonConstants.CONFIG_STUCK_INFLIGHT_THRESHOLD_SECONDS);
+        Object val = configurationMap.get(DPDPCommonConstants.EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -267,7 +285,7 @@ public class EventNotificationConfigParser {
 
     public int getMaxVerificationResponseBodyBytes() {
         Object val = configurationMap.get(
-                EventNotificationCommonConstants.CONFIG_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
@@ -282,7 +300,7 @@ public class EventNotificationConfigParser {
 
     public int getPendingSubscriptionRecoveryThresholdSeconds() {
         Object val = configurationMap.get(
-                EventNotificationCommonConstants.CONFIG_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
         if (val instanceof Integer) {
             return (Integer) val;
         } else if (val instanceof String) {
