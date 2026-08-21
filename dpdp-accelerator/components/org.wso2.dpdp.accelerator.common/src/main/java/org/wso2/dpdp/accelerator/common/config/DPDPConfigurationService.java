@@ -31,4 +31,10 @@ public interface DPDPConfigurationService {
     boolean isConsentPortalProvisioningEnabled();
 
     String getConsentPortalClientId();
+
+    boolean isConsentHistoryEnabled();
+
+    boolean isConsentHistorySnapshotEnabled();
+
+    String getConsentHistoryDataSourceName();
 }

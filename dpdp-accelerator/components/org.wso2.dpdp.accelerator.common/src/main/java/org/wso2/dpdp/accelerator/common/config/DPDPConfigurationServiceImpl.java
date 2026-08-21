@@ -41,4 +41,22 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
         return CONFIG_PARSER.getConsentPortalClientId();
     }
+
+    @Override
+    public boolean isConsentHistoryEnabled() {
+
+        return CONFIG_PARSER.isConsentHistoryEnabled();
+    }
+
+    @Override
+    public boolean isConsentHistorySnapshotEnabled() {
+
+        return CONFIG_PARSER.isConsentHistorySnapshotEnabled();
+    }
+
+    @Override
+    public String getConsentHistoryDataSourceName() {
+
+        return CONFIG_PARSER.getConsentHistoryDataSourceName();
+    }
 }

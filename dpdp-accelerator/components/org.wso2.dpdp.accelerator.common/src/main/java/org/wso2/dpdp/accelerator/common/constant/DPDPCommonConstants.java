@@ -28,6 +28,11 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";
 
+    public static final String CONSENT_HISTORY_ENABLED = "ConsentHistory.Enabled";
+    public static final String CONSENT_HISTORY_SNAPSHOT_ENABLED = "ConsentHistory.SnapshotEnabled";
+    public static final String CONSENT_HISTORY_DATA_SOURCE_NAME = "ConsentHistory.DataSourceName";
+    public static final String DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME = "jdbc/WSO2DPDP_DB";
+
     private DPDPCommonConstants() {
 
     }

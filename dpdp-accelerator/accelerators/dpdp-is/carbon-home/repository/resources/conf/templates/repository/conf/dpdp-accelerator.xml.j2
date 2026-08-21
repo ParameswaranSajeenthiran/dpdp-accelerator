@@ -31,4 +31,21 @@
         <ClientId>DPDP_CONSENT_PORTAL</ClientId>
         {% endif %}
     </ConsentPortal>
+    <ConsentHistory>
+        {% if dpdp_accelerator.consent_history.enabled is defined %}
+        <Enabled>{{dpdp_accelerator.consent_history.enabled}}</Enabled>
+        {% else %}
+        <Enabled>true</Enabled>
+        {% endif %}
+        {% if dpdp_accelerator.consent_history.snapshot_enabled is defined %}
+        <SnapshotEnabled>{{dpdp_accelerator.consent_history.snapshot_enabled}}</SnapshotEnabled>
+        {% else %}
+        <SnapshotEnabled>true</SnapshotEnabled>
+        {% endif %}
+        {% if dpdp_accelerator.consent_history.data_source_name is defined %}
+        <DataSourceName>{{dpdp_accelerator.consent_history.data_source_name}}</DataSourceName>
+        {% else %}
+        <DataSourceName>jdbc/WSO2DPDP_DB</DataSourceName>
+        {% endif %}
+    </ConsentHistory>
 </DPDPAccelerator>

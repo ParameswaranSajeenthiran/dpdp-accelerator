@@ -142,4 +142,22 @@ public final class DPDPConfigParser {
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_CLIENT_ID)
                 .orElse("DPDP_CONSENT_PORTAL");
     }
+
+    public boolean isConsentHistoryEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public boolean isConsentHistorySnapshotEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_SNAPSHOT_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public String getConsentHistoryDataSourceName() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_DATA_SOURCE_NAME)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME);
+    }
 }

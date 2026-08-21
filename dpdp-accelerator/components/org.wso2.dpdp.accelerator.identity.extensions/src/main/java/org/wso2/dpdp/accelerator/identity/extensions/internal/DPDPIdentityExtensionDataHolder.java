@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.identity.extensions.internal;
 
+import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
@@ -25,6 +26,7 @@ import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
 
 /**
  * Singleton holder for the OSGi services this module's listener needs, populated by
@@ -41,6 +43,8 @@ public final class DPDPIdentityExtensionDataHolder {
     private RoleManagementService roleManagementService;
     private RealmService realmService;
     private DPDPConfigurationService configurationService;
+    private PrivilegedConsentManager privilegedConsentManager;
+    private ConsentHistoryService consentHistoryService;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -119,5 +123,25 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setConfigurationService(DPDPConfigurationService configurationService) {
 
         this.configurationService = configurationService;
+    }
+
+    public PrivilegedConsentManager getPrivilegedConsentManager() {
+
+        return privilegedConsentManager;
+    }
+
+    public void setPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        this.privilegedConsentManager = privilegedConsentManager;
+    }
+
+    public ConsentHistoryService getConsentHistoryService() {
+
+        return consentHistoryService;
+    }
+
+    public void setConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        this.consentHistoryService = consentHistoryService;
     }
 }

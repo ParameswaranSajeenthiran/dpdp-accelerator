@@ -86,6 +86,18 @@
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.consent.mgt</groupId>
+            <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -130,6 +142,9 @@
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
                         <exclude>**/*TenantMgtListener.class</exclude>
+                        <!-- Requires a live PrivilegedCarbonContext and OSGi-injected consent-mgt
+                             services, not reproducible in a plain unit test. -->
+                        <exclude>**/*ConsentHistoryListener.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -184,11 +199,15 @@
                         </Export-Package>
                         <Import-Package>
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.history.service;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.history.service.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.history.dao.exceptions;version="${project.version}",
 
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.component.annotations;version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.logging;version="${commons.logging.imp.pkg.version.range}",
+                            com.google.gson;version="${gson.imp.pkg.version.range}",
 
                             org.wso2.carbon.context.*;version="${carbon.kernel.version}",
                             org.wso2.carbon.utils.multitenancy;version="${carbon.kernel.version}",
@@ -212,6 +231,10 @@
                             org.wso2.carbon.identity.core.util;version="${carbon.identity.core.version}",
                             org.wso2.carbon.identity.organization.management.service.util;version="${carbon.identity.organization.mgt.service.version}",
                             org.wso2.carbon.identity.organization.management.service.exception;version="${carbon.identity.organization.mgt.service.version}",
+                            org.wso2.carbon.consent.mgt.core;version="${carbon.consent.mgt.core.version}",
+                            org.wso2.carbon.consent.mgt.core.listener;version="${carbon.consent.mgt.core.version}",
+                            org.wso2.carbon.consent.mgt.core.model;version="${carbon.consent.mgt.core.version}",
+                            org.wso2.carbon.consent.mgt.core.exception;version="${carbon.consent.mgt.core.version}",
                             *
                         </Import-Package>
                         <_dsannotations>*</_dsannotations>

@@ -32,6 +32,8 @@
     <modules>
         <module>react-apps</module>
         <module>components/org.wso2.dpdp.accelerator.common</module>
+        <module>components/org.wso2.dpdp.accelerator.consent.history</module>
         <module>components/org.wso2.dpdp.accelerator.identity.extensions</module>
+        <module>internal-webapps/org.wso2.dpdp.accelerator.consent.history.endpoint</module>
     </modules>
 </project>

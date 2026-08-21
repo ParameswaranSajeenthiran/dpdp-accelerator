@@ -144,6 +144,28 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.identity.extensions</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.history.endpoint</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>consent-portal</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.utils</artifactId>
                 <version>${carbon.kernel.version}</version>
@@ -216,6 +238,56 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.consent.mgt</groupId>
+                <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+                <version>${carbon.consent.mgt.core.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>${javax.ws.rs.api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Annotates the generated DTOs (io.swagger.annotations.ApiModelProperty) - not part
+                 of <IS_HOME>/lib/runtimes/cxf3/, so unlike the dependencies above this one is
+                 bundled into the WAR rather than provided by the container. -->
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-core</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                <artifactId>jackson-jaxrs-json-provider</artifactId>
+                <version>${jackson.jaxrs.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.ws.commons.axiom.wso2</groupId>
                 <artifactId>axiom</artifactId>
                 <version>${axiom.version}</version>
@@ -238,6 +310,12 @@
                 <artifactId>org.osgi.service.component.annotations</artifactId>
                 <version>${osgi.service.component.annotations.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2database.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -297,6 +375,16 @@
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>${maven.clean.plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build.helper.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi.generator.plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -309,6 +397,7 @@
         <servlet.api.version>4.0.1</servlet.api.version>
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
+        <h2database.version>2.2.224</h2database.version>
         <jacoco.version>0.8.11</jacoco.version>
 
         <carbon.kernel.version>4.12.34</carbon.kernel.version>
@@ -322,6 +411,22 @@
         <carbon.identity.api.resource.mgt.version>7.10.156</carbon.identity.api.resource.mgt.version>
         <carbon.identity.inbound.auth.oauth.version>7.4.99</carbon.identity.inbound.auth.oauth.version>
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
+        <!-- 2.9.0 is missing org.wso2.carbon.consent.mgt.core.listener (ConsentManagementListener,
+             AbstractConsentManagementListener) and PrivilegedConsentManager - added in 2.9.1.
+             ReceiptUpdateInput and the preUpdateConsent/postUpdateConsent hooks are missing through
+             2.9.9 - confirmed (via decompiled jars, not assumed) first present in 2.9.10. -->
+        <carbon.consent.mgt.core.version>2.9.10</carbon.consent.mgt.core.version>
+        <gson.version>2.9.0</gson.version>
+        <gson.imp.pkg.version.range>[2.8.0, 3.0.0)</gson.imp.pkg.version.range>
+
+        <!-- Match the exact jars in <IS_HOME>/lib/runtimes/cxf3/ - that directory backs the
+             "CXF3" webapp-classloading environment our endpoint webapp declares, so it must
+             compile against the same versions it will actually run against. -->
+        <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
+        <cxf.version>3.6.12</cxf.version>
+        <jackson.databind.version>2.21.4</jackson.databind.version>
+        <jackson.jaxrs.version>2.21.2</jackson.jaxrs.version>
+        <swagger.annotations.version>1.6.14</swagger.annotations.version>
         <axiom.version>1.2.11-wso2v16</axiom.version>
         <securevault.version>1.2.0</securevault.version>
         <commons.logging.version>1.2</commons.logging.version>
@@ -336,6 +441,13 @@
         <maven.assembly.plugin.version>3.6.0</maven.assembly.plugin.version>
         <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
+        <build.helper.maven.plugin.version>3.5.0</build.helper.maven.plugin.version>
+        <openapi.generator.plugin.version>6.6.0</openapi.generator.plugin.version>
+
+        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate the consent-history
+             DTOs from consent-history.yaml, then set back to true and commit the result. Off by
+             default so a normal build doesn't regenerate on every run. -->
+        <dpdp.dto.codegen.skip>true</dpdp.dto.codegen.skip>
         <spotbugs.maven.plugin.version>4.8.2.0</spotbugs.maven.plugin.version>
         <findsecbugs.plugin.version>1.12.0</findsecbugs.plugin.version>
 

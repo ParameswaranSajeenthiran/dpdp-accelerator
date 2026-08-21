@@ -29,6 +29,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
+import org.wso2.carbon.consent.mgt.core.listener.ConsentManagementListener;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
@@ -39,6 +41,8 @@ import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
@@ -62,7 +66,10 @@ public class DPDPIdentityExtensionServiceComponent {
         BundleContext bundleContext = context.getBundleContext();
         tenantMgtListenerRegistration = bundleContext.registerService(TenantMgtListener.class,
                 new DPDPIdentityExtensionTenantMgtListener(), null);
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
+        bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentHistoryListener(),
+                null);
+        LOG.debug("DPDP Identity Extensions component activated; tenant management and consent management "
+                + "listeners registered.");
 
         try {
             TenantInfoBean superTenant = new TenantInfoBean();
@@ -213,5 +220,41 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @Reference(
+            service = PrivilegedConsentManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetPrivilegedConsentManager"
+    )
+    protected void setPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        LOG.debug("Setting the Privileged Consent Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setPrivilegedConsentManager(privilegedConsentManager);
+    }
+
+    protected void unsetPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        LOG.debug("Unsetting the Privileged Consent Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setPrivilegedConsentManager(null);
+    }
+
+    @Reference(
+            service = ConsentHistoryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConsentHistoryService"
+    )
+    protected void setConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        LOG.debug("Setting the Consent History Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentHistoryService(consentHistoryService);
+    }
+
+    protected void unsetConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        LOG.debug("Unsetting the Consent History Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentHistoryService(null);
     }
 }

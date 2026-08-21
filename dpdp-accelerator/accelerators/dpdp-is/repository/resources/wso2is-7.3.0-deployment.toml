@@ -117,14 +117,43 @@ context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
 
-# Serves the portal tenant-qualified, the same way the server treats the My
-# Account and Console applications: the TenantContextRewriteValve resolves
-# /t/<tenant>/consent-portal/... to the deployed webapp with that tenant set as
-# the request's tenant context. The super tenant keeps the unqualified
-# /consent-portal path, since tenanted /t/carbon.super URLs are rejected unless
+# The four consent-history read routes. Admin routes require the IS-native
+# consent-history scopes (seeded by identity.extensions at startup, the same
+# way enable_v2_api above seeds internal_consent_mgt_* for the v2 API); self
+# routes only require internal_login, since ownership is enforced in the
+# endpoint's own code rather than by scope.
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/status-history"
+secure = "true"
+http_method = "GET"
+scopes = ["internal_consent_mgt_status_history_view"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/history"
+secure = "true"
+http_method = "GET"
+scopes = ["internal_consent_mgt_history_view"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/status-history"
+secure = "true"
+http_method = "GET"
+scopes = ["internal_login"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/history"
+secure = "true"
+http_method = "GET"
+scopes = ["internal_login"]
+
+# Serves the portal and the consent-history API tenant-qualified, the same way
+# the server treats the My Account and Console applications: the
+# TenantContextRewriteValve resolves /t/<tenant>/... to the deployed webapp
+# with that tenant set as the request's tenant context. The super tenant keeps
+# the unqualified path, since tenanted /t/carbon.super URLs are rejected unless
 # require_super_tenant_in_urls is enabled.
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/"]
+custom_webapps = ["/consent-portal/", "/api/dpdp/consent-mgt/v1/"]
 
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
@@ -136,3 +165,25 @@ custom_webapps = ["/consent-portal/"]
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# Controls the capture (identity.extensions) and read APIs (consent.history.endpoint)
+# for consent status-audit/history. Set enabled = false to turn off both capture
+# and the read APIs; snapshot_enabled = false keeps the lightweight status-audit
+# trail but stops storing full pre-mutation JSON snapshots.
+# data_source_name must match the id in the [datasource.WSO2DPDP_DB] block below,
+# prefixed with "jdbc/".
+[dpdp_accelerator.consent_history]
+enabled = true
+snapshot_enabled = true
+data_source_name = "jdbc/WSO2DPDP_DB"
+
+# Ships with a working h2 file database - a fresh install needs no setup. Point this
+# at a different database by editing url/username/password/driver here; no code
+# change needed. Named the same way the product's own [datasource.AgentIdentity]
+# block is, rather than the [[datasource]] array form.
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+driver = "org.h2.Driver"

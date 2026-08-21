@@ -65,10 +65,22 @@ public class DPDPConfigParserTest {
     }
 
     @Test
+    public void fallsBackToConsentHistoryDefaultsWhenKeysAreAbsent() {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        assertTrue(parser.isConsentHistoryEnabled());
+        assertTrue(parser.isConsentHistorySnapshotEnabled());
+        assertEquals(parser.getConsentHistoryDataSourceName(), "jdbc/WSO2DPDP_DB");
+    }
+
+    @Test
     public void configurationServiceDelegatesToTheSameParser() {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertEquals(service.getConsentPortalClientId(), CUSTOM_CLIENT_ID);
         assertTrue(service.isConsentPortalProvisioningEnabled());
+        assertTrue(service.isConsentHistoryEnabled());
+        assertTrue(service.isConsentHistorySnapshotEnabled());
+        assertEquals(service.getConsentHistoryDataSourceName(), "jdbc/WSO2DPDP_DB");
     }
 }
