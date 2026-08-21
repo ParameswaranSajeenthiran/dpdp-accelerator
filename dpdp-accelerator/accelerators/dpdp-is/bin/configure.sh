@@ -118,7 +118,7 @@ fi
 echo "[3/3] Applying DPDP database schema to separate embedded H2 database (WSO2EVENT_NOTIFICATION_DB)"
 H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
 if [ -n "${H2_JAR}" ]; then
-  DPDP_H2_SCRIPT="${WSO2_IS_HOME}/dbscripts/dpdp/db_schema_h2.sql"
+  DPDP_H2_SCRIPT="${WSO2_IS_HOME}/dbscripts/dpdp-accelerator/event-notification/db_schema_h2.sql"
   if [ -f "${DPDP_H2_SCRIPT}" ]; then
     java -cp "${H2_JAR}" org.h2.tools.RunScript \
       -url "jdbc:h2:${WSO2_IS_HOME}/repository/database/WSO2EVENT_NOTIFICATION_DB" \

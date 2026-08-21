@@ -111,7 +111,7 @@
                                         <include name="*.jar"/>
                                     </fileset>
                                 </copy>
-                                <copy todir="${project.basedir}/carbon-home/dbscripts/dpdp">
+                                <copy todir="${project.basedir}/carbon-home/dbscripts/dpdp-accelerator/event-notification">
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/src/main/resources/dbscripts">
                                         <include name="*.sql"/>
                                     </fileset>
