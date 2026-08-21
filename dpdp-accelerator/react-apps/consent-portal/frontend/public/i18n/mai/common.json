@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} दिन विलंब",
       "overduePlural": "{{count}} दिन विलंब",
       "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी"
+      "daysLeftPlural": "{{count}} दिन बाँकी",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त भेल",
@@ -724,11 +725,11 @@
       "empty": "अहाँ अखनि तक कोनहु शिकायत दर्ज नहि केने छी।",
       "emptyFiltered": "चुनल गेल फ़िल्टर सँ कोनहु शिकायत मेल नहि खाैत अछि।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "हमर शिकायतक फिल्टर",
         "status": "स्थिति",
         "all": "सभ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "फिल्टर साफ करू",
+        "clearAriaLabel": "सभ फिल्टर साफ करू"
       },
       "table": {
         "tableAriaLabel": "हमर शिकायत तालिका",
@@ -745,13 +746,13 @@
       "back": "हमर शिकायत सभ पर वापस जाऊ",
       "notFound": "शिकायत नहि भेटल",
       "description": "विवरण",
-      "submittedOn": "{{date}} केँ दर्ज कएल गेल",
       "awaitingInfo": {
         "note": "शिकायत अधिकारी अहाँ सँ और जानकारीक प्रतीक्षा मे छथि। कृपया नीचाँ जवाब दिअ।"
       },
       "resolved": {
         "note": "अहि शिकायतक समाधान भऽ गेल अछि।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "शिकायत दर्ज करू",
@@ -809,8 +810,8 @@
       "initialSubmission": "प्रारंभिक सबमिशन",
       "internalNote": "आंतरिक",
       "overflowMore": "+{{count}} और",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "एकटा नवी फाइल जोड़ल गेल",
+      "uploadedCount_other": "{{count}} नवी फाइल जोड़ल गेल"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "कतार पर वापस जाऊ",
         "notFound": "शिकायत नहि भेटल",
-        "dataPrincipal": "उपयोगकर्ता"
+        "dataPrincipal": "उपयोगकर्ता",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

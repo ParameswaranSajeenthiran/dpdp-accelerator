@@ -394,8 +394,8 @@ function ComplaintActivityFeed({
     if (isStatusChangeEntry(entry)) {
       return (
         <Fragment key={entry.id}>
-          {renderTimelineLogRow(entry)}
           {renderTimelineCommentRow(entry)}
+          {renderTimelineLogRow(entry)}
         </Fragment>
       )
     }

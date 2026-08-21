@@ -36,7 +36,8 @@ class StatusTransitionValidatorTest {
             "WAITING_ON_CLIENT, AWAITING_INTERNAL_REVIEW",
             "AWAITING_INTERNAL_REVIEW, IN_PROGRESS",
             "AWAITING_INTERNAL_REVIEW, WAITING_ON_CLIENT",
-            "AWAITING_INTERNAL_REVIEW, RESOLVED"
+            "AWAITING_INTERNAL_REVIEW, RESOLVED",
+            "RESOLVED, AWAITING_INTERNAL_REVIEW"
     })
     void allowsDocumentedValidTransitions(String from, String to) {
         assertTrue(StatusTransitionValidator.isValidTransition(from, to));
@@ -48,6 +49,8 @@ class StatusTransitionValidatorTest {
             "OPEN, OPEN",
             "RESOLVED, OPEN",
             "RESOLVED, IN_PROGRESS",
+            "RESOLVED, WAITING_ON_CLIENT",
+            "RESOLVED, RESOLVED",
             "IN_PROGRESS, AWAITING_INTERNAL_REVIEW",
             "WAITING_ON_CLIENT, IN_PROGRESS",
             "WAITING_ON_CLIENT, RESOLVED"

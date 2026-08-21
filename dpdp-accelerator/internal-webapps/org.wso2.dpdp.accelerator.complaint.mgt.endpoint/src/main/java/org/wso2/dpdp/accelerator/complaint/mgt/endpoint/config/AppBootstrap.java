@@ -22,6 +22,7 @@ import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 import org.tomlj.TomlTable;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.ComplaintScopeRegistry;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 
 import java.io.BufferedReader;
@@ -92,6 +93,19 @@ public final class AppBootstrap {
                 }
                 PriorityMapper.configure(overrides);
                 LOGGER.info("Loaded " + overrides.size() + " category-to-priority mappings.");
+            }
+
+            TomlTable complaintScopes = result.getTable("complaintScopes");
+            if (complaintScopes != null) {
+                Map<String, String> scopeOverrides = new HashMap<>();
+                for (String key : complaintScopes.keySet()) {
+                    String value = complaintScopes.getString(key);
+                    if (value != null) {
+                        scopeOverrides.put(key, value);
+                    }
+                }
+                ComplaintScopeRegistry.configure(scopeOverrides);
+                LOGGER.info("Loaded " + scopeOverrides.size() + " complaint scope override(s).");
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Could not read deployment.toml: " + e.getMessage(), e);

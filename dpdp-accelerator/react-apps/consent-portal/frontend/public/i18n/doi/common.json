@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} दिन उप्पर होई गेआ",
       "overduePlural": "{{count}} दिन उप्पर होई गेदे न",
       "daysLeftSingular": "{{count}} दिन बची गेदा ऐ",
-      "daysLeftPlural": "{{count}} दिन बची गेदे न"
+      "daysLeftPlural": "{{count}} दिन बची गेदे न",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "शिकायत मिली",
@@ -724,11 +725,11 @@
       "empty": "तुस अजै तकर कोई शिकायत जमा नेईं कीती ऐ।",
       "emptyFiltered": "चुने दे फिल्टरें कन्नै कोई शिकायतां नेईं मिलदियां।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "मेरी शिकायतें फिल्टर",
         "status": "स्टेटस",
         "all": "सारे",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "फिल्टर साफ करो",
+        "clearAriaLabel": "सब्बे फिल्टर साफ करो"
       },
       "table": {
         "tableAriaLabel": "मेरी शिकायतां दी टेबल",
@@ -745,13 +746,13 @@
       "back": "मेरी शिकायतां च वापस",
       "notFound": "शिकायत नेईं लब्भी",
       "description": "विवरण",
-      "submittedOn": "{{date}} गी जमा कीता",
       "awaitingInfo": {
         "note": "शिकायत अधिकारी तुंदे पासूं होर जानकारी दी उडीक करा करदा ऐ। किरपा करियै खल्लै जवाब देओ।"
       },
       "resolved": {
         "note": "एह् शिकायत हल होई गेदी ऐ।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "इक शिकायत जमा करो",
@@ -809,8 +810,8 @@
       "initialSubmission": "पैह्ली जमात",
       "internalNote": "अंदरूनी",
       "overflowMore": "+{{count}} होर",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "इक नवीं फाइल जोड़ी गेई",
+      "uploadedCount_other": "{{count}} नवीं फाइलें जोड़ीयां गेइयां"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "कतार च वापस",
         "notFound": "शिकायत नेईं लब्भी",
-        "dataPrincipal": "यूजर"
+        "dataPrincipal": "यूजर",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

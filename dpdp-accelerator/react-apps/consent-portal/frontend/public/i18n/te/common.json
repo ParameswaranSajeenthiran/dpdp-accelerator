@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} రోజు ఆలస్యమైంది",
       "overduePlural": "{{count}} రోజులు ఆలస్యమైంది",
       "daysLeftSingular": "{{count}} రోజు మిగిలి ఉంది",
-      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి"
+      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ఫిర్యాదు స్వీకరించబడింది",
@@ -724,11 +725,11 @@
       "empty": "మీరు ఇంకా ఎలాంటి ఫిర్యాదులు సమర్పించలేదు.",
       "emptyFiltered": "ఎంచుకున్న ఫిల్టర్‌కు ఏ ఫిర్యాదులు సరిపోలలేదు.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "నా ఫిర్యాదల ఫిల్టర్లు",
         "status": "స్థితి",
         "all": "అన్నీ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ఫిల్టర్లను క్లియర్ చేయి",
+        "clearAriaLabel": "అన్ని ఫిల్టర్లను క్లియర్ చేయి"
       },
       "table": {
         "tableAriaLabel": "నా ఫిర్యాదుల పట్టిక",
@@ -745,13 +746,13 @@
       "back": "నా ఫిర్యాదులకు తిరిగి వెళ్ళు",
       "notFound": "ఫిర్యాదు కనుగొనబడలేదు",
       "description": "వివరణ",
-      "submittedOn": "{{date}}న సమర్పించబడింది",
       "awaitingInfo": {
         "note": "ఫిర్యాదు అధికారి మీ నుండి మరింత సమాచారం కోసం వేచి ఉన్నారు. దయచేసి కింద రిప్లై ఇవ్వండి."
       },
       "resolved": {
         "note": "ఈ ఫిర్యాదు పరిష్కరించబడింది."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ఫిర్యాదు సమర్పించండి",
@@ -809,8 +810,8 @@
       "initialSubmission": "ప్రాథమిక సమర్పణ",
       "internalNote": "అంతర్గతం",
       "overflowMore": "మరిన్ని +{{count}}",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "కొత్త ఫైల్ జోడించబడింది",
+      "uploadedCount_other": "{{count}} కొత్త ఫైళ్లు జోడించబడ్డాయి"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "క్యూకు తిరిగి వెళ్ళు",
         "notFound": "ఫిర్యాదు కనుగొనబడలేదు",
-        "dataPrincipal": "వినియోగదారు"
+        "dataPrincipal": "వినియోగదారు",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

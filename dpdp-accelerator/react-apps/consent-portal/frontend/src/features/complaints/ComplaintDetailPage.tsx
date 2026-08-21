@@ -137,12 +137,24 @@ function ComplaintDetailPage(): React.JSX.Element {
       </Stack>
 
       <Card sx={{ boxShadow: 1 }}>
-        <CardHeader title={t(`complaints.categories.${complaint.category}`)} sx={{ pb: 1 }} />
+        <CardHeader
+          title={
+            <Typography variant="h6" fontWeight={700}>
+              {t(`complaints.categories.${complaint.category}`)}
+            </Typography>
+          }
+          sx={{ pb: 1 }}
+        />
         <Divider />
         <CardContent>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                sx={{ display: 'block', textTransform: 'uppercase' }}
+              >
                 {t('complaints.detail.description')}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
@@ -151,10 +163,16 @@ function ComplaintDetailPage(): React.JSX.Element {
             </Box>
 
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                {t('complaints.detail.submittedOn', {
-                  date: formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS),
-                })}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                sx={{ display: 'block', textTransform: 'uppercase' }}
+              >
+                {t('complaints.detail.submittedOnLabel')}
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                {formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
               </Typography>
             </Box>
           </Stack>
@@ -193,17 +211,19 @@ function ComplaintDetailPage(): React.JSX.Element {
                 canPostInternalNote={false}
                 statusOptions={[]}
                 getStatusLabel={() => ''}
-                onSend={(message, files) => {
-                  const canMoveToInternalReview =
-                    complaint.status !== 'AWAITING_INTERNAL_REVIEW' &&
-                    complaint.status !== 'RESOLVED'
+                onSend={(message, files, _visibility, _nextStatus, onSent) => {
+                  const toStatus =
+                    complaint.status === 'AWAITING_INTERNAL_REVIEW'
+                      ? undefined
+                      : 'AWAITING_INTERNAL_REVIEW'
 
                   sendMessageMutation.mutate({
                     complaintId: complaint.id,
                     message,
                     files,
-                    toStatus: canMoveToInternalReview ? 'AWAITING_INTERNAL_REVIEW' : undefined,
+                    toStatus,
                   })
+                  onSent()
                 }}
               />
               <ComplaintActivityFeed

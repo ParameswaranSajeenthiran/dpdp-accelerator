@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} दिनं विलम्बितम्",
       "overduePlural": "{{count}} दिनानि विलम्बितानि",
       "daysLeftSingular": "{{count}} दिनं शेषम्",
-      "daysLeftPlural": "{{count}} दिनानि शेषाणि"
+      "daysLeftPlural": "{{count}} दिनानि शेषाणि",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "आक्षेपः प्राप्तः",
@@ -724,11 +725,11 @@
       "empty": "भवता अद्यापि कोऽपि आक्षेपः न समर्पितः।",
       "emptyFiltered": "चयनित-शोधकेन सह कोऽपि आक्षेपः न मिलति।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "मम विस्ताराः फिल्टर्",
         "status": "स्थितिः",
         "all": "सर्वम्",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "फिल्टर् परिष्करोतु",
+        "clearAriaLabel": "सर्वाणि फिल्टर् परिष्करोतु"
       },
       "table": {
         "tableAriaLabel": "मम आक्षेपाणां सारणी",
@@ -745,13 +746,13 @@
       "back": "मम आक्षेपान् प्रति गच्छन्तु",
       "notFound": "आक्षेपः न प्राप्तः",
       "description": "विवरणम्",
-      "submittedOn": "{{date}} दिनाङ्के समर्पितम्",
       "awaitingInfo": {
         "note": "आक्षेप-अधिकारी भवतः सकाशात् अधिक-सूचनायाः प्रतीक्षते। कृपया अधः उत्तरं ददतु।"
       },
       "resolved": {
         "note": "अयं आक्षेपः समाहितः अस्ति।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "आक्षेपं समर्पयन्तु",
@@ -809,8 +810,8 @@
       "initialSubmission": "प्रारम्भिक-समर्पणम्",
       "internalNote": "आन्तरिकम्",
       "overflowMore": "+{{count}} अधिकम्",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "नवा सञ्चिका योजिता",
+      "uploadedCount_other": "{{count}} नव्यः सञ्चिकाः योजिताः"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "पङ्क्तिं प्रति गच्छन्तु",
         "notFound": "आक्षेपः न प्राप्तः",
-        "dataPrincipal": "उपयोक्ता"
+        "dataPrincipal": "उपयोक्ता",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

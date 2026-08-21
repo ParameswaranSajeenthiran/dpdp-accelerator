@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} ದಿನ ಮೀರಿದೆ",
       "overduePlural": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
       "daysLeftSingular": "{{count}} ದಿನ ಉಳಿದಿದೆ",
-      "daysLeftPlural": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ"
+      "daysLeftPlural": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ದೂರು ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
@@ -724,11 +725,11 @@
       "empty": "ನೀವು ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳನ್ನು ಸಲ್ಲಿಸಿಲ್ಲ.",
       "emptyFiltered": "ಆಯ್ಕೆಮಾಡಿದ ಫಿಲ್ಟರ್‌ಗೆ ಯಾವುದೇ ದೂರುಗಳು ಹೊಂದಿಕೆಯಾಗುವುದಿಲ್ಲ.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "ನನ್ನ ದೂರುಗಳ ಫಿಲ್ಟರ್‌ಗಳು",
         "status": "ಸ್ಥಿತಿ",
         "all": "ಎಲ್ಲಾ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ",
+        "clearAriaLabel": "ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ"
       },
       "table": {
         "tableAriaLabel": "ನನ್ನ ದೂರುಗಳ ಟೇಬಲ್",
@@ -745,13 +746,13 @@
       "back": "ನನ್ನ ದೂರುಗಳಿಗೆ ಹಿಂತಿರುಗಿ",
       "notFound": "ದೂರು ಕಂಡುಬಂದಿಲ್ಲ",
       "description": "ವಿವರಣೆ",
-      "submittedOn": "{{date}} ರಂದು ಸಲ್ಲಿಸಲಾಗಿದೆ",
       "awaitingInfo": {
         "note": "ದೂರು ಅಧಿಕಾರಿಯು ನಿಮ್ಮಿಂದ ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ ಕಾಯುತ್ತಿದ್ದಾರೆ. ದಯವಿಟ್ಟು ಕೆಳಗೆ ಪ್ರತ್ಯುತ್ತರಿಸಿ."
       },
       "resolved": {
         "note": "ಈ ದೂರನ್ನು ಪರಿಹರಿಸಲಾಗಿದೆ."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ದೂರು ಸಲ್ಲಿಸಿ",
@@ -809,8 +810,8 @@
       "initialSubmission": "ಆರಂಭಿಕ ಸಲ್ಲಿಕೆ",
       "internalNote": "ಆಂತರಿಕ",
       "overflowMore": "ಇನ್ನೂ +{{count}}",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "ಹೊಸ ಫೈಲ್ ಲಗತ್ತಿಸಲಾಗಿದೆ",
+      "uploadedCount_other": "{{count}} ಹೊಸ ಫೈಲ್‌ಗಳನ್ನು ಲಗತ್ತಿಸಲಾಗಿದೆ"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ಸರತಿಗೆ ಹಿಂತಿರುಗಿ",
         "notFound": "ದೂರು ಕಂಡುಬಂದಿಲ್ಲ",
-        "dataPrincipal": "ಬಳಕೆದಾರ"
+        "dataPrincipal": "ಬಳಕೆದಾರ",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} દિવસ વિલંબિત",
       "overduePlural": "{{count}} દિવસો વિલંબિત",
       "daysLeftSingular": "{{count}} દિવસ બાકી",
-      "daysLeftPlural": "{{count}} દિવસો બાકી"
+      "daysLeftPlural": "{{count}} દિવસો બાકી",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ફરિયાદ પ્રાપ્ત થઈ",
@@ -724,11 +725,11 @@
       "empty": "તમે હજુ સુધી કોઈ ફરિયાદ નોંધાવી નથી.",
       "emptyFiltered": "પસંદ કરેલ ફિલ્ટર સાથે કોઈ ફરિયાદ મળતી નથી.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "મારી ફરિયાદો ફિલ્ટર",
         "status": "સ્થિતિ",
         "all": "તમામ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ફિલ્ટર સાફ કરો",
+        "clearAriaLabel": "બધા ફિલ્ટર સાફ કરો"
       },
       "table": {
         "tableAriaLabel": "મારી ફરિયાદોનું કોષ્ટક",
@@ -745,13 +746,13 @@
       "back": "મારી ફરિયાદો પર પાછા જાઓ",
       "notFound": "ફરિયાદ મળી નથી",
       "description": "વર્ણન",
-      "submittedOn": "{{date}} ના રોજ સબમિટ કરેલ",
       "awaitingInfo": {
         "note": "ફરિયાદ અધિકારી તમારી પાસેથી વધુ માહિતીની રાહ જોઈ રહ્યા છે. કૃપા કરીને નીચે જવાબ આપો."
       },
       "resolved": {
         "note": "આ ફરિયાદનો ઉકેલ આવી ગયો છે."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ફરિયાદ નોંધાવો",
@@ -809,8 +810,8 @@
       "initialSubmission": "પ્રારંભિક સબમિશન",
       "internalNote": "આંતરિક",
       "overflowMore": "+{{count}} વધુ",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "નવી ફાઇલ જોડાયેલ છે",
+      "uploadedCount_other": "{{count}} નવી ફાઇલ જોડાયેલ છે"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ક્યૂ પર પાછા જાઓ",
         "notFound": "ફરિયાદ મળતી નથી",
-        "dataPrincipal": "વપરાશકર્તા"
+        "dataPrincipal": "વપરાશકર્તા",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

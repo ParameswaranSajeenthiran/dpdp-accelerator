@@ -17,6 +17,7 @@
  */
 
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -47,6 +48,7 @@ import {
 } from '../complaints/hooks/useComplaintQueries'
 import { collectComplaintAttachments } from '../complaints/utils/complaintAttachments'
 import { getComplaintStatusLabelKey } from '../complaints/utils/complaintDisplay'
+import ComplaintResolveConfirmDialog from './components/ComplaintResolveConfirmDialog'
 
 const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   month: 'short',
@@ -55,6 +57,20 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
+}
+
+interface PendingResolveSend {
+  message: string
+  files: File[]
+  isPublic: boolean
+  onSent: () => void
+}
+
+function resolveErrorMessage(error: Error | null, t: (key: string) => string): string | undefined {
+  if (!error) {
+    return undefined
+  }
+  return t('complaints.management.case.resolveDialog.resolveFailed')
 }
 
 function ComplaintCaseDetailLoading(): React.JSX.Element {
@@ -92,6 +108,7 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
   const detailQuery = useManagedComplaintDetailQuery(id)
   const sendMessageMutation = useSendManagedComplaintMessageMutation()
   const [activeTab, setActiveTab] = useState<'activity' | 'attachments'>('activity')
+  const [pendingResolve, setPendingResolve] = useState<PendingResolveSend | null>(null)
 
   if (detailQuery.isPending) {
     return <ComplaintCaseDetailLoading />
@@ -138,7 +155,14 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
       </Stack>
 
       <Card sx={{ boxShadow: 1 }}>
-        <CardHeader title={t(`complaints.categories.${complaint.category}`)} sx={{ pb: 1 }} />
+        <CardHeader
+          title={
+            <Typography variant="h6" fontWeight={700}>
+              {t(`complaints.categories.${complaint.category}`)}
+            </Typography>
+          }
+          sx={{ pb: 1 }}
+        />
         <Divider />
         <CardContent>
           <Stack spacing={2}>
@@ -167,9 +191,10 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   fontWeight={600}
                   sx={{ display: 'block', textTransform: 'uppercase' }}
                 >
-                  {t('complaints.detail.submittedOn', {
-                    date: formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS),
-                  })}
+                  {t('complaints.detail.submittedOnLabel')}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                  {formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
               <Box>
@@ -179,9 +204,10 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   fontWeight={600}
                   sx={{ display: 'block', textTransform: 'uppercase' }}
                 >
-                  {t('complaints.sla.dueDate', {
-                    date: formatIsoDateTime(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS),
-                  })}
+                  {t('complaints.sla.dueLabel')}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                  {formatIsoDateTime(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
             </Box>
@@ -223,22 +249,34 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
         <CardContent>
           {activeTab === 'activity' ? (
             <Stack spacing={3}>
-              <ComplaintReplyComposer
-                canPostInternalNote
-                statusOptions={allowedNextStatuses}
-                getStatusLabel={(status) =>
-                  t(`complaints.status.${getComplaintStatusLabelKey(status)}`)
-                }
-                onSend={(message, files, visibility, nextStatus) => {
-                  sendMessageMutation.mutate({
-                    complaintId: complaint.id,
-                    message,
-                    isPublic: visibility !== 'internal',
-                    files,
-                    toStatus: nextStatus,
-                  })
-                }}
-              />
+              {complaint.status === 'RESOLVED' ? (
+                <Alert severity="warning">{t('complaints.management.case.resolvedLocked')}</Alert>
+              ) : (
+                <ComplaintReplyComposer
+                  canPostInternalNote
+                  statusOptions={allowedNextStatuses}
+                  getStatusLabel={(status) =>
+                    t(`complaints.status.${getComplaintStatusLabelKey(status)}`)
+                  }
+                  onSend={(message, files, visibility, nextStatus, onSent) => {
+                    const isPublic = visibility !== 'internal'
+
+                    if (nextStatus === 'RESOLVED') {
+                      setPendingResolve({ message, files, isPublic, onSent })
+                      return
+                    }
+
+                    sendMessageMutation.mutate({
+                      complaintId: complaint.id,
+                      message,
+                      isPublic,
+                      files,
+                      toStatus: nextStatus,
+                    })
+                    onSent()
+                  }}
+                />
+              )}
               <ComplaintActivityFeed
                 complaintId={complaint.id}
                 entries={complaint.timeline}
@@ -250,6 +288,39 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
           )}
         </CardContent>
       </Card>
+
+      <ComplaintResolveConfirmDialog
+        open={pendingResolve !== null}
+        loading={sendMessageMutation.isPending}
+        error={resolveErrorMessage(sendMessageMutation.error, t)}
+        onClose={() => {
+          setPendingResolve(null)
+          sendMessageMutation.reset()
+        }}
+        onConfirm={() => {
+          if (!pendingResolve) {
+            return
+          }
+
+          const { onSent } = pendingResolve
+
+          sendMessageMutation.mutate(
+            {
+              complaintId: complaint.id,
+              message: pendingResolve.message,
+              isPublic: pendingResolve.isPublic,
+              files: pendingResolve.files,
+              toStatus: 'RESOLVED',
+            },
+            {
+              onSuccess: () => {
+                setPendingResolve(null)
+                onSent()
+              },
+            },
+          )
+        }}
+      />
     </Box>
   )
 }

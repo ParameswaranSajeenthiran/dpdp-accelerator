@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} day overdue",
       "overduePlural": "{{count}} days overdue",
       "daysLeftSingular": "{{count}} day left",
-      "daysLeftPlural": "{{count}} days left"
+      "daysLeftPlural": "{{count}} days left",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "Complaint received",
@@ -745,13 +746,13 @@
       "back": "Back to my complaints",
       "notFound": "Complaint not found",
       "description": "Description",
-      "submittedOn": "Submitted on {{date}}",
       "awaitingInfo": {
         "note": "The complaint officer is waiting on more information from you. Please reply below."
       },
       "resolved": {
-        "note": "This complaint has been resolved."
-      }
+        "note": "This complaint has been resolved. If you're not satisfied with the outcome, send a message below to reopen it for review."
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "Submit a complaint",
@@ -848,7 +849,16 @@
       "case": {
         "back": "Back to queue",
         "notFound": "Complaint not found",
-        "dataPrincipal": "User"
+        "dataPrincipal": "User",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

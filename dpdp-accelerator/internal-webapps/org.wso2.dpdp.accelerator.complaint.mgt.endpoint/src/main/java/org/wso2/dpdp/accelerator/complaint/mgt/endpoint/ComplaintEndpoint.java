@@ -77,14 +77,14 @@ public class ComplaintEndpoint {
     }
 
     @POST
-    @RequireScope("portal:complaints:write:any")
+    @RequireScope
     public Response createComplaint(ComplaintCreateRequestBean request) {
         ComplaintCreateResponseBean response = complaintHandler.createComplaint(currentOrgId(), request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
     @GET
-    @RequireScope("portal:complaints:read:any")
+    @RequireScope
     public Response listComplaints(
             @QueryParam("status") String status,
             @QueryParam("priority") String priority,
@@ -99,7 +99,7 @@ public class ComplaintEndpoint {
 
     @GET
     @Path("/categories")
-    @RequireScope("portal:complaints:read:any")
+    @RequireScope
     public Response getCategories() {
         CategoryListResponseBean response = complaintHandler.getCategories();
         return Response.ok(response).build();
@@ -107,7 +107,7 @@ public class ComplaintEndpoint {
 
     @GET
     @Path("/{complaintId}")
-    @RequireScope("portal:complaints:read:any")
+    @RequireScope
     public Response getComplaint(@PathParam("complaintId") String complaintId) {
         ComplaintRecordBean response = complaintHandler.getComplaint(currentOrgId(), complaintId);
         return Response.ok(response).build();
@@ -115,7 +115,7 @@ public class ComplaintEndpoint {
 
     @POST
     @Path("/{complaintId}/status")
-    @RequireScope("portal:complaints:write:any")
+    @RequireScope
     public Response updateComplaintStatus(
             @PathParam("complaintId") String complaintId,
             ComplaintStatusUpdateRequestBean request) {

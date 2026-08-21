@@ -67,7 +67,7 @@ public class ComplaintCommentEndpoint {
     }
 
     @POST
-    @RequireScope("portal:complaints:write:any")
+    @RequireScope
     public Response addComplaintMessage(
             @PathParam("complaintId") String complaintId,
             ComplaintMessageRequestBean request) {

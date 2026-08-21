@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} நாள் தாமதம்",
       "overduePlural": "{{count}} நாட்கள் தாமதம்",
       "daysLeftSingular": "{{count}} நாள் மீதமுள்ளது",
-      "daysLeftPlural": "{{count}} நாட்கள் மீதமுள்ளன"
+      "daysLeftPlural": "{{count}} நாட்கள் மீதமுள்ளன",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "புகார் பெறப்பட்டது",
@@ -724,11 +725,11 @@
       "empty": "நீங்கள் இதுவரை எந்தப் புகாரையும் சமர்ப்பிக்கவில்லை.",
       "emptyFiltered": "தேர்ந்தெடுக்கப்பட்ட வடிகட்டிக்கு எந்தப் புகாரும் பொருந்தவில்லை.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "எனது புகார்கள் வடிகட்டிகள்",
         "status": "நிலை",
         "all": "அனைத்தும்",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "வடிகட்டிகளை அழி",
+        "clearAriaLabel": "அனைத்து வடிகட்டிகளையும் அழி"
       },
       "table": {
         "tableAriaLabel": "எனது புகார்கள் அட்டவணை",
@@ -745,13 +746,13 @@
       "back": "எனது புகார்களுக்குத் திரும்பு",
       "notFound": "புகார் கிடைக்கவில்லை",
       "description": "விளக்கம்",
-      "submittedOn": "{{date}} அன்று சமர்ப்பிக்கப்பட்டது",
       "awaitingInfo": {
         "note": "புகார் அதிகாரி உங்களிடமிருந்து கூடுதல் தகவலுக்காகக் காத்திருக்கிறார். கீழே பதிலளிக்கவும்."
       },
       "resolved": {
         "note": "இந்தப் புகார் தீர்க்கப்பட்டது."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "புகாரைச் சமர்ப்பி",
@@ -809,8 +810,8 @@
       "initialSubmission": "ஆரம்ப சமர்ப்பிப்பு",
       "internalNote": "உள் பகுதி",
       "overflowMore": "+மேலும் {{count}}",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "புதிய கோப்பு ஒன்று இணைக்கப்பட்டது",
+      "uploadedCount_other": "{{count}} புதிய கோப்புகள் இணைக்கப்பட்டன"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "வரிசைக்குத் திரும்பு",
         "notFound": "புகார் கிடைக்கவில்லை",
-        "dataPrincipal": "பயனர்"
+        "dataPrincipal": "பயனர்",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

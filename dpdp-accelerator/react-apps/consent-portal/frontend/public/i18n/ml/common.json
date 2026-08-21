@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} ദിവസം വൈകി",
       "overduePlural": "{{count}} ദിവസങ്ങൾ വൈകി",
       "daysLeftSingular": "{{count}} ദിവസം ബാക്കി",
-      "daysLeftPlural": "{{count}} ദിവസങ്ങൾ ബാക്കി"
+      "daysLeftPlural": "{{count}} ദിവസങ്ങൾ ബാക്കി",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "പരാതി ലഭിച്ചു",
@@ -724,11 +725,11 @@
       "empty": "നിങ്ങൾ ഇതുവരെ പരാതികളൊന്നും നൽകിയിട്ടില്ല.",
       "emptyFiltered": "തിരഞ്ഞെടുത്ത ഫിൽട്ടറുമായി പരാതികളൊന്നും പൊരുത്തപ്പെടുന്നില്ല.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "എന്റെ പരാതികളുടെ ഫിൽട്ടറുകൾ",
         "status": "സ്റ്റാറ്റസ്",
         "all": "എല്ലാം",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ഫിൽട്ടറുകൾ മായ്‌ക്കുക",
+        "clearAriaLabel": "എല്ലാ ഫിൽട്ടറുകളും മായ്‌ക്കുക"
       },
       "table": {
         "tableAriaLabel": "എന്റെ പരാതികളുടെ പട്ടിക",
@@ -745,13 +746,13 @@
       "back": "എന്റെ പരാതികളിലേക്ക് മടങ്ങുക",
       "notFound": "പരാതി കണ്ടെത്തിയില്ല",
       "description": "വിവരണം",
-      "submittedOn": "{{date}} ൽ സമർപ്പിച്ചു",
       "awaitingInfo": {
         "note": "പരാതി ഉദ്യോഗസ്ഥൻ നിങ്ങളിൽ നിന്ന് കൂടുതൽ വിവരങ്ങൾക്കായി കാത്തിരിക്കുകയാണ്. ദയവായി താഴെ മറുപടി നൽകുക."
       },
       "resolved": {
         "note": "ഈ പരാതി പരിഹരിച്ചു."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "പരാതി നൽകുക",
@@ -809,8 +810,8 @@
       "initialSubmission": "പ്രാഥമിക സമർപ്പണം",
       "internalNote": "ആന്തരികം",
       "overflowMore": "+{{count}} കൂടുതൽ",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "പുതിയ ഫയൽ അറ്റാച്ച് ചെയ്‌തു",
+      "uploadedCount_other": "{{count}} പുതിയ ഫയലുകൾ അറ്റാച്ച് ചെയ്‌തു"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ക്യൂവിലേക്ക് മടങ്ങുക",
         "notFound": "പരാതി കണ്ടെത്തിയില്ല",
-        "dataPrincipal": "ഉപയോക്താവ്"
+        "dataPrincipal": "ഉപയോക്താവ്",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

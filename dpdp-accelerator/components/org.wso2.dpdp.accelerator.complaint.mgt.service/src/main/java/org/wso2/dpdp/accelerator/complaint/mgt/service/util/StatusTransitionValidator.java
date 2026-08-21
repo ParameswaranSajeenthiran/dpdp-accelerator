@@ -37,13 +37,17 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintSta
  *   IN_PROGRESS                 -> WAITING_ON_CLIENT, RESOLVED
  *   WAITING_ON_CLIENT           -> AWAITING_INTERNAL_REVIEW
  *   AWAITING_INTERNAL_REVIEW    -> IN_PROGRESS, WAITING_ON_CLIENT, RESOLVED
- *   RESOLVED                    -> (terminal - no further transitions)
+ *   RESOLVED                    -> AWAITING_INTERNAL_REVIEW
  *
  * A complaint can only be RESOLVED after having gone through IN_PROGRESS or AWAITING_INTERNAL_REVIEW,
  * so OPEN -> RESOLVED directly is rejected (this matches the 409 example in the API spec).
  *
  * Once a complaint is WAITING_ON_CLIENT, the complainant's reply routes it to internal
  * review rather than back into IN_PROGRESS directly - AWAITING_INTERNAL_REVIEW is the only way out.
+ *
+ * A RESOLVED complaint is locked for the officer (no manual transition out of it); it can only be
+ * reopened when the complainant replies, which automatically routes it to AWAITING_INTERNAL_REVIEW
+ * for an officer to re-triage.
  */
 public class StatusTransitionValidator {
 
@@ -55,7 +59,7 @@ public class StatusTransitionValidator {
         ALLOWED_TRANSITIONS.put(IN_PROGRESS, EnumSet.of(WAITING_ON_CLIENT, RESOLVED));
         ALLOWED_TRANSITIONS.put(WAITING_ON_CLIENT, EnumSet.of(AWAITING_INTERNAL_REVIEW));
         ALLOWED_TRANSITIONS.put(AWAITING_INTERNAL_REVIEW, EnumSet.of(IN_PROGRESS, WAITING_ON_CLIENT, RESOLVED));
-        ALLOWED_TRANSITIONS.put(RESOLVED, EnumSet.noneOf(ComplaintStatus.class));
+        ALLOWED_TRANSITIONS.put(RESOLVED, EnumSet.of(AWAITING_INTERNAL_REVIEW));
     }
 
     private StatusTransitionValidator() {

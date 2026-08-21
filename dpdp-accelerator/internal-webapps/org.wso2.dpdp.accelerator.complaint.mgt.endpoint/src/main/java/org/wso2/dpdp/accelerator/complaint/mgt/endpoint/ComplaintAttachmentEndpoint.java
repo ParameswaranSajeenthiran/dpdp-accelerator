@@ -70,7 +70,7 @@ public class ComplaintAttachmentEndpoint {
     /** Officers may mark evidence isPublic=false to keep it hidden from the Data Principal; defaults to true. */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @RequireScope("portal:complaints:write:any")
+    @RequireScope
     public Response uploadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
             @FormDataParam("file") List<FormDataBodyPart> fileParts,
@@ -85,7 +85,7 @@ public class ComplaintAttachmentEndpoint {
     /** Officers see every attachment regardless of isPublic. */
     @GET
     @Path("/{attachmentId}")
-    @RequireScope("portal:complaints:read:any")
+    @RequireScope
     public Response downloadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
             @PathParam("attachmentId") String attachmentId) {

@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} دۄہ زیاتہٕ گۆومُت",
       "overduePlural": "{{count}} دۄہ زیاتہٕ گۆومُت",
       "daysLeftSingular": "{{count}} دۄہ باقائے",
-      "daysLeftPlural": "{{count}} دۄہ باقائے"
+      "daysLeftPlural": "{{count}} دۄہ باقائے",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "شِکایَت مِلییہِ",
@@ -724,11 +725,11 @@
       "empty": "تُہی چھُنہٕ وُنِی کانہہ شِکایَت درج کَرمِت۔",
       "emptyFiltered": "کانہہ تہِ شِکایَت چھنہٕ فِلتَرَن سِیِتھ مِلان۔",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "زی چھِ کور شِکایاتہ فلٹر",
         "status": "سٹیٹَس",
         "all": "ساری",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "فلٹر صاف کْریو",
+        "clearAriaLabel": "تمام فلٹر صاف کْریو"
       },
       "table": {
         "tableAriaLabel": "مَیانی شِکایات ٹیبل",
@@ -745,13 +746,13 @@
       "back": "مَیانی شِکایاتن مَنٛز واپس گَچھیو",
       "notFound": "شِکایَت لَبنہٕ نہٕ آو",
       "description": "تَفصِیل",
-      "submittedOn": "درج کُرمُت تاریخَس {{date}}",
       "awaitingInfo": {
         "note": "شِکایَت افسَر چھُ تُہنٛدِ طَرفہٕ مَعلوُماتُک اِنتِظار کَران۔ مہرَبانی کٔرِتھ بۆنِم حِصَس مَنٛز جواب دِیو۔"
       },
       "resolved": {
         "note": "یہِ شِکایَت چھیہِ حَل کَرنہٕ آمِت۔"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "شِکایَت درَج کِریو",
@@ -809,8 +810,8 @@
       "initialSubmission": "اِبتِدائی درَج کُرمُت",
       "internalNote": "اَندرُونی",
       "overflowMore": "+{{count}} بێیہِ",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "اکھ نْوئ فایِل جوڈیتھ",
+      "uploadedCount_other": "{{count}} نْوئ فایِلہ جوڈیتھ"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "کِیُو مَنٛز واپس گَچھیو",
         "notFound": "شِکایَت لَبنہٕ نہٕ آو",
-        "dataPrincipal": "صارف"
+        "dataPrincipal": "صارف",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

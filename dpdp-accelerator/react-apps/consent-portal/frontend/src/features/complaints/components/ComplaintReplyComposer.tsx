@@ -44,11 +44,16 @@ interface ComplaintReplyComposerProps {
   canPostInternalNote: boolean
   statusOptions: ComplaintStatus[]
   getStatusLabel: (status: ComplaintStatus) => string
+  // `onSent` clears the draft: call it once the send has actually gone through, not just
+  // once the officer clicked Send. A caller that gates the send behind a confirmation step
+  // (e.g. resolving a complaint) must delay calling it until that step is confirmed and the
+  // API call succeeds, so a cancelled confirmation leaves the officer's drafted message intact.
   onSend: (
     message: string,
     files: File[],
     visibility: ComplaintTimelineVisibility,
-    nextStatus?: ComplaintStatus,
+    nextStatus: ComplaintStatus | undefined,
+    onSent: () => void,
   ) => void
 }
 
@@ -211,11 +216,13 @@ function ComplaintReplyComposer({
                   draftFiles,
                   isInternalDraft ? 'internal' : 'shared',
                   pendingStatus || undefined,
+                  () => {
+                    setDraft('')
+                    setDraftFiles([])
+                    setAttachmentSizeError(null)
+                    setPendingStatus('')
+                  },
                 )
-                setDraft('')
-                setDraftFiles([])
-                setAttachmentSizeError(null)
-                setPendingStatus('')
               }}
             >
               {sendLabel}

@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} دن کی تاخیر",
       "overduePlural": "{{count}} دنوں کی تاخیر",
       "daysLeftSingular": "{{count}} دن باقی ہے",
-      "daysLeftPlural": "{{count}} دن باقی ہیں"
+      "daysLeftPlural": "{{count}} دن باقی ہیں",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",
@@ -724,11 +725,11 @@
       "empty": "آپ نے ابھی تک کوئی شکایت درج نہیں کی ہے۔",
       "emptyFiltered": "منتخب کردہ فلٹر سے کوئی شکایت میچ نہیں کرتی۔",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "میری شکایات کے فلٹر",
         "status": "اسٹیٹس",
         "all": "تمام",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "فلٹر صاف کریں",
+        "clearAriaLabel": "تمام فلٹر صاف کریں"
       },
       "table": {
         "tableAriaLabel": "میری شکایتوں کا ٹیبل",
@@ -745,13 +746,13 @@
       "back": "میری شکایتوں پر واپس جائیں",
       "notFound": "شکایت نہیں ملی",
       "description": "تفصیل",
-      "submittedOn": "{{date}} کو درج کی گئی",
       "awaitingInfo": {
         "note": "شکایت افسر آپ سے مزید معلومات کا منتظر ہے۔ براہ کرم نیچے جواب دیں۔"
       },
       "resolved": {
         "note": "یہ شکایت حل کر دی گئی ہے۔"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "شکایت درج کریں",
@@ -809,8 +810,8 @@
       "initialSubmission": "ابتدائی شکایت",
       "internalNote": "اندرونی",
       "overflowMore": "+{{count}} مزید",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "ایک نئی فائل منسلک کی گئی",
+      "uploadedCount_other": "{{count}} نئی فائلیں منسلک کی گئیں"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "قطار میں واپس جائیں",
         "notFound": "شکایت نہیں ملی",
-        "dataPrincipal": "صارف (Data Principal)"
+        "dataPrincipal": "صارف (Data Principal)",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

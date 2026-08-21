@@ -709,7 +709,8 @@
       "overdueSingular": "নুমিত {{count}} হেলেমখ্রে",
       "overduePlural": "নুমিত {{count}} হেলেমখ্রে",
       "daysLeftSingular": "নুমিত {{count}} ৱাৎলি",
-      "daysLeftPlural": "নুমিত {{count}} ৱাৎলি"
+      "daysLeftPlural": "নুমিত {{count}} ৱাৎলি",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ৱাকৎ ফংখ্রে",
@@ -724,11 +725,11 @@
       "empty": "নহাক্না ৱাকৎ অমত্তা পিশিন্দ্রি।",
       "emptyFiltered": "খনব ফিল্টরগা চান্নবা ৱাকৎ লৈত্রে।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "ঐখক কমপ্লেন্তা ফিল্টরশিং",
         "status": "ফিভম",
         "all": "পুম্নমক",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ফিল্টরশিং থুমদোকপা",
+        "clearAriaLabel": "ফিল্টর খুদিংমক থুমদোকপা"
       },
       "table": {
         "tableAriaLabel": "ইগী ৱাকৎশিংগী টেবিল",
@@ -745,13 +746,13 @@
       "back": "ইগী ৱাকৎশিংদা হনবা",
       "notFound": "ৱাকৎ থেংনদ্রে",
       "description": "অকুপ্পা সন্দোকনা তাকপা",
-      "submittedOn": "{{date}} দা পিশিনখ্রে",
       "awaitingInfo": {
         "note": "ৱাকৎ অসিগী অফিসারনা নহাৎকী মখাতানবা অকুপ্পা পাউ ঙাইরি। মখাদা পাউখুম পীবিয়ু।"
       },
       "resolved": {
         "note": "ৱাকৎ অসি লোইশিনখ্রে।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ৱাকৎ অমা পিশিনবা",
@@ -809,8 +810,8 @@
       "initialSubmission": "অহানবা পিশিনবা",
       "internalNote": "মনুংগী",
       "overflowMore": "+{{count}} হেনগৎলি",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "অনা ফাইল অমা পুথোকপা",
+      "uploadedCount_other": "{{count}} অনা ফাইল পুথোকপা"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ক্যু দা হনবা",
         "notFound": "ৱাকৎ থেংনদ্রে",
-        "dataPrincipal": "শীজিন্নবমী"
+        "dataPrincipal": "শীজিন্নবমী",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} दिन ढिलो",
       "overduePlural": "{{count}} दिन ढिलो",
       "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी"
+      "daysLeftPlural": "{{count}} दिन बाँकी",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "उजुरी प्राप्त भयो",
@@ -724,11 +725,11 @@
       "empty": "तपाईंले अझै कुनै उजुरी दर्ता गर्नुभएको छैन।",
       "emptyFiltered": "चयन गरिएको फिल्टरसँग कुनै उजुरी मेल खाँदैन।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "मेरा गुनासोहरूको फिल्टर",
         "status": "स्थिति",
         "all": "सबै",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "फिल्टर सफा गर्नुहोस्",
+        "clearAriaLabel": "सबै फिल्टर सफा गर्नुहोस्"
       },
       "table": {
         "tableAriaLabel": "मेरो उजुरी तालिका",
@@ -745,13 +746,13 @@
       "back": "मेरो उजुरीहरूमा फर्कनुहोस्",
       "notFound": "उजुरी भेटिएन",
       "description": "विवरण",
-      "submittedOn": "{{date}} मा पेश गरिएको",
       "awaitingInfo": {
         "note": "उजुरी अधिकारी तपाईंको थप जानकारीको प्रतीक्षामा हुनुहुन्छ। कृपया तल जवाफ दिनुहोस्।"
       },
       "resolved": {
         "note": "यो उजुरी समाधान गरिएको छ।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "उजुरी दर्ता गर्नुहोस्",
@@ -809,8 +810,8 @@
       "initialSubmission": "प्रारम्भिक उजुरी",
       "internalNote": "आन्तरिक",
       "overflowMore": "+{{count}} थप",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "एउटा नयाँ फाइल संलग्न गरियो",
+      "uploadedCount_other": "{{count}} वटा नयाँ फाइल संलग्न गरिए"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "लाइनमा फर्कनुहोस्",
         "notFound": "उजुरी भेटिएन",
-        "dataPrincipal": "प्रयोगकर्ता"
+        "dataPrincipal": "प्रयोगकर्ता",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

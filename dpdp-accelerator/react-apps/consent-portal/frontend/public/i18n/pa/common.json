@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
       "overduePlural": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
       "daysLeftSingular": "{{count}} ਦਿਨ ਬਾਕੀ ਹੈ",
-      "daysLeftPlural": "{{count}} ਦਿਨ ਬਾਕੀ ਹਨ"
+      "daysLeftPlural": "{{count}} ਦਿਨ ਬਾਕੀ ਹਨ",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ਸ਼ਿਕਾਇਤ ਪ੍ਰਾਪਤ ਹੋਈ",
@@ -724,11 +725,11 @@
       "empty": "ਤੁਸੀਂ ਅਜੇ ਤੱਕ ਕੋਈ ਸ਼ਿਕਾਇਤ ਦਰਜ ਨਹੀਂ ਕੀਤੀ ਹੈ।",
       "emptyFiltered": "ਚੁਣੇ ਗਏ ਫਿਲਟਰ ਨਾਲ ਕੋਈ ਸ਼ਿਕਾਇਤ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਫਿਲਟਰ",
         "status": "ਸਥਿਤੀ",
         "all": "ਸਭ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ",
+        "clearAriaLabel": "ਸਾਰੇ ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ"
       },
       "table": {
         "tableAriaLabel": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਦੀ ਸਾਰਣੀ",
@@ -745,13 +746,13 @@
       "back": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ 'ਤੇ ਵਾਪਸ ਜਾਓ",
       "notFound": "ਸ਼ਿਕਾਇਤ ਨਹੀਂ ਮਿਲੀ",
       "description": "ਵੇਰਵਾ",
-      "submittedOn": "{{date}} ਨੂੰ ਦਰਜ ਕੀਤੀ ਗਈ",
       "awaitingInfo": {
         "note": "ਸ਼ਿਕਾਇਤ ਅਧਿਕਾਰੀ ਤੁਹਾਡੇ ਤੋਂ ਹੋਰ ਜਾਣਕਾਰੀ ਦੀ ਉਡੀਕ ਕਰ ਰਿਹਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਹੇਠਾਂ ਜਵਾਬ ਦਿਓ।"
       },
       "resolved": {
         "note": "ਇਹ ਸ਼ਿਕਾਇਤ ਹੱਲ ਕਰ ਦਿੱਤੀ ਗਈ ਹੈ।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰੋ",
@@ -809,8 +810,8 @@
       "initialSubmission": "ਆਰੰਭਿਕ ਜਮ੍ਹਾਂ ਕਰਵਾਈ ਗਈ",
       "internalNote": "ਅੰਦਰੂਨੀ",
       "overflowMore": "+{{count}} ਹੋਰ",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "ਇੱਕ ਨਵੀਂ ਫਾਇਲ ਜੋੜੀ ਗਈ",
+      "uploadedCount_other": "{{count}} ਨਵੀਆਂ ਫਾਇਲਾਂ ਜੋੜੀਆਂ ਗਈਆਂ"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ਕਤਾਰ 'ਤੇ ਵਾਪਸ ਜਾਓ",
         "notFound": "ਸ਼ਿਕਾਇਤ ਨਹੀਂ ਮਿਲੀ",
-        "dataPrincipal": "ਵਰਤੋਂਕਾਰ"
+        "dataPrincipal": "ਵਰਤੋਂਕਾਰ",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

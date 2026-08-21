@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} দিন পাৰ হৈ গৈছে",
       "overduePlural": "{{count}} দিন পাৰ হৈ গৈছে",
       "daysLeftSingular": "{{count}} দিন বাকী আছে",
-      "daysLeftPlural": "{{count}} দিন বাকী আছে"
+      "daysLeftPlural": "{{count}} দিন বাকী আছে",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ পোৱা গৈছে",
@@ -724,11 +725,11 @@
       "empty": "আপুনি এতিয়ালৈকে কোনো অভিযোগ দাখিল কৰা নাই।",
       "emptyFiltered": "নিৰ্বাচিত ফিল্টাৰৰ সৈতে কোনো অভিযোগৰ মিল নাই।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "মোৰ অভিযোগসমূহৰ ফিল্টাৰসমূহ",
         "status": "স্থিতি",
         "all": "সকলো",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ফিল্টাৰসমূহ পৰিষ্কাৰ কৰক",
+        "clearAriaLabel": "সকলো ফিল্টাৰ পৰিষ্কাৰ কৰক"
       },
       "table": {
         "tableAriaLabel": "মোৰ অভিযোগৰ তালিকা",
@@ -745,13 +746,13 @@
       "back": "মোৰ অভিযোগসমূহলৈ উভতি যাওক",
       "notFound": "অভিযোগ পোৱা নগ'ল",
       "description": "বিৱৰণ",
-      "submittedOn": "{{date}} তাৰিখে দাখিল কৰা হৈছে",
       "awaitingInfo": {
         "note": "অভিযোগ বিষয়াই আপোনাৰ পৰা অধিক তথ্যৰ বাবে অপেক্ষা কৰি আছে। অনুগ্ৰহ কৰি তলত উত্তৰ দিয়ক।"
       },
       "resolved": {
         "note": "এই অভিযোগটো সমাধান কৰা হৈছে।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "এটা অভিযোগ দাখিল কৰক",
@@ -809,8 +810,8 @@
       "initialSubmission": "প্ৰাৰম্ভিক দাখিল",
       "internalNote": "আভ্যন্তৰীণ",
       "overflowMore": "আৰু +{{count}}",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "এটা নতুন ফাইল সংলগ্ন কৰা হ'ল",
+      "uploadedCount_other": "{{count}} টা নতুন ফাইল সংলগ্ন কৰা হ'ল"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "শাৰীলৈ উভতি যাওক",
         "notFound": "অভিযোগ পোৱা নগ'ল",
-        "dataPrincipal": "ব্যৱহাৰকাৰী"
+        "dataPrincipal": "ব্যৱহাৰকাৰী",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

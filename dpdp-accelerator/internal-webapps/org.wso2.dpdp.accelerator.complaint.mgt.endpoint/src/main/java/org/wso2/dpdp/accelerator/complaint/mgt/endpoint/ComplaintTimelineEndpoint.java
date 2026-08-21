@@ -60,7 +60,7 @@ public class ComplaintTimelineEndpoint {
     }
 
     @GET
-    @RequireScope("portal:complaints:read:any")
+    @RequireScope
     public Response getTimeline(
             @PathParam("complaintId") String complaintId,
             @QueryParam("fromTime") Long fromTime,

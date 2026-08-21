@@ -46,6 +46,12 @@
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.endpoint</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
     </dependencies>
 
     <build>
@@ -97,6 +103,10 @@
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.common/target"
                                               includes="org.wso2.dpdp.accelerator.common-*.jar"/>
                                 </copy>
+                                <!-- Backend JAX-RS API, not an SPA - ships as a plain WAR so Tomcat
+                                     hot-deploys it normally rather than pre-exploded. -->
+                                <copy file="../../internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/target/api#dpdp#complaints.war"
+                                      tofile="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#complaints.war"/>
                             </target>
                         </configuration>
                     </execution>

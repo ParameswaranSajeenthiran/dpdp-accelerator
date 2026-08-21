@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} दीस मुदत सोंपल्या",
       "overduePlural": "{{count}} दीस मुदत सोंपल्या",
       "daysLeftSingular": "{{count}} दीस उरला",
-      "daysLeftPlural": "{{count}} दीस उरल्यात"
+      "daysLeftPlural": "{{count}} दीस उरल्यात",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "कागाळ मेळ्ळी",
@@ -724,11 +725,11 @@
       "empty": "तुमी अजून खंयचीच कागाळ नोंद करूंक ना.",
       "emptyFiltered": "वेंचून काडिल्ल्या फिल्टराक खंयचीच कागाळ जुळना.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "मजल्या तक्रारींचे फिल्टर",
         "status": "स्थिती",
         "all": "सगळे",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "फिल्टर साफ करात",
+        "clearAriaLabel": "सगळे फिल्टर साफ करात"
       },
       "table": {
         "tableAriaLabel": "म्हज्या कागाळींचो तक्तो",
@@ -745,13 +746,13 @@
       "back": "म्हज्या कागाळींक परत वचात",
       "notFound": "कागाळ मेळ्ळी ना",
       "description": "वर्णन",
-      "submittedOn": "{{date}} दिसा नोंद केल्या",
       "awaitingInfo": {
         "note": "कागाळ अधिकारी तुमच्य कडल्यान आनीक म्हायतीची वाट पळयता. उपकार करून सकयल जाप दियात."
       },
       "resolved": {
         "note": "हे कागाळीची सोडवणूक जाल्या."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "कागाळ नोंद करात",
@@ -809,8 +810,8 @@
       "initialSubmission": "सुरुवातीची नोंद",
       "internalNote": "अंतर्गत",
       "overflowMore": "+{{count}} आनीक",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "एक नवी फायल जोडली",
+      "uploadedCount_other": "{{count}} नव्यो फायली जोडल्यो"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "रांगे कडेन परत वचात",
         "notFound": "कागाळ मेळ्ळी ना",
-        "dataPrincipal": "वापरपी"
+        "dataPrincipal": "वापरपी",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

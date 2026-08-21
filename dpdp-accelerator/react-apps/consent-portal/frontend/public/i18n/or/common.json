@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} ଦିନ ବିଳମ୍ବ",
       "overduePlural": "{{count}} ଦିନ ବିଳମ୍ବ",
       "daysLeftSingular": "{{count}} ଦିନ ବାକି",
-      "daysLeftPlural": "{{count}} ଦିନ ବାକି"
+      "daysLeftPlural": "{{count}} ଦିନ ବାକି",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "ଅଭିଯୋଗ ଗ୍ରହଣ କରାଗଲା",
@@ -724,11 +725,11 @@
       "empty": "ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଅଭିଯୋଗ ଦାଖଲ କରିନାହାଁନ୍ତି.",
       "emptyFiltered": "ଚୟନ କରାଯାଇଥିବା ଫିଲ୍ଟର୍ ସହିତ କୌଣସି ଅଭିଯୋଗ ମେଳ ଖାଉନାହିଁ.",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "ମୋର ଅଭିଯୋଗଗୁଡ଼ିକର ଫିଲ୍ଟର୍",
         "status": "ସ୍ଥିତି",
         "all": "ସମସ୍ତ",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ଫିଲ୍ଟର୍ ସଫା କରନ୍ତୁ",
+        "clearAriaLabel": "ସମସ୍ତ ଫିଲ୍ଟର୍ ସଫା କରନ୍ତୁ"
       },
       "table": {
         "tableAriaLabel": "ମୋର ଅଭିଯୋଗ ଟେବୁଲ୍",
@@ -745,13 +746,13 @@
       "back": "ମୋର ଅଭିଯୋଗଗୁଡ଼ିକୁ ଫେରନ୍ତୁ",
       "notFound": "ଅଭିଯୋଗ ମିଳିଲା ନାହିଁ",
       "description": "ବିବରଣୀ",
-      "submittedOn": "{{date}} ରେ ଦାଖଲ ହୋଇଛି",
       "awaitingInfo": {
         "note": "ଅଭିଯୋଗ ଅଧିକାରୀ ଆପଣଙ୍କଠାରୁ ଅଧିକ ସୂଚନାକୁ ଅପେକ୍ଷା କରିଛନ୍ତି. ଦୟାକରି ତଳେ ଉତ୍ତର ଦିଅନ୍ତୁ."
       },
       "resolved": {
         "note": "ଏହି ଅଭିଯୋଗର ସମାଧାନ ହୋଇଛି."
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "ଏକ ଅଭିଯୋଗ ଦାଖଲ କରନ୍ତୁ",
@@ -809,8 +810,8 @@
       "initialSubmission": "ପ୍ରାରମ୍ଭିକ ଦାଖଲ",
       "internalNote": "ଆଭ୍ୟନ୍ତରୀଣ",
       "overflowMore": "+{{count}} ଅଧିକ",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "ଗୋଟିଏ ନୂଆ ଫାଇଲ୍ ସଂଲଗ୍ନ କରାଗଲା",
+      "uploadedCount_other": "{{count}} ଟି ନୂଆ ଫାଇଲ୍ ସଂଲଗ୍ନ କରାଗଲା"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "ଧାଡିକୁ ଫେରନ୍ତୁ",
         "notFound": "ଅଭିଯୋଗ ମିଳିଲା ନାହିଁ",
-        "dataPrincipal": "ଉପଯୋଗକର୍ତ୍ତା"
+        "dataPrincipal": "ଉପଯୋଗକର୍ତ୍ତା",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

@@ -709,7 +709,8 @@
       "overdueSingular": "{{count}} দিন বিলম্বিত",
       "overduePlural": "{{count}} দিন বিলম্বিত",
       "daysLeftSingular": "{{count}} দিন বাকি",
-      "daysLeftPlural": "{{count}} দিন বাকি"
+      "daysLeftPlural": "{{count}} দিন বাকি",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ গৃহীত হয়েছে",
@@ -724,11 +725,11 @@
       "empty": "আপনি এখনও কোনো অভিযোগ জমা দেননি।",
       "emptyFiltered": "নির্বাচিত ফিল্টারের সাথে কোনো অভিযোগ মেলে না।",
       "filters": {
-        "sectionAriaLabel": "My complaints filters",
+        "sectionAriaLabel": "আমার অভিযোগগুলির ফিল্টার",
         "status": "স্ট্যাটাস",
         "all": "সমস্ত",
-        "clear": "Clear filters",
-        "clearAriaLabel": "Clear all filters"
+        "clear": "ফিল্টার সাফ করুন",
+        "clearAriaLabel": "সমস্ত ফিল্টার সাফ করুন"
       },
       "table": {
         "tableAriaLabel": "আমার অভিযোগের টেবিল",
@@ -745,13 +746,13 @@
       "back": "আমার অভিযোগে ফিরে যান",
       "notFound": "অভিযোগ পাওয়া যায়নি",
       "description": "বিবরণ",
-      "submittedOn": "{{date}} তারিখে জমা দেওয়া হয়েছে",
       "awaitingInfo": {
         "note": "অভিযোগ আধিকারিক আপনার কাছ থেকে আরও তথ্যের জন্য অপেক্ষা করছেন। অনুগ্রহ করে নিচে উত্তর দিন।"
       },
       "resolved": {
         "note": "এই অভিযোগটি মীমাংসা করা হয়েছে।"
-      }
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "একটি অভিযোগ জমা দিন",
@@ -809,8 +810,8 @@
       "initialSubmission": "প্রাথমিক জমাদান",
       "internalNote": "অভ্যন্তরীণ",
       "overflowMore": "আরও +{{count}}টি",
-      "uploadedCount_one": "Attached a new file",
-      "uploadedCount_other": "Attached {{count}} new files"
+      "uploadedCount_one": "একটি নতুন ফাইল সংযুক্ত করা হয়েছে",
+      "uploadedCount_other": "{{count}} টি নতুন ফাইল সংযুক্ত করা হয়েছে"
     },
     "management": {
       "queue": {
@@ -848,7 +849,16 @@
       "case": {
         "back": "সারিতে ফিরে যান",
         "notFound": "অভিযোগ পাওয়া যায়নি",
-        "dataPrincipal": "ব্যবহারকারী"
+        "dataPrincipal": "ব্যবহারকারী",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },
