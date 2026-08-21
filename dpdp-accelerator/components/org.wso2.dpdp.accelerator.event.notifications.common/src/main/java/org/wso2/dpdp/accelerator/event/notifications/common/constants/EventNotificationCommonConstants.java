@@ -76,6 +76,8 @@ public class EventNotificationCommonConstants {
     public static final String ERROR_GETTING_EVENT_PAYLOAD = "Error getting event payload [%s]";
     public static final String ERROR_LISTING_EVENTS = "Error listing events for org [%s]";
     public static final String ERROR_SUBSCRIPTION_OVERLAPPING_PURPOSES = "An active subscription with overlapping purposes already exists for this group/topic.";
+    public static final String ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE =
+            "A subscriber cannot use both webhook and poll delivery modes for the same topic.";
     public static final String ERROR_DUPLICATE_SUBSCRIPTION = "A subscription with the same parameters already exists.";
     public static final String ERROR_DELIVERY_ACK_ALREADY_EXISTS = "Completion evidence already acknowledged for this delivery.";
     public static final String ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS = "Topic has active subscriptions and cannot be deregistered.";

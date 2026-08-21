@@ -92,6 +92,8 @@ public class EventNotificationServiceConstants {
     public static final String CALLBACK_URL_HOST_INVALID_ERROR_MSG = "callbackUrl hostname is invalid.";
     public static final String CALLBACK_URL_NOT_PERMITTED_ERROR_MSG = "Callback URL destination is not permitted.";
     public static final String DUPLICATE_SUBSCRIPTION_ERROR_MSG = "A subscription with the same parameters already exists.";
+    public static final String MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG =
+            "A subscriber cannot use both webhook and poll delivery modes for the same topic.";
     public static final String FAILED_TO_DELETE_SUBSCRIPTION_ERROR_MSG = "Failed to delete subscription.";
     public static final String CALLBACK_URL_HTTPS_REQUIRED_ERROR_MSG = "callbackUrl must use HTTPS scheme in production environment.";
     public static final String WEBHOOK_CHALLENGE_MISMATCH_ERROR_MSG = "Callback URL did not echo back challenge string.";

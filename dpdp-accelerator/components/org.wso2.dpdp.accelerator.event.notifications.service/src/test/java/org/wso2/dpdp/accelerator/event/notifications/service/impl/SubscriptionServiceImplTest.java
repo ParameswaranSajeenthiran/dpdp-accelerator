@@ -286,4 +286,39 @@ public class SubscriptionServiceImplTest {
 
         subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
     }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreatePollSubscriptionWhenWebhookExistsFailsWithConflict() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
+                "WEBHOOK", "https://93.184.216.34:443/callback", "secret1", "ACTIVE",
+                new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
+        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
+                .thenReturn(Collections.singletonList(existingSub));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret2");
+
+        subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateWebhookSubscriptionWhenPollExistsFailsWithConflict() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
+                "POLL", null, "secret1", "ACTIVE",
+                new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
+        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
+                .thenReturn(Collections.singletonList(existingSub));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
+                "https://93.184.216.34:443/callback", "secret2");
+
+        subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
+    }
 }

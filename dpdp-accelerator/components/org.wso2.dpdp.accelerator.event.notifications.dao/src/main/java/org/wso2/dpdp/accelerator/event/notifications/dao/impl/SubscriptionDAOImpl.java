@@ -124,19 +124,17 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                             DeliveryMode existingDelMode = DeliveryMode.fromValueOrDefault(existingDeliveryModeStr,
                                     DeliveryMode.WEBHOOK);
 
+                            if (newDelMode != existingDelMode) {
+                                throw new EventNotificationDuplicateResourceException(
+                                        EventNotificationCommonConstants.ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE);
+                            }
+
                             if (newDelMode == DeliveryMode.WEBHOOK) {
-                                if (existingDelMode != DeliveryMode.WEBHOOK) {
-                                    continue;
-                                }
                                 String newCb = subscription.getCallbackUrl() != null
                                         ? subscription.getCallbackUrl().trim().toLowerCase() : "";
                                 String existCb = existingCallbackUrl != null
                                         ? existingCallbackUrl.trim().toLowerCase() : "";
                                 if (!newCb.equals(existCb)) {
-                                    continue;
-                                }
-                            } else {
-                                if (existingDelMode != DeliveryMode.POLL) {
                                     continue;
                                 }
                             }

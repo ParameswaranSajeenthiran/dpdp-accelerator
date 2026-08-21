@@ -203,9 +203,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG, topicName.trim()),
                     409);
         } catch (EventNotificationDuplicateResourceException e) {
+            String conflictMessage = EventNotificationCommonConstants.ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE
+                    .equals(e.getMessage())
+                            ? EventNotificationServiceConstants.MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG
+                            : EventNotificationServiceConstants.DUPLICATE_SUBSCRIPTION_ERROR_MSG;
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                     EventNotificationServiceConstants.ERROR_TITLE_DUPLICATE_SUBSCRIPTION,
-                    EventNotificationServiceConstants.DUPLICATE_SUBSCRIPTION_ERROR_MSG, 409);
+                    conflictMessage, 409);
         }
 
         if (deliveryMode == DeliveryMode.WEBHOOK) {
@@ -252,17 +256,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             DeliveryMode existingDeliveryMode = DeliveryMode.fromValueOrDefault(existing.getDeliveryMode(),
                     DeliveryMode.WEBHOOK);
 
+            if (existingDeliveryMode != deliveryMode) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                        EventNotificationServiceConstants.ERROR_TITLE_DUPLICATE_SUBSCRIPTION,
+                        EventNotificationServiceConstants.MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG, 409);
+            }
+
             if (deliveryMode == DeliveryMode.WEBHOOK) {
-                if (existingDeliveryMode != DeliveryMode.WEBHOOK) {
-                    continue;
-                }
                 String existingCallbackUrl = existing.getCallbackUrl() != null
                         ? existing.getCallbackUrl().trim().toLowerCase() : "";
                 if (!normalizedCallbackUrl.equals(existingCallbackUrl)) {
-                    continue;
-                }
-            } else {
-                if (existingDeliveryMode != DeliveryMode.POLL) {
                     continue;
                 }
             }

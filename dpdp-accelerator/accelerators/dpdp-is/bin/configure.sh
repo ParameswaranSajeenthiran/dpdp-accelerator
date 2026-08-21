@@ -124,7 +124,7 @@ else
     echo "[3/3] ERROR: could not locate the H2 engine jar; apply the DPDP schema manually."
     exit 2
   fi
-  DPDP_H2_SCRIPT="${WSO2_IS_HOME}/dbscripts/dpdp-accelerator/event-notification/db_schema_h2.sql"
+  DPDP_H2_SCRIPT="${WSO2_IS_HOME}/dbscripts/dpdp-accelerator/event-notification/h2.sql"
   if [ ! -f "${DPDP_H2_SCRIPT}" ]; then
     echo "[3/3] ERROR: no DPDP schema at ${DPDP_H2_SCRIPT}"
     exit 2
