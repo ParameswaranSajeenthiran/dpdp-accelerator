@@ -48,6 +48,11 @@ if [ -d "${PORTAL_PATH}" ]; then
 fi
 rm -f "${WEBAPPS_PATH}/consent-portal.war"
 
+# Likewise for dropins: a stale jar from an older accelerator version (renamed class,
+# version bump) would otherwise sit alongside the new one and load as a duplicate bundle.
+echo "Removing old DPDP accelerator artifacts from the product"
+find "${WSO2_IS_HOME}/repository/components/dropins" -name "org.wso2.dpdp.accelerator.*" -exec rm -f {} \;
+
 echo "Copying accelerator artifacts"
 cp -r "${ACCELERATOR_HOME}"/carbon-home/* "${WSO2_IS_HOME}/"
 

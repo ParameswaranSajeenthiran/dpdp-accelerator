@@ -133,28 +133,13 @@ http_method = "all"
 [tenant_context.rewrite]
 custom_webapps = ["/consent-portal/"]
 
-# The complaint-mgt endpoint is a plain JAX-RS webapp, not part of Identity
-# Server's own API resource framework, so Carbon's session/valve-based
-# "secured" default does not know how to authenticate a request against it -
-# it would demand a Carbon session or Basic auth credentials the browser never
-# has. Unlike the consent-portal entry above (unsecured because it holds no
-# data of its own and defers every real check to IS), this endpoint IS the
-# API: TokenIntrospectionFilter validates the caller's OAuth2 bearer token
-# in-process on every request and enforces the portal:complaints:* scopes
-# itself (see the endpoint module's AuthenticationFilter/ScopeAuthorizationFilter).
-# It must be excluded from Carbon's valve so that filter - not Carbon - is the
-# sole gate.
-[[resource.access_control]]
-context = "(.*)/api/dpdp/complaints(.*)"
-secure = "false"
-http_method = "all"
-
-# Credentials the complaint-mgt endpoint's TokenIntrospectionFilter uses to call
-# this Identity Server's own OAuth2 introspection endpoint (RFC 7662) to
-# validate a caller's bearer token and resolve its subject/scopes. Defaults to
-# the super admin, consistent with this accelerator's local-dev posture
-# elsewhere (see IS_ADMIN_USERNAME/IS_ADMIN_PASSWORD in configure.properties).
-[complaint_mgt.oauth2_introspection]
-endpoint = "https://IS_HOSTNAME:9443/oauth2/introspect"
-username = "IS_ADMIN_USERNAME"
-password = "IS_ADMIN_PASSWORD"
+# Controls the DPDP Consent Portal application/role auto-provisioning that runs
+# on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
+# Set auto_provisioning_enabled = false to manage the application and roles by
+# hand instead - this does not disable the portal itself, only the automatic
+# creation of its application and roles.
+# client_id must match whatever the deployed portal's own configuration expects -
+# changing it here without updating that too will break sign-in.
+[dpdp_accelerator.consent_portal]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_PORTAL"
