@@ -48,6 +48,15 @@ the part `.env.example` genuinely needs to convey.
 `README.md` also lists `Node.js 18+` as the prerequisite, while the rest of the repository
 requires 20.19+/22.12+.
 
+Two more references to things that do not exist:
+
+- `README.md` describes `03.07`, "a `test.describe.serial` chain covering the full admin journey".
+  There is no `03.07` spec, and `grep -rn "describe.serial" tests/` is empty — nothing in the suite
+  uses serial execution. The **Operating principles** section repeats the claim ("Only `03.07` uses
+  `test.describe.serial`").
+- `package.json` defines `"test:demo-data": "playwright test tests/99-demo-data"`, but there is no
+  `tests/99-demo-data` directory, so the script fails with "No tests found".
+
 ### The parallelism claim was false, and is now true (resolved)
 
 Kept as a record; no action needed. The three fixture defects behind this were fixed in

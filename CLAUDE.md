@@ -133,10 +133,14 @@ exempt: it holds wording for admin-created Purposes/Elements and is allowed to b
 
 Runs against a **real, persistent, shared** IS — nothing is mocked, and the environment never
 resets. Consequences that shape every test: assert by unique marker or server-issued ID, never by
-empty lists or row counts. Personas log in **once per run** and the session is cached across
-workers (`fixtures/auth.fixtures.ts`) because IS allows one active session per account. Tests
-delete Elements/Purposes they create but not Consents — the product has no delete-by-id for them,
-so they accumulate.
+empty lists or row counts. Personas log in **once per run**, cached across workers in
+`fixtures/auth.fixtures.ts`. Tests delete Elements/Purposes they create but not Consents — the
+product has no delete-by-id for them, so they accumulate.
+
+**Before writing or changing a test there, read `dpdp-integration-test-suite/AGENTS.md`.** It
+carries the rules that aren't guessable: the crossed directory/test-ID numbering, sourcing locators
+from the frontend's i18n rather than from memory, the leading-slash `goto()` trap, the two
+load-bearing lines in `pageForPersonaState`, and the measured flake profile.
 
 ## Frontend conventions
 
