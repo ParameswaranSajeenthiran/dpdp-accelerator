@@ -35,6 +35,10 @@ export const IS_SCOPES = {
   ELEMENT_VIEW: 'internal_consent_mgt_element_view',
   ELEMENT_CREATE: 'internal_consent_mgt_element_create',
   ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
+  COMPLAINTS_READ_SELF: 'portal:complaints:read:self',
+  COMPLAINTS_WRITE_SELF: 'portal:complaints:write:self',
+  COMPLAINTS_READ_ANY: 'portal:complaints:read:any',
+  COMPLAINTS_WRITE_ANY: 'portal:complaints:write:any',
 } as const
 
 /** Any one of these scopes is enough to unlock the area it guards. */
@@ -53,6 +57,10 @@ export const REQUIRED_SCOPES = {
   PURPOSES_WRITE: [IS_SCOPES.PURPOSE_CREATE, IS_SCOPES.PURPOSE_UPDATE, IS_SCOPES.PURPOSE_DELETE],
   ELEMENTS_READ: [IS_SCOPES.ELEMENT_VIEW],
   ELEMENTS_WRITE: [IS_SCOPES.ELEMENT_CREATE, IS_SCOPES.ELEMENT_DELETE],
+  COMPLAINTS_READ_SELF: [IS_SCOPES.COMPLAINTS_READ_SELF],
+  COMPLAINTS_WRITE_SELF: [IS_SCOPES.COMPLAINTS_WRITE_SELF],
+  COMPLAINTS_READ_ANY: [IS_SCOPES.COMPLAINTS_READ_ANY],
+  COMPLAINTS_WRITE_ANY: [IS_SCOPES.COMPLAINTS_WRITE_ANY],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */

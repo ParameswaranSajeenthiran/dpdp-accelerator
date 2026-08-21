@@ -724,8 +724,11 @@
       "empty": "ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଅଭିଯୋଗ ଦାଖଲ କରିନାହାଁନ୍ତି.",
       "emptyFiltered": "ଚୟନ କରାଯାଇଥିବା ଫିଲ୍ଟର୍ ସହିତ କୌଣସି ଅଭିଯୋଗ ମେଳ ଖାଉନାହିଁ.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "ସ୍ଥିତି",
-        "all": "ସମସ୍ତ"
+        "all": "ସମସ୍ତ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "ମୋର ଅଭିଯୋଗ ଟେବୁଲ୍",
@@ -805,7 +808,9 @@
       "empty": "ଏହି ଅଭିଯୋଗରେ କୌଣସି ଆଟାଚମେଣ୍ଟ ଯୋଡା ଯାଇନାହିଁ.",
       "initialSubmission": "ପ୍ରାରମ୍ଭିକ ଦାଖଲ",
       "internalNote": "ଆଭ୍ୟନ୍ତରୀଣ",
-      "overflowMore": "+{{count}} ଅଧିକ"
+      "overflowMore": "+{{count}} ଅଧିକ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

@@ -724,8 +724,11 @@
       "empty": "नोंथाङा दासिम जेबो अजत गथायाखै।",
       "emptyFiltered": "सायखनाय फिल्टरजों जेबो अजत गोरोबा।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "थासारि",
-        "all": "गासै"
+        "all": "गासै",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "आंनि अजतनि टेबल",
@@ -805,7 +808,9 @@
       "empty": "बे अजतआव जेबो फाइल जोबथापाखै।",
       "initialSubmission": "गुबै गथायनाय",
       "internalNote": "सिंनि",
-      "overflowMore": "+{{count}} बांसिन"
+      "overflowMore": "+{{count}} बांसिन",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

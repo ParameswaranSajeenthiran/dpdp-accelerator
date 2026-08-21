@@ -724,8 +724,11 @@
       "empty": "మీరు ఇంకా ఎలాంటి ఫిర్యాదులు సమర్పించలేదు.",
       "emptyFiltered": "ఎంచుకున్న ఫిల్టర్‌కు ఏ ఫిర్యాదులు సరిపోలలేదు.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "స్థితి",
-        "all": "అన్నీ"
+        "all": "అన్నీ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "నా ఫిర్యాదుల పట్టిక",
@@ -805,7 +808,9 @@
       "empty": "ఈ ఫిర్యాదుకు ఎలాంటి జోడింపులు జోడించబడలేదు.",
       "initialSubmission": "ప్రాథమిక సమర్పణ",
       "internalNote": "అంతర్గతం",
-      "overflowMore": "మరిన్ని +{{count}}"
+      "overflowMore": "మరిన్ని +{{count}}",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

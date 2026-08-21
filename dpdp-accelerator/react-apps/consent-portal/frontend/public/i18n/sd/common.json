@@ -724,8 +724,11 @@
       "empty": "توهان اڃا تائين ڪا به شڪايت جمع ناهي ڪرائي.",
       "emptyFiltered": "چونڊيل فلٽر سان ڪا به شڪايت نٿي ملي.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "حالت",
-        "all": "سڀ"
+        "all": "سڀ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "منهنجي شڪايتن جي ٽيبل",
@@ -805,7 +808,9 @@
       "empty": "هن شڪايت ۾ ڪي به منسلڪات شامل نه ڪيا ويا آهن.",
       "initialSubmission": "شروعاتي جمع ڪيل",
       "internalNote": "اندروني",
-      "overflowMore": "+{{count}} وڌيڪ"
+      "overflowMore": "+{{count}} وڌيڪ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

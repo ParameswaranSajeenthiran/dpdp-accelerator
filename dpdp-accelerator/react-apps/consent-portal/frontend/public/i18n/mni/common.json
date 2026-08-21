@@ -724,8 +724,11 @@
       "empty": "নহাক্না ৱাকৎ অমত্তা পিশিন্দ্রি।",
       "emptyFiltered": "খনব ফিল্টরগা চান্নবা ৱাকৎ লৈত্রে।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "ফিভম",
-        "all": "পুম্নমক"
+        "all": "পুম্নমক",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "ইগী ৱাকৎশিংগী টেবিল",
@@ -805,7 +808,9 @@
       "empty": "ৱাকৎ অসিদা ফাইল হাপত্রিবনি।",
       "initialSubmission": "অহানবা পিশিনবা",
       "internalNote": "মনুংগী",
-      "overflowMore": "+{{count}} হেনগৎলি"
+      "overflowMore": "+{{count}} হেনগৎলি",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

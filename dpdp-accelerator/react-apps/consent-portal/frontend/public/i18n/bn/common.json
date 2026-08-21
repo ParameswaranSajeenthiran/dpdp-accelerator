@@ -724,8 +724,11 @@
       "empty": "আপনি এখনও কোনো অভিযোগ জমা দেননি।",
       "emptyFiltered": "নির্বাচিত ফিল্টারের সাথে কোনো অভিযোগ মেলে না।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "স্ট্যাটাস",
-        "all": "সমস্ত"
+        "all": "সমস্ত",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "আমার অভিযোগের টেবিল",
@@ -805,7 +808,9 @@
       "empty": "এই অভিযোগে কোনো সংযুক্তি যোগ করা হয়নি।",
       "initialSubmission": "প্রাথমিক জমাদান",
       "internalNote": "অভ্যন্তরীণ",
-      "overflowMore": "আরও +{{count}}টি"
+      "overflowMore": "আরও +{{count}}টি",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

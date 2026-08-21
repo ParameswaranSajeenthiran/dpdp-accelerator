@@ -724,8 +724,11 @@
       "empty": "तपाईंले अझै कुनै उजुरी दर्ता गर्नुभएको छैन।",
       "emptyFiltered": "चयन गरिएको फिल्टरसँग कुनै उजुरी मेल खाँदैन।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "स्थिति",
-        "all": "सबै"
+        "all": "सबै",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "मेरो उजुरी तालिका",
@@ -805,7 +808,9 @@
       "empty": "यस उजुरीमा कुनै संलग्नक थपिएको छैन।",
       "initialSubmission": "प्रारम्भिक उजुरी",
       "internalNote": "आन्तरिक",
-      "overflowMore": "+{{count}} थप"
+      "overflowMore": "+{{count}} थप",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

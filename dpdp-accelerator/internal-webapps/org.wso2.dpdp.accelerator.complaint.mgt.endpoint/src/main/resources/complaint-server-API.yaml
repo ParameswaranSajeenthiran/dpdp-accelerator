@@ -1,0 +1,1326 @@
+openapi: 3.0.3
+info:
+  title: Complaint Server API
+  description: >
+    Standalone complaint-server API.
+
+
+    Endpoints are split into two namespaces:
+
+    - `/me/complaints/*` — for the authenticated Data Principal (normal user)
+      acting on their own complaints. Identity is resolved server-side from
+      the caller's bearer access token (its `sub` claim, via introspection)
+      — the same mechanism WSO2 IS's own /me consent endpoints use. There
+      is no user-id header or body field, so a token belonging to one user
+      can never be used to act on another user's complaint.
+    - `/complaints/*` — for COMPLAINT_OFFICER / SYSTEM actors managing
+      complaints across the org (grouped under the "Complaint Management"
+      tags below). These endpoints expose the full set of capabilities
+      (internal notes, status transitions, org-wide search) that a normal
+      user is not permitted to use.
+
+    Uploading one or more attachments records a timeline entry for the
+    upload and binds every attachment in that call to it, so the timeline
+    shows which entry a given attachment was added under (see
+    ComplaintTimelineEntryResponse.attachments). Each attachment still
+    carries its own `isPublic` flag governing whether the Data Principal
+    can see it. There is a single upload endpoint per namespace that can
+    be called at any point in the complaint's lifecycle.
+  version: "2.9.0"
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  - url: http://0.0.0.0:8091/api/v1
+    description: Local development
+tags:
+  - name: Me - Complaints
+    description: Data Principal (normal user) operations on their own complaints
+  - name: Me - Comments
+    description: Data Principal adding public replies to their own complaint
+  - name: Me - Timeline
+    description: Data Principal viewing the public timeline of their own complaint
+  - name: Me - Attachments
+    description: Data Principal uploading/downloading attachments on their own complaint
+  - name: Complaint Management - Complaints
+    description: Officer/admin operations across all complaints in the org
+  - name: Complaint Management - Comments
+    description: Officer adding replies or internal notes, optionally transitioning status
+  - name: Complaint Management - Timeline
+    description: Officer viewing the full timeline (comments, internal notes, status changes)
+  - name: Complaint Management - Attachments
+    description: Officer uploading/downloading attachments on any complaint
+
+paths:
+  # ===========================================================================
+  # ME (Data Principal / normal user) namespace
+  # ===========================================================================
+  /me/complaints:
+    post:
+      tags: [Me - Complaints]
+      summary: Submit a new complaint (self)
+      description: >
+        Creates a complaint on behalf of the authenticated Data Principal.
+        The owning userId is resolved server-side from the bearer
+        token's `sub` claim, not from the request body.
+
+        Required scope: `portal:complaints:write:self`
+      operationId: meCreateComplaint
+      security:
+        - OAuth2:
+            - portal:complaints:write:self
+      parameters:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeComplaintCreateRequest'
+      responses:
+        '201':
+          description: Complaint created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    get:
+      tags: [Me - Complaints]
+      summary: List my complaints
+      description: >
+        Returns only complaints owned by the authenticated Data Principal
+        (scoped by the caller's bearer token). 
+
+        Required scope: `portal:complaints:read:self`
+      operationId: meListComplaints
+      security:
+        - OAuth2:
+            - portal:complaints:read:self
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ComplaintStatus'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: sort
+          in: query
+          required: false
+          description: >
+            Default -updatedTime; only updatedTime/submittedTime/statutoryDueTime
+            sortable, "-" prefix for descending.
+          schema:
+            type: string
+            default: "-updatedTime"
+      responses:
+        '200':
+          description: List of the caller's own complaints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}:
+    get:
+      tags: [Me - Complaints]
+      summary: Get one of my complaints
+      description: >
+        Returns the complaint only if it is owned by the authenticated
+        Data Principal. Returns 404 (not 403) if the complaint belongs to
+        another user, to avoid confirming the ID's existence to a caller
+        who shouldn't see it. Does not include attachments — use
+        GET .../timeline for those.
+
+        Required scope: `portal:complaints:read:self`
+      operationId: meGetComplaint
+      security:
+        - OAuth2:
+            - portal:complaints:read:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      responses:
+        '200':
+          description: Complaint core fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRecord'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}/attachments:
+    post:
+      tags: [Me - Attachments]
+      summary: Upload and bind attachments to my complaint
+      description: >
+        ```
+        curl -X POST "http://localhost:8090/api/v1/me/complaints/{complaintId}/attachments" \
+        -H "Authorization: Bearer {access_token}" \
+        -F "file=@incident-screenshot.png;type=image/png" \
+        -F "file=@breach-report.pdf;type=application/pdf"
+        ```
+        Only permitted if the complaint is owned by the authenticated user.
+        Attachments can be uploaded at any point in the complaint's
+        lifecycle — at initial submission or later as follow-up evidence.
+        Attachments uploaded here are always `isPublic=true`. This call
+        also records one timeline entry for the upload (actor: the caller,
+        role USER) and binds every attachment in the request to it — see
+        ComplaintTimelineEntryResponse.attachments.
+
+        Required scope: `portal:complaints:write:self`
+      operationId: meUploadComplaintAttachment
+      security:
+        - OAuth2:
+            - portal:complaints:write:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: One or more files to upload in a single request.
+              encoding:
+                file:
+                  contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
+      responses:
+        '201':
+          description: Attachments stored and bound directly to the complaint
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComplaintAttachmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}/attachments/{attachmentId}:
+    get:
+      tags: [Me - Attachments]
+      summary: Download an attachment from my complaint
+      description: >
+        Returns the attachment's metadata together with its file content,
+        base64-encoded. Only attachments with `isPublic=true` are
+        accessible here.
+
+        Required scope: `portal:complaints:read:self`
+      operationId: meDownloadComplaintAttachment
+      security:
+        - OAuth2:
+            - portal:complaints:read:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attachment metadata and base64-encoded file content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintAttachmentDownloadResponse'
+        '403':
+          description: >
+            Forbidden — attachment is marked isPublic=false (CO-4030)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}/timeline:
+    get:
+      tags: [Me - Timeline]
+      summary: Get the public timeline of my complaint
+      description: >
+        Returns only the comment and status-change entries marked
+        isPublic=true — internal officer notes are never returned here.
+        Each entry's `attachments` lists the isPublic=true attachments
+        uploaded alongside it.
+
+        Required scope: `portal:complaints:read:self`
+      operationId: meGetComplaintTimeline
+      security:
+        - OAuth2:
+            - portal:complaints:read:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+        - name: fromTime
+          in: query
+          required: false
+          description: Filter to entries created at or after this time (Unix timestamp, milliseconds).
+          schema:
+            type: integer
+            format: int64
+        - name: toTime
+          in: query
+          required: false
+          description: Filter to entries created at or before this time (Unix timestamp, milliseconds).
+          schema:
+            type: integer
+            format: int64
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Public timeline entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}/comments:
+    post:
+      tags: [Me - Comments]
+      summary: Reply to my own complaint, optionally transitioning status
+      description: >
+        Adds a public reply from the Data Principal. 
+
+        Required scope: `portal:complaints:write:self`
+      operationId: meAddComplaintMessage
+      security:
+        - OAuth2:
+            - portal:complaints:write:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeComplaintMessageRequest'
+            example:
+              message: "That resolves it, thanks — closing this out."
+              toStatus: RESOLVED
+      responses:
+        '200':
+          description: >
+            The created comment. If toStatus was supplied,
+            fromStatus/toStatus are populated on this same entry to
+            reflect the transition that was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintCommentCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: >
+            Invalid state transition (CO-4090) — only returned when
+            toStatus was supplied and the requested transition is not
+            allowed from the complaint's current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /me/complaints/{complaintId}/status:
+    post:
+      tags: [Me - Complaints]
+      summary: Transition the status of my own complaint
+      description: >
+        Lets the Data Principal change the status of their own complaint
+        directly — e.g. 
+
+        Required scope: `portal:complaints:write:self`
+      operationId: meUpdateComplaintStatus
+      security:
+        - OAuth2:
+            - portal:complaints:write:self
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeComplaintStatusUpdateRequest'
+            example:
+              toStatus: RESOLVED
+      responses:
+        '200':
+          description: Status transition confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintStatusUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Invalid state transition (CO-4090)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ===========================================================================
+  # COMPLAINT MANAGEMENT (Officer / Admin) namespace
+  # ===========================================================================
+  /complaints:
+    post:
+      tags: [Complaint Management - Complaints]
+      summary: Create a complaint on behalf of a Data Principal
+      description: >
+        For officer-assisted intake — e.g. a complaint lodged by phone,
+        in person, or on paper and entered into the system by an officer,
+        rather than submitted by the Data Principal themselves via
+        POST /me/complaints. 
+
+        Required scope: `portal:complaints:write:any`
+      operationId: cmCreateComplaint
+      security:
+        - OAuth2:
+            - portal:complaints:write:any
+      parameters:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmComplaintCreateRequest'
+            example:
+              userId: "65fa2b1c9e"
+              subjectCategory: "DATA_BREACH"
+              description: "Complainant called in to report a data breach; recorded on their behalf."
+
+      responses:
+        '201':
+          description: Complaint created on behalf of the specified userId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    get:
+      tags: [Complaint Management - Complaints]
+      summary: List/search complaints (org-wide)
+      description: >
+        Officer/admin search across all complaints in the org, not
+        restricted to a single user.
+
+        Required scope: `portal:complaints:read:any`
+      operationId: cmListComplaints
+      security:
+        - OAuth2:
+            - portal:complaints:read:any
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ComplaintStatus'
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ComplaintPriority'
+        - name: userId
+          in: query
+          required: false
+          description: Exact match — filter to a specific Data Principal
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "-updatedTime"
+      responses:
+        '200':
+          description: List of complaints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}:
+    get:
+      tags: [Complaint Management - Complaints]
+      summary: Get any complaint
+      description: >
+
+        Required scope: `portal:complaints:read:any`
+      operationId: cmGetComplaint
+      security:
+        - OAuth2:
+            - portal:complaints:read:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      responses:
+        '200':
+          description: >
+            Complaint core fields. Does not include attachments — use
+            GET .../timeline for those.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintRecord'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}/attachments:
+    post:
+      tags: [Complaint Management - Attachments]
+      summary: Upload and bind attachments to a complaint (officer)
+      description: >
+        For an officer attaching supporting material — either as part of
+        officer-assisted intake immediately following POST /complaints,
+        or later as investigation evidence gathered during handling.
+        Attachments can be uploaded at any point in the complaint's
+        lifecycle. This call also records one timeline entry for the
+        upload (actor: the caller, resolved from the bearer token, role
+        COMPLAINT_OFFICER) and binds every attachment in the request to
+        it — see ComplaintTimelineEntryResponse.attachments.
+
+        By default, uploaded attachments are `isPublic=true` (visible to
+        the Data Principal via the /me endpoints). Set `isPublic=false`
+        to upload internal evidence that should never be exposed to the
+        Data Principal — this also marks the upload's timeline entry
+        internal.
+
+        Required scope: `portal:complaints:write:any`
+      operationId: cmUploadComplaintAttachment
+      security:
+        - OAuth2:
+            - portal:complaints:write:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                isPublic:
+                  type: boolean
+                  default: true
+                  description: >
+                    Whether these attachments should be visible to the
+                    Data Principal. Defaults to true.
+              encoding:
+                file:
+                  contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
+      responses:
+        '201':
+          description: Attachments stored and bound directly to the complaint
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComplaintAttachmentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}/attachments/{attachmentId}:
+    get:
+      tags: [Complaint Management - Attachments]
+      summary: Download any attachment by attachmentId
+      description: >
+        Officers have full access regardless of the `isPublic` flag on
+        the attachment.
+
+        Required scope: `portal:complaints:read:any`
+      operationId: cmDownloadComplaintAttachment
+      security:
+        - OAuth2:
+            - portal:complaints:read:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attachment metadata and base64-encoded file content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintAttachmentDownloadResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}/timeline:
+    get:
+      tags: [Complaint Management - Timeline]
+      summary: Get the full complaint timeline
+      description: >
+        Returns every entry regardless of isPublic — comments, internal
+        notes, and status changes, in chronological order. Each entry's
+        `attachments` lists every attachment uploaded alongside it,
+        regardless of isPublic.
+
+        Required scope: `portal:complaints:read:any`
+      operationId: cmGetComplaintTimeline
+      security:
+        - OAuth2:
+            - portal:complaints:read:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+        - name: fromTime
+          in: query
+          required: false
+          description: Filter to entries created at or after this time (Unix timestamp, milliseconds).
+          schema:
+            type: integer
+            format: int64
+        - name: toTime
+          in: query
+          required: false
+          description: Filter to entries created at or before this time (Unix timestamp, milliseconds).
+          schema:
+            type: integer
+            format: int64
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Timeline entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}/comments:
+    post:
+      tags: [Complaint Management - Comments]
+      summary: Append a comment or internal note, optionally transitioning status
+      description: >
+        Adds a comment or internal note to the complaint. The acting
+        officer/system identity and role are resolved server-side from the
+        caller's bearer access token, not supplied in the body. Optionally
+        accepts toStatus to transition the complaint's status in the same
+        call — useful for an officer replying with a message that also
+        resolves, reopens, or otherwise moves the complaint. If toStatus is
+        omitted, this behaves as a plain comment/note with no status
+        change. See POST /complaints/{complaintId}/status
+        for status-only transitions with no accompanying message (e.g.
+        automated SYSTEM transitions).
+
+        Required scope: `portal:complaints:write:any`
+      operationId: cmAddComplaintMessage
+      security:
+        - OAuth2:
+            - portal:complaints:write:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CmComplaintMessageRequest'
+            example:
+              message: "Confirmed and resolved — thanks for the details."
+              isPublic: true
+              toStatus: RESOLVED
+      responses:
+        '200':
+          description: The created comment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintCommentCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: Forbidden (CO-4030)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Invalid state transition (CO-4090)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /complaints/{complaintId}/status:
+    post:
+      tags: [Complaint Management - Complaints]
+      summary: Transition complaint status (no message)
+      description: >
+        Status-only transition with no accompanying comment — intended for
+        automated/SYSTEM transitions (e.g. an SLA monitor auto-closing a
+        complaint) or an officer changing status without posting a reply.
+        For an officer transitioning status while also leaving a message,
+        use POST /complaints/{complaintId}/comments
+        with toStatus set instead.
+
+        Required scope: `portal:complaints:write:any`
+      operationId: cmUpdateComplaintStatus
+      security:
+        - OAuth2:
+            - portal:complaints:write:any
+      parameters:
+        - $ref: '#/components/parameters/ComplaintId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComplaintStatusUpdateRequest'
+            example:
+              toStatus: RESOLVED
+              note: "Resolved after internal review."
+      responses:
+        '200':
+          description: Status transition confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintStatusUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Invalid state transition (CO-4090)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: >
+        WSO2 IS-issued OAuth2 access token. The caller's identity (userId)
+        is always resolved from the token's `sub` claim via introspection
+        — the same mechanism WSO2 IS's own /me consent endpoints use;
+        there is no user-id header or body field on /me endpoints, so a
+        token belonging to one user can never be used to act on another
+        user's complaint. Scopes additionally gate which resource breadth
+        (self vs any) and which HTTP verbs the token is authorized for:
+        - `portal:complaints:read:self` — GET on /me/* endpoints
+        - `portal:complaints:write:self` — POST/PUT/DELETE on /me/* endpoints
+        - `portal:complaints:read:any` — GET on /complaints/* (officer/admin) endpoints
+        - `portal:complaints:write:any` — POST/PUT/DELETE on /complaints/* (officer/admin) endpoints
+      flows:
+        authorizationCode:
+          authorizationUrl: https://localhost:9443/oauth2/authorize
+          tokenUrl: https://localhost:9443/oauth2/token
+          scopes:
+            portal:complaints:read:self: Read the caller's own complaints, comments, timeline, and attachments
+            portal:complaints:write:self: Create or update the caller's own complaints, comments, attachments, and status
+            portal:complaints:read:any: Read any complaint in the org (officer/admin)
+            portal:complaints:write:any: Create or update any complaint in the org (officer/admin)
+  parameters:
+    ComplaintId:
+      name: complaintId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request body (CO-4001)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation failed (CO-4002)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Complaint not found (CO-4040)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalError:
+      description: Internal error (CO-5000)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    ComplaintCategory:
+      type: string
+      enum:
+        - DATA_BREACH
+        - UNAUTHORIZED_DATA_SHARING
+        - CONSENT_WITHDRAWN_DATA_STILL_USED
+        - PURPOSE_VIOLATION
+        - DATA_ERASURE_NOT_COMPLETED
+        - DATA_CORRECTION_NOT_COMPLETED
+        - CONSENT_LIFECYCLE_ISSUE
+        - DATA_ACCESS_DENIED
+        - EXCESSIVE_DATA_COLLECTION
+        - OTHER
+    ComplaintPriority:
+      type: string
+      description: Server-derived, never client-supplied
+      enum: [CRITICAL, HIGH, MEDIUM, LOW]
+    ComplaintStatus:
+      type: string
+      enum: [OPEN, IN_PROGRESS, AWAITING_COMPLAINT_INFO, AWAITING_INTERNAL_REVIEW, RESOLVED]
+    ComplaintTimelineEntryType:
+      type: string
+      enum: [STATUS_CHANGE, COMMENT, INTERNAL_NOTE]
+    ComplaintActorRole:
+      type: string
+      enum: [USER, COMPLAINT_OFFICER, SYSTEM]
+    ErrorEnvelope:
+      type: object
+      required: [code, message, description, traceId]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        description:
+          type: string
+          maxLength: 1000
+        traceId:
+          type: string
+          format: uuid
+    ComplaintAttachmentResponse:
+      type: object
+      required: [attachmentId, fileName, contentType, sizeBytes, isPublic, uploadedTime]
+      properties:
+        attachmentId:
+          type: string
+        complaintEventId:
+          type: string
+          format: uuid
+          nullable: true
+          description: >
+            The timeline entry this attachment was uploaded under - see
+            ComplaintTimelineEntryResponse.attachments.
+        fileName:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+        isPublic:
+          type: boolean
+          description: >
+            Whether this attachment is visible to the Data Principal via
+            the /me endpoints. Always true for attachments uploaded
+            through /me/complaints/{complaintId}/attachments.
+        uploadedTime:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+    ComplaintCommentCreateResponse:
+      type: object
+      required: [id, actorUserId, actorRole, message, isPublic, fromStatus, toStatus, createdTime]
+      properties:
+        id:
+          type: string
+          format: uuid
+        actorUserId:
+          type: string
+        actorRole:
+          $ref: '#/components/schemas/ComplaintActorRole'
+        message:
+          type: string
+        isPublic:
+          type: boolean
+        fromStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+        toStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+        createdTime:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+    ComplaintTimelineEntryResponse:
+      type: object
+      description: >
+        Every attachment uploaded alongside this entry (an attachment
+        upload call records exactly one entry and binds every file in
+        that call to it) - empty for entries that are not an attachment
+        upload. Use GET .../attachments/{attachmentId} to download one.
+      required: [id, type, isPublic, actorRole, message, createdTime, attachments]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/ComplaintTimelineEntryType'
+        isPublic:
+          type: boolean
+        actorUserId:
+          type: string
+          nullable: true
+        actorUserName:
+          type: string
+          nullable: true
+          description: >
+            Human-readable display name for actorUserId, when the identity
+            provider resolved one at the time this entry was recorded. Null
+            for older entries recorded before this field existed, or when
+            no display name could be resolved - callers should fall back
+            to actorUserId for display in that case.
+        actorRole:
+          $ref: '#/components/schemas/ComplaintActorRole'
+        message:
+          type: string
+        fromStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+        toStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+        createdTime:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplaintAttachmentResponse'
+    ComplaintCreateResponse:
+      type: object
+      required:
+        - id
+        - subjectCategory
+        - priority
+        - status
+        - userId
+        - description
+        - submittedAt
+        - updatedAt
+        - statutoryDueDate
+      properties:
+        id:
+          type: string
+          format: uuid
+        subjectCategory:
+          $ref: '#/components/schemas/ComplaintCategory'
+        priority:
+          $ref: '#/components/schemas/ComplaintPriority'
+        status:
+          $ref: '#/components/schemas/ComplaintStatus'
+        userId:
+          type: string
+        userName:
+          type: string
+          nullable: true
+          description: >
+            Human-readable display name for userId, resolved from the
+            submitter's token at creation time when available. Null when
+            an officer lodged this on the Data Principal's behalf (no
+            resolvable name for that user) or for complaints predating
+            this field.
+        description:
+          type: string
+        submittedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        updatedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        statutoryDueDate:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+    ComplaintRecord:
+      type: object
+      description: >
+        Does not include attachments — use GET .../timeline for the
+        complaint's attachments (nested under the timeline entry each was
+        uploaded with) or GET .../attachments/{attachmentId} to download a
+        specific one.
+      required:
+        - id
+        - subjectCategory
+        - priority
+        - status
+        - userId
+        - description
+        - submittedAt
+        - updatedAt
+        - statutoryDueDate
+      properties:
+        id:
+          type: string
+          format: uuid
+        subjectCategory:
+          $ref: '#/components/schemas/ComplaintCategory'
+        priority:
+          $ref: '#/components/schemas/ComplaintPriority'
+        status:
+          $ref: '#/components/schemas/ComplaintStatus'
+        userId:
+          type: string
+        userName:
+          type: string
+          nullable: true
+          description: >
+            Human-readable display name for userId - see
+            ComplaintCreateResponse.userName.
+        description:
+          type: string
+        submittedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        updatedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        statutoryDueDate:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+    ComplaintListResponse:
+      type: object
+      required: [data, metadata]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplaintRecord'
+        metadata:
+          type: object
+          required: [total, offset, count, limit]
+          properties:
+            total:
+              type: integer
+            offset:
+              type: integer
+            count:
+              type: integer
+            limit:
+              type: integer
+    TimelineListResponse:
+      type: object
+      description: >
+        Each entry in `data` carries the attachments uploaded alongside it
+        under `attachments` (see ComplaintTimelineEntryResponse) - there is
+        no separate complaint-wide attachments list here; use
+        GET /complaints/{complaintId} for that. Filtered to isPublic=true
+        for /me callers; full list for officer/admin callers.
+      required: [data, metadata]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplaintTimelineEntryResponse'
+        metadata:
+          type: object
+          required: [total, offset, count, limit]
+          properties:
+            total:
+              type: integer
+            offset:
+              type: integer
+            count:
+              type: integer
+            limit:
+              type: integer
+    ComplaintStatusUpdateResponse:
+      type: object
+      required: [message, toStatus, updatedAt]
+      properties:
+        message:
+          type: string
+        toStatus:
+          $ref: '#/components/schemas/ComplaintStatus'
+        updatedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+
+    # ---- Me (Data Principal) request schemas ----
+    MeComplaintCreateRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /me/complaints. No userId field — the
+        owner is the authenticated caller, identified via their bearer
+        access token (sub claim).
+      required: [subjectCategory, description]
+      properties:
+        subjectCategory:
+          $ref: '#/components/schemas/ComplaintCategory'
+        description:
+          type: string
+          maxLength: 5000
+      example:
+        subjectCategory: "DATA_BREACH"
+        description: "My personal information was exposed due to a security incident on the platform."
+    MeComplaintMessageRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /me/complaints/{complaintId}/comments.
+        actorRole is implicitly USER and isPublic is implicitly true — a
+        normal user cannot post an internal note. toStatus is optional;
+        when supplied, the complaint is transitioned to that status in the
+        same call (see MeComplaintStatusUpdateRequest for the status-only
+        equivalent).
+      required: [message]
+      properties:
+        message:
+          type: string
+        toStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+          description: >
+            Optional. If present, transitions the complaint to this status
+            in the same call as posting the reply. Omit for a plain reply
+            with no status change.
+    MeComplaintStatusUpdateRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /me/complaints/{complaintId}/status. Only
+        toStatus is accepted — no note field, and no actorUserId/actorRole
+        (the caller's identity, role USER, is resolved from the bearer
+        token, same as every other /me endpoint). Subject to the same
+        state-machine rules as POST /complaints/{complaintId}/status
+        (invalid transitions return 409 CO-4090).
+      required: [toStatus]
+      properties:
+        toStatus:
+          $ref: '#/components/schemas/ComplaintStatus'
+
+    # ---- Complaint Management (Officer/Admin) request schemas ----
+    CmComplaintCreateRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /complaints (officer-assisted intake).
+        Unlike MeComplaintCreateRequest, userId is required — the officer
+        is creating this on behalf of a Data Principal who is not the
+        caller. actorUserId/actorRole identify who performed the intake
+        for audit purposes; they are not the complaint's owner.
+      required: [userId, subjectCategory, description, actorUserId, actorRole]
+      properties:
+        userId:
+          type: string
+          description: The Data Principal on whose behalf this complaint is being lodged.
+        subjectCategory:
+          $ref: '#/components/schemas/ComplaintCategory'
+        description:
+          type: string
+          maxLength: 5000
+        actorUserId:
+          type: string
+          description: Identity of the officer (or SYSTEM process) performing the intake.
+        actorRole:
+          type: string
+          enum: [COMPLAINT_OFFICER, SYSTEM]
+    CmComplaintMessageRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /complaints/{complaintId}/comments. No
+        actorUserId/actorRole — the acting officer/system's identity and
+        role are resolved server-side from the caller's bearer token,
+        same as the /me endpoints. toStatus is optional; when supplied,
+        the complaint is transitioned to that status as part of the same
+        call and the transition is recorded on this same timeline entry.
+      required: [message, isPublic]
+      properties:
+        message:
+          type: string
+        isPublic:
+          type: boolean
+          description: >
+            true to post a shared reply visible to the Data Principal;
+            false for an officer-internal note.
+        toStatus:
+          allOf:
+            - $ref: '#/components/schemas/ComplaintStatus'
+          nullable: true
+    ComplaintStatusUpdateRequest:
+      type: object
+      description: >
+        Pure-JSON body for POST /complaints/{complaintId}/status
+        — a status-only transition with no accompanying message. No
+        actorUserId/actorRole - the acting officer's identity (role
+        COMPLAINT_OFFICER) is resolved from the bearer token, never
+        accepted from the request body.
+      required: [toStatus, note]
+      properties:
+        toStatus:
+          $ref: '#/components/schemas/ComplaintStatus'
+        note:
+          type: string
+
+    ComplaintAttachmentDownloadResponse:
+      type: object
+      required: [attachmentId, fileName, contentType, uploadedTime, content]
+      properties:
+        attachmentId:
+          type: string
+        fileName:
+          type: string
+        contentType:
+          type: string
+        uploadedTime:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds.
+        content:
+          type: string
+          format: byte

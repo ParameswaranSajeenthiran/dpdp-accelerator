@@ -724,8 +724,11 @@
       "empty": "भवता अद्यापि कोऽपि आक्षेपः न समर्पितः।",
       "emptyFiltered": "चयनित-शोधकेन सह कोऽपि आक्षेपः न मिलति।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "स्थितिः",
-        "all": "सर्वम्"
+        "all": "सर्वम्",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "मम आक्षेपाणां सारणी",
@@ -805,7 +808,9 @@
       "empty": "अस्मिन् आक्षेपे कानिपि संलग्नानि न योजितानि।",
       "initialSubmission": "प्रारम्भिक-समर्पणम्",
       "internalNote": "आन्तरिकम्",
-      "overflowMore": "+{{count}} अधिकम्"
+      "overflowMore": "+{{count}} अधिकम्",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

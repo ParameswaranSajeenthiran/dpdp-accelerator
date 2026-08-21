@@ -16,7 +16,10 @@
 # under the License.
 #
 # Registers the consent portal as a public OAuth application on a RUNNING
-# Identity Server, for one tenant.
+# Identity Server, for one tenant. Also provisions the complaint-mgt endpoint's
+# API resource and scopes - the portal's complaint UI is served from the same
+# application, but (unlike consent-mgt v2) that API is not built into Identity
+# Server, so nothing auto-registers it.
 #
 # The portal is a single page application: it holds no client secret and
 # proves possession of the authorization code with PKCE instead. Its tokens
@@ -54,7 +57,17 @@ ADMIN_PASS="${IS_ADMIN_PASSWORD:-admin}"
 CLIENT_ID="DPDP_CONSENT_PORTAL"
 ADMIN_ROLE="dpdp-consent-admin"
 USER_ROLE="dpdp-consent-user"
+COMPLAINT_OFFICER_ROLE="dpdp-complaint-officer"
 APP_NAME="DPDP Consent Portal"
+
+# The complaint-mgt endpoint is a standalone webapp, not a built-in Identity
+# Server API, so - unlike consent-mgt v2 - nothing auto-registers it as an API
+# resource. This script creates it. Identifier is an opaque label (there is no
+# path convention to match since these scopes are custom, not IS-issued).
+COMPLAINT_API_IDENTIFIER="/api/dpdp/complaints"
+COMPLAINT_API_NAME="Complaint Management API"
+COMPLAINT_SELF_SCOPES=("portal:complaints:read:self" "portal:complaints:write:self")
+COMPLAINT_OFFICER_SCOPES=("portal:complaints:read:any" "portal:complaints:write:any")
 
 usage() {
   cat <<'USAGE'
@@ -172,7 +185,7 @@ case "${STATUS:-000}" in
 esac
 
 # ------------------------------------------------------------------ application
-echo "[1/5] Registering ${CLIENT_ID}"
+echo "[1/8] Registering ${CLIENT_ID}"
 APP_ID=$("${CURL[@]}" --get --data-urlencode "filter=clientId eq ${CLIENT_ID}" \
   "${API}/api/server/v1/applications" | json "d['applications'][0]['id'] if d.get('applications') else ''")
 
@@ -206,7 +219,7 @@ PY
 fi
 
 # ------------------------------------------------------- public client and PKCE
-echo "[2/5] Making it a public client with bound tokens"
+echo "[2/8] Making it a public client with bound tokens"
 # The redirect pattern accepts the portal home with or without its trailing
 # slash: the same URL serves as sign-in and post sign-out destination.
 OIDC_BODY=$(python3 - "${CLIENT_ID}" "${BASE}" "${TENANT_PATH}" <<'PY'
@@ -263,7 +276,7 @@ mutate "requesting the username claim" -X PATCH -H 'Content-Type: application/js
   }' "${API}/api/server/v1/applications/${APP_ID}"
 
 # ------------------------------------------------------------- API authorization
-echo "[3/5] Authorizing the consent management APIs"
+echo "[3/8] Authorizing the consent management APIs"
 ALL_SCOPES=""
 for IDENTIFIER in \
   "/api/identity/consent-mgt/v2.0/consents" \
@@ -288,8 +301,70 @@ for IDENTIFIER in \
   echo "      ${IDENTIFIER}"
 done
 
+# ---------------------------------------------------------- complaint API resource
+# Unlike consent-mgt v2, this API resource does not pre-exist on a stock
+# Identity Server - it belongs to our own complaint-mgt endpoint webapp, not to
+# IS itself. Create it (or bring its scope list up to date) before it can be
+# authorized for the application below.
+echo "[4/8] Registering the ${COMPLAINT_API_NAME}"
+COMPLAINT_ALL_SCOPES=("${COMPLAINT_SELF_SCOPES[@]}" "${COMPLAINT_OFFICER_SCOPES[@]}")
+
+COMPLAINT_RESOURCE=$("${CURL[@]}" --get --data-urlencode "filter=identifier eq ${COMPLAINT_API_IDENTIFIER}" \
+  "${API}/api/server/v1/api-resources" | json "d['apiResources'][0]['id'] if d.get('apiResources') else ''")
+
+COMPLAINT_SCOPES_BODY=$(python3 - "${COMPLAINT_ALL_SCOPES[@]}" <<'PY'
+import json, sys
+names = sys.argv[1:]
+print(json.dumps([{"name": n, "displayName": n, "description": n} for n in names]))
+PY
+)
+
+if [ -n "${COMPLAINT_RESOURCE}" ]; then
+  # Replacing the whole scope list (not adding one at a time) keeps this in
+  # sync when a release adds or renames a scope, the same reasoning as the
+  # role-permission replace below.
+  mutate "updating ${COMPLAINT_API_NAME} scopes" -X PUT -H 'Content-Type: application/json' \
+    -d "${COMPLAINT_SCOPES_BODY}" "${API}/api/server/v1/api-resources/${COMPLAINT_RESOURCE}/scopes"
+  echo "      Already registered (${COMPLAINT_RESOURCE}); scopes synced."
+else
+  COMPLAINT_RESOURCE_BODY=$(python3 - "${COMPLAINT_API_NAME}" "${COMPLAINT_API_IDENTIFIER}" "${COMPLAINT_ALL_SCOPES[@]}" <<'PY'
+import json, sys
+name, identifier = sys.argv[1], sys.argv[2]
+scope_names = sys.argv[3:]
+print(json.dumps({
+    "name": name,
+    "identifier": identifier,
+    "description": "Complaint management endpoints backing the DPDP consent portal's complaint UI.",
+    "requiresAuthorization": True,
+    "scopes": [{"name": n, "displayName": n, "description": n} for n in scope_names],
+}))
+PY
+)
+  COMPLAINT_RESOURCE=$("${CURL[@]}" -H 'Content-Type: application/json' -d "${COMPLAINT_RESOURCE_BODY}" \
+    "${API}/api/server/v1/api-resources" | json "d.get('id','')")
+  if [ -z "${COMPLAINT_RESOURCE}" ]; then
+    echo "ERROR: could not register the ${COMPLAINT_API_NAME}."
+    exit 2
+  fi
+  echo "      Registered ${COMPLAINT_API_NAME} (${COMPLAINT_RESOURCE})"
+fi
+
+echo "[5/8] Authorizing the ${COMPLAINT_API_NAME}"
+# The authorized-apis body shape differs from the api-resources scopes body
+# above (bare scope names, not scope objects), so it is built separately.
+COMPLAINT_AUTH_BODY=$(python3 - "${COMPLAINT_RESOURCE}" "${COMPLAINT_ALL_SCOPES[@]}" <<'PY'
+import json, sys
+resource_id = sys.argv[1]
+scope_names = sys.argv[2:]
+print(json.dumps({"id": resource_id, "policyIdentifier": "RBAC", "scopes": scope_names}))
+PY
+)
+mutate_or_exists "authorizing ${COMPLAINT_API_IDENTIFIER}" -H 'Content-Type: application/json' -d "${COMPLAINT_AUTH_BODY}" \
+  "${API}/api/server/v1/applications/${APP_ID}/authorized-apis"
+echo "      ${COMPLAINT_API_IDENTIFIER}"
+
 # ------------------------------------------------------------------------ roles
-echo "[4/5] Creating the ${ADMIN_ROLE} role"
+echo "[6/8] Creating the ${ADMIN_ROLE} role"
 # Authorizing the API is not enough on its own: under an RBAC policy the
 # Identity Server only puts a scope in a token when the user holds a role that
 # grants it. Roles belong to an audience, so a same-named role on a different
@@ -338,14 +413,34 @@ print(json.dumps({
   echo "      Created ${ADMIN_ROLE} (${ROLE_ID})"
 fi
 
-# Everyone who can sign in already manages their own consents, so this role
-# carries no permissions; it exists to group ordinary portal users.
-echo "[5/5] Creating the ${USER_ROLE} role"
+# Everyone who can sign in already manages their own consents without a
+# scoped role - the built-in IS /me consent endpoints authorize purely off the
+# session identity. Complaints do not get that for free: the complaint-mgt
+# endpoint is our own API and enforces portal:complaints:read/write:self
+# itself (see ScopeAuthorizationFilter), so a member of this role needs it
+# granted explicitly, same as any other scope in this script.
+echo "[7/8] Creating the ${USER_ROLE} role"
 USER_ROLE_ID=$("${CURL[@]}" --get --data-urlencode "filter=displayName eq ${USER_ROLE}" \
   "${API}/scim2/v2/Roles" \
   | json "next((r['id'] for r in d.get('Resources',[]) if r.get('audience',{}).get('value')=='${APP_ID}'), '')")
+
+USER_PERMISSIONS=$(python3 - "${COMPLAINT_SELF_SCOPES[@]}" <<'PY'
+import json, sys
+print(json.dumps([{"value": s} for s in sys.argv[1:]]))
+PY
+)
+
 if [ -n "${USER_ROLE_ID}" ]; then
-  echo "      Role already exists (${USER_ROLE_ID})."
+  USER_PATCH_BODY=$(python3 -c "
+import json
+print(json.dumps({
+  'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+  'Operations': [{'op': 'replace', 'path': 'permissions',
+                  'value': json.loads('''${USER_PERMISSIONS}''')}],
+}))")
+  mutate "updating the ${USER_ROLE} permissions" -X PATCH -H 'Content-Type: application/json' \
+    -d "${USER_PATCH_BODY}" "${API}/scim2/v2/Roles/${USER_ROLE_ID}"
+  echo "      Role already exists (${USER_ROLE_ID}); permissions updated, members unchanged."
 else
   USER_ROLE_BODY=$(python3 -c "
 import json
@@ -353,16 +448,70 @@ print(json.dumps({
   'schemas': ['urn:ietf:params:scim:schemas:extension:2.0:Role'],
   'displayName': '${USER_ROLE}',
   'audience': {'value': '${APP_ID}', 'type': 'application'},
+  'permissions': json.loads('''${USER_PERMISSIONS}'''),
 }))")
-  mutate "creating the ${USER_ROLE} role" -H 'Content-Type: application/json' \
-    -d "${USER_ROLE_BODY}" "${API}/scim2/v2/Roles"
-  echo "      Created ${USER_ROLE}"
+  USER_ROLE_ID=$("${CURL[@]}" -H 'Content-Type: application/json' -d "${USER_ROLE_BODY}" \
+    "${API}/scim2/v2/Roles" | json "d.get('id','')")
+  if [ -z "${USER_ROLE_ID}" ]; then
+    echo "ERROR: could not create the ${USER_ROLE} role."
+    exit 2
+  fi
+  echo "      Created ${USER_ROLE} (${USER_ROLE_ID})"
+fi
+
+# A distinct role from ${ADMIN_ROLE}: consent administration and complaint
+# handling are different jobs in a DPDP org, and separating them means
+# granting one does not silently grant the other.
+echo "[8/8] Creating the ${COMPLAINT_OFFICER_ROLE} role"
+OFFICER_ROLE_ID=$("${CURL[@]}" --get --data-urlencode "filter=displayName eq ${COMPLAINT_OFFICER_ROLE}" \
+  "${API}/scim2/v2/Roles" \
+  | json "next((r['id'] for r in d.get('Resources',[]) if r.get('audience',{}).get('value')=='${APP_ID}'), '')")
+
+OFFICER_PERMISSIONS=$(python3 - "${COMPLAINT_OFFICER_SCOPES[@]}" <<'PY'
+import json, sys
+print(json.dumps([{"value": s} for s in sys.argv[1:]]))
+PY
+)
+
+if [ -n "${OFFICER_ROLE_ID}" ]; then
+  OFFICER_PATCH_BODY=$(python3 -c "
+import json
+print(json.dumps({
+  'schemas': ['urn:ietf:params:scim:api:messages:2.0:PatchOp'],
+  'Operations': [{'op': 'replace', 'path': 'permissions',
+                  'value': json.loads('''${OFFICER_PERMISSIONS}''')}],
+}))")
+  mutate "updating the ${COMPLAINT_OFFICER_ROLE} permissions" -X PATCH -H 'Content-Type: application/json' \
+    -d "${OFFICER_PATCH_BODY}" "${API}/scim2/v2/Roles/${OFFICER_ROLE_ID}"
+  echo "      Role already exists (${OFFICER_ROLE_ID}); permissions updated, members unchanged."
+else
+  OFFICER_ROLE_BODY=$(python3 -c "
+import json
+print(json.dumps({
+  'schemas': ['urn:ietf:params:scim:schemas:extension:2.0:Role'],
+  'displayName': '${COMPLAINT_OFFICER_ROLE}',
+  'audience': {'value': '${APP_ID}', 'type': 'application'},
+  'permissions': json.loads('''${OFFICER_PERMISSIONS}'''),
+}))")
+  OFFICER_ROLE_ID=$("${CURL[@]}" -H 'Content-Type: application/json' -d "${OFFICER_ROLE_BODY}" \
+    "${API}/scim2/v2/Roles" | json "d.get('id','')")
+  if [ -z "${OFFICER_ROLE_ID}" ]; then
+    echo "ERROR: could not create the ${COMPLAINT_OFFICER_ROLE} role."
+    exit 2
+  fi
+  echo "      Created ${COMPLAINT_OFFICER_ROLE} (${OFFICER_ROLE_ID})"
 fi
 
 cat <<EOF
 
 Done. The portal is at ${PORTAL_URL}
 
-Assign users to ${ADMIN_ROLE} to grant consent administration; everyone else
-can manage their own consents as soon as they sign in.
+Assign users to:
+  - ${ADMIN_ROLE}            to grant consent administration (purposes, elements, all consents)
+  - ${USER_ROLE}             to let someone file and track their own complaints
+  - ${COMPLAINT_OFFICER_ROLE} to grant complaint handling across the org
+
+Everyone can manage their own consents as soon as they sign in; filing a
+complaint additionally requires ${USER_ROLE} since, unlike consent
+self-service, the complaint API is not built into Identity Server.
 EOF

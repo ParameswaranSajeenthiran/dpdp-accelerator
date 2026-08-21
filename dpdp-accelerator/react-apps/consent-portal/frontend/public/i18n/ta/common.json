@@ -724,8 +724,11 @@
       "empty": "நீங்கள் இதுவரை எந்தப் புகாரையும் சமர்ப்பிக்கவில்லை.",
       "emptyFiltered": "தேர்ந்தெடுக்கப்பட்ட வடிகட்டிக்கு எந்தப் புகாரும் பொருந்தவில்லை.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "நிலை",
-        "all": "அனைத்தும்"
+        "all": "அனைத்தும்",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "எனது புகார்கள் அட்டவணை",
@@ -805,7 +808,9 @@
       "empty": "இந்தப் புகாரில் எந்த இணைப்புகளும் சேர்க்கப்படவில்லை.",
       "initialSubmission": "ஆரம்ப சமர்ப்பிப்பு",
       "internalNote": "உள் பகுதி",
-      "overflowMore": "+மேலும் {{count}}"
+      "overflowMore": "+மேலும் {{count}}",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

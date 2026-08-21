@@ -724,8 +724,11 @@
       "empty": "ᱟᱹᱣᱨᱤ ᱜᱮ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱢ ᱮᱢ ᱟᱠᱟᱫᱼᱟ।",
       "emptyFiltered": "ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱯᱷᱤᱞᱴᱚᱨ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "ᱥᱴᱮᱴᱚᱥ",
-        "all": "ᱡᱚᱛᱚ"
+        "all": "ᱡᱚᱛᱚ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "ᱤᱧᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱴᱮᱵᱩᱞ",
@@ -805,7 +808,9 @@
       "empty": "ᱱᱚᱣᱟ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱨᱮ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱴᱮᱪᱢᱮᱱᱴ ᱵᱟᱝ ᱡᱚᱲᱟᱣ ᱟᱠᱟᱱᱟ।",
       "initialSubmission": "ᱮᱛᱚᱦᱚᱵ ᱮᱢ",
       "internalNote": "ᱵᱷᱤᱛᱨᱤ",
-      "overflowMore": "+{{count}} ᱟᱨᱦᱚᱸ"
+      "overflowMore": "+{{count}} ᱟᱨᱦᱚᱸ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

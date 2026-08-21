@@ -724,8 +724,11 @@
       "empty": "നിങ്ങൾ ഇതുവരെ പരാതികളൊന്നും നൽകിയിട്ടില്ല.",
       "emptyFiltered": "തിരഞ്ഞെടുത്ത ഫിൽട്ടറുമായി പരാതികളൊന്നും പൊരുത്തപ്പെടുന്നില്ല.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "സ്റ്റാറ്റസ്",
-        "all": "എല്ലാം"
+        "all": "എല്ലാം",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "എന്റെ പരാതികളുടെ പട്ടിക",
@@ -805,7 +808,9 @@
       "empty": "ഈ പരാതിയിൽ അറ്റാച്ച്മെന്റുകളൊന്നും ചേർത്തിട്ടില്ല.",
       "initialSubmission": "പ്രാഥമിക സമർപ്പണം",
       "internalNote": "ആന്തരികം",
-      "overflowMore": "+{{count}} കൂടുതൽ"
+      "overflowMore": "+{{count}} കൂടുതൽ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

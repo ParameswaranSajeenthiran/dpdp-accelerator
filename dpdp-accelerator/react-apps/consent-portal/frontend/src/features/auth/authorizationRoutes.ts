@@ -24,6 +24,8 @@ const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; requirement: ScopeR
   { path: '/purposes', requirement: REQUIRED_SCOPES.PURPOSES_READ },
   { path: '/elements', requirement: REQUIRED_SCOPES.ELEMENTS_READ },
   { path: '/administration/consents', requirement: REQUIRED_SCOPES.CONSENTS_READ_ANY },
+  { path: '/complaints', requirement: REQUIRED_SCOPES.COMPLAINTS_READ_SELF },
+  { path: '/complaint-management', requirement: REQUIRED_SCOPES.COMPLAINTS_READ_ANY },
 ]
 
 /** The first landing page the session's scopes actually allow. */

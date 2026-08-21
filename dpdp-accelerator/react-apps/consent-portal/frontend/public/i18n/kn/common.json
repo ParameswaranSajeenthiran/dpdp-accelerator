@@ -724,8 +724,11 @@
       "empty": "ನೀವು ಇನ್ನೂ ಯಾವುದೇ ದೂರುಗಳನ್ನು ಸಲ್ಲಿಸಿಲ್ಲ.",
       "emptyFiltered": "ಆಯ್ಕೆಮಾಡಿದ ಫಿಲ್ಟರ್‌ಗೆ ಯಾವುದೇ ದೂರುಗಳು ಹೊಂದಿಕೆಯಾಗುವುದಿಲ್ಲ.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "ಸ್ಥಿತಿ",
-        "all": "ಎಲ್ಲಾ"
+        "all": "ಎಲ್ಲಾ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "ನನ್ನ ದೂರುಗಳ ಟೇಬಲ್",
@@ -805,7 +808,9 @@
       "empty": "ಈ ದೂರಿಗೆ ಯಾವುದೇ ಲಗತ್ತುಗಳನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ.",
       "initialSubmission": "ಆರಂಭಿಕ ಸಲ್ಲಿಕೆ",
       "internalNote": "ಆಂತರಿಕ",
-      "overflowMore": "ಇನ್ನೂ +{{count}}"
+      "overflowMore": "ಇನ್ನೂ +{{count}}",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

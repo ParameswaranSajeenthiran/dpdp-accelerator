@@ -724,8 +724,11 @@
       "empty": "તમે હજુ સુધી કોઈ ફરિયાદ નોંધાવી નથી.",
       "emptyFiltered": "પસંદ કરેલ ફિલ્ટર સાથે કોઈ ફરિયાદ મળતી નથી.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "સ્થિતિ",
-        "all": "તમામ"
+        "all": "તમામ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "મારી ફરિયાદોનું કોષ્ટક",
@@ -805,7 +808,9 @@
       "empty": "આ ફરિયાદમાં કોઈ જોડાણો ઉમેરવામાં આવ્યા નથી.",
       "initialSubmission": "પ્રારંભિક સબમિશન",
       "internalNote": "આંતરિક",
-      "overflowMore": "+{{count}} વધુ"
+      "overflowMore": "+{{count}} વધુ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

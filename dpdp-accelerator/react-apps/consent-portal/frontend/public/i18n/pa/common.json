@@ -724,8 +724,11 @@
       "empty": "ਤੁਸੀਂ ਅਜੇ ਤੱਕ ਕੋਈ ਸ਼ਿਕਾਇਤ ਦਰਜ ਨਹੀਂ ਕੀਤੀ ਹੈ।",
       "emptyFiltered": "ਚੁਣੇ ਗਏ ਫਿਲਟਰ ਨਾਲ ਕੋਈ ਸ਼ਿਕਾਇਤ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "ਸਥਿਤੀ",
-        "all": "ਸਭ"
+        "all": "ਸਭ",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਦੀ ਸਾਰਣੀ",
@@ -805,7 +808,9 @@
       "empty": "ਇਸ ਸ਼ਿਕਾਇਤ ਵਿੱਚ ਕੋਈ ਅਟੈਚਮੈਂਟ ਨਹੀਂ ਜੋੜੀ ਗਈ ਹੈ।",
       "initialSubmission": "ਆਰੰਭਿਕ ਜਮ੍ਹਾਂ ਕਰਵਾਈ ਗਈ",
       "internalNote": "ਅੰਦਰੂਨੀ",
-      "overflowMore": "+{{count}} ਹੋਰ"
+      "overflowMore": "+{{count}} ਹੋਰ",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

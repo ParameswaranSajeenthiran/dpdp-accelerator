@@ -724,8 +724,11 @@
       "empty": "You haven't submitted any complaints yet.",
       "emptyFiltered": "No complaints match the selected filter.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "Status",
-        "all": "All"
+        "all": "All",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "My complaints table",
@@ -763,7 +766,7 @@
         "descriptionPlaceholder": "Describe your complaint in detail",
         "descriptionHelp": "Include as much detail as possible to help us resolve this quickly.",
         "attachments": "Attachments (optional)",
-        "attachmentsHelp": "PDF, DOCX, PNG, or JPG up to {{maxSize}} each.",
+        "attachmentsHelp": "You can attach 1 file (PDF, DOCX, PNG, or JPG) up to {{maxSize}}.",
         "uploadButton": "Upload files"
       },
       "validation": {
@@ -795,7 +798,7 @@
       "composerPlaceholderPublic": "Write a reply to the user...",
       "composerPlaceholderInternal": "Write an internal note (not visible to the user)...",
       "attach": "Attach",
-      "attachmentsHelp": "PDF, DOCX, PNG, or JPG up to {{maxSize}} per file.",
+      "attachmentsHelp": "You can attach 1 file (PDF, DOCX, PNG, or JPG) up to {{maxSize}}.",
       "attachmentTooLarge": "{{fileNames}} exceeds the {{maxSize}} attachment size limit.",
       "removeAttachment": "Remove attachment"
     },
@@ -805,7 +808,9 @@
       "empty": "No attachments have been added to this complaint.",
       "initialSubmission": "Initial submission",
       "internalNote": "Internal",
-      "overflowMore": "+{{count}} more"
+      "overflowMore": "+{{count}} more",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {

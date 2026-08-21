@@ -724,8 +724,11 @@
       "empty": "আপুনি এতিয়ালৈকে কোনো অভিযোগ দাখিল কৰা নাই।",
       "emptyFiltered": "নিৰ্বাচিত ফিল্টাৰৰ সৈতে কোনো অভিযোগৰ মিল নাই।",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "স্থিতি",
-        "all": "সকলো"
+        "all": "সকলো",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "মোৰ অভিযোগৰ তালিকা",
@@ -805,7 +808,9 @@
       "empty": "এই অভিযোগত কোনো সংলগ্ন ফাইল যোগ কৰা হোৱা নাই।",
       "initialSubmission": "প্ৰাৰম্ভিক দাখিল",
       "internalNote": "আভ্যন্তৰীণ",
-      "overflowMore": "আৰু +{{count}}"
+      "overflowMore": "আৰু +{{count}}",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {
