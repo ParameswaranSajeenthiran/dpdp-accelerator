@@ -16,15 +16,15 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.impl;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.impl;
 
-import org.wso2.dpdp.accelerator.consent.history.dao.ConsentHistoryDAO;
-import org.wso2.dpdp.accelerator.consent.history.dao.constants.ConsentHistoryDAOConstants;
-import org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataInsertionException;
-import org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataRetrievalException;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.queries.ConsentHistoryDBQueries;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryDBQueries;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

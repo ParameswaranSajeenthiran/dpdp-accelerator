@@ -16,17 +16,17 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.endpoint.util;
+package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.dto.ConsentHistoryResponseDTO;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.dto.StatusHistoryResponseDTO;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.exception.ConsentHistoryEndpointException;
-import org.wso2.dpdp.accelerator.consent.history.service.models.PagedResult;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryResponseDTO;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.StatusHistoryResponseDTO;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.ConsentHistoryEndpointException;
+import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.util.Collections;
 

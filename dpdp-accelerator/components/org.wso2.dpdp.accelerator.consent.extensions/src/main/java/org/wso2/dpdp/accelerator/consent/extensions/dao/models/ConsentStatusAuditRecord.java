@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.models;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.models;
 
 /**
  * One row of {@code DPDP_CONSENT_STATUS_AUDIT}.

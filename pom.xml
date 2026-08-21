@@ -145,7 +145,7 @@
             </dependency>
             <dependency>
                 <groupId>org.wso2.dpdp.accelerator</groupId>
-                <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -155,7 +155,7 @@
             </dependency>
             <dependency>
                 <groupId>org.wso2.dpdp.accelerator</groupId>
-                <artifactId>org.wso2.dpdp.accelerator.consent.history.endpoint</artifactId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</artifactId>
                 <version>${project.version}</version>
                 <type>war</type>
             </dependency>

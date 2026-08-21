@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.service.impl;
+package org.wso2.dpdp.accelerator.consent.extensions.service.impl;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -24,12 +24,12 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.consent.history.dao.ConsentHistoryDAO;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.history.internal.ConsentHistoryDataHolder;
-import org.wso2.dpdp.accelerator.consent.history.service.constants.ConsentHistoryServiceConstants.ActionType;
-import org.wso2.dpdp.accelerator.consent.history.service.models.PagedResult;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.internal.ConsentHistoryDataHolder;
+import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
+import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.sql.Connection;
 import java.util.Collections;
@@ -151,11 +151,11 @@ public class ConsentHistoryServiceImplTest {
                 eq(20), eq(0));
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataInsertionException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException.class)
     public void recordStatusAuditRollsBackAndRethrowsOnDaoFailure() throws Exception {
 
-        org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataInsertionException failure =
-                new org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataInsertionException(
+        org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException failure =
+                new org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException(
                         "boom", null);
         org.mockito.Mockito.doThrow(failure).when(consentHistoryDAO)
                 .insertStatusAudit(any(Connection.class), any(ConsentStatusAuditRecord.class));

@@ -16,9 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.queries;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
-import org.wso2.dpdp.accelerator.consent.history.dao.constants.ConsentHistoryDAOConstants;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 
 /**
  * SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. h2 and mysql DML is

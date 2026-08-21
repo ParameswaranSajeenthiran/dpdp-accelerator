@@ -19,7 +19,7 @@
 <suite name="dpdp-consent-history-endpoint-test-suite">
     <test name="dpdp-consent-history-endpoint-tests">
         <packages>
-            <package name="org.wso2.dpdp.accelerator.consent.history.endpoint.util"/>
+            <package name="org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util"/>
         </packages>
     </test>
 </suite>

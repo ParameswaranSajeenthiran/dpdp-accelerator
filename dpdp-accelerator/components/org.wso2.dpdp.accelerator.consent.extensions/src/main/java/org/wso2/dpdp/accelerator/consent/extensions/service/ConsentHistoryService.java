@@ -16,14 +16,14 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.service;
+package org.wso2.dpdp.accelerator.consent.extensions.service;
 
-import org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataInsertionException;
-import org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataRetrievalException;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.history.service.constants.ConsentHistoryServiceConstants.ActionType;
-import org.wso2.dpdp.accelerator.consent.history.service.models.PagedResult;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
+import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 /**
  * Every method takes {@code tenantDomain} explicitly - callers (the consent listener, the

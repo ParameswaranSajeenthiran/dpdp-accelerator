@@ -26,7 +26,7 @@ import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 
 /**
  * Singleton holder for the OSGi services this module's listener needs, populated by

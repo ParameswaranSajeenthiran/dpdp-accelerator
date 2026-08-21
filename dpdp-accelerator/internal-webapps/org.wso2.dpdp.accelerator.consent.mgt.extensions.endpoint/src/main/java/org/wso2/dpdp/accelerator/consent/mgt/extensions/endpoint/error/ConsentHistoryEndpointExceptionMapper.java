@@ -16,12 +16,12 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.endpoint.error;
+package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.dto.ErrorDTO;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.exception.ConsentHistoryEndpointException;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ErrorDTO;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.ConsentHistoryEndpointException;
 
 import java.util.UUID;
 

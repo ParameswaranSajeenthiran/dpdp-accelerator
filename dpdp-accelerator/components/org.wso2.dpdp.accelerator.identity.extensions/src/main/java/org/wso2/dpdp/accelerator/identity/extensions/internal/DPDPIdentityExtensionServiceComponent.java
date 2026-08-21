@@ -41,7 +41,7 @@ import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 

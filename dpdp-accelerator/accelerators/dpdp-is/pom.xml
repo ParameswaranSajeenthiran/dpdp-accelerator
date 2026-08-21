@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.consent.history.endpoint</artifactId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</artifactId>
             <type>war</type>
         </dependency>
         <dependency>
@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
         </dependency>
     </dependencies>
 
@@ -97,15 +97,15 @@
                             <target>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>
-                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.consent.history.endpoint/target/api#dpdp#consent-mgt#v1.war"
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint/target/api#dpdp#consent-mgt#v1.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#consent-mgt#v1"/>
                                 <copy todir="${project.basedir}/carbon-home/repository/components/dropins">
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.identity.extensions/target"
                                               includes="org.wso2.dpdp.accelerator.identity.extensions-*.jar"/>
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.common/target"
                                               includes="org.wso2.dpdp.accelerator.common-*.jar"/>
-                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.consent.history/target"
-                                              includes="org.wso2.dpdp.accelerator.consent.history-*.jar"/>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.consent.extensions/target"
+                                              includes="org.wso2.dpdp.accelerator.consent.extensions-*.jar"/>
                                 </copy>
                             </target>
                         </configuration>

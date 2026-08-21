@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.service.constants;
+package org.wso2.dpdp.accelerator.consent.extensions.service.constants;
 
 public final class ConsentHistoryServiceConstants {
 

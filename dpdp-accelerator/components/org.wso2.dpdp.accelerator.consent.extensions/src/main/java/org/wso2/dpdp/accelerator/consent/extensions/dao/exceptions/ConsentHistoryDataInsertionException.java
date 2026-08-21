@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.exceptions;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
 /**
  * Thrown when a status-audit or history snapshot row could not be written.

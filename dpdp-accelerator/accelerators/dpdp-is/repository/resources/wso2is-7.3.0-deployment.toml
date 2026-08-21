@@ -166,7 +166,7 @@ custom_webapps = ["/consent-portal/", "/api/dpdp/consent-mgt/v1/"]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
 
-# Controls the capture (identity.extensions) and read APIs (consent.history.endpoint)
+# Controls the capture (identity.extensions) and read APIs (consent.mgt.extensions.endpoint)
 # for consent status-audit/history. Set enabled = false to turn off both capture
 # and the read APIs; snapshot_enabled = false keeps the lightweight status-audit
 # trail but stops storing full pre-mutation JSON snapshots.

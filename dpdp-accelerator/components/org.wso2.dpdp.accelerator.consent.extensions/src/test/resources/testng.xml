@@ -19,8 +19,8 @@
 <suite name="dpdp-consent-history-test-suite">
     <test name="dpdp-consent-history-tests">
         <packages>
-            <package name="org.wso2.dpdp.accelerator.consent.history.dao.impl"/>
-            <package name="org.wso2.dpdp.accelerator.consent.history.service.impl"/>
+            <package name="org.wso2.dpdp.accelerator.consent.extensions.dao.impl"/>
+            <package name="org.wso2.dpdp.accelerator.consent.extensions.service.impl"/>
         </packages>
     </test>
 </suite>

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.internal;
+package org.wso2.dpdp.accelerator.consent.extensions.internal;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,11 +29,11 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
-import org.wso2.dpdp.accelerator.consent.history.service.impl.ConsentHistoryServiceImpl;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.impl.ConsentHistoryServiceImpl;
 
 @Component(
-        name = "org.wso2.dpdp.accelerator.consent.history.internal.ConsentHistoryServiceComponent",
+        name = "org.wso2.dpdp.accelerator.consent.extensions.internal.ConsentHistoryServiceComponent",
         immediate = true
 )
 public class ConsentHistoryServiceComponent {

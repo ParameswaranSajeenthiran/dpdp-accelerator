@@ -91,7 +91,7 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -199,9 +199,9 @@
                         </Export-Package>
                         <Import-Package>
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.service;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.service.constants;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.dao.exceptions;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;version="${project.version}",
 
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",

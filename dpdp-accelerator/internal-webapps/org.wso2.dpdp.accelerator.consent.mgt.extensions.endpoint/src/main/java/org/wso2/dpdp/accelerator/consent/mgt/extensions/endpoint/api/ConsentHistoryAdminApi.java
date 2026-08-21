@@ -16,22 +16,22 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.endpoint.api;
+package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.consent.history.dao.exceptions.ConsentHistoryDataRetrievalException;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.dto.ConsentHistoryResponseDTO;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.dto.StatusHistoryResponseDTO;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.error.ConsentHistoryErrorCodes;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.exception.ConsentHistoryEndpointException;
-import org.wso2.dpdp.accelerator.consent.history.endpoint.util.ConsentHistoryEndpointUtil;
-import org.wso2.dpdp.accelerator.consent.history.service.ConsentHistoryService;
-import org.wso2.dpdp.accelerator.consent.history.service.models.PagedResult;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryResponseDTO;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.StatusHistoryResponseDTO;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error.ConsentHistoryErrorCodes;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.ConsentHistoryEndpointException;
+import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util.ConsentHistoryEndpointUtil;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

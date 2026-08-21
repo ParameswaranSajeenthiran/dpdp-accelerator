@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.constants;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.constants;
 
 /**
  * Table and column names for {@code DPDP_CONSENT_STATUS_AUDIT} and {@code DPDP_CONSENT_HISTORY}.

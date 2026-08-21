@@ -16,14 +16,14 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.dao.impl;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.impl;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.consent.history.dao.ConsentHistoryDAO;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentHistoryRecord;
-import org.wso2.dpdp.accelerator.consent.history.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

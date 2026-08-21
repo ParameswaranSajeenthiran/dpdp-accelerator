@@ -27,15 +27,15 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.wso2.dpdp.accelerator.consent.history.endpoint</artifactId>
-    <name>WSO2 DPDP Accelerator - Consent History Endpoint</name>
+    <artifactId>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</artifactId>
+    <name>WSO2 DPDP Accelerator - Consent Extensions Endpoint</name>
     <description>Admin and self-service REST APIs for reading consent status-audit and history</description>
     <packaging>war</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -137,7 +137,7 @@
                             <generateModelTests>false</generateModelTests>
                             <generateModelDocumentation>false</generateModelDocumentation>
                             <generateSupportingFiles>false</generateSupportingFiles>
-                            <modelPackage>org.wso2.dpdp.accelerator.consent.history.endpoint.dto</modelPackage>
+                            <modelPackage>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto</modelPackage>
                             <configOptions>
                                 <sourceFolder>src/gen/java</sourceFolder>
                                 <useGenericResponse>true</useGenericResponse>

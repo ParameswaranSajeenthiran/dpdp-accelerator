@@ -27,8 +27,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.wso2.dpdp.accelerator.consent.history</artifactId>
-    <name>WSO2 DPDP Accelerator - Consent History</name>
+    <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
+    <name>WSO2 DPDP Accelerator - Consent Extensions</name>
     <description>DAO and service layer that captures and stores consent status-audit and snapshot history</description>
     <packaging>bundle</packaging>
 
@@ -135,19 +135,19 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Private-Package>
-                            org.wso2.dpdp.accelerator.consent.history.internal,
-                            org.wso2.dpdp.accelerator.consent.history.dao,
-                            org.wso2.dpdp.accelerator.consent.history.dao.impl,
-                            org.wso2.dpdp.accelerator.consent.history.dao.queries,
-                            org.wso2.dpdp.accelerator.consent.history.dao.constants,
-                            org.wso2.dpdp.accelerator.consent.history.service.impl,
+                            org.wso2.dpdp.accelerator.consent.extensions.internal,
+                            org.wso2.dpdp.accelerator.consent.extensions.dao,
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.impl,
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.queries,
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.constants,
+                            org.wso2.dpdp.accelerator.consent.extensions.service.impl,
                         </Private-Package>
                         <Export-Package>
-                            org.wso2.dpdp.accelerator.consent.history.dao.models;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.dao.exceptions;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.service;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.service.constants;version="${project.version}",
-                            org.wso2.dpdp.accelerator.consent.history.service.models;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.models;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service.models;version="${project.version}",
                         </Export-Package>
                         <Import-Package>
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",

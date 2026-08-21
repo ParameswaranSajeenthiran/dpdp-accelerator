@@ -38,15 +38,15 @@
         <init-param>
             <param-name>jaxrs.serviceClasses</param-name>
             <param-value>
-                org.wso2.dpdp.accelerator.consent.history.endpoint.api.ConsentHistoryAdminApi,
-                org.wso2.dpdp.accelerator.consent.history.endpoint.api.ConsentHistorySelfApi
+                org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.api.ConsentHistoryAdminApi,
+                org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.api.ConsentHistorySelfApi
             </param-value>
         </init-param>
         <init-param>
             <param-name>jaxrs.providers</param-name>
             <param-value>
                 com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider,
-                org.wso2.dpdp.accelerator.consent.history.endpoint.error.ConsentHistoryEndpointExceptionMapper
+                org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error.ConsentHistoryEndpointExceptionMapper
             </param-value>
         </init-param>
     </servlet>

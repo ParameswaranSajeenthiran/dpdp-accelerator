@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.endpoint.error;
+package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error;
 
 public final class ConsentHistoryErrorCodes {
 

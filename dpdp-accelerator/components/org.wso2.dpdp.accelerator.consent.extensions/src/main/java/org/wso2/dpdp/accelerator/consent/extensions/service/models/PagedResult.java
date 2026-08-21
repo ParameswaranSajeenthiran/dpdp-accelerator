@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.consent.history.service.models;
+package org.wso2.dpdp.accelerator.consent.extensions.service.models;
 
 import java.util.List;
 
