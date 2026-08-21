@@ -23,7 +23,6 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,28 +41,12 @@ public class DBUtils {
     }
 
     public static Connection getConnection() throws SQLException {
-        String envUrl = System.getenv(EventNotificationCommonConstants.ENV_JDBC_URL);
-        String envUser = System.getenv(EventNotificationCommonConstants.ENV_JDBC_USER);
-        String envPass = System.getenv(EventNotificationCommonConstants.ENV_JDBC_PASS);
-
-        if (envUrl != null && !envUrl.trim().isEmpty()) {
-            return DriverManager.getConnection(
-                    envUrl.trim(),
-                    envUser != null ? envUser.trim() : EventNotificationCommonConstants.DEFAULT_H2_USER,
-                    envPass != null ? envPass.trim() : EventNotificationCommonConstants.DEFAULT_H2_PASS
-            );
-        }
-
         DataSource ds = getDataSource();
         if (ds != null) {
             return ds.getConnection();
         }
-
-        return DriverManager.getConnection(
-                EventNotificationCommonConstants.DEFAULT_H2_URL,
-                EventNotificationCommonConstants.DEFAULT_H2_USER,
-                EventNotificationCommonConstants.DEFAULT_H2_PASS
-        );
+        throw new SQLException("IS datasource ["
+                + EventNotificationCommonConstants.JDBC_DPDP_DATASOURCE_NAME + "] is unavailable");
     }
 
     private static DataSource getDataSource() {
@@ -77,18 +60,14 @@ public class DBUtils {
                     try {
                         InitialContext ctx = new InitialContext();
                         try {
-                            dataSource = (DataSource) ctx.lookup(EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME);
+                            dataSource = (DataSource) ctx.lookup(EventNotificationCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
                         } catch (Exception e) {
-                            try {
-                                dataSource = (DataSource) ctx.lookup(EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_JNDI_ENV_NAME);
-                            } catch (Exception ex) {
-                                dataSource = (DataSource) ctx.lookup(EventNotificationCommonConstants.JDBC_SHARED_DATASOURCE_NAME);
-                            }
+                            dataSource = (DataSource) ctx.lookup(EventNotificationCommonConstants.JDBC_DPDP_JNDI_ENV_NAME);
                         }
                     } catch (Exception e) {
                         lastJndiLookupFailedTime = System.currentTimeMillis();
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("JNDI lookup failed for [" + EventNotificationCommonConstants.JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME + "], falling back to direct connection.", e);
+                            LOG.debug("JNDI lookup failed for [" + EventNotificationCommonConstants.JDBC_DPDP_DATASOURCE_NAME + "], falling back to direct connection.", e);
                         }
                     }
                     if (dataSource == null) {

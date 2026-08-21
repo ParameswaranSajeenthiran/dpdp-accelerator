@@ -19,6 +19,8 @@
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
@@ -46,6 +48,9 @@ import java.util.Optional;
 
 @Component(service = DeliveryDAO.class, immediate = true)
 public class DeliveryDAOImpl implements DeliveryDAO {
+
+    @Reference
+    private DPDPConfigurationService configurationService;
 
     private EventNotificationCommonDBQueries getQueries(Connection conn) {
         return EventNotificationQueryFactory.getQueryProvider(conn);
@@ -144,7 +149,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit) {
-        int threshold = org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+        int threshold = getConfiguration().getEventNotificationStuckInFlightThresholdSeconds();
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - threshold * 1000L);
         return getStuckInFlightWebhookDispatchContexts(limit, cutoff);
     }
@@ -444,7 +449,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit) {
-        int threshold = org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+        int threshold = getConfiguration().getEventNotificationStuckInFlightThresholdSeconds();
         Timestamp cutoff = new Timestamp(System.currentTimeMillis() - threshold * 1000L);
         return getStuckInFlightWebhookDeliveries(limit, cutoff);
     }
@@ -943,5 +948,12 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 rs.getTimestamp("OCCURRED_AT"),
                 rs.getTimestamp("DELIVERY_CREATED_AT"),
                 rs.getString("PAYLOAD"));
+    }
+
+    private DPDPConfigurationService getConfiguration() {
+        if (configurationService == null) {
+            return new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false);
+        }
+        return configurationService;
     }
 }

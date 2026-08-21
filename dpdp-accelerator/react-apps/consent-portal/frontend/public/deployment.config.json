@@ -15,11 +15,11 @@
     "internal_consent_mgt_element_view",
     "internal_consent_mgt_element_create",
     "internal_consent_mgt_element_delete",
-    "portal:event-subscriptions:read",
-    "portal:event-subscriptions:write",
-    "portal:event-topics:read",
-    "portal:event-topics:write",
-    "portal:events:read",
-    "portal:events:write"
+    "notifications:subscriptions:read",
+    "notifications:subscriptions:write",
+    "notifications:topics:read",
+    "notifications:topics:write",
+    "notifications:events:read",
+    "notifications:events:write"
   ]
 }

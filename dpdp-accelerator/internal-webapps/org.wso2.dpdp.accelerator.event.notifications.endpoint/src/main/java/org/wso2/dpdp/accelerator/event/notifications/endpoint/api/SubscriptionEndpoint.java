@@ -23,6 +23,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -54,23 +55,15 @@ public class SubscriptionEndpoint {
 
     @POST
     public Response createSubscription(
-            @HeaderParam("org-id") String orgId,
             @HeaderParam("group-id") String headerGroupId,
             SubscriptionDTO request) {
-        if (request != null && (request.getGroupId() == null || request.getGroupId().trim().isEmpty())) {
-            if (headerGroupId != null && !headerGroupId.trim().isEmpty()) {
-                request.setGroupId(headerGroupId.trim());
-            } else if (orgId != null && !orgId.trim().isEmpty()) {
-                request.setGroupId(orgId.trim());
-            }
-        }
+        String orgId = DPDPTenantContext.getOrganizationId();
         SubscriptionDTO dto = subscriptionHandler.createSubscription(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
     @GET
     public Response listSubscriptions(
-            @HeaderParam("org-id") String orgId,
             @QueryParam("status") String status,
             @QueryParam("purposes") String purposes,
             @QueryParam("search") String search,
@@ -78,57 +71,52 @@ public class SubscriptionEndpoint {
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("sort") String sort) {
         PaginatedResult<SubscriptionDTO> result = subscriptionHandler.listSubscriptions(
-                orgId, status, purposes, search, limit, offset, sort);
+                DPDPTenantContext.getOrganizationId(), status, purposes, search, limit, offset, sort);
         return Response.ok(result).build();
     }
 
     @GET
     @Path("/{subscriptionId}")
     public Response getSubscription(
-            @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.getSubscription(orgId, subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.getSubscription(DPDPTenantContext.getOrganizationId(), subscriptionId);
         return Response.ok(dto).build();
     }
 
     @DELETE
     @Path("/{subscriptionId}")
     public Response deleteSubscription(
-            @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.deleteSubscription(orgId, subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.deleteSubscription(DPDPTenantContext.getOrganizationId(), subscriptionId);
         return Response.ok(dto).build();
     }
 
     @POST
     @Path("/{subscriptionId}/verify")
     public Response retryVerification(
-            @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.retryVerification(orgId, subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.retryVerification(DPDPTenantContext.getOrganizationId(), subscriptionId);
         return Response.ok(dto).build();
     }
 
     @GET
     @Path("/{subscriptionId}/events")
     public Response listSubscriptionEvents(
-            @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
         PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionHandler.listSubscriptionEvents(
-                orgId, subscriptionId, limit, offset);
+                DPDPTenantContext.getOrganizationId(), subscriptionId, limit, offset);
         return Response.ok(result).build();
     }
 
     @GET
     @Path("/{subscriptionId}/events/{deliveryId}")
     public Response getSubscriptionEventHistory(
-            @HeaderParam("org-id") String orgId,
             @PathParam("subscriptionId") String subscriptionId,
             @PathParam("deliveryId") String deliveryId) {
         SubscriptionEventHistoryDTO dto = subscriptionHandler.getSubscriptionEventHistory(
-                orgId, subscriptionId, deliveryId);
+                DPDPTenantContext.getOrganizationId(), subscriptionId, deliveryId);
         return Response.ok(dto).build();
     }
 }

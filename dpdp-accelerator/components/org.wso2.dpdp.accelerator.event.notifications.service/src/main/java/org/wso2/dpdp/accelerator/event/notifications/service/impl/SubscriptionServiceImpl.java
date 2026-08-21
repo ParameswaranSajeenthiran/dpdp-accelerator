@@ -22,7 +22,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HTTPClientFactory;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
@@ -89,6 +89,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeliveryDAO deliveryDAO;
     @Reference
     private DeliveryAckDAO deliveryAckDAO;
+    @Reference
+    private DPDPConfigurationService configurationService;
 
     private ScheduledExecutorService scheduler;
     private HttpClient httpClient;
@@ -98,15 +100,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO) {
+        this(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
+                new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false));
+    }
+
+    public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
+            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
+            DPDPConfigurationService configurationService) {
         this.subscriptionDAO = subscriptionDAO;
         this.topicDAO = topicDAO;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
+        this.configurationService = configurationService;
     }
 
     @Activate
     protected void activate() {
-        int poolSize = EventNotificationConfigParser.getInstance().getThreadPoolSize();
+        int poolSize = getConfiguration().getEventNotificationThreadPoolSize();
         this.scheduler = Executors.newScheduledThreadPool(poolSize, r -> {
             Thread t = new Thread(r, "webhook-verification-pool");
             t.setDaemon(true);
@@ -277,7 +287,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
         long delaySeconds = 0;
         if (attempt > 0) {
-            delaySeconds = EventNotificationConfigParser.getInstance().getBaseBackoffSeconds()
+            delaySeconds = getConfiguration().getEventNotificationBaseBackoffSeconds()
                     * (long) Math.pow(3, attempt - 1);
         }
         scheduler.schedule(new WebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, attempt),
@@ -316,7 +326,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 }
             } catch (Exception e) {
                 int nextAttempt = attempt + 1;
-                int maxRetries = EventNotificationConfigParser.getInstance().getMaxRetries();
+                int maxRetries = getConfiguration().getEventNotificationMaxRetries();
                 if (nextAttempt <= maxRetries) {
                     LOG.warn("Webhook verification attempt " + (attempt + 1)
                             + " failed for subscription [" + subscriptionId + "]. Retrying. Reason: " + e.getMessage());
@@ -343,7 +353,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             URI uri = URI.create(callbackUrl.trim());
             String scheme = uri.getScheme();
             if ("http".equalsIgnoreCase(scheme)
-                    && !EventNotificationConfigParser.getInstance().isAllowHttpCallbackUrl()) {
+                    && !getConfiguration().isEventNotificationHttpCallbackUrlAllowed()) {
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                         EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
@@ -376,7 +386,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     .build();
 
             HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-            int maxBodyBytes = EventNotificationConfigParser.getInstance().getMaxVerificationResponseBodyBytes();
+        int maxBodyBytes = getConfiguration().getEventNotificationMaxVerificationResponseBodyBytes();
             if (response.statusCode() != 200) {
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
@@ -808,5 +818,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 updatedAt,
                 false,
                 null);
+    }
+
+    private DPDPConfigurationService getConfiguration() {
+        if (configurationService == null) {
+            return new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false);
+        }
+        return configurationService;
     }
 }

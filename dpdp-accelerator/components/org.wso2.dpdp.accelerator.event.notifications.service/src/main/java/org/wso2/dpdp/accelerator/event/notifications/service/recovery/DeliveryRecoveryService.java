@@ -22,7 +22,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
@@ -57,6 +57,9 @@ public class DeliveryRecoveryService {
     @Reference
     private SubscriptionService subscriptionService;
 
+    @Reference
+    private DPDPConfigurationService configurationService;
+
     private ScheduledExecutorService scheduler;
     private ExecutorService workerPool;
 
@@ -64,15 +67,17 @@ public class DeliveryRecoveryService {
     }
 
     public DeliveryRecoveryService(SubscriptionDAO subscriptionDAO,
-            DeliveryDAO deliveryDAO, SubscriptionService subscriptionService) {
+            DeliveryDAO deliveryDAO, SubscriptionService subscriptionService,
+            DPDPConfigurationService configurationService) {
         this.subscriptionDAO = subscriptionDAO;
         this.deliveryDAO = deliveryDAO;
         this.subscriptionService = subscriptionService;
+        this.configurationService = configurationService;
     }
 
     @Activate
     protected void activate() {
-        int poolSize = EventNotificationConfigParser.getInstance().getThreadPoolSize();
+        int poolSize = configurationService.getEventNotificationThreadPoolSize();
         this.scheduler = Executors.newScheduledThreadPool(2, r -> {
             Thread t = new Thread(r, "delivery-recovery-scheduler");
             t.setDaemon(true);
@@ -86,9 +91,9 @@ public class DeliveryRecoveryService {
 
         this.scheduler.scheduleWithFixedDelay(new PendingDeliveryRecoveryTask(), 10, 30, TimeUnit.SECONDS);
 
-        int deliveryPollSeconds = EventNotificationConfigParser.getInstance().getDeliveryWorkerPollSeconds();
+        int deliveryPollSeconds = configurationService.getEventNotificationDeliveryWorkerPollSeconds();
         this.scheduler.scheduleWithFixedDelay(
-                new WebhookDeliveryWorker(deliveryDAO, this.workerPool),
+                new WebhookDeliveryWorker(deliveryDAO, this.workerPool, configurationService),
                 10,
                 deliveryPollSeconds,
                 TimeUnit.SECONDS);
@@ -132,7 +137,7 @@ public class DeliveryRecoveryService {
 
         private void recoverPendingSubscriptions() {
             Timestamp threshold = new Timestamp(System.currentTimeMillis()
-                    - EventNotificationConfigParser.getInstance().getPendingSubscriptionRecoveryThresholdSeconds()
+                    - configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds()
                     * 1000L);
             List<Subscription> pendingSubs = subscriptionDAO.getPendingSubscriptionsForRecovery(threshold, 20);
             for (Subscription sub : pendingSubs) {

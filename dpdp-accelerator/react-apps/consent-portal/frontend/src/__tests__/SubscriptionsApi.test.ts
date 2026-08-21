@@ -63,7 +63,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '10',
       offset: '20',
@@ -80,7 +80,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub%2F123')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions/sub%2F123')
     expect(req.method).toBe('GET')
   })
 
@@ -101,7 +101,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions')
     expect(req.method).toBe('POST')
     expect(JSON.parse(String(req.data))).toEqual(payload)
   })
@@ -113,7 +113,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions/sub-1')
     expect(req.method).toBe('DELETE')
   })
 
@@ -124,7 +124,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/verify')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions/sub-1/verify')
     expect(req.method).toBe('POST')
   })
 
@@ -135,7 +135,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/events')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions/sub-1/events')
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '5',
       offset: '10',
@@ -150,7 +150,7 @@ describe('subscriptionsApi', () => {
 
     const req = sentRequest()
     const url = new URL(req.url)
-    expect(url.pathname).toBe('/api/event-notifications/subscriptions/sub-1/events/dlv-1')
+    expect(url.pathname).toBe('/api/dpdp/event-notifications/v1/subscriptions/sub-1/events/dlv-1')
     expect(req.method).toBe('GET')
   })
 })

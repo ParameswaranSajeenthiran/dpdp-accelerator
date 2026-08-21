@@ -18,27 +18,116 @@
 
 package org.wso2.dpdp.accelerator.common.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.Map;
+import java.util.Collections;
 
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
-    private static final DPDPConfigParser CONFIG_PARSER = DPDPConfigParser.getInstance();
+    private static final Log LOG = LogFactory.getLog(DPDPConfigurationServiceImpl.class);
+    private final DPDPConfigParser configParser;
+
+    public DPDPConfigurationServiceImpl() {
+        this(true);
+    }
+
+    public DPDPConfigurationServiceImpl(boolean loadConfiguration) {
+        DPDPConfigParser parser;
+        if (!loadConfiguration) {
+            parser = null;
+        } else {
+            try {
+                parser = DPDPConfigParser.getInstance();
+            } catch (RuntimeException e) {
+            LOG.debug("DPDP accelerator configuration is unavailable.", e);
+                parser = null;
+            }
+        }
+        this.configParser = parser;
+    }
 
     @Override
     public Map<String, Object> getConfigurations() {
 
-        return CONFIG_PARSER.getConfiguration();
+        return configParser == null ? Collections.emptyMap() : configParser.getConfiguration();
     }
 
     @Override
     public boolean isConsentPortalProvisioningEnabled() {
 
-        return CONFIG_PARSER.isConsentPortalProvisioningEnabled();
+        return configParser == null || configParser.isConsentPortalProvisioningEnabled();
     }
 
     @Override
     public String getConsentPortalClientId() {
 
-        return CONFIG_PARSER.getConsentPortalClientId();
+        return configParser == null ? "DPDP_CONSENT_PORTAL" : configParser.getConsentPortalClientId();
+    }
+
+    @Override
+    public int getEventNotificationThreadPoolSize() {
+        return getInt("EventNotifications.ThreadPoolSize");
+    }
+
+    @Override
+    public long getEventNotificationBaseBackoffSeconds() {
+        return getLong("EventNotifications.BaseBackoffSeconds");
+    }
+
+    @Override
+    public int getEventNotificationMaxRetries() {
+        return getInt("EventNotifications.MaxRetries");
+    }
+
+    @Override
+    public boolean isEventNotificationHttpCallbackUrlAllowed() {
+        return getBoolean("EventNotifications.AllowHttpCallbackUrl");
+    }
+
+    @Override
+    public int getEventNotificationDeliveryWorkerBatchSize() {
+        return getInt("EventNotifications.DeliveryWorkerBatchSize");
+    }
+
+    @Override
+    public int getEventNotificationDeliveryWorkerPollSeconds() {
+        return getInt("EventNotifications.DeliveryWorkerPollSeconds");
+    }
+
+    @Override
+    public int getEventNotificationStuckInFlightThresholdSeconds() {
+        return getInt("EventNotifications.StuckInFlightThresholdSeconds");
+    }
+
+    @Override
+    public int getEventNotificationMaxVerificationResponseBodyBytes() {
+        return getInt("EventNotifications.MaxVerificationResponseBodyBytes");
+    }
+
+    @Override
+    public int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds() {
+        return getInt("EventNotifications.PendingSubscriptionRecoveryThresholdSeconds");
+    }
+
+    private int getInt(String configKey) {
+        return Integer.parseInt(getRequiredValue(configKey));
+    }
+
+    private long getLong(String configKey) {
+        return Long.parseLong(getRequiredValue(configKey));
+    }
+
+    private boolean getBoolean(String configKey) {
+        return Boolean.parseBoolean(getRequiredValue(configKey));
+    }
+
+    private String getRequiredValue(String configKey) {
+        Object configuredValue = getConfigurations().get(configKey);
+        if (configuredValue != null && !configuredValue.toString().trim().isEmpty()) {
+            return configuredValue.toString().trim();
+        }
+        throw new IllegalStateException("Required DPDP configuration is missing: " + configKey);
     }
 }

@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
@@ -52,6 +53,9 @@ public class WebhookDeliveryWorkerTest {
     @Mock
     private DeliveryDAO deliveryDAO;
 
+    @Mock
+    private DPDPConfigurationService configurationService;
+
     private ScheduledExecutorService scheduler;
     private HttpClient httpClient;
 
@@ -62,6 +66,8 @@ public class WebhookDeliveryWorkerTest {
         // them to make real HTTP calls in this test. DiscardingExecutor drops the task.
         scheduler = new DiscardingExecutor();
         httpClient = HttpClient.newHttpClient();
+        when(configurationService.getEventNotificationDeliveryWorkerBatchSize()).thenReturn(50);
+        when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(10);
     }
 
     // Minimal ScheduledExecutorService that records nothing and runs nothing — keeps the
@@ -124,7 +130,7 @@ public class WebhookDeliveryWorkerTest {
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt())).thenReturn(full);
         when(deliveryDAO.claimWebhookDelivery(anyString())).thenReturn(true);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
         assertEquals(counts[0], 50, "50 pending rows should be submitted");
@@ -137,7 +143,7 @@ public class WebhookDeliveryWorkerTest {
                 .thenReturn(java.util.Collections.singletonList(context("d1", 0)));
         when(deliveryDAO.claimWebhookDelivery(eq("d1"))).thenReturn(false);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
         assertEquals(counts[0], 0);
@@ -154,7 +160,7 @@ public class WebhookDeliveryWorkerTest {
         // regular claimWebhookDelivery, so the pending-claim mock is intentionally absent.
         when(deliveryDAO.claimStuckWebhookDelivery(eq("stuck-1"), any())).thenReturn(true);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
         assertEquals(counts[0], 0, "no pending to submit");
@@ -173,7 +179,7 @@ public class WebhookDeliveryWorkerTest {
         when(deliveryDAO.claimWebhookDelivery(eq("d1"))).thenReturn(true);
         when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
         assertEquals(counts[0], 0);
@@ -193,7 +199,7 @@ public class WebhookDeliveryWorkerTest {
         when(deliveryDAO.claimWebhookDelivery(eq("d1"))).thenReturn(true);
         when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         worker.runTick();
 
         verify(deliveryDAO).updateWebhookDeliveryStatus(any());
@@ -214,7 +220,7 @@ public class WebhookDeliveryWorkerTest {
                 org.mockito.ArgumentCaptor.forClass(WebhookDelivery.class);
         when(deliveryDAO.updateWebhookDeliveryStatus(captor.capture())).thenReturn(true);
 
-        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         worker.runTick();
 
         assertEquals(captor.getValue().getStatus(), DeliveryStatus.FAILED.getValue());

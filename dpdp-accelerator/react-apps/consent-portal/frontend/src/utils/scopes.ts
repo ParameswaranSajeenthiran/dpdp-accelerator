@@ -38,12 +38,12 @@ export const IS_SCOPES = {
 } as const
 
 export const EVENT_SCOPES = {
-  EVENT_SUBSCRIPTIONS_READ: 'portal:event-subscriptions:read',
-  EVENT_SUBSCRIPTIONS_WRITE: 'portal:event-subscriptions:write',
-  EVENT_TOPICS_READ: 'portal:event-topics:read',
-  EVENT_TOPICS_WRITE: 'portal:event-topics:write',
-  EVENTS_READ: 'portal:events:read',
-  EVENTS_WRITE: 'portal:events:write',
+  EVENT_SUBSCRIPTIONS_READ: 'notifications:subscriptions:read',
+  EVENT_SUBSCRIPTIONS_WRITE: 'notifications:subscriptions:write',
+  EVENT_TOPICS_READ: 'notifications:topics:read',
+  EVENT_TOPICS_WRITE: 'notifications:topics:write',
+  EVENTS_READ: 'notifications:events:read',
+  EVENTS_WRITE: 'notifications:events:write',
 } as const
 
 /** Any one of these scopes is enough to unlock the area it guards. */

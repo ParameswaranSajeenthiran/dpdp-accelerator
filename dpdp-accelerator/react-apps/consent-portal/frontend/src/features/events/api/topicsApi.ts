@@ -22,7 +22,7 @@ import { apiRequest } from '../../../utils/apiClient'
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 export async function fetchTopics(params: TopicListQueryParams): Promise<TopicListResponse> {
-  return apiRequest<TopicListResponse>('/api/event-notifications/topics', {
+  return apiRequest<TopicListResponse>('/api/dpdp/event-notifications/v1/topics', {
     method: 'GET',
     query: {
       limit: params.limit,
@@ -35,7 +35,7 @@ export async function fetchTopics(params: TopicListQueryParams): Promise<TopicLi
 }
 
 export async function createTopic(payload: TopicInput): Promise<TopicRecord> {
-  return apiRequest<TopicRecord>('/api/event-notifications/topics', {
+  return apiRequest<TopicRecord>('/api/dpdp/event-notifications/v1/topics', {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(payload),
@@ -43,7 +43,7 @@ export async function createTopic(payload: TopicInput): Promise<TopicRecord> {
 }
 
 export async function deleteTopic(topicId: string): Promise<TopicRecord> {
-  return apiRequest<TopicRecord>(`/api/event-notifications/topics/${encodeURIComponent(topicId)}`, {
+  return apiRequest<TopicRecord>(`/api/dpdp/event-notifications/v1/topics/${encodeURIComponent(topicId)}`, {
     method: 'DELETE',
   })
 }

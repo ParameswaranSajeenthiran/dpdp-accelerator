@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
+import org.wso2.carbon.identity.api.resource.mgt.constant.APIResourceManagementConstants;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
 import org.wso2.carbon.identity.application.common.model.APIResource;
 import org.wso2.carbon.identity.application.common.model.AuthorizedAPI;
@@ -47,8 +48,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Registers the DPDP Consent Portal OAuth2 application and authorizes it for the three
- * consent-mgt APIs. Role creation is a separate concern - see
+ * Registers the DPDP Consent Portal OAuth2 application and authorizes it for the consent-mgt
+ * and Event Notification APIs. Role creation is a separate concern - see
  * {@link DPDPConsentPortalRoleProvisioningUtil}. Every method here assumes it is already
  * running inside the correct tenant's {@code PrivilegedCarbonContext} flow; that setup lives in
  * the caller ({@link DPDPIdentityExtensionTenantMgtListener}), not here, so this class stays
@@ -65,6 +66,16 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             "/api/identity/consent-mgt/v2.0/consents",
             "/api/identity/consent-mgt/v2.0/purposes",
             "/api/identity/consent-mgt/v2.0/elements"
+    };
+    private static final String[] EVENT_NOTIFICATION_API_IDENTIFIERS = {
+            "/api/dpdp/event-notifications/v1/topics",
+            "/api/dpdp/event-notifications/v1/subscriptions",
+            "/api/dpdp/event-notifications/v1/events"
+    };
+    private static final String[][] EVENT_NOTIFICATION_API_SCOPES = {
+            {"notifications:topics:read", "notifications:topics:write"},
+            {"notifications:subscriptions:read", "notifications:subscriptions:write"},
+            {"notifications:events:read", "notifications:events:write"}
     };
 
     private DPDPConsentPortalAppProvisioningUtil() {
@@ -100,12 +111,62 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     public static List<String> authorizeConsentManagementAPIs(String applicationId, String tenantDomain)
             throws Exception {
 
+        return authorizeAPIs(applicationId, tenantDomain, CONSENT_MGT_API_IDENTIFIERS);
+    }
+
+    /**
+     * Authorizes the Event Notification API resources for the tenant's portal application.
+     * The operation is idempotent and preserves any existing authorization.
+     */
+    public static List<String> authorizeEventNotificationAPIs(String applicationId, String tenantDomain)
+            throws Exception {
+
+        return authorizeAPIs(applicationId, tenantDomain, EVENT_NOTIFICATION_API_IDENTIFIERS);
+    }
+
+    /**
+     * Registers the Event Notification API resources for a tenant when they are not already
+     * present. This is intentionally idempotent because tenant provisioning can be retried.
+     */
+    public static void registerEventNotificationAPIs(String tenantDomain) throws Exception {
+
+        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
+        for (int i = 0; i < EVENT_NOTIFICATION_API_IDENTIFIERS.length; i++) {
+            String identifier = EVENT_NOTIFICATION_API_IDENTIFIERS[i];
+            if (apiResourceManager.getAPIResourceByIdentifier(identifier, tenantDomain) != null) {
+                continue;
+            }
+            List<Scope> scopes = new ArrayList<>();
+            for (String scopeName : EVENT_NOTIFICATION_API_SCOPES[i]) {
+                scopes.add(new Scope(null, scopeName, scopeName, "Event Notification API scope: " + scopeName));
+            }
+            APIResource resource = new APIResource.APIResourceBuilder()
+                    .name("DPDP Event Notification API " + resourceName(identifier))
+                    .identifier(identifier)
+                    .type(APIResourceManagementConstants.APIResourceTypes.TENANT)
+                    .description("DPDP Event Notification " + resourceName(identifier) + " API")
+                    .requiresAuthorization(true)
+                    .scopes(scopes)
+                    .build();
+            apiResourceManager.addAPIResource(resource, tenantDomain);
+        }
+    }
+
+    private static String resourceName(String identifier) {
+
+        String[] parts = identifier.split("/");
+        return parts[parts.length - 1];
+    }
+
+    private static List<String> authorizeAPIs(String applicationId, String tenantDomain, String[] identifiers)
+            throws Exception {
+
         APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
         AuthorizedAPIManagementService authorizedAPIManagementService = DPDPIdentityExtensionDataHolder.getInstance()
                 .getAuthorizedAPIManagementService();
 
         List<String> authorizedScopeNames = new ArrayList<>();
-        for (String identifier : CONSENT_MGT_API_IDENTIFIERS) {
+        for (String identifier : identifiers) {
             APIResource apiResource = apiResourceManager.getAPIResourceByIdentifier(identifier, tenantDomain);
             if (apiResource == null) {
                 throw new IdentityApplicationManagementException("API resource not registered: " + identifier

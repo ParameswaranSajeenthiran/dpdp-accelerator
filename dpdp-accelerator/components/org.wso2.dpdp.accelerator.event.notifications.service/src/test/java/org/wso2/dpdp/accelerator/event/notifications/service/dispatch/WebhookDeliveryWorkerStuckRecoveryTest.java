@@ -24,6 +24,7 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import java.net.http.HttpClient;
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -47,12 +48,17 @@ public class WebhookDeliveryWorkerStuckRecoveryTest {
         @Mock
         private HttpClient httpClient;
 
+        @Mock
+        private DPDPConfigurationService configurationService;
+
         private WebhookDeliveryWorker worker;
 
         @BeforeMethod
         public void setUp() {
                 MockitoAnnotations.openMocks(this);
-                worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient);
+                when(configurationService.getEventNotificationDeliveryWorkerBatchSize()).thenReturn(50);
+                when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(10);
+                worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         }
 
         @Test
@@ -71,8 +77,7 @@ public class WebhookDeliveryWorkerStuckRecoveryTest {
                 verify(deliveryDAO).getStuckInFlightWebhookDispatchContexts(anyInt(), cutoffCaptor.capture());
 
                 Timestamp cutoff = cutoffCaptor.getValue();
-                long thresholdMs = org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser
-                                .getInstance().getStuckInFlightThresholdSeconds() * 1000L;
+                long thresholdMs = configurationService.getEventNotificationStuckInFlightThresholdSeconds() * 1000L;
                 assertTrue(cutoff.getTime() <= System.currentTimeMillis() - (thresholdMs - 2000L),
                                 "Cutoff timestamp should be past the stuck threshold");
         }

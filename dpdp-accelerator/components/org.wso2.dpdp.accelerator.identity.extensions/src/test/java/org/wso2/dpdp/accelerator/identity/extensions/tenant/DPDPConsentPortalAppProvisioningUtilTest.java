@@ -247,6 +247,60 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
                 anyString());
     }
 
+    @Test
+    public void authorizeEventNotificationAPIsAuthorizesAllThreeResources() throws Exception {
+        Scope topicScope = mockScope("notifications:topics:read");
+        Scope subscriptionScope = mockScope("notifications:subscriptions:read");
+        Scope eventScope = mockScope("notifications:events:read");
+        APIResource topicsResource = mockResource("event-topics", "/api/dpdp/event-notifications/v1/topics",
+                Arrays.asList(topicScope));
+        APIResource subscriptionsResource = mockResource("event-subscriptions", "/api/dpdp/event-notifications/v1/subscriptions",
+                Arrays.asList(subscriptionScope));
+        APIResource eventsResource = mockResource("event-events", "/api/dpdp/event-notifications/v1/events",
+                Arrays.asList(eventScope));
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/topics", TENANT_DOMAIN))
+                .thenReturn(topicsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/subscriptions", TENANT_DOMAIN))
+                .thenReturn(subscriptionsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/events", TENANT_DOMAIN))
+                .thenReturn(eventsResource);
+
+        List<String> scopes = DPDPConsentPortalAppProvisioningUtil
+                .authorizeEventNotificationAPIs(APPLICATION_ID, TENANT_DOMAIN);
+
+        assertEquals(scopes, Arrays.asList("notifications:topics:read",
+                "notifications:subscriptions:read", "notifications:events:read"));
+        verify(authorizedAPIManagementService, times(3)).addAuthorizedAPI(eq(APPLICATION_ID),
+                any(AuthorizedAPI.class), eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void registerEventNotificationAPIsRegistersMissingResourcesWithAllScopes() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(anyString(), eq(TENANT_DOMAIN))).thenReturn(null);
+
+        DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(TENANT_DOMAIN);
+
+        ArgumentCaptor<APIResource> resourceCaptor = ArgumentCaptor.forClass(APIResource.class);
+        verify(apiResourceManager, times(3)).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
+        assertEquals(resourceCaptor.getAllValues().get(0).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(1).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(2).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(2).getScopes().get(1).getName(),
+                "notifications:events:write");
+    }
+
+    @Test
+    public void registerEventNotificationAPIsDoesNotDuplicateExistingResources() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(anyString(), eq(TENANT_DOMAIN)))
+                .thenReturn(mock(APIResource.class));
+
+        DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(TENANT_DOMAIN);
+
+        verify(apiResourceManager, never()).addAPIResource(any(APIResource.class), anyString());
+    }
+
     private static Scope mockScope(String name) {
 
         Scope scope = mock(Scope.class);

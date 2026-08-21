@@ -39,6 +39,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -68,12 +69,21 @@ public class SubscriptionServiceImplTest {
     @Mock
     private DeliveryAckDAO deliveryAckDAO;
 
+    @Mock
+    private DPDPConfigurationService configurationService;
+
     private SubscriptionServiceImpl subscriptionService;
 
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        subscriptionService = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO);
+        when(configurationService.getEventNotificationThreadPoolSize()).thenReturn(4);
+        when(configurationService.getEventNotificationBaseBackoffSeconds()).thenReturn(5L);
+        when(configurationService.getEventNotificationMaxRetries()).thenReturn(5);
+        when(configurationService.isEventNotificationHttpCallbackUrlAllowed()).thenReturn(true);
+        when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
+        subscriptionService = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
+                configurationService);
     }
 
     @Test
@@ -246,14 +256,14 @@ public class SubscriptionServiceImplTest {
         when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
 
         Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
-                "WEBHOOK", "https://example.com/callback1", "secret1", "ACTIVE",
+                "WEBHOOK", "https://93.184.216.34:443/callback1", "secret1", "ACTIVE",
                 new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
         when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
                 .thenReturn(Collections.singletonList(existingSub));
         doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
 
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
-        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://example.com/callback2", "secret2");
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://93.184.216.34:443/callback2", "secret2");
 
         SubscriptionDTO result = subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
         assertNotNull(result);
@@ -266,13 +276,13 @@ public class SubscriptionServiceImplTest {
         when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
 
         Subscription existingSub = new Subscription("sub1", "org1", "org1", "t1", "ALL", Collections.emptyList(),
-                "WEBHOOK", "https://example.com/callback1", "secret1", "ACTIVE",
+                "WEBHOOK", "https://93.184.216.34:443/callback1", "secret1", "ACTIVE",
                 new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
         when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "t1"))
                 .thenReturn(Collections.singletonList(existingSub));
 
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
-        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://example.com/callback1", "secret2");
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "https://93.184.216.34:443/callback1", "secret2");
 
         subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
     }

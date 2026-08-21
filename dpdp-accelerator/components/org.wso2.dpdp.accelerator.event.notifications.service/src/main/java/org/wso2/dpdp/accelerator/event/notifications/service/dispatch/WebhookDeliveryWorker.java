@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
@@ -71,15 +71,27 @@ public class WebhookDeliveryWorker implements Runnable {
     private final DeliveryDAO deliveryDAO;
     private final Executor executor;
     private final HttpClient httpClient;
+    private final DPDPConfigurationService configurationService;
 
     public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor) {
-        this(deliveryDAO, executor, defaultHttpClient());
+        this(deliveryDAO, executor, defaultHttpClient(), null);
     }
 
     public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor, HttpClient httpClient) {
+        this(deliveryDAO, executor, httpClient, null);
+    }
+
+    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor,
+            DPDPConfigurationService configurationService) {
+        this(deliveryDAO, executor, defaultHttpClient(), configurationService);
+    }
+
+    public WebhookDeliveryWorker(DeliveryDAO deliveryDAO, Executor executor, HttpClient httpClient,
+            DPDPConfigurationService configurationService) {
         this.deliveryDAO = deliveryDAO;
         this.executor = executor;
         this.httpClient = httpClient;
+        this.configurationService = configurationService;
     }
 
     private static HttpClient defaultHttpClient() {
@@ -104,7 +116,7 @@ public class WebhookDeliveryWorker implements Runnable {
      * pass and the stuck-recovery pass fired.
      */
     public int[] runTick() {
-        int batchSize = EventNotificationConfigParser.getInstance().getDeliveryWorkerBatchSize();
+        int batchSize = getConfiguration().getEventNotificationDeliveryWorkerBatchSize();
         List<WebhookDeliveryDispatchContext> pending = fetch(batchSize, false);
         int submitted = submitBatch(pending, false, null);
         // Only reclaim stuck in-flight when we are below budget — if pending already filled
@@ -112,7 +124,7 @@ public class WebhookDeliveryWorker implements Runnable {
         int reclaimed = 0;
         int remaining = batchSize - submitted;
         if (remaining > 0) {
-            int thresholdSeconds = EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+            int thresholdSeconds = getConfiguration().getEventNotificationStuckInFlightThresholdSeconds();
             java.sql.Timestamp cutoff = new java.sql.Timestamp(
                     System.currentTimeMillis() - thresholdSeconds * 1000L);
             List<WebhookDeliveryDispatchContext> stuck = fetch(remaining, true);
@@ -133,7 +145,7 @@ public class WebhookDeliveryWorker implements Runnable {
         }
         try {
             if (reclaim) {
-                int thresholdSeconds = EventNotificationConfigParser.getInstance().getStuckInFlightThresholdSeconds();
+                int thresholdSeconds = getConfiguration().getEventNotificationStuckInFlightThresholdSeconds();
                 java.sql.Timestamp cutoff = new java.sql.Timestamp(
                         System.currentTimeMillis() - thresholdSeconds * 1000L);
                 return deliveryDAO.getStuckInFlightWebhookDispatchContexts(limit, cutoff);
@@ -179,7 +191,8 @@ public class WebhookDeliveryWorker implements Runnable {
                         ctx.getTopicId(),
                         ctx.getTopicName(),
                         deliveryDAO,
-                        httpClient));
+                        httpClient,
+                        getConfiguration()));
                 submitted++;
             } catch (Exception e) {
                 LOG.error("Failed to submit WebhookDeliveryTask for delivery ["
@@ -188,6 +201,13 @@ public class WebhookDeliveryWorker implements Runnable {
             }
         }
         return submitted;
+    }
+
+    private DPDPConfigurationService getConfiguration() {
+        if (configurationService == null) {
+            return new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false);
+        }
+        return configurationService;
     }
 
     private boolean claim(String deliveryId) {

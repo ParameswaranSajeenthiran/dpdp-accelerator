@@ -111,15 +111,10 @@
                                         <include name="*.jar"/>
                                     </fileset>
                                 </copy>
-                                <copy todir="${project.basedir}/carbon-home/dbscripts/dpdp-accelerator/event-notification">
-                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/src/main/resources/dbscripts">
-                                        <include name="*.sql"/>
-                                    </fileset>
-                                </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>
-                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#event-notifications.war"
-                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#event-notifications/"/>
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#dpdp#event-notifications#v1.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#event-notifications#v1/"/>
                                 <copy todir="${project.basedir}/carbon-home/repository/components/dropins">
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.identity.extensions/target"
                                               includes="org.wso2.dpdp.accelerator.identity.extensions-*.jar"/>

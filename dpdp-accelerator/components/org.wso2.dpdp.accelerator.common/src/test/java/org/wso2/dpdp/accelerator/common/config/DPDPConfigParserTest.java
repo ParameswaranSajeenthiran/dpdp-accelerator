@@ -46,8 +46,18 @@ public class DPDPConfigParserTest {
         Files.write(configFile, ("<DPDPAccelerator xmlns=\"http://wso2.org/projects/carbon/dpdp-accelerator.xml\">"
                 + "<ConsentPortal>"
                 + "<ClientId>" + CUSTOM_CLIENT_ID + "</ClientId>"
-                // Enabled is deliberately left unset, to exercise the default-fallback path.
                 + "</ConsentPortal>"
+                + "<EventNotifications>"
+                + "<ThreadPoolSize>8</ThreadPoolSize>"
+                + "<BaseBackoffSeconds>12</BaseBackoffSeconds>"
+                + "<MaxRetries>7</MaxRetries>"
+                + "<AllowHttpCallbackUrl>false</AllowHttpCallbackUrl>"
+                + "<DeliveryWorkerBatchSize>25</DeliveryWorkerBatchSize>"
+                + "<DeliveryWorkerPollSeconds>9</DeliveryWorkerPollSeconds>"
+                + "<StuckInFlightThresholdSeconds>15</StuckInFlightThresholdSeconds>"
+                + "<MaxVerificationResponseBodyBytes>8192</MaxVerificationResponseBodyBytes>"
+                + "<PendingSubscriptionRecoveryThresholdSeconds>90</PendingSubscriptionRecoveryThresholdSeconds>"
+                + "</EventNotifications>"
                 + "</DPDPAccelerator>").getBytes());
         System.setProperty("carbon.config.dir.path", configDir.toString());
     }
@@ -70,5 +80,14 @@ public class DPDPConfigParserTest {
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertEquals(service.getConsentPortalClientId(), CUSTOM_CLIENT_ID);
         assertTrue(service.isConsentPortalProvisioningEnabled());
+        assertEquals(service.getEventNotificationThreadPoolSize(), 8);
+        assertEquals(service.getEventNotificationBaseBackoffSeconds(), 12L);
+        assertEquals(service.getEventNotificationMaxRetries(), 7);
+        assertTrue(!service.isEventNotificationHttpCallbackUrlAllowed());
+        assertEquals(service.getEventNotificationDeliveryWorkerBatchSize(), 25);
+        assertEquals(service.getEventNotificationDeliveryWorkerPollSeconds(), 9);
+        assertEquals(service.getEventNotificationStuckInFlightThresholdSeconds(), 15);
+        assertEquals(service.getEventNotificationMaxVerificationResponseBodyBytes(), 8192);
+        assertEquals(service.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds(), 90);
     }
 }

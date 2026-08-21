@@ -18,7 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.config.EventNotificationConfigParser;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -85,10 +86,18 @@ public class WebhookDeliveryTask implements Runnable {
     private final String topicName;
     private final DeliveryDAO deliveryDAO;
     private final HttpClient httpClient;
+    private final DPDPConfigurationService configurationService;
 
     public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String payload, String callbackUrl,
             String sharedSecret, String topicId, String topicName, DeliveryDAO deliveryDAO,
             HttpClient httpClient) {
+        this(delivery, orgId, payload, callbackUrl, sharedSecret, topicId, topicName, deliveryDAO,
+                httpClient, new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false));
+    }
+
+    public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String payload, String callbackUrl,
+            String sharedSecret, String topicId, String topicName, DeliveryDAO deliveryDAO,
+            HttpClient httpClient, DPDPConfigurationService configurationService) {
         this.delivery = delivery;
         this.orgId = orgId;
         this.payload = payload;
@@ -98,6 +107,7 @@ public class WebhookDeliveryTask implements Runnable {
         this.topicName = topicName;
         this.deliveryDAO = deliveryDAO;
         this.httpClient = httpClient;
+        this.configurationService = configurationService;
     }
 
     @Override
@@ -227,7 +237,7 @@ public class WebhookDeliveryTask implements Runnable {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         WebhookDeliveryAudit audit = newAudit(now, responseCode);
         int newAttempt = delivery.getAttemptCount() + 1;
-        int maxRetries = EventNotificationConfigParser.getInstance().getMaxRetries();
+        int maxRetries = configurationService.getEventNotificationMaxRetries();
         if (newAttempt >= maxRetries) {
             WebhookDelivery failed = new WebhookDelivery(
                     delivery.getDeliveryId(),
@@ -250,7 +260,7 @@ public class WebhookDeliveryTask implements Runnable {
             return;
         }
 
-        long baseBackoffSeconds = EventNotificationConfigParser.getInstance().getBaseBackoffSeconds();
+        long baseBackoffSeconds = configurationService.getEventNotificationBaseBackoffSeconds();
         long delaySeconds = baseBackoffSeconds * (long) Math.pow(3, newAttempt - 1);
         Timestamp nextRetryAt = new Timestamp(now.getTime() + delaySeconds * 1000L);
 

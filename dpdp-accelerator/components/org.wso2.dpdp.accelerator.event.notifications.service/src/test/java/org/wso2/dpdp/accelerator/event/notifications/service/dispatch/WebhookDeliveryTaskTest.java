@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
@@ -71,9 +72,14 @@ public class WebhookDeliveryTaskTest {
     @Mock
     private HttpClient httpClient;
 
+    @Mock
+    private DPDPConfigurationService configurationService;
+
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(configurationService.getEventNotificationMaxRetries()).thenReturn(5);
+        when(configurationService.getEventNotificationBaseBackoffSeconds()).thenReturn(5L);
     }
 
     private WebhookDelivery delivery(int attemptCount) {
@@ -103,7 +109,8 @@ public class WebhookDeliveryTaskTest {
                 TOPIC_ID,
                 TOPIC_NAME,
                 deliveryDAO,
-                httpClient);
+                httpClient,
+                configurationService);
     }
 
     @SuppressWarnings("unchecked")

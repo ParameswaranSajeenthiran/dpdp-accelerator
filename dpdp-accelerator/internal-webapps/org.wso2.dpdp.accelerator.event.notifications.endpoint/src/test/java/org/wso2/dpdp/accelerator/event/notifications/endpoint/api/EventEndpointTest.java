@@ -61,7 +61,7 @@ public class EventEndpointTest {
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        eventEndpoint = new EventEndpoint(eventHandler);
+        eventEndpoint = new EventEndpoint(eventHandler, () -> "org1");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class EventEndpointTest {
                 Arrays.asList("marketing"), null, null);
         when(eventHandler.publishEvent(eq("org1"), eq("g1"), any())).thenReturn(published);
 
-        Response response = eventEndpoint.publishEvent("org1", "g1", request);
+        Response response = eventEndpoint.publishEvent("g1", request);
 
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
         assertEquals(response.getEntity(), published);
@@ -86,7 +86,7 @@ public class EventEndpointTest {
                 .thenThrow(new RuntimeException("boom"));
 
         try {
-            eventEndpoint.publishEvent("org1", "g1", request);
+            eventEndpoint.publishEvent("g1", request);
             org.testng.Assert.fail("Expected RuntimeException");
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");
@@ -101,14 +101,14 @@ public class EventEndpointTest {
         eventDTO.setDeliveriesCount(1);
         PaginatedResult<EventDTO> page = new PaginatedResult<>(
                 Collections.singletonList(eventDTO), 1);
-        when(eventHandler.searchEvents(eq("org1"), eq("topic-1"), eq("DELIVERED"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0)))
+        when(eventHandler.searchEvents(eq("org1"), eq("topic-1"), eq("DELIVERED"), eq("org1"), eq("marketing"), eq("search"), eq(10), eq(0)))
                 .thenReturn(page);
 
-        Response response = eventEndpoint.listEvents("org1", "topic-1", "DELIVERED", "sub-1", "grp-1", "marketing", "search", 10, 0);
+        Response response = eventEndpoint.listEvents("topic-1", "DELIVERED", "sub-1", "marketing", "search", 10, 0);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), page);
-        verify(eventHandler, times(1)).searchEvents("org1", "topic-1", "DELIVERED", "grp-1", "marketing", "search", 10, 0);
+        verify(eventHandler, times(1)).searchEvents("org1", "topic-1", "DELIVERED", "org1", "marketing", "search", 10, 0);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class EventEndpointTest {
                 .thenThrow(new RuntimeException("boom"));
 
         try {
-            eventEndpoint.listEvents("org1", null, null, null, null, null, "search", 10, 0);
+            eventEndpoint.listEvents(null, null, null, null, "search", 10, 0);
             org.testng.Assert.fail("Expected RuntimeException");
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");
@@ -131,7 +131,7 @@ public class EventEndpointTest {
         dto.setEventId("evt-1");
         when(eventHandler.getDeliveryHistory(eq("org1"), eq("dlv-1"))).thenReturn(dto);
 
-        Response response = eventEndpoint.getDeliveryHistory("org1", "dlv-1");
+        Response response = eventEndpoint.getDeliveryHistory("dlv-1");
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), dto);
@@ -143,7 +143,7 @@ public class EventEndpointTest {
         EventDTO dto = new EventDTO("evt-1", "org1", "g1", "topic-1", "{}", Collections.emptyList(), null, null);
         when(eventHandler.getEventById(eq("org1"), eq("evt-1"))).thenReturn(dto);
 
-        Response response = eventEndpoint.getEvent("org1", "evt-1");
+        Response response = eventEndpoint.getEvent("evt-1");
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), dto);
@@ -158,7 +158,7 @@ public class EventEndpointTest {
                 1);
         when(eventHandler.getEventDeliveries(eq("org1"), eq("evt-1"), eq(20), eq(0))).thenReturn(page);
 
-        Response response = eventEndpoint.getEventDeliveries("org1", "evt-1", 20, 0);
+        Response response = eventEndpoint.getEventDeliveries("evt-1", 20, 0);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), page);

@@ -28,29 +28,8 @@ public class EventNotificationCommonConstants {
     }
 
     // Datasource Constants
-    public static final String JDBC_EVENT_NOTIFICATION_DATASOURCE_NAME = "jdbc/EventNotificationDB";
-    public static final String JDBC_EVENT_NOTIFICATION_JNDI_ENV_NAME = "java:comp/env/jdbc/EventNotificationDB";
-    public static final String JDBC_SHARED_DATASOURCE_NAME = "jdbc/WSO2SHARED_DB";
-    public static final String DEFAULT_H2_URL = "jdbc:h2:./repository/database/WSO2EVENT_NOTIFICATION_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000";
-    public static final String DEFAULT_H2_USER = "wso2carbon";
-    public static final String DEFAULT_H2_PASS = "wso2carbon";
-
-    // Environment Overrides for DB
-    public static final String ENV_JDBC_URL = "ENF_DB_URL";
-    public static final String ENV_JDBC_USER = "ENF_DB_USER";
-    public static final String ENV_JDBC_PASS = "ENF_DB_PASS";
-
-    // Config Keys
-    // Defaults
-    public static final int DEFAULT_THREAD_POOL_SIZE = 4;
-    public static final long DEFAULT_BASE_BACKOFF_SECONDS = 5L;
-    public static final int DEFAULT_MAX_RETRIES = 5;
-    public static final boolean DEFAULT_ALLOW_HTTP_CALLBACK_URL = true;
-    public static final int DEFAULT_DELIVERY_WORKER_BATCH_SIZE = 50;
-    public static final int DEFAULT_DELIVERY_WORKER_POLL_SECONDS = 5;
-    public static final int DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS = 10;
-    public static final int DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES = 4096;
-    public static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS = 60;
+    public static final String JDBC_DPDP_DATASOURCE_NAME = "jdbc/WSO2DPDP_DB";
+    public static final String JDBC_DPDP_JNDI_ENV_NAME = "java:comp/env/jdbc/WSO2DPDP_DB";
 
     // Data Access Error Messages
     public static final String ERROR_ADDING_TOPIC = "Error adding topic [%s]";

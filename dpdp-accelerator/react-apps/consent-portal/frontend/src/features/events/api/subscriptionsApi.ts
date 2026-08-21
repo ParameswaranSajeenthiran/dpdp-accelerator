@@ -31,7 +31,7 @@ const jsonHeaders = { 'Content-Type': 'application/json' }
 export async function fetchSubscriptions(
   params: SubscriptionListQueryParams,
 ): Promise<SubscriptionListResponse> {
-  return apiRequest<SubscriptionListResponse>('/api/event-notifications/subscriptions', {
+  return apiRequest<SubscriptionListResponse>('/api/dpdp/event-notifications/v1/subscriptions', {
     method: 'GET',
     query: {
       limit: params.limit,
@@ -46,7 +46,7 @@ export async function fetchSubscriptions(
 
 export async function fetchSubscriptionById(subscriptionId: string): Promise<SubscriptionRecord> {
   return apiRequest<SubscriptionRecord>(
-    `/api/event-notifications/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    `/api/dpdp/event-notifications/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
     {
       method: 'GET',
     },
@@ -54,7 +54,7 @@ export async function fetchSubscriptionById(subscriptionId: string): Promise<Sub
 }
 
 export async function createSubscription(payload: SubscriptionInput): Promise<SubscriptionRecord> {
-  return apiRequest<SubscriptionRecord>('/api/event-notifications/subscriptions', {
+  return apiRequest<SubscriptionRecord>('/api/dpdp/event-notifications/v1/subscriptions', {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(payload),
@@ -63,7 +63,7 @@ export async function createSubscription(payload: SubscriptionInput): Promise<Su
 
 export async function deleteSubscription(subscriptionId: string): Promise<SubscriptionRecord> {
   return apiRequest<SubscriptionRecord>(
-    `/api/event-notifications/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    `/api/dpdp/event-notifications/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
     {
       method: 'DELETE',
     },
@@ -72,7 +72,7 @@ export async function deleteSubscription(subscriptionId: string): Promise<Subscr
 
 export async function verifySubscription(subscriptionId: string): Promise<SubscriptionRecord> {
   return apiRequest<SubscriptionRecord>(
-    `/api/event-notifications/subscriptions/${encodeURIComponent(subscriptionId)}/verify`,
+    `/api/dpdp/event-notifications/v1/subscriptions/${encodeURIComponent(subscriptionId)}/verify`,
     {
       method: 'POST',
     },
@@ -84,7 +84,7 @@ export async function fetchSubscriptionEvents(
   params: { limit: number; offset: number },
 ): Promise<{ items: SubscriptionDeliveryRecord[]; total: number }> {
   return apiRequest<{ items: SubscriptionDeliveryRecord[]; total: number }>(
-    `/api/event-notifications/subscriptions/${encodeURIComponent(subscriptionId)}/events`,
+    `/api/dpdp/event-notifications/v1/subscriptions/${encodeURIComponent(subscriptionId)}/events`,
     {
       method: 'GET',
       query: {
@@ -100,7 +100,7 @@ export async function fetchSubscriptionEventHistory(
   deliveryId: string,
 ): Promise<SubscriptionEventHistoryRecord> {
   return apiRequest<SubscriptionEventHistoryRecord>(
-    `/api/event-notifications/subscriptions/${encodeURIComponent(subscriptionId)}/events/${encodeURIComponent(deliveryId)}`,
+    `/api/dpdp/event-notifications/v1/subscriptions/${encodeURIComponent(subscriptionId)}/events/${encodeURIComponent(deliveryId)}`,
     {
       method: 'GET',
     },

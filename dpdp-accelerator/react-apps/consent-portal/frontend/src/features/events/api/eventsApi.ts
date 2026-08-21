@@ -23,7 +23,7 @@ import { apiRequest } from '../../../utils/apiClient'
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 export async function fetchEvents(params: EventListQueryParams): Promise<EventListResponse> {
-  return apiRequest<EventListResponse>('/api/event-notifications/events', {
+  return apiRequest<EventListResponse>('/api/dpdp/event-notifications/v1/events', {
     method: 'GET',
     query: {
       limit: params.limit,
@@ -42,7 +42,7 @@ export async function fetchEventDeliveryHistory(
   deliveryId: string,
 ): Promise<SubscriptionEventHistoryRecord> {
   return apiRequest<SubscriptionEventHistoryRecord>(
-    `/api/event-notifications/events/${encodeURIComponent(deliveryId)}/history`,
+    `/api/dpdp/event-notifications/v1/events/${encodeURIComponent(deliveryId)}/history`,
     {
       method: 'GET',
     },
@@ -50,7 +50,7 @@ export async function fetchEventDeliveryHistory(
 }
 
 export async function fetchEventById(eventId: string): Promise<EventRecord> {
-  return apiRequest<EventRecord>(`/api/event-notifications/events/${encodeURIComponent(eventId)}`, {
+  return apiRequest<EventRecord>(`/api/dpdp/event-notifications/v1/events/${encodeURIComponent(eventId)}`, {
     method: 'GET',
   })
 }
@@ -61,7 +61,7 @@ export async function fetchEventDeliveries(
   offset = 0,
 ): Promise<EventListResponse> {
   return apiRequest<EventListResponse>(
-    `/api/event-notifications/events/${encodeURIComponent(eventId)}/deliveries`,
+    `/api/dpdp/event-notifications/v1/events/${encodeURIComponent(eventId)}/deliveries`,
     {
       method: 'GET',
       query: {
@@ -73,7 +73,7 @@ export async function fetchEventDeliveries(
 }
 
 export async function publishEvent(payload: EventInput): Promise<EventRecord> {
-  return apiRequest<EventRecord>('/api/event-notifications/events', {
+  return apiRequest<EventRecord>('/api/dpdp/event-notifications/v1/events', {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(payload),

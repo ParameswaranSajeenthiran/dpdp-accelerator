@@ -24,6 +24,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -36,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.function.Supplier;
 
 /**
  * JAX-RS endpoint for event publication, delivery listing, and delivery audit history.
@@ -46,67 +48,69 @@ import javax.ws.rs.core.Response;
 public class EventEndpoint {
 
     private final EventHandler eventHandler;
+    private final Supplier<String> organizationIdResolver;
 
     public EventEndpoint() {
         this.eventHandler = new EventHandler();
+        this.organizationIdResolver = DPDPTenantContext::getOrganizationId;
     }
 
     public EventEndpoint(EventHandler eventHandler) {
+        this(eventHandler, DPDPTenantContext::getOrganizationId);
+    }
+
+    EventEndpoint(EventHandler eventHandler, Supplier<String> organizationIdResolver) {
         this.eventHandler = eventHandler;
+        this.organizationIdResolver = organizationIdResolver;
     }
 
     @POST
     public Response publishEvent(
-            @HeaderParam("org-id") String orgId,
             @HeaderParam("group-id") String groupId,
             EventCreateDTO request) {
-        EventDTO dto = eventHandler.publishEvent(orgId, groupId, request);
+        EventDTO dto = eventHandler.publishEvent(organizationIdResolver.get(), groupId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
     @GET
     public Response listEvents(
-            @HeaderParam("org-id") String orgId,
             @QueryParam("topic") String topic,
             @QueryParam("status") String status,
             @QueryParam("subscriptionId") String subscriptionId,
-            @QueryParam("groupId") String groupId,
             @QueryParam("purposes") String purposes,
             @QueryParam("search") String search,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
+        String orgId = organizationIdResolver.get();
         PaginatedResult<EventDTO> result = eventHandler.searchEvents(
-                orgId, topic, status, groupId, purposes, search, limit, offset);
+                orgId, topic, status, orgId, purposes, search, limit, offset);
         return Response.ok(result).build();
     }
 
     @GET
     @Path("/{deliveryId}/history")
     public Response getDeliveryHistory(
-            @HeaderParam("org-id") String orgId,
             @PathParam("deliveryId") String deliveryId) {
-        SubscriptionEventHistoryDTO dto = eventHandler.getDeliveryHistory(orgId, deliveryId);
+        SubscriptionEventHistoryDTO dto = eventHandler.getDeliveryHistory(organizationIdResolver.get(), deliveryId);
         return Response.ok(dto).build();
     }
 
     @GET
     @Path("/{eventId}")
     public Response getEvent(
-            @HeaderParam("org-id") String orgId,
             @PathParam("eventId") String eventId) {
-        EventDTO dto = eventHandler.getEventById(orgId, eventId);
+        EventDTO dto = eventHandler.getEventById(organizationIdResolver.get(), eventId);
         return Response.ok(dto).build();
     }
 
     @GET
     @Path("/{eventId}/deliveries")
     public Response getEventDeliveries(
-            @HeaderParam("org-id") String orgId,
             @PathParam("eventId") String eventId,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset) {
         PaginatedResult<SubscriptionDeliveryDTO> result = eventHandler.getEventDeliveries(
-                orgId, eventId, limit, offset);
+                organizationIdResolver.get(), eventId, limit, offset);
         return Response.ok(result).build();
     }
 }

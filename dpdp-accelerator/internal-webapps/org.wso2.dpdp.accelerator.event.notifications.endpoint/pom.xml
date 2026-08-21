@@ -34,7 +34,7 @@
     <name>WSO2 DPDP Event Notification - Endpoint Webapp</name>
     <description>
         Internal Carbon webapp exposing the Event Notification REST API.
-        Deployed as api#event-notifications.war inside
+        Deployed as api#dpdp#event-notifications#v1.war inside
         repository/deployment/server/webapps/.
     </description>
 
@@ -52,11 +52,6 @@
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -83,24 +78,34 @@
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.utils</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Carbon base may bring the legacy Pax Logging API, which conflicts
+                     with the WSO2 Pax Logging API used by the current Carbon runtime. -->
+                <exclusion>
+                    <groupId>org.ops4j.pax.logging</groupId>
+                    <artifactId>pax-logging-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.common</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.dao</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.service</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -117,7 +122,6 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
-            <version>2.39</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -134,7 +138,7 @@
                             <directory>src/main/webapp</directory>
                         </resource>
                     </webResources>
-                    <warName>api#event-notifications</warName>
+                    <warName>api#dpdp#event-notifications#v1</warName>
                     <packagingExcludes>WEB-INF/lib/slf4j-api-*.jar</packagingExcludes>
                 </configuration>
             </plugin>

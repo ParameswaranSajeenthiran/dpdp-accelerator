@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.TopicHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -51,29 +52,28 @@ public class TopicEndpoint {
     }
 
     @POST
-    public Response createTopic(@HeaderParam("org-id") String orgId, TopicDTO request) {
-        TopicDTO dto = topicHandler.createTopic(orgId, request);
+    public Response createTopic(TopicDTO request) {
+        TopicDTO dto = topicHandler.createTopic(DPDPTenantContext.getOrganizationId(), request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
     @GET
     public Response listTopics(
-            @HeaderParam("org-id") String orgId,
             @QueryParam("status") String status,
             @QueryParam("search") String search,
             @QueryParam("limit") @DefaultValue("20") int limit,
             @QueryParam("offset") @DefaultValue("0") int offset,
             @QueryParam("sort") String sort) {
-        PaginatedResult<TopicDTO> result = topicHandler.listTopics(orgId, status, search, limit, offset, sort);
+        PaginatedResult<TopicDTO> result = topicHandler.listTopics(DPDPTenantContext.getOrganizationId(), status,
+                search, limit, offset, sort);
         return Response.ok(result).build();
     }
 
     @DELETE
     @Path("/{topicId}")
     public Response deleteTopic(
-            @HeaderParam("org-id") String orgId,
             @PathParam("topicId") String topicId) {
-        TopicDTO dto = topicHandler.deleteTopic(orgId, topicId);
+        TopicDTO dto = topicHandler.deleteTopic(DPDPTenantContext.getOrganizationId(), topicId);
         return Response.ok(dto).build();
     }
 }

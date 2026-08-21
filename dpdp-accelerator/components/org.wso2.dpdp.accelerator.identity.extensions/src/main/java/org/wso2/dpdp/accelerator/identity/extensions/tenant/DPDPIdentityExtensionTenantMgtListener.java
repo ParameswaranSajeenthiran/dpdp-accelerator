@@ -101,8 +101,11 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                         + "; reconciling its API authorization and roles.");
             }
 
+            DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
+            authorizedScopes.addAll(DPDPConsentPortalAppProvisioningUtil
+                    .authorizeEventNotificationAPIs(applicationId, tenantDomain));
             DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
