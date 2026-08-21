@@ -48,7 +48,14 @@ the part `.env.example` genuinely needs to convey.
 `README.md` also lists `Node.js 18+` as the prerequisite, while the rest of the repository
 requires 20.19+/22.12+.
 
-### The parallelism claim is false
+### The parallelism claim was false, and is now true (resolved)
+
+Kept as a record; no action needed. The three fixture defects behind this were fixed in
+"Make the integration suite parallel-safe" and the suite now passes 49/49 at the default worker
+count across consecutive runs, in 1.1 min against 5.7 min serially. Everything below describes the
+state before that fix.
+
+
 
 Under **Operating principles** the README states:
 
@@ -67,21 +74,26 @@ raw API setup calls returning **401** where 201 was expected (e.g. `seedConsent`
 `utils/consentSetup.ts`), and tests hitting the 30 s timeout parked on a login navigation.
 
 The mechanism is the single-session-per-account cap the README already acknowledges under
-**Known limitations**, but the mitigation described one section earlier doesn't actually cover it.
-`fixtures/auth.fixtures.ts`'s `getPersonaState` caches the *login* so credentials are entered once,
-yet `pageForPersonaState` still drives a full OIDC redirect for **every** browser context it
-builds. Meanwhile `authHeadersFromPersonaState` pairs the *first* login's bearer token with the
-*first* login's `atbv` token-binding cookie, and every raw API call in the suite uses that one
-pair. Concurrent re-authentication of the same account invalidates it, so the API seeding 401s.
-Serially the window never opens, which is why the same tests pass at `--workers=1`.
+**Known limitations** — but not for the reason that section gives, and not for the reason first
+guessed here. Two hypotheses were tested and **disproved** by instrumenting the fixture:
 
-So the two README sections contradict each other: "no extra setup needed" is only true if you
-also do what **Known limitations** says and provision additional accounts. Until then the suite
-needs `workers: 1`.
+- *"Concurrent re-auth revokes the cached bearer token, so API seeding 401s."* No. A probe issued
+  four concurrent re-authentications and then reused the cached bearer token: still `200`, and IS
+  reported one active session throughout. The token survives fine.
+- *"The account needs one IS session per worker, so provision more accounts."* No. Sharing the IS
+  SSO session across contexts is harmless; `commonAuthId` is reused deliberately and works.
 
-Fixing this properly is a design decision, not a doc fix — either pin `workers: 1` in
-`playwright.config.ts` (costs ~3 min of wall clock), or give each Playwright worker its own IS
-account so no two workers ever authenticate as the same persona.
+The actual cause was three fixture defects, none of which needed extra accounts — see the
+"Make the integration suite parallel-safe" commit. The load-bearing one: `storageState` captures
+`JSESSIONID path=/consent-portal`, so every context built from a cached login replayed the same
+**servlet HTTP session** — which is exactly where the portal's JSP shell parks the authorization
+code before handing it over once and clearing it. Concurrent callbacks stomped one shared parked
+code; the losers landed on the default route, which surfaced as a timeout waiting for an element
+on a page that never rendered.
+
+Lesson worth keeping: "passes serially, fails in parallel" invites a story about the identity
+provider, and both plausible stories here were wrong. The evidence that settled it was cheap —
+printing the URL each context actually landed on, and printing the cookies each context inherited.
 
 ## `README.md` (root) vs `docs/setup-guide.md`
 
