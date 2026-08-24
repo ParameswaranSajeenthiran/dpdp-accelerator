@@ -77,7 +77,7 @@ public class EventPublishTransactionAtomicityTest {
         String topicName = "consent.update";
         Topic activeTopic = new Topic("topic-123", orgId, topicName, "desc", TopicStatus.ACTIVE.getValue());
 
-        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq(orgId), eq(topicName)))
+        when(topicDAO.getActiveTopicByOrgAndNameForUpdate(any(Connection.class), eq(orgId), eq(topicName)))
                 .thenReturn(Optional.of(activeTopic));
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
         doThrow(new EventNotificationDataAccessException("Fanout DB write failure"))

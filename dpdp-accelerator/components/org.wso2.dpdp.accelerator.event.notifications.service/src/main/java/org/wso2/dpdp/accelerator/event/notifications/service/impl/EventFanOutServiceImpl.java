@@ -18,11 +18,10 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
@@ -61,15 +60,12 @@ import org.apache.commons.logging.LogFactory;
  * <p>Poll-mode subscriptions receive a pending poll-delivery row in the same
  * transaction as the event and webhook delivery rows.</p>
  */
-@Component(service = EventFanOutService.class, immediate = true)
 public class EventFanOutServiceImpl implements EventFanOutService {
 
     private static final Log LOG = LogFactory.getLog(EventFanOutServiceImpl.class);
 
-    @Reference
     private SubscriptionDAO subscriptionDAO;
 
-    @Reference
     private DeliveryDAO deliveryDAO;
 
     public EventFanOutServiceImpl() {
@@ -81,19 +77,16 @@ public class EventFanOutServiceImpl implements EventFanOutService {
     }
 
     @Override
-    public void fanOutEvent(Event event, List<String> eventPurposes) {
-        fanOutEvent(null, event, eventPurposes);
-    }
-
-    @Override
     public void fanOutEvent(Connection conn, Event event, List<String> eventPurposes) {
         if (event == null) {
             return;
         }
 
-        List<Subscription> candidates = (conn != null)
-                ? subscriptionDAO.getLiveSubscriptionsByOrgAndTopic(conn, event.getOrgId(), event.getTopicId())
-                : subscriptionDAO.getLiveSubscriptionsByOrgAndTopic(event.getOrgId(), event.getTopicId());
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null for transactional event fan-out.");
+        }
+        List<Subscription> candidates = subscriptionDAO.getActiveSubscriptionsForFanOut(
+                conn, event.getOrgId(), event.getTopicId());
 
         // Defensive dedupe — DAO should not return the same subscription twice but a downstream
         // bug could; we cap fan-out to one delivery per subscription per event.
@@ -103,6 +96,9 @@ public class EventFanOutServiceImpl implements EventFanOutService {
         for (Subscription subscription : candidates) {
             if (subscription.getSubscriptionId() == null
                     || !processed.add(subscription.getSubscriptionId())) {
+                continue;
+            }
+            if (!SubscriptionStatus.ACTIVE.getValue().equals(subscription.getStatus())) {
                 continue;
             }
             if (!matchesGroup(subscription, event.getGroupId())) {
@@ -147,9 +143,7 @@ public class EventFanOutServiceImpl implements EventFanOutService {
                 now,
                 now,
                 null);
-        boolean saved = (conn != null)
-                ? deliveryDAO.addWebhookDelivery(conn, delivery)
-                : deliveryDAO.addWebhookDelivery(delivery);
+        boolean saved = deliveryDAO.addWebhookDelivery(conn, delivery);
         if (saved) {
             if (LOG.isInfoEnabled()) {
                 LOG.info("Queued webhook delivery [" + LogSanitizer.sanitize(deliveryId) + "] for subscription ["
@@ -173,9 +167,7 @@ public class EventFanOutServiceImpl implements EventFanOutService {
                 PollStatus.PENDING.getValue(),
                 now,
                 null);
-        boolean saved = (conn != null)
-                ? deliveryDAO.addPollDelivery(conn, delivery)
-                : deliveryDAO.addPollDelivery(delivery);
+        boolean saved = deliveryDAO.addPollDelivery(conn, delivery);
         if (!saved) {
             throw new org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException(
                     "Failed to queue poll delivery for subscription ["

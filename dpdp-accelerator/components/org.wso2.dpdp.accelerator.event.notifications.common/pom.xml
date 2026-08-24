@@ -39,22 +39,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.service.component.annotations</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -126,11 +112,7 @@
                         <Export-Package>
                             org.wso2.dpdp.accelerator.event.notifications.common.*;version="${project.version}"
                         </Export-Package>
-                        <Import-Package>
-                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
-                            org.wso2.dpdp.accelerator.common.constant;version="${project.version}",
-                            *
-                        </Import-Package>
+                        <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

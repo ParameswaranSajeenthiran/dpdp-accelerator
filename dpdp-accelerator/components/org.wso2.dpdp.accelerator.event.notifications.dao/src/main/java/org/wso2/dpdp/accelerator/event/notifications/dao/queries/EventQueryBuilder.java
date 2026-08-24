@@ -30,6 +30,7 @@ import java.util.List;
 public class EventQueryBuilder {
 
     private final String orgId;
+    private final EventNotificationCommonDBQueries queries;
     private String search;
     private String topic;
     private String status;
@@ -38,7 +39,12 @@ public class EventQueryBuilder {
     private String purposes;
 
     public EventQueryBuilder(String orgId) {
+        this(orgId, new EventNotificationCommonDBQueries());
+    }
+
+    public EventQueryBuilder(String orgId, EventNotificationCommonDBQueries queries) {
         this.orgId = orgId;
+        this.queries = queries;
     }
 
     public EventQueryBuilder setSearch(String search) {
@@ -159,8 +165,8 @@ public class EventQueryBuilder {
             sql.append(" AND (LOWER(e.").append(EventNotificationDBColumns.EVENT_ID)
                     .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.GROUP_ID)
                     .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
-                    .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.PAYLOAD)
-                    .append(") LIKE ?)");
+                    .append(") LIKE ? OR ").append(queries.getEventPayloadSearchExpression())
+                    .append(" LIKE ?)");
             String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);

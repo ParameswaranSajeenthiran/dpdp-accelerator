@@ -20,12 +20,8 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
@@ -38,14 +34,10 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryAttemptDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
@@ -54,7 +46,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResu
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +65,6 @@ import org.apache.commons.logging.LogFactory;
  * {@code WebhookDeliveryWorker}.
  * </p>
  */
-@Component(service = EventPublishService.class, immediate = true)
 public class EventPublishServiceImpl implements EventPublishService {
 
     private static final Log LOG = LogFactory.getLog(EventPublishServiceImpl.class);
@@ -82,19 +72,14 @@ public class EventPublishServiceImpl implements EventPublishService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TransactionManager transactionManager;
 
-    @Reference
     private EventDAO eventDAO;
 
-    @Reference
     private TopicDAO topicDAO;
 
-    @Reference
     private EventFanOutService eventFanOutService;
 
-    @Reference
     private DeliveryDAO deliveryDAO;
 
-    @Reference
     private DeliveryAckDAO deliveryAckDAO;
 
     public EventPublishServiceImpl() {
@@ -182,7 +167,14 @@ public class EventPublishServiceImpl implements EventPublishService {
                 Topic topic = resolveActiveTopic(conn, orgId, topicName);
                 Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
-                eventDAO.addEvent(conn, event);
+                if (!eventDAO.addEvent(conn, event)) {
+                    throw new EventNotificationException(
+                            EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                            EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                            String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
+                                    topic.getName()),
+                            400);
+                }
                 if (purposes != null && !purposes.isEmpty()) {
                     eventDAO.addEventPurposes(conn, eventId, purposes);
                 }
@@ -205,7 +197,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     }
 
     private Topic resolveActiveTopic(Connection conn, String orgId, String topicName) {
-        Optional<Topic> existing = topicDAO.getTopicByOrgAndName(conn, orgId.trim(), topicName.trim());
+        Optional<Topic> existing = topicDAO.getActiveTopicByOrgAndNameForUpdate(conn, orgId.trim(), topicName.trim());
         if (!existing.isPresent()) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,
@@ -281,7 +273,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                     summary.getGroupId(),
                     summary.getTopicName(),
                     summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                            : SubscriptionStatus.PENDING.getValue(),
+                            : DeliveryHistoryMapper.defaultStatus(summary.getDeliveryMode()),
                     summary.getDeliveryMode() != null ? summary.getDeliveryMode()
                             : DeliveryMode.WEBHOOK.getValue(),
                     summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
@@ -311,74 +303,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
         }
 
-        SubscriptionDeliverySummary summary = summaryOpt.get();
-        String mode = summary.getDeliveryMode() != null ? summary.getDeliveryMode()
-                : DeliveryMode.WEBHOOK.getValue();
-
-        SubscriptionEventHistoryDTO dto = new SubscriptionEventHistoryDTO();
-        dto.setDeliveryId(summary.getDeliveryId());
-        dto.setEventId(summary.getEventId());
-        dto.setTopic(summary.getTopicName());
-        dto.setDeliveryMode(mode);
-        dto.setCurrentStatus(summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                : SubscriptionStatus.PENDING.getValue());
-        dto.setOccurredAt(summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
-                : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime() : System.currentTimeMillis()));
-
-        if (DeliveryMode.WEBHOOK.getValue().equals(mode)) {
-            Optional<WebhookDelivery> whOpt = deliveryDAO.getWebhookDeliveryById(deliveryId.trim(), orgId.trim());
-            if (whOpt.isPresent()) {
-                WebhookDelivery wh = whOpt.get();
-                if (wh.getNextRetryAt() != null) {
-                    dto.setNextRetryAt(wh.getNextRetryAt().getTime());
-                }
-            }
-
-            Optional<WebhookDeliveryAck> ackOpt = deliveryAckDAO.getDeliveryAckByDeliveryId(deliveryId.trim());
-            if (ackOpt.isPresent()) {
-                WebhookDeliveryAck ack = ackOpt.get();
-                dto.setCompletionStatus(
-                        ack.getCompletionStatus() != null ? ack.getCompletionStatus()
-                                : DeliveryStatus.COMPLETED.getValue());
-                dto.setCompletionEvidence(ack.getCompletionEvidence());
-            }
-
-            List<WebhookDeliveryAudit> audits = deliveryDAO.getWebhookDeliveryAudits(deliveryId.trim(), orgId.trim());
-            List<SubscriptionDeliveryAttemptDTO> history = new ArrayList<>();
-            int attemptNum = 1;
-            for (WebhookDeliveryAudit audit : audits) {
-                String auditStatus;
-                Integer httpStatus = null;
-                String respCode = audit.getResponseCode();
-                if (respCode != null) {
-                    try {
-                        int code = Integer.parseInt(respCode);
-                        httpStatus = code;
-                        auditStatus = (code >= 200 && code < 300) ? DeliveryStatus.DELIVERED.getValue()
-                                : DeliveryStatus.FAILED.getValue();
-                    } catch (NumberFormatException e) {
-                        auditStatus = DeliveryStatus.FAILED.getValue();
-                    }
-                } else {
-                    auditStatus = DeliveryStatus.FAILED.getValue();
-                }
-
-                history.add(new SubscriptionDeliveryAttemptDTO(
-                        attemptNum++,
-                        auditStatus,
-                        audit.getAttemptAt() != null ? audit.getAttemptAt().getTime()
-                                : (audit.getCreatedAt() != null ? audit.getCreatedAt().getTime()
-                                        : System.currentTimeMillis()),
-                        httpStatus,
-                        (httpStatus != null && httpStatus >= 200 && httpStatus < 300)
-                                ? null : (httpStatus != null ? "HTTP " + httpStatus : respCode)));
-            }
-            dto.setHistory(history);
-        } else {
-            dto.setHistory(Collections.emptyList());
-        }
-
-        return dto;
+        return DeliveryHistoryMapper.map(orgId.trim(), deliveryId.trim(), summaryOpt.get(), deliveryDAO,
+                deliveryAckDAO);
     }
 
     @Override

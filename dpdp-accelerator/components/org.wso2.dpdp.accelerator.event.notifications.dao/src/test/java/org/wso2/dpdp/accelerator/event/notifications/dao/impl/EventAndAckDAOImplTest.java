@@ -26,6 +26,8 @@ public class EventAndAckDAOImplTest {
     public void setUp() throws Exception {
         databaseName = "dao_event_" + System.nanoTime();
         connection = DriverManager.getConnection("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
+        connection.createStatement().execute("CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, "
+                + "ORG_ID VARCHAR(128), STATUS VARCHAR(32))");
         connection.createStatement().execute("CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, "
                 + "ORG_ID VARCHAR(128), GROUP_ID VARCHAR(128), TOPIC_ID VARCHAR(64), PAYLOAD VARCHAR(4096), CREATED_AT TIMESTAMP)");
         connection.createStatement().execute("CREATE TABLE EVENT_PURPOSE (EVENT_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128))");
@@ -34,6 +36,8 @@ public class EventAndAckDAOImplTest {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
         setManagerDataSource(dataSource);
+        connection.createStatement().execute(
+                "INSERT INTO TOPIC (TOPIC_ID, ORG_ID, STATUS) VALUES ('topic-1', 'org-1', 'active')");
     }
 
     @AfterMethod

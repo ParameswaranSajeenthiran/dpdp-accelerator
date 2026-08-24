@@ -18,8 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
@@ -28,7 +26,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAu
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryDispatchContext;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -45,13 +42,6 @@ public interface DeliveryDAO {
     Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId);
 
     /**
-     * Returns the payload stored on the {@code EVENT} row keyed by {@code eventId}. Lives on
-     * the delivery DAO rather than a dedicated event DAO because the worker that dispatches
-     * webhook deliveries needs it and the dispatch loop is owned by the service layer.
-     */
-    Optional<String> getEventPayload(String eventId);
-
-    /**
      * Returns the next batch of pending webhook deliveries joined with the matching
      * subscription callback URL, shared secret, and event payload so the dispatch worker can
      * issue a single HTTP POST without further DAO calls.
@@ -65,12 +55,6 @@ public interface DeliveryDAO {
     List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit);
 
     List<WebhookDeliveryDispatchContext> getStuckInFlightWebhookDispatchContexts(int limit, Timestamp updatedBefore);
-
-    List<WebhookDelivery> getPendingWebhookDeliveries(int limit);
-
-    List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit);
-
-    List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit, Timestamp updatedBefore);
 
     boolean updateWebhookDeliveryStatus(WebhookDelivery delivery);
 

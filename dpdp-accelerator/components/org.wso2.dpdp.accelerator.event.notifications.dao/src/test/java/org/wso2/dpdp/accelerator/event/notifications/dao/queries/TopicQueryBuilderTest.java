@@ -5,11 +5,9 @@
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
  */
-package org.wso2.dpdp.accelerator.event.notifications.service.queries;
+package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.TopicQueryBuilder;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

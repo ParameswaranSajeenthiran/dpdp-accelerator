@@ -10,15 +10,20 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.DeliveryDAOImpl;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.TopicDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 
 import java.io.StringReader;
 import java.sql.Connection;
@@ -31,9 +36,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /** Real H2 checks for the connection-aware persistence methods. */
 public class TransactionIntegrationTest {
@@ -48,8 +58,9 @@ public class TransactionIntegrationTest {
         RunScript.execute(connection, new StringReader(
                 "CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
                         + "NAME VARCHAR(225) NOT NULL, DESCRIPTION VARCHAR(255), STATUS VARCHAR(32) NOT NULL, "
-                        + "INITIATED_BY VARCHAR(32) NOT NULL);"
-                        + "CREATE UNIQUE INDEX UQ_TOPIC_ORG_NAME_STATUS ON TOPIC(ORG_ID, NAME, STATUS);"
+                        + "INITIATED_BY VARCHAR(32) NOT NULL, ACTIVE_NAME VARCHAR(225) GENERATED ALWAYS AS "
+                        + "(CASE WHEN STATUS = 'active' THEN LOWER(NAME) ELSE NULL END));"
+                        + "CREATE UNIQUE INDEX UQ_TOPIC_ORG_ACTIVE_NAME ON TOPIC(ORG_ID, ACTIVE_NAME);"
                         + "CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
                         + "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, "
                         + "PURPOSE_SET_HASH VARCHAR(64) NOT NULL, DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), "
@@ -57,7 +68,14 @@ public class TransactionIntegrationTest {
                         + "CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128), "
                         + "PRIMARY KEY(SUBSCRIPTION_ID, PURPOSE_NAME));"
                         + "CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, SUBSCRIPTION_ID VARCHAR(64), "
-                        + "EVENT_ID VARCHAR(64), STATUS VARCHAR(32), CREATED_AT TIMESTAMP, COMPLETED_AT TIMESTAMP);"));
+                        + "EVENT_ID VARCHAR(64), STATUS VARCHAR(32), CREATED_AT TIMESTAMP, COMPLETED_AT TIMESTAMP);"
+                        + "CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
+                        + "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD VARCHAR(4096), "
+                        + "CREATED_AT TIMESTAMP NOT NULL);"
+                        + "CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, "
+                        + "SUBSCRIPTION_ID VARCHAR(64), EVENT_ID VARCHAR(64), STATUS VARCHAR(32), "
+                        + "ATTEMPT_COUNT INT, NEXT_RETRY_AT TIMESTAMP, CREATED_AT TIMESTAMP, UPDATED_AT TIMESTAMP, "
+                        + "DELIVERED_AT TIMESTAMP);"));
     }
 
     @AfterMethod
@@ -154,6 +172,90 @@ public class TransactionIntegrationTest {
         }
     }
 
+    @Test
+    public void deregisteredTopicNameCanBeRecreatedWithANewIdRepeatedly() throws Exception {
+        TopicDAOImpl dao = new TopicDAOImpl();
+        String previousTopicId = null;
+
+        for (int cycle = 1; cycle <= 3; cycle++) {
+            String topicId = "topic-" + cycle;
+            assertNotEquals(topicId, previousTopicId);
+            assertTrue(dao.addTopic(connection,
+                    new Topic(topicId, "org-1", cycle % 2 == 0 ? "ACCOUNTS" : "accounts", "",
+                            TopicStatus.ACTIVE.getValue())));
+            assertTrue(dao.deregisterTopicAtomic(connection, topicId, "org-1"));
+            assertFalse(dao.deregisterTopicAtomic(connection, topicId, "org-1"),
+                    "A deregistered topic must not transition again");
+            previousTopicId = topicId;
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COUNT(*), COUNT(DISTINCT TOPIC_ID) FROM TOPIC WHERE ORG_ID = ? AND LOWER(NAME) = LOWER(?)")) {
+            ps.setString(1, "org-1");
+            ps.setString(2, "accounts");
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(rs.getInt(1), 3);
+                assertEquals(rs.getInt(2), 3);
+            }
+        }
+    }
+
+    @Test
+    public void activeTopicNameIsUniqueIgnoringCase() throws Exception {
+        TopicDAOImpl dao = new TopicDAOImpl();
+        assertTrue(dao.addTopic(connection,
+                new Topic("topic-1", "org-1", "Accounts", "", TopicStatus.ACTIVE.getValue())));
+
+        expectThrows(EventNotificationDuplicateResourceException.class,
+                () -> dao.addTopic(connection,
+                        new Topic("topic-2", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COUNT(*) FROM TOPIC WHERE ORG_ID = ? AND STATUS = ?")) {
+            ps.setString(1, "org-1");
+            ps.setString(2, TopicStatus.ACTIVE.getValue());
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(rs.getInt(1), 1);
+            }
+        }
+    }
+
+    @Test(timeOut = 10000)
+    public void concurrentCaseInsensitiveTopicCreationAllowsOneActiveRow() throws Exception {
+        try (Connection first = DriverManager.getConnection("jdbc:h2:mem:" + databaseName
+                + ";DB_CLOSE_DELAY=-1");
+                Connection second = DriverManager.getConnection("jdbc:h2:mem:" + databaseName
+                        + ";DB_CLOSE_DELAY=-1")) {
+            first.setAutoCommit(false);
+            second.setAutoCommit(false);
+            CountDownLatch start = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Boolean> firstCreate = executor.submit(
+                        () -> createTopicWhenReady(first, start, "topic-1", "Accounts"));
+                Future<Boolean> secondCreate = executor.submit(
+                        () -> createTopicWhenReady(second, start, "topic-2", "accounts"));
+                start.countDown();
+                assertTrue(firstCreate.get() ^ secondCreate.get(),
+                        "Exactly one concurrent request must create the active topic");
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COUNT(*) FROM TOPIC WHERE ORG_ID = ? AND STATUS = ?")) {
+            ps.setString(1, "org-1");
+            ps.setString(2, TopicStatus.ACTIVE.getValue());
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(rs.getInt(1), 1);
+            }
+        }
+    }
+
     @Test(timeOut = 10000)
     public void pollDeliveryClaimIsSerializedAcrossConnections() throws Exception {
         try (PreparedStatement ps = connection.prepareStatement(
@@ -185,11 +287,185 @@ public class TransactionIntegrationTest {
         }
     }
 
+    @Test(timeOut = 10000)
+    public void topicDeregistrationWaitsForEventPublicationTransaction() throws Exception {
+        TopicDAOImpl topicDAO = new TopicDAOImpl();
+        EventDAOImpl eventDAO = new EventDAOImpl();
+        assertTrue(topicDAO.addTopic(connection,
+                new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+
+        try (Connection publisher = newConnection(); Connection deregister = newConnection()) {
+            publisher.setAutoCommit(false);
+            deregister.setAutoCommit(false);
+            assertTrue(topicDAO.getActiveTopicByOrgAndNameForUpdate(publisher, "org-1", "accounts").isPresent());
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            CountDownLatch attempted = new CountDownLatch(1);
+            try {
+                Future<Boolean> deregistration = executor.submit(() -> {
+                    attempted.countDown();
+                    boolean result = topicDAO.deregisterTopicAtomic(deregister, "topic-1", "org-1");
+                    deregister.commit();
+                    return result;
+                });
+                attempted.await();
+                expectThrows(TimeoutException.class,
+                        () -> deregistration.get(200, TimeUnit.MILLISECONDS));
+
+                Event event = new Event("event-1", "org-1", "group-1", "topic-1", "{}",
+                        new Timestamp(System.currentTimeMillis()));
+                assertTrue(eventDAO.addEvent(publisher, event));
+                publisher.commit();
+                assertTrue(deregistration.get(5, TimeUnit.SECONDS));
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COUNT(*) FROM EVENT WHERE EVENT_ID = ? AND ORG_ID = ?")) {
+            ps.setString(1, "event-1");
+            ps.setString(2, "org-1");
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(rs.getInt(1), 1);
+            }
+        }
+    }
+
+    @Test(timeOut = 10000)
+    public void subscriptionDeletionCannotOvertakeFanOutDeliveryInsert() throws Exception {
+        TopicDAOImpl topicDAO = new TopicDAOImpl();
+        SubscriptionDAOImpl subscriptionDAO = new SubscriptionDAOImpl();
+        DeliveryDAOImpl deliveryDAO = new DeliveryDAOImpl();
+        EventDAOImpl eventDAO = new EventDAOImpl();
+        assertTrue(topicDAO.addTopic(connection,
+                new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        subscriptionDAO.addSubscription(connection,
+                new Subscription("sub-1", "org-1", "group-1", "topic-1", PurposeFilterMode.ALL.getValue(),
+                        Collections.emptyList(), DeliveryMode.WEBHOOK.getValue(), "https://example.com/callback",
+                        "secret", SubscriptionStatus.ACTIVE.getValue(), now, now));
+
+        try (Connection fanOut = newConnection(); Connection delete = newConnection()) {
+            fanOut.setAutoCommit(false);
+            delete.setAutoCommit(false);
+            assertEquals(subscriptionDAO.getActiveSubscriptionsForFanOut(fanOut, "org-1", "topic-1").size(), 1);
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            CountDownLatch attempted = new CountDownLatch(1);
+            try {
+                Future<Boolean> deletion = executor.submit(() -> {
+                    attempted.countDown();
+                    boolean result = subscriptionDAO.deleteSubscriptionAtomic(delete, "sub-1", "org-1",
+                            SubscriptionStatus.ACTIVE.getValue());
+                    delete.commit();
+                    return result;
+                });
+                attempted.await();
+                expectThrows(TimeoutException.class, () -> deletion.get(200, TimeUnit.MILLISECONDS));
+
+                assertTrue(eventDAO.addEvent(fanOut,
+                        new Event("event-1", "org-1", "group-1", "topic-1", "{}", now)));
+                assertTrue(deliveryDAO.addWebhookDelivery(fanOut,
+                        new WebhookDelivery("delivery-1", "sub-1", "event-1",
+                                DeliveryStatus.PENDING.getValue(), 0, null, now, now, null)));
+                fanOut.commit();
+                assertFalse(deletion.get(5, TimeUnit.SECONDS),
+                        "Deletion must see the pending delivery inserted by fan-out");
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+    }
+
+    @Test
+    public void eventInsertRejectsTopicThatIsNoLongerActive() throws Exception {
+        TopicDAOImpl topicDAO = new TopicDAOImpl();
+        assertTrue(topicDAO.addTopic(connection,
+                new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+        assertTrue(topicDAO.deregisterTopicAtomic(connection, "topic-1", "org-1"));
+
+        Event event = new Event("event-1", "org-1", "group-1", "topic-1", "{}",
+                new Timestamp(System.currentTimeMillis()));
+        assertFalse(new EventDAOImpl().addEvent(connection, event));
+    }
+
+    @Test(timeOut = 10000)
+    public void pendingVerificationLeaseCanBeClaimedByOnlyOneConnection() throws Exception {
+        TopicDAOImpl topicDAO = new TopicDAOImpl();
+        SubscriptionDAOImpl subscriptionDAO = new SubscriptionDAOImpl();
+        assertTrue(topicDAO.addTopic(connection,
+                new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        subscriptionDAO.addSubscription(connection,
+                new Subscription("sub-1", "org-1", "group-1", "topic-1", PurposeFilterMode.ALL.getValue(),
+                        Collections.emptyList(), DeliveryMode.WEBHOOK.getValue(), "https://example.com/callback",
+                        "secret", SubscriptionStatus.PENDING.getValue(), now, now));
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE SUBSCRIPTION SET UPDATED_AT = ? WHERE SUBSCRIPTION_ID = ?")) {
+            ps.setTimestamp(1, new Timestamp(now.getTime() - TimeUnit.MINUTES.toMillis(5)));
+            ps.setString(2, "sub-1");
+            ps.executeUpdate();
+        }
+
+        Timestamp eligibleBefore = new Timestamp(now.getTime() - TimeUnit.MINUTES.toMillis(1));
+        try (Connection first = newConnection(); Connection second = newConnection()) {
+            first.setAutoCommit(false);
+            second.setAutoCommit(false);
+            CountDownLatch start = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Boolean> firstClaim = executor.submit(
+                        () -> claimVerificationWhenReady(first, start, eligibleBefore));
+                Future<Boolean> secondClaim = executor.submit(
+                        () -> claimVerificationWhenReady(second, start, eligibleBefore));
+                start.countDown();
+                assertTrue(firstClaim.get() ^ secondClaim.get(),
+                        "Exactly one recovery worker must claim the pending verification lease");
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+
+        assertFalse(subscriptionDAO.claimPendingSubscriptionForVerification(
+                connection, "sub-1", "org-1", eligibleBefore));
+        assertFalse(subscriptionDAO.claimPendingSubscriptionForVerification(
+                connection, "sub-1", "another-org", new Timestamp(Long.MAX_VALUE)));
+    }
+
+    private Connection newConnection() throws Exception {
+        return DriverManager.getConnection("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
+    }
+
     private boolean claimWhenReady(Connection conn, CountDownLatch start) throws Exception {
         start.await();
         boolean claimed = new DeliveryDAOImpl().claimPollDelivery(conn, "delivery-1");
         conn.commit();
         return claimed;
+    }
+
+    private boolean claimVerificationWhenReady(Connection conn, CountDownLatch start, Timestamp eligibleBefore)
+            throws Exception {
+        start.await();
+        boolean claimed = new SubscriptionDAOImpl().claimPendingSubscriptionForVerification(
+                conn, "sub-1", "org-1", eligibleBefore);
+        conn.commit();
+        return claimed;
+    }
+
+    private boolean createTopicWhenReady(Connection conn, CountDownLatch start, String topicId, String topicName)
+            throws Exception {
+        start.await();
+        try {
+            boolean created = new TopicDAOImpl().addTopic(conn,
+                    new Topic(topicId, "org-1", topicName, "", TopicStatus.ACTIVE.getValue()));
+            conn.commit();
+            return created;
+        } catch (EventNotificationDuplicateResourceException e) {
+            conn.rollback();
+            return false;
+        }
     }
 
 }

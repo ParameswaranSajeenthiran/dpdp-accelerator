@@ -18,14 +18,11 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Optional;
 
 public interface TopicDAO {
@@ -37,6 +34,8 @@ public interface TopicDAO {
     Optional<Topic> getTopicById(String topicId, String orgId);
 
     Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name);
+
+    Optional<Topic> getActiveTopicByOrgAndNameForUpdate(Connection conn, String orgId, String name);
 
     default Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
         return DatabaseUtils.executeWithConnection(

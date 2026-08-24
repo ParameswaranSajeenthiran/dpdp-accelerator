@@ -42,7 +42,5 @@ public interface EventFanOutService {
      *                      evaluate each subscription's purpose filter. May be null
      *                      or empty for an event with no purpose metadata.
      */
-    void fanOutEvent(Event event, List<String> eventPurposes);
-
     void fanOutEvent(Connection conn, Event event, List<String> eventPurposes);
 }

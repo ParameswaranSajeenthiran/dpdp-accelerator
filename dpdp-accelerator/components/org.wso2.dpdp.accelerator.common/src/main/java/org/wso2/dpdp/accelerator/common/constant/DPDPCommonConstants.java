@@ -45,6 +45,14 @@ public final class DPDPCommonConstants {
             "EventNotifications.MaxVerificationResponseBodyBytes";
     public static final String EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS =
             "EventNotifications.PendingSubscriptionRecoveryThresholdSeconds";
+    public static final String EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS =
+            "EventNotifications.BackgroundWorkerInitialDelaySeconds";
+    public static final String EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS =
+            "EventNotifications.PendingSubscriptionRecoveryIntervalSeconds";
+    public static final String EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE =
+            "EventNotifications.PendingSubscriptionRecoveryBatchSize";
+    public static final String EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS =
+            "EventNotifications.WorkerShutdownTimeoutSeconds";
 
     private DPDPCommonConstants() {
 

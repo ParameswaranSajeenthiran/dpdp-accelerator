@@ -18,8 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
@@ -39,10 +37,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Component(service = TopicService.class, immediate = true)
 public class TopicServiceImpl implements TopicService {
 
-    @Reference
     private TopicDAO topicDAO;
 
     public TopicServiceImpl() {

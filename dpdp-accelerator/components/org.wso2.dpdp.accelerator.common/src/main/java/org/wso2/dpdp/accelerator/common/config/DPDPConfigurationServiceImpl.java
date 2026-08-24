@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.common.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 
 import java.util.Map;
 import java.util.Collections;
@@ -81,73 +82,79 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
     @Override
     public int getEventNotificationThreadPoolSize() {
-        return getPositiveInt("EventNotifications.ThreadPoolSize", DEFAULT_THREAD_POOL_SIZE);
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE, DEFAULT_THREAD_POOL_SIZE);
     }
 
     @Override
     public long getEventNotificationBaseBackoffSeconds() {
-        return getNonNegativeLong("EventNotifications.BaseBackoffSeconds", DEFAULT_BASE_BACKOFF_SECONDS);
+        return getNonNegativeLong(DPDPCommonConstants.EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS,
+                DEFAULT_BASE_BACKOFF_SECONDS);
     }
 
     @Override
     public int getEventNotificationMaxRetries() {
-        return getNonNegativeInt("EventNotifications.MaxRetries", DEFAULT_MAX_RETRIES);
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_RETRIES, DEFAULT_MAX_RETRIES);
     }
 
     @Override
     public boolean isEventNotificationHttpCallbackUrlAllowed() {
-        return getBoolean("EventNotifications.AllowHttpCallbackUrl", DEFAULT_ALLOW_HTTP_CALLBACK_URL);
+        return getBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL,
+                DEFAULT_ALLOW_HTTP_CALLBACK_URL);
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerBatchSize() {
-        return getPositiveInt("EventNotifications.DeliveryWorkerBatchSize", DEFAULT_DELIVERY_WORKER_BATCH_SIZE);
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE,
+                DEFAULT_DELIVERY_WORKER_BATCH_SIZE);
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerPollSeconds() {
-        return getPositiveInt("EventNotifications.DeliveryWorkerPollSeconds", DEFAULT_DELIVERY_WORKER_POLL_SECONDS);
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS,
+                DEFAULT_DELIVERY_WORKER_POLL_SECONDS);
     }
 
     @Override
     public int getEventNotificationStuckInFlightThresholdSeconds() {
-        return getNonNegativeInt("EventNotifications.StuckInFlightThresholdSeconds",
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS,
                 DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS);
     }
 
     @Override
     public int getEventNotificationMaxVerificationResponseBodyBytes() {
-        return getPositiveInt("EventNotifications.MaxVerificationResponseBodyBytes",
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
                 DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds() {
-        return getNonNegativeInt("EventNotifications.PendingSubscriptionRecoveryThresholdSeconds",
+        return getNonNegativeInt(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
                 DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
     }
 
     @Override
     public int getEventNotificationBackgroundWorkerInitialDelaySeconds() {
-        return getNonNegativeInt("EventNotifications.BackgroundWorkerInitialDelaySeconds",
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS,
                 DEFAULT_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS);
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds() {
-        return getPositiveInt("EventNotifications.PendingSubscriptionRecoveryIntervalSeconds",
+        return getPositiveInt(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS,
                 DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS);
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryBatchSize() {
-        return getPositiveInt("EventNotifications.PendingSubscriptionRecoveryBatchSize",
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE,
                 DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE);
     }
 
     @Override
     public int getEventNotificationWorkerShutdownTimeoutSeconds() {
-        return getPositiveInt("EventNotifications.WorkerShutdownTimeoutSeconds",
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS,
                 DEFAULT_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
     }
 

@@ -14,8 +14,8 @@ public class DaoModelCoverageTest {
 
     @Test
     public void coversAllModelConstructorsAndAccessors() throws Exception {
-        Class<?>[] models = {Event.class, EventPurpose.class, PollDelivery.class, Subscription.class,
-                SubscriptionDeliverySummary.class, SubscriptionPurpose.class, Topic.class,
+        Class<?>[] models = {Event.class, PollDelivery.class, Subscription.class,
+                SubscriptionDeliverySummary.class, Topic.class,
                 WebhookDelivery.class, WebhookDeliveryAck.class, WebhookDeliveryAudit.class,
                 WebhookDeliveryDispatchContext.class};
         for (Class<?> model : models) {

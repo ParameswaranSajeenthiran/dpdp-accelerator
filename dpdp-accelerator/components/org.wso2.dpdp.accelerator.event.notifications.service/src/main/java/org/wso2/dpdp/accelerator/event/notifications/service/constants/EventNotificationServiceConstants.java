@@ -81,6 +81,8 @@ public class EventNotificationServiceConstants {
     public static final String EVENT_TOPIC_NOT_FOUND_ERROR_MSG = "No topic exists with name '%s' for this org.";
     public static final String EVENT_PAYLOAD_REQUIRED_ERROR_MSG = "Event payload is required.";
     public static final String CALLBACK_URL_REQUIRED_ERROR_MSG = "callbackUrl is required when delivery mode is WEBHOOK.";
+    public static final String SHARED_SECRET_REQUIRED_ERROR_MSG =
+            "sharedSecret is required when delivery mode is WEBHOOK.";
     public static final String DUPLICATE_SUBSCRIPTION_ERROR_MSG = "A subscription with the same parameters already exists.";
     public static final String MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG =
             "A subscriber cannot use both webhook and poll delivery modes for the same topic.";

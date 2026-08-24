@@ -16,12 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.event.notifications.service.queries;
+package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryBuilderUtils;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
 
 import java.util.List;
 

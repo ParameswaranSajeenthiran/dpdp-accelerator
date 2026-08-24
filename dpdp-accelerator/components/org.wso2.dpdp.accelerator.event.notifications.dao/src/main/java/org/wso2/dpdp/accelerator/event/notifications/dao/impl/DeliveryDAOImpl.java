@@ -18,8 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
@@ -47,11 +45,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@Component(service = DeliveryDAO.class, immediate = true)
 public class DeliveryDAOImpl implements DeliveryDAO {
 
-    @Reference
     private DPDPConfigurationService configurationService;
+
+    public DeliveryDAOImpl() {
+    }
+
+    public DeliveryDAOImpl(DPDPConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
 
     private EventNotificationCommonDBQueries getQueries(Connection conn) {
         return EventNotificationQueryFactory.getQueryProvider(conn);
@@ -110,35 +113,6 @@ public class DeliveryDAOImpl implements DeliveryDAO {
           } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY, deliveryId), e);
-          }
-        });
-    }
-
-    @Override
-    public List<WebhookDelivery> getPendingWebhookDeliveries(int limit) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<WebhookDelivery> list = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingWebhookDeliveriesQuery())) {
-            ps.setInt(1, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new WebhookDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
-                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
-                }
-            }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
           }
         });
     }
@@ -260,24 +234,33 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     @Override
     public boolean recordSuccessfulAttempt(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
         return DatabaseUtils.executeInTransaction(conn -> {
-            addWebhookDeliveryAudit(conn, audit);
-            return updateWebhookDeliveryStatus(conn, delivery);
+            boolean updated = updateWebhookDeliveryStatus(conn, delivery);
+            if (updated) {
+                addWebhookDeliveryAudit(conn, audit);
+            }
+            return updated;
         });
     }
 
     @Override
     public boolean recordRetryableFailure(WebhookDeliveryAudit audit, String deliveryId, int attemptCount, Timestamp nextRetryAt) {
         return DatabaseUtils.executeInTransaction(conn -> {
-            addWebhookDeliveryAudit(conn, audit);
-            return releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
+            boolean released = releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
+            if (released) {
+                addWebhookDeliveryAudit(conn, audit);
+            }
+            return released;
         });
     }
 
     @Override
     public boolean recordPermanentFailure(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
         return DatabaseUtils.executeInTransaction(conn -> {
-            addWebhookDeliveryAudit(conn, audit);
-            return updateWebhookDeliveryStatus(conn, delivery);
+            boolean updated = updateWebhookDeliveryStatus(conn, delivery);
+            if (updated) {
+                addWebhookDeliveryAudit(conn, audit);
+            }
+            return updated;
         });
     }
 
@@ -381,44 +364,6 @@ public class DeliveryDAOImpl implements DeliveryDAO {
           } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_POLL_DELIVERY, deliveryId), e);
-          }
-        });
-    }
-
-    @Override
-    public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit) {
-        int threshold = getConfiguration().getEventNotificationStuckInFlightThresholdSeconds();
-        Timestamp cutoff = new Timestamp(System.currentTimeMillis() - threshold * 1000L);
-        return getStuckInFlightWebhookDeliveries(limit, cutoff);
-    }
-
-    @Override
-    public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit, Timestamp updatedBefore) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<WebhookDelivery> list = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn.prepareStatement(
-                        getQueries(conn).getGetStuckInFlightWebhookDeliveriesQuery())) {
-            ps.setTimestamp(1, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
-            ps.setInt(2, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new WebhookDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
-                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
-                }
-            }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
           }
         });
     }
@@ -803,28 +748,6 @@ public class DeliveryDAOImpl implements DeliveryDAO {
           } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
-          }
-        });
-    }
-
-    @Override
-    public Optional<String> getEventPayload(String eventId) {
-        if (eventId == null || eventId.trim().isEmpty()) {
-            return Optional.empty();
-        }
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPayloadQuery())) {
-            ps.setString(1, eventId.trim());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.ofNullable(rs.getString(EventNotificationDBColumns.PAYLOAD));
-                }
-            }
-            return Optional.empty();
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_PAYLOAD, eventId), e);
           }
         });
     }

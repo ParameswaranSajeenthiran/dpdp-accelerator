@@ -18,7 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
-import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
@@ -45,7 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Component(service = EventDAO.class, immediate = true)
 public class EventDAOImpl implements EventDAO {
 
     private EventNotificationCommonDBQueries getQueries(Connection conn) {
@@ -65,6 +63,8 @@ public class EventDAOImpl implements EventDAO {
             ps.setString(5, event.getPayload());
             ps.setTimestamp(6,
                     event.getCreatedAt() != null ? event.getCreatedAt() : new Timestamp(System.currentTimeMillis()));
+            ps.setString(7, event.getTopicId());
+            ps.setString(8, event.getOrgId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
@@ -169,18 +169,17 @@ public class EventDAOImpl implements EventDAO {
     public PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
             String subscriptionId, String purposes, String search, int limit, int offset) {
         List<Event> events = new ArrayList<>();
-        EventQueryBuilder builder = new EventQueryBuilder(orgId)
-                .setTopic(topic)
-                .setStatus(status)
-                .setGroupId(groupId)
-                .setSubscriptionId(subscriptionId)
-                .setPurposes(purposes)
-                .setSearch(search);
-
         int[] total = {0};
         return DatabaseUtils.executeWithConnection(conn -> {
           try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
+            EventQueryBuilder builder = new EventQueryBuilder(orgId, queries)
+                    .setTopic(topic)
+                    .setStatus(status)
+                    .setGroupId(groupId)
+                    .setSubscriptionId(subscriptionId)
+                    .setPurposes(purposes)
+                    .setSearch(search);
             String sortColumn = builder.resolveSortColumn();
             QueryResult countResult = builder.buildCountQuery(queries.getCountEventsBaseQuery());
             QueryResult selectResult = builder.buildSelectQuery(queries.getListEventsBaseQuery(),

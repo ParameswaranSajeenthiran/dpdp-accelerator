@@ -143,11 +143,11 @@ public class EventPublishReadTest {
     }
 
     @Test
-    public void pollDeliveryHistoryHasEmptyHistory() {
+    public void pollDeliveryHistoryMapsCompletionAttempt() {
         SubscriptionDeliverySummary summary = new SubscriptionDeliverySummary("d1", "e1", "s1", "topic",
                 "pending", "poll", null, new Timestamp(100), null);
         when(deliveryDAO.getOrgDeliveryById("org-1", "d1")).thenReturn(Optional.of(summary));
-        assertEquals(service.getDeliveryHistory("org-1", "d1").getHistory().size(), 0);
+        assertEquals(service.getDeliveryHistory("org-1", "d1").getHistory().size(), 1);
     }
 
     @Test

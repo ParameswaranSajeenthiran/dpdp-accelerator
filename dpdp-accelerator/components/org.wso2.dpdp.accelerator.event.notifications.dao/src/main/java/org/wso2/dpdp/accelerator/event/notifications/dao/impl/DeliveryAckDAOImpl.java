@@ -18,7 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
-import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
@@ -35,7 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-@Component(service = DeliveryAckDAO.class, immediate = true)
 public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     private EventNotificationCommonDBQueries getQueries(Connection conn) {

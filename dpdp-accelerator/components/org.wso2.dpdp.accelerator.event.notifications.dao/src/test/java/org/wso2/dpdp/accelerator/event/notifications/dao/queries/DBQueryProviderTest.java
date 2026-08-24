@@ -31,4 +31,23 @@ public class DBQueryProviderTest {
         Assert.assertTrue(EventNotificationQueryFactory.getQueryProvider("sqlite")
                 instanceof EventNotificationSqliteDBQueries);
     }
+
+    @Test
+    public void pendingWebhookClaimHonorsRetrySchedule() {
+        String query = new EventNotificationCommonDBQueries().getClaimWebhookDeliveryQuery();
+
+        Assert.assertTrue(query.contains("NEXT_RETRY_AT IS NULL OR NEXT_RETRY_AT <= CURRENT_TIMESTAMP"));
+    }
+
+    @Test
+    public void transactionalFanOutQueriesUseLocksExceptOnSqlite() {
+        EventNotificationCommonDBQueries common = new EventNotificationCommonDBQueries();
+        EventNotificationSqliteDBQueries sqlite = new EventNotificationSqliteDBQueries();
+
+        Assert.assertTrue(common.getActiveTopicByOrgAndNameForUpdateQuery().endsWith("FOR UPDATE"));
+        Assert.assertTrue(common.getActiveSubscriptionsForFanOutQuery().endsWith("FOR UPDATE"));
+        Assert.assertFalse(sqlite.getActiveTopicByOrgAndNameForUpdateQuery().contains("FOR UPDATE"));
+        Assert.assertFalse(sqlite.getActiveSubscriptionsForFanOutQuery().contains("FOR UPDATE"));
+        Assert.assertTrue(common.getAddEventQuery().contains("STATUS = 'active'"));
+    }
 }

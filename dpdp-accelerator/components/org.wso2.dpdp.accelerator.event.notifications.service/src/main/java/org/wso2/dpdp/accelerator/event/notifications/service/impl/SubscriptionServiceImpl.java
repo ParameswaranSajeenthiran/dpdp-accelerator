@@ -18,10 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
@@ -29,28 +25,23 @@ import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.CallbackUrlCanonicalizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.WebhookVerificationUriBuilder;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
-import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryAttemptDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
@@ -59,8 +50,10 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -79,20 +72,14 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-@Component(service = SubscriptionService.class, immediate = true)
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private static final Log LOG = LogFactory.getLog(SubscriptionServiceImpl.class);
 
-    @Reference
     private SubscriptionDAO subscriptionDAO;
-    @Reference
     private TopicDAO topicDAO;
-    @Reference
     private DeliveryDAO deliveryDAO;
-    @Reference
     private DeliveryAckDAO deliveryAckDAO;
-    @Reference
     private DPDPConfigurationService configurationService;
 
     private ScheduledExecutorService scheduler;
@@ -117,8 +104,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.configurationService = configurationService;
     }
 
-    @Activate
-    protected void activate() {
+    public void start() {
         int poolSize = getConfiguration().getEventNotificationThreadPoolSize();
         this.scheduler = Executors.newScheduledThreadPool(poolSize, r -> {
             Thread t = new Thread(r, "webhook-verification-pool");
@@ -129,8 +115,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.httpClient = HTTPClientUtils.getHttpClient();
     }
 
-    @Deactivate
-    protected void deactivate() {
+    public void stop() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
         }
@@ -172,6 +157,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (deliveryMode == DeliveryMode.WEBHOOK) {
             validateCallbackUrl(callbackUrl);
+            if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                        EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
+                        EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG, 400);
+            }
         }
 
         validatePurposeFilterMode(filterType, purposes);
@@ -382,34 +373,28 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         validateCallbackUrl(callbackUrl);
         String challenge = UUID.randomUUID().toString();
         try {
-            String encodedTopic = URLEncoder.encode(topicName, StandardCharsets.UTF_8);
-            String encodedChallenge = URLEncoder.encode(challenge, StandardCharsets.UTF_8);
-            String separator = callbackUrl.contains("?") ? "&" : "?";
-            String verificationUrl = callbackUrl + separator + "hub.mode=subscribe&hub.topic=" + encodedTopic
-                    + "&hub.challenge=" + encodedChallenge;
+            URI verificationUri = WebhookVerificationUriBuilder.build(URI.create(callbackUrl.trim()), topicName,
+                    challenge);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(verificationUrl))
+                    .uri(verificationUri)
                     .timeout(Duration.ofSeconds(EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS))
                     .GET()
                     .build();
 
-            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             int maxBodyBytes = getConfiguration().getEventNotificationMaxVerificationResponseBodyBytes();
-            if (response.statusCode() != 200) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
-                        EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
-                        "Callback URL responded with HTTP " + response.statusCode(),
-                        422);
-            }
-
-            byte[] bodyBytes = response.body() != null ? response.body() : new byte[0];
-            if (bodyBytes.length > maxBodyBytes) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
-                        EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
-                        "Verification response body exceeded " + maxBodyBytes + " bytes", 422);
+            InputStream responseBody = response.body() != null ? response.body() : InputStream.nullInputStream();
+            byte[] bodyBytes;
+            try (InputStream inputStream = responseBody) {
+                if (response.statusCode() != 200) {
+                    throw new EventNotificationException(
+                            EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
+                            EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
+                            "Callback URL responded with HTTP " + response.statusCode(),
+                            422);
+                }
+                bodyBytes = readVerificationResponse(inputStream, maxBodyBytes);
             }
             String body = new String(bodyBytes, StandardCharsets.UTF_8).trim();
             // Spec-compliant verification: the response body must be the challenge value
@@ -436,6 +421,31 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
                     EventNotificationServiceConstants.WEBHOOK_VERIFICATION_FAILED_ERROR_MSG, 422);
+        }
+    }
+
+    private byte[] readVerificationResponse(InputStream inputStream, int maxBodyBytes) throws IOException {
+
+        ByteArrayOutputStream body = new ByteArrayOutputStream(Math.min(maxBodyBytes, 8192));
+        byte[] buffer = new byte[8192];
+        int remaining = maxBodyBytes;
+        while (true) {
+            int readLength = remaining >= buffer.length ? buffer.length : remaining + 1;
+            int count = inputStream.read(buffer, 0, readLength);
+            if (count < 0) {
+                return body.toByteArray();
+            }
+            if (count == 0) {
+                continue;
+            }
+            if (count > remaining) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
+                        EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
+                        "Verification response body exceeded " + maxBodyBytes + " bytes", 422);
+            }
+            body.write(buffer, 0, count);
+            remaining -= count;
         }
     }
 
@@ -551,43 +561,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void retriggerVerificationTask(String orgId, String subscriptionId, String callbackUrl, String topicName) {
-        if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
-        }
-        if (subscriptionId == null || subscriptionId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    EventNotificationServiceConstants.SUBSCRIPTION_ID_MISSING_ERROR_MSG, 400);
-        }
-        if (callbackUrl == null || callbackUrl.trim().isEmpty() || topicName == null
-                || topicName.trim().isEmpty()) {
-            throw new EventNotificationException(
-                    EventNotificationServiceConstants.ERROR_CODE_MISSING_REQUIRED_PARAM,
-                    EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
-                    EventNotificationServiceConstants.CALLBACK_URL_REQUIRED_ERROR_MSG, 422);
-        }
-
-        // Confirm the subscription exists for this org before scheduling any outbound
-        // traffic.
-        Optional<Subscription> subOpt = subscriptionDAO.getSubscriptionById(subscriptionId.trim(), orgId.trim());
-        if (subOpt.isEmpty() || SubscriptionStatus.DELETED.getValue().equalsIgnoreCase(subOpt.get().getStatus())) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
-                    EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
-                    EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404);
-        }
-
-        // Apply the same SSRF + scheme guards the public path uses. Without this, this
-        // entry point
-        // would let callers schedule arbitrary outbound webhooks against any URL.
-        validateCallbackUrl(callbackUrl.trim());
-
-        scheduleWebhookVerificationTask(subscriptionId.trim(), orgId.trim(), callbackUrl.trim(), topicName.trim(), 0);
-    }
-
-    @Override
     public SubscriptionDTO retryVerification(String orgId, String subscriptionId) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
@@ -621,19 +594,38 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                     EventNotificationServiceConstants.NO_CALLBACK_URL_ERROR_MSG, 409);
         }
+        if (sub.getSharedSecret() == null || sub.getSharedSecret().trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                    EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                    EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG, 409);
+        }
 
         String topicName = topicDAO.getTopicById(sub.getTopicId(), sub.getOrgId()).map(Topic::getName)
                 .orElse("unknown");
         try {
             verifyWebhookCallback(sub.getCallbackUrl().trim(), topicName);
-            subscriptionDAO.updateSubscriptionStatus(subscriptionId.trim(), orgId.trim(),
-                    SubscriptionStatus.ACTIVE.getValue());
-            sub.setStatus(SubscriptionStatus.ACTIVE.getValue());
         } catch (EventNotificationException e) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED, e.getDescription(), 422);
         }
+
+        String expectedStatus = sub.getStatus().trim().toLowerCase(java.util.Locale.ROOT);
+        boolean updated = subscriptionDAO.updateSubscriptionStatus(subscriptionId.trim(), orgId.trim(),
+                expectedStatus, SubscriptionStatus.ACTIVE.getValue());
+        if (!updated) {
+            Optional<Subscription> current = subscriptionDAO.getSubscriptionById(subscriptionId.trim(), orgId.trim());
+            if (current.isEmpty()
+                    || SubscriptionStatus.DELETED.getValue().equalsIgnoreCase(current.get().getStatus())) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
+                        EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
+                        EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404);
+            }
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                    EventNotificationServiceConstants.ERROR_TITLE_CONCURRENT_MUTATION,
+                    EventNotificationServiceConstants.SUBSCRIPTION_CONCURRENT_MODIFICATION_ERROR_MSG, 409);
+        }
+        sub.setStatus(SubscriptionStatus.ACTIVE.getValue());
 
         return mapToDTO(sub, topicName);
     }
@@ -714,92 +706,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
         }
 
-        SubscriptionDeliverySummary summary = summaryOpt.get();
-        String mode = summary.getDeliveryMode() != null ? summary.getDeliveryMode()
-                : DeliveryMode.WEBHOOK.getValue();
-
-        SubscriptionEventHistoryDTO dto = new SubscriptionEventHistoryDTO();
-        dto.setDeliveryId(summary.getDeliveryId());
-        dto.setEventId(summary.getEventId());
-        dto.setTopic(summary.getTopicName());
-        dto.setDeliveryMode(mode);
-        dto.setCurrentStatus(summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                : SubscriptionStatus.PENDING.getValue());
-        dto.setOccurredAt(summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
-                : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime() : System.currentTimeMillis()));
-
-        if (DeliveryMode.WEBHOOK.getValue().equals(mode)) {
-            Optional<WebhookDelivery> whOpt = deliveryDAO.getWebhookDeliveryById(deliveryId.trim(), orgId.trim());
-            if (whOpt.isPresent()) {
-                WebhookDelivery wh = whOpt.get();
-                if (wh.getNextRetryAt() != null) {
-                    dto.setNextRetryAt(wh.getNextRetryAt().getTime());
-                }
-            }
-
-            Optional<WebhookDeliveryAck> ackOpt = deliveryAckDAO.getDeliveryAckByDeliveryId(deliveryId.trim());
-            if (ackOpt.isPresent()) {
-                WebhookDeliveryAck ack = ackOpt.get();
-                dto.setCompletionStatus(
-                        ack.getCompletionStatus() != null ? ack.getCompletionStatus()
-                                : DeliveryStatus.COMPLETED.getValue());
-                dto.setCompletionEvidence(ack.getCompletionEvidence());
-            }
-
-            List<WebhookDeliveryAudit> audits = deliveryDAO.getWebhookDeliveryAudits(deliveryId.trim(), orgId.trim());
-            List<SubscriptionDeliveryAttemptDTO> attempts = new ArrayList<>();
-            int attemptNumber = 1;
-            for (WebhookDeliveryAudit audit : audits) {
-                Integer httpStatus = null;
-                String error = null;
-                String status = DeliveryStatus.FAILED.getValue();
-                if (audit.getResponseCode() != null) {
-                    try {
-                        httpStatus = Integer.parseInt(audit.getResponseCode().trim());
-                        if (httpStatus >= 200 && httpStatus < 300) {
-                            status = DeliveryStatus.DELIVERED.getValue();
-                        } else {
-                            error = "HTTP " + httpStatus;
-                        }
-                    } catch (NumberFormatException e) {
-                        error = audit.getResponseCode();
-                    }
-                }
-                attempts.add(new SubscriptionDeliveryAttemptDTO(attemptNumber++, status,
-                        audit.getAttemptAt() != null ? audit.getAttemptAt().getTime()
-                                : (audit.getCreatedAt() != null ? audit.getCreatedAt().getTime()
-                                        : System.currentTimeMillis()),
-                        httpStatus, error));
-            }
-            if (attempts.isEmpty()) {
-                attempts.add(new SubscriptionDeliveryAttemptDTO(1,
-                        summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                                : SubscriptionStatus.PENDING.getValue(),
-                        summary.getCreatedAt() != null ? summary.getCreatedAt().getTime() : System.currentTimeMillis(),
-                        null, null));
-            }
-            dto.setHistory(attempts);
-        } else {
-            Optional<PollDelivery> pollOpt = deliveryDAO.getPollDeliveryById(deliveryId.trim(), orgId.trim());
-            List<SubscriptionDeliveryAttemptDTO> attempts = new ArrayList<>();
-            String pollStatus = summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                    : SubscriptionStatus.PENDING.getValue();
-            long timestamp = summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
-                    : System.currentTimeMillis();
-
-            if (pollOpt.isPresent()) {
-                PollDelivery pd = pollOpt.get();
-                if (pd.getCompletedAt() != null) {
-                    timestamp = pd.getCompletedAt().getTime();
-                }
-            }
-
-            dto.setCompletionStatus(pollStatus);
-            attempts.add(new SubscriptionDeliveryAttemptDTO(1, pollStatus, timestamp, null, null));
-            dto.setHistory(attempts);
-        }
-
-        return dto;
+        return DeliveryHistoryMapper.map(orgId.trim(), deliveryId.trim(), summaryOpt.get(), deliveryDAO,
+                deliveryAckDAO);
     }
 
     private SubscriptionDTO mapToDTO(Subscription sub, String topicName) {

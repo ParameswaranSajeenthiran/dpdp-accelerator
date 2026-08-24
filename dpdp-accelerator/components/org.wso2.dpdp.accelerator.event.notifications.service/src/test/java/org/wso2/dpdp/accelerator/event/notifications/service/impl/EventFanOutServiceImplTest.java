@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 
+import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,20 +55,28 @@ public class EventFanOutServiceImplTest {
     private SubscriptionDAO subscriptionDAO;
     private DeliveryDAO deliveryDAO;
     private EventFanOutServiceImpl fanOutService;
+    private Connection connection;
 
     @BeforeMethod
     public void setUp() {
         subscriptionDAO = mock(SubscriptionDAO.class);
         deliveryDAO = mock(DeliveryDAO.class);
+        connection = mock(Connection.class);
         fanOutService = new EventFanOutServiceImpl(subscriptionDAO, deliveryDAO);
-        when(deliveryDAO.addWebhookDelivery(any())).thenReturn(true);
+        when(deliveryDAO.addWebhookDelivery(any(Connection.class), any())).thenReturn(true);
     }
 
     @Test
     public void fanOutEvent_nullEvent_isNoOp() {
-        fanOutService.fanOutEvent(null, Arrays.asList("marketing"));
-        verify(subscriptionDAO, never()).getLiveSubscriptionsByOrgAndTopic(any(), any());
-        verify(deliveryDAO, never()).addWebhookDelivery(any());
+        fanOutService.fanOutEvent(connection, null, Arrays.asList("marketing"));
+        verify(subscriptionDAO, never()).getActiveSubscriptionsForFanOut(any(Connection.class), any(), any());
+        verify(deliveryDAO, never()).addWebhookDelivery(any(Connection.class), any());
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void fanOutEvent_requiresTransactionConnection() {
+        fanOutService.fanOutEvent(null, sampleEvent("org1", "g1", "topic1"),
+                Arrays.asList("marketing"));
     }
 
     @Test
@@ -75,13 +84,13 @@ public class EventFanOutServiceImplTest {
         Event event = sampleEvent("org1", "g1", "topic1");
         Subscription webhookMatch = subscription("sub-1", "org1", "g1", "topic1",
                 PurposeFilterMode.SPECIFIC.getValue(), Arrays.asList("marketing"), "webhook");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(webhookMatch));
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
         ArgumentCaptor<WebhookDelivery> captor = ArgumentCaptor.forClass(WebhookDelivery.class);
-        verify(deliveryDAO, times(1)).addWebhookDelivery(captor.capture());
+        verify(deliveryDAO, times(1)).addWebhookDelivery(any(Connection.class), captor.capture());
         WebhookDelivery saved = captor.getValue();
         assertEquals(saved.getSubscriptionId(), "sub-1");
         assertEquals(saved.getEventId(), event.getEventId());
@@ -94,12 +103,12 @@ public class EventFanOutServiceImplTest {
         Event event = sampleEvent("org1", "g1", "topic1");
         Subscription wrongGroup = subscription("sub-1", "org1", "g9", "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "webhook");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(wrongGroup));
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
-        verify(deliveryDAO, never()).addWebhookDelivery(any());
+        verify(deliveryDAO, never()).addWebhookDelivery(any(Connection.class), any());
     }
 
     @Test
@@ -107,12 +116,12 @@ public class EventFanOutServiceImplTest {
         Event event = sampleEvent("org1", "g9", "topic1");
         Subscription anyGroup = subscription("sub-1", "org1", null, "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "webhook");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(anyGroup));
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
-        verify(deliveryDAO, times(1)).addWebhookDelivery(any());
+        verify(deliveryDAO, times(1)).addWebhookDelivery(any(Connection.class), any());
     }
 
     @Test
@@ -120,12 +129,12 @@ public class EventFanOutServiceImplTest {
         Event event = sampleEvent("org1", "g1", "topic1");
         Subscription wrongPurpose = subscription("sub-1", "org1", "g1", "topic1",
                 PurposeFilterMode.SPECIFIC.getValue(), Arrays.asList("billing"), "webhook");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(wrongPurpose));
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
-        verify(deliveryDAO, never()).addWebhookDelivery(any());
+        verify(deliveryDAO, never()).addWebhookDelivery(any(Connection.class), any());
     }
 
     @Test
@@ -140,32 +149,30 @@ public class EventFanOutServiceImplTest {
                 PurposeFilterMode.SPECIFIC.getValue(), Arrays.asList("billing"), "webhook"));
         candidates.add(subscription("sub-poll-deferred", "org1", "g1", "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "poll"));
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1")).thenReturn(candidates);
-        when(deliveryDAO.addPollDelivery(any())).thenReturn(true);
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
+                .thenReturn(candidates);
+        when(deliveryDAO.addPollDelivery(any(Connection.class), any())).thenReturn(true);
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
         ArgumentCaptor<WebhookDelivery> captor = ArgumentCaptor.forClass(WebhookDelivery.class);
-        verify(deliveryDAO, times(1)).addWebhookDelivery(captor.capture());
+        verify(deliveryDAO, times(1)).addWebhookDelivery(any(Connection.class), captor.capture());
         assertEquals(captor.getValue().getSubscriptionId(), "sub-webhook-match");
-        verify(deliveryDAO, times(1)).addPollDelivery(any());
+        verify(deliveryDAO, times(1)).addPollDelivery(any(Connection.class), any());
     }
 
     @Test
-    public void fanOutEvent_queuesDeliveryForPendingWebhookSubscription() {
+    public void fanOutEvent_pendingWebhookSubscriptionIsIgnoredDefensively() {
         Event event = sampleEvent("org1", "g1", "topic1");
         Subscription pendingSub = subscription("sub-pending", "org1", "g1", "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "webhook");
         pendingSub.setStatus("pending");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(pendingSub));
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
 
-        ArgumentCaptor<WebhookDelivery> captor = ArgumentCaptor.forClass(WebhookDelivery.class);
-        verify(deliveryDAO, times(1)).addWebhookDelivery(captor.capture());
-        assertEquals(captor.getValue().getSubscriptionId(), "sub-pending");
-        assertEquals(captor.getValue().getStatus(), "pending");
+        verify(deliveryDAO, never()).addWebhookDelivery(any(Connection.class), any());
     }
 
     @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException.class)
@@ -173,11 +180,11 @@ public class EventFanOutServiceImplTest {
         Event event = sampleEvent("org1", "g1", "topic1");
         Subscription webhookMatch = subscription("sub-1", "org1", "g1", "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "webhook");
-        when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1"))
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(connection, "org1", "topic1"))
                 .thenReturn(Collections.singletonList(webhookMatch));
-        when(deliveryDAO.addWebhookDelivery(any())).thenReturn(false);
+        when(deliveryDAO.addWebhookDelivery(any(Connection.class), any())).thenReturn(false);
 
-        fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
+        fanOutService.fanOutEvent(connection, event, Arrays.asList("marketing"));
     }
 
     private static Event sampleEvent(String orgId, String groupId, String topicId) {

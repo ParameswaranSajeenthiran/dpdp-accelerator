@@ -24,12 +24,24 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 public class EventNotificationSqliteDBQueries extends EventNotificationCommonDBQueries {
 
     @Override
+    public String getActiveTopicByOrgAndNameForUpdateQuery() {
+        return getGetTopicByOrgAndNameQuery();
+    }
+
+    @Override
     public String getLockActiveSubscriptionsQuery() {
         return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, " +
                "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                "FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ? AND TOPIC_ID = ? " +
                "AND STATUS IN (" + SQL_SUBSCRIPTION_ACTIVE + ", " + SQL_SUBSCRIPTION_PENDING + ", "
                + SQL_SUBSCRIPTION_STALE + ")";
+    }
+
+    @Override
+    public String getActiveSubscriptionsForFanOutQuery() {
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, " +
+               "DELIVERY_MODE, CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
+               "FROM SUBSCRIPTION WHERE ORG_ID = ? AND TOPIC_ID = ? AND STATUS = " + SQL_SUBSCRIPTION_ACTIVE;
     }
 
 }

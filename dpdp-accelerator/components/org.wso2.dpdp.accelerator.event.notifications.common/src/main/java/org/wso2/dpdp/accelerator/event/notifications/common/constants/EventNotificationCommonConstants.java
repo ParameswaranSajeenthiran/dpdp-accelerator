@@ -69,7 +69,6 @@ public class EventNotificationCommonConstants {
     public static final String ERROR_ADDING_EVENT_PURPOSES = "Error adding event purposes for event [%s]";
     public static final String ERROR_GETTING_EVENT_PURPOSES = "Error getting event purposes for event [%s]";
     public static final String ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC = "Error checking active events for topic [%s]";
-    public static final String ERROR_GETTING_EVENT_PAYLOAD = "Error getting event payload [%s]";
     public static final String ERROR_LISTING_EVENTS = "Error listing events for org [%s]";
     public static final String ERROR_SUBSCRIPTION_OVERLAPPING_PURPOSES = "An active subscription with overlapping purposes already exists for this group/topic.";
     public static final String ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE =

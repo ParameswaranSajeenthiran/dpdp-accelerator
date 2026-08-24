@@ -18,13 +18,10 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -55,15 +52,6 @@ public interface SubscriptionDAO {
     PaginatedDAOResult<Subscription> listSubscriptions(String orgId, String status, String purposes, String search,
             int limit, int offset, String sort);
 
-    List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
-
-    default List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        return DatabaseUtils.executeWithConnection(conn ->
-                getSubscriptionsByOrgAndTopic(conn, orgId, topicId));
-    }
-
-    List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId, String status);
-
     /**
      * Returns all subscriptions for a topic that are in a live state
      * (active, pending, stale) — i.e. all except deleted. Used for
@@ -76,6 +64,13 @@ public interface SubscriptionDAO {
                 getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId));
     }
 
+    /**
+     * Returns and locks active subscriptions that are eligible for event fan-out.
+     * The caller must hold the supplied transaction until all delivery rows have
+     * been inserted.
+     */
+    List<Subscription> getActiveSubscriptionsForFanOut(Connection conn, String orgId, String topicId);
+
     long countActiveSubscriptionsForTopic(String orgId, String topicId);
 
     List<String> getPurposesBySubscriptionId(String subscriptionId, String orgId);
@@ -85,4 +80,10 @@ public interface SubscriptionDAO {
     boolean hasPendingOrInFlightDeliveries(String subscriptionId, String orgId);
 
     List<Subscription> getPendingSubscriptionsForRecovery(Timestamp updatedBefore, int limit);
+
+    boolean claimPendingSubscriptionForVerification(String subscriptionId, String orgId,
+            Timestamp eligibleBefore);
+
+    boolean claimPendingSubscriptionForVerification(Connection connection, String subscriptionId, String orgId,
+            Timestamp eligibleBefore);
 }

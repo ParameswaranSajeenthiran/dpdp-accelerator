@@ -32,6 +32,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
@@ -50,10 +51,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.expectThrows;
 
 public class SubscriptionServiceImplTest {
 
@@ -240,6 +243,22 @@ public class SubscriptionServiceImplTest {
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "http://127.0.0.1:8080/callback", "secret123");
 
         subscriptionService.createSubscription("org1", "group1", "user-consent", filter, delivery);
+    }
+
+    @Test
+    public void testCreateWebhookSubscriptionRequiresSharedSecret() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
+                "https://93.184.216.34:443/callback", " ");
+
+        EventNotificationException exception = expectThrows(EventNotificationException.class,
+                () -> subscriptionService.createSubscription("org1", "group1", "user-consent", filter, delivery));
+        assertEquals(exception.getStatusCode(), 400);
+        assertEquals(exception.getDescription(), EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG);
+        verify(subscriptionDAO, never()).addSubscription(any(Subscription.class));
     }
 
     @Test(expectedExceptions = EventNotificationException.class)

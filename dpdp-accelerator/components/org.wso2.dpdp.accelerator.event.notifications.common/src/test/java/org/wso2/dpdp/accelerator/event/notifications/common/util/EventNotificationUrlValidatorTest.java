@@ -57,4 +57,11 @@ public class EventNotificationUrlValidatorTest {
         Assert.expectThrows(IllegalArgumentException.class,
                 () -> EventNotificationUrlValidator.validate("https://192.168.1.10/hook"));
     }
+
+    @Test
+    public void testRejectsCallbackFragmentBeforeResolution() {
+
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validate("https://callback.invalid/hook#ignored"));
+    }
 }

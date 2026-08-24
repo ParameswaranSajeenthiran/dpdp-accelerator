@@ -62,6 +62,16 @@ public class QueryBuilderTest {
     }
 
     @Test
+    public void postgresEventSearchCastsJsonPayloadToText() {
+        QueryResult result = new EventQueryBuilder("org", new EventNotificationPostgresDBQueries())
+                .setSearch("account")
+                .buildCountQuery("SELECT COUNT(*) FROM EVENT e JOIN TOPIC t ON 1=1 WHERE e.ORG_ID = ?");
+
+        assertTrue(result.getSql().contains("LOWER(CAST(e.PAYLOAD AS TEXT)) LIKE ?"));
+        assertTrue(!result.getSql().contains("LOWER(e.PAYLOAD) LIKE ?"));
+    }
+
+    @Test
     public void subscriptionBuilderCoversFiltersSortsAndEmptyInputs() {
         SubscriptionQueryBuilder full = new SubscriptionQueryBuilder("org").setStatus("active")
                 .setSearch("a_%").setPurposes("one, ,TWO").setSort("updatedAt");

@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
+            <artifactId>jackson-core</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -68,6 +68,16 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component.annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -151,7 +161,19 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.name}</Bundle-Name>
                         <_dsannotations>*</_dsannotations>
+                        <Private-Package>
+                            org.wso2.dpdp.accelerator.event.notifications.service.dispatch,
+                            org.wso2.dpdp.accelerator.event.notifications.service.impl,
+                            org.wso2.dpdp.accelerator.event.notifications.service.internal,
+                            org.wso2.dpdp.accelerator.event.notifications.service.matching,
+                            org.wso2.dpdp.accelerator.event.notifications.service.recovery
+                        </Private-Package>
                         <Export-Package>
+                            !org.wso2.dpdp.accelerator.event.notifications.service.dispatch,
+                            !org.wso2.dpdp.accelerator.event.notifications.service.impl,
+                            !org.wso2.dpdp.accelerator.event.notifications.service.internal,
+                            !org.wso2.dpdp.accelerator.event.notifications.service.matching,
+                            !org.wso2.dpdp.accelerator.event.notifications.service.recovery,
                             org.wso2.dpdp.accelerator.event.notifications.service.*;version="${project.version}"
                         </Export-Package>
                         <Import-Package>

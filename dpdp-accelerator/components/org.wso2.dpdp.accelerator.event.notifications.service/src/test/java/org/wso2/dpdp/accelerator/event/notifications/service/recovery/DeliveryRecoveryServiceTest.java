@@ -21,12 +21,18 @@ import java.lang.reflect.Constructor;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 public class DeliveryRecoveryServiceTest {
 
@@ -46,6 +52,8 @@ public class DeliveryRecoveryServiceTest {
         MockitoAnnotations.openMocks(this);
         when(configurationService.getEventNotificationThreadPoolSize()).thenReturn(2);
         when(configurationService.getEventNotificationDeliveryWorkerPollSeconds()).thenReturn(5);
+        when(configurationService.getEventNotificationDeliveryWorkerBatchSize()).thenReturn(20);
+        when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(10);
         when(configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds())
                 .thenReturn(60);
         when(configurationService.getEventNotificationBackgroundWorkerInitialDelaySeconds()).thenReturn(10);
@@ -62,10 +70,14 @@ public class DeliveryRecoveryServiceTest {
         Subscription withoutCallback = subscription("without-callback", " ");
         when(subscriptionDAO.getPendingSubscriptionsForRecovery(any(Timestamp.class), anyInt()))
                 .thenReturn(Arrays.asList(retryable, withoutCallback));
+        when(subscriptionDAO.claimPendingSubscriptionForVerification(
+                eq("retryable"), eq("org1"), any(Timestamp.class))).thenReturn(true);
 
         runPendingRecoveryTask();
 
         verify(subscriptionService).retryVerification("org1", "retryable");
+        verify(subscriptionDAO, never()).claimPendingSubscriptionForVerification(
+                eq("without-callback"), eq("org1"), any(Timestamp.class));
     }
 
     @Test
@@ -73,6 +85,8 @@ public class DeliveryRecoveryServiceTest {
         Subscription retryable = subscription("retryable", "https://example.com:443/callback");
         when(subscriptionDAO.getPendingSubscriptionsForRecovery(any(Timestamp.class), anyInt()))
                 .thenReturn(Collections.singletonList(retryable));
+        when(subscriptionDAO.claimPendingSubscriptionForVerification(
+                eq("retryable"), eq("org1"), any(Timestamp.class))).thenReturn(true);
         doThrow(new RuntimeException("verification unavailable"))
                 .when(subscriptionService).retryVerification("org1", "retryable");
 
@@ -82,10 +96,56 @@ public class DeliveryRecoveryServiceTest {
     }
 
     @Test
+    public void subscriptionIsNotRetriedWhenAnotherNodeOwnsTheClaim() throws Exception {
+        Subscription retryable = subscription("already-claimed", "https://example.com:443/callback");
+        when(subscriptionDAO.getPendingSubscriptionsForRecovery(any(Timestamp.class), anyInt()))
+                .thenReturn(Collections.singletonList(retryable));
+        when(subscriptionDAO.claimPendingSubscriptionForVerification(
+                eq("already-claimed"), eq("org1"), any(Timestamp.class))).thenReturn(false);
+
+        runPendingRecoveryTask();
+
+        verify(subscriptionService, never()).retryVerification("org1", "already-claimed");
+    }
+
+    @Test
     public void serviceCanActivateAndDeactivate() {
         recoveryService.activate();
         recoveryService.deactivate();
         recoveryService.deactivate();
+    }
+
+    @Test
+    public void workerExecutorQueueIsBoundedByConfiguredBatchSize() throws Exception {
+        recoveryService.activate();
+        try {
+            java.lang.reflect.Field workerPoolField = DeliveryRecoveryService.class.getDeclaredField("workerPool");
+            workerPoolField.setAccessible(true);
+            ThreadPoolExecutor workerPool = (ThreadPoolExecutor) workerPoolField.get(recoveryService);
+
+            assertEquals(workerPool.getCorePoolSize(), 2);
+            assertEquals(workerPool.getQueue().remainingCapacity(), 20);
+        } finally {
+            recoveryService.deactivate();
+        }
+    }
+
+    @Test
+    public void activationRejectsStuckThresholdAtHttpTimeout() {
+        when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(5);
+
+        IllegalStateException error = expectThrows(IllegalStateException.class, recoveryService::activate);
+
+        assertTrue(error.getMessage().contains("must be greater than 5 seconds"));
+    }
+
+    @Test
+    public void activationRejectsVerificationRecoveryThresholdAtHttpTimeout() {
+        when(configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds()).thenReturn(5);
+
+        IllegalStateException error = expectThrows(IllegalStateException.class, recoveryService::activate);
+
+        assertTrue(error.getMessage().contains("pending subscription recovery threshold"));
     }
 
     private void runPendingRecoveryTask() throws Exception {

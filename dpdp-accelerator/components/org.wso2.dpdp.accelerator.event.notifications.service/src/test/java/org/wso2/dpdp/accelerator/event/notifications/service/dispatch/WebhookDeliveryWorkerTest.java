@@ -58,28 +58,29 @@ public class WebhookDeliveryWorkerTest {
     @Mock
     private DPDPConfigurationService configurationService;
 
-    private ScheduledExecutorService scheduler;
+    private QueueingExecutor scheduler;
     private HttpClient httpClient;
 
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        // The worker submits WebhookDeliveryTask instances to the scheduler; we don't want
-        // them to make real HTTP calls in this test. DiscardingExecutor drops the task.
-        scheduler = new DiscardingExecutor();
+        // Claims now happen inside executing work, so tests control exactly when queued
+        // units start by draining this executor explicitly.
+        scheduler = new QueueingExecutor();
         httpClient = HTTPClientUtils.getHttpClient();
         when(configurationService.getEventNotificationDeliveryWorkerBatchSize()).thenReturn(50);
         when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(10);
     }
 
-    // Minimal ScheduledExecutorService that records nothing and runs nothing — keeps the
-    // worker happy without taking the network dependency.
-    private static class DiscardingExecutor implements ScheduledExecutorService {
+    // Minimal ScheduledExecutorService that queues work until the test explicitly starts it.
+    private static class QueueingExecutor implements ScheduledExecutorService {
+        private final java.util.List<Runnable> queued = new java.util.ArrayList<>();
+
         @Override public java.util.concurrent.ScheduledFuture<?> schedule(Runnable r, long d, TimeUnit u) { return null; }
         @Override public <V> java.util.concurrent.ScheduledFuture<V> schedule(java.util.concurrent.Callable<V> c, long d, TimeUnit u) { return null; }
         @Override public java.util.concurrent.ScheduledFuture<?> scheduleAtFixedRate(Runnable r, long i, long p, TimeUnit u) { return null; }
         @Override public java.util.concurrent.ScheduledFuture<?> scheduleWithFixedDelay(Runnable r, long i, long p, TimeUnit u) { return null; }
-        @Override public void execute(Runnable r) { /* discard */ }
+        @Override public void execute(Runnable r) { queued.add(r); }
         @Override public void shutdown() {}
         @Override public java.util.List<Runnable> shutdownNow() { return java.util.Collections.emptyList(); }
         @Override public boolean isShutdown() { return false; }
@@ -92,9 +93,15 @@ public class WebhookDeliveryWorkerTest {
         @Override public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return java.util.Collections.emptyList(); }
         @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c) { return null; }
         @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return null; }
+
+        private void runAll() {
+            java.util.List<Runnable> copy = new java.util.ArrayList<>(queued);
+            queued.clear();
+            copy.forEach(Runnable::run);
+        }
     }
 
-    private static class RejectingExecutor extends DiscardingExecutor {
+    private static class RejectingExecutor extends QueueingExecutor {
         @Override
         public void execute(Runnable r) {
             throw new RuntimeException("executor rejected");
@@ -144,6 +151,7 @@ public class WebhookDeliveryWorkerTest {
 
         assertEquals(counts[0], 50, "50 pending rows should be submitted");
         verify(deliveryDAO, never()).getStuckInFlightWebhookDispatchContexts(anyInt());
+        verify(deliveryDAO, never()).claimWebhookDelivery(anyString());
     }
 
     @Test
@@ -155,7 +163,9 @@ public class WebhookDeliveryWorkerTest {
         WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
-        assertEquals(counts[0], 0);
+        assertEquals(counts[0], 1, "The candidate is queued before its claim is attempted");
+        scheduler.runAll();
+        verify(deliveryDAO).claimWebhookDelivery("d1");
     }
 
     @Test
@@ -174,6 +184,7 @@ public class WebhookDeliveryWorkerTest {
 
         assertEquals(counts[0], 0, "no pending to submit");
         assertEquals(counts[1], 1, "one stuck row reclaimed");
+        verify(deliveryDAO, never()).claimStuckWebhookDelivery(anyString(), any());
     }
 
     @Test
@@ -191,7 +202,8 @@ public class WebhookDeliveryWorkerTest {
         WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         int[] counts = worker.runTick();
 
-        assertEquals(counts[0], 0);
+        assertEquals(counts[0], 1);
+        scheduler.runAll();
         verify(deliveryDAO).updateWebhookDeliveryStatus(any());
     }
 
@@ -221,11 +233,13 @@ public class WebhookDeliveryWorkerTest {
                 configurationService);
         int[] counts = worker.runTick();
 
-        assertEquals(counts[0], 0);
+        assertEquals(counts[0], 1);
+        scheduler.runAll();
+        verify(deliveryDAO).claimWebhookDelivery("claim-failure");
     }
 
     @Test
-    public void testExecutorRejectionMarksDeliveryUnrecoverable() {
+    public void testExecutorRejectionLeavesDeliveryUnclaimed() {
         WebhookDeliveryDispatchContext dispatchContext = context("executor-rejection", 0);
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(Collections.singletonList(dispatchContext));
@@ -235,7 +249,8 @@ public class WebhookDeliveryWorkerTest {
         int[] counts = worker.runTick();
 
         assertEquals(counts[0], 0);
-        verify(deliveryDAO).updateWebhookDeliveryStatus(any());
+        verify(deliveryDAO, never()).claimWebhookDelivery(anyString());
+        verify(deliveryDAO, never()).updateWebhookDeliveryStatus(any());
     }
 
     @Test
@@ -255,7 +270,8 @@ public class WebhookDeliveryWorkerTest {
                 configurationService);
         int[] counts = worker.runTick();
 
-        assertEquals(counts[0], 0);
+        assertEquals(counts[0], 1);
+        scheduler.runAll();
     }
 
     @Test
@@ -274,6 +290,7 @@ public class WebhookDeliveryWorkerTest {
         WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         worker.runTick();
 
+        scheduler.runAll();
         verify(deliveryDAO).updateWebhookDeliveryStatus(any());
     }
 
@@ -295,6 +312,24 @@ public class WebhookDeliveryWorkerTest {
         WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService);
         worker.runTick();
 
+        scheduler.runAll();
         assertEquals(captor.getValue().getStatus(), DeliveryStatus.FAILED.getValue());
+    }
+
+    @Test
+    public void testMissingSharedSecretMarksDeliveryUnrecoverableWithoutDispatch() {
+        WebhookDeliveryDispatchContext valid = context("missing-secret", 0);
+        WebhookDeliveryDispatchContext unsigned = new WebhookDeliveryDispatchContext(
+                valid.getDelivery(), valid.getOrgId(), valid.getCallbackUrl(), " ", valid.getPayload(),
+                valid.getDelivery().getUpdatedAt(), valid.getTopicId(), valid.getTopicName());
+        when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
+                .thenReturn(Collections.singletonList(unsigned));
+        when(deliveryDAO.claimWebhookDelivery("missing-secret")).thenReturn(true);
+        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
+
+        new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient, configurationService).runTick();
+        scheduler.runAll();
+
+        verify(deliveryDAO).updateWebhookDeliveryStatus(any());
     }
 }

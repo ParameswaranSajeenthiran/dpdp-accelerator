@@ -23,7 +23,11 @@ import java.util.Collections;
 import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -101,6 +105,22 @@ public class DaoWritePathCoverageTest {
     }
 
     @Test
+    public void losingDeliveryStateTransitionDoesNotInsertAudit() throws Exception {
+        when(statement.executeUpdate()).thenReturn(0);
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        WebhookDelivery delivery = new WebhookDelivery("d-1", "s-1", "e-1", "delivered", 1,
+                null, now, now, now);
+        WebhookDeliveryAudit audit = new WebhookDeliveryAudit("a-1", "e-1", "d-1", "org-1", "200", now, now);
+        DeliveryDAOImpl dao = new DeliveryDAOImpl();
+
+        assertFalse(dao.recordSuccessfulAttempt(audit, delivery));
+        assertFalse(dao.recordRetryableFailure(audit, "d-1", 1, now));
+        assertFalse(dao.recordPermanentFailure(audit, delivery));
+
+        verify(connection, never()).prepareStatement(contains("INSERT INTO WEBHOOK_DELIVERY_AUDIT"));
+    }
+
+    @Test
     public void exercisesSubscriptionAndTopicWritePaths() throws Exception {
         when(resultSet.next()).thenReturn(true, true, false, false, false, false);
         when(resultSet.getString(1)).thenReturn("active");
@@ -171,9 +191,6 @@ public class DaoWritePathCoverageTest {
         assertTrue(subscriptions.updateSubscriptionStatus("s", "org", null, "active"));
         assertTrue(subscriptions.updateSubscriptionStatus(connection, "s", "org", null, "active"));
         assertTrue(subscriptions.deleteSubscriptionAtomic("s", "org", "active"));
-        expectThrows(IllegalArgumentException.class,
-                () -> subscriptions.getSubscriptionsByOrgAndTopic((Connection) null, "org", "topic"));
-
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
         expectThrows(IllegalArgumentException.class,
                 () -> deliveries.addWebhookDelivery(null,

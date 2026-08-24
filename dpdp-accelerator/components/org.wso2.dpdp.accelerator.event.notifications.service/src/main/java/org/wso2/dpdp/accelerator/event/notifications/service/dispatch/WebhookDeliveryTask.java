@@ -73,6 +73,7 @@ public class WebhookDeliveryTask implements Runnable {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_JSON = "application/json";
     private static final String RESPONSE_CODE_EXCEPTION = "EXCEPTION";
+    private static final String RESPONSE_CODE_MISSING_SHARED_SECRET = "MISSING_SECRET";
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(
             EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS);
 
@@ -129,6 +130,8 @@ public class WebhookDeliveryTask implements Runnable {
                     + LogSanitizer.sanitize(e.getMessage()));
             if (e instanceof MalformedPayloadException) {
                 recordPermanentFailure(MALFORMED_PAYLOAD_RESPONSE_CODE);
+            } else if (e instanceof MissingSharedSecretException) {
+                recordPermanentFailure(RESPONSE_CODE_MISSING_SHARED_SECRET);
             } else {
                 recordFailure(RESPONSE_CODE_EXCEPTION, null);
             }
@@ -156,6 +159,9 @@ public class WebhookDeliveryTask implements Runnable {
      * also dedupe on the {@code Delivery-Id} header without recomputing the HMAC.</p>
      */
     private String dispatch() throws Exception {
+        if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
+            throw new MissingSharedSecretException();
+        }
         String envelope = buildEnvelope();
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(callbackUrl))
@@ -164,9 +170,7 @@ public class WebhookDeliveryTask implements Runnable {
                 .header(DELIVERY_ID_HEADER, delivery.getDeliveryId())
                 .POST(HttpRequest.BodyPublishers.ofString(envelope));
         String signature = HmacSigner.sign(sharedSecret, envelope);
-        if (signature != null) {
-            builder.header(EVENT_SIGNATURE_HEADER, "sha256=" + signature);
-        }
+        builder.header(EVENT_SIGNATURE_HEADER, "sha256=" + signature);
         HttpResponse<Void> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.discarding());
         return String.valueOf(response.statusCode());
     }
@@ -232,6 +236,13 @@ public class WebhookDeliveryTask implements Runnable {
 
         private MalformedPayloadException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    private static final class MissingSharedSecretException extends Exception {
+
+        private MissingSharedSecretException() {
+            super("Webhook shared secret is missing.");
         }
     }
 

@@ -18,23 +18,22 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.recovery;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
+import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.WebhookDeliveryWorker;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,21 +43,16 @@ import org.apache.commons.logging.LogFactory;
  * retries
  * and stuck pending subscriptions across JVM server restarts.
  */
-@Component(service = DeliveryRecoveryService.class, immediate = true)
 public class DeliveryRecoveryService {
 
     private static final Log LOG = LogFactory.getLog(DeliveryRecoveryService.class);
 
-    @Reference
     private SubscriptionDAO subscriptionDAO;
 
-    @Reference
     private DeliveryDAO deliveryDAO;
 
-    @Reference
     private SubscriptionService subscriptionService;
 
-    @Reference
     private DPDPConfigurationService configurationService;
 
     private ScheduledExecutorService scheduler;
@@ -76,19 +70,35 @@ public class DeliveryRecoveryService {
         this.configurationService = configurationService;
     }
 
-    @Activate
     protected void activate() {
+        int stuckThresholdSeconds = configurationService.getEventNotificationStuckInFlightThresholdSeconds();
+        if (stuckThresholdSeconds <= EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS) {
+            throw new IllegalStateException("Event notification stuck in-flight threshold must be greater than "
+                    + EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS
+                    + " seconds so an active webhook request cannot be reclaimed.");
+        }
+        int verificationRecoveryThresholdSeconds =
+                configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds();
+        if (verificationRecoveryThresholdSeconds <= EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS) {
+            throw new IllegalStateException("Event notification pending subscription recovery threshold must be " +
+                    "greater than " + EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS +
+                    " seconds so an active verification request cannot be reclaimed.");
+        }
         int poolSize = configurationService.getEventNotificationThreadPoolSize();
         this.scheduler = Executors.newScheduledThreadPool(2, r -> {
             Thread t = new Thread(r, "delivery-recovery-scheduler");
             t.setDaemon(true);
             return t;
         });
-        this.workerPool = Executors.newFixedThreadPool(Math.max(1, poolSize), r -> {
+        int workerCount = Math.max(1, poolSize);
+        int queueCapacity = Math.max(1,
+                configurationService.getEventNotificationDeliveryWorkerBatchSize());
+        this.workerPool = new ThreadPoolExecutor(workerCount, workerCount, 0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(queueCapacity), r -> {
             Thread t = new Thread(r, "webhook-delivery-worker");
             t.setDaemon(true);
             return t;
-        });
+        }, new ThreadPoolExecutor.AbortPolicy());
 
         int initialDelaySeconds = configurationService.getEventNotificationBackgroundWorkerInitialDelaySeconds();
         int recoveryIntervalSeconds =
@@ -107,12 +117,19 @@ public class DeliveryRecoveryService {
                 + "delivery worker (poll every " + deliveryPollSeconds + "s).");
     }
 
-    @Deactivate
     protected void deactivate() {
         int shutdownTimeoutSeconds = configurationService.getEventNotificationWorkerShutdownTimeoutSeconds();
         shutdownGracefully("delivery-recovery-scheduler", scheduler, shutdownTimeoutSeconds);
         shutdownGracefully("webhook-delivery-worker-pool", workerPool, shutdownTimeoutSeconds);
         LOG.info("Delivery Recovery Service deactivated cleanly.");
+    }
+
+    public void start() {
+        activate();
+    }
+
+    public void stop() {
+        deactivate();
     }
 
     private static void shutdownGracefully(String name, java.util.concurrent.ExecutorService pool,
@@ -153,6 +170,10 @@ public class DeliveryRecoveryService {
             for (Subscription sub : pendingSubs) {
                 if (sub.getCallbackUrl() != null && !sub.getCallbackUrl().trim().isEmpty()) {
                     try {
+                        if (!subscriptionDAO.claimPendingSubscriptionForVerification(
+                                sub.getSubscriptionId(), sub.getOrgId(), threshold)) {
+                            continue;
+                        }
                         subscriptionService.retryVerification(sub.getOrgId(), sub.getSubscriptionId());
                         LOG.info("Recovered and re-verified pending subscription ["
                                 + LogSanitizer.sanitize(sub.getSubscriptionId()) + "].");

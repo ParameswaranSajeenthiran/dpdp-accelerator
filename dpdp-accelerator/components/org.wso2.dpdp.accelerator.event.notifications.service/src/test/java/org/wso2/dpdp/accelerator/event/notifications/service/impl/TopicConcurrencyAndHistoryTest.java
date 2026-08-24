@@ -65,6 +65,7 @@ public class TopicConcurrencyAndHistoryTest {
 
         assertNotNull(createdTopic);
         assertNotNull(createdTopic.getTopicId());
+        assertNotEquals(createdTopic.getTopicId(), "old-uuid-123");
         assertEquals(createdTopic.getName(), topicName);
         assertEquals(createdTopic.getStatus(), TopicStatus.ACTIVE.getValue());
         verify(topicDAO).addTopic(any());

@@ -46,12 +46,10 @@ import org.apache.commons.logging.LogFactory;
  * payload, so the worker can hand one object straight to
  * {@link WebhookDeliveryTask}
  * without further DAO calls.</li>
- * <li>For each context, atomically flips the row to {@code in_flight} via
- * {@link DeliveryDAO#claimWebhookDelivery(String)} so a concurrent worker does
- * not
- * pick the same row.</li>
- * <li>Submits a {@link WebhookDeliveryTask} to the shared scheduler.</li>
- * <li>Submits a {@link WebhookDeliveryTask} to the shared executor.</li>
+ * <li>Submits each context to the shared executor while it is still pending.</li>
+ * <li>When the executor starts that unit of work, atomically flips the row to
+ * {@code in_flight} via {@link DeliveryDAO#claimWebhookDelivery(String)}. Claimed
+ * rows therefore represent running work, not work waiting in an executor queue.</li>
  * <li>Also drains stuck {@code in_flight} rows whose {@code UPDATED_AT} is
  * older than the
  * configured stuck threshold so a crashed worker does not permanently block
@@ -168,39 +166,45 @@ public class WebhookDeliveryWorker implements Runnable {
         int submitted = 0;
         for (WebhookDeliveryDispatchContext ctx : contexts) {
             WebhookDelivery delivery = ctx.getDelivery();
-            boolean claimed = isReclaim
-                    ? claimStuck(delivery.getDeliveryId(), stuckCutoff)
-                    : claim(delivery.getDeliveryId());
-            if (!claimed) {
-                continue;
-            }
-            if (!isDeliverable(ctx)) {
-                markUnrecoverable(delivery, isReclaim
-                        ? "missing callback URL or event payload (subscription may have been deleted)"
-                        : "missing callback URL or event payload");
-                continue;
-            }
             try {
-                executor.execute(new WebhookDeliveryTask(
-                        delivery,
-                        ctx.getOrgId(),
-                        ctx.getPayload(),
-                        ctx.getCallbackUrl(),
-                        ctx.getSharedSecret(),
-                        ctx.getTopicId(),
-                        ctx.getTopicName(),
-                        deliveryDAO,
-                        httpClient,
-                        getConfiguration()));
+                executor.execute(() -> executeClaimed(ctx, isReclaim, stuckCutoff));
                 submitted++;
             } catch (Exception e) {
                 LOG.error("Failed to submit WebhookDeliveryTask for delivery ["
                         + LogSanitizer.sanitize(delivery.getDeliveryId()) + "]: "
                         + LogSanitizer.sanitize(e.getMessage()), e);
-                markUnrecoverable(delivery, "executor rejected task");
             }
         }
         return submitted;
+    }
+
+    private void executeClaimed(WebhookDeliveryDispatchContext ctx, boolean isReclaim,
+            java.sql.Timestamp stuckCutoff) {
+        WebhookDelivery delivery = ctx.getDelivery();
+        boolean claimed = isReclaim
+                ? claimStuck(delivery.getDeliveryId(), stuckCutoff)
+                : claim(delivery.getDeliveryId());
+        if (!claimed) {
+            return;
+        }
+        if (!isDeliverable(ctx)) {
+            markUnrecoverable(delivery, isReclaim
+                    ? "missing callback URL, shared secret, or event payload "
+                            + "(subscription may have been deleted)"
+                    : "missing callback URL, shared secret, or event payload");
+            return;
+        }
+        new WebhookDeliveryTask(
+                delivery,
+                ctx.getOrgId(),
+                ctx.getPayload(),
+                ctx.getCallbackUrl(),
+                ctx.getSharedSecret(),
+                ctx.getTopicId(),
+                ctx.getTopicName(),
+                deliveryDAO,
+                httpClient,
+                getConfiguration()).run();
     }
 
     private DPDPConfigurationService getConfiguration() {
@@ -239,7 +243,8 @@ public class WebhookDeliveryWorker implements Runnable {
         if (payload == null) {
             return false;
         }
-        return true;
+        String sharedSecret = ctx.getSharedSecret();
+        return sharedSecret != null && !sharedSecret.trim().isEmpty();
     }
 
     /**

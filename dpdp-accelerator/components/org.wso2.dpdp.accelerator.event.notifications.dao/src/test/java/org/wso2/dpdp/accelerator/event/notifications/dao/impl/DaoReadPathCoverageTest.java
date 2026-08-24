@@ -51,7 +51,6 @@ public class DaoReadPathCoverageTest {
         SubscriptionDAOImpl subscriptions = new SubscriptionDAOImpl();
         subscriptions.getSubscriptionById("missing", "org");
         subscriptions.listSubscriptions("org", null, null, null, 20, 0, null);
-        subscriptions.getSubscriptionsByOrgAndTopic("org", "topic", null);
         subscriptions.getPurposesBySubscriptionId("sub", "org");
         subscriptions.countActiveSubscriptionsForTopic("org", "topic");
         subscriptions.getPurposesBySubscriptionIds(java.util.Collections.singletonList("sub"));
@@ -72,14 +71,11 @@ public class DaoReadPathCoverageTest {
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
         setConfiguration(deliveries);
         deliveries.getWebhookDeliveryById("delivery", "org");
-        deliveries.getPendingWebhookDeliveries(10);
         deliveries.getPendingWebhookDispatchContexts(10);
         deliveries.getStuckInFlightWebhookDispatchContexts(10, null);
-        deliveries.getStuckInFlightWebhookDeliveries(10, null);
         deliveries.getPendingPollDeliveries("org", "group", 10);
         deliveries.getWebhookDeliveryAudits("delivery", "org");
         deliveries.getPollDeliveryById("delivery", "org");
-        deliveries.getEventPayload("event");
         deliveries.getOrgDeliveryById("org", "delivery");
         deliveries.getSubscriptionDeliveryById("org", "sub", "delivery");
         deliveries.listSubscriptionDeliveries("org", "sub", 10, 0, new int[1]);
@@ -96,7 +92,6 @@ public class DaoReadPathCoverageTest {
         SubscriptionDAOImpl subscriptions = new SubscriptionDAOImpl();
         expectThrows(RuntimeException.class, () -> subscriptions.getSubscriptionById("sub", "org"));
         expectThrows(RuntimeException.class, () -> subscriptions.listSubscriptions("org", null, null, null, 20, 0, null));
-        expectThrows(RuntimeException.class, () -> subscriptions.getSubscriptionsByOrgAndTopic("org", "topic", null));
         expectThrows(RuntimeException.class, () -> subscriptions.getPurposesBySubscriptionId("sub", "org"));
         expectThrows(RuntimeException.class, () -> subscriptions.countActiveSubscriptionsForTopic("org", "topic"));
         expectThrows(RuntimeException.class, () -> subscriptions.hasPendingOrInFlightDeliveries("sub", "org"));
@@ -116,13 +111,10 @@ public class DaoReadPathCoverageTest {
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
         setConfiguration(deliveries);
         expectThrows(RuntimeException.class, () -> deliveries.getWebhookDeliveryById("delivery", "org"));
-        expectThrows(RuntimeException.class, () -> deliveries.getPendingWebhookDeliveries(10));
         expectThrows(RuntimeException.class, () -> deliveries.getPendingWebhookDispatchContexts(10));
-        expectThrows(RuntimeException.class, () -> deliveries.getStuckInFlightWebhookDeliveries(10, new Timestamp(1)));
         expectThrows(RuntimeException.class, () -> deliveries.getPendingPollDeliveries("org", "group", 10));
         expectThrows(RuntimeException.class, () -> deliveries.getWebhookDeliveryAudits("delivery", "org"));
         expectThrows(RuntimeException.class, () -> deliveries.getPollDeliveryById("delivery", "org"));
-        expectThrows(RuntimeException.class, () -> deliveries.getEventPayload("event"));
         expectThrows(RuntimeException.class, () -> deliveries.getOrgDeliveryById("org", "delivery"));
     }
 
@@ -130,8 +122,6 @@ public class DaoReadPathCoverageTest {
     public void coversEmptyInputReadGuards() throws Exception {
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
         setConfiguration(deliveries);
-        org.testng.Assert.assertFalse(deliveries.getEventPayload(null).isPresent());
-        org.testng.Assert.assertFalse(deliveries.getEventPayload(" ").isPresent());
         org.testng.Assert.assertTrue(deliveries.listEventDeliveries(null, "event", 10, 0, null).isEmpty());
         org.testng.Assert.assertTrue(deliveries.listEventDeliveries("org", "", 10, 0, null).isEmpty());
         org.testng.Assert.assertTrue(new SubscriptionDAOImpl()

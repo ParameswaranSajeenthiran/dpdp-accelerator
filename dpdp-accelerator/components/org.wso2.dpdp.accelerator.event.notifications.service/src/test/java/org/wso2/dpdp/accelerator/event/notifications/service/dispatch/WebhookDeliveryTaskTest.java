@@ -100,12 +100,16 @@ public class WebhookDeliveryTaskTest {
     }
 
     private WebhookDeliveryTask task(WebhookDelivery delivery, String payload) {
+        return task(delivery, payload, SHARED_SECRET);
+    }
+
+    private WebhookDeliveryTask task(WebhookDelivery delivery, String payload, String sharedSecret) {
         return new WebhookDeliveryTask(
                 delivery,
                 ORG_ID,
                 payload,
                 CALLBACK_URL,
-                SHARED_SECRET,
+                sharedSecret,
                 TOPIC_ID,
                 TOPIC_NAME,
                 deliveryDAO,
@@ -418,6 +422,18 @@ public class WebhookDeliveryTaskTest {
         task(delivery, null).run();
 
         verify(deliveryDAO).recordPermanentFailure(any(), any());
+        verify(httpClient, never()).send(any(), any());
+    }
+
+    @Test
+    public void testMissingSharedSecretFailsPermanentlyWithoutSendingHttpRequest() throws Exception {
+        when(deliveryDAO.recordPermanentFailure(any(), any())).thenReturn(true);
+
+        task(delivery(0), "{\"hello\":\"world\"}", " ").run();
+
+        ArgumentCaptor<WebhookDeliveryAudit> auditCaptor = ArgumentCaptor.forClass(WebhookDeliveryAudit.class);
+        verify(deliveryDAO).recordPermanentFailure(auditCaptor.capture(), any());
+        assertEquals(auditCaptor.getValue().getResponseCode(), "MISSING_SECRET");
         verify(httpClient, never()).send(any(), any());
     }
 

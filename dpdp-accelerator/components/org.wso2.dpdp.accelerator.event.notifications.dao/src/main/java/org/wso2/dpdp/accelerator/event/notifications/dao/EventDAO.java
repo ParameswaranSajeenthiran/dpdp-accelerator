@@ -18,13 +18,10 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 

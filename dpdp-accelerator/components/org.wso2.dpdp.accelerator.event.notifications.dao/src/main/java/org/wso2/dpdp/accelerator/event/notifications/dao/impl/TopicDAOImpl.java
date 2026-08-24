@@ -18,7 +18,6 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
-import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@Component(service = TopicDAO.class, immediate = true)
 public class TopicDAOImpl implements TopicDAO {
 
     private EventNotificationCommonDBQueries getQueries(Connection conn) {
@@ -147,6 +145,25 @@ public class TopicDAOImpl implements TopicDAO {
     }
 
     @Override
+    public Optional<Topic> getActiveTopicByOrgAndNameForUpdate(Connection conn, String orgId, String name) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                getQueries(conn).getActiveTopicByOrgAndNameForUpdateQuery())) {
+            ps.setString(1, orgId);
+            ps.setString(2, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapTopic(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
+                    e);
+        }
+    }
+
+    @Override
     public boolean updateTopicStatus(String topicId, String orgId, TopicStatus status) {
         Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
         return DatabaseUtils.executeInTransaction(
@@ -185,11 +202,8 @@ public class TopicDAOImpl implements TopicDAO {
                         .prepareStatement(queries.getLockTopicForSubscriptionQuery())) {
                     topicLockPs.setString(1, topicId);
                     topicLockPs.setString(2, orgId);
-                    try (ResultSet rs = topicLockPs.executeQuery()) {
-                        if (!rs.next()) {
-                            // Topic was deleted between the service-layer pre-check and now.
-                            return false;
-                        }
+                    if (topicLockPs.executeUpdate() == 0) {
+                        return false;
                     }
                 }
 
@@ -210,10 +224,11 @@ public class TopicDAOImpl implements TopicDAO {
                 }
 
             int updated;
-            try (PreparedStatement ps = conn.prepareStatement(queries.getUpdateTopicStatusQuery())) {
+            try (PreparedStatement ps = conn.prepareStatement(queries.getUpdateTopicStatusGuardedQuery())) {
                     ps.setString(1, TopicStatus.DEREGISTERED.getValue());
                     ps.setString(2, topicId);
                     ps.setString(3, orgId);
+                    ps.setString(4, TopicStatus.ACTIVE.getValue());
                     updated = ps.executeUpdate();
                 }
 
