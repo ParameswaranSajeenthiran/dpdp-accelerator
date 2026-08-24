@@ -36,6 +36,12 @@ Output: `dpdp-accelerator/accelerators/dpdp-is/target/wso2-dpdp-is-accelerator-<
 | Frontend lint / format | `npm run lint` / `npm run format:check` |
 | E2E (Playwright, needs a deployed IS) | `cd dpdp-integration-test-suite && ./run-e2e.sh [tests/03-consents]` |
 
+CI runs the Java/frontend build and the full E2E suite on every PR to `main` and `dev` via
+`.github/workflows/pr-checks.yml`, which deploys a fresh IS 7.3.0 from scratch. It needs no
+secrets. Role *membership* is the one thing the accelerator never provisions, so both CI and a
+fresh local install get their accounts from
+`dpdp-integration-test-suite/scripts/provision-test-users.sh` (idempotent).
+
 **Use npm, not pnpm.** `package-lock.json` is the committed lockfile and the Maven build invokes
 `npm install` / `npm run build`. The frontend `README.md` and `AGENTS.md` both say pnpm — they are
 stale on this point (see [Stale docs](#stale-docs)).

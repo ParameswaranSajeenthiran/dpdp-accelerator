@@ -1,0 +1,263 @@
+# Build + end-to-end checks for the DPDP accelerator.
+#
+# Blocking on main, advisory on dev: both branches run these jobs, but only main
+# marks them as required status checks (Settings -> Rules -> Rulesets), so a dev PR
+# still shows a red X without blocking Merge.
+#
+# Needs no secrets on its default path. The IS pack is a public release asset, the
+# accelerator's configure.properties already defaults to localhost/admin/admin/h2,
+# and the test accounts are created per run with a generated password. That is what
+# keeps the plain `pull_request` trigger safe for fork PRs, where the token is
+# read-only and no secrets are exposed.
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      apply_updates:
+        description: Apply WSO2 U2 updates to the IS pack before testing (needs subscription credentials)
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  IS_VERSION: 7.3.0
+  ACCELERATOR_VERSION: 1.0.0-SNAPSHOT
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # JDK 21 serves both jobs: it satisfies the IS 7.3.0 runtime requirement and
+      # builds this repo fine (maven.compiler.source is 11).
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+      # 20.19+/22.12+ is the repo's real floor; the test-suite README's "Node 18+"
+      # is stale (see docs/known-doc-issues.md).
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      # From the REPOSITORY ROOT. Building from dpdp-accelerator/ silently skips the
+      # accelerator zip, because the root pom aggregates the accelerators subtree
+      # separately. This also runs the frontend npm build, jacoco's 80% gate, and the
+      # security/i18n/shell verify steps chained into `npm run build`.
+      - name: Build
+        run: mvn -B clean install
+        env:
+          MAVEN_OPTS: -Xmx4g
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: accelerator-zip
+          path: dpdp-accelerator/accelerators/dpdp-is/target/wso2-dpdp-is-accelerator-*.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  e2e:
+    name: E2E integration tests
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 60
+    env:
+      IS_BASE_URL: https://localhost:9443
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      # Derived rather than hardcoded so bumping IS_VERSION is a one-line change.
+      - name: Resolve IS_HOME
+        run: echo "IS_HOME=${GITHUB_WORKSPACE}/wso2is-${IS_VERSION}" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: accelerator-zip
+          path: dist
+
+      # A 420 MB asset. Keyed on version alone, which is correct because a published
+      # release asset is immutable - bumping IS_VERSION must be the only way it changes.
+      - name: Cache IS pack
+        id: is-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/is-pack
+          key: wso2is-${{ env.IS_VERSION }}
+
+      - name: Download IS ${{ env.IS_VERSION }}
+        if: steps.is-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/is-pack && cd ~/is-pack
+          base="https://github.com/wso2/product-is/releases/download/v${IS_VERSION}"
+          curl -fL --retry 3 -o wso2is.zip    "${base}/wso2is-${IS_VERSION}.zip"
+          curl -fL --retry 3 -o wso2is.sha256 "${base}/wso2is-${IS_VERSION}.zip.sha256"
+          # Fail loudly on a truncated download rather than later, as a mystery
+          # startup error.
+          echo "$(cut -d' ' -f1 wso2is.sha256)  wso2is.zip" | sha256sum -c -
+
+      - name: Unpack IS
+        run: unzip -q ~/is-pack/wso2is.zip -d "${GITHUB_WORKSPACE}"
+
+      # OFF BY DEFAULT. Enable per run from the Actions UI, or repo-wide by setting the
+      # APPLY_WSO2_UPDATES variable to "true".
+      #
+      # Runs before merge.sh so an update cannot clobber our dropins. U2 updates are
+      # patches - the product stays 7.3.0 and updates/product.txt still reads
+      # wso2is-7.3.0 - so the accelerator's stock-7.3.0 deployment.toml template stays
+      # valid. The pack ships bin/update_tool_setup.sh, which detects OS/arch and
+      # downloads the updater itself, so no encrypted binary needs committing.
+      - name: Apply WSO2 U2 updates
+        if: ${{ inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true' }}
+        env:
+          WSO2_USERNAME: ${{ secrets.WSO2_SUBSCRIPTION_USERNAME }}
+          WSO2_PASSWORD: ${{ secrets.WSO2_SUBSCRIPTION_U2_PASSWORD }}
+        run: |
+          # Secrets are never exposed to fork PRs and are not provisioned on this repo
+          # yet, so degrade with a warning instead of failing the run.
+          if [ -z "${WSO2_USERNAME}" ] || [ -z "${WSO2_PASSWORD}" ]; then
+            echo "::warning::Updates requested but WSO2 subscription credentials are absent - testing the GA pack"
+            exit 0
+          fi
+          cd "$IS_HOME"
+          bash bin/update_tool_setup.sh
+          # One retry: the updater is network-flaky, which is why FSA retries it too.
+          bin/wso2update_linux -v --username "$WSO2_USERNAME" --password "$WSO2_PASSWORD" \
+            || bin/wso2update_linux -v --username "$WSO2_USERNAME" --password "$WSO2_PASSWORD"
+
+      # configure.properties already defaults to localhost / admin / admin / h2 with
+      # APPLY_CONSENT_DB_MIGRATION=true, and the pack ships
+      # dbscripts/migrations/consent/h2-migration.txt - so no edits are needed. Both
+      # scripts are non-interactive, and configure.sh refuses to run while the server
+      # is up, which is why this happens before the start step.
+      - name: Apply the accelerator
+        run: |
+          unzip -q dist/wso2-dpdp-is-accelerator-*.zip -d "$IS_HOME"
+          cd "${IS_HOME}/wso2-dpdp-is-accelerator-${ACCELERATOR_VERSION}"
+          bash bin/merge.sh     "$IS_HOME"
+          bash bin/configure.sh "$IS_HOME"
+
+      - name: Start the Identity Server
+        run: |
+          "${IS_HOME}/bin/wso2server.sh" start
+          for i in $(seq 1 60); do
+            if curl -sk -o /dev/null -f "${IS_BASE_URL}/oauth2/jwks"; then
+              echo "Identity Server ready after ~$((i * 5))s"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Identity Server did not become ready within 300s"
+          tail -200 "${IS_HOME}/repository/logs/wso2carbon.log"
+          exit 1
+
+      # DPDPIdentityExtensionServiceComponent.activate() provisions the super tenant
+      # and swallows its own errors, so a clean startup can still leave no application
+      # and no roles - which would surface as 49 confusing auth failures. Assert it
+      # worked, and retry once via restart, the known-cheap recovery for a race with
+      # consent-mgt v2 API-resource registration.
+      - name: Verify accelerator provisioning
+        run: |
+          roles_found() {
+            curl -sk -u admin:admin \
+              "${IS_BASE_URL}/scim2/v2/Roles?filter=displayName+eq+dpdp-consent-admin" \
+              | python3 -c 'import json, sys; print(json.load(sys.stdin).get("totalResults", 0))'
+          }
+          if [ "$(roles_found)" != "1" ]; then
+            echo "::warning::dpdp-consent-admin missing after startup; restarting once"
+            grep -n "Error provisioning the DPDP Consent Portal" \
+              "${IS_HOME}/repository/logs/wso2carbon.log" || true
+            "${IS_HOME}/bin/wso2server.sh" restart
+            for i in $(seq 1 60); do
+              curl -sk -o /dev/null -f "${IS_BASE_URL}/oauth2/jwks" && break
+              sleep 5
+            done
+          fi
+          if [ "$(roles_found)" != "1" ]; then
+            echo "::error::Accelerator did not provision dpdp-consent-admin for carbon.super"
+            exit 1
+          fi
+          echo "Provisioning verified."
+
+      - name: Provision test users
+        id: users
+        run: |
+          # Ephemeral - thrown away with the runner - but masked so it cannot reach a log.
+          password="$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9')Aa1!"
+          echo "::add-mask::${password}"
+          echo "TEST_PASSWORD=${password}" >> "$GITHUB_ENV"
+          TEST_PASSWORD="${password}" \
+            bash dpdp-integration-test-suite/scripts/provision-test-users.sh
+
+      # run-e2e.sh hard-fails without a .env, so write one. These values override
+      # .env.example's localhost defaults, which utils/env.ts always loads first.
+      # Usernames come from the script's own outputs rather than being repeated here.
+      - name: Configure the suite
+        working-directory: dpdp-integration-test-suite
+        run: |
+          cat > .env <<EOF
+          PORTAL_BASE_URL=${IS_BASE_URL}/consent-portal
+          IS_BASE_URL=${IS_BASE_URL}
+          IGNORE_HTTPS_ERRORS=true
+          TEST_USER_USERNAME=${{ steps.users.outputs.user }}
+          TEST_USER_PASSWORD=${TEST_PASSWORD}
+          TEST_CONSENT_ADMIN_USERNAME=${{ steps.users.outputs.admin }}
+          TEST_CONSENT_ADMIN_PASSWORD=${TEST_PASSWORD}
+          TEST_USER_2_USERNAME=${{ steps.users.outputs.user2 }}
+          TEST_USER_2_PASSWORD=${TEST_PASSWORD}
+          EOF
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # npm ci and the browser install are already done, so run-e2e.sh skips both and
+      # just execs playwright. The github reporter adds inline annotations; the config
+      # itself only declares html.
+      - name: Run Playwright
+        working-directory: dpdp-integration-test-suite
+        run: ./run-e2e.sh --reporter=github,html
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            dpdp-integration-test-suite/playwright-report/
+            dpdp-integration-test-suite/test-results/
+          retention-days: 7
+
+      - name: Upload server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carbon-logs
+          path: ${{ env.IS_HOME }}/repository/logs/
+          retention-days: 7
+
+      - name: Stop the Identity Server
+        if: always()
+        run: |
+          "${IS_HOME}/bin/wso2server.sh" stop || true

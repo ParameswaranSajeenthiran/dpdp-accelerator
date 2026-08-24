@@ -32,21 +32,28 @@ since a build failure in `i18n:verify` looks nothing like a Vite error.
 
 ## `dpdp-integration-test-suite/`
 
+### The `create-portal-app.sh` references (partly resolved)
+
 Four references to `bin/create-portal-app.sh`, which does not exist anywhere in the repository:
 
-- `README.md:21` — listed as a prerequisite step
+- ~~`README.md:21` — listed as a prerequisite step~~ — **fixed**: the Prerequisites section now
+  describes auto-provisioning and points at `scripts/provision-test-users.sh`.
 - `.env.example:25` — credited with creating the `dpdp-consent-admin` role
 - `utils/authStorage.ts:22` — cited as the source of `validateTokenBinding: true`
 - `utils/env.ts:73` — same as `.env.example`
 
-The consent portal application and both roles are now provisioned automatically by
-`DPDPIdentityExtensionTenantMgtListener` on tenant create/update, controlled by
-`[dpdp_accelerator.consent_portal]` in `deployment.toml`. See `docs/configuration-guide.md`
-§1 ("The application is provisioned automatically"). Role *membership* is still manual, which is
-the part `.env.example` genuinely needs to convey.
+The consent portal application and both roles are provisioned automatically by
+`DPDPIdentityExtensionTenantMgtListener` on tenant create/update — and for the super tenant, by
+`DPDPIdentityExtensionServiceComponent.activate()`, since `onTenantCreate` never fires for
+`carbon.super`. Controlled by `[dpdp_accelerator.consent_portal]` in `deployment.toml`. See
+`docs/configuration-guide.md` §1 ("The application is provisioned automatically").
 
-`README.md` also lists `Node.js 18+` as the prerequisite, while the rest of the repository
-requires 20.19+/22.12+.
+Role *membership* was the genuinely manual part. It is now automated by
+`dpdp-integration-test-suite/scripts/provision-test-users.sh`, which also creates the accounts —
+so the three remaining references above should point at that script rather than at Console steps.
+
+~~`README.md` also lists `Node.js 18+` as the prerequisite, while the rest of the repository
+requires 20.19+/22.12+.~~ — **fixed**, the README now says 20.19+/22.12+.
 
 Two more references to things that do not exist:
 
@@ -116,7 +123,9 @@ Cheapest first:
 1. Delete the pnpm instructions from `AGENTS.md` and `README.md`; replace with npm. One-line
    change each, and the highest-value fix since it misdirects both humans and agents.
 2. Strip the removed BFF env vars from the frontend README's environment table.
-3. Replace the `create-portal-app.sh` references with a pointer to auto-provisioning, keeping the
-   manual role-assignment note.
+3. Replace the three remaining `create-portal-app.sh` references (`.env.example:25`,
+   `utils/authStorage.ts:22`, `utils/env.ts:73`) with a pointer to auto-provisioning plus
+   `scripts/provision-test-users.sh`. The `README.md` reference and the `Node.js 18+` claim are
+   already fixed.
 4. Retitle the two "OpenFGC" headers.
 5. Rewrite the frontend README's Quickstart against the real path and the real optional env.
