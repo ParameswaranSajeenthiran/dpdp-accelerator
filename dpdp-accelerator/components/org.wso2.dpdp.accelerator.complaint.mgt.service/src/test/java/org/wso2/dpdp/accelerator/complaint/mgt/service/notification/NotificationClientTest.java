@@ -18,152 +18,142 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
 
-import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
- * Exercises {@link NotificationClient} against a real embedded HTTP server (no mocking of the
- * HTTP layer itself), since its whole job is the wire contract with {@code DPDPNotificationServlet}
- * on the other end.
+ * Exercises {@link NotificationClient} against a mocked {@link IdentityEventService} - the real
+ * lookup goes through {@code PrivilegedCarbonContext.getOSGiService}, which only resolves inside
+ * an actual Carbon/OSGi runtime, so the package-private supplier constructor is the test seam.
  */
+@ExtendWith(MockitoExtension.class)
 class NotificationClientTest {
 
-    private HttpServer server;
+    private static final String COMPLAINT_NOTIFICATION_EVENT = "DPDP_COMPLAINT_NOTIFICATION_EVENT";
 
-    @AfterEach
-    void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
-        System.clearProperty("CO_NOTIFY_INTERNAL_URL");
-    }
+    @Mock
+    private IdentityEventService identityEventService;
 
-    private CompletableFuture<Map<String, String>> startCapturingServer() throws IOException {
-        server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        CompletableFuture<Map<String, String>> received = new CompletableFuture<>();
-        server.createContext("/notify", exchange -> {
-            byte[] body = exchange.getRequestBody().readAllBytes();
-            received.complete(decodeForm(new String(body, StandardCharsets.UTF_8)));
-            exchange.sendResponseHeaders(202, -1);
-            exchange.close();
-        });
-        server.start();
-        System.setProperty("CO_NOTIFY_INTERNAL_URL", "http://localhost:" + server.getAddress().getPort() + "/notify");
-        return received;
-    }
-
-    private static Map<String, String> decodeForm(String body) {
-        Map<String, String> fields = new LinkedHashMap<>();
-        if (body.isEmpty()) {
-            return fields;
-        }
-        for (String pair : body.split("&")) {
-            String[] parts = pair.split("=", 2);
-            fields.put(URLDecoder.decode(parts[0], StandardCharsets.UTF_8),
-                    parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "");
-        }
-        return fields;
-    }
-
-    private static Map<String, String> await(CompletableFuture<Map<String, String>> future) throws Exception {
-        try {
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            throw new AssertionError("Notification client never called the bridge server.", e);
-        }
+    private Complaint complaint() {
+        return new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH", "CRITICAL", "OPEN",
+                "desc", 1L, 2L, 3L);
     }
 
     @Test
-    void notifyComplaintCreatedPostsExpectedFields() throws Exception {
-        CompletableFuture<Map<String, String>> received = startCapturingServer();
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
+    void notifyComplaintCreatedFiresExpectedEventProperties() throws Exception {
+        NotificationClient client = new NotificationClient(() -> identityEventService);
 
-        new NotificationClient().notifyComplaintCreated(complaint);
+        client.notifyComplaintCreated(complaint());
 
-        Map<String, String> fields = await(received);
-        assertEquals("ComplaintCreated", fields.get("notification-type"));
-        assertEquals("org1", fields.get("tenant-domain"));
-        assertEquals("c1", fields.get("complaint-id"));
-        assertEquals("CMP-2026-00001", fields.get("reference-id"));
-        assertEquals("DATA_BREACH", fields.get("category"));
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(identityEventService).handleEvent(captor.capture());
+        Event event = captor.getValue();
+        assertEquals(COMPLAINT_NOTIFICATION_EVENT, event.getEventName());
+        Map<String, Object> props = event.getEventProperties();
+        assertEquals("ComplaintCreated", props.get("notification-type"));
+        assertEquals("org1", props.get(IdentityEventConstants.EventProperty.TENANT_DOMAIN));
+        assertEquals("c1", props.get("complaint-id"));
+        assertEquals("CMP-2026-00001", props.get("reference-id"));
+        assertEquals("DATA_BREACH", props.get("category"));
     }
 
     @Test
-    void notifyCommentAddedPostsActorRoleAndExcerpt() throws Exception {
-        CompletableFuture<Map<String, String>> received = startCapturingServer();
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
+    void notifyCommentAddedFiresActorRoleAndExcerpt() throws Exception {
+        NotificationClient client = new NotificationClient(() -> identityEventService);
         ComplaintEvent event = new ComplaintEvent("e1", "org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 true, "hello there", null, null, 100L);
 
-        new NotificationClient().notifyCommentAdded(complaint, event);
+        client.notifyCommentAdded(complaint(), event);
 
-        Map<String, String> fields = await(received);
-        assertEquals("ComplaintCommentAdded", fields.get("notification-type"));
-        assertEquals("COMPLAINT_OFFICER", fields.get("actor-role"));
-        assertEquals("hello there", fields.get("message-excerpt"));
-        assertEquals("user1", fields.get("creator-user-id"));
-        assertEquals("User One", fields.get("creator-user-name"));
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(identityEventService).handleEvent(captor.capture());
+        Map<String, Object> props = captor.getValue().getEventProperties();
+        assertEquals("ComplaintCommentAdded", props.get("notification-type"));
+        assertEquals("COMPLAINT_OFFICER", props.get("actor-role"));
+        assertEquals("hello there", props.get("message-excerpt"));
+        assertEquals("user1", props.get("creator-user-id"));
+        assertEquals("User One", props.get("creator-user-name"));
     }
 
     @Test
-    void notifyCommentAddedTruncatesLongMessages() throws Exception {
-        CompletableFuture<Map<String, String>> received = startCapturingServer();
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
+    void truncatesLongMessagesToAnExcerpt() throws Exception {
+        NotificationClient client = new NotificationClient(() -> identityEventService);
         String longMessage = "a".repeat(500);
         ComplaintEvent event = new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "USER", true, longMessage,
                 null, null, 100L);
 
-        new NotificationClient().notifyCommentAdded(complaint, event);
+        client.notifyCommentAdded(complaint(), event);
 
-        Map<String, String> fields = await(received);
-        String excerpt = fields.get("message-excerpt");
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(identityEventService).handleEvent(captor.capture());
+        String excerpt = (String) captor.getValue().getEventProperties().get("message-excerpt");
         assertTrue(excerpt.length() < longMessage.length());
         assertTrue(excerpt.endsWith("..."));
     }
 
     @Test
-    void omitsCreatorUserNameFieldWhenComplaintHasNone() throws Exception {
-        CompletableFuture<Map<String, String>> received = startCapturingServer();
-        Complaint complaint = new Complaint("c1", "org1", "user1", null, "CMP-2026-00001", "DATA_BREACH", "CRITICAL",
-                "OPEN", "desc", 1L, 2L, 3L);
+    void omitsCreatorUserNamePropertyWhenComplaintHasNone() throws Exception {
+        NotificationClient client = new NotificationClient(() -> identityEventService);
+        Complaint complaintWithoutUserName = new Complaint("c1", "org1", "user1", null, "CMP-2026-00001",
+                "DATA_BREACH", "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
         ComplaintEvent event = new ComplaintEvent("e1", "org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 true, "hi", null, null, 100L);
 
-        new NotificationClient().notifyCommentAdded(complaint, event);
+        client.notifyCommentAdded(complaintWithoutUserName, event);
 
-        Map<String, String> fields = await(received);
-        assertFalse(fields.containsKey("creator-user-name"));
-        assertEquals("user1", fields.get("creator-user-id"));
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(identityEventService).handleEvent(captor.capture());
+        Map<String, Object> props = captor.getValue().getEventProperties();
+        assertFalse(props.containsKey("creator-user-name"));
+        assertEquals("user1", props.get("creator-user-id"));
     }
 
     @Test
-    void neverThrowsWhenTheBridgeIsUnreachable() {
-        // No server started - CO_NOTIFY_INTERNAL_URL keeps its unreachable default. A notification
-        // failure must never propagate to the caller (see NotificationClient's class javadoc).
-        System.setProperty("CO_NOTIFY_INTERNAL_URL", "https://localhost:1/dpdp-internal/notify");
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
+    void neverThrowsWhenTheEventServiceIsUnresolvable() {
+        // Mirrors real behaviour outside a Carbon/OSGi runtime - PrivilegedCarbonContext resolves
+        // nothing, so the supplier returns null. A notification failure must never propagate.
+        NotificationClient client = new NotificationClient(() -> null);
 
-        new NotificationClient().notifyComplaintCreated(complaint);
+        client.notifyComplaintCreated(complaint());
+    }
+
+    @Test
+    void neverThrowsWhenTheEventServiceThrows() throws Exception {
+        doThrow(new RuntimeException("boom")).when(identityEventService).handleEvent(any(Event.class));
+        NotificationClient client = new NotificationClient(() -> identityEventService);
+
+        client.notifyComplaintCreated(complaint());
+
+        verify(identityEventService).handleEvent(any(Event.class));
+    }
+
+    @Test
+    void neverThrowsWhenTheSupplierItselfThrows() throws Exception {
+        NotificationClient client = new NotificationClient(() -> {
+            throw new NoClassDefFoundError("org.wso2.carbon.context.PrivilegedCarbonContext");
+        });
+
+        client.notifyComplaintCreated(complaint());
+
+        verify(identityEventService, never()).handleEvent(any(Event.class));
     }
 }

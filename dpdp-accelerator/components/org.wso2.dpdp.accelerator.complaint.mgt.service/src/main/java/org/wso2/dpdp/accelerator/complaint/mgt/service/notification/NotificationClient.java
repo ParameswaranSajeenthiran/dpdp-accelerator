@@ -18,35 +18,33 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
 
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.common.config.ConfigProvider;
 
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.time.Duration;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 /**
  * Notifies the {@code org.wso2.dpdp.accelerator.identity.extensions} OSGi bundle of complaint
- * events, so it can resolve recipients and trigger IS's native email notification mechanism (see
- * that bundle's {@code notification} package). This plain, non-OSGi module has no direct path to
- * {@code IdentityEventService}, so it bridges over a loopback-only internal HTTP call instead -
- * see {@code DPDPNotificationServlet} in that bundle for the receiving end of this contract.
+ * events, so its {@code ComplaintNotificationHandler} can resolve recipients and trigger IS's
+ * native email notification mechanism (see that bundle's {@code notification} package).
+ *
+ * <p>This plain, non-OSGi module has no {@code BundleContext} of its own, but
+ * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)} resolves OSGi
+ * services via a static holder ({@code org.wso2.carbon.context.internal.OSGiDataHolder}) that is
+ * populated wherever the {@code org.wso2.carbon.context} classes are loaded from Carbon's shared
+ * classloader rather than bundled per-webapp - which is exactly why
+ * {@code org.wso2.carbon.utils}/{@code org.wso2.carbon.identity.event} are declared {@code
+ * provided} in this module's pom rather than bundled into the WAR. This is the same lookup
+ * mechanism used throughout Carbon-hosted custom webapps to reach an OSGi service without being
+ * an OSGi bundle themselves.
  *
  * <p>Never lets a notification failure propagate to the caller - every public method here is
  * fire-and-forget by design, since a complaint or comment write must succeed independently of
@@ -56,47 +54,43 @@ public class NotificationClient {
 
     private static final Logger LOGGER = Logger.getLogger(NotificationClient.class.getName());
 
-    private static final String CONFIG_INTERNAL_URL = "complaint_mgt.notifications.internal_url";
-    private static final String SYS_PROP_INTERNAL_URL = "CO_NOTIFY_INTERNAL_URL";
-    private static final String DEFAULT_INTERNAL_URL = "https://localhost:9443/dpdp-internal/notify";
-
-    // Form field names - must match DPDPNotificationServlet's expected parameter names exactly.
-    // See org.wso2.dpdp.accelerator.identity.extensions.notification.DPDPComplaintEventConstants,
-    // the source of truth for this small wire contract between the two modules.
-    private static final String FIELD_NOTIFICATION_TYPE = "notification-type";
-    private static final String FIELD_TENANT_DOMAIN = "tenant-domain";
-    private static final String FIELD_COMPLAINT_ID = "complaint-id";
-    private static final String FIELD_REFERENCE_ID = "reference-id";
-    private static final String FIELD_CATEGORY = "category";
-    private static final String FIELD_ACTOR_ROLE = "actor-role";
-    private static final String FIELD_MESSAGE_EXCERPT = "message-excerpt";
-    private static final String FIELD_CREATOR_USER_ID = "creator-user-id";
-    private static final String FIELD_CREATOR_USER_NAME = "creator-user-name";
+    /** Mirrors identity.extensions' DPDPComplaintEventConstants - the source of truth for this event contract. */
+    private static final String COMPLAINT_NOTIFICATION_EVENT = "DPDP_COMPLAINT_NOTIFICATION_EVENT";
+    private static final String PROP_NOTIFICATION_TYPE = "notification-type";
+    private static final String PROP_COMPLAINT_ID = "complaint-id";
+    private static final String PROP_REFERENCE_ID = "reference-id";
+    private static final String PROP_CATEGORY = "category";
+    private static final String PROP_ACTOR_ROLE = "actor-role";
+    private static final String PROP_MESSAGE_EXCERPT = "message-excerpt";
+    private static final String PROP_CREATOR_USER_ID = "creator-user-id";
+    private static final String PROP_CREATOR_USER_NAME = "creator-user-name";
 
     private static final String NOTIFICATION_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
     private static final String NOTIFICATION_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
 
     private static final int MAX_EXCERPT_LENGTH = 300;
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
 
-    private final String internalUrl;
-    private final HttpClient httpClient;
+    private final Supplier<IdentityEventService> eventServiceSupplier;
 
     public NotificationClient() {
-        this.internalUrl = ConfigProvider.getString(CONFIG_INTERNAL_URL,
-                System.getProperty(SYS_PROP_INTERNAL_URL, DEFAULT_INTERNAL_URL));
-        this.httpClient = buildHttpClient(internalUrl);
+        this(() -> (IdentityEventService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                .getOSGiService(IdentityEventService.class, null));
+    }
+
+    /** Test seam - lets a test inject a mock supplier instead of a real OSGi lookup. */
+    NotificationClient(Supplier<IdentityEventService> eventServiceSupplier) {
+        this.eventServiceSupplier = eventServiceSupplier;
     }
 
     /** Notifies the complaint officers (dpdp-consent-admin role members) that a complaint was filed. */
     public void notifyComplaintCreated(Complaint complaint) {
-        Map<String, String> fields = new LinkedHashMap<>();
-        fields.put(FIELD_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMPLAINT_CREATED);
-        fields.put(FIELD_TENANT_DOMAIN, complaint.getOrgId());
-        putIfPresent(fields, FIELD_COMPLAINT_ID, complaint.getComplaintId());
-        putIfPresent(fields, FIELD_REFERENCE_ID, complaint.getReferenceId());
-        putIfPresent(fields, FIELD_CATEGORY, complaint.getCategory());
-        send(fields);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(PROP_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMPLAINT_CREATED);
+        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, complaint.getOrgId());
+        putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
+        putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
+        putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
+        fire(properties);
     }
 
     /**
@@ -105,22 +99,22 @@ public class NotificationClient {
      * {@code ComplaintNotificationHandler} for how the actor role decides this).
      */
     public void notifyCommentAdded(Complaint complaint, ComplaintEvent event) {
-        Map<String, String> fields = new LinkedHashMap<>();
-        fields.put(FIELD_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMMENT_ADDED);
-        fields.put(FIELD_TENANT_DOMAIN, complaint.getOrgId());
-        putIfPresent(fields, FIELD_COMPLAINT_ID, complaint.getComplaintId());
-        putIfPresent(fields, FIELD_REFERENCE_ID, complaint.getReferenceId());
-        putIfPresent(fields, FIELD_CATEGORY, complaint.getCategory());
-        putIfPresent(fields, FIELD_ACTOR_ROLE, event.getActorRole());
-        putIfPresent(fields, FIELD_MESSAGE_EXCERPT, excerpt(event.getComment()));
-        putIfPresent(fields, FIELD_CREATOR_USER_ID, complaint.getUserId());
-        putIfPresent(fields, FIELD_CREATOR_USER_NAME, complaint.getUserName());
-        send(fields);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(PROP_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMMENT_ADDED);
+        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, complaint.getOrgId());
+        putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
+        putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
+        putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
+        putIfPresent(properties, PROP_ACTOR_ROLE, event.getActorRole());
+        putIfPresent(properties, PROP_MESSAGE_EXCERPT, excerpt(event.getComment()));
+        putIfPresent(properties, PROP_CREATOR_USER_ID, complaint.getUserId());
+        putIfPresent(properties, PROP_CREATOR_USER_NAME, complaint.getUserName());
+        fire(properties);
     }
 
-    private static void putIfPresent(Map<String, String> fields, String key, String value) {
+    private static void putIfPresent(Map<String, Object> properties, String key, String value) {
         if (value != null && !value.trim().isEmpty()) {
-            fields.put(key, value);
+            properties.put(key, value);
         }
     }
 
@@ -131,86 +125,22 @@ public class NotificationClient {
         return message.length() <= MAX_EXCERPT_LENGTH ? message : message.substring(0, MAX_EXCERPT_LENGTH) + "...";
     }
 
-    private void send(Map<String, String> fields) {
+    private void fire(Map<String, Object> properties) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(internalUrl))
-                    .timeout(REQUEST_TIMEOUT)
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(encode(fields), StandardCharsets.UTF_8))
-                    .build();
-            HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() >= 300) {
-                LOGGER.warning("Complaint notification bridge at " + internalUrl + " returned status "
-                        + response.statusCode());
+            IdentityEventService eventService = eventServiceSupplier.get();
+            if (eventService == null) {
+                LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
+                        + "complaint notification not sent.");
+                return;
             }
-        } catch (Exception e) {
+            eventService.handleEvent(new Event(COMPLAINT_NOTIFICATION_EVENT, properties));
+        } catch (Throwable t) {
             // Deliberately never rethrown - see class javadoc. The complaint/comment write this
             // is called after has already committed; a notification failure must not surface as
-            // one.
-            LOGGER.log(Level.WARNING, "Error sending complaint notification to " + internalUrl, e);
+            // one. Catches Throwable, not just Exception, because a misconfigured deployment
+            // (org.wso2.carbon.context classes not actually on Carbon's shared classloader) would
+            // surface as a LinkageError/NoClassDefFoundError, not a checked exception.
+            LOGGER.log(Level.WARNING, "Error sending complaint notification", t);
         }
     }
-
-    private static String encode(Map<String, String> fields) {
-        StringBuilder body = new StringBuilder();
-        for (Map.Entry<String, String> entry : fields.entrySet()) {
-            if (body.length() > 0) {
-                body.append('&');
-            }
-            body.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
-                    .append('=')
-                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
-        }
-        return body.toString();
-    }
-
-    /**
-     * Builds the HTTP client used for the internal bridge call. When the configured URL's host is
-     * loopback (the only case this bridge is designed for - both sides run in the same JVM/Tomcat
-     * instance), certificate validation is relaxed, since IS's own management-port certificate is
-     * commonly self-signed and there is no practical way for this module to be handed IS's actual
-     * keystore. This relaxation is scoped to loopback hosts only and to this one client instance -
-     * it is never installed as a JVM-wide default - so a misconfigured, non-loopback
-     * {@code internal_url} still gets full certificate validation rather than silently trusting
-     * anything.
-     */
-    private static HttpClient buildHttpClient(String url) {
-        HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(REQUEST_TIMEOUT);
-        if (isLoopbackUrl(url)) {
-            try {
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, new TrustManager[]{TRUST_ALL_LOOPBACK_ONLY}, new SecureRandom());
-                builder.sslContext(sslContext);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Could not relax TLS trust for loopback notification bridge; "
-                        + "falling back to default certificate validation.", e);
-            }
-        }
-        return builder.build();
-    }
-
-    private static boolean isLoopbackUrl(String url) {
-        try {
-            String host = URI.create(url).getHost();
-            return host != null && InetAddress.getByName(host).isLoopbackAddress();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private static final X509TrustManager TRUST_ALL_LOOPBACK_ONLY = new X509TrustManager() {
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-    };
 }
