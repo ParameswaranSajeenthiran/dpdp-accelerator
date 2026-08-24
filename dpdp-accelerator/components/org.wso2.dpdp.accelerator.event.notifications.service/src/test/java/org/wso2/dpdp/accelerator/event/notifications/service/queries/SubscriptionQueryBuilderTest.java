@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.service.queries;
 
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
 
 import java.util.List;
 
@@ -33,8 +34,8 @@ public class SubscriptionQueryBuilderTest {
     public void testBaseSelectQueryAndCountQuery() {
         SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123");
 
-        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(" ORDER BY s.UPDATED_AT DESC");
-        SubscriptionQueryBuilder.QueryResult countResult = builder.buildCountQuery();
+        QueryResult selectResult = builder.buildSelectQuery(" ORDER BY s.UPDATED_AT DESC");
+        QueryResult countResult = builder.buildCountQuery();
 
         assertTrue(selectResult.getSql().contains("WHERE s.ORG_ID = ?"));
         assertTrue(selectResult.getSql().contains("ORDER BY s.UPDATED_AT DESC"));
@@ -52,7 +53,7 @@ public class SubscriptionQueryBuilderTest {
         SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
                 .setStatus("active");
 
-        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
+        QueryResult selectResult = builder.buildSelectQuery(null);
 
         assertTrue(selectResult.getSql().contains("AND s.STATUS = ?"));
         assertEquals(selectResult.getParameters().size(), 2);
@@ -65,7 +66,7 @@ public class SubscriptionQueryBuilderTest {
         SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
                 .setSearch("test_user%name\\foo");
 
-        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
+        QueryResult selectResult = builder.buildSelectQuery(null);
 
         assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ?"));
         assertTrue(selectResult.getSql().contains("LOWER(s.GROUP_ID) LIKE ?"));
@@ -84,7 +85,7 @@ public class SubscriptionQueryBuilderTest {
         SubscriptionQueryBuilder builder = new SubscriptionQueryBuilder("org123")
                 .setSearch(subId);
 
-        SubscriptionQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(null);
+        QueryResult selectResult = builder.buildSelectQuery(null);
 
         assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ?"));
         List<Object> params = selectResult.getParameters();
@@ -105,14 +106,14 @@ public class SubscriptionQueryBuilderTest {
         // Single purpose
         SubscriptionQueryBuilder singleBuilder = new SubscriptionQueryBuilder("org123")
                 .setPurposes("marketing");
-        SubscriptionQueryBuilder.QueryResult singleResult = singleBuilder.buildSelectQuery(null);
+        QueryResult singleResult = singleBuilder.buildSelectQuery(null);
         assertTrue(singleResult.getSql().contains("LOWER(sp2.PURPOSE_NAME) IN (?)"));
         assertEquals(singleResult.getParameters().get(1), "marketing");
 
         // Multiple comma-separated purposes with spaces
         SubscriptionQueryBuilder multiBuilder = new SubscriptionQueryBuilder("org123")
                 .setPurposes(" Marketing , Analytics, PROFILING ");
-        SubscriptionQueryBuilder.QueryResult multiResult = multiBuilder.buildSelectQuery(null);
+        QueryResult multiResult = multiBuilder.buildSelectQuery(null);
         assertTrue(multiResult.getSql().contains("LOWER(sp2.PURPOSE_NAME) IN (?, ?, ?)"));
         assertEquals(multiResult.getParameters().size(), 4);
         assertEquals(multiResult.getParameters().get(1), "marketing");
@@ -122,7 +123,7 @@ public class SubscriptionQueryBuilderTest {
         // Empty / blank purposes
         SubscriptionQueryBuilder emptyBuilder = new SubscriptionQueryBuilder("org123")
                 .setPurposes("  ,  ");
-        SubscriptionQueryBuilder.QueryResult emptyResult = emptyBuilder.buildSelectQuery(null);
+        QueryResult emptyResult = emptyBuilder.buildSelectQuery(null);
         assertFalse(emptyResult.getSql().contains("SUBSCRIPTION_PURPOSE sp2"));
         assertEquals(emptyResult.getParameters().size(), 1);
     }
@@ -147,7 +148,7 @@ public class SubscriptionQueryBuilderTest {
         String sortColumn = builder.resolveSortColumn();
         assertEquals(sortColumn, "s.CREATED_AT DESC");
 
-        SubscriptionQueryBuilder.QueryResult result = builder.buildSelectQuery(" ORDER BY " + sortColumn);
+        QueryResult result = builder.buildSelectQuery(" ORDER BY " + sortColumn);
 
         assertTrue(result.getSql().contains("AND s.STATUS = ?"));
         assertTrue(result.getSql().contains("LIKE ?"));

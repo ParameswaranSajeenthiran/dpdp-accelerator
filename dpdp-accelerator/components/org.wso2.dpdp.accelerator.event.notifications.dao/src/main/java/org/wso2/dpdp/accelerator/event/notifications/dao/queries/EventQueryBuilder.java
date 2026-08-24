@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class EventQueryBuilder {
     private String topic;
     private String status;
     private String groupId;
+    private String subscriptionId;
     private String purposes;
 
     public EventQueryBuilder(String orgId) {
@@ -58,6 +61,11 @@ public class EventQueryBuilder {
         return this;
     }
 
+    public EventQueryBuilder setSubscriptionId(String subscriptionId) {
+        this.subscriptionId = subscriptionId;
+        return this;
+    }
+
     public EventQueryBuilder setPurposes(String purposes) {
         this.purposes = purposes;
         return this;
@@ -69,12 +77,7 @@ public class EventQueryBuilder {
      * {@link SubscriptionQueryBuilder}.
      */
     public static String escapeLikePattern(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace("\\", "\\\\")
-                   .replace("%", "\\%")
-                   .replace("_", "\\_");
+        return QueryBuilderUtils.escapeLikePattern(text);
     }
 
     /**
@@ -82,7 +85,7 @@ public class EventQueryBuilder {
      * on the EVENT row today so a direction toggle is unnecessary.
      */
     public String resolveSortColumn() {
-        return "e.CREATED_AT DESC";
+        return "e." + EventNotificationDBColumns.CREATED_AT + " DESC";
     }
 
     public QueryResult buildSelectQuery(String baseSelect, String paginationClause) {
@@ -105,18 +108,36 @@ public class EventQueryBuilder {
         params.add(orgId);
 
         if (topic != null && !topic.trim().isEmpty() && !"all".equalsIgnoreCase(topic.trim())) {
-            sql.append(" AND LOWER(t.NAME) = ?");
+            sql.append(" AND LOWER(t.").append(EventNotificationDBColumns.NAME).append(") = ?");
             params.add(topic.trim().toLowerCase());
         }
 
         if (groupId != null && !groupId.trim().isEmpty()) {
-            sql.append(" AND e.GROUP_ID = ?");
+            sql.append(" AND e.").append(EventNotificationDBColumns.GROUP_ID).append(" = ?");
             params.add(groupId.trim());
         }
 
+        if (subscriptionId != null && !subscriptionId.trim().isEmpty()) {
+            sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ?)")
+                    .append(" OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ?))");
+            params.add(subscriptionId.trim());
+            params.add(subscriptionId.trim());
+        }
+
         if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status.trim())) {
-            sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.EVENT_ID = e.EVENT_ID AND LOWER(wd.STATUS) = ?) "
-                    + "OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.EVENT_ID = e.EVENT_ID AND LOWER(pd.STATUS) = ?))");
+            sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(wd.")
+                    .append(EventNotificationDBColumns.STATUS).append(") = ?) OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(pd.")
+                    .append(EventNotificationDBColumns.STATUS).append(") = ?))");
             String statusParam = status.trim().toLowerCase();
             params.add(statusParam);
             params.add(statusParam);
@@ -131,7 +152,10 @@ public class EventQueryBuilder {
                 }
             }
             if (!valid.isEmpty()) {
-                sql.append(" AND e.EVENT_ID IN (SELECT ep.EVENT_ID FROM EVENT_PURPOSE ep WHERE LOWER(ep.PURPOSE_NAME) IN (");
+                sql.append(" AND e.").append(EventNotificationDBColumns.EVENT_ID)
+                        .append(" IN (SELECT ep.").append(EventNotificationDBColumns.EVENT_ID)
+                        .append(" FROM EVENT_PURPOSE ep WHERE LOWER(ep.")
+                        .append(EventNotificationDBColumns.PURPOSE_NAME).append(") IN (");
                 for (int i = 0; i < valid.size(); i++) {
                     sql.append(i == 0 ? "?" : ", ?");
                     params.add(valid.get(i));
@@ -141,8 +165,11 @@ public class EventQueryBuilder {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(e.EVENT_ID) LIKE ? OR LOWER(e.GROUP_ID) LIKE ? "
-                    + "OR LOWER(t.NAME) LIKE ? OR LOWER(e.PAYLOAD) LIKE ?)");
+            sql.append(" AND (LOWER(e.").append(EventNotificationDBColumns.EVENT_ID)
+                    .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.GROUP_ID)
+                    .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
+                    .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.PAYLOAD)
+                    .append(") LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);
@@ -152,21 +179,4 @@ public class EventQueryBuilder {
         return params;
     }
 
-    public static class QueryResult {
-        private final String sql;
-        private final List<Object> parameters;
-
-        public QueryResult(String sql, List<Object> parameters) {
-            this.sql = sql;
-            this.parameters = parameters;
-        }
-
-        public String getSql() {
-            return sql;
-        }
-
-        public List<Object> getParameters() {
-            return parameters;
-        }
-    }
 }

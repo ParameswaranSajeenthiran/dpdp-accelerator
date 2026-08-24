@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.TopicHandler;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
@@ -27,7 +28,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -61,8 +61,8 @@ public class TopicEndpoint {
     public Response listTopics(
             @QueryParam("status") String status,
             @QueryParam("search") String search,
-            @QueryParam("limit") @DefaultValue("20") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
+            @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset,
             @QueryParam("sort") String sort) {
         PaginatedResult<TopicDTO> result = topicHandler.listTopics(DPDPTenantContext.getOrganizationId(), status,
                 search, limit, offset, sort);

@@ -69,7 +69,7 @@ public interface EventPublishService {
      * @return the matching page plus the total count.
      */
     default PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset) {
-        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+        return searchEvents(orgId, null, null, null, null, null, search, limit, offset);
     }
 
     /**
@@ -87,7 +87,12 @@ public interface EventPublishService {
      * @return paginated list of events.
      */
     PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
-            String purposes, String search, int limit, int offset);
+            String subscriptionId, String purposes, String search, int limit, int offset);
+
+    default PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset) {
+        return searchEvents(orgId, topic, status, groupId, null, purposes, search, limit, offset);
+    }
 
     /**
      * Paginated list of event deliveries across the organisation with optional status,

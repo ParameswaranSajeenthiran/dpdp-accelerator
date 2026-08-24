@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.SubscriptionHandler;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
@@ -29,7 +30,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -54,9 +54,7 @@ public class SubscriptionEndpoint {
     }
 
     @POST
-    public Response createSubscription(
-            @HeaderParam("group-id") String headerGroupId,
-            SubscriptionDTO request) {
+    public Response createSubscription(SubscriptionDTO request) {
         String orgId = DPDPTenantContext.getOrganizationId();
         SubscriptionDTO dto = subscriptionHandler.createSubscription(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
@@ -67,8 +65,8 @@ public class SubscriptionEndpoint {
             @QueryParam("status") String status,
             @QueryParam("purposes") String purposes,
             @QueryParam("search") String search,
-            @QueryParam("limit") @DefaultValue("20") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
+            @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset,
             @QueryParam("sort") String sort) {
         PaginatedResult<SubscriptionDTO> result = subscriptionHandler.listSubscriptions(
                 DPDPTenantContext.getOrganizationId(), status, purposes, search, limit, offset, sort);
@@ -103,8 +101,8 @@ public class SubscriptionEndpoint {
     @Path("/{subscriptionId}/events")
     public Response listSubscriptionEvents(
             @PathParam("subscriptionId") String subscriptionId,
-            @QueryParam("limit") @DefaultValue("20") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset) {
+            @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
+            @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset) {
         PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionHandler.listSubscriptionEvents(
                 DPDPTenantContext.getOrganizationId(), subscriptionId, limit, offset);
         return Response.ok(result).build();

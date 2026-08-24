@@ -26,9 +26,10 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
@@ -36,6 +37,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationQueryFactory;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -72,7 +74,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         String purposeSetHash = PurposeOverlapUtils.computePurposeSetHash(newMode, subscription.getPurposes());
         subscription.setPurposeSetHash(purposeSetHash);
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
@@ -114,10 +116,10 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     lockPs.setString(3, subscription.getTopicId());
                     try (ResultSet rs = lockPs.executeQuery()) {
                         while (rs.next()) {
-                            String existingId = rs.getString("SUBSCRIPTION_ID");
-                            String existingModeStr = rs.getString("PURPOSE_FILTER_MODE");
-                            String existingDeliveryModeStr = rs.getString("DELIVERY_MODE");
-                            String existingCallbackUrl = rs.getString("CALLBACK_URL");
+                            String existingId = rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID);
+                            String existingModeStr = rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE);
+                            String existingDeliveryModeStr = rs.getString(EventNotificationDBColumns.DELIVERY_MODE);
+                            String existingCallbackUrl = rs.getString(EventNotificationDBColumns.CALLBACK_URL);
 
                             DeliveryMode newDelMode = DeliveryMode.fromValueOrDefault(subscription.getDeliveryMode(),
                                     DeliveryMode.WEBHOOK);
@@ -209,7 +211,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public Optional<Subscription> getSubscriptionById(String subscriptionId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionByIdQuery())) {
             ps.setString(1, subscriptionId);
             ps.setString(2, orgId);
@@ -230,7 +232,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean updateSubscriptionStatus(String subscriptionId, String orgId, String status) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateSubscriptionStatusQuery())) {
             ps.setString(1, status);
             ps.setString(2, subscriptionId);
@@ -249,7 +251,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         if (expectedStatus == null || expectedStatus.trim().isEmpty()) {
             return updateSubscriptionStatus(subscriptionId, orgId, newStatus);
         }
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn
                         .prepareStatement(getQueries(conn).getUpdateSubscriptionStatusGuardedQuery())) {
             ps.setString(1, newStatus);
@@ -266,7 +268,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean deleteSubscriptionAtomic(String subscriptionId, String orgId, String expectedStatus) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getDeleteSubscriptionAtomicQuery())) {
             ps.setString(1, subscriptionId);
             ps.setString(2, orgId);
@@ -292,11 +294,11 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 .setSort(sort);
 
         int total = 0;
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             String sortColumn = builder.resolveSortColumn();
-            SubscriptionQueryBuilder.QueryResult countResult = builder.buildCountQuery();
-            SubscriptionQueryBuilder.QueryResult selectResult = builder
+            QueryResult countResult = builder.buildCountQuery();
+            QueryResult selectResult = builder
                     .buildSelectQuery(queries.getPaginationClause(sortColumn));
 
             try (PreparedStatement countPs = conn.prepareStatement(countResult.getSql())) {
@@ -331,7 +333,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 for (Subscription s : subscriptions) {
                     subIds.add(s.getSubscriptionId());
                 }
-                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(subIds);
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
                 for (Subscription s : subscriptions) {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
@@ -385,7 +387,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId, String status) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getSubscriptionsByOrgAndTopic(conn, orgId, topicId, status);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -431,13 +433,13 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     @Override
     public List<String> getPurposesBySubscriptionId(String subscriptionId, String orgId) {
         List<String> purposes = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionPurposesQuery())) {
             ps.setString(1, subscriptionId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    purposes.add(rs.getString("PURPOSE_NAME"));
+                    purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
                 }
             }
             return purposes;
@@ -451,7 +453,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public long countActiveSubscriptionsForTopic(String orgId, String topicId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn
                         .prepareStatement(getQueries(conn).getCountActiveSubscriptionsForTopicQuery())) {
             ps.setString(1, orgId);
@@ -472,7 +474,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public Map<String, List<String>> getPurposesBySubscriptionIds(List<String> subscriptionIds) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getPurposesBySubscriptionIds(conn, subscriptionIds);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -496,8 +498,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 }
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        String subId = rs.getString("SUBSCRIPTION_ID");
-                        String purpose = rs.getString("PURPOSE_NAME");
+                        String subId = rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID);
+                        String purpose = rs.getString(EventNotificationDBColumns.PURPOSE_NAME);
                         map.computeIfAbsent(subId, k -> new ArrayList<>()).add(purpose);
                     }
                 }
@@ -511,7 +513,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean hasPendingOrInFlightDeliveries(String subscriptionId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn
                         .prepareStatement(getQueries(conn).getHasPendingOrInFlightDeliveriesForSubscriptionQuery())) {
             ps.setString(1, subscriptionId);
@@ -535,7 +537,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     @Override
     public List<Subscription> getPendingSubscriptionsForRecovery(Timestamp updatedBefore, int limit) {
         List<Subscription> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn
                         .prepareStatement(getQueries(conn).getGetPendingSubscriptionsForRecoveryQuery())) {
             ps.setTimestamp(1, updatedBefore);
@@ -560,7 +562,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             ps.setString(1, subscriptionId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    purposes.add(rs.getString("PURPOSE_NAME"));
+                    purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
                 }
             }
         }
@@ -569,18 +571,18 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     private Subscription mapSubscription(ResultSet rs) throws SQLException {
         return new Subscription(
-                rs.getString("SUBSCRIPTION_ID"),
-                rs.getString("ORG_ID"),
-                rs.getString("GROUP_ID"),
-                rs.getString("TOPIC_ID"),
-                rs.getString("PURPOSE_FILTER_MODE"),
+                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                rs.getString(EventNotificationDBColumns.ORG_ID),
+                rs.getString(EventNotificationDBColumns.GROUP_ID),
+                rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE),
                 null,
-                rs.getString("PURPOSE_SET_HASH"),
-                rs.getString("DELIVERY_MODE"),
-                rs.getString("CALLBACK_URL"),
-                rs.getString("SHARED_SECRET"),
-                rs.getString("STATUS"),
-                rs.getTimestamp("CREATED_AT"),
-                rs.getTimestamp("UPDATED_AT"));
+                rs.getString(EventNotificationDBColumns.PURPOSE_SET_HASH),
+                rs.getString(EventNotificationDBColumns.DELIVERY_MODE),
+                rs.getString(EventNotificationDBColumns.CALLBACK_URL),
+                rs.getString(EventNotificationDBColumns.SHARED_SECRET),
+                rs.getString(EventNotificationDBColumns.STATUS),
+                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT));
     }
 }

@@ -101,14 +101,14 @@ public class EventEndpointTest {
         eventDTO.setDeliveriesCount(1);
         PaginatedResult<EventDTO> page = new PaginatedResult<>(
                 Collections.singletonList(eventDTO), 1);
-        when(eventHandler.searchEvents(eq("org1"), eq("topic-1"), eq("DELIVERED"), eq("org1"), eq("marketing"), eq("search"), eq(10), eq(0)))
+        when(eventHandler.searchEvents(eq("org1"), eq("topic-1"), eq("DELIVERED"), eq("org1"), eq("sub-1"), eq("marketing"), eq("search"), eq(10), eq(0)))
                 .thenReturn(page);
 
         Response response = eventEndpoint.listEvents("topic-1", "DELIVERED", "sub-1", "marketing", "search", 10, 0);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), page);
-        verify(eventHandler, times(1)).searchEvents("org1", "topic-1", "DELIVERED", "org1", "marketing", "search", 10, 0);
+        verify(eventHandler, times(1)).searchEvents("org1", "topic-1", "DELIVERED", "org1", "sub-1", "marketing", "search", 10, 0);
     }
 
     @Test

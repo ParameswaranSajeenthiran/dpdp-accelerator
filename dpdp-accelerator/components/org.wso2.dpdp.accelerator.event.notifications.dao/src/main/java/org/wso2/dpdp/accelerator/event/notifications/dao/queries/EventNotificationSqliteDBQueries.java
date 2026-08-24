@@ -28,13 +28,8 @@ public class EventNotificationSqliteDBQueries extends EventNotificationCommonDBQ
         return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, " +
                "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                "FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ? AND TOPIC_ID = ? " +
-               "AND STATUS IN ('active', 'pending', 'stale')";
+               "AND STATUS IN (" + SQL_SUBSCRIPTION_ACTIVE + ", " + SQL_SUBSCRIPTION_PENDING + ", "
+               + SQL_SUBSCRIPTION_STALE + ")";
     }
 
-    @Override
-    public String getGetPendingWebhookDeliveriesQuery() {
-        return "SELECT DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT " +
-               "FROM WEBHOOK_DELIVERY WHERE STATUS = 'pending' AND (NEXT_RETRY_AT IS NULL OR NEXT_RETRY_AT <= CURRENT_TIMESTAMP) " +
-               "ORDER BY CREATED_AT ASC LIMIT ?";
-    }
 }

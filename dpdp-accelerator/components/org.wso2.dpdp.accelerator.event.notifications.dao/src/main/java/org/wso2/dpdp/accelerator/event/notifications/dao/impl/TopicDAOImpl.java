@@ -23,15 +23,17 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationQueryFactory;
-import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.TopicQueryBuilder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,14 +51,10 @@ public class TopicDAOImpl implements TopicDAO {
         return EventNotificationQueryFactory.getQueryProvider(conn);
     }
 
-    private static String escapeLikePattern(String text) {
-        return SubscriptionQueryBuilder.escapeLikePattern(text);
-    }
-
     @Override
     public boolean addTopic(Topic topic) {
         Objects.requireNonNull(topic, EventNotificationCommonConstants.ERROR_TOPIC_NULL);
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
@@ -65,7 +63,7 @@ public class TopicDAOImpl implements TopicDAO {
                     checkPs.setString(1, topic.getOrgId());
                     checkPs.setString(2, topic.getName());
                     try (ResultSet rs = checkPs.executeQuery()) {
-                        if (rs.next() && TopicStatus.ACTIVE.getValue().equalsIgnoreCase(rs.getString("STATUS"))) {
+                        if (rs.next() && TopicStatus.ACTIVE.getValue().equalsIgnoreCase(rs.getString(EventNotificationDBColumns.STATUS))) {
                             throw new EventNotificationDuplicateResourceException(
                                     String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
                                             topic.getName()));
@@ -112,7 +110,7 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public Optional<Topic> getTopicById(String topicId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByIdQuery())) {
             ps.setString(1, topicId);
             ps.setString(2, orgId);
@@ -130,7 +128,7 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getTopicByOrgAndName(conn, orgId, name);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -163,7 +161,7 @@ public class TopicDAOImpl implements TopicDAO {
     @Override
     public boolean updateTopicStatus(String topicId, String orgId, TopicStatus status) {
         Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateTopicStatusQuery())) {
             ps.setString(1, status.getValue());
             ps.setString(2, topicId);
@@ -177,7 +175,7 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public boolean deregisterTopicAtomic(String topicId, String orgId) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
@@ -246,45 +244,22 @@ public class TopicDAOImpl implements TopicDAO {
     public PaginatedDAOResult<Topic> listTopics(String orgId, String status, String search, int limit, int offset,
             String sort) {
         List<Topic> topics = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT TOPIC_ID, ORG_ID, NAME, DESCRIPTION, STATUS, INITIATED_BY FROM TOPIC WHERE ORG_ID = ?");
-        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM TOPIC WHERE ORG_ID = ?");
-
-        List<Object> params = new ArrayList<>();
-        params.add(orgId);
-
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND LOWER(STATUS) = LOWER(?)");
-            countSql.append(" AND LOWER(STATUS) = LOWER(?)");
-            params.add(status.trim());
-        }
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(TOPIC_ID) LIKE ? OR LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
-            countSql.append(" AND (LOWER(TOPIC_ID) LIKE ? OR LOWER(NAME) LIKE ? OR LOWER(DESCRIPTION) LIKE ?)");
-            String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
-            params.add(term);
-            params.add(term);
-            params.add(term);
-        }
-
-        String sortColumn;
-        if ("-name".equalsIgnoreCase(sort)) {
-            sortColumn = "NAME DESC";
-        } else if ("status".equalsIgnoreCase(sort)) {
-            sortColumn = "STATUS ASC";
-        } else if ("-status".equalsIgnoreCase(sort)) {
-            sortColumn = "STATUS DESC";
-        } else {
-            sortColumn = "NAME ASC";
-        }
+        TopicQueryBuilder builder = new TopicQueryBuilder(orgId)
+                .setStatus(status)
+                .setSearch(search)
+                .setSort(sort);
 
         int total = 0;
-        try (Connection conn = DBUtils.getConnection()) {
-            sql.append(getQueries(conn).getPaginationClause(sortColumn));
-            try (PreparedStatement countPs = conn.prepareStatement(countSql.toString())) {
-                for (int i = 0; i < params.size(); i++) {
-                    countPs.setObject(i + 1, params.get(i));
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+            EventNotificationCommonDBQueries queries = getQueries(conn);
+            QueryResult countResult = builder.buildCountQuery();
+            QueryResult selectResult = builder.buildSelectQuery(
+                    queries.getPaginationClause(builder.resolveSortColumn()));
+
+            try (PreparedStatement countPs = conn.prepareStatement(countResult.getSql())) {
+                List<Object> countParams = countResult.getParameters();
+                for (int i = 0; i < countParams.size(); i++) {
+                    countPs.setObject(i + 1, countParams.get(i));
                 }
                 try (ResultSet rs = countPs.executeQuery()) {
                     if (rs.next()) {
@@ -293,12 +268,13 @@ public class TopicDAOImpl implements TopicDAO {
                 }
             }
 
-            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-                for (int i = 0; i < params.size(); i++) {
-                    ps.setObject(i + 1, params.get(i));
+            try (PreparedStatement ps = conn.prepareStatement(selectResult.getSql())) {
+                List<Object> selectParams = selectResult.getParameters();
+                for (int i = 0; i < selectParams.size(); i++) {
+                    ps.setObject(i + 1, selectParams.get(i));
                 }
-                ps.setInt(params.size() + 1, limit);
-                ps.setInt(params.size() + 2, offset);
+                ps.setInt(selectParams.size() + 1, limit);
+                ps.setInt(selectParams.size() + 2, offset);
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -315,11 +291,11 @@ public class TopicDAOImpl implements TopicDAO {
 
     private Topic mapTopic(ResultSet rs) throws SQLException {
         return new Topic(
-                rs.getString("TOPIC_ID"),
-                rs.getString("ORG_ID"),
-                rs.getString("NAME"),
-                rs.getString("DESCRIPTION"),
-                rs.getString("STATUS"),
-                rs.getString("INITIATED_BY"));
+                rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                rs.getString(EventNotificationDBColumns.ORG_ID),
+                rs.getString(EventNotificationDBColumns.NAME),
+                rs.getString(EventNotificationDBColumns.DESCRIPTION),
+                rs.getString(EventNotificationDBColumns.STATUS),
+                rs.getString(EventNotificationDBColumns.INITIATED_BY));
     }
 }

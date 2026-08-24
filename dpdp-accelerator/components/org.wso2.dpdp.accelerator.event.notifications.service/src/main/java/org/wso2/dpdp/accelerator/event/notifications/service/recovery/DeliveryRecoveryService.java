@@ -23,6 +23,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
@@ -116,7 +117,7 @@ public class DeliveryRecoveryService {
         pool.shutdown();
         try {
             if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-                LOG.warn(name + " did not terminate within 5 s; forcing interrupt.");
+                LOG.debug(LogSanitizer.sanitize(name) + " did not terminate within 5 s; forcing interrupt.");
                 pool.shutdownNow();
             }
         } catch (InterruptedException ie) {
@@ -131,7 +132,8 @@ public class DeliveryRecoveryService {
             try {
                 recoverPendingSubscriptions();
             } catch (Exception e) {
-                LOG.warn("Error during pending subscription recovery run: " + e.getMessage(), e);
+                LOG.error("Error during pending subscription recovery run: "
+                        + LogSanitizer.sanitize(e.getMessage()), e);
             }
         }
 
@@ -144,11 +146,13 @@ public class DeliveryRecoveryService {
                 if (sub.getCallbackUrl() != null && !sub.getCallbackUrl().trim().isEmpty()) {
                     try {
                         subscriptionService.retryVerification(sub.getOrgId(), sub.getSubscriptionId());
-                        LOG.info("Recovered and re-verified pending subscription [" + sub.getSubscriptionId() + "].");
+                        LOG.info("Recovered and re-verified pending subscription ["
+                                + LogSanitizer.sanitize(sub.getSubscriptionId()) + "].");
                     } catch (Exception e) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Recovery retry verification for subscription [" + sub.getSubscriptionId()
-                                    + "] deferred: " + e.getMessage());
+                            LOG.debug("Recovery retry verification for subscription ["
+                                    + LogSanitizer.sanitize(sub.getSubscriptionId()) + "] deferred: "
+                                    + LogSanitizer.sanitize(e.getMessage()));
                         }
                     }
                 }

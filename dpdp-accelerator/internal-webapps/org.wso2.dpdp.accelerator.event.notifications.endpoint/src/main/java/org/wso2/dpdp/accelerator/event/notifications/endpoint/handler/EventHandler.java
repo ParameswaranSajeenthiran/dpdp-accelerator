@@ -65,6 +65,15 @@ public class EventHandler {
     }
 
     public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status,
+            String groupId, String subscriptionId, String purposes, String search, Integer limit, Integer offset) {
+        int lim = (limit != null && limit > 0)
+                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
+                : EventNotificationCommonConstants.DEFAULT_LIMIT;
+        int off = offset != null && offset >= 0 ? offset : 0;
+        return eventPublishService.searchEvents(orgId, topic, status, groupId, subscriptionId, purposes, search, lim, off);
+    }
+
+    public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status,
             String groupId, String purposes, String search, Integer limit, Integer offset) {
         int lim = (limit != null && limit > 0)
                 ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)

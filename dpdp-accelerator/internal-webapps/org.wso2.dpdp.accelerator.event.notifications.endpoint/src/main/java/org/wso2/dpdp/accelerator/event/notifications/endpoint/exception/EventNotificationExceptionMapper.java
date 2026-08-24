@@ -21,6 +21,8 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.exception;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointErrorCodes;
 
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.WebApplicationException;
@@ -67,27 +69,34 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
         }
 
         if (rootCause instanceof IllegalArgumentException) {
-            log.warn("Invalid request argument: " + rootCause.getMessage());
-            return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4002", "Invalid request parameter", rootCause.getMessage());
+            log.debug("Invalid request argument: " + LogSanitizer.sanitize(rootCause.getMessage()));
+            return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
+                    EventNotificationEndpointErrorCodes.INVALID_REQUEST_PARAMETER,
+                    "Invalid request parameter", rootCause.getMessage());
         }
 
         log.error("Unhandled exception in Event Notification endpoint", exception);
-        return buildResponse(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "CS-5000", "Internal server error", "An unexpected error occurred.");
+        return buildResponse(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                EventNotificationEndpointErrorCodes.INTERNAL_SERVER_ERROR,
+                "Internal server error", "An unexpected error occurred.");
     }
 
     private Response handleEventNotificationException(EventNotificationException ex) {
         if (ex.getStatusCode() >= 500) {
-            log.error("Service error [" + ex.getCode() + "]: " + ex.getMessage(), ex);
+            log.error("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
+                    + LogSanitizer.sanitize(ex.getMessage()), ex);
         } else {
-            log.warn("Service error [" + ex.getCode() + "]: " + ex.getMessage());
+            log.debug("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
+                    + LogSanitizer.sanitize(ex.getMessage()));
         }
         return buildResponse(ex.getStatusCode(), ex.getCode(), ex.getMessage(), ex.getDescription());
     }
 
     private Response handleWebApplicationException(WebApplicationException wae) {
         int status = wae.getResponse().getStatus();
-        log.warn("JAX-RS exception [" + status + "]: " + wae.getMessage());
-        return buildResponse(status, "CS-" + status, wae.getMessage() != null ? wae.getMessage() : Response.Status.fromStatusCode(status).getReasonPhrase(), null);
+        log.debug("JAX-RS exception [" + status + "]: " + LogSanitizer.sanitize(wae.getMessage()));
+        return buildResponse(status, EventNotificationEndpointErrorCodes.forHttpStatus(status),
+                wae.getMessage() != null ? wae.getMessage() : Response.Status.fromStatusCode(status).getReasonPhrase(), null);
     }
 
     private Response handleConstraintViolation(ConstraintViolationException cve) {
@@ -96,8 +105,10 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
                 .reduce((a, b) -> a + "; " + b)
                 .orElse(cve.getMessage());
 
-        log.warn("Validation failure: " + detail);
-        return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4003", "Request failed validation", detail);
+        log.debug("Validation failure: " + LogSanitizer.sanitize(detail));
+        return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
+                EventNotificationEndpointErrorCodes.VALIDATION_FAILURE,
+                "Request failed validation", detail);
     }
 
     private Response handleJsonProcessingException(JsonProcessingException jpe) {
@@ -107,8 +118,10 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
             detail = "Unrecognized field '" + upe.getPropertyName() + "' in request payload.";
         }
 
-        log.warn("Malformed request payload: " + detail);
-        return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(), "CS-4001", "Malformed request payload", detail);
+        log.debug("Malformed request payload: " + LogSanitizer.sanitize(detail));
+        return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
+                EventNotificationEndpointErrorCodes.MALFORMED_REQUEST,
+                "Malformed request payload", detail);
     }
 
     private Response buildResponse(int status, String code, String message, String description) {

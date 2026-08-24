@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 
 import java.sql.Connection;
@@ -33,7 +33,7 @@ public interface EventDAO {
     boolean addEvent(Connection conn, Event event);
 
     default boolean addEvent(Event event) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return addEvent(conn, event);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -47,7 +47,7 @@ public interface EventDAO {
     void addEventPurposes(Connection conn, String eventId, List<String> purposes);
 
     default void addEventPurposes(String eventId, List<String> purposes) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             addEventPurposes(conn, eventId, purposes);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -60,9 +60,14 @@ public interface EventDAO {
     boolean hasActiveEventsForTopic(String topicId);
 
     PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
-            String purposes, String search, int limit, int offset);
+            String subscriptionId, String purposes, String search, int limit, int offset);
+
+    default PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset) {
+        return searchEvents(orgId, topic, status, groupId, null, purposes, search, limit, offset);
+    }
 
     default PaginatedDAOResult<Event> searchEvents(String orgId, String search, int limit, int offset) {
-        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+        return searchEvents(orgId, null, null, null, null, null, search, limit, offset);
     }
 }

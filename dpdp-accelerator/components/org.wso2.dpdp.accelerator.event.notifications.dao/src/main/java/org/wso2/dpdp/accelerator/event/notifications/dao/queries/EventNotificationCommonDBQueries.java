@@ -19,11 +19,27 @@
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 
 /**
  * Common ANSI SQL queries base provider for DPDP Event Notification Framework.
  */
 public class EventNotificationCommonDBQueries {
+
+    protected static final String SQL_TOPIC_ACTIVE = "'" + TopicStatus.ACTIVE.getValue() + "'";
+    protected static final String SQL_SUBSCRIPTION_ACTIVE = "'" + SubscriptionStatus.ACTIVE.getValue() + "'";
+    protected static final String SQL_SUBSCRIPTION_PENDING = "'" + SubscriptionStatus.PENDING.getValue() + "'";
+    protected static final String SQL_SUBSCRIPTION_STALE = "'" + SubscriptionStatus.STALE.getValue() + "'";
+    protected static final String SQL_SUBSCRIPTION_DELETED = "'" + SubscriptionStatus.DELETED.getValue() + "'";
+    protected static final String SQL_DELIVERY_PENDING = "'" + DeliveryStatus.PENDING.getValue() + "'";
+    protected static final String SQL_DELIVERY_IN_FLIGHT = "'" + DeliveryStatus.IN_FLIGHT.getValue() + "'";
+    protected static final String SQL_POLL_PENDING = "'" + PollStatus.PENDING.getValue() + "'";
+    protected static final String SQL_POLL_ACKNOWLEDGED = "'" + PollStatus.ACKNOWLEDGED.getValue() + "'";
+    protected static final String SQL_WEBHOOK_MODE = "'" + DeliveryMode.WEBHOOK.getValue() + "'";
+    protected static final String SQL_POLL_MODE = "'" + DeliveryMode.POLL.getValue() + "'";
 
     // TOPIC Queries
     public String getAddTopicQuery() {
@@ -38,7 +54,7 @@ public class EventNotificationCommonDBQueries {
 
     public String getGetTopicByOrgAndNameQuery() {
         return "SELECT TOPIC_ID, ORG_ID, NAME, DESCRIPTION, STATUS, INITIATED_BY " +
-                "FROM TOPIC WHERE ORG_ID = ? AND LOWER(NAME) = LOWER(?) AND LOWER(STATUS) = 'active'";
+                "FROM TOPIC WHERE ORG_ID = ? AND LOWER(NAME) = LOWER(?) AND LOWER(STATUS) = " + SQL_TOPIC_ACTIVE;
     }
 
     public String getUpdateTopicStatusQuery() {
@@ -68,7 +84,8 @@ public class EventNotificationCommonDBQueries {
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ? AND TOPIC_ID = ? " +
-                "AND STATUS IN ('active', 'pending', 'stale') FOR UPDATE";
+                "AND STATUS IN (" + SQL_SUBSCRIPTION_ACTIVE + ", " + SQL_SUBSCRIPTION_PENDING + ", "
+                + SQL_SUBSCRIPTION_STALE + ") FOR UPDATE";
     }
 
     public String getLockTopicForSubscriptionQuery() {
@@ -101,11 +118,13 @@ public class EventNotificationCommonDBQueries {
      * </ol>
      */
     public String getDeleteSubscriptionAtomicQuery() {
-        return "UPDATE SUBSCRIPTION SET STATUS = 'deleted', UPDATED_AT = CURRENT_TIMESTAMP " +
+        return "UPDATE SUBSCRIPTION SET STATUS = " + SQL_SUBSCRIPTION_DELETED + ", UPDATED_AT = CURRENT_TIMESTAMP " +
                 "WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS = ? " +
-                "AND NOT EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY WHERE SUBSCRIPTION_ID = ? AND STATUS IN ('pending', 'in_flight')) "
+                "AND NOT EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY WHERE SUBSCRIPTION_ID = ? AND STATUS IN ("
+                + SQL_DELIVERY_PENDING + ", " + SQL_DELIVERY_IN_FLIGHT + ")) "
                 +
-                "AND NOT EXISTS (SELECT 1 FROM POLL_DELIVERY WHERE SUBSCRIPTION_ID = ? AND STATUS = 'pending')";
+                "AND NOT EXISTS (SELECT 1 FROM POLL_DELIVERY WHERE SUBSCRIPTION_ID = ? AND STATUS = "
+                + SQL_POLL_PENDING + ")";
     }
 
     public String getGetSubscriptionsByOrgAndTopicQuery() {
@@ -126,12 +145,14 @@ public class EventNotificationCommonDBQueries {
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION WHERE ORG_ID = ? AND TOPIC_ID = ? " +
-                "AND STATUS IN ('active', 'pending', 'stale')";
+                "AND STATUS IN (" + SQL_SUBSCRIPTION_ACTIVE + ", " + SQL_SUBSCRIPTION_PENDING + ", "
+                + SQL_SUBSCRIPTION_STALE + ")";
     }
 
     public String getCountActiveSubscriptionsForTopicQuery() {
         return "SELECT COUNT(*) FROM SUBSCRIPTION WHERE ORG_ID = ? AND TOPIC_ID = ? " +
-                "AND STATUS IN ('active', 'pending', 'stale')";
+                "AND STATUS IN (" + SQL_SUBSCRIPTION_ACTIVE + ", " + SQL_SUBSCRIPTION_PENDING + ", "
+                + SQL_SUBSCRIPTION_STALE + ")";
     }
 
     public String getGetSubscriptionPurposesQuery() {
@@ -170,13 +191,14 @@ public class EventNotificationCommonDBQueries {
 
     public String getUpdateWebhookDeliveryStatusQuery() {
         return "UPDATE WEBHOOK_DELIVERY SET STATUS = ?, ATTEMPT_COUNT = ?, NEXT_RETRY_AT = ?, DELIVERED_AT = ?, " +
-                "UPDATED_AT = CURRENT_TIMESTAMP WHERE DELIVERY_ID = ? AND STATUS = 'in_flight'";
+                "UPDATED_AT = CURRENT_TIMESTAMP WHERE DELIVERY_ID = ? AND STATUS = " + SQL_DELIVERY_IN_FLIGHT;
     }
 
     public String getGetPendingWebhookDeliveriesQuery() {
         return "SELECT DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT "
                 +
-                "FROM WEBHOOK_DELIVERY WHERE STATUS = 'pending' AND (NEXT_RETRY_AT IS NULL OR NEXT_RETRY_AT <= CURRENT_TIMESTAMP) "
+                "FROM WEBHOOK_DELIVERY WHERE STATUS = " + SQL_DELIVERY_PENDING
+                + " AND (NEXT_RETRY_AT IS NULL OR NEXT_RETRY_AT <= CURRENT_TIMESTAMP) "
                 +
                 "ORDER BY CREATED_AT ASC LIMIT ?";
     }
@@ -195,14 +217,14 @@ public class EventNotificationCommonDBQueries {
     public String getGetStuckInFlightWebhookDeliveriesQuery() {
         return "SELECT DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT "
                 +
-                "FROM WEBHOOK_DELIVERY WHERE STATUS = 'in_flight' AND UPDATED_AT <= ? "
+                "FROM WEBHOOK_DELIVERY WHERE STATUS = " + SQL_DELIVERY_IN_FLIGHT + " AND UPDATED_AT <= ? "
                 +
                 "ORDER BY UPDATED_AT ASC LIMIT ?";
     }
 
     public String getReleaseWebhookDeliveryQuery() {
-        return "UPDATE WEBHOOK_DELIVERY SET STATUS = 'pending', ATTEMPT_COUNT = ?, NEXT_RETRY_AT = ?, " +
-                "UPDATED_AT = CURRENT_TIMESTAMP WHERE DELIVERY_ID = ? AND STATUS = 'in_flight'";
+        return "UPDATE WEBHOOK_DELIVERY SET STATUS = " + SQL_DELIVERY_PENDING + ", ATTEMPT_COUNT = ?, NEXT_RETRY_AT = ?, " +
+                "UPDATED_AT = CURRENT_TIMESTAMP WHERE DELIVERY_ID = ? AND STATUS = " + SQL_DELIVERY_IN_FLIGHT;
     }
 
     // EVENT Queries
@@ -275,7 +297,8 @@ public class EventNotificationCommonDBQueries {
                 "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
                 "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
-                "WHERE d.STATUS = 'pending' AND s.STATUS = 'active' AND (d.NEXT_RETRY_AT IS NULL OR d.NEXT_RETRY_AT <= CURRENT_TIMESTAMP) "
+                "WHERE d.STATUS = " + SQL_DELIVERY_PENDING + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE
+                + " AND (d.NEXT_RETRY_AT IS NULL OR d.NEXT_RETRY_AT <= CURRENT_TIMESTAMP) "
                 +
                 "ORDER BY d.CREATED_AT ASC LIMIT ?";
     }
@@ -286,7 +309,8 @@ public class EventNotificationCommonDBQueries {
                 "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
                 "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
-                "WHERE d.STATUS = 'in_flight' AND s.STATUS = 'active' AND d.UPDATED_AT <= ? " +
+                "WHERE d.STATUS = " + SQL_DELIVERY_IN_FLIGHT + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE
+                + " AND d.UPDATED_AT <= ? " +
                 "ORDER BY d.UPDATED_AT ASC LIMIT ?";
     }
 
@@ -333,7 +357,8 @@ public class EventNotificationCommonDBQueries {
     public String getGetPendingPollDeliveriesQuery() {
         return "SELECT p.DELIVERY_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.CREATED_AT, p.COMPLETED_AT " +
                 "FROM POLL_DELIVERY p JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ? AND s.GROUP_ID = ? AND s.DELIVERY_MODE = 'poll' AND s.STATUS = 'active' AND p.STATUS = 'pending' "
+                "WHERE s.ORG_ID = ? AND s.GROUP_ID = ? AND s.DELIVERY_MODE = " + SQL_POLL_MODE
+                + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE + " AND p.STATUS = " + SQL_POLL_PENDING + " "
                 +
                 "ORDER BY p.CREATED_AT ASC LIMIT ?";
     }
@@ -342,7 +367,8 @@ public class EventNotificationCommonDBQueries {
         return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
-                "FROM SUBSCRIPTION WHERE STATUS = 'pending' AND DELIVERY_MODE = 'webhook' AND UPDATED_AT <= ?";
+                "FROM SUBSCRIPTION WHERE STATUS = " + SQL_SUBSCRIPTION_PENDING + " AND DELIVERY_MODE = "
+                + SQL_WEBHOOK_MODE + " AND UPDATED_AT <= ?";
     }
 
     /**
@@ -373,8 +399,8 @@ public class EventNotificationCommonDBQueries {
      * {@link #getUpdatePollDeliveryStatusQuery()} for rationale.
      */
     public String getClaimPollDeliveryQuery() {
-        return "UPDATE POLL_DELIVERY SET STATUS = 'acknowledged', COMPLETED_AT = CURRENT_TIMESTAMP " +
-                "WHERE DELIVERY_ID = ? AND STATUS = 'pending'";
+        return "UPDATE POLL_DELIVERY SET STATUS = " + SQL_POLL_ACKNOWLEDGED + ", COMPLETED_AT = CURRENT_TIMESTAMP " +
+                "WHERE DELIVERY_ID = ? AND STATUS = " + SQL_POLL_PENDING;
     }
 
     /**
@@ -393,8 +419,8 @@ public class EventNotificationCommonDBQueries {
      * returns false.
      */
     public String getClaimWebhookDeliveryQuery() {
-        return "UPDATE WEBHOOK_DELIVERY SET STATUS = 'in_flight', UPDATED_AT = CURRENT_TIMESTAMP " +
-                "WHERE DELIVERY_ID = ? AND STATUS = 'pending'";
+        return "UPDATE WEBHOOK_DELIVERY SET STATUS = " + SQL_DELIVERY_IN_FLIGHT + ", UPDATED_AT = CURRENT_TIMESTAMP " +
+                "WHERE DELIVERY_ID = ? AND STATUS = " + SQL_DELIVERY_PENDING;
     }
 
     /**
@@ -411,8 +437,8 @@ public class EventNotificationCommonDBQueries {
      * double-claimed.
      */
     public String getClaimStuckWebhookDeliveryQuery() {
-        return "UPDATE WEBHOOK_DELIVERY SET STATUS = 'in_flight', UPDATED_AT = CURRENT_TIMESTAMP " +
-                "WHERE DELIVERY_ID = ? AND STATUS = 'in_flight' AND UPDATED_AT <= ?";
+        return "UPDATE WEBHOOK_DELIVERY SET STATUS = " + SQL_DELIVERY_IN_FLIGHT + ", UPDATED_AT = CURRENT_TIMESTAMP " +
+                "WHERE DELIVERY_ID = ? AND STATUS = " + SQL_DELIVERY_IN_FLIGHT + " AND UPDATED_AT <= ?";
     }
 
     public String getUpdatePollDeliveryStatusGuardedQuery() {

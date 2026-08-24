@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
@@ -66,7 +67,7 @@ public class EventEndpoint {
 
     @POST
     public Response publishEvent(
-            @HeaderParam("group-id") String groupId,
+            @HeaderParam(EventNotificationEndpointConstants.GROUP_ID_HEADER) String groupId,
             EventCreateDTO request) {
         EventDTO dto = eventHandler.publishEvent(organizationIdResolver.get(), groupId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
@@ -79,11 +80,13 @@ public class EventEndpoint {
             @QueryParam("subscriptionId") String subscriptionId,
             @QueryParam("purposes") String purposes,
             @QueryParam("search") String search,
-            @QueryParam("limit") @DefaultValue("20") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset) {
+            @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
+            @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset) {
         String orgId = organizationIdResolver.get();
-        PaginatedResult<EventDTO> result = eventHandler.searchEvents(
-                orgId, topic, status, orgId, purposes, search, limit, offset);
+        PaginatedResult<EventDTO> result = subscriptionId == null || subscriptionId.trim().isEmpty()
+                ? eventHandler.searchEvents(orgId, topic, status, orgId, purposes, search, limit, offset)
+                : eventHandler.searchEvents(orgId, topic, status, orgId, subscriptionId,
+                        purposes, search, limit, offset);
         return Response.ok(result).build();
     }
 
@@ -107,8 +110,8 @@ public class EventEndpoint {
     @Path("/{eventId}/deliveries")
     public Response getEventDeliveries(
             @PathParam("eventId") String eventId,
-            @QueryParam("limit") @DefaultValue("20") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset) {
+            @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
+            @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset) {
         PaginatedResult<SubscriptionDeliveryDTO> result = eventHandler.getEventDeliveries(
                 organizationIdResolver.get(), eventId, limit, offset);
         return Response.ok(result).build();

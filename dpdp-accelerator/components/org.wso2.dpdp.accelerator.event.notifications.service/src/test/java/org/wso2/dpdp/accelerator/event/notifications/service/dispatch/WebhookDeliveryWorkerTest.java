@@ -23,6 +23,7 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -65,7 +67,7 @@ public class WebhookDeliveryWorkerTest {
         // The worker submits WebhookDeliveryTask instances to the scheduler; we don't want
         // them to make real HTTP calls in this test. DiscardingExecutor drops the task.
         scheduler = new DiscardingExecutor();
-        httpClient = HttpClient.newHttpClient();
+        httpClient = HTTPClientUtils.getHttpClient();
         when(configurationService.getEventNotificationDeliveryWorkerBatchSize()).thenReturn(50);
         when(configurationService.getEventNotificationStuckInFlightThresholdSeconds()).thenReturn(10);
     }
@@ -90,6 +92,13 @@ public class WebhookDeliveryWorkerTest {
         @Override public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return java.util.Collections.emptyList(); }
         @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c) { return null; }
         @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return null; }
+    }
+
+    private static class RejectingExecutor extends DiscardingExecutor {
+        @Override
+        public void execute(Runnable r) {
+            throw new RuntimeException("executor rejected");
+        }
     }
 
     private WebhookDeliveryDispatchContext context(String deliveryId, int attemptCount) {
@@ -184,6 +193,69 @@ public class WebhookDeliveryWorkerTest {
 
         assertEquals(counts[0], 0);
         verify(deliveryDAO).updateWebhookDeliveryStatus(any());
+    }
+
+    @Test
+    public void testPendingFetchFailureDoesNotStopTick() {
+        when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
+                .thenThrow(new RuntimeException("pending fetch failed"));
+        when(deliveryDAO.getStuckInFlightWebhookDispatchContexts(anyInt(), any()))
+                .thenReturn(Collections.emptyList());
+
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient,
+                configurationService);
+        int[] counts = worker.runTick();
+
+        assertEquals(counts[0], 0);
+        assertEquals(counts[1], 0);
+    }
+
+    @Test
+    public void testClaimFailureDoesNotSubmitDelivery() {
+        when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
+                .thenReturn(Collections.singletonList(context("claim-failure", 0)));
+        when(deliveryDAO.claimWebhookDelivery(eq("claim-failure")))
+                .thenThrow(new RuntimeException("claim failed"));
+
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient,
+                configurationService);
+        int[] counts = worker.runTick();
+
+        assertEquals(counts[0], 0);
+    }
+
+    @Test
+    public void testExecutorRejectionMarksDeliveryUnrecoverable() {
+        WebhookDeliveryDispatchContext dispatchContext = context("executor-rejection", 0);
+        when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
+                .thenReturn(Collections.singletonList(dispatchContext));
+        when(deliveryDAO.claimWebhookDelivery(eq("executor-rejection"))).thenReturn(true);
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, new RejectingExecutor(), httpClient,
+                configurationService);
+        int[] counts = worker.runTick();
+
+        assertEquals(counts[0], 0);
+        verify(deliveryDAO).updateWebhookDeliveryStatus(any());
+    }
+
+    @Test
+    public void testMarkUnrecoverableUpdateFailureIsHandled() {
+        WebhookDeliveryDispatchContext dispatchContext = context("update-failure", 0);
+        when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
+                .thenReturn(Collections.singletonList(new WebhookDeliveryDispatchContext(
+                        dispatchContext.getDelivery(), dispatchContext.getOrgId(),
+                        null, dispatchContext.getSharedSecret(), dispatchContext.getPayload(),
+                        dispatchContext.getDelivery().getUpdatedAt(), dispatchContext.getTopicId(),
+                        dispatchContext.getTopicName())));
+        when(deliveryDAO.claimWebhookDelivery(eq("update-failure"))).thenReturn(true);
+        doThrow(new RuntimeException("status update failed"))
+                .when(deliveryDAO).updateWebhookDeliveryStatus(any());
+
+        WebhookDeliveryWorker worker = new WebhookDeliveryWorker(deliveryDAO, scheduler, httpClient,
+                configurationService);
+        int[] counts = worker.runTick();
+
+        assertEquals(counts[0], 0);
     }
 
     @Test

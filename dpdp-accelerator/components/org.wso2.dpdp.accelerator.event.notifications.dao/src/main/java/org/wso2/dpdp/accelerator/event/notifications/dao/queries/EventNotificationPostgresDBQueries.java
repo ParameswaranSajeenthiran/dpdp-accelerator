@@ -22,11 +22,4 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
  * PostgreSQL dialect query provider for DPDP Event Notification Framework.
  */
 public class EventNotificationPostgresDBQueries extends EventNotificationCommonDBQueries {
-
-    @Override
-    public String getGetPendingWebhookDeliveriesQuery() {
-        return "SELECT DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT " +
-               "FROM WEBHOOK_DELIVERY WHERE STATUS = 'pending' AND (NEXT_RETRY_AT IS NULL OR NEXT_RETRY_AT <= CURRENT_TIMESTAMP) " +
-               "ORDER BY CREATED_AT ASC LIMIT ?";
-    }
 }

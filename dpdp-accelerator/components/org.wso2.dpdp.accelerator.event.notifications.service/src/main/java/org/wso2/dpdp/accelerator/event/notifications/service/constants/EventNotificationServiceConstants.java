@@ -26,26 +26,21 @@ public class EventNotificationServiceConstants {
     private EventNotificationServiceConstants() {
     }
 
-    // Domain & State Constants
-    public static final String WEBHOOK_DELIVERY_MODE = "webhook";
-    public static final String POLL_DELIVERY_MODE = "poll";
-    public static final String STATUS_ACTIVE = "active";
-    public static final String STATUS_STALE = "stale";
-    public static final String STATUS_PENDING = "pending";
-    public static final String STATUS_DELETED = "deleted";
+    public static final long WEBHOOK_HTTP_TIMEOUT_SECONDS = 5;
+    public static final int RETRY_BACKOFF_MULTIPLIER = 3;
 
     // Error Codes
-    public static final String ERROR_CODE_INVALID_REQUEST = "CS-4001";
-    public static final String ERROR_CODE_MISSING_REQUIRED_PARAM = "CS-4002";
-    public static final String ERROR_CODE_INVALID_STATE = "CS-4003";
-    public static final String ERROR_CODE_RESOURCE_NOT_FOUND = "CS-4040";
-    public static final String ERROR_CODE_TOPIC_NOT_FOUND = "CS-4041";
-    public static final String ERROR_CODE_DELIVERY_NOT_FOUND = "CS-4042";
-    public static final String ERROR_CODE_EVENT_NOT_FOUND = "CS-4043";
-    public static final String ERROR_CODE_RESOURCE_EXISTS = "CS-4090";
-    public static final String ERROR_CODE_WEBHOOK_VERIFICATION_FAILED = "CS-4220";
-    public static final String ERROR_CODE_EVENT_PUBLISH_FAILED = "CS-5001";
-    public static final String ERROR_CODE_INTERNAL_ERROR = "CS-5000";
+    public static final String ERROR_CODE_INVALID_REQUEST = "EN-4001";
+    public static final String ERROR_CODE_MISSING_REQUIRED_PARAM = "EN-4002";
+    public static final String ERROR_CODE_INVALID_STATE = "EN-4003";
+    public static final String ERROR_CODE_RESOURCE_NOT_FOUND = "EN-4040";
+    public static final String ERROR_CODE_TOPIC_NOT_FOUND = "EN-4041";
+    public static final String ERROR_CODE_DELIVERY_NOT_FOUND = "EN-4042";
+    public static final String ERROR_CODE_EVENT_NOT_FOUND = "EN-4043";
+    public static final String ERROR_CODE_RESOURCE_EXISTS = "EN-4090";
+    public static final String ERROR_CODE_WEBHOOK_VERIFICATION_FAILED = "EN-4220";
+    public static final String ERROR_CODE_EVENT_PUBLISH_FAILED = "EN-5001";
+    public static final String ERROR_CODE_INTERNAL_ERROR = "EN-5000";
 
     // Error Titles
     public static final String ERROR_TITLE_MALFORMED_REQUEST = "Malformed request";

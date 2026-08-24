@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="dpdp-event-notifications-dao-test-suite">
+    <test name="dpdp-event-notifications-dao-tests">
+        <packages>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.dao"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.dao.queries"/>
+        </packages>
+    </test>
+</suite>

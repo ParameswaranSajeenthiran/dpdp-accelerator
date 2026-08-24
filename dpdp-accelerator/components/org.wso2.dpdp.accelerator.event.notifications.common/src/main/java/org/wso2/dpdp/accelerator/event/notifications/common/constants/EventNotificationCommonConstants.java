@@ -27,10 +27,6 @@ public class EventNotificationCommonConstants {
     private EventNotificationCommonConstants() {
     }
 
-    // Datasource Constants
-    public static final String JDBC_DPDP_DATASOURCE_NAME = "jdbc/WSO2DPDP_DB";
-    public static final String JDBC_DPDP_JNDI_ENV_NAME = "java:comp/env/jdbc/WSO2DPDP_DB";
-
     // Data Access Error Messages
     public static final String ERROR_ADDING_TOPIC = "Error adding topic [%s]";
     public static final String ERROR_GETTING_TOPIC_BY_ID = "Error getting topic by ID [%s]";

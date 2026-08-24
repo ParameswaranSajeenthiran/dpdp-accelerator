@@ -21,14 +21,16 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationQueryFactory;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventQueryBuilder;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -80,7 +82,7 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public Optional<Event> getEventById(String eventId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
             ps.setString(1, eventId);
             ps.setString(2, orgId);
@@ -129,12 +131,12 @@ public class EventDAOImpl implements EventDAO {
     @Override
     public List<String> getEventPurposes(String eventId) {
         List<String> purposes = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesQuery())) {
             ps.setString(1, eventId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    purposes.add(rs.getString("PURPOSE_NAME"));
+                    purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
                 }
             }
             return purposes;
@@ -146,7 +148,7 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public boolean hasActiveEventsForTopic(String topicId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
             ps.setString(1, topicId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -160,21 +162,22 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
-            String purposes, String search, int limit, int offset) {
+            String subscriptionId, String purposes, String search, int limit, int offset) {
         List<Event> events = new ArrayList<>();
         EventQueryBuilder builder = new EventQueryBuilder(orgId)
                 .setTopic(topic)
                 .setStatus(status)
                 .setGroupId(groupId)
+                .setSubscriptionId(subscriptionId)
                 .setPurposes(purposes)
                 .setSearch(search);
 
         int total = 0;
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             String sortColumn = builder.resolveSortColumn();
-            EventQueryBuilder.QueryResult countResult = builder.buildCountQuery(queries.getCountEventsBaseQuery());
-            EventQueryBuilder.QueryResult selectResult = builder.buildSelectQuery(queries.getListEventsBaseQuery(),
+            QueryResult countResult = builder.buildCountQuery(queries.getCountEventsBaseQuery());
+            QueryResult selectResult = builder.buildSelectQuery(queries.getListEventsBaseQuery(),
                     queries.getPaginationClause(sortColumn));
 
             try (PreparedStatement countPs = conn.prepareStatement(countResult.getSql())) {
@@ -206,7 +209,7 @@ public class EventDAOImpl implements EventDAO {
 
             if (!events.isEmpty()) {
                 List<String> eventIds = events.stream().map(Event::getEventId).collect(Collectors.toList());
-                Map<String, List<String>> purposeMap = getPurposesByEventIds(eventIds);
+                Map<String, List<String>> purposeMap = getPurposesByEventIds(conn, eventIds);
                 for (Event e : events) {
                     e.setPurposes(purposeMap.getOrDefault(e.getEventId(), Collections.emptyList()));
                 }
@@ -221,19 +224,19 @@ public class EventDAOImpl implements EventDAO {
 
     private Event mapEvent(ResultSet rs) throws SQLException {
         Event event = new Event(
-                rs.getString("EVENT_ID"),
-                rs.getString("ORG_ID"),
-                rs.getString("GROUP_ID"),
-                rs.getString("TOPIC_ID"),
-                rs.getString("PAYLOAD"),
-                rs.getTimestamp("CREATED_AT"));
+                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                rs.getString(EventNotificationDBColumns.ORG_ID),
+                rs.getString(EventNotificationDBColumns.GROUP_ID),
+                rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                rs.getString(EventNotificationDBColumns.PAYLOAD),
+                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT));
         try {
-            event.setTopic(rs.getString("TOPIC_NAME"));
+            event.setTopic(rs.getString(EventNotificationDBColumns.TOPIC_NAME));
         } catch (SQLException ignored) {
             // Column may not be present in all query projections
         }
         try {
-            event.setDeliveriesCount(rs.getInt("DELIVERIES_COUNT"));
+            event.setDeliveriesCount(rs.getInt(EventNotificationDBColumns.DELIVERIES_COUNT));
         } catch (SQLException ignored) {
             // Column may not be present in all query projections
         }
@@ -245,26 +248,25 @@ public class EventDAOImpl implements EventDAO {
      * {@code SubscriptionDAOImpl.getPurposesBySubscriptionIds} to avoid N+1 when
      * rendering the search response.
      */
-    private Map<String, List<String>> getPurposesByEventIds(List<String> eventIds) throws SQLException {
+    private Map<String, List<String>> getPurposesByEventIds(Connection conn, List<String> eventIds)
+            throws SQLException {
         if (eventIds == null || eventIds.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, List<String>> purposeMap = new HashMap<>();
         String placeholders = String.join(", ", Collections.nCopies(eventIds.size(), "?"));
         String sql;
-        try (Connection conn = DBUtils.getConnection()) {
-            sql = String.format(
-                    getQueries(conn).getGetPurposesByEventIdsTemplate(), placeholders);
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                for (int i = 0; i < eventIds.size(); i++) {
-                    ps.setString(i + 1, eventIds.get(i));
-                }
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        String eventId = rs.getString("EVENT_ID");
-                        String purpose = rs.getString("PURPOSE_NAME");
-                        purposeMap.computeIfAbsent(eventId, k -> new ArrayList<>()).add(purpose);
-                    }
+        sql = String.format(
+                getQueries(conn).getGetPurposesByEventIdsTemplate(), placeholders);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < eventIds.size(); i++) {
+                ps.setString(i + 1, eventIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String eventId = rs.getString(EventNotificationDBColumns.EVENT_ID);
+                    String purpose = rs.getString(EventNotificationDBColumns.PURPOSE_NAME);
+                    purposeMap.computeIfAbsent(eventId, k -> new ArrayList<>()).add(purpose);
                 }
             }
         }

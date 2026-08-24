@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,34 +59,36 @@ public class SubscriptionQueryBuilder {
     }
 
     public static String escapeLikePattern(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace("\\", "\\\\")
-                   .replace("%", "\\%")
-                   .replace("_", "\\_");
+        return QueryBuilderUtils.escapeLikePattern(text);
     }
 
     public String resolveSortColumn() {
         if ("updatedAt".equalsIgnoreCase(sort)) {
-            return "s.UPDATED_AT ASC";
+            return "s." + EventNotificationDBColumns.UPDATED_AT + " ASC";
         } else if ("createdAt".equalsIgnoreCase(sort)) {
-            return "s.CREATED_AT ASC";
+            return "s." + EventNotificationDBColumns.CREATED_AT + " ASC";
         } else if ("-createdAt".equalsIgnoreCase(sort)) {
-            return "s.CREATED_AT DESC";
+            return "s." + EventNotificationDBColumns.CREATED_AT + " DESC";
         } else {
-            return "s.UPDATED_AT DESC";
+            return "s." + EventNotificationDBColumns.UPDATED_AT + " DESC";
         }
     }
 
     public QueryResult buildSelectQuery(String paginationClause) {
         StringBuilder sql = new StringBuilder(
-                "SELECT DISTINCT s.SUBSCRIPTION_ID, s.ORG_ID, s.GROUP_ID, s.TOPIC_ID, s.PURPOSE_FILTER_MODE, s.PURPOSE_SET_HASH, " +
-                "s.DELIVERY_MODE, s.CALLBACK_URL, s.SHARED_SECRET, s.STATUS, s.CREATED_AT, s.UPDATED_AT " +
+                "SELECT DISTINCT s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ", s." +
+                EventNotificationDBColumns.ORG_ID + ", s." + EventNotificationDBColumns.GROUP_ID + ", s." +
+                EventNotificationDBColumns.TOPIC_ID + ", s." + EventNotificationDBColumns.PURPOSE_FILTER_MODE + ", s." +
+                EventNotificationDBColumns.PURPOSE_SET_HASH + ", s." + EventNotificationDBColumns.DELIVERY_MODE +
+                ", s." + EventNotificationDBColumns.CALLBACK_URL + ", s." + EventNotificationDBColumns.SHARED_SECRET +
+                ", s." + EventNotificationDBColumns.STATUS + ", s." + EventNotificationDBColumns.CREATED_AT +
+                ", s." + EventNotificationDBColumns.UPDATED_AT + " " +
                 "FROM SUBSCRIPTION s " +
-                "LEFT JOIN TOPIC t ON s.TOPIC_ID = t.TOPIC_ID " +
-                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s.SUBSCRIPTION_ID = sp.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ?"
+                "LEFT JOIN TOPIC t ON s." + EventNotificationDBColumns.TOPIC_ID + " = t." +
+                EventNotificationDBColumns.TOPIC_ID + " " +
+                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s." + EventNotificationDBColumns.SUBSCRIPTION_ID +
+                " = sp." + EventNotificationDBColumns.SUBSCRIPTION_ID + " " +
+                "WHERE s." + EventNotificationDBColumns.ORG_ID + " = ?"
         );
         List<Object> params = buildWhereClauseAndParams(sql);
         if (paginationClause != null && !paginationClause.trim().isEmpty()) {
@@ -95,10 +99,12 @@ public class SubscriptionQueryBuilder {
 
     public QueryResult buildCountQuery() {
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(DISTINCT s.SUBSCRIPTION_ID) FROM SUBSCRIPTION s " +
-                "LEFT JOIN TOPIC t ON s.TOPIC_ID = t.TOPIC_ID " +
-                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s.SUBSCRIPTION_ID = sp.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ?"
+                "SELECT COUNT(DISTINCT s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ") FROM SUBSCRIPTION s " +
+                "LEFT JOIN TOPIC t ON s." + EventNotificationDBColumns.TOPIC_ID + " = t." +
+                EventNotificationDBColumns.TOPIC_ID + " " +
+                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s." + EventNotificationDBColumns.SUBSCRIPTION_ID +
+                " = sp." + EventNotificationDBColumns.SUBSCRIPTION_ID + " " +
+                "WHERE s." + EventNotificationDBColumns.ORG_ID + " = ?"
         );
         List<Object> params = buildWhereClauseAndParams(sql);
         return new QueryResult(sql.toString(), params);
@@ -109,12 +115,18 @@ public class SubscriptionQueryBuilder {
         params.add(orgId);
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND s.STATUS = ?");
+            sql.append(" AND s.").append(EventNotificationDBColumns.STATUS).append(" = ?");
             params.add(status.trim());
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(s.SUBSCRIPTION_ID) LIKE ? OR LOWER(s.GROUP_ID) LIKE ? OR LOWER(s.STATUS) LIKE ? OR LOWER(s.CALLBACK_URL) LIKE ? OR LOWER(t.NAME) LIKE ? OR LOWER(sp.PURPOSE_NAME) LIKE ?)");
+            sql.append(" AND (LOWER(s.").append(EventNotificationDBColumns.SUBSCRIPTION_ID)
+                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.GROUP_ID)
+                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.STATUS)
+                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.CALLBACK_URL)
+                    .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
+                    .append(") LIKE ? OR LOWER(sp.").append(EventNotificationDBColumns.PURPOSE_NAME)
+                    .append(") LIKE ?)");
             String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);
@@ -133,7 +145,10 @@ public class SubscriptionQueryBuilder {
                 }
             }
             if (!validPurposes.isEmpty()) {
-                sql.append(" AND EXISTS (SELECT 1 FROM SUBSCRIPTION_PURPOSE sp2 WHERE sp2.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND LOWER(sp2.PURPOSE_NAME) IN (");
+                sql.append(" AND EXISTS (SELECT 1 FROM SUBSCRIPTION_PURPOSE sp2 WHERE sp2.")
+                        .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = s.")
+                        .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND LOWER(sp2.")
+                        .append(EventNotificationDBColumns.PURPOSE_NAME).append(") IN (");
                 for (int i = 0; i < validPurposes.size(); i++) {
                     sql.append(i == 0 ? "?" : ", ?");
                 }
@@ -144,21 +159,4 @@ public class SubscriptionQueryBuilder {
         return params;
     }
 
-    public static class QueryResult {
-        private final String sql;
-        private final List<Object> parameters;
-
-        public QueryResult(String sql, List<Object> parameters) {
-            this.sql = sql;
-            this.parameters = parameters;
-        }
-
-        public String getSql() {
-            return sql;
-        }
-
-        public List<Object> getParameters() {
-            return parameters;
-        }
-    }
 }

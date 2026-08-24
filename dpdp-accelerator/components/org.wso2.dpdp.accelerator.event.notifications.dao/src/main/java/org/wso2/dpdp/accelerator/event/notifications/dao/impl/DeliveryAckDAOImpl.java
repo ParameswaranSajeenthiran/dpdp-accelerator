@@ -21,8 +21,9 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 import org.osgi.service.component.annotations.Component;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
@@ -43,7 +44,7 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public boolean addDeliveryAck(WebhookDeliveryAck ack) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAckQuery())) {
             ps.setString(1, ack.getAckId());
             ps.setString(2, ack.getDeliveryId());
@@ -63,17 +64,17 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(String deliveryId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
             ps.setString(1, deliveryId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(new WebhookDeliveryAck(
-                            rs.getString("ACK_ID"),
-                            rs.getString("DELIVERY_ID"),
-                            rs.getTimestamp("COMPLETED_AT"),
-                            rs.getString("COMPLETION_STATUS"),
-                            rs.getString("COMPLETION_EVIDENCE")
+                            rs.getString(EventNotificationDBColumns.ACK_ID),
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT),
+                            rs.getString(EventNotificationDBColumns.COMPLETION_STATUS),
+                            rs.getString(EventNotificationDBColumns.COMPLETION_EVIDENCE)
                     ));
                 }
             }

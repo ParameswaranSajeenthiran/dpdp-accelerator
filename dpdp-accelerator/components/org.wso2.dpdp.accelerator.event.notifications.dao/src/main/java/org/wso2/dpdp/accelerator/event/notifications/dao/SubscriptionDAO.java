@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 
 import java.sql.Connection;
@@ -48,7 +48,7 @@ public interface SubscriptionDAO {
     List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     default List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getSubscriptionsByOrgAndTopic(conn, orgId, topicId);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -66,7 +66,7 @@ public interface SubscriptionDAO {
     List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     default List<Subscription> getLiveSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(

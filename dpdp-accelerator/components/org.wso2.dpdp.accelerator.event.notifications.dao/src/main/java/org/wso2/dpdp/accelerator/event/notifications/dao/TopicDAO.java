@@ -21,7 +21,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 
 import java.sql.Connection;
@@ -37,7 +37,7 @@ public interface TopicDAO {
     Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name);
 
     default Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return getTopicByOrgAndName(conn, orgId, name);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(

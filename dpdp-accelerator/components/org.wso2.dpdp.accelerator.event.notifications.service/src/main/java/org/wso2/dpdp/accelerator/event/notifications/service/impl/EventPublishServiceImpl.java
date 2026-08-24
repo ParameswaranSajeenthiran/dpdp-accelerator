@@ -23,9 +23,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
@@ -139,7 +142,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         try {
             payloadJson = payload == null ? "{}" : objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            LOG.error("Failed to serialize event payload: " + e.getMessage(), e);
+            LOG.error("Failed to serialize event payload: " + LogSanitizer.sanitize(e.getMessage()), e);
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
@@ -152,10 +155,11 @@ public class EventPublishServiceImpl implements EventPublishService {
 
         Connection conn = null;
         try {
-            conn = DBUtils.getConnection();
+            conn = JDBCPersistenceManager.getConnection();
         } catch (Exception e) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Could not acquire connection from DBUtils: " + e.getMessage());
+                LOG.debug("Could not acquire connection from JDBCPersistenceManager: "
+                        + LogSanitizer.sanitize(e.getMessage()));
             }
         }
 
@@ -187,7 +191,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                     conn.rollback();
                 } catch (Exception ignored) {
                 }
-                LOG.error("Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
+                LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
+                        + LogSanitizer.sanitize(e.getMessage()), e);
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                         EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
@@ -219,7 +224,8 @@ public class EventPublishServiceImpl implements EventPublishService {
             } catch (EventNotificationException e) {
                 throw e;
             } catch (Exception e) {
-                LOG.error("Failed to publish event [" + eventId + "]: " + e.getMessage(), e);
+                LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
+                        + LogSanitizer.sanitize(e.getMessage()), e);
                 throw new EventNotificationException(
                         EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                         EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
@@ -257,12 +263,17 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     @Override
     public PaginatedResult<EventDTO> searchEvents(String orgId, String search, int limit, int offset) {
-        return searchEvents(orgId, null, null, null, null, search, limit, offset);
+        return searchEvents(orgId, null, null, null, null, null, search, limit, offset);
+    }
+
+    public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
+            String purposes, String search, int limit, int offset) {
+        return searchEvents(orgId, topic, status, groupId, null, purposes, search, limit, offset);
     }
 
     @Override
     public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
-            String purposes, String search, int limit, int offset) {
+            String subscriptionId, String purposes, String search, int limit, int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -271,8 +282,10 @@ public class EventPublishServiceImpl implements EventPublishService {
         int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
                 : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
         int off = (offset < 0) ? 0 : offset;
-        PaginatedDAOResult<Event> daoResult = eventDAO.searchEvents(
-                orgId.trim(), topic, status, groupId, purposes, search, lim, off);
+        PaginatedDAOResult<Event> daoResult = subscriptionId == null || subscriptionId.trim().isEmpty()
+                ? eventDAO.searchEvents(orgId.trim(), topic, status, groupId, purposes, search, lim, off)
+                : eventDAO.searchEvents(orgId.trim(), topic, status, groupId, subscriptionId,
+                        purposes, search, lim, off);
         List<EventDTO> dtoList = new ArrayList<>();
         for (Event event : daoResult.getItems()) {
             dtoList.add(mapToDTO(event));
@@ -305,9 +318,9 @@ public class EventPublishServiceImpl implements EventPublishService {
                     summary.getGroupId(),
                     summary.getTopicName(),
                     summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                            : EventNotificationServiceConstants.STATUS_PENDING,
+                            : SubscriptionStatus.PENDING.getValue(),
                     summary.getDeliveryMode() != null ? summary.getDeliveryMode()
-                            : EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE,
+                            : DeliveryMode.WEBHOOK.getValue(),
                     summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
                             : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime()
                                     : System.currentTimeMillis())));
@@ -337,7 +350,7 @@ public class EventPublishServiceImpl implements EventPublishService {
 
         SubscriptionDeliverySummary summary = summaryOpt.get();
         String mode = summary.getDeliveryMode() != null ? summary.getDeliveryMode()
-                : EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE;
+                : DeliveryMode.WEBHOOK.getValue();
 
         SubscriptionEventHistoryDTO dto = new SubscriptionEventHistoryDTO();
         dto.setDeliveryId(summary.getDeliveryId());
@@ -345,11 +358,11 @@ public class EventPublishServiceImpl implements EventPublishService {
         dto.setTopic(summary.getTopicName());
         dto.setDeliveryMode(mode);
         dto.setCurrentStatus(summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                : EventNotificationServiceConstants.STATUS_PENDING);
+                : SubscriptionStatus.PENDING.getValue());
         dto.setOccurredAt(summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
                 : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime() : System.currentTimeMillis()));
 
-        if (EventNotificationServiceConstants.WEBHOOK_DELIVERY_MODE.equalsIgnoreCase(mode)) {
+        if (DeliveryMode.WEBHOOK.getValue().equals(mode)) {
             Optional<WebhookDelivery> whOpt = deliveryDAO.getWebhookDeliveryById(deliveryId.trim(), orgId.trim());
             if (whOpt.isPresent()) {
                 WebhookDelivery wh = whOpt.get();
@@ -394,7 +407,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                                 : (audit.getCreatedAt() != null ? audit.getCreatedAt().getTime()
                                         : System.currentTimeMillis()),
                         httpStatus,
-                        (httpStatus != null && httpStatus >= 200 && httpStatus < 300) ? null : respCode));
+                        (httpStatus != null && httpStatus >= 200 && httpStatus < 300)
+                                ? null : (httpStatus != null ? "HTTP " + httpStatus : respCode)));
             }
             dto.setHistory(history);
         } else {

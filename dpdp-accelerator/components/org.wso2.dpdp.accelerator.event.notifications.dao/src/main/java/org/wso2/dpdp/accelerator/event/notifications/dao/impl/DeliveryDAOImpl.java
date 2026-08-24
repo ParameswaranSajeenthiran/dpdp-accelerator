@@ -24,7 +24,8 @@ import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.event.notifications.common.util.DBUtils;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
@@ -90,22 +91,22 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryByIdAndOrgQuery())) {
             ps.setString(1, deliveryId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(new WebhookDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getInt("ATTEMPT_COUNT"),
-                            rs.getTimestamp("NEXT_RETRY_AT"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getTimestamp("DELIVERED_AT")));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
                 }
             }
             return Optional.empty();
@@ -118,21 +119,21 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     @Override
     public List<WebhookDelivery> getPendingWebhookDeliveries(int limit) {
         List<WebhookDelivery> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingWebhookDeliveriesQuery())) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new WebhookDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getInt("ATTEMPT_COUNT"),
-                            rs.getTimestamp("NEXT_RETRY_AT"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getTimestamp("DELIVERED_AT")));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
                 }
             }
             return list;
@@ -161,30 +162,30 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     private List<WebhookDeliveryDispatchContext> loadDispatchContexts(String sql, int limit) {
         List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     WebhookDelivery delivery = new WebhookDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getInt("ATTEMPT_COUNT"),
-                            rs.getTimestamp("NEXT_RETRY_AT"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getTimestamp("DELIVERED_AT"));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
                     list.add(new WebhookDeliveryDispatchContext(
                             delivery,
-                            rs.getString("ORG_ID"),
-                            rs.getString("CALLBACK_URL"),
-                            rs.getString("SHARED_SECRET"),
-                            rs.getString("PAYLOAD"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getString("TOPIC_ID"),
-                            rs.getString("TOPIC_NAME")));
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
+                            rs.getString(EventNotificationDBColumns.CALLBACK_URL),
+                            rs.getString(EventNotificationDBColumns.SHARED_SECRET),
+                            rs.getString(EventNotificationDBColumns.PAYLOAD),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                            rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
                 }
             }
             return list;
@@ -196,31 +197,31 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     private List<WebhookDeliveryDispatchContext> loadDispatchContextsWithCutoff(String sql, int limit, Timestamp cutoff) {
         List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setTimestamp(1, cutoff != null ? cutoff : new Timestamp(System.currentTimeMillis()));
             ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     WebhookDelivery delivery = new WebhookDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getInt("ATTEMPT_COUNT"),
-                            rs.getTimestamp("NEXT_RETRY_AT"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getTimestamp("DELIVERED_AT"));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
                     list.add(new WebhookDeliveryDispatchContext(
                             delivery,
-                            rs.getString("ORG_ID"),
-                            rs.getString("CALLBACK_URL"),
-                            rs.getString("SHARED_SECRET"),
-                            rs.getString("PAYLOAD"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getString("TOPIC_ID"),
-                            rs.getString("TOPIC_NAME")));
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
+                            rs.getString(EventNotificationDBColumns.CALLBACK_URL),
+                            rs.getString(EventNotificationDBColumns.SHARED_SECRET),
+                            rs.getString(EventNotificationDBColumns.PAYLOAD),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                            rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
                 }
             }
             return list;
@@ -232,7 +233,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean updateWebhookDeliveryStatus(WebhookDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return updateWebhookDeliveryStatus(conn, delivery);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -260,7 +261,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean recordSuccessfulAttempt(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
@@ -290,7 +291,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean recordRetryableFailure(WebhookDeliveryAudit audit, String deliveryId, int attemptCount, Timestamp nextRetryAt) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
@@ -318,7 +319,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean recordPermanentFailure(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             conn.setAutoCommit(false);
             try {
@@ -348,7 +349,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean addWebhookDeliveryAudit(WebhookDeliveryAudit audit) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return addWebhookDeliveryAudit(conn, audit);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -379,7 +380,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     @Override
     public List<WebhookDeliveryAudit> getWebhookDeliveryAudits(String deliveryId, String orgId) {
         List<WebhookDeliveryAudit> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn
                         .prepareStatement(getQueries(conn).getGetWebhookDeliveryAuditsByDeliveryIdQuery())) {
             ps.setString(1, deliveryId);
@@ -387,13 +388,13 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new WebhookDeliveryAudit(
-                            rs.getString("AUDIT_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("ORG_ID"),
-                            rs.getString("RESPONSE_CODE"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("ATTEMPT_AT")));
+                            rs.getString(EventNotificationDBColumns.AUDIT_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
+                            rs.getString(EventNotificationDBColumns.RESPONSE_CODE),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.ATTEMPT_AT)));
                 }
             }
             return list;
@@ -406,7 +407,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean addPollDelivery(PollDelivery delivery) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddPollDeliveryQuery())) {
             ps.setString(1, delivery.getDeliveryId());
             ps.setString(2, delivery.getSubscriptionId());
@@ -425,19 +426,19 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<PollDelivery> getPollDeliveryById(String deliveryId, String orgId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPollDeliveryByIdAndOrgQuery())) {
             ps.setString(1, deliveryId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(new PollDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("COMPLETED_AT")));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
                 }
             }
             return Optional.empty();
@@ -457,7 +458,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     @Override
     public List<WebhookDelivery> getStuckInFlightWebhookDeliveries(int limit, Timestamp updatedBefore) {
         List<WebhookDelivery> list = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(
                         getQueries(conn).getGetStuckInFlightWebhookDeliveriesQuery())) {
             ps.setTimestamp(1, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
@@ -465,15 +466,15 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new WebhookDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getInt("ATTEMPT_COUNT"),
-                            rs.getTimestamp("NEXT_RETRY_AT"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("UPDATED_AT"),
-                            rs.getTimestamp("DELIVERED_AT")));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
                 }
             }
             return list;
@@ -486,7 +487,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     @Override
     public List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit) {
         List<PollDelivery> candidates = new ArrayList<>();
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingPollDeliveriesQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, groupId);
@@ -494,12 +495,12 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     candidates.add(new PollDelivery(
-                            rs.getString("DELIVERY_ID"),
-                            rs.getString("SUBSCRIPTION_ID"),
-                            rs.getString("EVENT_ID"),
-                            rs.getString("STATUS"),
-                            rs.getTimestamp("CREATED_AT"),
-                            rs.getTimestamp("COMPLETED_AT")));
+                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                            rs.getString(EventNotificationDBColumns.EVENT_ID),
+                            rs.getString(EventNotificationDBColumns.STATUS),
+                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
                 }
             }
             return candidates;
@@ -520,7 +521,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             return;
         }
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             boolean originalAutoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
@@ -577,7 +578,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimWebhookDelivery(String deliveryId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getClaimWebhookDeliveryQuery())) {
             ps.setString(1, deliveryId);
             return ps.executeUpdate() > 0;
@@ -589,7 +590,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimStuckWebhookDelivery(String deliveryId, Timestamp updatedBefore) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getClaimStuckWebhookDeliveryQuery())) {
             ps.setString(1, deliveryId);
             ps.setTimestamp(2, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
@@ -602,7 +603,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean releaseWebhookDelivery(String deliveryId, int attemptCount, Timestamp nextRetryAt) {
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -627,7 +628,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimPollDelivery(String deliveryId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getClaimPollDeliveryQuery())) {
             ps.setString(1, deliveryId);
             return ps.executeUpdate() > 0;
@@ -639,7 +640,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean updatePollDeliveryStatus(String deliveryId, String status) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdatePollDeliveryStatusQuery())) {
             ps.setString(1, status);
             ps.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
@@ -656,7 +657,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         if (expectedStatus == null || expectedStatus.trim().isEmpty()) {
             return updatePollDeliveryStatus(deliveryId, newStatus);
         }
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdatePollDeliveryStatusGuardedQuery())) {
             ps.setString(1, newStatus);
             ps.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
@@ -674,7 +675,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             int offset, int[] totalOut) {
         List<SubscriptionDeliverySummary> list = new ArrayList<>();
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             String baseSql = queries.getGetSubscriptionDeliveriesUnionBaseQuery();
             String countSql = "SELECT COUNT(*) FROM (" + baseSql + ") AS u";
@@ -716,7 +717,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<SubscriptionDeliverySummary> getSubscriptionDeliveryById(String orgId, String subscriptionId, String deliveryId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionDeliveryByIdQuery())) {
             ps.setString(1, subscriptionId);
             ps.setString(2, deliveryId);
@@ -790,7 +791,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             outerParams.add(term);
         }
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
             List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
@@ -843,12 +844,12 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         if (eventId == null || eventId.trim().isEmpty()) {
             return Optional.empty();
         }
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPayloadQuery())) {
             ps.setString(1, eventId.trim());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.ofNullable(rs.getString("PAYLOAD"));
+                    return Optional.ofNullable(rs.getString(EventNotificationDBColumns.PAYLOAD));
                 }
             }
             return Optional.empty();
@@ -860,7 +861,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<SubscriptionDeliverySummary> getOrgDeliveryById(String orgId, String deliveryId) {
-        try (Connection conn = DBUtils.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection();
                 PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetOrgDeliveryByIdQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, orgId);
@@ -886,7 +887,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         StringBuilder outerWhere = new StringBuilder(" WHERE EVENT_ID = ?");
         List<Object> outerParams = new ArrayList<>(Collections.singletonList(eventId.trim()));
 
-        try (Connection conn = DBUtils.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
             List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
@@ -938,16 +939,16 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     private SubscriptionDeliverySummary mapSummary(ResultSet rs) throws SQLException {
         return new SubscriptionDeliverySummary(
-                rs.getString("DELIVERY_ID"),
-                rs.getString("EVENT_ID"),
-                rs.getString("SUBSCRIPTION_ID"),
-                rs.getString("GROUP_ID"),
-                rs.getString("TOPIC_NAME"),
-                rs.getString("CURRENT_STATUS"),
-                rs.getString("DELIVERY_MODE"),
-                rs.getTimestamp("OCCURRED_AT"),
-                rs.getTimestamp("DELIVERY_CREATED_AT"),
-                rs.getString("PAYLOAD"));
+                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                rs.getString(EventNotificationDBColumns.GROUP_ID),
+                rs.getString(EventNotificationDBColumns.TOPIC_NAME),
+                rs.getString(EventNotificationDBColumns.CURRENT_STATUS),
+                rs.getString(EventNotificationDBColumns.DELIVERY_MODE),
+                rs.getTimestamp(EventNotificationDBColumns.OCCURRED_AT),
+                rs.getTimestamp(EventNotificationDBColumns.DELIVERY_CREATED_AT),
+                rs.getString(EventNotificationDBColumns.PAYLOAD));
     }
 
     private DPDPConfigurationService getConfiguration() {

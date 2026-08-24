@@ -41,7 +41,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void testToResponseNotFoundException() {
-        EventNotificationException ex = new EventNotificationException("CS-4040", "Resource not found", "Topic ID not found.", 404);
+        EventNotificationException ex = new EventNotificationException("EN-4040", "Resource not found", "Topic ID not found.", 404);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);
@@ -51,14 +51,14 @@ public class EventNotificationExceptionMapperTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> entity = (Map<String, Object>) response.getEntity();
         assertNotNull(entity);
-        assertEquals(entity.get("code"), "CS-4040");
+        assertEquals(entity.get("code"), "EN-4040");
         assertEquals(entity.get("message"), "Resource not found");
         assertEquals(entity.get("description"), "Topic ID not found.");
     }
 
     @Test
     public void testToResponseConflictException() {
-        EventNotificationException ex = new EventNotificationException("CS-4090", "Topic already exists", "Topic name conflict.", 409);
+        EventNotificationException ex = new EventNotificationException("EN-4090", "Topic already exists", "Topic name conflict.", 409);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);
@@ -68,7 +68,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void testToResponseValidationException() {
-        EventNotificationException ex = new EventNotificationException("CS-4001", "Malformed request", "Org ID required.", 400);
+        EventNotificationException ex = new EventNotificationException("EN-4001", "Malformed request", "Org ID required.", 400);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);

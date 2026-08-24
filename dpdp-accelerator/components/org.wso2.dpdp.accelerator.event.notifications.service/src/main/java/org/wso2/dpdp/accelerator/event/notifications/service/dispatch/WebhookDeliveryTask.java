@@ -19,6 +19,8 @@
 package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
+import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
@@ -69,7 +71,8 @@ public class WebhookDeliveryTask implements Runnable {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_JSON = "application/json";
     private static final String RESPONSE_CODE_EXCEPTION = "EXCEPTION";
-    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(
+            EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS);
 
     // ObjectMapper is thread-safe for serialization after construction (Jackson docs guarantee
     // this). Sharing a single static instance avoids the overhead of instantiating a new mapper
@@ -119,8 +122,9 @@ public class WebhookDeliveryTask implements Runnable {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            LOG.warn("Webhook delivery attempt failed for delivery ["
-                    + delivery.getDeliveryId() + "]: " + e.getMessage(), e);
+            LOG.debug("Webhook delivery attempt failed for delivery ["
+                    + LogSanitizer.sanitize(delivery.getDeliveryId()) + "]: "
+                    + LogSanitizer.sanitize(e.getMessage()));
             recordFailure(RESPONSE_CODE_EXCEPTION, null);
             return;
         }
@@ -189,7 +193,7 @@ public class WebhookDeliveryTask implements Runnable {
             try {
                 parsed = ENVELOPE_MAPPER.readTree(payload);
             } catch (Exception parseFailure) {
-                LOG.warn("Event payload for delivery [" + delivery.getDeliveryId()
+                LOG.debug("Event payload for delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
                         + "] was not parseable JSON; sending empty object under \"payload\".");
             }
             // readTree returns NullNode for the literal string "null"; coerce to {} so the
@@ -221,15 +225,17 @@ public class WebhookDeliveryTask implements Runnable {
         try {
             boolean recorded = deliveryDAO.recordSuccessfulAttempt(audit, updated);
             if (recorded) {
-                LOG.info("Webhook delivered [delivery=" + delivery.getDeliveryId() + ", event="
-                        + delivery.getEventId() + ", topic=" + topicName + ", attempt="
+                LOG.info("Webhook delivered [delivery=" + LogSanitizer.sanitize(delivery.getDeliveryId()) + ", event="
+                        + LogSanitizer.sanitize(delivery.getEventId()) + ", topic=" + LogSanitizer.sanitize(topicName) + ", attempt="
                         + updated.getAttemptCount() + ", status=" + httpStatus + "].");
             } else {
-                LOG.warn("recordSuccessfulAttempt returned false for delivery [" + delivery.getDeliveryId() + "].");
+                LOG.debug("recordSuccessfulAttempt returned false for delivery ["
+                        + LogSanitizer.sanitize(delivery.getDeliveryId()) + "].");
             }
         } catch (Exception e) {
-            LOG.warn("Failed to record successful attempt for delivery [" + delivery.getDeliveryId()
-                    + "]: " + e.getMessage(), e);
+            LOG.error("Failed to record successful attempt for delivery ["
+                    + LogSanitizer.sanitize(delivery.getDeliveryId()) + "]: "
+                    + LogSanitizer.sanitize(e.getMessage()), e);
         }
     }
 
@@ -251,34 +257,36 @@ public class WebhookDeliveryTask implements Runnable {
                     null);
             try {
                 deliveryDAO.recordPermanentFailure(audit, failed);
-                LOG.warn("Webhook delivery [" + delivery.getDeliveryId() + "] exhausted "
-                        + maxRetries + " attempts; marked as failed (last response=" + responseCode + ").");
+                LOG.debug("Webhook delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId()) + "] exhausted "
+                        + maxRetries + " attempts; marked as failed (last response="
+                        + LogSanitizer.sanitize(responseCode) + ").");
             } catch (Exception e) {
-                LOG.error("Failed to mark delivery [" + delivery.getDeliveryId()
-                        + "] as failed: " + e.getMessage(), e);
+                LOG.error("Failed to mark delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                        + "] as failed: " + LogSanitizer.sanitize(e.getMessage()), e);
             }
             return;
         }
 
         long baseBackoffSeconds = configurationService.getEventNotificationBaseBackoffSeconds();
-        long delaySeconds = baseBackoffSeconds * (long) Math.pow(3, newAttempt - 1);
+        long delaySeconds = baseBackoffSeconds * (long) Math.pow(
+                EventNotificationServiceConstants.RETRY_BACKOFF_MULTIPLIER, newAttempt - 1);
         Timestamp nextRetryAt = new Timestamp(now.getTime() + delaySeconds * 1000L);
 
         try {
             boolean released = deliveryDAO.recordRetryableFailure(audit, delivery.getDeliveryId(), newAttempt, nextRetryAt);
             if (released) {
-                LOG.info("Webhook delivery [" + delivery.getDeliveryId() + "] attempt " + newAttempt
-                        + " failed (response=" + responseCode + "); next retry at " + nextRetryAt
+                LOG.debug("Webhook delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId()) + "] attempt " + newAttempt
+                        + " failed (response=" + LogSanitizer.sanitize(responseCode) + "); next retry at " + nextRetryAt
                         + " (~" + delaySeconds + "s).");
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Webhook delivery [" + delivery.getDeliveryId()
+                    LOG.debug("Webhook delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
                             + "] was no longer in_flight; release was a no-op.");
                 }
             }
         } catch (Exception e) {
-            LOG.error("Failed to release webhook delivery [" + delivery.getDeliveryId()
-                    + "] for retry: " + e.getMessage(), e);
+            LOG.error("Failed to release webhook delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                    + "] for retry: " + LogSanitizer.sanitize(e.getMessage()), e);
         }
     }
 
