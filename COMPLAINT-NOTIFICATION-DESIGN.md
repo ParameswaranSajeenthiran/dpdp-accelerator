@@ -1,12 +1,13 @@
 # Wiring email into the complaint feature
 
 **Feature:** Complaint notifications
-**Status:** Approved plan, in implementation
+**Status:** Implemented
 **Touches:** `complaint.mgt.service` · `identity.extensions`
 
 How a create-complaint or add-comment call, sitting in a plain servlet WAR with no path to
-WSO2 IS's notification machinery, ends up as a real templated email — by crossing into the
-repo's one OSGi bundle and firing the same event chain IS uses for its own account emails.
+WSO2 IS's notification machinery, ends up as a real templated email — by reaching into the
+repo's one OSGi bundle directly and firing the same event chain IS uses for its own account
+emails.
 
 ## 1. The problem
 
@@ -18,22 +19,29 @@ The implementation isn't simple, because of where the code that needs to send ma
 lives.
 
 **Where complaints happen.** `org.wso2.dpdp.accelerator.complaint.mgt.endpoint` is a plain,
-non-OSGi Jersey servlet WAR, dropped straight into IS's Tomcat. It decodes JWTs in-process,
-talks to its own database directly, and never touches Carbon or OSGi — by design.
+non-OSGi Jersey servlet WAR, dropped straight into IS's Tomcat. It decodes JWTs in-process and
+talks to its own database directly — it isn't itself an OSGi bundle, and has no `BundleContext`
+of its own.
 
 **Where IS's mail machinery lives.** Sending a real, templated email means calling
-`IdentityEventService` — an OSGi service. It's reachable from exactly one place in this repo:
+`IdentityEventService` — an OSGi service. Resolving it registered as an OSGi service, and the
+code that reacts to it, both live in exactly one place in this repo:
 `org.wso2.dpdp.accelerator.identity.extensions`, the only OSGi bundle here.
 
-So the write and the send happen in two different deployables that don't share a classloader.
-Everything below is the shape of the bridge between them.
+The write and the send still live in two different deployables — but reaching from one into the
+other turns out not to require a network hop at all. Everything below is the shape of that
+reach.
 
 ## 2. Architecture
 
 A complaint write commits inside the service module first — the notification is a
-fire-and-forget step tacked on *after* that commit, never inside its transaction. From there the
-call crosses the WAR/bundle boundary over loopback HTTP, then travels through two distinct
-identity-event hops before IS's own mail sender ever sees it.
+fire-and-forget step tacked on *after* that commit, never inside its transaction. The write and
+the OSGi event framework live in different deployables (a plain WAR vs. this repo's one OSGi
+bundle), but there is no network hop between them: the WAR reaches `IdentityEventService`
+directly via `PrivilegedCarbonContext.getOSGiService()`, the same lookup mechanism any
+Carbon-hosted custom webapp uses to consume an OSGi service without being a bundle itself. From
+there the event travels through two distinct identity-event hops before IS's own mail sender
+ever sees it.
 
 Legend: 🟠 new code (this feature) · ⚪ existing code (reused) · 🟢 IS / OSGi framework
 
@@ -45,21 +53,21 @@ flowchart TD
         direction TB
         IMPL["ComplaintServiceImpl /\nComplaintEventServiceImpl"]:::existing
         NC["NotificationClient\nnotifyComplaintCreated()\nnotifyCommentAdded()"]:::new
+        LOOKUP["PrivilegedCarbonContext\n.getOSGiService(IdentityEventService.class)"]:::new
         IMPL -->|"after DB commit,\nfire-and-forget"| NC
+        NC --> LOOKUP
     end
+
+    EVT1["Event: DPDP_COMPLAINT_NOTIFICATION\n(our own event name)"]:::new
 
     subgraph BUNDLE["identity.extensions  ·  the one OSGi bundle"]
         direction TB
-        SERVLET["DPDPNotificationServlet\n(HttpService-registered)"]:::new
-        EVT1["Event: DPDP_COMPLAINT_NOTIFICATION\n(our own event name)"]:::new
         HANDLER["ComplaintNotificationHandler\nextends AbstractEventHandler"]:::new
         RESOLVE["Recipient lookup\nvia RoleManagementService / RealmService"]:::existing
         EVT2["Event: TRIGGER_NOTIFICATION\n(IS's standard event name)"]:::external
         ISHANDLER["IS's own notification handler\n(already registered, ships with IS)"]:::external
         TEMPLATE["Registered email template\n(auto-provisioned per tenant)"]:::external
 
-        SERVLET -->|"builds"| EVT1
-        EVT1 -->|"IdentityEventService.handleEvent()"| HANDLER
         HANDLER -->|"canHandle() matches\nour event name"| RESOLVE
         RESOLVE -->|"dpdp-consent-admin members,\nor the complaint's creator"| HANDLER
         HANDLER -->|"builds send-to / TEMPLATE_TYPE,\nbuilds"| EVT2
@@ -71,7 +79,8 @@ flowchart TD
     INBOX(["Officer's or citizen's\ninbox"]):::actor
 
     ACT --> IMPL
-    NC -->|"HTTPS POST, loopback only\n/dpdp-internal/notify"| SERVLET
+    LOOKUP -->|"IdentityEventService.handleEvent()\n- no network hop, same JVM"| EVT1
+    EVT1 --> HANDLER
     TEMPLATE --> SMTP --> INBOX
 
     classDef actor fill:transparent,stroke:#8a93a3,stroke-width:1.2px,color:#333a48,font-size:12px;
@@ -82,9 +91,9 @@ flowchart TD
     style BUNDLE fill:transparent,stroke:#c7c4b8,stroke-dasharray: 3 3;
 ```
 
-*The write and the send live in different deployables. The only line crossing that boundary is
-one loopback HTTPS call from the service module into a servlet registered by the bundle —
-everything after that is in-process OSGi event dispatch.*
+*No servlet, no HTTP call, no TLS trust decision — the WAR resolves `IdentityEventService`
+straight from Carbon's shared OSGi service registry. Everything from that lookup onward is
+in-process OSGi event dispatch.*
 
 ## 3. Why two events, not one
 
@@ -125,7 +134,7 @@ pointed at the email claim instead of mobile.
 
 ## 5. Class diagram
 
-Six new classes across the two modules; everything else on this diagram already exists and is
+Five new classes across the two modules; everything else on this diagram already exists and is
 only shown to make the new dependencies legible.
 
 ```mermaid
@@ -140,25 +149,17 @@ classDiagram
         <<new>>
         +notifyComplaintCreated(Complaint)
         +notifyCommentAdded(Complaint, ComplaintEvent)
-        -postInternal(payload) void
+        -fire(properties) void
     }
     ComplaintServiceImpl ..> NotificationClient : after commit
     ComplaintEventServiceImpl ..> NotificationClient : after commit
-
-    class DPDPNotificationServlet {
-        <<new>>
-        +doPost(request, response)
-        -isLoopback(request) boolean
-    }
-    HttpServlet <|-- DPDPNotificationServlet
-    NotificationClient ..> DPDPNotificationServlet : HTTPS POST, loopback only
+    NotificationClient ..> IdentityEventService : PrivilegedCarbonContext.getOSGiService(), handleEvent(custom event)
 
     class DPDPComplaintEventConstants {
         <<new>>
         +COMPLAINT_NOTIFICATION_EVENT
         +NOTIFICATION_HANDLER_NAME
     }
-    DPDPNotificationServlet ..> DPDPComplaintEventConstants
 
     class ComplaintNotificationRecipientResolver {
         <<new>>
@@ -172,7 +173,7 @@ classDiagram
         +handleEvent(Event)
     }
     AbstractEventHandler <|-- ComplaintNotificationHandler
-    DPDPNotificationServlet ..> IdentityEventService : handleEvent(custom event)
+    ComplaintNotificationHandler ..> DPDPComplaintEventConstants
     ComplaintNotificationHandler ..> ComplaintNotificationRecipientResolver
     ComplaintNotificationHandler ..> IdentityEventService : handleEvent(TRIGGER_NOTIFICATION)
     ComplaintNotificationRecipientResolver ..> RoleManagementService
@@ -197,7 +198,6 @@ classDiagram
     }
     DPDPIdentityExtensionServiceComponent ..> DPDPIdentityExtensionDataHolder : populates via @Reference
     DPDPIdentityExtensionServiceComponent ..> ComplaintNotificationHandler : registers as AbstractEventHandler service
-    DPDPIdentityExtensionServiceComponent ..> DPDPNotificationServlet : registers via HttpService
     ComplaintNotificationRecipientResolver ..> DPDPIdentityExtensionDataHolder : reads services from
 
     class IdentityEventService { <<interface>> }
@@ -207,8 +207,9 @@ classDiagram
     class AbstractEventHandler { <<abstract>> }
 ```
 
-*Everything under `identity.extensions` reaches the same four OSGi services through
-`DPDPIdentityExtensionDataHolder` — none of the new classes take an `@Reference` directly.*
+*`NotificationClient` reaches `IdentityEventService` directly via `PrivilegedCarbonContext` —
+not through `DPDPIdentityExtensionDataHolder`, which stays scoped to the OSGi bundle side for the
+second hop and for recipient resolution.*
 
 ## 6. Sequence diagram
 
@@ -221,7 +222,7 @@ sequenceDiagram
     actor U as Citizen / Officer
     participant SVC as ComplaintServiceImpl /<br/>ComplaintEventServiceImpl
     participant NC as NotificationClient
-    participant SRV as DPDPNotificationServlet
+    participant PCC as PrivilegedCarbonContext
     participant IES as IdentityEventService
     participant H as ComplaintNotificationHandler
     participant R as RecipientResolver
@@ -234,11 +235,9 @@ sequenceDiagram
     SVC->>NC: notifyComplaintCreated() /<br/>notifyCommentAdded()
     deactivate SVC
     Note right of SVC: fire-and-forget - never<br/>blocks or fails the write
-    NC->>SRV: HTTPS POST /dpdp-internal/notify<br/>(loopback only)
-    activate SRV
-    SRV->>SRV: reject unless request is<br/>from a loopback address
-    SRV->>IES: handleEvent(DPDP_COMPLAINT_NOTIFICATION_EVENT)
-    deactivate SRV
+    NC->>PCC: getOSGiService(IdentityEventService.class)
+    PCC-->>NC: the running IdentityEventService instance<br/>(same JVM, no network call)
+    NC->>IES: handleEvent(DPDP_COMPLAINT_NOTIFICATION_EVENT)
     activate IES
     IES->>H: dispatch (canHandle matches<br/>our event name)
     deactivate IES
@@ -261,8 +260,8 @@ sequenceDiagram
 
 *Two separate `IdentityEventService.handleEvent()` calls, not one — the first is our own event (so
 `ComplaintNotificationHandler` can resolve who to notify), the second is IS's standard
-`TRIGGER_NOTIFICATION` (so IS's own template/SMTP dispatch actually runs). Everything left of the
-loopback POST can fail without the complaint or comment write ever knowing.*
+`TRIGGER_NOTIFICATION` (so IS's own template/SMTP dispatch actually runs). No servlet, no HTTP
+request, no TLS decision — `getOSGiService` is a direct, same-process lookup.*
 
 ## 7. Key decisions
 
@@ -271,10 +270,13 @@ loopback POST can fail without the complaint or comment write ever knowing.*
    password resets — rather than a jakarta.mail client we'd own and maintain.
 2. **"Officer" means the role, not an assignment field.** Every `dpdp-consent-admin` member
    gets notified; there's no per-complaint assignee to track, and none is added.
-3. **Loopback IP check, no shared secret.** The bridge servlet and the code calling it always
-   run in the same JVM and the same Tomcat instance in this deployment model, so a
-   remote-address check is sufficient — a secret would be state with nothing new to protect
-   against.
+3. **Direct OSGi lookup, not an HTTP bridge.** An earlier version of this design routed the
+   WAR-to-bundle hop through a loopback-only servlet. That's gone —
+   `PrivilegedCarbonContext.getOSGiService(IdentityEventService.class, null)` is the standard
+   mechanism Carbon-hosted custom webapps use to consume an OSGi service without being a bundle
+   themselves (it resolves via a static holder populated wherever `org.wso2.carbon.utils` loads
+   from Carbon's shared classloader, which is why that dependency is declared `provided` rather
+   than bundled into the WAR). No servlet, no `HttpService` dependency, no TLS-trust decision.
 4. **Two event hops instead of inheriting a handler.** See [section 3](#3-why-two-events-not-one)
    — this replaced the original plan's `extends DefaultNotificationHandler` once that artifact
    turned out to be unverifiable in this project's dependency set.

@@ -94,14 +94,6 @@
             <artifactId>org.wso2.carbon.identity.governance</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -243,17 +235,8 @@
                             org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.exceptions.notiification;version="${carbon.identity.governance.version}",
-                            org.osgi.service.http;version="${osgi.service.http.imp.pkg.version.range}",
-                            javax.servlet;version="${javax.servlet.imp.pkg.version.range}",
-                            javax.servlet.http;version="${javax.servlet.imp.pkg.version.range}",
                             *
                         </Import-Package>
-                        <!-- org.eclipse.equinox.http.service.api and tomcat-servlet-api both
-                             advertise the JavaServlet;version=4.0.0 OSGi contract, which bnd
-                             would otherwise use to auto-version javax.servlet/javax.servlet.http
-                             - conflicting with the explicit Import-Package versions above.
-                             Disabling contract processing lets those explicit versions win. -->
-                        <_contract>!JavaServlet</_contract>
                         <_dsannotations>*</_dsannotations>
                     </instructions>
                 </configuration>

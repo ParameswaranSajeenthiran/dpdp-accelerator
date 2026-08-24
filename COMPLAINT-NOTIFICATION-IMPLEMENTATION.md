@@ -2,7 +2,13 @@
 
 **Status: complete.** All modules compile and `mvn verify` passes clean across the full reactor
 (`identity.extensions`, `complaint.mgt.service`, `complaint.mgt.dao`, both `common` modules) —
-164 tests, 0 failures, including the `identity.extensions` module's 80% JaCoCo coverage gate.
+162 tests, 0 failures, including the `identity.extensions` module's 80% JaCoCo coverage gate.
+
+**Revised after initial implementation:** the WAR-to-bundle hop originally went over a loopback
+HTTP call to a servlet. That's been replaced with a direct
+`PrivilegedCarbonContext.getOSGiService(IdentityEventService.class, null)` lookup — see "Bridge
+mechanism simplified" below. The sections below describe the current (post-simplification)
+state.
 
 ## What this adds
 
@@ -19,16 +25,16 @@ diagrams. This file is the "what actually changed" companion to that design doc.
 
 ### `components/org.wso2.dpdp.accelerator.complaint.mgt.service`
 - `notification/NotificationClient.java` — `notifyComplaintCreated(Complaint)` /
-  `notifyCommentAdded(Complaint, ComplaintEvent)`. Fire-and-forget HTTPS POST (form-urlencoded) to
-  an internal bridge URL; never throws past the caller.
-- `src/test/.../notification/NotificationClientTest.java` — exercises it against a real embedded
-  `com.sun.net.httpserver.HttpServer`, not a mock.
+  `notifyCommentAdded(Complaint, ComplaintEvent)`. Resolves `IdentityEventService` via
+  `PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(...)` and calls
+  `handleEvent()` directly — fire-and-forget, never throws past the caller (catches `Throwable`,
+  not just `Exception`, in case the Carbon classes aren't resolvable in a given deployment).
+  Package-private constructor overload takes a `Supplier<IdentityEventService>` for testability.
+- `src/test/.../notification/NotificationClientTest.java` — mocks `IdentityEventService` via the
+  supplier seam and verifies the fired `Event`'s properties.
 
 ### `components/org.wso2.dpdp.accelerator.identity.extensions` (the repo's one OSGi bundle)
 - `notification/DPDPComplaintEventConstants.java` — event name, handler name, property keys.
-- `notification/DPDPNotificationServlet.java` — the receiving end of the bridge call. Registered
-  via OSGi `HttpService` at `/dpdp-internal/notify`; rejects anything not from a loopback address.
-  Builds a custom `Event` and calls `IdentityEventService.handleEvent()`.
 - `notification/ComplaintNotificationHandler.java` — `extends AbstractEventHandler`, registered as
   an `AbstractEventHandler` OSGi service. Resolves recipients, then fires a **second**,
   standard `TRIGGER_NOTIFICATION` event so IS's own already-registered internal handler does the
@@ -41,7 +47,7 @@ diagrams. This file is the "what actually changed" companion to that design doc.
 - `notification/EmailTemplateProvisioningUtil.java` — auto-provisions the two email templates
   (`ComplaintCreated`, `ComplaintCommentAdded`) per tenant via
   `NotificationTemplateManager`, idempotently, so no manual IS Console step is needed.
-- Test files for all four of the above, under `src/test/.../notification/`.
+- Test files for all three of the above, under `src/test/.../notification/`.
 - `src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` — switches this module's
   tests to Mockito's inline mock maker, required because `AbstractUserStoreManager.getUserClaimValue`
   is a `final` method in Carbon's user-core jar and can't be intercepted by Mockito's default
@@ -56,9 +62,9 @@ diagrams. This file is the "what actually changed" companion to that design doc.
 - `ComplaintServiceImplTest.java` / `ComplaintEventServiceImplTest.java` — updated to mock
   `NotificationClient` and assert it's invoked (or not, on failure paths) with the right arguments.
 - `DPDPIdentityExtensionDataHolder.java` / `DPDPIdentityExtensionServiceComponent.java`
-  (identity.extensions) — new `@Reference`s for `IdentityEventService`,
-  `NotificationTemplateManager`, and OSGi `HttpService`; registers the new handler and servlet in
-  `activate()`, unregisters the servlet in `deactivate()`.
+  (identity.extensions) — new `@Reference`s for `IdentityEventService` and
+  `NotificationTemplateManager`; registers the new handler as an `AbstractEventHandler` OSGi
+  service in `activate()`.
 - `DPDPIdentityExtensionTenantMgtListener.java` — calls
   `EmailTemplateProvisioningUtil.provisionTemplates(tenantDomain)` alongside existing role
   provisioning.
@@ -66,16 +72,19 @@ diagrams. This file is the "what actually changed" companion to that design doc.
   `public` so the new recipient resolver can reuse the same role-name constant instead of
   duplicating the literal.
 - Root `pom.xml` — new dependency-management entries: `org.wso2.carbon.identity.event`,
-  `org.wso2.carbon.identity.governance`, `org.osgi.compendium` (all `provided`, matching every
-  other Carbon dependency here).
-- `identity.extensions/pom.xml` — the three new dependencies plus `javax.servlet-api`, matching
-  `Import-Package` additions in the `maven-bundle-plugin` config, and a surefire
-  `net.bytebuddy.experimental=true` system property (see "Test infrastructure fixes").
+  `org.wso2.carbon.identity.governance` (both `provided`, matching every other Carbon dependency
+  here).
+- `identity.extensions/pom.xml` — the two new dependencies, matching `Import-Package` additions
+  in the `maven-bundle-plugin` config, and a surefire `net.bytebuddy.experimental=true` system
+  property (see "Test infrastructure fixes").
 - `identity.extensions/src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` — new
   file, switches the module's tests to Mockito's inline mock maker (see "Test infrastructure
   fixes").
-- `complaint.mgt.service/pom.xml` — added `org.wso2.dpdp.common` dependency (for `ConfigProvider`,
-  reused from the existing pattern in the endpoint module).
+- `complaint.mgt.service/pom.xml` — added `org.wso2.carbon.utils` (for `PrivilegedCarbonContext`)
+  and `org.wso2.carbon.identity.event` (for `IdentityEventService`/`Event`), both `provided` so
+  they resolve to Carbon's shared classloader at runtime rather than bundling a private copy into
+  the WAR (bundling a private copy would give the WAR its own, never-populated static holder,
+  defeating the whole lookup).
 - `identity.extensions/src/test/resources/testng.xml` — added the new `notification` package to
   the TestNG suite (it was previously scoped to only the `tenant` package).
 - `wso2is-7.3.0-deployment.toml` — documented that `[output_adapter.email]` (already present,
@@ -91,6 +100,38 @@ this project's dependency set at a version I could verify locally. Rather than d
 unverified jar, the handler extends the plain `AbstractEventHandler` (confirmed present) and fires
 its own second `TRIGGER_NOTIFICATION` event instead of inheriting IS's dispatch — same end
 result, one fewer unverifiable dependency. Documented in the design doc's "Key decisions" section.
+
+## Bridge mechanism simplified: direct OSGi lookup, not HTTP
+
+The first working version of this feature bridged the WAR-to-bundle gap with a loopback-only
+internal servlet (`DPDPNotificationServlet`, registered via OSGi `HttpService`) that
+`NotificationClient` reached over an HTTPS POST to `https://localhost:9443/dpdp-internal/notify`,
+with TLS certificate validation relaxed for loopback hosts only.
+
+That's been removed. `NotificationClient` now resolves `IdentityEventService` directly via
+`PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(IdentityEventService.class,
+null)` and calls `handleEvent()` in-process — no servlet, no HTTP request, no TLS-trust decision
+to make at all. This works because `getOSGiService` resolves through a static holder
+(`org.wso2.carbon.context.internal.OSGiDataHolder`) populated wherever the
+`org.wso2.carbon.context`/`org.wso2.carbon.utils` classes are loaded from Carbon's *shared*
+classloader rather than bundled per-webapp — which is exactly why those dependencies are declared
+`provided` in `complaint.mgt.service`'s pom rather than pulled into the WAR's own `WEB-INF/lib`.
+This is the standard, documented mechanism Carbon-hosted custom webapps use to consume an OSGi
+service without being an OSGi bundle themselves.
+
+Deleted as part of this simplification: `DPDPNotificationServlet.java` and its test, the
+`HttpService` `@Reference`/registration/unregistration in `DPDPIdentityExtensionServiceComponent`,
+and the `org.osgi.compendium`/`javax.servlet-api` dependencies (identity.extensions) and
+`org.wso2.dpdp.common` dependency (complaint.mgt.service, no longer needed once there was no
+`internal_url` config left to read).
+
+**Worth validating on a live deployment**: this mechanism is well-established for Carbon-hosted
+webapps in general, but hasn't been proven specifically for *this* WAR (which is deliberately
+built to avoid Carbon/OSGi coupling everywhere else). If `getOSGiService` ever returns `null` in
+practice, `NotificationClient.fire()` logs a warning and returns without throwing — it won't break
+the complaint/comment write, but no notification will go out either. The original HTTP-bridge
+design remains a documented fallback if that turns out to be necessary (see git history on this
+branch for the prior implementation).
 
 ## Manual steps required before this actually delivers email
 
@@ -122,5 +163,6 @@ Running the `identity.extensions` module's test suite under JDK 21 (this project
    the same mock already wired into the data holder.
 
 Final state: `mvn verify` passes across the full reactor (`identity.extensions`,
-`complaint.mgt.service`, `complaint.mgt.dao`, both `common` modules) — 164 tests, 0 failures,
-including the `identity.extensions` module's 80% JaCoCo coverage gate.
+`complaint.mgt.service`, `complaint.mgt.dao`, both `common` modules) — 162 tests, 0 failures
+(39 in `identity.extensions`, 123 in `complaint.mgt.service`), including the
+`identity.extensions` module's 80% JaCoCo coverage gate.
