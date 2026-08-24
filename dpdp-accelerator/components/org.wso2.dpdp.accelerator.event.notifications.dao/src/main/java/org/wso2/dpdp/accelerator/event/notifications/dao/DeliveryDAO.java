@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
@@ -38,13 +38,8 @@ public interface DeliveryDAO {
     boolean addWebhookDelivery(Connection conn, WebhookDelivery delivery);
 
     default boolean addWebhookDelivery(WebhookDelivery delivery) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return addWebhookDelivery(conn, delivery);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_ADDING_WEBHOOK_DELIVERY,
-                            delivery != null ? delivery.getDeliveryId() : "null"), e);
-        }
+        return DatabaseUtils.executeInTransaction(
+                conn -> addWebhookDelivery(conn, delivery));
     }
 
     Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId);
@@ -91,13 +86,20 @@ public interface DeliveryDAO {
 
     boolean addPollDelivery(PollDelivery delivery);
 
+    boolean addPollDelivery(Connection connection, PollDelivery delivery);
+
     Optional<PollDelivery> getPollDeliveryById(String deliveryId, String orgId);
 
     List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit);
 
     void updatePollDeliveryStatuses(String orgId, String groupId, List<String> ackEventIds, List<String> errEventIds);
 
+    void updatePollDeliveryStatuses(Connection connection, String orgId, String groupId,
+            List<String> ackEventIds, List<String> errEventIds);
+
     boolean claimWebhookDelivery(String deliveryId);
+
+    boolean claimWebhookDelivery(Connection connection, String deliveryId);
 
     /**
      * Atomically reclaims a stuck {@code in_flight} delivery whose {@code UPDATED_AT} is
@@ -107,13 +109,24 @@ public interface DeliveryDAO {
      */
     boolean claimStuckWebhookDelivery(String deliveryId, Timestamp updatedBefore);
 
+    boolean claimStuckWebhookDelivery(Connection connection, String deliveryId, Timestamp updatedBefore);
+
     boolean releaseWebhookDelivery(String deliveryId, int attemptCount, Timestamp nextRetryAt);
+
+    boolean releaseWebhookDelivery(Connection connection, String deliveryId, int attemptCount, Timestamp nextRetryAt);
 
     boolean claimPollDelivery(String deliveryId);
 
+    boolean claimPollDelivery(Connection connection, String deliveryId);
+
     boolean updatePollDeliveryStatus(String deliveryId, String status);
 
+    boolean updatePollDeliveryStatus(Connection connection, String deliveryId, String status);
+
     boolean updatePollDeliveryStatus(String deliveryId, String expectedStatus, String newStatus);
+
+    boolean updatePollDeliveryStatus(Connection connection, String deliveryId, String expectedStatus,
+            String newStatus);
 
     List<SubscriptionDeliverySummary> listSubscriptionDeliveries(String orgId, String subscriptionId, int limit, int offset, int[] totalOut);
 

@@ -29,15 +29,19 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionCallback;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.sql.Connection;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
@@ -51,13 +55,19 @@ public class EventPublishTransactionAtomicityTest {
 
     @Mock
     private EventFanOutService eventFanOutService;
+    @Mock
+    private TransactionManager transactionManager;
+    private Connection connection;
 
     private EventPublishServiceImpl publishService;
 
     @BeforeMethod
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, eventFanOutService);
+        connection = org.mockito.Mockito.mock(Connection.class);
+        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
+                ((TransactionCallback<?>) invocation.getArgument(0)).execute(connection));
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, eventFanOutService, transactionManager);
     }
 
     @Test
@@ -67,17 +77,18 @@ public class EventPublishTransactionAtomicityTest {
         String topicName = "consent.update";
         Topic activeTopic = new Topic("topic-123", orgId, topicName, "desc", TopicStatus.ACTIVE.getValue());
 
-        when(topicDAO.getTopicByOrgAndName(orgId, topicName)).thenReturn(Optional.of(activeTopic));
-        when(eventDAO.addEvent(any())).thenReturn(true);
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq(orgId), eq(topicName)))
+                .thenReturn(Optional.of(activeTopic));
+        when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
         doThrow(new EventNotificationDataAccessException("Fanout DB write failure"))
-                .when(eventFanOutService).fanOutEvent(any(), any());
+                .when(eventFanOutService).fanOutEvent(any(Connection.class), any(), any());
 
         try {
             publishService.publishEvent(orgId, groupId, topicName, Arrays.asList("purpose-1"), Collections.emptyMap());
             fail("Expected EventNotificationException on fan-out failure");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 500);
-            verify(eventFanOutService).fanOutEvent(any(), any());
+            verify(eventFanOutService).fanOutEvent(any(Connection.class), any(), any());
         }
     }
 }

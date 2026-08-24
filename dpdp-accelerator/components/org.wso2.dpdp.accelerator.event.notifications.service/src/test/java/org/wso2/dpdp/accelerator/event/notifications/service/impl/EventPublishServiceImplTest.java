@@ -22,6 +22,8 @@ import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionCallback;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
@@ -35,6 +37,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.sql.Timestamp;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +74,8 @@ public class EventPublishServiceImplTest {
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
     private EventPublishServiceImpl publishService;
+    private TransactionManager transactionManager;
+    private Connection connection;
 
     @BeforeMethod
     public void setUp() {
@@ -79,12 +84,17 @@ public class EventPublishServiceImplTest {
         fanOutService = mock(EventFanOutService.class);
         deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
         deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO);
+        transactionManager = mock(TransactionManager.class);
+        connection = mock(Connection.class);
+        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
+                ((TransactionCallback<?>) invocation.getArgument(0)).execute(connection));
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
+                transactionManager);
     }
 
     @Test
     public void publishEvent_happyPath_persistsAndFansOut() {
-        when(topicDAO.getTopicByOrgAndName("org1", "topic-a"))
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic-a")))
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", "desc", "active")));
         Map<String, Object> payload = new HashMap<>();
         payload.put("k", "v");
@@ -102,25 +112,27 @@ public class EventPublishServiceImplTest {
         assertNotNull(dto.getCreatedAt());
 
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        verify(eventDAO, times(1)).addEvent(eventCaptor.capture());
+        verify(eventDAO, times(1)).addEvent(eq(connection), eventCaptor.capture());
         Event persisted = eventCaptor.getValue();
         assertEquals(persisted.getEventId(), dto.getEventId());
         assertEquals(persisted.getOrgId(), "org1");
         assertEquals(persisted.getTopicId(), "topic-id-1");
 
-        verify(eventDAO, times(1)).addEventPurposes(eq(dto.getEventId()), eq(Arrays.asList("marketing")));
-        verify(fanOutService, times(1)).fanOutEvent(any(Event.class), eq(Arrays.asList("marketing")));
+        verify(eventDAO, times(1)).addEventPurposes(eq(connection), eq(dto.getEventId()), eq(Arrays.asList("marketing")));
+        verify(fanOutService, times(1)).fanOutEvent(eq(connection), any(Event.class), eq(Arrays.asList("marketing")));
     }
 
     @Test
-    public void publishEvent_nullPayload_isStoredAsEmptyJson() {
-        when(topicDAO.getTopicByOrgAndName("org1", "topic-a"))
-                .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "active")));
-
-        EventDTO dto = publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), null);
-
-        assertEquals(dto.getPayload(), "{}");
-        verify(eventDAO, never()).addEventPurposes(anyString(), anyList());
+    public void publishEvent_nullPayload_isRejected() {
+        try {
+            publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), null);
+            fail("Expected EventNotificationException");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 422);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_MISSING_REQUIRED_PARAM);
+            assertEquals(e.getDescription(), EventNotificationServiceConstants.EVENT_PAYLOAD_REQUIRED_ERROR_MSG);
+        }
+        verify(topicDAO, never()).getTopicByOrgAndName(any(Connection.class), anyString(), anyString());
     }
 
     @Test
@@ -132,9 +144,9 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
         }
-        verify(topicDAO, never()).getTopicByOrgAndName(anyString(), anyString());
+        verify(topicDAO, never()).getTopicByOrgAndName(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any());
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -146,7 +158,7 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getStatusCode(), 400);
         }
         verify(eventDAO, never()).addEvent(any());
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -160,9 +172,9 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getDescription(),
                     EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG);
         }
-        verify(topicDAO, never()).getTopicByOrgAndName(anyString(), anyString());
+        verify(topicDAO, never()).getTopicByOrgAndName(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any());
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -176,9 +188,9 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getDescription(),
                     EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG);
         }
-        verify(topicDAO, never()).getTopicByOrgAndName(anyString(), anyString());
+        verify(topicDAO, never()).getTopicByOrgAndName(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any());
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -210,10 +222,11 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void publishEvent_topicNotFound_throws404() {
-        when(topicDAO.getTopicByOrgAndName("org1", "missing-topic")).thenReturn(Optional.empty());
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("missing-topic")))
+                .thenReturn(Optional.empty());
 
         try {
-            publishService.publishEvent("org1", "g1", "missing-topic", null, null);
+            publishService.publishEvent("org1", "g1", "missing-topic", null, Collections.emptyMap());
             fail("Expected EventNotificationException");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 404);
@@ -221,16 +234,16 @@ public class EventPublishServiceImplTest {
             assertTrue(e.getDescription().contains("missing-topic"));
         }
         verify(eventDAO, never()).addEvent(any());
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
     public void publishEvent_topicNotActive_throws400() {
-        when(topicDAO.getTopicByOrgAndName("org1", "topic-a"))
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic-a")))
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "deregistered")));
 
         try {
-            publishService.publishEvent("org1", "g1", "topic-a", null, null);
+            publishService.publishEvent("org1", "g1", "topic-a", null, Collections.emptyMap());
             fail("Expected EventNotificationException");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 400);
@@ -241,12 +254,13 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void publishEvent_fanOutFails_throws500() {
-        when(topicDAO.getTopicByOrgAndName("org1", "topic-a"))
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic-a")))
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "active")));
-        doThrow(new RuntimeException("boom")).when(fanOutService).fanOutEvent(any(), any());
+        doThrow(new RuntimeException("boom")).when(fanOutService)
+                .fanOutEvent(any(Connection.class), any(), any());
 
         try {
-            publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), null);
+            publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), Collections.emptyMap());
             fail("Expected EventNotificationException when fan-out fails");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 500);
@@ -256,18 +270,18 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void publishEvent_addEventThrows_throws500() {
-        when(topicDAO.getTopicByOrgAndName("org1", "topic-a"))
+        when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic-a")))
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "active")));
-        doThrow(new RuntimeException("db down")).when(eventDAO).addEvent(any());
+        doThrow(new RuntimeException("db down")).when(eventDAO).addEvent(any(Connection.class), any());
 
         try {
-            publishService.publishEvent("org1", "g1", "topic-a", null, null);
+            publishService.publishEvent("org1", "g1", "topic-a", null, Collections.emptyMap());
             fail("Expected EventNotificationException");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 500);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED);
         }
-        verify(fanOutService, never()).fanOutEvent(any(), any());
+        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test

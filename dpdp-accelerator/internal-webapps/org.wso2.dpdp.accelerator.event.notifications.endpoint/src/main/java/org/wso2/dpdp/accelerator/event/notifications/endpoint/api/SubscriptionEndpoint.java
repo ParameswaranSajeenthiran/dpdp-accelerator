@@ -37,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.function.Supplier;
 
 @Path("/subscriptions")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -44,18 +45,26 @@ import javax.ws.rs.core.Response;
 public class SubscriptionEndpoint {
 
     private final SubscriptionHandler subscriptionHandler;
+    private final Supplier<String> organizationIdSupplier;
 
     public SubscriptionEndpoint() {
         this.subscriptionHandler = new SubscriptionHandler();
+        this.organizationIdSupplier = DPDPTenantContext::getOrganizationId;
     }
 
     public SubscriptionEndpoint(SubscriptionHandler subscriptionHandler) {
         this.subscriptionHandler = subscriptionHandler;
+        this.organizationIdSupplier = DPDPTenantContext::getOrganizationId;
+    }
+
+    public SubscriptionEndpoint(SubscriptionHandler subscriptionHandler, Supplier<String> organizationIdSupplier) {
+        this.subscriptionHandler = subscriptionHandler;
+        this.organizationIdSupplier = organizationIdSupplier;
     }
 
     @POST
     public Response createSubscription(SubscriptionDTO request) {
-        String orgId = DPDPTenantContext.getOrganizationId();
+        String orgId = organizationIdSupplier.get();
         SubscriptionDTO dto = subscriptionHandler.createSubscription(orgId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
@@ -69,7 +78,7 @@ public class SubscriptionEndpoint {
             @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset,
             @QueryParam("sort") String sort) {
         PaginatedResult<SubscriptionDTO> result = subscriptionHandler.listSubscriptions(
-                DPDPTenantContext.getOrganizationId(), status, purposes, search, limit, offset, sort);
+                organizationIdSupplier.get(), status, purposes, search, limit, offset, sort);
         return Response.ok(result).build();
     }
 
@@ -77,7 +86,7 @@ public class SubscriptionEndpoint {
     @Path("/{subscriptionId}")
     public Response getSubscription(
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.getSubscription(DPDPTenantContext.getOrganizationId(), subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.getSubscription(organizationIdSupplier.get(), subscriptionId);
         return Response.ok(dto).build();
     }
 
@@ -85,7 +94,7 @@ public class SubscriptionEndpoint {
     @Path("/{subscriptionId}")
     public Response deleteSubscription(
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.deleteSubscription(DPDPTenantContext.getOrganizationId(), subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.deleteSubscription(organizationIdSupplier.get(), subscriptionId);
         return Response.ok(dto).build();
     }
 
@@ -93,7 +102,7 @@ public class SubscriptionEndpoint {
     @Path("/{subscriptionId}/verify")
     public Response retryVerification(
             @PathParam("subscriptionId") String subscriptionId) {
-        SubscriptionDTO dto = subscriptionHandler.retryVerification(DPDPTenantContext.getOrganizationId(), subscriptionId);
+        SubscriptionDTO dto = subscriptionHandler.retryVerification(organizationIdSupplier.get(), subscriptionId);
         return Response.ok(dto).build();
     }
 
@@ -104,7 +113,7 @@ public class SubscriptionEndpoint {
             @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
             @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset) {
         PaginatedResult<SubscriptionDeliveryDTO> result = subscriptionHandler.listSubscriptionEvents(
-                DPDPTenantContext.getOrganizationId(), subscriptionId, limit, offset);
+                organizationIdSupplier.get(), subscriptionId, limit, offset);
         return Response.ok(result).build();
     }
 
@@ -114,7 +123,7 @@ public class SubscriptionEndpoint {
             @PathParam("subscriptionId") String subscriptionId,
             @PathParam("deliveryId") String deliveryId) {
         SubscriptionEventHistoryDTO dto = subscriptionHandler.getSubscriptionEventHistory(
-                DPDPTenantContext.getOrganizationId(), subscriptionId, deliveryId);
+                organizationIdSupplier.get(), subscriptionId, deliveryId);
         return Response.ok(dto).build();
     }
 }

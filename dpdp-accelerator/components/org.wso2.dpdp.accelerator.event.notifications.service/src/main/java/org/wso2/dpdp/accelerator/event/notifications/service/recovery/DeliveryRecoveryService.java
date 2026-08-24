@@ -90,12 +90,16 @@ public class DeliveryRecoveryService {
             return t;
         });
 
-        this.scheduler.scheduleWithFixedDelay(new PendingDeliveryRecoveryTask(), 10, 30, TimeUnit.SECONDS);
+        int initialDelaySeconds = configurationService.getEventNotificationBackgroundWorkerInitialDelaySeconds();
+        int recoveryIntervalSeconds =
+                configurationService.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds();
+        this.scheduler.scheduleWithFixedDelay(new PendingDeliveryRecoveryTask(), initialDelaySeconds,
+                recoveryIntervalSeconds, TimeUnit.SECONDS);
 
         int deliveryPollSeconds = configurationService.getEventNotificationDeliveryWorkerPollSeconds();
         this.scheduler.scheduleWithFixedDelay(
                 new WebhookDeliveryWorker(deliveryDAO, this.workerPool, configurationService),
-                10,
+                initialDelaySeconds,
                 deliveryPollSeconds,
                 TimeUnit.SECONDS);
 
@@ -105,19 +109,22 @@ public class DeliveryRecoveryService {
 
     @Deactivate
     protected void deactivate() {
-        shutdownGracefully("delivery-recovery-scheduler", scheduler);
-        shutdownGracefully("webhook-delivery-worker-pool", workerPool);
+        int shutdownTimeoutSeconds = configurationService.getEventNotificationWorkerShutdownTimeoutSeconds();
+        shutdownGracefully("delivery-recovery-scheduler", scheduler, shutdownTimeoutSeconds);
+        shutdownGracefully("webhook-delivery-worker-pool", workerPool, shutdownTimeoutSeconds);
         LOG.info("Delivery Recovery Service deactivated cleanly.");
     }
 
-    private static void shutdownGracefully(String name, java.util.concurrent.ExecutorService pool) {
+    private static void shutdownGracefully(String name, java.util.concurrent.ExecutorService pool,
+            int timeoutSeconds) {
         if (pool == null || pool.isShutdown()) {
             return;
         }
         pool.shutdown();
         try {
-            if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-                LOG.debug(LogSanitizer.sanitize(name) + " did not terminate within 5 s; forcing interrupt.");
+            if (!pool.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
+                LOG.debug(LogSanitizer.sanitize(name) + " did not terminate within " + timeoutSeconds
+                        + " s; forcing interrupt.");
                 pool.shutdownNow();
             }
         } catch (InterruptedException ie) {
@@ -141,7 +148,8 @@ public class DeliveryRecoveryService {
             Timestamp threshold = new Timestamp(System.currentTimeMillis()
                     - configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds()
                     * 1000L);
-            List<Subscription> pendingSubs = subscriptionDAO.getPendingSubscriptionsForRecovery(threshold, 20);
+            int batchSize = configurationService.getEventNotificationPendingSubscriptionRecoveryBatchSize();
+            List<Subscription> pendingSubs = subscriptionDAO.getPendingSubscriptionsForRecovery(threshold, batchSize);
             for (Subscription sub : pendingSubs) {
                 if (sub.getCallbackUrl() != null && !sub.getCallbackUrl().trim().isEmpty()) {
                     try {

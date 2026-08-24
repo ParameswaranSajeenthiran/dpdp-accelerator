@@ -58,10 +58,6 @@ public class SubscriptionQueryBuilder {
         return this;
     }
 
-    public static String escapeLikePattern(String text) {
-        return QueryBuilderUtils.escapeLikePattern(text);
-    }
-
     public String resolveSortColumn() {
         if ("updatedAt".equalsIgnoreCase(sort)) {
             return "s." + EventNotificationDBColumns.UPDATED_AT + " ASC";
@@ -127,7 +123,7 @@ public class SubscriptionQueryBuilder {
                     .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
                     .append(") LIKE ? OR LOWER(sp.").append(EventNotificationDBColumns.PURPOSE_NAME)
                     .append(") LIKE ?)");
-            String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
+            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);
             params.add(term);

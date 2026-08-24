@@ -49,4 +49,12 @@ public interface DPDPConfigurationService {
     int getEventNotificationMaxVerificationResponseBodyBytes();
 
     int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds();
+
+    int getEventNotificationBackgroundWorkerInitialDelaySeconds();
+
+    int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds();
+
+    int getEventNotificationPendingSubscriptionRecoveryBatchSize();
+
+    int getEventNotificationWorkerShutdownTimeoutSeconds();
 }

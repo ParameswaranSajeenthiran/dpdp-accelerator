@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -79,6 +80,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     private static final Log LOG = LogFactory.getLog(EventPublishServiceImpl.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final TransactionManager transactionManager;
 
     @Reference
     private EventDAO eventDAO;
@@ -96,21 +98,35 @@ public class EventPublishServiceImpl implements EventPublishService {
     private DeliveryAckDAO deliveryAckDAO;
 
     public EventPublishServiceImpl() {
+        this.transactionManager = JDBCPersistenceManager.getInstance();
     }
 
     public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService) {
+        this(eventDAO, topicDAO, eventFanOutService, JDBCPersistenceManager.getInstance());
+    }
+
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
+            TransactionManager transactionManager) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
+        this.transactionManager = transactionManager;
     }
 
     public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO) {
+        this(eventDAO, topicDAO, eventFanOutService, deliveryDAO, deliveryAckDAO,
+                JDBCPersistenceManager.getInstance());
+    }
+
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
+            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, TransactionManager transactionManager) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
+        this.transactionManager = transactionManager;
     }
 
     @Override
@@ -138,9 +154,17 @@ public class EventPublishServiceImpl implements EventPublishService {
                     400);
         }
 
+        if (payload == null) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_MISSING_REQUIRED_PARAM,
+                    EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
+                    EventNotificationServiceConstants.EVENT_PAYLOAD_REQUIRED_ERROR_MSG,
+                    422);
+        }
+
         String payloadJson;
         try {
-            payloadJson = payload == null ? "{}" : objectMapper.writeValueAsString(payload);
+            payloadJson = objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             LOG.error("Failed to serialize event payload: " + LogSanitizer.sanitize(e.getMessage()), e);
             throw new EventNotificationException(
@@ -153,21 +177,8 @@ public class EventPublishServiceImpl implements EventPublishService {
         String eventId = UUID.randomUUID().toString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        Connection conn = null;
         try {
-            conn = JDBCPersistenceManager.getConnection();
-        } catch (Exception e) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Could not acquire connection from JDBCPersistenceManager: "
-                        + LogSanitizer.sanitize(e.getMessage()));
-            }
-        }
-
-        if (conn != null) {
-            boolean originalAutoCommit = true;
-            try {
-                originalAutoCommit = conn.getAutoCommit();
-                conn.setAutoCommit(false);
+            return transactionManager.executeInTransaction(conn -> {
                 Topic topic = resolveActiveTopic(conn, orgId, topicName);
                 Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
@@ -177,72 +188,24 @@ public class EventPublishServiceImpl implements EventPublishService {
                 }
                 eventFanOutService.fanOutEvent(conn, event, purposes);
 
-                conn.commit();
                 return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson, purposes, now,
                         now);
-            } catch (EventNotificationException e) {
-                try {
-                    conn.rollback();
-                } catch (Exception ignored) {
-                }
-                throw e;
-            } catch (Exception e) {
-                try {
-                    conn.rollback();
-                } catch (Exception ignored) {
-                }
-                LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
-                        + LogSanitizer.sanitize(e.getMessage()), e);
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
-                        EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
-                        EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
-                        500);
-            } finally {
-                try {
-                    conn.setAutoCommit(originalAutoCommit);
-                } catch (Exception ignored) {
-                } finally {
-                    try {
-                        conn.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        } else {
-            // Fallback for mocked unit tests or environments without direct JDBC pool
-            try {
-                Topic topic = resolveActiveTopic(orgId, topicName);
-                Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
-                eventDAO.addEvent(event);
-                if (purposes != null && !purposes.isEmpty()) {
-                    eventDAO.addEventPurposes(eventId, purposes);
-                }
-                eventFanOutService.fanOutEvent(event, purposes);
-                return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson, purposes, now,
-                        now);
-            } catch (EventNotificationException e) {
-                throw e;
-            } catch (Exception e) {
-                LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
-                        + LogSanitizer.sanitize(e.getMessage()), e);
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
-                        EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
-                        EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
-                        500);
-            }
+            });
+        } catch (EventNotificationException e) {
+            throw e;
+        } catch (Exception e) {
+            LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
+                    + LogSanitizer.sanitize(e.getMessage()), e);
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
+                    EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
+                    EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
+                    500);
         }
     }
 
-    private Topic resolveActiveTopic(String orgId, String topicName) {
-        return resolveActiveTopic(null, orgId, topicName);
-    }
-
-    private Topic resolveActiveTopic(java.sql.Connection conn, String orgId, String topicName) {
-        Optional<Topic> existing = (conn != null)
-                ? topicDAO.getTopicByOrgAndName(conn, orgId.trim(), topicName.trim())
-                : topicDAO.getTopicByOrgAndName(orgId.trim(), topicName.trim());
+    private Topic resolveActiveTopic(Connection conn, String orgId, String topicName) {
+        Optional<Topic> existing = topicDAO.getTopicByOrgAndName(conn, orgId.trim(), topicName.trim());
         if (!existing.isPresent()) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,

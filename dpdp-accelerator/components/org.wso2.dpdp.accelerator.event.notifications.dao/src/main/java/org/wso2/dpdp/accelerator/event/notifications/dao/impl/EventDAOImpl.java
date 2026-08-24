@@ -23,7 +23,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
@@ -55,7 +55,7 @@ public class EventDAOImpl implements EventDAO {
     @Override
     public boolean addEvent(Connection conn, Event event) {
         if (conn == null) {
-            return EventDAO.super.addEvent(event);
+            throw new IllegalArgumentException("Connection cannot be null.");
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddEventQuery())) {
             ps.setString(1, event.getEventId());
@@ -82,29 +82,29 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public Optional<Event> getEventById(String eventId, String orgId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
+        return DatabaseUtils.executeWithConnection(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
             ps.setString(1, eventId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Event event = mapEvent(rs);
-                    event.setPurposes(getEventPurposes(eventId));
+                    event.setPurposes(getEventPurposes(conn, eventId));
                     return Optional.of(event);
                 }
             }
             return Optional.empty();
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
-        }
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
+            }
+        });
     }
 
     @Override
     public void addEventPurposes(Connection conn, String eventId, List<String> purposes) {
         if (conn == null) {
-            EventDAO.super.addEventPurposes(eventId, purposes);
-            return;
+            throw new IllegalArgumentException("Connection cannot be null.");
         }
         if (purposes == null || purposes.isEmpty()) {
             return;
@@ -130,9 +130,13 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public List<String> getEventPurposes(String eventId) {
+        return DatabaseUtils.executeWithConnection(conn -> getEventPurposes(conn, eventId));
+    }
+
+    @Override
+    public List<String> getEventPurposes(Connection conn, String eventId) {
         List<String> purposes = new ArrayList<>();
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesQuery())) {
             ps.setString(1, eventId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -148,16 +152,17 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public boolean hasActiveEventsForTopic(String topicId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
+        return DatabaseUtils.executeWithConnection(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
             ps.setString(1, topicId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
-        }
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
+            }
+        });
     }
 
     @Override
@@ -172,8 +177,9 @@ public class EventDAOImpl implements EventDAO {
                 .setPurposes(purposes)
                 .setSearch(search);
 
-        int total = 0;
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+        int[] total = {0};
+        return DatabaseUtils.executeWithConnection(conn -> {
+          try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             String sortColumn = builder.resolveSortColumn();
             QueryResult countResult = builder.buildCountQuery(queries.getCountEventsBaseQuery());
@@ -187,7 +193,7 @@ public class EventDAOImpl implements EventDAO {
                 }
                 try (ResultSet rs = countPs.executeQuery()) {
                     if (rs.next()) {
-                        total = rs.getInt(1);
+                        total[0] = rs.getInt(1);
                     }
                 }
             }
@@ -215,11 +221,12 @@ public class EventDAOImpl implements EventDAO {
                 }
             }
 
-            return new PaginatedDAOResult<>(events, total);
-        } catch (SQLException e) {
+            return new PaginatedDAOResult<>(events, total[0]);
+          } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_EVENTS, orgId), e);
-        }
+          }
+        });
     }
 
     private Event mapEvent(ResultSet rs) throws SQLException {

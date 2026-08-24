@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.service.queries;
 
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.SubscriptionQueryBuilder;
+import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryBuilderUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.QueryResult;
 
 import java.util.List;
@@ -96,9 +97,9 @@ public class SubscriptionQueryBuilderTest {
 
     @Test
     public void testLikePatternEscapingHelper() {
-        assertEquals(SubscriptionQueryBuilder.escapeLikePattern(null), "");
-        assertEquals(SubscriptionQueryBuilder.escapeLikePattern("normal"), "normal");
-        assertEquals(SubscriptionQueryBuilder.escapeLikePattern("100%_pure\\"), "100\\%\\_pure\\\\");
+        assertEquals(QueryBuilderUtils.escapeLikePattern(null), "");
+        assertEquals(QueryBuilderUtils.escapeLikePattern("normal"), "normal");
+        assertEquals(QueryBuilderUtils.escapeLikePattern("100%_pure\\"), "100\\%\\_pure\\\\");
     }
 
     @Test

@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 
 import java.sql.Connection;
@@ -34,13 +34,23 @@ public interface SubscriptionDAO {
 
     void addSubscription(Subscription subscription);
 
+    void addSubscription(Connection connection, Subscription subscription);
+
     Optional<Subscription> getSubscriptionById(String subscriptionId, String orgId);
 
     boolean updateSubscriptionStatus(String subscriptionId, String orgId, String status);
 
+    boolean updateSubscriptionStatus(Connection connection, String subscriptionId, String orgId, String status);
+
     boolean updateSubscriptionStatus(String subscriptionId, String orgId, String expectedStatus, String newStatus);
 
+    boolean updateSubscriptionStatus(Connection connection, String subscriptionId, String orgId,
+            String expectedStatus, String newStatus);
+
     boolean deleteSubscriptionAtomic(String subscriptionId, String orgId, String expectedStatus);
+
+    boolean deleteSubscriptionAtomic(Connection connection, String subscriptionId, String orgId,
+            String expectedStatus);
 
     PaginatedDAOResult<Subscription> listSubscriptions(String orgId, String status, String purposes, String search,
             int limit, int offset, String sort);
@@ -48,12 +58,8 @@ public interface SubscriptionDAO {
     List<Subscription> getSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     default List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return getSubscriptionsByOrgAndTopic(conn, orgId, topicId);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId, topicId), e);
-        }
+        return DatabaseUtils.executeWithConnection(conn ->
+                getSubscriptionsByOrgAndTopic(conn, orgId, topicId));
     }
 
     List<Subscription> getSubscriptionsByOrgAndTopic(String orgId, String topicId, String status);
@@ -66,12 +72,8 @@ public interface SubscriptionDAO {
     List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     default List<Subscription> getLiveSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId, topicId), e);
-        }
+        return DatabaseUtils.executeWithConnection(conn ->
+                getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId));
     }
 
     long countActiveSubscriptionsForTopic(String orgId, String topicId);

@@ -1,0 +1,74 @@
+package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
+
+import org.h2.jdbcx.JdbcDataSource;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
+
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Timestamp;
+import java.util.Collections;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+public class EventAndAckDAOImplTest {
+
+    private String databaseName;
+    private Connection connection;
+
+    @BeforeMethod
+    public void setUp() throws Exception {
+        databaseName = "dao_event_" + System.nanoTime();
+        connection = DriverManager.getConnection("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
+        connection.createStatement().execute("CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, "
+                + "ORG_ID VARCHAR(128), GROUP_ID VARCHAR(128), TOPIC_ID VARCHAR(64), PAYLOAD VARCHAR(4096), CREATED_AT TIMESTAMP)");
+        connection.createStatement().execute("CREATE TABLE EVENT_PURPOSE (EVENT_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128))");
+        connection.createStatement().execute("CREATE TABLE WEBHOOK_DELIVERY_ACK (ACK_ID VARCHAR(64) PRIMARY KEY, "
+                + "DELIVERY_ID VARCHAR(64), COMPLETED_AT TIMESTAMP, COMPLETION_STATUS VARCHAR(32), COMPLETION_EVIDENCE VARCHAR(4096))");
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
+        setManagerDataSource(dataSource);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        if (connection != null) connection.close();
+        setManagerDataSource(null);
+    }
+
+    @Test
+    public void eventCrudAndPurposeLookupUseSharedConnection() throws Exception {
+        Event event = new Event("event-1", "org-1", "group-1", "topic-1", "{\"x\":1}",
+                new Timestamp(System.currentTimeMillis()));
+        EventDAOImpl dao = new EventDAOImpl();
+        assertTrue(dao.addEvent(connection, event));
+        dao.addEventPurposes(connection, "event-1", java.util.Arrays.asList("marketing", " ", null));
+        assertEquals(dao.getEventPurposes(connection, "event-1"), Collections.singletonList("marketing"));
+        assertTrue(dao.hasActiveEventsForTopic("topic-1"));
+        assertTrue(dao.getEventById("event-1", "org-1").isPresent());
+        assertFalse(dao.getEventById("missing", "org-1").isPresent());
+    }
+
+    @Test
+    public void deliveryAckCanBeInsertedAndRead() {
+        DeliveryAckDAOImpl dao = new DeliveryAckDAOImpl();
+        WebhookDeliveryAck ack = new WebhookDeliveryAck("ack-1", "delivery-1",
+                new Timestamp(System.currentTimeMillis()), "completed", "200");
+        assertTrue(dao.addDeliveryAck(ack));
+        assertEquals(dao.getDeliveryAckByDeliveryId("delivery-1").get().getAckId(), "ack-1");
+        assertFalse(dao.getDeliveryAckByDeliveryId("missing").isPresent());
+    }
+
+    private void setManagerDataSource(Object dataSource) throws Exception {
+        Field field = Class.forName("org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager")
+                .getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+}

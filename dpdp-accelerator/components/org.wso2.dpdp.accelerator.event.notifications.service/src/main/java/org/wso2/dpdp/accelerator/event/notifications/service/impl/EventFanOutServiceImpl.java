@@ -22,9 +22,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
@@ -55,10 +58,8 @@ import org.apache.commons.logging.LogFactory;
  *         POSTs the payload to the subscriber's callback URL with HMAC.</li>
  * </ol>
  *
- * <p>Poll-mode subscriptions are logged at FINE and skipped in this slice;
- * the {@code EVENT_PURPOSE} row plus the live {@code EVENT} payload are still
- * available for the poll API to serve on the next
- * {@code /events/poll} call once that endpoint is wired.</p>
+ * <p>Poll-mode subscriptions receive a pending poll-delivery row in the same
+ * transaction as the event and webhook delivery rows.</p>
  */
 @Component(service = EventFanOutService.class, immediate = true)
 public class EventFanOutServiceImpl implements EventFanOutService {
@@ -117,12 +118,7 @@ public class EventFanOutServiceImpl implements EventFanOutService {
             if (mode == DeliveryMode.WEBHOOK) {
                 queueWebhookDelivery(conn, subscription, event, now);
             } else {
-                // Poll-mode deferred to the poll endpoint slice.
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Skipping poll-mode subscription [" + subscription.getSubscriptionId()
-                            + "] for event [" + event.getEventId()
-                            + "] — poll-side fan-out not active in this slice.");
-                }
+                queuePollDelivery(conn, subscription, event, now);
             }
         }
     }
@@ -156,13 +152,36 @@ public class EventFanOutServiceImpl implements EventFanOutService {
                 : deliveryDAO.addWebhookDelivery(delivery);
         if (saved) {
             if (LOG.isInfoEnabled()) {
-                LOG.info("Queued webhook delivery [" + deliveryId + "] for subscription ["
-                        + subscription.getSubscriptionId() + "] on event [" + event.getEventId() + "].");
+                LOG.info("Queued webhook delivery [" + LogSanitizer.sanitize(deliveryId) + "] for subscription ["
+                        + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["
+                        + LogSanitizer.sanitize(event.getEventId()) + "].");
             }
         } else {
             throw new org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException(
-                    "Failed to queue webhook delivery for subscription [" + subscription.getSubscriptionId()
-                            + "] on event [" + event.getEventId() + "] — DAO returned false.");
+                    "Failed to queue webhook delivery for subscription ["
+                            + LogSanitizer.sanitize(subscription.getSubscriptionId())
+                            + "] on event [" + LogSanitizer.sanitize(event.getEventId())
+                            + "] — DAO returned false.");
+        }
+    }
+
+    private void queuePollDelivery(Connection conn, Subscription subscription, Event event, Timestamp now) {
+        PollDelivery delivery = new PollDelivery(
+                UUID.randomUUID().toString(),
+                subscription.getSubscriptionId(),
+                event.getEventId(),
+                PollStatus.PENDING.getValue(),
+                now,
+                null);
+        boolean saved = (conn != null)
+                ? deliveryDAO.addPollDelivery(conn, delivery)
+                : deliveryDAO.addPollDelivery(delivery);
+        if (!saved) {
+            throw new org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException(
+                    "Failed to queue poll delivery for subscription ["
+                            + LogSanitizer.sanitize(subscription.getSubscriptionId())
+                            + "] on event [" + LogSanitizer.sanitize(event.getEventId())
+                            + "] — DAO returned false.");
         }
     }
 }

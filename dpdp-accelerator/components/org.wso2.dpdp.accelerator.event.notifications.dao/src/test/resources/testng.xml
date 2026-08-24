@@ -5,6 +5,8 @@
         <packages>
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao"/>
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao.queries"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.dao.impl"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.dao.model"/>
         </packages>
     </test>
 </suite>

@@ -20,12 +20,22 @@ package org.wso2.dpdp.accelerator.common.util;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.test.CarbonTestEnvironment;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.expectThrows;
 
 public class DPDPTenantContextTest {
+
+    @BeforeClass
+    public void configureCarbonTestEnvironment() throws IOException {
+
+        CarbonTestEnvironment.configure();
+    }
 
     @Test
     public void getOrganizationIdReturnsCurrentTenantDomain() {

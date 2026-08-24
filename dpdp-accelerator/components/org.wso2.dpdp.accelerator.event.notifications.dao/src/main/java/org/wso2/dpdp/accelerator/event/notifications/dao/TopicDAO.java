@@ -21,7 +21,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 
 import java.sql.Connection;
@@ -32,23 +32,24 @@ public interface TopicDAO {
 
     boolean addTopic(Topic topic);
 
+    boolean addTopic(Connection conn, Topic topic);
+
     Optional<Topic> getTopicById(String topicId, String orgId);
 
     Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name);
 
     default Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return getTopicByOrgAndName(conn, orgId, name);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
-                    e);
-        }
+        return DatabaseUtils.executeWithConnection(
+                conn -> getTopicByOrgAndName(conn, orgId, name));
     }
 
     boolean updateTopicStatus(String topicId, String orgId, TopicStatus status);
 
+    boolean updateTopicStatus(Connection conn, String topicId, String orgId, TopicStatus status);
+
     boolean deregisterTopicAtomic(String topicId, String orgId);
+
+    boolean deregisterTopicAtomic(Connection conn, String topicId, String orgId);
 
     PaginatedDAOResult<Topic> listTopics(String orgId, String status, String search, int limit, int offset,
             String sort);

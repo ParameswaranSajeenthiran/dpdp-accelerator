@@ -62,6 +62,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class WebhookDeliveryTask implements Runnable {
 
+    private static final String MALFORMED_PAYLOAD_RESPONSE_CODE = "MALFORMED_PAYLOAD";
+
     private static final Log LOG = LogFactory.getLog(WebhookDeliveryTask.class);
 
     // Constants kept here (not in EventNotificationCommonConstants) so they stay scoped to
@@ -125,7 +127,11 @@ public class WebhookDeliveryTask implements Runnable {
             LOG.debug("Webhook delivery attempt failed for delivery ["
                     + LogSanitizer.sanitize(delivery.getDeliveryId()) + "]: "
                     + LogSanitizer.sanitize(e.getMessage()));
-            recordFailure(RESPONSE_CODE_EXCEPTION, null);
+            if (e instanceof MalformedPayloadException) {
+                recordPermanentFailure(MALFORMED_PAYLOAD_RESPONSE_CODE);
+            } else {
+                recordFailure(RESPONSE_CODE_EXCEPTION, null);
+            }
             return;
         }
 
@@ -174,7 +180,7 @@ public class WebhookDeliveryTask implements Runnable {
      * <p>LinkedHashMap preserves field order so the serialized envelope is stable across
      * runs (helpful for snapshot tests and for receivers diffing the body byte-for-byte).
      * If the raw payload is null or not parseable JSON, the {@code payload} field falls
-     * back to an empty object so the envelope itself is always valid JSON.</p>
+     * causes the delivery to be marked permanently failed.</p>
      */
     private String buildEnvelope() throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
@@ -187,19 +193,18 @@ public class WebhookDeliveryTask implements Runnable {
 
         Object payloadNode;
         if (payload == null) {
-            payloadNode = java.util.Collections.emptyMap();
+            throw new MalformedPayloadException("Event payload is null.", null);
         } else {
             com.fasterxml.jackson.databind.JsonNode parsed = null;
             try {
                 parsed = ENVELOPE_MAPPER.readTree(payload);
             } catch (Exception parseFailure) {
                 LOG.debug("Event payload for delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
-                        + "] was not parseable JSON; sending empty object under \"payload\".");
+                        + "] was not parseable JSON; marking delivery as permanently failed.");
+                throw new MalformedPayloadException("Event payload is not valid JSON.", parseFailure);
             }
-            // readTree returns NullNode for the literal string "null"; coerce to {} so the
-            // envelope still carries an object under "payload".
             if (parsed == null || parsed.isNull()) {
-                payloadNode = java.util.Collections.emptyMap();
+                throw new MalformedPayloadException("Event payload is null.", null);
             } else {
                 payloadNode = parsed;
             }
@@ -207,6 +212,27 @@ public class WebhookDeliveryTask implements Runnable {
         envelope.put("payload", payloadNode);
 
         return ENVELOPE_MAPPER.writeValueAsString(envelope);
+    }
+
+    private void recordPermanentFailure(String responseCode) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        WebhookDelivery failed = new WebhookDelivery(
+                delivery.getDeliveryId(), delivery.getSubscriptionId(), delivery.getEventId(),
+                DeliveryStatus.FAILED.getValue(), delivery.getAttemptCount() + 1, null,
+                delivery.getCreatedAt(), now, null);
+        try {
+            deliveryDAO.recordPermanentFailure(newAudit(now, responseCode), failed);
+        } catch (Exception e) {
+            LOG.error("Failed to mark malformed delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                    + "] as failed: " + LogSanitizer.sanitize(e.getMessage()), e);
+        }
+    }
+
+    private static final class MalformedPayloadException extends Exception {
+
+        private MalformedPayloadException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     private void recordSuccess(int httpStatus) {

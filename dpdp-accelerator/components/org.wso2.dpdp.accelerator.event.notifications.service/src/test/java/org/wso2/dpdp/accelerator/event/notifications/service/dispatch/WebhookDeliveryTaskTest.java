@@ -400,33 +400,25 @@ public class WebhookDeliveryTaskTest {
     }
 
     @Test
-    public void testUnparseablePayloadFallsBackToEmptyObject() throws Exception {
-        // If the producer stored a non-JSON blob (corruption, legacy row), the envelope
-        // must still be valid JSON so receivers can parse the body without a try/catch.
+    public void testUnparseablePayloadIsMarkedAsPermanentFailure() throws Exception {
         WebhookDelivery delivery = delivery(0);
-        stubHttpResponse(200);
-        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+        when(deliveryDAO.recordPermanentFailure(any(), any())).thenReturn(true);
 
         task(delivery, "not-json-at-all").run();
 
-        JsonNode envelope = new ObjectMapper().readTree(bodyOf(captureRequest()));
-        assertTrue(envelope.get("payload").isObject(), "payload should fall back to an object");
-        assertEquals(envelope.get("payload").size(), 0, "fallback object should be empty");
+        verify(deliveryDAO).recordPermanentFailure(any(), any());
+        verify(httpClient, never()).send(any(), any());
     }
 
     @Test
-    public void testNullPayloadStillProducesValidEnvelope() throws Exception {
+    public void testNullPayloadIsMarkedAsPermanentFailure() throws Exception {
         WebhookDelivery delivery = delivery(0);
-        stubHttpResponse(200);
-        when(deliveryDAO.updateWebhookDeliveryStatus(any())).thenReturn(true);
-        when(deliveryDAO.addWebhookDeliveryAudit(any())).thenReturn(true);
+        when(deliveryDAO.recordPermanentFailure(any(), any())).thenReturn(true);
 
         task(delivery, null).run();
 
-        JsonNode envelope = new ObjectMapper().readTree(bodyOf(captureRequest()));
-        assertTrue(envelope.get("payload").isObject(), "null payload should fall back to an object");
-        assertEquals(envelope.get("payload").size(), 0);
+        verify(deliveryDAO).recordPermanentFailure(any(), any());
+        verify(httpClient, never()).send(any(), any());
     }
 
     // Quick helper; keeps the test file readable.

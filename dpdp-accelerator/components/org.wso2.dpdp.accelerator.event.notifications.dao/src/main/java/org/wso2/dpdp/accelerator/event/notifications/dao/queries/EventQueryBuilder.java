@@ -72,15 +72,6 @@ public class EventQueryBuilder {
     }
 
     /**
-     * Escapes characters that have special meaning inside a SQL LIKE pattern
-     * so user input is treated as literal text. Mirrors the helper on
-     * {@link SubscriptionQueryBuilder}.
-     */
-    public static String escapeLikePattern(String text) {
-        return QueryBuilderUtils.escapeLikePattern(text);
-    }
-
-    /**
      * Fixed sort column for events. {@code createdAt} is the only timestamp
      * on the EVENT row today so a direction toggle is unnecessary.
      */
@@ -170,7 +161,7 @@ public class EventQueryBuilder {
                     .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
                     .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.PAYLOAD)
                     .append(") LIKE ?)");
-            String term = "%" + escapeLikePattern(search.trim()).toLowerCase() + "%";
+            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
             params.add(term);
             params.add(term);
             params.add(term);

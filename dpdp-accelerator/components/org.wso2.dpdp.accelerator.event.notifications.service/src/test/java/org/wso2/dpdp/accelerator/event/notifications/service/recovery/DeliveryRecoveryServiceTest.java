@@ -48,6 +48,10 @@ public class DeliveryRecoveryServiceTest {
         when(configurationService.getEventNotificationDeliveryWorkerPollSeconds()).thenReturn(5);
         when(configurationService.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds())
                 .thenReturn(60);
+        when(configurationService.getEventNotificationBackgroundWorkerInitialDelaySeconds()).thenReturn(10);
+        when(configurationService.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds()).thenReturn(30);
+        when(configurationService.getEventNotificationPendingSubscriptionRecoveryBatchSize()).thenReturn(20);
+        when(configurationService.getEventNotificationWorkerShutdownTimeoutSeconds()).thenReturn(5);
         recoveryService = new DeliveryRecoveryService(subscriptionDAO, deliveryDAO,
                 subscriptionService, configurationService);
     }

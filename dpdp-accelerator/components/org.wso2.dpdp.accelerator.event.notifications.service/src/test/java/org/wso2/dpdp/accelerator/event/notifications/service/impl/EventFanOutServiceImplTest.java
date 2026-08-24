@@ -129,7 +129,7 @@ public class EventFanOutServiceImplTest {
     }
 
     @Test
-    public void fanOutEvent_mixedCandidates_queuesOnlyWebhookMatches() {
+    public void fanOutEvent_mixedCandidates_queuesMatchingWebhookAndPollDeliveries() {
         Event event = sampleEvent("org1", "g1", "topic1");
         List<Subscription> candidates = new ArrayList<>();
         candidates.add(subscription("sub-webhook-match", "org1", "g1", "topic1",
@@ -141,12 +141,14 @@ public class EventFanOutServiceImplTest {
         candidates.add(subscription("sub-poll-deferred", "org1", "g1", "topic1",
                 PurposeFilterMode.ALL.getValue(), null, "poll"));
         when(subscriptionDAO.getLiveSubscriptionsByOrgAndTopic("org1", "topic1")).thenReturn(candidates);
+        when(deliveryDAO.addPollDelivery(any())).thenReturn(true);
 
         fanOutService.fanOutEvent(event, Arrays.asList("marketing"));
 
         ArgumentCaptor<WebhookDelivery> captor = ArgumentCaptor.forClass(WebhookDelivery.class);
         verify(deliveryDAO, times(1)).addWebhookDelivery(captor.capture());
         assertEquals(captor.getValue().getSubscriptionId(), "sub-webhook-match");
+        verify(deliveryDAO, times(1)).addPollDelivery(any());
     }
 
     @Test

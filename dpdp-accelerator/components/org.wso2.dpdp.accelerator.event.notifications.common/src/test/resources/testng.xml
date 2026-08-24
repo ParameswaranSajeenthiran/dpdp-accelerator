@@ -22,6 +22,7 @@
     <test name="dpdp-event-notifications-common-tests">
         <packages>
             <package name="org.wso2.dpdp.accelerator.event.notifications.common.util"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.common"/>
         </packages>
     </test>
 </suite>

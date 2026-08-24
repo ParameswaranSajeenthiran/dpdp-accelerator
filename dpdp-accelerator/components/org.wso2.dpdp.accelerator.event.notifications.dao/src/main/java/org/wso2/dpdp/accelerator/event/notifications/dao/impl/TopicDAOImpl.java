@@ -26,7 +26,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
@@ -54,55 +54,47 @@ public class TopicDAOImpl implements TopicDAO {
     @Override
     public boolean addTopic(Topic topic) {
         Objects.requireNonNull(topic, EventNotificationCommonConstants.ERROR_TOPIC_NULL);
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            boolean originalAutoCommit = conn.getAutoCommit();
-            try {
-                conn.setAutoCommit(false);
-                try (PreparedStatement checkPs = conn
-                        .prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
-                    checkPs.setString(1, topic.getOrgId());
-                    checkPs.setString(2, topic.getName());
-                    try (ResultSet rs = checkPs.executeQuery()) {
-                        if (rs.next() && TopicStatus.ACTIVE.getValue().equalsIgnoreCase(rs.getString(EventNotificationDBColumns.STATUS))) {
-                            throw new EventNotificationDuplicateResourceException(
-                                    String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
-                                            topic.getName()));
-                        }
-                    }
-                }
+        return DatabaseUtils.executeInTransaction(conn -> addTopic(conn, topic));
+    }
 
-                try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddTopicQuery())) {
-                    ps.setString(1, topic.getTopicId());
-                    ps.setString(2, topic.getOrgId());
-                    ps.setString(3, topic.getName());
-                    ps.setString(4, topic.getDescription());
-                    ps.setString(5, topic.getStatus());
-                    ps.setString(6,
-                            topic.getInitiatedBy() != null ? topic.getInitiatedBy() : Initiator.USER.getValue());
-                    boolean created = ps.executeUpdate() > 0;
-                    conn.commit();
-                    return created;
-                }
-            } catch (SQLException e) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rollbackEx) {
-                    e.addSuppressed(rollbackEx);
-                }
-                if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+    @Override
+    public boolean addTopic(Connection conn, Topic topic) {
+        Objects.requireNonNull(conn, "Connection cannot be null.");
+        Objects.requireNonNull(topic, EventNotificationCommonConstants.ERROR_TOPIC_NULL);
+        try (PreparedStatement checkPs = conn
+                .prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
+            checkPs.setString(1, topic.getOrgId());
+            checkPs.setString(2, topic.getName());
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (rs.next() && TopicStatus.ACTIVE.getValue().equalsIgnoreCase(
+                        rs.getString(EventNotificationDBColumns.STATUS))) {
                     throw new EventNotificationDuplicateResourceException(
                             String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS,
-                                    topic.getName()),
-                            e);
-                }
-                throw e;
-            } finally {
-                try {
-                    conn.setAutoCommit(originalAutoCommit);
-                } catch (SQLException ignored) {
+                                    topic.getName()));
                 }
             }
         } catch (SQLException e) {
+            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                throw new EventNotificationDuplicateResourceException(
+                        String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS, topic.getName()), e);
+            }
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, topic.getName()), e);
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddTopicQuery())) {
+            ps.setString(1, topic.getTopicId());
+            ps.setString(2, topic.getOrgId());
+            ps.setString(3, topic.getName());
+            ps.setString(4, topic.getDescription());
+            ps.setString(5, topic.getStatus());
+            ps.setString(6, topic.getInitiatedBy() != null ? topic.getInitiatedBy() : Initiator.USER.getValue());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                throw new EventNotificationDuplicateResourceException(
+                        String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS, topic.getName()), e);
+            }
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, topic.getName()), e);
         }
@@ -110,8 +102,8 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public Optional<Topic> getTopicById(String topicId, String orgId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByIdQuery())) {
+        return DatabaseUtils.executeWithConnection(conn -> {
+          try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByIdQuery())) {
             ps.setString(1, topicId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -120,27 +112,23 @@ public class TopicDAOImpl implements TopicDAO {
                 }
             }
             return Optional.empty();
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ID, topicId), e);
-        }
+          } catch (SQLException e) {
+              throw new EventNotificationDataAccessException(
+                      String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ID, topicId), e);
+          }
+        });
     }
 
     @Override
     public Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return getTopicByOrgAndName(conn, orgId, name);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
-                    e);
-        }
+        return DatabaseUtils.executeWithConnection(
+                conn -> getTopicByOrgAndName(conn, orgId, name));
     }
 
     @Override
     public Optional<Topic> getTopicByOrgAndName(Connection conn, String orgId, String name) {
         if (conn == null) {
-            return getTopicByOrgAndName(orgId, name);
+            throw new IllegalArgumentException("Connection cannot be null.");
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByOrgAndNameQuery())) {
             ps.setString(1, orgId);
@@ -161,8 +149,15 @@ public class TopicDAOImpl implements TopicDAO {
     @Override
     public boolean updateTopicStatus(String topicId, String orgId, TopicStatus status) {
         Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateTopicStatusQuery())) {
+        return DatabaseUtils.executeInTransaction(
+                conn -> updateTopicStatus(conn, topicId, orgId, status));
+    }
+
+    @Override
+    public boolean updateTopicStatus(Connection conn, String topicId, String orgId, TopicStatus status) {
+        Objects.requireNonNull(conn, "Connection cannot be null.");
+        Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateTopicStatusQuery())) {
             ps.setString(1, status.getValue());
             ps.setString(2, topicId);
             ps.setString(3, orgId);
@@ -175,15 +170,18 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public boolean deregisterTopicAtomic(String topicId, String orgId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            boolean originalAutoCommit = conn.getAutoCommit();
-            try {
-                conn.setAutoCommit(false);
+        return DatabaseUtils.executeInTransaction(
+                conn -> deregisterTopicAtomic(conn, topicId, orgId));
+    }
 
-                EventNotificationCommonDBQueries queries = getQueries(conn);
+    @Override
+    public boolean deregisterTopicAtomic(Connection conn, String topicId, String orgId) {
+        Objects.requireNonNull(conn, "Connection cannot be null.");
+        try {
+            EventNotificationCommonDBQueries queries = getQueries(conn);
 
-                // Lock the topic row so concurrent subscription creates serialize with us.
-                try (PreparedStatement topicLockPs = conn
+            // Lock the topic row so concurrent subscription creates serialize with us.
+            try (PreparedStatement topicLockPs = conn
                         .prepareStatement(queries.getLockTopicForSubscriptionQuery())) {
                     topicLockPs.setString(1, topicId);
                     topicLockPs.setString(2, orgId);
@@ -195,9 +193,9 @@ public class TopicDAOImpl implements TopicDAO {
                     }
                 }
 
-                // Count non-deleted subscriptions under the topic lock.
-                long activeCount;
-                try (PreparedStatement countPs = conn
+            // Count non-deleted subscriptions under the topic lock.
+            long activeCount;
+            try (PreparedStatement countPs = conn
                         .prepareStatement(queries.getCountActiveSubscriptionsForTopicQuery())) {
                     countPs.setString(1, orgId);
                     countPs.setString(2, topicId);
@@ -206,34 +204,20 @@ public class TopicDAOImpl implements TopicDAO {
                     }
                 }
 
-                if (activeCount > 0) {
+            if (activeCount > 0) {
                     throw new EventNotificationInvalidStateException(
                             EventNotificationCommonConstants.ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS);
                 }
 
-                int updated;
-                try (PreparedStatement ps = conn.prepareStatement(queries.getUpdateTopicStatusQuery())) {
+            int updated;
+            try (PreparedStatement ps = conn.prepareStatement(queries.getUpdateTopicStatusQuery())) {
                     ps.setString(1, TopicStatus.DEREGISTERED.getValue());
                     ps.setString(2, topicId);
                     ps.setString(3, orgId);
                     updated = ps.executeUpdate();
                 }
 
-                conn.commit();
-                return updated > 0;
-            } catch (SQLException e) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rollbackEx) {
-                    e.addSuppressed(rollbackEx);
-                }
-                throw e;
-            } finally {
-                try {
-                    conn.setAutoCommit(originalAutoCommit);
-                } catch (SQLException ignored) {
-                }
-            }
+            return updated > 0;
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_DEREGISTERING_TOPIC, topicId), e);
@@ -249,8 +233,9 @@ public class TopicDAOImpl implements TopicDAO {
                 .setSearch(search)
                 .setSort(sort);
 
-        int total = 0;
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+        int[] total = {0};
+        return DatabaseUtils.executeWithConnection(conn -> {
+          try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             QueryResult countResult = builder.buildCountQuery();
             QueryResult selectResult = builder.buildSelectQuery(
@@ -263,7 +248,7 @@ public class TopicDAOImpl implements TopicDAO {
                 }
                 try (ResultSet rs = countPs.executeQuery()) {
                     if (rs.next()) {
-                        total = rs.getInt(1);
+                        total[0] = rs.getInt(1);
                     }
                 }
             }
@@ -282,11 +267,12 @@ public class TopicDAOImpl implements TopicDAO {
                     }
                 }
             }
-            return new PaginatedDAOResult<>(topics, total);
-        } catch (SQLException e) {
+            return new PaginatedDAOResult<>(topics, total[0]);
+          } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
-        }
+          }
+        });
     }
 
     private Topic mapTopic(ResultSet rs) throws SQLException {

@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 
 import java.sql.Connection;
@@ -33,13 +33,7 @@ public interface EventDAO {
     boolean addEvent(Connection conn, Event event);
 
     default boolean addEvent(Event event) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return addEvent(conn, event);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_ADDING_EVENT,
-                            event != null ? event.getEventId() : "null"), e);
-        }
+        return DatabaseUtils.executeInTransaction(conn -> addEvent(conn, event));
     }
 
     Optional<Event> getEventById(String eventId, String orgId);
@@ -47,15 +41,15 @@ public interface EventDAO {
     void addEventPurposes(Connection conn, String eventId, List<String> purposes);
 
     default void addEventPurposes(String eventId, List<String> purposes) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+        DatabaseUtils.executeInTransaction(conn -> {
             addEventPurposes(conn, eventId, purposes);
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_ADDING_EVENT_PURPOSES, eventId), e);
-        }
+            return null;
+        });
     }
 
     List<String> getEventPurposes(String eventId);
+
+    List<String> getEventPurposes(Connection connection, String eventId);
 
     boolean hasActiveEventsForTopic(String topicId);
 

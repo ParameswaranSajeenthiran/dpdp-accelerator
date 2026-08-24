@@ -64,7 +64,6 @@ public class EventNotificationServiceConstants {
     public static final String ORG_ID_OR_TOPIC_NAME_MISSING_ERROR_MSG = "Org ID and topic name are required.";
     public static final String TOPIC_ID_MISSING_ERROR_MSG = "Topic ID is required.";
     public static final String TOPIC_ALREADY_EXISTS_ERROR_MSG = "A topic with the specified name already exists for this organization.";
-    public static final String FAILED_TO_REACTIVATE_TOPIC_ERROR_MSG = "Failed to reactivate existing topic.";
     public static final String FAILED_TO_CREATE_TOPIC_ERROR_MSG = "Failed to create topic in database.";
     public static final String FAILED_TO_DEREGISTER_TOPIC_ERROR_MSG = "Failed to deregister topic.";
     public static final String ORG_ID_MISSING_ERROR_MSG = "Organization ID is required.";
@@ -80,12 +79,8 @@ public class EventNotificationServiceConstants {
     public static final String WEBHOOK_VERIFICATION_FAILED_ERROR_MSG = "Webhook intent verification failed for callback URL.";
     public static final String EVENT_PUBLISH_FAILED_ERROR_MSG = "Failed to publish event.";
     public static final String EVENT_TOPIC_NOT_FOUND_ERROR_MSG = "No topic exists with name '%s' for this org.";
-    public static final String EVENT_PURPOSES_REQUIRED_ERROR_MSG =
-            "At least one purpose is required when publishing an event.";
+    public static final String EVENT_PAYLOAD_REQUIRED_ERROR_MSG = "Event payload is required.";
     public static final String CALLBACK_URL_REQUIRED_ERROR_MSG = "callbackUrl is required when delivery mode is WEBHOOK.";
-    public static final String CALLBACK_URL_HTTP_SCHEME_ERROR_MSG = "callbackUrl must use HTTP or HTTPS scheme.";
-    public static final String CALLBACK_URL_HOST_INVALID_ERROR_MSG = "callbackUrl hostname is invalid.";
-    public static final String CALLBACK_URL_NOT_PERMITTED_ERROR_MSG = "Callback URL destination is not permitted.";
     public static final String DUPLICATE_SUBSCRIPTION_ERROR_MSG = "A subscription with the same parameters already exists.";
     public static final String MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG =
             "A subscriber cannot use both webhook and poll delivery modes for the same topic.";

@@ -194,3 +194,7 @@ delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10
 max_verification_response_body_bytes = 4096
 pending_subscription_recovery_threshold_seconds = 60
+background_worker_initial_delay_seconds = 10
+pending_subscription_recovery_interval_seconds = 30
+pending_subscription_recovery_batch_size = 20
+worker_shutdown_timeout_seconds = 5

@@ -18,12 +18,18 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.WebApplicationException;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import java.util.Collections;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
@@ -73,5 +79,25 @@ public class EventNotificationExceptionMapperTest {
 
         assertNotNull(response);
         assertEquals(response.getStatus(), 400);
+    }
+
+    @Test
+    public void mapsWrappedServiceAndWebApplicationExceptions() {
+        EventNotificationException service = new EventNotificationException("EN-5000", "failure", "details", 500);
+        assertEquals(mapper.toResponse(new RuntimeException(new RuntimeException(service))).getStatus(), 500);
+        assertEquals(mapper.toResponse(new WebApplicationException(Response.status(418).build())).getStatus(), 418);
+    }
+
+    @Test
+    public void mapsArgumentJsonConstraintAndUnknownExceptions() {
+        assertEquals(mapper.toResponse(new IllegalArgumentException("bad")).getStatus(), 400);
+        assertEquals(mapper.toResponse(new JsonProcessingException("bad") { }).getStatus(), 400);
+        ConstraintViolation<?> violation = Mockito.mock(ConstraintViolation.class);
+        Mockito.when(violation.getPropertyPath()).thenReturn(null);
+        Mockito.when(violation.getMessage()).thenReturn("required");
+        ConstraintViolationException validation = new ConstraintViolationException(
+                "invalid", Collections.singleton(violation));
+        assertEquals(mapper.toResponse(validation).getStatus(), 400);
+        assertEquals(mapper.toResponse(new RuntimeException("unexpected")).getStatus(), 500);
     }
 }

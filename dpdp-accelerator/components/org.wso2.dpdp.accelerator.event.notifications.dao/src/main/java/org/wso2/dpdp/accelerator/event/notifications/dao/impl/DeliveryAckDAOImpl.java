@@ -23,7 +23,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
@@ -44,8 +44,11 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public boolean addDeliveryAck(WebhookDeliveryAck ack) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAckQuery())) {
+        return DatabaseUtils.executeInTransaction(conn -> addDeliveryAck(conn, ack));
+    }
+
+    private boolean addDeliveryAck(Connection conn, WebhookDeliveryAck ack) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAckQuery())) {
             ps.setString(1, ack.getAckId());
             ps.setString(2, ack.getDeliveryId());
             ps.setTimestamp(3, ack.getCompletedAt());
@@ -64,8 +67,8 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(String deliveryId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
+        return DatabaseUtils.executeWithConnection(conn -> {
+          try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
             ps.setString(1, deliveryId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -79,9 +82,10 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
                 }
             }
             return Optional.empty();
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_DELIVERY_ACK_BY_DELIVERY_ID, deliveryId), e);
-        }
+          } catch (SQLException e) {
+              throw new EventNotificationDataAccessException(
+                      String.format(EventNotificationCommonConstants.ERROR_GETTING_DELIVERY_ACK_BY_DELIVERY_ID, deliveryId), e);
+          }
+        });
     }
 }

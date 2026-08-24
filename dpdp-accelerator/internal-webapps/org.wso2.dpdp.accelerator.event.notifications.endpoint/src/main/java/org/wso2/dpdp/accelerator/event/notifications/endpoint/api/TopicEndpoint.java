@@ -35,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.function.Supplier;
 
 @Path("/topics")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -42,18 +43,26 @@ import javax.ws.rs.core.Response;
 public class TopicEndpoint {
 
     private final TopicHandler topicHandler;
+    private final Supplier<String> organizationIdSupplier;
 
     public TopicEndpoint() {
         this.topicHandler = new TopicHandler();
+        this.organizationIdSupplier = DPDPTenantContext::getOrganizationId;
     }
 
     public TopicEndpoint(TopicHandler topicHandler) {
         this.topicHandler = topicHandler;
+        this.organizationIdSupplier = DPDPTenantContext::getOrganizationId;
+    }
+
+    public TopicEndpoint(TopicHandler topicHandler, Supplier<String> organizationIdSupplier) {
+        this.topicHandler = topicHandler;
+        this.organizationIdSupplier = organizationIdSupplier;
     }
 
     @POST
     public Response createTopic(TopicDTO request) {
-        TopicDTO dto = topicHandler.createTopic(DPDPTenantContext.getOrganizationId(), request);
+        TopicDTO dto = topicHandler.createTopic(organizationIdSupplier.get(), request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
@@ -64,7 +73,7 @@ public class TopicEndpoint {
             @QueryParam("limit") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_LIMIT_STR) int limit,
             @QueryParam("offset") @DefaultValue(EventNotificationEndpointConstants.DEFAULT_OFFSET_STR) int offset,
             @QueryParam("sort") String sort) {
-        PaginatedResult<TopicDTO> result = topicHandler.listTopics(DPDPTenantContext.getOrganizationId(), status,
+        PaginatedResult<TopicDTO> result = topicHandler.listTopics(organizationIdSupplier.get(), status,
                 search, limit, offset, sort);
         return Response.ok(result).build();
     }
@@ -73,7 +82,7 @@ public class TopicEndpoint {
     @Path("/{topicId}")
     public Response deleteTopic(
             @PathParam("topicId") String topicId) {
-        TopicDTO dto = topicHandler.deleteTopic(DPDPTenantContext.getOrganizationId(), topicId);
+        TopicDTO dto = topicHandler.deleteTopic(organizationIdSupplier.get(), topicId);
         return Response.ok(dto).build();
     }
 }

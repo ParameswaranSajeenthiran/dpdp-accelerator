@@ -77,5 +77,25 @@
         {% else %}
         <PendingSubscriptionRecoveryThresholdSeconds>60</PendingSubscriptionRecoveryThresholdSeconds>
         {% endif %}
+        {% if dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds is defined %}
+        <BackgroundWorkerInitialDelaySeconds>{{dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds}}</BackgroundWorkerInitialDelaySeconds>
+        {% else %}
+        <BackgroundWorkerInitialDelaySeconds>10</BackgroundWorkerInitialDelaySeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds is defined %}
+        <PendingSubscriptionRecoveryIntervalSeconds>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds}}</PendingSubscriptionRecoveryIntervalSeconds>
+        {% else %}
+        <PendingSubscriptionRecoveryIntervalSeconds>30</PendingSubscriptionRecoveryIntervalSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size is defined %}
+        <PendingSubscriptionRecoveryBatchSize>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size}}</PendingSubscriptionRecoveryBatchSize>
+        {% else %}
+        <PendingSubscriptionRecoveryBatchSize>20</PendingSubscriptionRecoveryBatchSize>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds is defined %}
+        <WorkerShutdownTimeoutSeconds>{{dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds}}</WorkerShutdownTimeoutSeconds>
+        {% else %}
+        <WorkerShutdownTimeoutSeconds>5</WorkerShutdownTimeoutSeconds>
+        {% endif %}
     </EventNotifications>
 </DPDPAccelerator>

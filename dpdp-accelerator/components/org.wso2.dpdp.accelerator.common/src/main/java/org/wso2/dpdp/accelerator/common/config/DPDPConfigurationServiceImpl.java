@@ -27,6 +27,19 @@ import java.util.Collections;
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
     private static final Log LOG = LogFactory.getLog(DPDPConfigurationServiceImpl.class);
+    private static final int DEFAULT_THREAD_POOL_SIZE = 4;
+    private static final long DEFAULT_BASE_BACKOFF_SECONDS = 5L;
+    private static final int DEFAULT_MAX_RETRIES = 5;
+    private static final boolean DEFAULT_ALLOW_HTTP_CALLBACK_URL = true;
+    private static final int DEFAULT_DELIVERY_WORKER_BATCH_SIZE = 50;
+    private static final int DEFAULT_DELIVERY_WORKER_POLL_SECONDS = 5;
+    private static final int DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS = 10;
+    private static final int DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES = 4096;
+    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS = 60;
+    private static final int DEFAULT_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS = 10;
+    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS = 30;
+    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE = 20;
+    private static final int DEFAULT_WORKER_SHUTDOWN_TIMEOUT_SECONDS = 5;
     private final DPDPConfigParser configParser;
 
     public DPDPConfigurationServiceImpl() {
@@ -41,7 +54,7 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
             try {
                 parser = DPDPConfigParser.getInstance();
             } catch (RuntimeException e) {
-            LOG.debug("DPDP accelerator configuration is unavailable.", e);
+                LOG.debug("DPDP accelerator configuration is unavailable.", e);
                 parser = null;
             }
         }
@@ -68,66 +81,127 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
     @Override
     public int getEventNotificationThreadPoolSize() {
-        return getInt("EventNotifications.ThreadPoolSize");
+        return getPositiveInt("EventNotifications.ThreadPoolSize", DEFAULT_THREAD_POOL_SIZE);
     }
 
     @Override
     public long getEventNotificationBaseBackoffSeconds() {
-        return getLong("EventNotifications.BaseBackoffSeconds");
+        return getNonNegativeLong("EventNotifications.BaseBackoffSeconds", DEFAULT_BASE_BACKOFF_SECONDS);
     }
 
     @Override
     public int getEventNotificationMaxRetries() {
-        return getInt("EventNotifications.MaxRetries");
+        return getNonNegativeInt("EventNotifications.MaxRetries", DEFAULT_MAX_RETRIES);
     }
 
     @Override
     public boolean isEventNotificationHttpCallbackUrlAllowed() {
-        return getBoolean("EventNotifications.AllowHttpCallbackUrl");
+        return getBoolean("EventNotifications.AllowHttpCallbackUrl", DEFAULT_ALLOW_HTTP_CALLBACK_URL);
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerBatchSize() {
-        return getInt("EventNotifications.DeliveryWorkerBatchSize");
+        return getPositiveInt("EventNotifications.DeliveryWorkerBatchSize", DEFAULT_DELIVERY_WORKER_BATCH_SIZE);
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerPollSeconds() {
-        return getInt("EventNotifications.DeliveryWorkerPollSeconds");
+        return getPositiveInt("EventNotifications.DeliveryWorkerPollSeconds", DEFAULT_DELIVERY_WORKER_POLL_SECONDS);
     }
 
     @Override
     public int getEventNotificationStuckInFlightThresholdSeconds() {
-        return getInt("EventNotifications.StuckInFlightThresholdSeconds");
+        return getNonNegativeInt("EventNotifications.StuckInFlightThresholdSeconds",
+                DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS);
     }
 
     @Override
     public int getEventNotificationMaxVerificationResponseBodyBytes() {
-        return getInt("EventNotifications.MaxVerificationResponseBodyBytes");
+        return getPositiveInt("EventNotifications.MaxVerificationResponseBodyBytes",
+                DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds() {
-        return getInt("EventNotifications.PendingSubscriptionRecoveryThresholdSeconds");
+        return getNonNegativeInt("EventNotifications.PendingSubscriptionRecoveryThresholdSeconds",
+                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
     }
 
-    private int getInt(String configKey) {
-        return Integer.parseInt(getRequiredValue(configKey));
+    @Override
+    public int getEventNotificationBackgroundWorkerInitialDelaySeconds() {
+        return getNonNegativeInt("EventNotifications.BackgroundWorkerInitialDelaySeconds",
+                DEFAULT_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS);
     }
 
-    private long getLong(String configKey) {
-        return Long.parseLong(getRequiredValue(configKey));
+    @Override
+    public int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds() {
+        return getPositiveInt("EventNotifications.PendingSubscriptionRecoveryIntervalSeconds",
+                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS);
     }
 
-    private boolean getBoolean(String configKey) {
-        return Boolean.parseBoolean(getRequiredValue(configKey));
+    @Override
+    public int getEventNotificationPendingSubscriptionRecoveryBatchSize() {
+        return getPositiveInt("EventNotifications.PendingSubscriptionRecoveryBatchSize",
+                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE);
     }
 
-    private String getRequiredValue(String configKey) {
+    @Override
+    public int getEventNotificationWorkerShutdownTimeoutSeconds() {
+        return getPositiveInt("EventNotifications.WorkerShutdownTimeoutSeconds",
+                DEFAULT_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
+    }
+
+    private int getPositiveInt(String configKey, int defaultValue) {
+        int value = getInt(configKey, defaultValue);
+        if (value <= 0) {
+            throw new IllegalStateException("DPDP configuration must be positive: " + configKey);
+        }
+        return value;
+    }
+
+    private int getNonNegativeInt(String configKey, int defaultValue) {
+        int value = getInt(configKey, defaultValue);
+        if (value < 0) {
+            throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
+        }
+        return value;
+    }
+
+    private long getNonNegativeLong(String configKey, long defaultValue) {
+        String value = getValue(configKey, String.valueOf(defaultValue));
+        try {
+            long parsed = Long.parseLong(value);
+            if (parsed < 0) {
+                throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
+            }
+            return parsed;
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
+        }
+    }
+
+    private int getInt(String configKey, int defaultValue) {
+        String value = getValue(configKey, String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
+        }
+    }
+
+    private boolean getBoolean(String configKey, boolean defaultValue) {
+        String value = getValue(configKey, String.valueOf(defaultValue));
+        if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+            throw new IllegalStateException("Invalid boolean DPDP configuration: " + configKey);
+        }
+        return Boolean.parseBoolean(value);
+    }
+
+    private String getValue(String configKey, String defaultValue) {
         Object configuredValue = getConfigurations().get(configKey);
         if (configuredValue != null && !configuredValue.toString().trim().isEmpty()) {
             return configuredValue.toString().trim();
         }
-        throw new IllegalStateException("Required DPDP configuration is missing: " + configKey);
+        return defaultValue;
     }
 }

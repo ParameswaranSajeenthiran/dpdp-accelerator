@@ -27,6 +27,7 @@ import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.CallbackUrlCanonicalizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -241,7 +242,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             PurposeFilterMode filterType, List<String> purposes,
             DeliveryMode deliveryMode, String callbackUrl) {
         Set<String> newPurposesSet = PurposeOverlapUtils.canonicalize(purposes);
-        String normalizedCallbackUrl = callbackUrl != null ? callbackUrl.trim().toLowerCase() : "";
+        String normalizedCallbackUrl = CallbackUrlCanonicalizer.canonicalize(callbackUrl);
 
         for (Subscription existing : existingSubs) {
             String existingGroupId = existing.getGroupId() != null ? existing.getGroupId().trim() : "";
@@ -249,10 +250,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 continue;
             }
 
-            String existingStatus = existing.getStatus() != null ? existing.getStatus().toLowerCase() : "";
-            if (!SubscriptionStatus.ACTIVE.getValue().toLowerCase().equals(existingStatus)
-                    && !SubscriptionStatus.PENDING.getValue().toLowerCase().equals(existingStatus)
-                    && !SubscriptionStatus.STALE.getValue().toLowerCase().equals(existingStatus)) {
+            String existingStatus = existing.getStatus() != null
+                    ? existing.getStatus().toLowerCase(java.util.Locale.ROOT) : "";
+            if (!SubscriptionStatus.ACTIVE.getValue().toLowerCase(java.util.Locale.ROOT).equals(existingStatus)
+                    && !SubscriptionStatus.PENDING.getValue().toLowerCase(java.util.Locale.ROOT).equals(existingStatus)
+                    && !SubscriptionStatus.STALE.getValue().toLowerCase(java.util.Locale.ROOT).equals(existingStatus)) {
                 continue;
             }
 
@@ -266,8 +268,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             if (deliveryMode == DeliveryMode.WEBHOOK) {
-                String existingCallbackUrl = existing.getCallbackUrl() != null
-                        ? existing.getCallbackUrl().trim().toLowerCase() : "";
+                String existingCallbackUrl = CallbackUrlCanonicalizer.canonicalize(existing.getCallbackUrl());
                 if (!normalizedCallbackUrl.equals(existingCallbackUrl)) {
                     continue;
                 }
@@ -373,7 +374,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
-                    "Invalid callbackUrl: " + e.getMessage(), 400);
+                    "Invalid callback URL.", 400);
         }
     }
 
@@ -428,10 +429,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Webhook verification request failed: " + LogSanitizer.sanitize(e.getMessage()), e);
+            }
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED,
-                    "Webhook call failed: " + e.getMessage(), 422);
+                    EventNotificationServiceConstants.WEBHOOK_VERIFICATION_FAILED_ERROR_MSG, 422);
         }
     }
 
