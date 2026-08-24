@@ -27,7 +27,7 @@ import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.internal.ConsentHistoryDataHolder;
+import org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionDataHolder;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
@@ -61,7 +61,7 @@ public class ConsentHistoryServiceImplTest {
     public void setUp() {
 
         MockitoAnnotations.openMocks(this);
-        ConsentHistoryDataHolder.getInstance().setConfigurationService(configurationService);
+        DPDPConsentExtensionDataHolder.getInstance().setConfigurationService(configurationService);
         when(configurationService.isConsentHistorySnapshotEnabled()).thenReturn(true);
         consentHistoryService = new ConsentHistoryServiceImpl(consentHistoryDAO, () -> mock(Connection.class),
                 connection -> { }, connection -> { });

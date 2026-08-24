@@ -29,29 +29,32 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.impl.ConsentExpiryServiceImpl;
 import org.wso2.dpdp.accelerator.consent.extensions.service.impl.ConsentHistoryServiceImpl;
 
 @Component(
-        name = "org.wso2.dpdp.accelerator.consent.extensions.internal.ConsentHistoryServiceComponent",
+        name = "org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionServiceComponent",
         immediate = true
 )
-public class ConsentHistoryServiceComponent {
+public class DPDPConsentExtensionServiceComponent {
 
-    private static final Log LOG = LogFactory.getLog(ConsentHistoryServiceComponent.class);
+    private static final Log LOG = LogFactory.getLog(DPDPConsentExtensionServiceComponent.class);
 
     @Activate
     protected void activate(ComponentContext context) {
 
         BundleContext bundleContext = context.getBundleContext();
         bundleContext.registerService(ConsentHistoryService.class.getName(), new ConsentHistoryServiceImpl(), null);
-        LOG.debug("DPDP Consent History component activated; service registered.");
+        bundleContext.registerService(ConsentExpiryService.class.getName(), new ConsentExpiryServiceImpl(), null);
+        LOG.debug("DPDP Consent Extensions component activated; services registered.");
     }
 
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
-        LOG.debug("DPDP Consent History component deactivated.");
+        LOG.debug("DPDP Consent Extensions component deactivated.");
     }
 
     @Reference(
@@ -63,12 +66,12 @@ public class ConsentHistoryServiceComponent {
     protected void setConfigurationService(DPDPConfigurationService configurationService) {
 
         LOG.debug("Setting the DPDP Configuration Service.");
-        ConsentHistoryDataHolder.getInstance().setConfigurationService(configurationService);
+        DPDPConsentExtensionDataHolder.getInstance().setConfigurationService(configurationService);
     }
 
     protected void unsetConfigurationService(DPDPConfigurationService configurationService) {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
-        ConsentHistoryDataHolder.getInstance().setConfigurationService(null);
+        DPDPConsentExtensionDataHolder.getInstance().setConfigurationService(null);
     }
 }

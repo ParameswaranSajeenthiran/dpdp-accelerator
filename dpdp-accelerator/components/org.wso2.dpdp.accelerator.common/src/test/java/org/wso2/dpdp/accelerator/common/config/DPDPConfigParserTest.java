@@ -83,4 +83,22 @@ public class DPDPConfigParserTest {
         assertTrue(service.isConsentHistorySnapshotEnabled());
         assertEquals(service.getConsentHistoryDataSourceName(), "jdbc/WSO2DPDP_DB");
     }
+
+    @Test
+    public void fallsBackToConsentExpiryDefaultsWhenKeysAreAbsent() {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        assertTrue(parser.isConsentExpiryEnabled());
+        assertEquals(parser.getConsentExpiryCronValue(), "0 0 0 * * ?");
+        assertEquals(parser.getConsentExpiryBatchSize(), 100);
+    }
+
+    @Test
+    public void configurationServiceDelegatesConsentExpiryToTheSameParser() {
+
+        DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
+        assertTrue(service.isConsentExpiryEnabled());
+        assertEquals(service.getConsentExpiryCronValue(), "0 0 0 * * ?");
+        assertEquals(service.getConsentExpiryBatchSize(), 100);
+    }
 }

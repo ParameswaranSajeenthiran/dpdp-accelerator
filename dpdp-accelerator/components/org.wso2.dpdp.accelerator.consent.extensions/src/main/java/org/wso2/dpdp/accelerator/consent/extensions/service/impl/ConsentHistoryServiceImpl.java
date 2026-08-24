@@ -28,7 +28,7 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistor
 import org.wso2.dpdp.accelerator.consent.extensions.dao.impl.ConsentHistoryDAOImpl;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.internal.ConsentHistoryDataHolder;
+import org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionDataHolder;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
@@ -102,7 +102,7 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
     public void recordHistorySnapshot(String tenantDomain, String consentId, ActionType actionType,
             String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException {
 
-        if (!ConsentHistoryDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
+        if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
             LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
             return;
         }

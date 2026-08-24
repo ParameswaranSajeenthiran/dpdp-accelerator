@@ -59,4 +59,22 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
         return CONFIG_PARSER.getConsentHistoryDataSourceName();
     }
+
+    @Override
+    public boolean isConsentExpiryEnabled() {
+
+        return CONFIG_PARSER.isConsentExpiryEnabled();
+    }
+
+    @Override
+    public String getConsentExpiryCronValue() {
+
+        return CONFIG_PARSER.getConsentExpiryCronValue();
+    }
+
+    @Override
+    public int getConsentExpiryBatchSize() {
+
+        return CONFIG_PARSER.getConsentExpiryBatchSize();
+    }
 }

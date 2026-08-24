@@ -20,17 +20,17 @@ package org.wso2.dpdp.accelerator.consent.extensions.internal;
 
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 
-public class ConsentHistoryDataHolder {
+public class DPDPConsentExtensionDataHolder {
 
-    private static final ConsentHistoryDataHolder INSTANCE = new ConsentHistoryDataHolder();
+    private static final DPDPConsentExtensionDataHolder INSTANCE = new DPDPConsentExtensionDataHolder();
 
     private DPDPConfigurationService configurationService;
 
-    private ConsentHistoryDataHolder() {
+    private DPDPConsentExtensionDataHolder() {
 
     }
 
-    public static ConsentHistoryDataHolder getInstance() {
+    public static DPDPConsentExtensionDataHolder getInstance() {
 
         return INSTANCE;
     }

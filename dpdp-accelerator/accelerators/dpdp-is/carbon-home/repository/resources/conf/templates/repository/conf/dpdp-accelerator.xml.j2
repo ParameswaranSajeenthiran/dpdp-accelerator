@@ -48,4 +48,21 @@
         <DataSourceName>jdbc/WSO2DPDP_DB</DataSourceName>
         {% endif %}
     </ConsentHistory>
+    <ConsentExpiry>
+        {% if dpdp_accelerator.consent_expiry.enabled is defined %}
+        <Enabled>{{dpdp_accelerator.consent_expiry.enabled}}</Enabled>
+        {% else %}
+        <Enabled>true</Enabled>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.cron_value is defined %}
+        <CronValue>{{dpdp_accelerator.consent_expiry.cron_value}}</CronValue>
+        {% else %}
+        <CronValue>0 0 0 * * ?</CronValue>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.batch_size is defined %}
+        <BatchSize>{{dpdp_accelerator.consent_expiry.batch_size}}</BatchSize>
+        {% else %}
+        <BatchSize>100</BatchSize>
+        {% endif %}
+    </ConsentExpiry>
 </DPDPAccelerator>

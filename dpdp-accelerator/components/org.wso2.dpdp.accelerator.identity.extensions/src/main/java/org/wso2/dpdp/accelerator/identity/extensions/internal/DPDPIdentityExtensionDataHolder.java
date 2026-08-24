@@ -26,6 +26,7 @@ import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 
 /**
@@ -45,6 +46,7 @@ public final class DPDPIdentityExtensionDataHolder {
     private DPDPConfigurationService configurationService;
     private PrivilegedConsentManager privilegedConsentManager;
     private ConsentHistoryService consentHistoryService;
+    private ConsentExpiryService consentExpiryService;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -143,5 +145,15 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setConsentHistoryService(ConsentHistoryService consentHistoryService) {
 
         this.consentHistoryService = consentHistoryService;
+    }
+
+    public ConsentExpiryService getConsentExpiryService() {
+
+        return consentExpiryService;
+    }
+
+    public void setConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        this.consentExpiryService = consentExpiryService;
     }
 }

@@ -41,8 +41,10 @@ import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobActivator;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
@@ -68,6 +70,7 @@ public class DPDPIdentityExtensionServiceComponent {
                 new DPDPIdentityExtensionTenantMgtListener(), null);
         bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentHistoryListener(),
                 null);
+        new ConsentExpiryJobActivator().activate();
         LOG.debug("DPDP Identity Extensions component activated; tenant management and consent management "
                 + "listeners registered.");
 
@@ -256,5 +259,23 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the Consent History Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConsentHistoryService(null);
+    }
+
+    @Reference(
+            service = ConsentExpiryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConsentExpiryService"
+    )
+    protected void setConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        LOG.debug("Setting the Consent Expiry Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentExpiryService(consentExpiryService);
+    }
+
+    protected void unsetConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        LOG.debug("Unsetting the Consent Expiry Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentExpiryService(null);
     }
 }

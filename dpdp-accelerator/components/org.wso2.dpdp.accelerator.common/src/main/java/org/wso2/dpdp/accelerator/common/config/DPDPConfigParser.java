@@ -160,4 +160,22 @@ public final class DPDPConfigParser {
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_DATA_SOURCE_NAME)
                 .orElse(DPDPCommonConstants.DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME);
     }
+
+    public boolean isConsentExpiryEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public String getConsentExpiryCronValue() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_CRON_VALUE)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_CRON_VALUE);
+    }
+
+    public int getConsentExpiryBatchSize() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_BATCH_SIZE)
+                .map(Integer::parseInt).orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE);
+    }
 }

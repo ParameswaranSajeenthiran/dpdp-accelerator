@@ -37,4 +37,10 @@ public interface DPDPConfigurationService {
     boolean isConsentHistorySnapshotEnabled();
 
     String getConsentHistoryDataSourceName();
+
+    boolean isConsentExpiryEnabled();
+
+    String getConsentExpiryCronValue();
+
+    int getConsentExpiryBatchSize();
 }

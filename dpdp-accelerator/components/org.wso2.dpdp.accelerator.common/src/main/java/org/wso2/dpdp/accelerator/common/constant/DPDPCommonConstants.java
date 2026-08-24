@@ -33,6 +33,12 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_HISTORY_DATA_SOURCE_NAME = "ConsentHistory.DataSourceName";
     public static final String DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME = "jdbc/WSO2DPDP_DB";
 
+    public static final String CONSENT_EXPIRY_ENABLED = "ConsentExpiry.Enabled";
+    public static final String CONSENT_EXPIRY_CRON_VALUE = "ConsentExpiry.CronValue";
+    public static final String CONSENT_EXPIRY_BATCH_SIZE = "ConsentExpiry.BatchSize";
+    public static final String DEFAULT_CONSENT_EXPIRY_CRON_VALUE = "0 0 0 * * ?";
+    public static final int DEFAULT_CONSENT_EXPIRY_BATCH_SIZE = 100;
+
     private DPDPCommonConstants() {
 
     }
