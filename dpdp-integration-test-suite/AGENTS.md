@@ -211,11 +211,10 @@ already been made here.
 
 Do not trust these; they describe things that no longer exist:
 
-- `README.md`, `.env.example`, `utils/env.ts`, `utils/authStorage.ts` all cite
-  `bin/create-portal-app.sh`. There is no such script — the portal application and both roles are
-  auto-provisioned by `DPDPIdentityExtensionTenantMgtListener`. Role *membership* is still manual.
+- `.env.example`, `utils/env.ts`, `utils/authStorage.ts` cite `bin/create-portal-app.sh`. There is
+  no such script — the portal application and both roles are auto-provisioned by
+  `DPDPIdentityExtensionTenantMgtListener`. Role *membership* is now handled by
+  `scripts/provision-test-users.sh`, not a manual Console step.
 - `README.md` describes a `03.07` serial admin-journey chain. It does not exist, and nothing in the
   suite uses `test.describe.serial`.
 - `package.json` has a `test:demo-data` script pointing at `tests/99-demo-data`, which does not exist.
-- `README.md` claims parallel runs need no extra setup and asks for Node 18+; see
-  `docs/known-doc-issues.md` at the repository root.

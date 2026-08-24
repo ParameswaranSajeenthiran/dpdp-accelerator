@@ -166,7 +166,7 @@ load-bearing lines in `pageForPersonaState`, and the measured flake profile.
 ## Stale docs
 
 Several committed docs contain known-inaccurate references (pnpm vs npm, a removed BFF, a deleted
-`create-portal-app.sh`). See `docs/known-doc-issues.md` before trusting a README in this repo.
+`create-portal-app.sh`). Don't take a README's claims at face value without checking the source.
 
 ## Reference docs
 
