@@ -116,7 +116,7 @@ responsible for.
 | --- | --- |
 | `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
 | `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
-| `03-consents/` | Consent records: User and admin registries (view/search/act), plus `03.07`, a `test.describe.serial` chain covering the full admin journey — create an Element, a Purpose, then a Consent — end to end |
+| `03-consents/` | Consent records: User and admin registries (view/search/act) |
 | `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes |
 
 ## Operating principles
@@ -134,9 +134,8 @@ persistent, shared environment rather than a disposable one:
 - **Tests clean up their own setup data — except Consents.** Elements/Purposes created as setup
   are deleted when the test finishes; Consents are left in place, since the product has no
   delete-by-id for them.
-- **Almost everything is independent.** Only `03.07` uses `test.describe.serial` for a fixed,
-  same-worker execution order — everything else can run in any order, on any worker, without
-  coordination.
+- **Every spec is independent.** Nothing in the suite uses `test.describe.serial` — every test can
+  run in any order, on any worker, without coordination.
 
 ## Known limitations
 

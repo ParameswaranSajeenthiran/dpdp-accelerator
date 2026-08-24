@@ -206,15 +206,3 @@ already been made here.
 2. `npx playwright test <your specs> --workers=1` — passing.
 3. `npx playwright test` — full suite, parallel, and compare against the flake profile above.
 4. State actual counts. "Tests pass" without the numbers is not a result.
-
-## Stale references in this directory
-
-Do not trust these; they describe things that no longer exist:
-
-- `.env.example`, `utils/env.ts`, `utils/authStorage.ts` cite `bin/create-portal-app.sh`. There is
-  no such script — the portal application and both roles are auto-provisioned by
-  `DPDPIdentityExtensionTenantMgtListener`. Role *membership* is now handled by
-  `scripts/provision-test-users.sh`, not a manual Console step.
-- `README.md` describes a `03.07` serial admin-journey chain. It does not exist, and nothing in the
-  suite uses `test.describe.serial`.
-- `package.json` has a `test:demo-data` script pointing at `tests/99-demo-data`, which does not exist.

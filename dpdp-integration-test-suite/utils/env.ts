@@ -70,11 +70,11 @@ export const env = {
     password: required('TEST_USER_PASSWORD'),
   } satisfies Persona,
 
-  // Must be a real user assigned the dpdp-consent-admin role (bin/create-portal-app.sh creates
-  // the role itself, but not its membership - see docs/configuration-guide.md, "Grant
-  // administration access", for assigning it to an account in the Console). Grants every
-  // internal_consent_mgt_* scope, so this single persona both drives the admin consent registry
-  // UI and creates Purposes/Elements/Consents via the API as test setup for the UI layer.
+  // Must be a real user assigned the dpdp-consent-admin role. The accelerator provisions the role
+  // itself automatically, but never role membership - run scripts/provision-test-users.sh to
+  // create this account with its role already assigned. Grants every internal_consent_mgt_*
+  // scope, so this single persona both drives the admin consent registry UI and creates
+  // Purposes/Elements/Consents via the API as test setup for the UI layer.
   consentAdmin: {
     username: required('TEST_CONSENT_ADMIN_USERNAME'),
     password: required('TEST_CONSENT_ADMIN_PASSWORD'),

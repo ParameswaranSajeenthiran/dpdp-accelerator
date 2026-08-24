@@ -3,8 +3,8 @@ DPDP Accelerator is a collection of artifacts, reference implementations, and do
 
 ## Build
 
-Requires JDK 11+, Maven 3.6.3+, and Node.js 20.19+ (or 22.12+) with npm, all
-on the `PATH`.
+Requires JDK 11+ (JDK 21+ to run the server), Maven 3.6.3+, and Node.js 20.19+ (or 22.12+) with
+npm, all on the `PATH`.
 
 Run from this directory (the repository root) — **not** from `dpdp-accelerator/`,
 which only builds the consent portal on its own and skips the accelerator zip:

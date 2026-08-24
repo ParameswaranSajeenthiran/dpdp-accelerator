@@ -1,13 +1,13 @@
-# OpenFGC Portal Agent Guide
+# DPDP Consent Portal Frontend Agent Guide
 
-This is the cross-agent, provider-neutral instruction file for this repository.
+This is the cross-agent, provider-neutral instruction file for the consent portal frontend.
 
 Use this file as the canonical shared policy for the frontend. For Oxygen UI component-specific guidance, also follow `.ai/oxygen-ui/AGENTS.md`.
 
 ## Required Stack and Patterns
 
 - React + TypeScript + Vite
-- pnpm for package management
+- npm for package management
 - Oxygen UI for UI components
 - Vitest + React Testing Library for tests
 - ESLint + Prettier for code quality
