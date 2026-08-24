@@ -108,11 +108,12 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                     .authorizeComplaintManagementAPI(applicationId, tenantDomain);
 
             // No dedicated complaint role - the complaint scopes are folded into dpdp-consent-admin
-            // alongside the consent-mgt ones, same as DPDPConsentPortalRoleProvisioningUtil already
-            // does for consent; dpdp-consent-user is unaffected (still carries none).
+            // alongside the consent-mgt ones; dpdp-consent-user gets only the :self-suffixed
+            // complaint scopes (see DPDPConsentPortalRoleProvisioningUtil).
             List<String> adminScopes = new ArrayList<>(authorizedConsentScopes);
             adminScopes.addAll(authorizedComplaintScopes);
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes);
+            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes,
+                    tenantInfoBean);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

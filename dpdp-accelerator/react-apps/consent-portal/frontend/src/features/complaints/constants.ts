@@ -18,14 +18,6 @@
 
 import type { ComplaintStatus } from '../../types/complaint'
 
-export const COMPLAINT_STATE_MACHINE_ORDER: ComplaintStatus[] = [
-  'OPEN',
-  'IN_PROGRESS',
-  'WAITING_ON_CLIENT',
-  'AWAITING_INTERNAL_REVIEW',
-  'RESOLVED',
-]
-
 export const COMPLAINT_NEXT_STATUSES: Record<ComplaintStatus, ComplaintStatus[]> = {
   OPEN: ['IN_PROGRESS', 'WAITING_ON_CLIENT'],
   IN_PROGRESS: ['WAITING_ON_CLIENT', 'RESOLVED'],

@@ -58,7 +58,11 @@ public final class DPDPConsentPortalAppProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalAppProvisioningUtil.class);
     static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String USERNAME_CLAIM_URI = "http://wso2.org/claims/username";
+    // OAuthAdminServiceImpl#validateAccessTokenClaims checks setAccessTokenClaims() entries
+    // against the OIDC dialect's claim mappings (getOIDCToLocalClaimMappings), not the local
+    // dialect - so this must be the OIDC claim URI "username", which maps to the local claim
+    // http://wso2.org/claims/username, not that local claim URI itself.
+    private static final String USERNAME_CLAIM_URI = "username";
     private static final String AUTHORIZED_API_POLICY = "RBAC";
     private static final String[] GRANT_TYPES = {"authorization_code", "refresh_token"};
     private static final String[] CONSENT_MGT_API_IDENTIFIERS = {

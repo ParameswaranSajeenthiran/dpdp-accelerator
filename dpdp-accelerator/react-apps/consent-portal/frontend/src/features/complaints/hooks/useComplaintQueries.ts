@@ -44,7 +44,6 @@ import {
   listMyComplaints,
   sendManagedComplaintMessage,
   sendMyComplaintMessage,
-  updateManagedComplaintStatus,
   uploadManagedComplaintAttachments,
   uploadMyComplaintAttachments,
 } from '../api/complaintsApi'
@@ -287,39 +286,6 @@ export function useSendManagedComplaintMessageMutation(): UseMutationResult<
       if (variables.toStatus) {
         await queryClient.invalidateQueries({ queryKey: ['complaints', 'managed'] })
       }
-    },
-  })
-}
-
-interface UpdateManagedComplaintStatusVariables {
-  complaintId: string
-  toStatus: ComplaintStatus
-  note: string
-}
-
-export function useUpdateManagedComplaintStatusMutation(): UseMutationResult<
-  void,
-  Error,
-  UpdateManagedComplaintStatusVariables
-> {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      complaintId,
-      toStatus,
-      note,
-    }: UpdateManagedComplaintStatusVariables): Promise<void> => {
-      await updateManagedComplaintStatus(complaintId, {
-        toStatus,
-        note,
-      })
-    },
-    onSuccess: async (_data, variables): Promise<void> => {
-      await queryClient.invalidateQueries({
-        queryKey: ['complaint', 'managed', variables.complaintId],
-      })
-      await queryClient.invalidateQueries({ queryKey: ['complaints', 'managed'] })
     },
   })
 }

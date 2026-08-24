@@ -27,8 +27,6 @@ import type {
   ComplaintListResponseAPI,
   ComplaintMessageRequestAPI,
   ComplaintRecordAPI,
-  ComplaintStatusUpdateRequestAPI,
-  ComplaintStatusUpdateResponseAPI,
   ComplaintTimelineListResponseAPI,
 } from '../../../types/complaint'
 import { apiRequest } from '../../../utils/apiClient'
@@ -126,20 +124,6 @@ export async function sendMyComplaintMessage(
   )
 }
 
-export async function updateMyComplaintStatus(
-  complaintId: string,
-  body: ComplaintStatusUpdateRequestAPI,
-): Promise<ComplaintStatusUpdateResponseAPI> {
-  return apiRequest<ComplaintStatusUpdateResponseAPI>(
-    `${COMPLAINT_MGT_V1}/me/complaints/${encodeURIComponent(complaintId)}/status`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ toStatus: body.toStatus }),
-    },
-  )
-}
-
 /** Always isPublic=true - the /me upload endpoint has no isPublic field. */
 export async function uploadMyComplaintAttachments(
   complaintId: string,
@@ -202,20 +186,6 @@ export async function sendManagedComplaintMessage(
         isPublic: body.isPublic ?? true,
         toStatus: body.toStatus,
       }),
-    },
-  )
-}
-
-export async function updateManagedComplaintStatus(
-  complaintId: string,
-  body: ComplaintStatusUpdateRequestAPI,
-): Promise<ComplaintStatusUpdateResponseAPI> {
-  return apiRequest<ComplaintStatusUpdateResponseAPI>(
-    `${COMPLAINT_MGT_V1}/complaints/${encodeURIComponent(complaintId)}/status`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify(body),
     },
   )
 }

@@ -139,8 +139,9 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertTrue(dto.getAllowedOrigins().isEmpty());
         // Without this, JWT access tokens carry only the opaque "sub" - TokenIntrospectionClient
         // in the complaint-mgt endpoint depends on this claim being present to attribute
-        // complaints/comments to a human-readable name.
-        assertEquals(dto.getAccessTokenClaims(), new String[]{"http://wso2.org/claims/username"});
+        // complaints/comments to a human-readable name. Must be the OIDC claim URI ("username"),
+        // not the local claim URI - see the constant's Javadoc for why.
+        assertEquals(dto.getAccessTokenClaims(), new String[]{"username"});
     }
 
     @Test

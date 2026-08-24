@@ -172,12 +172,6 @@ export interface ComplaintCommentCreateResponseAPI {
   createdTime: number
 }
 
-export interface ComplaintStatusUpdateResponseAPI {
-  message: string
-  toStatus: ComplaintStatus
-  updatedAt: number
-}
-
 export interface ComplaintCategoriesResponseAPI {
   data: Array<{ category: ComplaintCategoryAPI; priority: ComplaintPriorityAPI }>
 }
@@ -199,12 +193,6 @@ export interface ComplaintMessageRequestAPI {
   toStatus?: ComplaintStatus
   /** Officer/admin (cm) only - true for a shared reply, false for an internal note. */
   isPublic?: boolean
-}
-
-export interface ComplaintStatusUpdateRequestAPI {
-  toStatus: ComplaintStatus
-  /** Officer/admin (cm) only. */
-  note?: string
 }
 
 // ---- UI-facing (mapped) shapes - see utils/complaintMapper.ts ----
