@@ -8,6 +8,8 @@
 package org.wso2.dpdp.accelerator.common.persistence;
 
 import org.mockito.Mockito;
+import org.mockito.InOrder;
+import org.h2.jdbcx.JdbcDataSource;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
@@ -15,10 +17,14 @@ import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 public class JDBCPersistenceManagerTest {
@@ -82,6 +88,57 @@ public class JDBCPersistenceManagerTest {
         Mockito.verify(connection).rollback();
         Mockito.verify(connection).setAutoCommit(true);
         Mockito.verify(connection).close();
+    }
+
+    @Test
+    public void executeInTransactionRollsBackErrorBeforeRestoringAutoCommit() throws Exception {
+        DataSource dataSource = Mockito.mock(DataSource.class);
+        Connection connection = Mockito.mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+        Mockito.when(connection.getAutoCommit()).thenReturn(true);
+        setDataSource(dataSource);
+        AssertionError expected = new AssertionError("expected");
+
+        AssertionError actual = expectThrows(AssertionError.class, () ->
+                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
+                    throw expected;
+                }));
+
+        assertSame(actual, expected);
+        InOrder lifecycle = Mockito.inOrder(connection);
+        lifecycle.verify(connection).setAutoCommit(false);
+        lifecycle.verify(connection).rollback();
+        lifecycle.verify(connection).setAutoCommit(true);
+        lifecycle.verify(connection).close();
+        Mockito.verify(connection, Mockito.never()).commit();
+    }
+
+    @Test
+    public void executeInTransactionDoesNotPersistH2ChangesWhenErrorIsThrown() throws Exception {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:dpdp_error_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
+        setDataSource(dataSource);
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE TX_ERROR_TEST (ID INT PRIMARY KEY)");
+        }
+
+        expectThrows(AssertionError.class, () ->
+                JDBCPersistenceManager.getInstance().executeInTransaction(connection -> {
+                    try (PreparedStatement statement = connection.prepareStatement(
+                            "INSERT INTO TX_ERROR_TEST (ID) VALUES (?)")) {
+                        statement.setInt(1, 1);
+                        statement.executeUpdate();
+                    }
+                    throw new AssertionError("expected");
+                }));
+
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM TX_ERROR_TEST");
+             ResultSet resultSet = statement.executeQuery()) {
+            assertTrue(resultSet.next());
+            assertEquals(resultSet.getInt(1), 0);
+        }
     }
 
     @Test

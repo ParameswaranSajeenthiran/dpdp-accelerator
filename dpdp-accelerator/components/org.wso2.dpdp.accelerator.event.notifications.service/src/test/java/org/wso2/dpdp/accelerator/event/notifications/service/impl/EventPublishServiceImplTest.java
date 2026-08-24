@@ -22,7 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionCallback;
+import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
 import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -87,7 +87,7 @@ public class EventPublishServiceImplTest {
         transactionManager = mock(TransactionManager.class);
         connection = mock(Connection.class);
         when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
-                ((TransactionCallback<?>) invocation.getArgument(0)).execute(connection));
+                ((ConnectionCallback<?>) invocation.getArgument(0)).execute(connection));
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
         publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
                 transactionManager);
@@ -330,12 +330,12 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void searchEvents_withAllFilters_forwardsToDao() {
-        when(eventDAO.searchEvents(eq("org1"), eq("topic1"), eq("DELIVERED"), eq("grp1"), eq("marketing"), eq("search1"), eq(10), eq(0)))
+        when(eventDAO.searchEvents(eq("org1"), eq("topic1"), eq("delivered"), eq("grp1"), eq("marketing"), eq("search1"), eq(10), eq(0)))
                 .thenReturn(new PaginatedDAOResult<>(Collections.emptyList(), 0));
 
         PaginatedResult<EventDTO> result = publishService.searchEvents("org1", "topic1", "DELIVERED", "grp1", "marketing", "search1", 10, 0);
         assertNotNull(result);
-        verify(eventDAO, times(1)).searchEvents("org1", "topic1", "DELIVERED", "grp1", "marketing", "search1", 10, 0);
+        verify(eventDAO, times(1)).searchEvents("org1", "topic1", "delivered", "grp1", "marketing", "search1", 10, 0);
     }
 
     @Test(expectedExceptions = EventNotificationException.class)
@@ -421,7 +421,7 @@ public class EventPublishServiceImplTest {
                 new org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary(
                         "dlv-1", "evt-1", "sub-1", "topic-1", "DELIVERED", "webhook",
                         new Timestamp(1710000000000L), new Timestamp(1710000000000L), "{}");
-        when(deliveryDAO.listOrgDeliveries(eq("org1"), eq("DELIVERED"), eq("sub-1"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0), any(int[].class)))
+        when(deliveryDAO.listOrgDeliveries(eq("org1"), eq("delivered"), eq("sub-1"), eq("grp-1"), eq("marketing"), eq("search"), eq(10), eq(0), any(int[].class)))
                 .thenAnswer(invocation -> {
                     int[] total = invocation.getArgument(8);
                     total[0] = 1;

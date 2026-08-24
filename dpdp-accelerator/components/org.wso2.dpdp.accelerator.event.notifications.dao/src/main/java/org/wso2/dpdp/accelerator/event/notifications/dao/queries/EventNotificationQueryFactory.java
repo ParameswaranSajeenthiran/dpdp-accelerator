@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,7 +35,8 @@ public class EventNotificationQueryFactory {
     }
 
     public static EventNotificationCommonDBQueries getQueryProvider(String dbType) {
-        String key = (dbType != null && !dbType.trim().isEmpty()) ? dbType.trim().toLowerCase() : "default";
+        String key = (dbType != null && !dbType.trim().isEmpty())
+                ? dbType.trim().toLowerCase(Locale.ROOT) : "default";
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
             if (k.contains("postgres")) {
                 return new EventNotificationPostgresDBQueries();

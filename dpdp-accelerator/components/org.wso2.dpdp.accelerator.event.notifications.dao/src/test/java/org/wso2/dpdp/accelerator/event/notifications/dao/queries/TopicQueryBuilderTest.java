@@ -38,11 +38,11 @@ public class TopicQueryBuilderTest {
         QueryResult result = builder.buildSelectQuery(null);
 
         assertTrue(result.getSql().contains("LOWER(STATUS) = LOWER(?)"));
-        assertTrue(result.getSql().contains("LOWER(TOPIC_ID) LIKE ?"));
+        assertTrue(result.getSql().contains("LOWER(TOPIC_ID) LIKE ? ESCAPE '!'"));
         assertEquals(result.getParameters().size(), 5);
         assertEquals(result.getParameters().get(0), "org1");
         assertEquals(result.getParameters().get(1), "active");
-        assertEquals(result.getParameters().get(2), "%accounts\\_\\%%");
+        assertEquals(result.getParameters().get(2), "%accounts!_!%%");
     }
 
     @Test

@@ -42,8 +42,11 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 public class DeliveryDAOImpl implements DeliveryDAO {
 
@@ -420,45 +423,59 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             throw new IllegalArgumentException(
                     "Organization ID and Group ID cannot be empty when updating poll delivery statuses.");
         }
-        if ((ackEventIds == null || ackEventIds.isEmpty()) && (errEventIds == null || errEventIds.isEmpty())) {
+        Set<String> normalizedAckEventIds = normalizeEventIds(ackEventIds);
+        Set<String> normalizedErrEventIds = normalizeEventIds(errEventIds);
+        if (normalizedAckEventIds.isEmpty() && normalizedErrEventIds.isEmpty()) {
             return;
         }
+        if (!Collections.disjoint(normalizedAckEventIds, normalizedErrEventIds)) {
+            throw new IllegalArgumentException(
+                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
+        }
         try {
-                EventNotificationCommonDBQueries queries = getQueries(conn);
+            EventNotificationCommonDBQueries queries = getQueries(conn);
 
-                try (PreparedStatement updatePs = conn
-                        .prepareStatement(queries.getUpdatePollDeliveryStatusByEventAndGroupQuery())) {
-                    if (ackEventIds != null && !ackEventIds.isEmpty()) {
-                        for (String eventId : ackEventIds) {
-                            if (eventId != null && !eventId.trim().isEmpty()) {
-                                updatePs.setString(1, PollStatus.ACKNOWLEDGED.getValue());
-                                updatePs.setString(2, eventId.trim());
-                                updatePs.setString(3, orgId);
-                                updatePs.setString(4, groupId);
-                                updatePs.addBatch();
-                            }
-                        }
-                        updatePs.executeBatch();
+            try (PreparedStatement updatePs = conn
+                    .prepareStatement(queries.getUpdatePollDeliveryStatusByEventAndGroupQuery())) {
+                if (!normalizedAckEventIds.isEmpty()) {
+                    for (String eventId : normalizedAckEventIds) {
+                        updatePs.setString(1, PollStatus.ACKNOWLEDGED.getValue());
+                        updatePs.setString(2, eventId);
+                        updatePs.setString(3, orgId.trim());
+                        updatePs.setString(4, groupId.trim());
+                        updatePs.addBatch();
                     }
-
-                    if (errEventIds != null && !errEventIds.isEmpty()) {
-                        for (String eventId : errEventIds) {
-                            if (eventId != null && !eventId.trim().isEmpty()) {
-                                updatePs.setString(1, PollStatus.ERR.getValue());
-                                updatePs.setString(2, eventId.trim());
-                                updatePs.setString(3, orgId);
-                                updatePs.setString(4, groupId);
-                                updatePs.addBatch();
-                            }
-                        }
-                        updatePs.executeBatch();
-                    }
-
+                    updatePs.executeBatch();
                 }
-            } catch (SQLException e) {
-                throw new EventNotificationDataAccessException(
-                        String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
+
+                if (!normalizedErrEventIds.isEmpty()) {
+                    for (String eventId : normalizedErrEventIds) {
+                        updatePs.setString(1, PollStatus.ERR.getValue());
+                        updatePs.setString(2, eventId);
+                        updatePs.setString(3, orgId.trim());
+                        updatePs.setString(4, groupId.trim());
+                        updatePs.addBatch();
+                    }
+                    updatePs.executeBatch();
+                }
             }
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
+        }
+    }
+
+    private static Set<String> normalizeEventIds(List<String> eventIds) {
+        Set<String> normalized = new LinkedHashSet<>();
+        if (eventIds == null) {
+            return normalized;
+        }
+        for (String eventId : eventIds) {
+            if (eventId != null && !eventId.trim().isEmpty()) {
+                normalized.add(eventId.trim());
+            }
+        }
+        return normalized;
     }
 
     @Override
@@ -658,7 +675,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         if (statusFilter != null && !statusFilter.trim().isEmpty()) {
             outerWhere.append(outerWhere.length() == 0 ? " WHERE " : " AND ");
             outerWhere.append("LOWER(CURRENT_STATUS) = ?");
-            outerParams.add(statusFilter.trim().toLowerCase());
+            outerParams.add(statusFilter.trim().toLowerCase(Locale.ROOT));
         }
 
         if (subscriptionIdFilter != null && !subscriptionIdFilter.trim().isEmpty()) {
@@ -678,7 +695,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             List<String> validTokens = new ArrayList<>();
             for (String token : purposeTokens) {
                 if (token != null && !token.trim().isEmpty()) {
-                    validTokens.add(token.trim().toLowerCase());
+                    validTokens.add(token.trim().toLowerCase(Locale.ROOT));
                 }
             }
             if (!validTokens.isEmpty()) {
@@ -694,8 +711,13 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
         if (search != null && !search.trim().isEmpty()) {
             outerWhere.append(outerWhere.length() == 0 ? " WHERE " : " AND ");
-            outerWhere.append("(LOWER(DELIVERY_ID) LIKE ? OR LOWER(EVENT_ID) LIKE ? OR LOWER(GROUP_ID) LIKE ? OR LOWER(TOPIC_NAME) LIKE ?)");
-            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
+            outerWhere.append("(")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(DELIVERY_ID)"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(EVENT_ID)"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(GROUP_ID)"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(TOPIC_NAME)"))
+                    .append(")");
+            String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
             outerParams.add(term);
             outerParams.add(term);
             outerParams.add(term);

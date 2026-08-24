@@ -166,7 +166,8 @@
                             org.wso2.dpdp.accelerator.event.notifications.service.impl,
                             org.wso2.dpdp.accelerator.event.notifications.service.internal,
                             org.wso2.dpdp.accelerator.event.notifications.service.matching,
-                            org.wso2.dpdp.accelerator.event.notifications.service.recovery
+                            org.wso2.dpdp.accelerator.event.notifications.service.recovery,
+                            org.wso2.dpdp.accelerator.event.notifications.service.util
                         </Private-Package>
                         <Export-Package>
                             !org.wso2.dpdp.accelerator.event.notifications.service.dispatch,
@@ -174,6 +175,7 @@
                             !org.wso2.dpdp.accelerator.event.notifications.service.internal,
                             !org.wso2.dpdp.accelerator.event.notifications.service.matching,
                             !org.wso2.dpdp.accelerator.event.notifications.service.recovery,
+                            !org.wso2.dpdp.accelerator.event.notifications.service.util,
                             org.wso2.dpdp.accelerator.event.notifications.service.*;version="${project.version}"
                         </Export-Package>
                         <Import-Package>

@@ -208,7 +208,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 subscriptionId, orgId));
     }
 
-    private Optional<Subscription> getSubscriptionById(Connection conn, String subscriptionId, String orgId) {
+    @Override
+    public Optional<Subscription> getSubscriptionById(Connection conn, String subscriptionId, String orgId) {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionByIdQuery())) {
             ps.setString(1, subscriptionId);
             ps.setString(2, orgId);
@@ -224,6 +225,26 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTION_BY_ID, subscriptionId),
                     e);
+        }
+    }
+
+    @Override
+    public Optional<Subscription> lockSubscriptionForVerification(Connection conn, String subscriptionId,
+            String orgId, String expectedStatus) {
+        Objects.requireNonNull(conn, "Connection cannot be null.");
+        try (PreparedStatement ps = conn.prepareStatement(
+                getQueries(conn).getLockSubscriptionForVerificationQuery())) {
+            ps.setString(1, subscriptionId);
+            ps.setString(2, orgId);
+            ps.setString(3, expectedStatus);
+            if (ps.executeUpdate() == 0) {
+                return Optional.empty();
+            }
+            return getSubscriptionById(conn, subscriptionId, orgId);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS,
+                            subscriptionId), e);
         }
     }
 
@@ -550,32 +571,6 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     EventNotificationCommonConstants.ERROR_GETTING_PENDING_SUBSCRIPTIONS_FOR_RECOVERY, e);
             }
         });
-    }
-
-    @Override
-    public boolean claimPendingSubscriptionForVerification(String subscriptionId, String orgId,
-            Timestamp eligibleBefore) {
-        return DatabaseUtils.executeInTransaction(conn ->
-                claimPendingSubscriptionForVerification(conn, subscriptionId, orgId, eligibleBefore));
-    }
-
-    @Override
-    public boolean claimPendingSubscriptionForVerification(Connection conn, String subscriptionId, String orgId,
-            Timestamp eligibleBefore) {
-        Objects.requireNonNull(conn, "Connection cannot be null.");
-        Objects.requireNonNull(eligibleBefore, "Verification claim threshold cannot be null.");
-        try (PreparedStatement ps = conn.prepareStatement(
-                getQueries(conn).getClaimPendingSubscriptionForVerificationQuery())) {
-            ps.setString(1, subscriptionId);
-            ps.setString(2, orgId);
-            ps.setTimestamp(3, eligibleBefore);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS,
-                            subscriptionId),
-                    e);
-        }
     }
 
     private List<String> getPurposesBySubscriptionId(String subscriptionId, Connection conn) throws SQLException {

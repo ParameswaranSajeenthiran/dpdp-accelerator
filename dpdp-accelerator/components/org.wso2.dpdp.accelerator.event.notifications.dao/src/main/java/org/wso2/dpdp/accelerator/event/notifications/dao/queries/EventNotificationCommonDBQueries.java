@@ -140,6 +140,12 @@ public class EventNotificationCommonDBQueries {
                 "WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS = ?";
     }
 
+    public String getLockSubscriptionForVerificationQuery() {
+        return "UPDATE SUBSCRIPTION SET UPDATED_AT = UPDATED_AT " +
+                "WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS = ? AND DELIVERY_MODE = "
+                + SQL_WEBHOOK_MODE;
+    }
+
     /**
      * Returns all subscriptions for an org/topic that are in a live state
      * (active, pending, stale). Used by duplicate-check logic so that a second
@@ -357,12 +363,6 @@ public class EventNotificationCommonDBQueries {
                 + SQL_WEBHOOK_MODE + " AND UPDATED_AT <= ?";
     }
 
-    public String getClaimPendingSubscriptionForVerificationQuery() {
-        return "UPDATE SUBSCRIPTION SET UPDATED_AT = CURRENT_TIMESTAMP " +
-                "WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS = " + SQL_SUBSCRIPTION_PENDING +
-                " AND DELIVERY_MODE = " + SQL_WEBHOOK_MODE + " AND UPDATED_AT <= ?";
-    }
-
     /**
      * Updates a poll delivery status directly by delivery ID.
      * <p>
@@ -379,7 +379,7 @@ public class EventNotificationCommonDBQueries {
 
     public String getUpdatePollDeliveryStatusByEventAndGroupQuery() {
         return "UPDATE POLL_DELIVERY SET STATUS = ?, COMPLETED_AT = CURRENT_TIMESTAMP " +
-                "WHERE EVENT_ID = ? AND SUBSCRIPTION_ID IN (" +
+                "WHERE EVENT_ID = ? AND STATUS = " + SQL_POLL_PENDING + " AND SUBSCRIPTION_ID IN (" +
                 "SELECT SUBSCRIPTION_ID FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ?)";
     }
 

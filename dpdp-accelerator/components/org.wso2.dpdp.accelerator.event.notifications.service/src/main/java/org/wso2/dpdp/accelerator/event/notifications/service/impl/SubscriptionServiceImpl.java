@@ -19,6 +19,8 @@
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
@@ -49,6 +51,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -81,6 +84,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeliveryDAO deliveryDAO;
     private DeliveryAckDAO deliveryAckDAO;
     private DPDPConfigurationService configurationService;
+    private TransactionManager transactionManager = JDBCPersistenceManager.getInstance();
 
     private ScheduledExecutorService scheduler;
     private HttpClient httpClient;
@@ -97,11 +101,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
             DPDPConfigurationService configurationService) {
+        this(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO, configurationService,
+                JDBCPersistenceManager.getInstance());
+    }
+
+    public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
+            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
+            DPDPConfigurationService configurationService, TransactionManager transactionManager) {
         this.subscriptionDAO = subscriptionDAO;
         this.topicDAO = topicDAO;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
         this.configurationService = configurationService;
+        this.transactionManager = transactionManager;
     }
 
     public void start() {
@@ -311,33 +323,83 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         @Override
         public void run() {
+            int maxRetries = getConfiguration().getEventNotificationMaxRetries();
+            VerificationAttemptResult result = executeVerificationAttempt(subscriptionId, orgId,
+                    SubscriptionStatus.PENDING.getValue(), callbackUrl, topicName,
+                    attempt >= maxRetries);
+            if (!result.claimed) {
+                LOG.debug("Webhook verification skipped for subscription ["
+                        + LogSanitizer.sanitize(subscriptionId) + "] because it is no longer PENDING.");
+                return;
+            }
+            if (result.success) {
+                LOG.info("Webhook verification succeeded for subscription ["
+                        + LogSanitizer.sanitize(subscriptionId) + "] on attempt " + (attempt + 1) + ".");
+                return;
+            }
+            int nextAttempt = attempt + 1;
+            if (nextAttempt <= maxRetries) {
+                LOG.debug("Webhook verification attempt " + (attempt + 1)
+                        + " failed for subscription [" + LogSanitizer.sanitize(subscriptionId)
+                        + "]. Retrying. Reason: " + LogSanitizer.sanitize(result.failure.getMessage()));
+                scheduleWebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, nextAttempt);
+            } else {
+                LOG.debug("Exhausted all retries for subscription [" + LogSanitizer.sanitize(subscriptionId)
+                        + "]. Marked as STALE.");
+            }
+        }
+    }
+
+    /**
+     * Keeps the subscription row locked for the complete bounded verification call.
+     * This intentionally spans the HTTP request: without a dedicated lease column it
+     * is the only portable way to prevent another IS node from issuing the same
+     * verification concurrently. The request timeout bounds the lock duration.
+     */
+    private VerificationAttemptResult executeVerificationAttempt(String subscriptionId, String orgId,
+            String expectedStatus, String callbackUrl, String topicName, boolean markStaleOnFailure) {
+        return transactionManager.executeInTransaction(connection -> {
+            Optional<Subscription> locked = subscriptionDAO.lockSubscriptionForVerification(connection,
+                    subscriptionId, orgId, expectedStatus);
+            if (locked.isEmpty()) {
+                return VerificationAttemptResult.notClaimed();
+            }
             try {
                 verifyWebhookCallback(callbackUrl, topicName);
-                boolean updated = subscriptionDAO.updateSubscriptionStatus(subscriptionId, orgId,
-                        SubscriptionStatus.PENDING.getValue(), SubscriptionStatus.ACTIVE.getValue());
-                if (updated) {
-                    LOG.info("Webhook verification succeeded for subscription [" + LogSanitizer.sanitize(subscriptionId) + "] on attempt "
-                            + (attempt + 1) + ".");
-                } else {
-                    LOG.info("Webhook verification succeeded for subscription [" + LogSanitizer.sanitize(subscriptionId)
-                            + "] but status was no longer PENDING.");
-                }
             } catch (Exception e) {
-                int nextAttempt = attempt + 1;
-                int maxRetries = getConfiguration().getEventNotificationMaxRetries();
-                if (nextAttempt <= maxRetries) {
-                    LOG.debug("Webhook verification attempt " + (attempt + 1)
-                            + " failed for subscription [" + LogSanitizer.sanitize(subscriptionId)
-                            + "]. Retrying. Reason: " + LogSanitizer.sanitize(e.getMessage()));
-                    scheduleWebhookVerificationTask(subscriptionId, orgId, callbackUrl, topicName, nextAttempt);
-                } else {
-                    LOG.debug("Exhausted all retries for subscription [" + LogSanitizer.sanitize(subscriptionId)
-                            + "]. Marking as STALE.");
-                    subscriptionDAO.updateSubscriptionStatus(subscriptionId, orgId,
-                            SubscriptionStatus.PENDING.getValue(),
-                            SubscriptionStatus.STALE.getValue());
+                if (markStaleOnFailure) {
+                    subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
+                            expectedStatus, SubscriptionStatus.STALE.getValue());
                 }
+                return VerificationAttemptResult.failure(e);
             }
+            boolean updated = subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
+                    expectedStatus, SubscriptionStatus.ACTIVE.getValue());
+            return updated ? VerificationAttemptResult.success() : VerificationAttemptResult.notClaimed();
+        });
+    }
+
+    private static final class VerificationAttemptResult {
+        private final boolean claimed;
+        private final boolean success;
+        private final Exception failure;
+
+        private VerificationAttemptResult(boolean claimed, boolean success, Exception failure) {
+            this.claimed = claimed;
+            this.success = success;
+            this.failure = failure;
+        }
+
+        private static VerificationAttemptResult notClaimed() {
+            return new VerificationAttemptResult(false, false, null);
+        }
+
+        private static VerificationAttemptResult success() {
+            return new VerificationAttemptResult(true, true, null);
+        }
+
+        private static VerificationAttemptResult failure(Exception failure) {
+            return new VerificationAttemptResult(true, false, failure);
         }
     }
 
@@ -457,13 +519,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
-        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
-                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
-        int off = (offset < 0) ? 0 : offset;
-        PaginatedDAOResult<Subscription> daoResult = subscriptionDAO.listSubscriptions(orgId.trim(), status, purposes,
-                search,
-                lim,
-                off, sort);
+        int lim = EventNotificationParameterUtils.normalizeLimit(limit);
+        int off = EventNotificationParameterUtils.normalizeOffset(offset);
+        String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
+        PaginatedDAOResult<Subscription> daoResult = subscriptionDAO.listSubscriptions(
+                orgId.trim(), normalizedStatus, purposes, search, lim, off, sort);
         List<SubscriptionDTO> dtoList = new ArrayList<>();
         for (Subscription sub : daoResult.getItems()) {
             String topicName = topicDAO.getTopicById(sub.getTopicId(), sub.getOrgId()).map(Topic::getName)
@@ -602,18 +662,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         String topicName = topicDAO.getTopicById(sub.getTopicId(), sub.getOrgId()).map(Topic::getName)
                 .orElse("unknown");
-        try {
-            verifyWebhookCallback(sub.getCallbackUrl().trim(), topicName);
-        } catch (EventNotificationException e) {
+        String expectedStatus = sub.getStatus().trim().toLowerCase(java.util.Locale.ROOT);
+        VerificationAttemptResult result = executeVerificationAttempt(subscriptionId.trim(), orgId.trim(),
+                expectedStatus, sub.getCallbackUrl().trim(), topicName, false);
+        if (result.claimed && !result.success) {
+            String description = result.failure instanceof EventNotificationException
+                    ? ((EventNotificationException) result.failure).getDescription()
+                    : result.failure.getMessage();
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_WEBHOOK_VERIFICATION_FAILED,
-                    EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED, e.getDescription(), 422);
+                    EventNotificationServiceConstants.ERROR_TITLE_WEBHOOK_VERIFICATION_FAILED, description, 422);
         }
-
-        String expectedStatus = sub.getStatus().trim().toLowerCase(java.util.Locale.ROOT);
-        boolean updated = subscriptionDAO.updateSubscriptionStatus(subscriptionId.trim(), orgId.trim(),
-                expectedStatus, SubscriptionStatus.ACTIVE.getValue());
-        if (!updated) {
+        if (!result.claimed) {
             Optional<Subscription> current = subscriptionDAO.getSubscriptionById(subscriptionId.trim(), orgId.trim());
             if (current.isEmpty()
                     || SubscriptionStatus.DELETED.getValue().equalsIgnoreCase(current.get().getStatus())) {
@@ -651,9 +711,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404);
         }
 
-        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
-                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
-        int off = (offset < 0) ? 0 : offset;
+        int lim = EventNotificationParameterUtils.normalizeLimit(limit);
+        int off = EventNotificationParameterUtils.normalizeOffset(offset);
         int[] totalOut = new int[1];
 
         List<SubscriptionDeliverySummary> summaries = deliveryDAO.listSubscriptionDeliveries(orgId.trim(),

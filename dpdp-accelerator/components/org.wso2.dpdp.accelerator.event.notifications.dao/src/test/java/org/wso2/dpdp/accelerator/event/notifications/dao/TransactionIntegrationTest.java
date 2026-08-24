@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
@@ -392,7 +393,7 @@ public class TransactionIntegrationTest {
     }
 
     @Test(timeOut = 10000)
-    public void pendingVerificationLeaseCanBeClaimedByOnlyOneConnection() throws Exception {
+    public void pendingVerificationRowCanBeOwnedByOnlyOneTransaction() throws Exception {
         TopicDAOImpl topicDAO = new TopicDAOImpl();
         SubscriptionDAOImpl subscriptionDAO = new SubscriptionDAOImpl();
         assertTrue(topicDAO.addTopic(connection,
@@ -402,36 +403,87 @@ public class TransactionIntegrationTest {
                 new Subscription("sub-1", "org-1", "group-1", "topic-1", PurposeFilterMode.ALL.getValue(),
                         Collections.emptyList(), DeliveryMode.WEBHOOK.getValue(), "https://example.com/callback",
                         "secret", SubscriptionStatus.PENDING.getValue(), now, now));
-        try (PreparedStatement ps = connection.prepareStatement(
-                "UPDATE SUBSCRIPTION SET UPDATED_AT = ? WHERE SUBSCRIPTION_ID = ?")) {
-            ps.setTimestamp(1, new Timestamp(now.getTime() - TimeUnit.MINUTES.toMillis(5)));
-            ps.setString(2, "sub-1");
-            ps.executeUpdate();
-        }
-
-        Timestamp eligibleBefore = new Timestamp(now.getTime() - TimeUnit.MINUTES.toMillis(1));
         try (Connection first = newConnection(); Connection second = newConnection()) {
             first.setAutoCommit(false);
             second.setAutoCommit(false);
-            CountDownLatch start = new CountDownLatch(1);
+            CountDownLatch firstLocked = new CountDownLatch(1);
+            CountDownLatch secondStarted = new CountDownLatch(1);
+            CountDownLatch releaseFirst = new CountDownLatch(1);
             ExecutorService executor = Executors.newFixedThreadPool(2);
             try {
                 Future<Boolean> firstClaim = executor.submit(
-                        () -> claimVerificationWhenReady(first, start, eligibleBefore));
+                        () -> holdVerificationLock(first, firstLocked, releaseFirst));
                 Future<Boolean> secondClaim = executor.submit(
-                        () -> claimVerificationWhenReady(second, start, eligibleBefore));
-                start.countDown();
-                assertTrue(firstClaim.get() ^ secondClaim.get(),
-                        "Exactly one recovery worker must claim the pending verification lease");
+                        () -> claimVerificationAfterFirstLock(second, firstLocked, secondStarted));
+                assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
+                releaseFirst.countDown();
+                assertTrue(firstClaim.get());
+                assertFalse(secondClaim.get(),
+                        "The waiting transaction must observe the ACTIVE state and skip verification");
             } finally {
                 executor.shutdownNow();
             }
         }
+    }
 
-        assertFalse(subscriptionDAO.claimPendingSubscriptionForVerification(
-                connection, "sub-1", "org-1", eligibleBefore));
-        assertFalse(subscriptionDAO.claimPendingSubscriptionForVerification(
-                connection, "sub-1", "another-org", new Timestamp(Long.MAX_VALUE)));
+    @Test(timeOut = 10000)
+    public void concurrentPollErrorCannotOverwriteAcknowledgement() throws Exception {
+        TopicDAOImpl topicDAO = new TopicDAOImpl();
+        SubscriptionDAOImpl subscriptionDAO = new SubscriptionDAOImpl();
+        DeliveryDAOImpl deliveryDAO = new DeliveryDAOImpl();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        assertTrue(topicDAO.addTopic(connection,
+                new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
+        subscriptionDAO.addSubscription(connection,
+                new Subscription("sub-1", "org-1", "group-1", "topic-1", PurposeFilterMode.ALL.getValue(),
+                        Collections.emptyList(), DeliveryMode.POLL.getValue(), null, null,
+                        SubscriptionStatus.ACTIVE.getValue(), now, now));
+        assertTrue(deliveryDAO.addPollDelivery(connection,
+                new PollDelivery("delivery-1", "sub-1", "event-1", PollStatus.PENDING.getValue(), now, null)));
+
+        try (Connection first = newConnection(); Connection second = newConnection()) {
+            first.setAutoCommit(false);
+            second.setAutoCommit(false);
+            CountDownLatch acknowledgementUpdated = new CountDownLatch(1);
+            CountDownLatch errorStarted = new CountDownLatch(1);
+            CountDownLatch releaseAcknowledgement = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Void> acknowledgement = executor.submit(() -> {
+                    deliveryDAO.updatePollDeliveryStatuses(first, "org-1", "group-1",
+                            Collections.singletonList("event-1"), Collections.emptyList());
+                    acknowledgementUpdated.countDown();
+                    releaseAcknowledgement.await();
+                    first.commit();
+                    return null;
+                });
+                Future<Void> error = executor.submit(() -> {
+                    acknowledgementUpdated.await();
+                    errorStarted.countDown();
+                    deliveryDAO.updatePollDeliveryStatuses(second, "org-1", "group-1",
+                            Collections.emptyList(), Collections.singletonList("event-1"));
+                    second.commit();
+                    return null;
+                });
+                assertTrue(errorStarted.await(5, TimeUnit.SECONDS));
+                expectThrows(TimeoutException.class, () -> error.get(200, TimeUnit.MILLISECONDS));
+                releaseAcknowledgement.countDown();
+                acknowledgement.get(5, TimeUnit.SECONDS);
+                error.get(5, TimeUnit.SECONDS);
+            } finally {
+                releaseAcknowledgement.countDown();
+                executor.shutdownNow();
+            }
+        }
+
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT STATUS FROM POLL_DELIVERY WHERE DELIVERY_ID = ?")) {
+            ps.setString(1, "delivery-1");
+            try (ResultSet rs = ps.executeQuery()) {
+                assertTrue(rs.next());
+                assertEquals(rs.getString(1), PollStatus.ACKNOWLEDGED.getValue());
+            }
+        }
     }
 
     private Connection newConnection() throws Exception {
@@ -445,11 +497,25 @@ public class TransactionIntegrationTest {
         return claimed;
     }
 
-    private boolean claimVerificationWhenReady(Connection conn, CountDownLatch start, Timestamp eligibleBefore)
+    private boolean holdVerificationLock(Connection conn, CountDownLatch firstLocked, CountDownLatch releaseFirst)
             throws Exception {
-        start.await();
-        boolean claimed = new SubscriptionDAOImpl().claimPendingSubscriptionForVerification(
-                conn, "sub-1", "org-1", eligibleBefore);
+        SubscriptionDAOImpl dao = new SubscriptionDAOImpl();
+        boolean claimed = dao.lockSubscriptionForVerification(conn, "sub-1", "org-1",
+                SubscriptionStatus.PENDING.getValue()).isPresent();
+        firstLocked.countDown();
+        releaseFirst.await();
+        dao.updateSubscriptionStatus(conn, "sub-1", "org-1", SubscriptionStatus.PENDING.getValue(),
+                SubscriptionStatus.ACTIVE.getValue());
+        conn.commit();
+        return claimed;
+    }
+
+    private boolean claimVerificationAfterFirstLock(Connection conn, CountDownLatch firstLocked,
+            CountDownLatch secondStarted) throws Exception {
+        firstLocked.await();
+        secondStarted.countDown();
+        boolean claimed = new SubscriptionDAOImpl().lockSubscriptionForVerification(conn, "sub-1", "org-1",
+                SubscriptionStatus.PENDING.getValue()).isPresent();
         conn.commit();
         return claimed;
     }

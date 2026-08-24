@@ -88,7 +88,7 @@ public class TopicServiceImplTest {
         PaginatedDAOResult<Topic> daoResult = new PaginatedDAOResult<>(Collections.singletonList(topic), 1);
         when(topicDAO.listTopics("org1", "active", null, 10, 0, "asc")).thenReturn(daoResult);
 
-        PaginatedResult<TopicDTO> result = topicService.listTopics("org1", "active", null, 10, 0, "asc");
+        PaginatedResult<TopicDTO> result = topicService.listTopics("org1", " ACTIVE ", null, 10, 0, "asc");
         assertNotNull(result);
         assertEquals(result.getTotal(), 1);
         assertEquals(result.getItems().size(), 1);

@@ -24,8 +24,8 @@
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao"/>
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao.queries"/>
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao.impl"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.dao.internal"/>
             <package name="org.wso2.dpdp.accelerator.event.notifications.dao.model"/>
-            <package name="org.wso2.dpdp.accelerator.event.notifications.dao.persistence"/>
         </packages>
     </test>
 </suite>

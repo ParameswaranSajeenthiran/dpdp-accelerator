@@ -25,6 +25,7 @@ import java.util.Arrays;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertFalse;
@@ -80,6 +81,20 @@ public class DaoWritePathCoverageTest {
         assertTrue(dao.claimPollDelivery(connection, "p-1"));
         assertTrue(dao.updatePollDeliveryStatus(connection, "p-1", "completed"));
         assertTrue(dao.updatePollDeliveryStatus(connection, "p-1", "completed", "acknowledged"));
+    }
+
+    @Test
+    public void pollCompletionNormalizesIdsAndRejectsOverlappingOutcomes() throws Exception {
+        DeliveryDAOImpl dao = new DeliveryDAOImpl();
+
+        dao.updatePollDeliveryStatuses(connection, " org-1 ", " group-1 ",
+                Arrays.asList(" event-1 ", "event-1", null, " "), Collections.emptyList());
+
+        verify(statement, times(1)).addBatch();
+        verify(statement, times(1)).executeBatch();
+        expectThrows(IllegalArgumentException.class,
+                () -> dao.updatePollDeliveryStatuses(connection, "org-1", "group-1",
+                        Arrays.asList("event-1", "event-2"), Arrays.asList("event-3", " event-1 ")));
     }
 
     @Test

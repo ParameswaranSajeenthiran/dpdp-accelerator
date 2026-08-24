@@ -21,7 +21,6 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
@@ -105,7 +104,7 @@ public class EventHandlerTest {
     }
 
     @Test
-    public void searchEvents_clampsAndForwardsToService() {
+    public void searchEvents_forwardsPaginationToService() {
         PaginatedResult<EventDTO> daoResult = new PaginatedResult<>(Collections.<EventDTO>emptyList(), 0);
         when(eventPublishService.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(daoResult);
@@ -114,7 +113,7 @@ public class EventHandlerTest {
 
         assertNotNull(result);
         verify(eventPublishService, times(1)).searchEvents("org1", null, null, null, null, "search",
-                EventNotificationCommonConstants.MAX_LIMIT, 0);
+                10000, -5);
     }
 
     @Test
@@ -130,14 +129,14 @@ public class EventHandlerTest {
     }
 
     @Test
-    public void searchEvents_nullLimit_defaultsToDefaultLimit() {
+    public void searchEvents_nullPaginationUsesServiceSentinels() {
         when(eventPublishService.searchEvents(anyString(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(new PaginatedResult<>(Collections.<EventDTO>emptyList(), 0));
 
         eventHandler.searchEvents("org1", "search", null, null);
 
         verify(eventPublishService, times(1)).searchEvents("org1", null, null, null, null, "search",
-                EventNotificationCommonConstants.DEFAULT_LIMIT, 0);
+                0, -1);
     }
 
     @Test

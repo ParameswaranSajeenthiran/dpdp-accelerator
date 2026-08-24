@@ -29,7 +29,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionCallback;
+import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
 import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 
 import java.util.Arrays;
@@ -66,7 +66,7 @@ public class EventPublishTransactionAtomicityTest {
         MockitoAnnotations.openMocks(this);
         connection = org.mockito.Mockito.mock(Connection.class);
         when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
-                ((TransactionCallback<?>) invocation.getArgument(0)).execute(connection));
+                ((ConnectionCallback<?>) invocation.getArgument(0)).execute(connection));
         publishService = new EventPublishServiceImpl(eventDAO, topicDAO, eventFanOutService, transactionManager);
     }
 

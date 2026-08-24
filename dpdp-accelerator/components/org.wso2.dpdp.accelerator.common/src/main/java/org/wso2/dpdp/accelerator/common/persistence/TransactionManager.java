@@ -20,5 +20,5 @@ package org.wso2.dpdp.accelerator.common.persistence;
 /** Executes operations using a centrally managed JDBC transaction. */
 public interface TransactionManager {
 
-    <T> T executeInTransaction(TransactionCallback<T> callback);
+    <T> T executeInTransaction(ConnectionCallback<T> callback);
 }

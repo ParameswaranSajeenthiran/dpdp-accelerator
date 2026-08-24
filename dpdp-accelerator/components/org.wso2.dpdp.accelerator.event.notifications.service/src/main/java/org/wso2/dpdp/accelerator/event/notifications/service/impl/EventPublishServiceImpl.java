@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
@@ -42,6 +41,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
 import java.sql.Connection;
 import java.sql.Timestamp;
@@ -234,12 +234,12 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
-        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
-                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
-        int off = (offset < 0) ? 0 : offset;
+        int lim = EventNotificationParameterUtils.normalizeLimit(limit);
+        int off = EventNotificationParameterUtils.normalizeOffset(offset);
+        String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
         PaginatedDAOResult<Event> daoResult = subscriptionId == null || subscriptionId.trim().isEmpty()
-                ? eventDAO.searchEvents(orgId.trim(), topic, status, groupId, purposes, search, lim, off)
-                : eventDAO.searchEvents(orgId.trim(), topic, status, groupId, subscriptionId,
+                ? eventDAO.searchEvents(orgId.trim(), topic, normalizedStatus, groupId, purposes, search, lim, off)
+                : eventDAO.searchEvents(orgId.trim(), topic, normalizedStatus, groupId, subscriptionId,
                         purposes, search, lim, off);
         List<EventDTO> dtoList = new ArrayList<>();
         for (Event event : daoResult.getItems()) {
@@ -256,13 +256,13 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
-        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
-                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
-        int off = (offset < 0) ? 0 : offset;
+        int lim = EventNotificationParameterUtils.normalizeLimit(limit);
+        int off = EventNotificationParameterUtils.normalizeOffset(offset);
+        String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
         int[] totalOut = new int[1];
 
         List<SubscriptionDeliverySummary> summaries = deliveryDAO.listOrgDeliveries(
-                orgId.trim(), status, subscriptionId, groupId, purposes, search, lim, off, totalOut);
+                orgId.trim(), normalizedStatus, subscriptionId, groupId, purposes, search, lim, off, totalOut);
 
         List<SubscriptionDeliveryDTO> dtoList = new ArrayList<>();
         for (SubscriptionDeliverySummary summary : summaries) {
@@ -363,8 +363,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,
                     400);
         }
-        int safeLimit = Math.max(1, limit);
-        int safeOffset = Math.max(0, offset);
+        int safeLimit = EventNotificationParameterUtils.normalizeLimit(limit);
+        int safeOffset = EventNotificationParameterUtils.normalizeOffset(offset);
         int[] totalOut = new int[1];
         List<SubscriptionDeliverySummary> summaries = deliveryDAO.listEventDeliveries(
                 orgId.trim(), eventId.trim(), safeLimit, safeOffset, totalOut);

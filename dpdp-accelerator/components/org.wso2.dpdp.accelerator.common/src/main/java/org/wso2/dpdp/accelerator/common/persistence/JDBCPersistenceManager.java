@@ -87,7 +87,7 @@ public final class JDBCPersistenceManager implements TransactionManager {
      * @return callback result
      */
     @Override
-    public <T> T executeInTransaction(TransactionCallback<T> callback) {
+    public <T> T executeInTransaction(ConnectionCallback<T> callback) {
 
         if (callback == null) {
             throw new IllegalArgumentException("Transaction callback cannot be null.");
@@ -101,7 +101,7 @@ public final class JDBCPersistenceManager implements TransactionManager {
                 T result = callback.execute(connection);
                 connection.commit();
                 return result;
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | Error e) {
                 rollback(connection, e);
                 throw e;
             } catch (Exception e) {

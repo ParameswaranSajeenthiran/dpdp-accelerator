@@ -82,7 +82,7 @@ public class DeliveryRecoveryService {
         if (verificationRecoveryThresholdSeconds <= EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS) {
             throw new IllegalStateException("Event notification pending subscription recovery threshold must be " +
                     "greater than " + EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS +
-                    " seconds so an active verification request cannot be reclaimed.");
+                    " seconds so an active verification request is not selected for recovery.");
         }
         int poolSize = configurationService.getEventNotificationThreadPoolSize();
         this.scheduler = Executors.newScheduledThreadPool(2, r -> {
@@ -170,10 +170,6 @@ public class DeliveryRecoveryService {
             for (Subscription sub : pendingSubs) {
                 if (sub.getCallbackUrl() != null && !sub.getCallbackUrl().trim().isEmpty()) {
                     try {
-                        if (!subscriptionDAO.claimPendingSubscriptionForVerification(
-                                sub.getSubscriptionId(), sub.getOrgId(), threshold)) {
-                            continue;
-                        }
                         subscriptionService.retryVerification(sub.getOrgId(), sub.getSubscriptionId());
                         LOG.info("Recovered and re-verified pending subscription ["
                                 + LogSanitizer.sanitize(sub.getSubscriptionId()) + "].");

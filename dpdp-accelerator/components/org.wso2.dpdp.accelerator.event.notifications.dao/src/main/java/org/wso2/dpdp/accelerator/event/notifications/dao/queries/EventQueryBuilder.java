@@ -22,6 +22,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotifica
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Helper builder for constructing dynamic event search and count queries.
@@ -106,7 +107,7 @@ public class EventQueryBuilder {
 
         if (topic != null && !topic.trim().isEmpty() && !"all".equalsIgnoreCase(topic.trim())) {
             sql.append(" AND LOWER(t.").append(EventNotificationDBColumns.NAME).append(") = ?");
-            params.add(topic.trim().toLowerCase());
+            params.add(topic.trim().toLowerCase(Locale.ROOT));
         }
 
         if (groupId != null && !groupId.trim().isEmpty()) {
@@ -114,7 +115,28 @@ public class EventQueryBuilder {
             params.add(groupId.trim());
         }
 
-        if (subscriptionId != null && !subscriptionId.trim().isEmpty()) {
+        boolean hasSubscriptionId = subscriptionId != null && !subscriptionId.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty()
+                && !"all".equalsIgnoreCase(status.trim());
+
+        if (hasSubscriptionId && hasStatus) {
+            String subscriptionParam = subscriptionId.trim();
+            String statusParam = status.trim().toLowerCase(Locale.ROOT);
+            sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ? AND LOWER(wd.")
+                    .append(EventNotificationDBColumns.STATUS).append(") = ?)")
+                    .append(" OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ? AND LOWER(pd.")
+                    .append(EventNotificationDBColumns.STATUS).append(") = ?))");
+            params.add(subscriptionParam);
+            params.add(statusParam);
+            params.add(subscriptionParam);
+            params.add(statusParam);
+        } else if (hasSubscriptionId) {
             sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
@@ -127,7 +149,7 @@ public class EventQueryBuilder {
             params.add(subscriptionId.trim());
         }
 
-        if (status != null && !status.trim().isEmpty() && !"all".equalsIgnoreCase(status.trim())) {
+        if (hasStatus && !hasSubscriptionId) {
             sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(wd.")
@@ -135,7 +157,7 @@ public class EventQueryBuilder {
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(pd.")
                     .append(EventNotificationDBColumns.STATUS).append(") = ?))");
-            String statusParam = status.trim().toLowerCase();
+            String statusParam = status.trim().toLowerCase(Locale.ROOT);
             params.add(statusParam);
             params.add(statusParam);
         }
@@ -145,7 +167,7 @@ public class EventQueryBuilder {
             List<String> valid = new ArrayList<>();
             for (String token : tokens) {
                 if (token != null && !token.trim().isEmpty()) {
-                    valid.add(token.trim().toLowerCase());
+                    valid.add(token.trim().toLowerCase(Locale.ROOT));
                 }
             }
             if (!valid.isEmpty()) {
@@ -162,12 +184,17 @@ public class EventQueryBuilder {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(e.").append(EventNotificationDBColumns.EVENT_ID)
-                    .append(") LIKE ? OR LOWER(e.").append(EventNotificationDBColumns.GROUP_ID)
-                    .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
-                    .append(") LIKE ? OR ").append(queries.getEventPayloadSearchExpression())
-                    .append(" LIKE ?)");
-            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
+            sql.append(" AND (")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(e." + EventNotificationDBColumns.EVENT_ID + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(e." + EventNotificationDBColumns.GROUP_ID + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(t." + EventNotificationDBColumns.NAME + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            queries.getEventPayloadSearchExpression()))
+                    .append(")");
+            String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
             params.add(term);
             params.add(term);
             params.add(term);

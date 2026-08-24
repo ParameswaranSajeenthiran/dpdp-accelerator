@@ -35,6 +35,16 @@ public interface SubscriptionDAO {
 
     Optional<Subscription> getSubscriptionById(String subscriptionId, String orgId);
 
+    Optional<Subscription> getSubscriptionById(Connection connection, String subscriptionId, String orgId);
+
+    /**
+     * Acquires the subscription row for an exclusive webhook verification attempt.
+     * The caller must keep the supplied transaction open until verification and the
+     * resulting state transition have completed.
+     */
+    Optional<Subscription> lockSubscriptionForVerification(Connection connection, String subscriptionId,
+            String orgId, String expectedStatus);
+
     boolean updateSubscriptionStatus(String subscriptionId, String orgId, String status);
 
     boolean updateSubscriptionStatus(Connection connection, String subscriptionId, String orgId, String status);
@@ -81,9 +91,4 @@ public interface SubscriptionDAO {
 
     List<Subscription> getPendingSubscriptionsForRecovery(Timestamp updatedBefore, int limit);
 
-    boolean claimPendingSubscriptionForVerification(String subscriptionId, String orgId,
-            Timestamp eligibleBefore);
-
-    boolean claimPendingSubscriptionForVerification(Connection connection, String subscriptionId, String orgId,
-            Timestamp eligibleBefore);
 }

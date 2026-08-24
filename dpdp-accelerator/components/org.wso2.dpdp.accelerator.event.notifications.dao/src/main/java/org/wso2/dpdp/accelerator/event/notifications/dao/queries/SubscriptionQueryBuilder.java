@@ -22,6 +22,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotifica
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Helper builder for constructing dynamic subscription search and count queries.
@@ -116,14 +117,21 @@ public class SubscriptionQueryBuilder {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(s.").append(EventNotificationDBColumns.SUBSCRIPTION_ID)
-                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.GROUP_ID)
-                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.STATUS)
-                    .append(") LIKE ? OR LOWER(s.").append(EventNotificationDBColumns.CALLBACK_URL)
-                    .append(") LIKE ? OR LOWER(t.").append(EventNotificationDBColumns.NAME)
-                    .append(") LIKE ? OR LOWER(sp.").append(EventNotificationDBColumns.PURPOSE_NAME)
-                    .append(") LIKE ?)");
-            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
+            sql.append(" AND (")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.GROUP_ID + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.STATUS + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.CALLBACK_URL + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(t." + EventNotificationDBColumns.NAME + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(sp." + EventNotificationDBColumns.PURPOSE_NAME + ")"))
+                    .append(")");
+            String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
             params.add(term);
             params.add(term);
             params.add(term);
@@ -137,7 +145,7 @@ public class SubscriptionQueryBuilder {
             List<String> validPurposes = new ArrayList<>();
             for (String p : purposeArr) {
                 if (p != null && !p.trim().isEmpty()) {
-                    validPurposes.add(p.trim().toLowerCase());
+                    validPurposes.add(p.trim().toLowerCase(Locale.ROOT));
                 }
             }
             if (!validPurposes.isEmpty()) {

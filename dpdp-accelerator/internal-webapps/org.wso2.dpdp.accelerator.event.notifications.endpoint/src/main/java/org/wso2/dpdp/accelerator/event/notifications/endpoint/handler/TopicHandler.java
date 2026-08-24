@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -50,10 +49,8 @@ public class TopicHandler {
 
     public PaginatedResult<TopicDTO> listTopics(String orgId, String status, String search,
             Integer limit, Integer offset, String sort) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
 
         return topicService.listTopics(orgId, status, search, lim, off, sort);
     }

@@ -49,5 +49,8 @@ public class DBQueryProviderTest {
         Assert.assertFalse(sqlite.getActiveTopicByOrgAndNameForUpdateQuery().contains("FOR UPDATE"));
         Assert.assertFalse(sqlite.getActiveSubscriptionsForFanOutQuery().contains("FOR UPDATE"));
         Assert.assertTrue(common.getAddEventQuery().contains("STATUS = 'active'"));
+        Assert.assertTrue(common.getLockSubscriptionForVerificationQuery().contains("DELIVERY_MODE = 'webhook'"));
+        Assert.assertTrue(common.getLockSubscriptionForVerificationQuery().contains("STATUS = ?"));
+        Assert.assertTrue(common.getUpdatePollDeliveryStatusByEventAndGroupQuery().contains("STATUS = 'pending'"));
     }
 }

@@ -24,13 +24,13 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,10 +101,11 @@ public class TopicServiceImpl implements TopicService {
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
                     400);
         }
-        int lim = (limit <= 0) ? EventNotificationCommonConstants.DEFAULT_LIMIT
-                : Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT);
-        int off = (offset < 0) ? 0 : offset;
-        PaginatedDAOResult<Topic> daoResult = topicDAO.listTopics(orgId.trim(), status, search, lim, off, sort);
+        int lim = EventNotificationParameterUtils.normalizeLimit(limit);
+        int off = EventNotificationParameterUtils.normalizeOffset(offset);
+        String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
+        PaginatedDAOResult<Topic> daoResult = topicDAO.listTopics(
+                orgId.trim(), normalizedStatus, search, lim, off, sort);
         List<TopicDTO> dtoList = new ArrayList<>();
         for (Topic t : daoResult.getItems()) {
             dtoList.add(

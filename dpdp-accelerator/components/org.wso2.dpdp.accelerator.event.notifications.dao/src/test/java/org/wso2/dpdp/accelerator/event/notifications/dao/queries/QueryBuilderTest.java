@@ -25,7 +25,10 @@ public class QueryBuilderTest {
 
         assertTrue(subscriptionResult.getSql().contains("LIKE ?"));
         assertTrue(eventResult.getSql().contains("LIKE ?"));
-        assertEquals(QueryBuilderUtils.escapeLikePattern("a_%"), "a\\_\\%");
+        assertEquals(QueryBuilderUtils.escapeLikePattern("a_%"), "a!_!%");
+        assertEquals(QueryBuilderUtils.buildCaseInsensitiveContainsPattern(" A_!% "), "%a!_!!!%%");
+        assertEquals(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(NAME)"),
+                "LOWER(NAME) LIKE ? ESCAPE '!'");
     }
 
     @Test
@@ -62,12 +65,25 @@ public class QueryBuilderTest {
     }
 
     @Test
+    public void eventBuilderCorrelatesSubscriptionAndStatusOnTheSameDelivery() {
+        QueryResult result = new EventQueryBuilder("org")
+                .setSubscriptionId(" sub-1 ")
+                .setStatus(" FAILED ")
+                .buildCountQuery("SELECT COUNT(*) FROM EVENT e WHERE e.ORG_ID = ?");
+
+        assertTrue(result.getSql().contains("wd.SUBSCRIPTION_ID = ? AND LOWER(wd.STATUS) = ?"));
+        assertTrue(result.getSql().contains("pd.SUBSCRIPTION_ID = ? AND LOWER(pd.STATUS) = ?"));
+        assertEquals(result.getParameters(), java.util.Arrays.asList(
+                "org", "sub-1", "failed", "sub-1", "failed"));
+    }
+
+    @Test
     public void postgresEventSearchCastsJsonPayloadToText() {
         QueryResult result = new EventQueryBuilder("org", new EventNotificationPostgresDBQueries())
                 .setSearch("account")
                 .buildCountQuery("SELECT COUNT(*) FROM EVENT e JOIN TOPIC t ON 1=1 WHERE e.ORG_ID = ?");
 
-        assertTrue(result.getSql().contains("LOWER(CAST(e.PAYLOAD AS TEXT)) LIKE ?"));
+        assertTrue(result.getSql().contains("LOWER(CAST(e.PAYLOAD AS TEXT)) LIKE ? ESCAPE '!'"));
         assertTrue(!result.getSql().contains("LOWER(e.PAYLOAD) LIKE ?"));
     }
 

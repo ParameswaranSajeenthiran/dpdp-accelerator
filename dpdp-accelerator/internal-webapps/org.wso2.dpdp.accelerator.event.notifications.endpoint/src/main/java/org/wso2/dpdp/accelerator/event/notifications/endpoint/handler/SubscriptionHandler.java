@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
@@ -57,10 +56,8 @@ public class SubscriptionHandler {
 
     public PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes,
             String search, Integer limit, Integer offset, String sort) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return subscriptionService.listSubscriptions(orgId, status, purposes, search, lim, off, sort);
     }
 
@@ -78,10 +75,8 @@ public class SubscriptionHandler {
 
     public PaginatedResult<SubscriptionDeliveryDTO> listSubscriptionEvents(String orgId, String subscriptionId,
             Integer limit, Integer offset) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return subscriptionService.listSubscriptionEvents(orgId, subscriptionId, lim, off);
     }
 

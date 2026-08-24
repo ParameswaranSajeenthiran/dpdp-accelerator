@@ -27,10 +27,14 @@ public class EventAndAckDAOImplTest {
         databaseName = "dao_event_" + System.nanoTime();
         connection = DriverManager.getConnection("jdbc:h2:mem:" + databaseName + ";DB_CLOSE_DELAY=-1");
         connection.createStatement().execute("CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, "
-                + "ORG_ID VARCHAR(128), STATUS VARCHAR(32))");
+                + "ORG_ID VARCHAR(128), NAME VARCHAR(225), STATUS VARCHAR(32))");
         connection.createStatement().execute("CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, "
                 + "ORG_ID VARCHAR(128), GROUP_ID VARCHAR(128), TOPIC_ID VARCHAR(64), PAYLOAD VARCHAR(4096), CREATED_AT TIMESTAMP)");
         connection.createStatement().execute("CREATE TABLE EVENT_PURPOSE (EVENT_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128))");
+        connection.createStatement().execute("CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, "
+                + "SUBSCRIPTION_ID VARCHAR(64), EVENT_ID VARCHAR(64), STATUS VARCHAR(32))");
+        connection.createStatement().execute("CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, "
+                + "SUBSCRIPTION_ID VARCHAR(64), EVENT_ID VARCHAR(64), STATUS VARCHAR(32))");
         connection.createStatement().execute("CREATE TABLE WEBHOOK_DELIVERY_ACK (ACK_ID VARCHAR(64) PRIMARY KEY, "
                 + "DELIVERY_ID VARCHAR(64), COMPLETED_AT TIMESTAMP, COMPLETION_STATUS VARCHAR(32), COMPLETION_EVIDENCE VARCHAR(4096))");
         JdbcDataSource dataSource = new JdbcDataSource();
@@ -67,6 +71,26 @@ public class EventAndAckDAOImplTest {
         assertTrue(dao.addDeliveryAck(ack));
         assertEquals(dao.getDeliveryAckByDeliveryId("delivery-1").get().getAckId(), "ack-1");
         assertFalse(dao.getDeliveryAckByDeliveryId("missing").isPresent());
+    }
+
+    @Test
+    public void eventSearchCorrelatesSubscriptionAndStatusToOneDelivery() throws Exception {
+        connection.createStatement().executeUpdate("UPDATE TOPIC SET NAME = 'accounts' WHERE TOPIC_ID = 'topic-1'");
+        connection.createStatement().executeUpdate("INSERT INTO EVENT "
+                + "(EVENT_ID, ORG_ID, GROUP_ID, TOPIC_ID, PAYLOAD, CREATED_AT) "
+                + "VALUES ('event-1', 'org-1', 'group-1', 'topic-1', '{}', CURRENT_TIMESTAMP)");
+        connection.createStatement().executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
+                + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
+                + "VALUES ('delivery-1', 'sub-1', 'event-1', 'delivered')");
+        connection.createStatement().executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
+                + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
+                + "VALUES ('delivery-2', 'sub-2', 'event-1', 'failed')");
+
+        EventDAOImpl dao = new EventDAOImpl();
+        assertEquals(dao.searchEvents("org-1", null, "failed", null, "sub-1", null, null, 20, 0)
+                .getTotal(), 0);
+        assertEquals(dao.searchEvents("org-1", null, "delivered", null, "sub-1", null, null, 20, 0)
+                .getTotal(), 1);
     }
 
     private void setManagerDataSource(Object dataSource) throws Exception {

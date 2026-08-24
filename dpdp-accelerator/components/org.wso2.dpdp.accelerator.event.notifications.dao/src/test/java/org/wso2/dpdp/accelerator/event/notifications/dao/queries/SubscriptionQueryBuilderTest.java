@@ -66,15 +66,15 @@ public class SubscriptionQueryBuilderTest {
 
         QueryResult selectResult = builder.buildSelectQuery(null);
 
-        assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ?"));
-        assertTrue(selectResult.getSql().contains("LOWER(s.GROUP_ID) LIKE ?"));
-        assertTrue(selectResult.getSql().contains("LOWER(sp.PURPOSE_NAME) LIKE ?"));
+        assertTrue(selectResult.getSql().contains("LOWER(s.SUBSCRIPTION_ID) LIKE ? ESCAPE '!'"));
+        assertTrue(selectResult.getSql().contains("LOWER(s.GROUP_ID) LIKE ? ESCAPE '!'"));
+        assertTrue(selectResult.getSql().contains("LOWER(sp.PURPOSE_NAME) LIKE ? ESCAPE '!'"));
         
         // 1 orgId parameter + 6 LIKE parameters
         List<Object> params = selectResult.getParameters();
         assertEquals(params.size(), 7);
         assertEquals(params.get(0), "org123");
-        assertEquals(params.get(1), "%test\\_user\\%name\\\\foo%");
+        assertEquals(params.get(1), "%test!_user!%name\\foo%");
     }
 
     @Test
@@ -96,7 +96,8 @@ public class SubscriptionQueryBuilderTest {
     public void testLikePatternEscapingHelper() {
         assertEquals(QueryBuilderUtils.escapeLikePattern(null), "");
         assertEquals(QueryBuilderUtils.escapeLikePattern("normal"), "normal");
-        assertEquals(QueryBuilderUtils.escapeLikePattern("100%_pure\\"), "100\\%\\_pure\\\\");
+        assertEquals(QueryBuilderUtils.escapeLikePattern("100%_pure\\"), "100!%!_pure\\");
+        assertEquals(QueryBuilderUtils.escapeLikePattern("important!"), "important!!");
     }
 
     @Test

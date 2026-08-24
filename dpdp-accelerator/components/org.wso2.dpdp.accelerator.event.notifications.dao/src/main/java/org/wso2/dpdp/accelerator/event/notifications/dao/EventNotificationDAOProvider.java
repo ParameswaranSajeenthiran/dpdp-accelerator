@@ -15,17 +15,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.wso2.dpdp.accelerator.common.persistence;
 
-import java.sql.Connection;
+package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 /**
- * Operation executed within a connection-owned transaction.
- *
- * @param <T> result type
+ * Provides the Event Notification DAOs managed by the DAO OSGi component.
  */
-@FunctionalInterface
-public interface TransactionCallback<T> {
+public interface EventNotificationDAOProvider {
 
-    T execute(Connection connection) throws Exception;
+    TopicDAO getTopicDAO();
+
+    SubscriptionDAO getSubscriptionDAO();
+
+    EventDAO getEventDAO();
+
+    DeliveryDAO getDeliveryDAO();
+
+    DeliveryAckDAO getDeliveryAckDAO();
 }

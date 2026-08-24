@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
@@ -66,28 +65,22 @@ public class EventHandler {
 
     public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status,
             String groupId, String subscriptionId, String purposes, String search, Integer limit, Integer offset) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return eventPublishService.searchEvents(orgId, topic, status, groupId, subscriptionId, purposes, search, lim, off);
     }
 
     public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status,
             String groupId, String purposes, String search, Integer limit, Integer offset) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return eventPublishService.searchEvents(orgId, topic, status, groupId, purposes, search, lim, off);
     }
 
     public PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
             String subscriptionId, String groupId, String purposes, String search, Integer limit, Integer offset) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return eventPublishService.listOrgDeliveries(orgId, status, subscriptionId, groupId, purposes, search, lim, off);
     }
 
@@ -100,10 +93,8 @@ public class EventHandler {
     }
 
     public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, Integer limit, Integer offset) {
-        int lim = (limit != null && limit > 0)
-                ? Math.min(limit, EventNotificationCommonConstants.MAX_LIMIT)
-                : EventNotificationCommonConstants.DEFAULT_LIMIT;
-        int off = offset != null && offset >= 0 ? offset : 0;
+        int lim = limit == null ? 0 : limit;
+        int off = offset == null ? -1 : offset;
         return eventPublishService.getEventDeliveries(orgId, eventId, lim, off);
     }
 }

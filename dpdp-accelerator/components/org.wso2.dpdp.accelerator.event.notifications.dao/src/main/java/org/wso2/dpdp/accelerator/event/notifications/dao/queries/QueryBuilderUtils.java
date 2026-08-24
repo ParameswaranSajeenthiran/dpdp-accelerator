@@ -17,8 +17,12 @@
  */
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
+import java.util.Locale;
+
 /** Shared helpers for dynamic SQL query builders. */
 public final class QueryBuilderUtils {
+
+    private static final String LIKE_ESCAPE_CHARACTER = "!";
 
     private QueryBuilderUtils() {
     }
@@ -27,8 +31,17 @@ public final class QueryBuilderUtils {
         if (text == null) {
             return "";
         }
-        return text.replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
+        return text.replace(LIKE_ESCAPE_CHARACTER, LIKE_ESCAPE_CHARACTER + LIKE_ESCAPE_CHARACTER)
+                .replace("%", LIKE_ESCAPE_CHARACTER + "%")
+                .replace("_", LIKE_ESCAPE_CHARACTER + "_");
+    }
+
+    public static String buildCaseInsensitiveContainsPattern(String text) {
+        String normalized = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+        return "%" + escapeLikePattern(normalized) + "%";
+    }
+
+    public static String buildEscapedLikePredicate(String expression) {
+        return expression + " LIKE ? ESCAPE '" + LIKE_ESCAPE_CHARACTER + "'";
     }
 }

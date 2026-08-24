@@ -13,15 +13,14 @@ import java.util.Collections;
 import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-/** Covers handler forwarding plus default, capped, and negative pagination normalization. */
+/** Covers endpoint-handler forwarding, including nullable pagination translation. */
 public class HandlerCoverageTest {
 
     @Test
-    public void eventHandlerForwardsEveryOperationAndNormalizesPagination() {
+    public void eventHandlerForwardsEveryOperation() {
         EventPublishService service = Mockito.mock(EventPublishService.class);
         EventHandler handler = new EventHandler(service);
         handler.publishEvent("org", "group", new EventCreateDTO("topic", Collections.singletonList("p"),
@@ -38,11 +37,11 @@ public class HandlerCoverageTest {
         verify(service).publishEvent(eq("org"), eq("group"), eq("topic"), any(), any());
         verify(service).getDeliveryHistory("org", "delivery");
         verify(service).getEventById("org", "event");
-        verify(service).getEventDeliveries(eq("org"), eq("event"), anyInt(), eq(0));
+        verify(service).getEventDeliveries("org", "event", Integer.MAX_VALUE, -1);
     }
 
     @Test
-    public void subscriptionHandlerForwardsEveryOperationAndNormalizesPagination() {
+    public void subscriptionHandlerForwardsEveryOperation() {
         SubscriptionService service = Mockito.mock(SubscriptionService.class);
         SubscriptionHandler handler = new SubscriptionHandler(service);
         handler.createSubscription(" org ", new SubscriptionDTO());
@@ -63,7 +62,7 @@ public class HandlerCoverageTest {
     }
 
     @Test
-    public void topicHandlerForwardsEveryOperationAndNormalizesPagination() {
+    public void topicHandlerForwardsEveryOperation() {
         TopicService service = Mockito.mock(TopicService.class);
         TopicHandler handler = new TopicHandler(service);
         handler.createTopic("org", new TopicDTO());

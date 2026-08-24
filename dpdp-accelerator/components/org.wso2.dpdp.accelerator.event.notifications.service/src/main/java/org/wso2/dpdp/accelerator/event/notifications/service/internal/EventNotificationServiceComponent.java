@@ -26,9 +26,11 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
-import org.wso2.dpdp.accelerator.event.notifications.dao.persistence.EventNotificationStoreInitializer;
+import org.wso2.dpdp.accelerator.event.notifications.dao.EventNotificationDAOProvider;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
@@ -53,6 +55,7 @@ public class EventNotificationServiceComponent {
 
     private SubscriptionServiceImpl subscriptionService;
     private DeliveryRecoveryService deliveryRecoveryService;
+    private volatile EventNotificationDAOProvider daoProvider;
 
     private ServiceRegistration<TopicService> topicServiceRegistration;
     private ServiceRegistration<SubscriptionService> subscriptionServiceRegistration;
@@ -66,20 +69,18 @@ public class EventNotificationServiceComponent {
             throw new IllegalStateException("DPDP configuration service is unavailable.");
         }
 
-        EventNotificationStoreInitializer store =
-                EventNotificationStoreInitializer.initialize(configurationService);
-        TopicService topicService = new TopicServiceImpl(store.getTopicDAO());
+        TopicService topicService = new TopicServiceImpl(daoProvider.getTopicDAO());
         subscriptionService = new SubscriptionServiceImpl(
-                store.getSubscriptionDAO(), store.getTopicDAO(), store.getDeliveryDAO(),
-                store.getDeliveryAckDAO(), configurationService);
+                daoProvider.getSubscriptionDAO(), daoProvider.getTopicDAO(), daoProvider.getDeliveryDAO(),
+                daoProvider.getDeliveryAckDAO(), configurationService);
         EventFanOutService eventFanOutService =
-                new EventFanOutServiceImpl(store.getSubscriptionDAO(), store.getDeliveryDAO());
+                new EventFanOutServiceImpl(daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO());
         EventPublishService eventPublishService = new EventPublishServiceImpl(
-                store.getEventDAO(), store.getTopicDAO(), eventFanOutService,
-                store.getDeliveryDAO(), store.getDeliveryAckDAO(),
+                daoProvider.getEventDAO(), daoProvider.getTopicDAO(), eventFanOutService,
+                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO(),
                 JDBCPersistenceManager.getInstance());
         deliveryRecoveryService = new DeliveryRecoveryService(
-                store.getSubscriptionDAO(), store.getDeliveryDAO(),
+                daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO(),
                 subscriptionService, configurationService);
 
         try {
@@ -125,6 +126,24 @@ public class EventNotificationServiceComponent {
         EventNotificationDataHolder dataHolder = EventNotificationDataHolder.getInstance();
         if (dataHolder.getConfigurationService() == configurationService) {
             dataHolder.setConfigurationService(null);
+        }
+    }
+
+    @Reference(
+            service = EventNotificationDAOProvider.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.STATIC,
+            unbind = "unsetEventNotificationDAOProvider"
+    )
+    protected void setEventNotificationDAOProvider(EventNotificationDAOProvider daoProvider) {
+
+        this.daoProvider = daoProvider;
+    }
+
+    protected void unsetEventNotificationDAOProvider(EventNotificationDAOProvider daoProvider) {
+
+        if (this.daoProvider == daoProvider) {
+            this.daoProvider = null;
         }
     }
 

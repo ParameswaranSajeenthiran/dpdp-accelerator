@@ -23,25 +23,100 @@ import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.EventNotificationDAOProvider;
+import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.DeliveryAckDAOImpl;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.DeliveryDAOImpl;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;
+import org.wso2.dpdp.accelerator.event.notifications.dao.impl.TopicDAOImpl;
 
 /**
- * Activation marker for the Event Notification DAO bundle.
+ * Creates the Event Notification DAOs and publishes them through a single OSGi provider service.
  */
 @Component(
         name = "org.wso2.dpdp.accelerator.event.notifications.dao.internal.EventNotificationDAOServiceComponent",
+        service = EventNotificationDAOProvider.class,
         immediate = true
 )
-public class EventNotificationDAOServiceComponent {
+public class EventNotificationDAOServiceComponent implements EventNotificationDAOProvider {
 
     private static final Log LOG = LogFactory.getLog(EventNotificationDAOServiceComponent.class);
 
+    private volatile DPDPConfigurationService configurationService;
+
     @Activate
     protected void activate() {
-        LOG.debug("Event Notification DAO component is activated successfully.");
+
+        EventNotificationDAODataHolder dataHolder = EventNotificationDAODataHolder.getInstance();
+        dataHolder.setTopicDAO(new TopicDAOImpl());
+        dataHolder.setSubscriptionDAO(new SubscriptionDAOImpl());
+        dataHolder.setEventDAO(new EventDAOImpl());
+        dataHolder.setDeliveryDAO(new DeliveryDAOImpl(configurationService));
+        dataHolder.setDeliveryAckDAO(new DeliveryAckDAOImpl());
+        LOG.debug("Event Notification DAO services are activated successfully.");
     }
 
     @Deactivate
     protected void deactivate() {
-        LOG.debug("Event Notification DAO component is deactivated successfully.");
+
+        EventNotificationDAODataHolder.getInstance().clear();
+        LOG.debug("Event Notification DAO services are deactivated successfully.");
+    }
+
+    @Reference(
+            service = DPDPConfigurationService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.STATIC,
+            unbind = "unsetDPDPConfigurationService"
+    )
+    protected void setDPDPConfigurationService(DPDPConfigurationService configurationService) {
+
+        this.configurationService = configurationService;
+    }
+
+    protected void unsetDPDPConfigurationService(DPDPConfigurationService configurationService) {
+
+        if (this.configurationService == configurationService) {
+            this.configurationService = null;
+        }
+    }
+
+    @Override
+    public TopicDAO getTopicDAO() {
+
+        return EventNotificationDAODataHolder.getInstance().getTopicDAO();
+    }
+
+    @Override
+    public SubscriptionDAO getSubscriptionDAO() {
+
+        return EventNotificationDAODataHolder.getInstance().getSubscriptionDAO();
+    }
+
+    @Override
+    public EventDAO getEventDAO() {
+
+        return EventNotificationDAODataHolder.getInstance().getEventDAO();
+    }
+
+    @Override
+    public DeliveryDAO getDeliveryDAO() {
+
+        return EventNotificationDAODataHolder.getInstance().getDeliveryDAO();
+    }
+
+    @Override
+    public DeliveryAckDAO getDeliveryAckDAO() {
+
+        return EventNotificationDAODataHolder.getInstance().getDeliveryAckDAO();
     }
 }

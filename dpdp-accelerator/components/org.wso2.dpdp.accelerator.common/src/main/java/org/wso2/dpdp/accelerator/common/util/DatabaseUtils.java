@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.common.util;
 
 import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionCallback;
 
 /** Thin facade for centrally managed DPDP database operations. */
 public final class DatabaseUtils {
@@ -33,7 +32,7 @@ public final class DatabaseUtils {
         return JDBCPersistenceManager.getInstance().executeWithConnection(callback);
     }
 
-    public static <T> T executeInTransaction(TransactionCallback<T> callback) {
+    public static <T> T executeInTransaction(ConnectionCallback<T> callback) {
 
         return JDBCPersistenceManager.getInstance().executeInTransaction(callback);
     }

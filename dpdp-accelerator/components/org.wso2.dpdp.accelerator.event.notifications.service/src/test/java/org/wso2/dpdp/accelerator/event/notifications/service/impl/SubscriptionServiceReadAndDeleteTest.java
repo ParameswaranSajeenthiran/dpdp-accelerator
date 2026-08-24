@@ -5,6 +5,8 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
+import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -19,6 +21,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEve
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.sql.Timestamp;
+import java.sql.Connection;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.http.HttpClient;
@@ -50,6 +53,8 @@ public class SubscriptionServiceReadAndDeleteTest {
     @Mock private DeliveryDAO deliveryDAO;
     @Mock private DeliveryAckDAO deliveryAckDAO;
     @Mock private DPDPConfigurationService configurationService;
+    @Mock private TransactionManager transactionManager;
+    @Mock private Connection connection;
 
     private SubscriptionServiceImpl service;
 
@@ -120,8 +125,17 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(configurationService.getEventNotificationMaxRetries()).thenReturn(1);
         when(configurationService.isEventNotificationHttpCallbackUrlAllowed()).thenReturn(true);
         when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
+        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation -> {
+            ConnectionCallback<?> callback = invocation.getArgument(0);
+            return callback.execute(connection);
+        });
+        when(subscriptionDAO.lockSubscriptionForVerification(eq(connection), anyString(), anyString(), anyString()))
+                .thenAnswer(invocation -> Optional.of(webhookSubscription(invocation.getArgument(1),
+                        invocation.getArgument(3))));
+        when(subscriptionDAO.updateSubscriptionStatus(eq(connection), anyString(), anyString(), anyString(),
+                anyString())).thenReturn(true);
         service = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
-                configurationService);
+                configurationService, transactionManager);
     }
 
     @Test
@@ -132,7 +146,7 @@ public class SubscriptionServiceReadAndDeleteTest {
                 .thenReturn(new PaginatedDAOResult<>(Collections.singletonList(sub), 3));
         when(topicDAO.getTopicById("topic-1", "org-1")).thenReturn(Optional.empty());
 
-        PaginatedResult<?> result = service.listSubscriptions(" org-1 ", "active", "p", "search", 0, -1,
+        PaginatedResult<?> result = service.listSubscriptions(" org-1 ", " ACTIVE ", "p", "search", 0, -1,
                 "createdAt");
 
         assertEquals(result.getTotal(), 3);
@@ -226,7 +240,7 @@ public class SubscriptionServiceReadAndDeleteTest {
         constructor.setAccessible(true);
         Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", "not-a-url", "topic", 1);
         task.run();
-        verify(subscriptionDAO).updateSubscriptionStatus("sub-1", "org-1", "pending", "stale");
+        verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "stale");
     }
 
     @Test
@@ -239,7 +253,7 @@ public class SubscriptionServiceReadAndDeleteTest {
         constructor.setAccessible(true);
         ((Runnable) constructor.newInstance(service, "sub-1", "org-1", "https://93.184.216.34:443/callback",
                 "topic", 0)).run();
-        verify(subscriptionDAO).updateSubscriptionStatus("sub-1", "org-1", "pending", "active");
+        verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
     }
 
     @Test
@@ -250,7 +264,7 @@ public class SubscriptionServiceReadAndDeleteTest {
 
         service.retryVerification("org-1", "sub-1");
 
-        verify(subscriptionDAO).updateSubscriptionStatus("sub-1", "org-1", "pending", "active");
+        verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
     }
 
     @Test
@@ -268,7 +282,7 @@ public class SubscriptionServiceReadAndDeleteTest {
         assertEquals(exception.getStatusCode(), 422);
         assertTrue(responseBody.closed);
         assertEquals(responseBody.bytesRead, 37);
-        verify(subscriptionDAO, never()).updateSubscriptionStatus("sub-1", "org-1", "pending", "active");
+        verify(subscriptionDAO, never()).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
     }
 
     @Test
@@ -286,7 +300,7 @@ public class SubscriptionServiceReadAndDeleteTest {
                 service.retryVerification("org-1", "sub-1");
 
         assertEquals(result.getStatus().getValue(), "active");
-        verify(subscriptionDAO).updateSubscriptionStatus("sub-1", "org-1", "pending", "active");
+        verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
         verify(subscriptionDAO, never()).updateSubscriptionStatus("sub-1", "org-1", "active");
     }
 
@@ -296,11 +310,11 @@ public class SubscriptionServiceReadAndDeleteTest {
         Subscription deleted = webhookSubscription("sub-1", "deleted");
         when(subscriptionDAO.getSubscriptionById("sub-1", "org-1"))
                 .thenReturn(Optional.of(pending), Optional.of(deleted));
+        when(subscriptionDAO.lockSubscriptionForVerification(connection, "sub-1", "org-1", "pending"))
+                .thenReturn(Optional.empty());
         when(topicDAO.getTopicById("topic-1", "org-1"))
                 .thenReturn(Optional.of(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
                         "topic-1", "org-1", "accounts", "", "active")));
-        when(subscriptionDAO.updateSubscriptionStatus("sub-1", "org-1", "pending", "active"))
-                .thenReturn(false);
         installSuccessfulVerificationClient();
 
         org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException exception =
@@ -309,7 +323,7 @@ public class SubscriptionServiceReadAndDeleteTest {
                         () -> service.retryVerification("org-1", "sub-1"));
 
         assertEquals(exception.getStatusCode(), 404);
-        verify(subscriptionDAO).updateSubscriptionStatus("sub-1", "org-1", "pending", "active");
+        verify(subscriptionDAO, never()).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
         verify(subscriptionDAO, never()).updateSubscriptionStatus("sub-1", "org-1", "active");
     }
 

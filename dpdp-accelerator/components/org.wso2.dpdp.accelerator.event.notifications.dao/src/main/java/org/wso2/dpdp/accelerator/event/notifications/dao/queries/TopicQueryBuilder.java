@@ -93,10 +93,15 @@ public class TopicQueryBuilder {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (LOWER(").append(EventNotificationDBColumns.TOPIC_ID).append(") LIKE ?")
-                    .append(" OR LOWER(").append(EventNotificationDBColumns.NAME).append(") LIKE ?")
-                    .append(" OR LOWER(").append(EventNotificationDBColumns.DESCRIPTION).append(") LIKE ?)");
-            String term = "%" + QueryBuilderUtils.escapeLikePattern(search.trim()).toLowerCase() + "%";
+            sql.append(" AND (")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(" + EventNotificationDBColumns.TOPIC_ID + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(" + EventNotificationDBColumns.NAME + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(" + EventNotificationDBColumns.DESCRIPTION + ")"))
+                    .append(")");
+            String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
             parameters.add(term);
             parameters.add(term);
             parameters.add(term);
