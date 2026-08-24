@@ -24,9 +24,11 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintExcept
 import org.wso2.dpdp.common.util.TenantContextUtils;
 
 import javax.annotation.Priority;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 import java.util.logging.Level;
@@ -53,7 +55,12 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
     private static final Logger LOGGER = Logger.getLogger(TokenIntrospectionFilter.class.getName());
     private static final String BEARER_PREFIX = "Bearer ";
 
+    private static final String FORWARD_REQUEST_URI_ATTRIBUTE = "javax.servlet.forward.request_uri";
+
     private final TokenIntrospectionClient introspectionClient;
+
+    @Context
+    private HttpServletRequest httpServletRequest;
 
     public TokenIntrospectionFilter() {
         this(new TokenIntrospectionClient());
@@ -61,6 +68,11 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
 
     public TokenIntrospectionFilter(TokenIntrospectionClient introspectionClient) {
         this.introspectionClient = introspectionClient;
+    }
+
+    /** Test seam - Jersey normally field-injects this via @Context. */
+    void setHttpServletRequest(HttpServletRequest httpServletRequest) {
+        this.httpServletRequest = httpServletRequest;
     }
 
     @Override
@@ -75,18 +87,25 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
             throw new ComplaintException(ComplaintErrorCode.UNAUTHENTICATED, "Missing bearer token.");
         }
 
-        // /t/{tenant-domain}/ is a WSO2 Carbon tenant-qualified URL segment - this webapp is
-        // excluded from Carbon's own tenant-aware valve (see this class's own javadoc), so nothing
-        // upstream strips or resolves it for us; TenantContextUtils reads it directly off the raw
-        // request path instead. Falls back to DAOConstants.DEFAULT_ORG_ID for a super-tenant
-        // (unqualified) request.
+        // /t/{tenant-domain}/ is a WSO2 Carbon tenant-qualified URL segment. This webapp is
+        // registered under [tenant_context.rewrite] custom_webapps (see wso2is-7.3.0-deployment.toml)
+        // so Tomcat's TenantContextRewriteValve can dispatch /t/{tenant}/api/dpdp/complaints/...
+        // to it at all - but that valve does an internal forward that strips the /t/{tenant}/
+        // prefix before this servlet ever sees the request, so UriInfo's path never carries it.
+        // The servlet spec guarantees the pre-forward URI survives in this standard request
+        // attribute, so read from there first and only fall back to UriInfo's path for a request
+        // that reached this webapp some other way (e.g. a direct, unqualified super-tenant call).
+        // Falls back further to DAOConstants.DEFAULT_ORG_ID when neither carries a /t/.../ segment.
         //
         // IMPORTANT: this value is client-supplied and UNAUTHENTICATED - the caller can put
         // anything here. It must never be assigned to the principal directly; it only tells us
         // which tenant the caller is claiming to act as, which we then verify below against the
         // tenant the validated token actually belongs to.
-        String requestedOrgId = TenantContextUtils.extractOrgId(
-                requestContext.getUriInfo().getRequestUri().getPath(), DAOConstants.DEFAULT_ORG_ID);
+        String forwardedRequestUri = httpServletRequest == null ? null
+                : (String) httpServletRequest.getAttribute(FORWARD_REQUEST_URI_ATTRIBUTE);
+        String pathToInspect = forwardedRequestUri != null ? forwardedRequestUri
+                : requestContext.getUriInfo().getRequestUri().getPath();
+        String requestedOrgId = TenantContextUtils.extractOrgId(pathToInspect, DAOConstants.DEFAULT_ORG_ID);
 
         AuthenticatedPrincipal principal;
         try {

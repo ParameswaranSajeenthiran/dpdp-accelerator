@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
@@ -132,5 +133,42 @@ class TokenIntrospectionFilterTest {
         when(introspectionClient.introspect(anyString())).thenReturn(principal);
 
         assertDoesNotThrow(() -> filter.filter(requestContext));
+    }
+
+    /**
+     * [tenant_context.rewrite] custom_webapps makes Tomcat's TenantContextRewriteValve internally
+     * forward /t/{tenant}/api/dpdp/complaints/... to this webapp's own context, stripping the
+     * /t/{tenant}/ prefix before UriInfo ever sees it - so a request that reached this filter with
+     * a bare (unqualified-looking) UriInfo path must still resolve the real tenant from the
+     * standard servlet forward attribute, not silently fall back to the super tenant.
+     */
+    @Test
+    void resolvesTheRequestedTenantFromTheForwardAttributeWhenTheValveStrippedThePathPrefix() throws Exception {
+        HttpServletRequest httpServletRequest = org.mockito.Mockito.mock(HttpServletRequest.class);
+        when(httpServletRequest.getAttribute("javax.servlet.forward.request_uri"))
+                .thenReturn("/t/example.com/api/dpdp/complaints/v1/complaints");
+        filter.setHttpServletRequest(httpServletRequest);
+        AuthenticatedPrincipal principal =
+                new AuthenticatedPrincipal("alice", "alice@example.com", "example.com", Set.of());
+        when(introspectionClient.introspect(anyString())).thenReturn(principal);
+
+        assertDoesNotThrow(() -> filter.filter(requestContext));
+
+        verify(requestContext).setProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY, principal);
+    }
+
+    @Test
+    void rejectsWithForbiddenWhenTheForwardAttributeTenantDiffersFromTheTokensTenant() throws Exception {
+        HttpServletRequest httpServletRequest = org.mockito.Mockito.mock(HttpServletRequest.class);
+        when(httpServletRequest.getAttribute("javax.servlet.forward.request_uri"))
+                .thenReturn("/t/other-tenant.com/api/dpdp/complaints/v1/complaints");
+        filter.setHttpServletRequest(httpServletRequest);
+        AuthenticatedPrincipal principal =
+                new AuthenticatedPrincipal("alice", "alice@example.com", "example.com", Set.of());
+        when(introspectionClient.introspect(anyString())).thenReturn(principal);
+
+        ComplaintException ex = assertThrows(ComplaintException.class, () -> filter.filter(requestContext));
+
+        assertEquals("CO-4030", ex.getCode());
     }
 }

@@ -130,8 +130,17 @@ http_method = "all"
 # the request's tenant context. The super tenant keeps the unqualified
 # /consent-portal path, since tenanted /t/carbon.super URLs are rejected unless
 # require_super_tenant_in_urls is enabled.
+#
+# The complaint-mgt endpoint needs the same treatment - it's one webapp shared
+# across every tenant, not redeployed per tenant - or /t/<tenant>/api/dpdp/
+# complaints/... 404s before it ever reaches the access_control rules below
+# (those only govern auth on a path Tomcat already dispatched; this list is
+# what makes Tomcat dispatch a /t/<tenant>/... path to the webapp at all). The
+# TenantContextRewriteValve strips the /t/<tenant>/ prefix before forwarding,
+# which is why TokenIntrospectionFilter reads the pre-forward URI from the
+# standard javax.servlet.forward.request_uri attribute instead of UriInfo.
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/"]
+custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 
 # The complaint-mgt endpoint is a plain JAX-RS webapp, not part of Identity
 # Server's own API resource framework, so Carbon's session/valve-based

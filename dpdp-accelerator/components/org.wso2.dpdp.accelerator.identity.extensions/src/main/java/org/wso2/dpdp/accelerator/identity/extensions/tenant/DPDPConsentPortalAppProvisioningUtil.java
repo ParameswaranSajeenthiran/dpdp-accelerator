@@ -61,8 +61,12 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     // OAuthAdminServiceImpl#validateAccessTokenClaims checks setAccessTokenClaims() entries
     // against the OIDC dialect's claim mappings (getOIDCToLocalClaimMappings), not the local
     // dialect - so this must be the OIDC claim URI "username", which maps to the local claim
-    // http://wso2.org/claims/username, not that local claim URI itself.
-    private static final String USERNAME_CLAIM_URI = "username";
+    // http://wso2.org/claims/local below, not that local claim URI itself.
+    private static final String USERNAME_OIDC_CLAIM_URI = "username";
+    // The service provider's ClaimConfig below is local-dialect (setLocalClaimDialect(true)), so
+    // its Claim needs the full local claim URI, not the OIDC claim URI above - the two are
+    // different namespaces for the same underlying attribute.
+    private static final String USERNAME_LOCAL_CLAIM_URI = "http://wso2.org/claims/username";
     private static final String AUTHORIZED_API_POLICY = "RBAC";
     private static final String[] GRANT_TYPES = {"authorization_code", "refresh_token"};
     private static final String[] CONSENT_MGT_API_IDENTIFIERS = {
@@ -153,6 +157,10 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
+        // Without this the app defaults to an opaque (UUID) access token, which
+        // TokenIntrospectionClient cannot decode at all - it only ever parses a JWT's payload
+        // segment. This must be JWT for the same reason accessTokenClaims below must be set.
+        dto.setTokenType("JWT");
         dto.setTokenBindingType("cookie");
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);
@@ -160,7 +168,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         // at all - since WSO2 IS doesn't embed local claims into access tokens by default. The
         // complaint-mgt endpoint's TokenIntrospectionClient reads this claim directly off the
         // decoded token to attribute complaints/comments/attachments to a display name.
-        dto.setAccessTokenClaims(new String[]{USERNAME_CLAIM_URI});
+        dto.setAccessTokenClaims(new String[]{USERNAME_OIDC_CLAIM_URI});
 
         DPDPIdentityExtensionDataHolder.getInstance().getOAuthAdminService().registerOAuthApplicationData(dto);
     }
@@ -208,7 +216,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         serviceProvider.setLocalAndOutBoundAuthenticationConfig(localAndOutboundAuthenticationConfig);
 
         Claim usernameClaim = new Claim();
-        usernameClaim.setClaimUri(USERNAME_CLAIM_URI);
+        usernameClaim.setClaimUri(USERNAME_LOCAL_CLAIM_URI);
         ClaimMapping usernameClaimMapping = new ClaimMapping();
         usernameClaimMapping.setRequested(true);
         usernameClaimMapping.setLocalClaim(usernameClaim);
