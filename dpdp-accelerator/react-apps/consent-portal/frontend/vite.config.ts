@@ -43,8 +43,9 @@ function securityHeadersPlugin(metaPolicy: string): Plugin {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
-  // Empty or path-only values mean the BFF is same-origin (WAR deployment inside
-  // WSO2 Identity Server); absolute URLs support a separately hosted BFF.
+  // Empty or path-only values mean the Identity Server APIs are same-origin (the
+  // normal WAR deployment inside IS); an absolute URL points a dev server at a
+  // remote Identity Server instead.
   const apiBaseURL = env.VITE_API_BASE_URL || '/consent-portal'
   const basePath = env.VITE_BASE_PATH || '/consent-portal/'
 
