@@ -31,22 +31,6 @@ permissions:
 env:
   IS_VERSION: 7.3.0
   ACCELERATOR_VERSION: 1.0.0-SNAPSHOT
-  # TEMPORARY DEFAULT - flip to 'release' once WSO2_USERNAME / WSO2_U2_PASSWORD secrets exist.
-  #
-  # The vanilla 7.3.0 GA release does not carry the consent-mgt v2 API resources this
-  # accelerator depends on. Confirmed by deploying it fresh in CI, then reproducing
-  # the identical failure in a controlled local test against the exact byte-verified
-  # release asset, then disproving the obvious fix: manually backporting the one
-  # known consent DB migration script from an already-updated pack did not resolve
-  # it either. The actual fix ships only via a WSO2 update (see "Apply WSO2 U2
-  # updates" below), and this repo has no subscription credentials yet.
-  #
-  # Building from product-is's own master branch carries the feature natively, and
-  # is safe to do today: master's stock deployment.toml is byte-identical to this
-  # repo's wso2is-7.3.0-deployment.toml template (diffed directly, 2026-08-24) apart
-  # from the three placeholders configure.sh already substitutes, so no new template
-  # is needed. This can drift as master evolves - if a future e2e run fails at
-  # "Apply the accelerator" specifically, re-diff the two files first.
   IS_SOURCE: master  # 'release' | 'master'
 
 jobs:
@@ -59,23 +43,15 @@ jobs:
         with:
           persist-credentials: false
 
-      # JDK 21 serves both jobs: it satisfies the IS 7.3.0 runtime requirement and
-      # builds this repo fine (maven.compiler.source is 11).
       - uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: temurin
           cache: maven
-      # 20.19+/22.12+ is the repo's real floor; the test-suite README's "Node 18+"
-      # is stale (see docs/known-doc-issues.md).
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      # From the REPOSITORY ROOT. Building from dpdp-accelerator/ silently skips the
-      # accelerator zip, because the root pom aggregates the accelerators subtree
-      # separately. This also runs the frontend npm build, jacoco's 80% gate, and the
-      # security/i18n/shell verify steps chained into `npm run build`.
       - name: Build
         run: mvn -B clean install
         env:
@@ -149,15 +125,6 @@ jobs:
           restore-keys: |
             product-is-master-m2-
 
-      # Full reactor, not `-pl modules/distribution -am`: tried that first and it
-      # failed on wso2-maven-json-merge-plugin ("Error while Writing Merged Json")
-      # after the assembly step had already produced the zip - that plugin combines
-      # JSON fragments contributed by sibling modules via file-path convention, not
-      # Maven's dependency graph, so a pruned reactor starves it of inputs the other
-      # modules would normally have produced. All the slow, non-runtime-affecting
-      # checks are skipped for build speed, matching how this accelerator's own build
-      # should NOT be treated (that one keeps its jacoco gate) - this is upstream code
-      # we are only borrowing for the moment.
       - name: Build IS from product-is master
         if: env.IS_SOURCE == 'master'
         run: |
@@ -185,9 +152,6 @@ jobs:
       - name: Unpack IS
         run: unzip -q ~/is-pack/wso2is.zip -d "${GITHUB_WORKSPACE}"
 
-      # Not hardcoded to IS_VERSION: the release path unpacks to wso2is-7.3.0/, but a
-      # master build's version floats (e.g. wso2is-7.4.0-SNAPSHOT/), so the actual
-      # directory is detected instead of assumed.
       - name: Resolve IS_HOME
         run: |
           dir=$(find "${GITHUB_WORKSPACE}" -maxdepth 1 -type d -name "wso2is-*")
@@ -198,15 +162,6 @@ jobs:
           echo "IS_HOME=${dir}" >> "$GITHUB_ENV"
           echo "Resolved IS_HOME=${dir}"
 
-      # OFF BY DEFAULT, and only meaningful on the release path - the updater expects
-      # a released product, not a from-source snapshot build. Enable per run from the
-      # Actions UI, or repo-wide by setting the APPLY_WSO2_UPDATES variable to "true".
-      #
-      # Runs before merge.sh so an update cannot clobber our dropins. U2 updates are
-      # patches - the product stays 7.3.0 and updates/product.txt still reads
-      # wso2is-7.3.0 - so the accelerator's stock-7.3.0 deployment.toml template stays
-      # valid. The pack ships bin/update_tool_setup.sh, which detects OS/arch and
-      # downloads the updater itself, so no encrypted binary needs committing.
       - name: Apply WSO2 U2 updates
         if: ${{ env.IS_SOURCE == 'release' && (inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true') }}
         env:
@@ -225,13 +180,6 @@ jobs:
           bin/wso2update_linux -v --username "$WSO2_USERNAME" --password "$WSO2_PASSWORD" \
             || bin/wso2update_linux -v --username "$WSO2_USERNAME" --password "$WSO2_PASSWORD"
 
-      # configure.properties already defaults to localhost / admin / admin / h2 with
-      # APPLY_CONSENT_DB_MIGRATION=true. On the release path the migration is silently
-      # skipped instead (the GA pack does not ship it - see the IS_SOURCE note above);
-      # on the master build it is expected to be present via whatever consent-mgt
-      # component version master currently pulls in. Both scripts are non-interactive,
-      # and configure.sh refuses to run while the server is up, which is why this
-      # happens before the start step.
       - name: Apply the accelerator
         run: |
           unzip -q dist/wso2-dpdp-is-accelerator-*.zip -d "$IS_HOME"
@@ -253,18 +201,6 @@ jobs:
           tail -200 "${IS_HOME}/repository/logs/wso2carbon.log"
           exit 1
 
-      # DPDPIdentityExtensionServiceComponent.activate() runs during OSGi bundle
-      # activation and can race ahead of the consent-mgt v2 API-resource registration
-      # that [consent_mgt] enable_v2_api = true triggers - and it swallows its own
-      # error, so a clean startup can still leave no application and no roles, which
-      # would surface as 49 confusing auth failures instead of one clear one.
-      #
-      # This is a genuine, measured race, not a hypothetical: on a dedicated local
-      # machine the accelerator wins it on nearly every boot, but on a GitHub-hosted
-      # runner it was observed to lose twice in a row (2026-08-24, run 32700270002),
-      # which is why a single restart is not enough - only a full restart re-triggers
-      # activate(), since onTenantCreate/onTenantUpdate never fire for the super
-      # tenant. Retry with bounded restarts rather than assuming one recovery works.
       - name: Verify accelerator provisioning
         run: |
           roles_found() {
@@ -311,9 +247,6 @@ jobs:
           TEST_PASSWORD="${password}" \
             bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
-      # run-e2e.sh hard-fails without a .env, so write one. These values override
-      # .env.example's localhost defaults, which utils/env.ts always loads first.
-      # Usernames come from the script's own outputs rather than being repeated here.
       - name: Configure the suite
         working-directory: dpdp-integration-test-suite
         run: |

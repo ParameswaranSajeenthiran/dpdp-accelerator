@@ -32,8 +32,6 @@ export class PurposeListPage {
     this.table = page.getByRole('table', { name: 'Consent purposes' })
     this.heading = page.getByRole('heading', { name: 'Purposes' })
     this.addPurposeButton = page.getByRole('button', { name: 'Add Purpose' })
-    // catalog.purposes.searchPlaceholder, rendered by PurposeSearchFilter.tsx - see the note in
-    // ElementListPage on why this can't be a shared "Search by name".
     this.nameSearch = page.getByPlaceholder('Search by purpose name')
     this.typeFilter = page.getByLabel('Type', { exact: true })
     this.searchButton = page.getByRole('button', { name: 'Search' })

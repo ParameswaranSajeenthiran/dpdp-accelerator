@@ -195,11 +195,6 @@ with a single failure, 1 with 18. Two open modes:
 - One run failed 18 tests with `401` on API seeding using the cached admin token. Unreproduced and
   unexplained.
 
-So: **before reporting a failure as a regression, re-run it at `--workers=1`.** If it passes
-serially and fails in parallel, you have probably hit one of the above rather than broken something.
-Conversely, do not declare a flaky-test fix successful on a handful of green runs — that mistake has
-already been made here.
-
 ## Before you call a change done
 
 1. `npx tsc --noEmit` — clean.

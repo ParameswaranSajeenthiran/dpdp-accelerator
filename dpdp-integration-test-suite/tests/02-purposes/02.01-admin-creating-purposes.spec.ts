@@ -49,9 +49,6 @@ test.describe('Admin creating Purposes (UI)', () => {
       consentCleanupTracker.trackPurpose(purposeMatch[1])
     }
     await expect(consentAdminPage.getByText('No custom properties.')).toBeVisible()
-    // catalog.messages.noElements, rendered by PurposeDetailsPage.tsx. Worded "for this version",
-    // not "for this purpose" - the empty state belongs to the purpose VERSION being viewed. Note
-    // consentRegistry.details.noElements is a different string ("associated with this purpose").
     await expect(
       consentAdminPage.getByText('No elements are configured for this version.'),
     ).toBeVisible()

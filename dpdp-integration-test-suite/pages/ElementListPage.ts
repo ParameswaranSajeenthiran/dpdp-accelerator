@@ -31,9 +31,6 @@ export class ElementListPage {
     this.table = page.getByRole('table', { name: 'Consent elements' })
     this.heading = page.getByRole('heading', { name: 'Elements' })
     this.addElementButton = page.getByRole('button', { name: 'Add Element' })
-    // catalog.elements.searchPlaceholder, rendered by ElementSearchFilter.tsx. The elements and
-    // purposes lists carry DIFFERENT placeholders ("element name" vs "purpose name"), so neither
-    // is reachable by a shared "Search by name" substring.
     this.nameSearch = page.getByPlaceholder('Search by element name')
     this.searchButton = page.getByRole('button', { name: 'Search' })
     this.resetButton = page.getByRole('button', { name: 'Reset' })

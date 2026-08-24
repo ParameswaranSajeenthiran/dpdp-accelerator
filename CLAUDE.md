@@ -163,11 +163,6 @@ load-bearing lines in `pageForPersonaState`, and the measured flake profile.
 - No hardcoded user-facing copy — externalize to i18n keys and use `useTranslation('common')`.
 - Never log tokens, emails, or other PII.
 
-## Stale docs
-
-Several committed docs contain known-inaccurate references (pnpm vs npm, a removed BFF, a deleted
-`create-portal-app.sh`). Don't take a README's claims at face value without checking the source.
-
 ## Reference docs
 
 `docs/setup-guide.md` (install + start the server), `docs/configuration-guide.md` (portal
