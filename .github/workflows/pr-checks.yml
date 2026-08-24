@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     # Headroom for an unmeasured product-is master build (large multi-module
-    # reactor, even with tests/checks skipped) plus up to 4 provisioning restarts.
+    # reactor, even with tests/checks skipped) plus one provisioning restart.
     timeout-minutes: 110
     env:
       IS_BASE_URL: https://localhost:9443
@@ -216,7 +216,7 @@ jobs:
             return 1
           }
 
-          max_restarts=4
+          max_restarts=1
           attempt=0
           while [ "$(roles_found)" != "1" ]; do
             if [ "${attempt}" -ge "${max_restarts}" ]; then
