@@ -31,7 +31,7 @@ permissions:
 env:
   IS_VERSION: 7.3.0
   ACCELERATOR_VERSION: 1.0.0-SNAPSHOT
-  # TEMPORARY DEFAULT - flip to 'release' once WSO2_SUBSCRIPTION_* secrets exist.
+  # TEMPORARY DEFAULT - flip to 'release' once WSO2_USERNAME / WSO2_U2_PASSWORD secrets exist.
   #
   # The vanilla 7.3.0 GA release does not carry the consent-mgt v2 API resources this
   # accelerator depends on. Confirmed by deploying it fresh in CI, then reproducing
@@ -210,8 +210,8 @@ jobs:
       - name: Apply WSO2 U2 updates
         if: ${{ env.IS_SOURCE == 'release' && (inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true') }}
         env:
-          WSO2_USERNAME: ${{ secrets.WSO2_SUBSCRIPTION_USERNAME }}
-          WSO2_PASSWORD: ${{ secrets.WSO2_SUBSCRIPTION_U2_PASSWORD }}
+          WSO2_USERNAME: ${{ secrets.WSO2_USERNAME }}
+          WSO2_PASSWORD: ${{ secrets.WSO2_U2_PASSWORD }}
         run: |
           # Secrets are never exposed to fork PRs and are not provisioned on this repo
           # yet, so degrade with a warning instead of failing the run.
