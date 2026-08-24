@@ -75,7 +75,9 @@ jobs:
     name: E2E integration tests
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 60
+    # Headroom for up to 4 provisioning restarts (worst case ~5 min each) on top
+    # of the normal run.
+    timeout-minutes: 75
     env:
       IS_BASE_URL: https://localhost:9443
     steps:
@@ -174,11 +176,18 @@ jobs:
           tail -200 "${IS_HOME}/repository/logs/wso2carbon.log"
           exit 1
 
-      # DPDPIdentityExtensionServiceComponent.activate() provisions the super tenant
-      # and swallows its own errors, so a clean startup can still leave no application
-      # and no roles - which would surface as 49 confusing auth failures. Assert it
-      # worked, and retry once via restart, the known-cheap recovery for a race with
-      # consent-mgt v2 API-resource registration.
+      # DPDPIdentityExtensionServiceComponent.activate() runs during OSGi bundle
+      # activation and can race ahead of the consent-mgt v2 API-resource registration
+      # that [consent_mgt] enable_v2_api = true triggers - and it swallows its own
+      # error, so a clean startup can still leave no application and no roles, which
+      # would surface as 49 confusing auth failures instead of one clear one.
+      #
+      # This is a genuine, measured race, not a hypothetical: on a dedicated local
+      # machine the accelerator wins it on nearly every boot, but on a GitHub-hosted
+      # runner it was observed to lose twice in a row (2026-08-24, run 32700270002),
+      # which is why a single restart is not enough - only a full restart re-triggers
+      # activate(), since onTenantCreate/onTenantUpdate never fire for the super
+      # tenant. Retry with bounded restarts rather than assuming one recovery works.
       - name: Verify accelerator provisioning
         run: |
           roles_found() {
@@ -186,21 +195,34 @@ jobs:
               "${IS_BASE_URL}/scim2/v2/Roles?filter=displayName+eq+dpdp-consent-admin" \
               | python3 -c 'import json, sys; print(json.load(sys.stdin).get("totalResults", 0))'
           }
-          if [ "$(roles_found)" != "1" ]; then
-            echo "::warning::dpdp-consent-admin missing after startup; restarting once"
-            grep -n "Error provisioning the DPDP Consent Portal" \
-              "${IS_HOME}/repository/logs/wso2carbon.log" || true
-            "${IS_HOME}/bin/wso2server.sh" restart
+          wait_for_is() {
             for i in $(seq 1 60); do
-              curl -sk -o /dev/null -f "${IS_BASE_URL}/oauth2/jwks" && break
+              curl -sk -o /dev/null -f "${IS_BASE_URL}/oauth2/jwks" && return 0
               sleep 5
             done
+            return 1
+          }
+
+          max_restarts=4
+          attempt=0
+          while [ "$(roles_found)" != "1" ]; do
+            if [ "${attempt}" -ge "${max_restarts}" ]; then
+              echo "::error::Accelerator did not provision dpdp-consent-admin for carbon.super after ${max_restarts} restarts"
+              grep -n "Error provisioning the DPDP Consent Portal" \
+                "${IS_HOME}/repository/logs/wso2carbon.log" || true
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            echo "::warning::dpdp-consent-admin missing after startup; restart ${attempt}/${max_restarts}"
+            "${IS_HOME}/bin/wso2server.sh" restart
+            wait_for_is || { echo "::error::Identity Server did not come back up after restart ${attempt}"; exit 1; }
+          done
+
+          if [ "${attempt}" -gt 0 ]; then
+            echo "Provisioning verified after ${attempt} restart(s)."
+          else
+            echo "Provisioning verified."
           fi
-          if [ "$(roles_found)" != "1" ]; then
-            echo "::error::Accelerator did not provision dpdp-consent-admin for carbon.super"
-            exit 1
-          fi
-          echo "Provisioning verified."
 
       - name: Provision test users
         id: users
