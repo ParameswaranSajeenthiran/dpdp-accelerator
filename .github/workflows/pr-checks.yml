@@ -149,18 +149,21 @@ jobs:
           restore-keys: |
             product-is-master-m2-
 
-      # modules/distribution depends on modules/features and modules/p2-profile-gen,
-      # which -am pulls in automatically; modules/integration and modules/tests-utils
-      # are not needed for the runtime pack and are skipped by omission. All the
-      # slow, non-runtime-affecting checks are skipped for build speed, matching how
-      # this accelerator's own build should NOT be treated (that one keeps its
-      # jacoco gate) - this is upstream code we are only borrowing for the moment.
+      # Full reactor, not `-pl modules/distribution -am`: tried that first and it
+      # failed on wso2-maven-json-merge-plugin ("Error while Writing Merged Json")
+      # after the assembly step had already produced the zip - that plugin combines
+      # JSON fragments contributed by sibling modules via file-path convention, not
+      # Maven's dependency graph, so a pruned reactor starves it of inputs the other
+      # modules would normally have produced. All the slow, non-runtime-affecting
+      # checks are skipped for build speed, matching how this accelerator's own build
+      # should NOT be treated (that one keeps its jacoco gate) - this is upstream code
+      # we are only borrowing for the moment.
       - name: Build IS from product-is master
         if: env.IS_SOURCE == 'master'
         run: |
           git clone --depth 1 https://github.com/wso2/product-is.git /tmp/product-is
           cd /tmp/product-is
-          mvn -B -ntp -pl modules/distribution -am install \
+          mvn -B -ntp install \
             -Dmaven.test.skip=true -Dspotbugs.skip=true -Dcheckstyle.skip=true \
             -Dpmd.skip=true -Drat.skip=true -Dlicense.skip=true \
             -Dmaven.javadoc.skip=true -Djacoco.skip=true
