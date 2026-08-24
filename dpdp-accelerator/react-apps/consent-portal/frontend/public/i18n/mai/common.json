@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} दिन विलंब",
       "daysLeftSingular": "{{count}} दिन बाँकी",
       "daysLeftPlural": "{{count}} दिन बाँकी",
-      "dueLabel": "Due"
+      "dueLabel": "समय सीमा"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त भेल",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "अहि शिकायतक समाधान भऽ गेल अछि।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "ई शिकायत एहि तिथि पर प्रस्तुत कयल गेल छल"
     },
     "submit": {
       "title": "शिकायत दर्ज करू",
@@ -850,14 +850,14 @@
         "back": "कतार पर वापस जाऊ",
         "notFound": "शिकायत नहि भेटल",
         "dataPrincipal": "उपयोगकर्ता",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ई शिकायत सुलझा देल गेल अछि आ एखन ई लॉक अछि। अहाँ एकरा सीधे पुनः नहि खोलि सकैत छी — एकरा केवल तखने पुनः खोलल जा सकैत अछि जखन क्लाइंट नव संदेश पठाओत।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "शिकायत निवारण",
+          "message": "की अहाँ निश्चित छी जे अहाँ एहि शिकायतकेँ सुलझाएल गेल चिह्नित करय चाहैत छी?",
+          "note": "एक बेर समाधान भऽ गेला पर, अहाँ फेरसँ उत्तर नहि दऽ सकब वा ओकर स्थिति नहि बदलि सकब, जखन धरि कि क्लाइंट कोनो नव संदेश नहि पठाबय।",
+          "confirm": "शिकायत निवारण",
+          "processing": "समाधान भऽ रहल अछि...",
+          "resolveFailed": "किछु गलत भऽ गेल आ शिकायतक समाधान नहि भऽ सकल। कृपया फेरसँ प्रयास करू।"
         }
       }
     }

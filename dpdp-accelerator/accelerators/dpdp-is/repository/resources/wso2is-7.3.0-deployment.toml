@@ -275,23 +275,16 @@ context = "(.*)/api/dpdp/complaints(.*)"
 secure = "false"
 http_method = "all"
 
-# Credentials the complaint-mgt endpoint's TokenIntrospectionFilter uses to call
-# this Identity Server's own OAuth2 introspection endpoint (RFC 7662) to
-# validate a caller's bearer token and resolve its subject/scopes. Defaults to
-# the super admin, consistent with this accelerator's local-dev posture
-# elsewhere (see IS_ADMIN_USERNAME/IS_ADMIN_PASSWORD in configure.properties).
+# The complaint-mgt endpoint's TokenIntrospectionFilter/TokenIntrospectionClient decode a caller's
+# bearer token's JWT claims directly, in-process - no call out to Identity Server, and no
+# signature check here, since Carbon's own valve (see the [[resource.access_control]] entries
+# above) already verified the token's signature/expiry/revocation status before this webapp ever
+# saw the request.
 [complaint_mgt.oauth2_introspection]
-endpoint = "https://IS_HOSTNAME:9443/oauth2/introspect"
-username = "IS_ADMIN_USERNAME"
-password = "IS_ADMIN_PASSWORD"
 # The only OAuth2 application whose tokens this endpoint accepts - must match the
 # client_id auto-provisioned per tenant (see [dpdp_accelerator.consent_portal] below).
-# A token introspecting as active but minted for any other application is rejected.
+# A token decoding successfully but minted for any other application is rejected.
 expected_client_id = "DPDP_CONSENT_PORTAL"
-# Bounds how long TokenIntrospectionFilter waits on this IS's own /oauth2/introspect endpoint
-# per request - without it, a hung/unreachable IS blocks this webapp's servlet worker threads
-# indefinitely, since every request here goes through introspection.
-timeout_millis = "5000"
 
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).

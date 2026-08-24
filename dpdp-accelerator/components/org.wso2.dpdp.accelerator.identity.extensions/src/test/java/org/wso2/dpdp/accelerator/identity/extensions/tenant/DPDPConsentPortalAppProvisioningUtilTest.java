@@ -137,6 +137,10 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertTrue(dto.isTokenBindingValidationEnabled());
         assertTrue(dto.isTokenRevocationWithIDPSessionTerminationEnabled());
         assertTrue(dto.getAllowedOrigins().isEmpty());
+        // Without this, JWT access tokens carry only the opaque "sub" - TokenIntrospectionClient
+        // in the complaint-mgt endpoint depends on this claim being present to attribute
+        // complaints/comments to a human-readable name.
+        assertEquals(dto.getAccessTokenClaims(), new String[]{"http://wso2.org/claims/username"});
     }
 
     @Test

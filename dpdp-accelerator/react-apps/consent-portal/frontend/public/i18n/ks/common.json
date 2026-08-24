@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} دۄہ زیاتہٕ گۆومُت",
       "daysLeftSingular": "{{count}} دۄہ باقائے",
       "daysLeftPlural": "{{count}} دۄہ باقائے",
-      "dueLabel": "Due"
+      "dueLabel": "آخری تٲریٖخ"
     },
     "timeline": {
       "complaintReceived": "شِکایَت مِلییہِ",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "یہِ شِکایَت چھیہِ حَل کَرنہٕ آمِت۔"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "یہ شکایت چھِ اتھ تٲریٖخس پؠٹھ دَرٕج کَرنہٕ آمٕژ"
     },
     "submit": {
       "title": "شِکایَت درَج کِریو",
@@ -850,14 +850,14 @@
         "back": "کِیُو مَنٛز واپس گَچھیو",
         "notFound": "شِکایَت لَبنہٕ نہٕ آو",
         "dataPrincipal": "صارف",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "یہ شکایت حل گٔیہِ تہٕ ابہٕ چھےٚ یہِ بنٛد۔ تُہۍ ہٮ۪کِو نہٕ یہِ براہِ راست دوبارہ کُھلٲوِتھ — یہِ ہٮ۪کہِ صرف تِلہِ دوبارہ کُھلِتھ ییٚلہِ کلائنٹ اکھ نۆو پیغام سوزِ۔",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "شکایت حل کٔرِو",
+          "message": "کیا تُہہ چھِو پکا زِ تُہہ چھِو یہِ شِکایت حل کٔرِتھ مارک کَرُن یژھان؟",
+          "note": "ییٚلہِ یہِ حل گژھِ، تُہۍ ہٮ۪کِو نہٕ بیٛیہِ کینٛہہ جواب دِتھ یا اَمِچ حالت بیٛیہِ بدلتھ یوتام نہٕ کلائنٹ اکھ نۆو پیغام سوزِ۔",
+          "confirm": "شکایت حل کٔرِو",
+          "processing": "حل کران",
+          "resolveFailed": "کٮ۪نٛہہ گٔیہِ غلط تہٕ شِکایت ہٮ۪ک نہٕ حل کٔرتھ۔ مہرہبٲنی کٔرتھ بیٛیہِ کوٗشش کٔرِو۔"
         }
       }
     }

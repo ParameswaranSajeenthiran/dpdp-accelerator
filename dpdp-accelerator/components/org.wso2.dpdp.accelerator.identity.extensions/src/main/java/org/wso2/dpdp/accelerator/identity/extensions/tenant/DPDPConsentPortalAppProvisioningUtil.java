@@ -152,6 +152,11 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setTokenBindingType("cookie");
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);
+        // Without this, JWT access tokens carry only the opaque "sub" - no human-readable identity
+        // at all - since WSO2 IS doesn't embed local claims into access tokens by default. The
+        // complaint-mgt endpoint's TokenIntrospectionClient reads this claim directly off the
+        // decoded token to attribute complaints/comments/attachments to a display name.
+        dto.setAccessTokenClaims(new String[]{USERNAME_CLAIM_URI});
 
         DPDPIdentityExtensionDataHolder.getInstance().getOAuthAdminService().registerOAuthApplicationData(dto);
     }

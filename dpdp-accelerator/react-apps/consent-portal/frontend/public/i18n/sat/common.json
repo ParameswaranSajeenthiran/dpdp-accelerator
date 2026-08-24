@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
       "daysLeftSingular": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
       "daysLeftPlural": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
-      "dueLabel": "Due"
+      "dueLabel": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ"
     },
     "timeline": {
       "complaintReceived": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱧᱟᱢ ᱮᱱᱟ",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "ᱱᱚᱣᱟ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱥᱚᱞᱦᱮ ᱮᱱᱟ।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "ᱱᱚᱣᱟ ᱫᱚᱫᱷᱟ ᱫᱚ ᱱᱚᱣᱟ ᱢᱟᱹᱦᱤᱛ ᱨᱮ ᱡᱚᱢᱟ ᱟᱠᱟᱱᱟ"
     },
     "submit": {
       "title": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱮᱢ ᱢᱮ",
@@ -850,14 +850,14 @@
         "back": "Queue ᱛᱮ ᱨᱩᱣᱟᱹᱲ",
         "notFound": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
         "dataPrincipal": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ᱱᱚᱣᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱫᱚ ᱥᱚᱞᱦᱮ ᱟᱠᱟᱱᱟ ᱟᱨ ᱱᱤᱛᱚᱜ ᱫᱚ ᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾ ᱟᱢ ᱱᱚᱣᱟ ᱫᱚ ᱥᱚᱡᱷᱮ ᱵᱟᱢ ᱡᱷᱤᱡ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ — ᱱᱚᱣᱟ ᱫᱚ ᱩᱱᱨᱮᱜᱮ ᱡᱷᱤᱡ ᱨᱩᱣᱟᱹᱲ ᱜᱟᱱᱚᱜᱼᱟ ᱡᱩᱫᱤ ᱠᱞᱟᱭᱮᱱᱴ ᱢᱤᱫᱴᱟᱝ ᱱᱟᱣᱟ ᱠᱷᱚᱵᱚᱨ ᱮ ᱵᱷᱮᱡᱟᱭᱟ ᱾",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱚᱞᱦᱮ",
+          "message": "ᱟᱢ ᱪᱮᱫ ᱱᱚᱣᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱫᱚ ᱥᱚᱞᱦᱮ ᱟᱠᱟᱱ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱦᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱮᱢ ᱴᱷᱟᱹᱣᱠᱟᱹ ᱟᱠᱟᱫᱟ?",
+          "note": "ᱥᱚᱞᱦᱮ ᱛᱟᱭᱚᱢ, ᱟᱢ ᱫᱚ ᱟᱨᱦᱚᱸ ᱵᱟᱢ ᱛᱮᱞᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱥᱮ ᱥᱴᱮᱴᱟᱥ ᱵᱟᱢ ᱵᱚᱫᱚᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ, ᱡᱩᱫᱤ ᱵᱟᱝ ᱠᱞᱟᱭᱮᱱᱴ ᱢᱤᱫᱴᱟᱝ ᱱᱟᱣᱟ ᱢᱮᱥᱮᱡᱽ ᱮ ᱵᱷᱮᱡᱟᱭᱟ ᱾",
+          "confirm": "ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱚᱞᱦᱮ",
+          "processing": "ᱥᱚᱞᱦᱮ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+          "resolveFailed": "ᱢᱤᱫᱴᱟᱝ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱥᱚᱞᱦᱮ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ ᱾ ᱫᱚᱭᱟ ᱠᱟᱛᱮ ᱟᱨᱦᱚᱱ ᱪᱮᱥᱴᱟ ᱢᱮ ᱾"
         }
       }
     }

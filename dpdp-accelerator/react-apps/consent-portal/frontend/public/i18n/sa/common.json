@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} दिनानि विलम्बितानि",
       "daysLeftSingular": "{{count}} दिनं शेषम्",
       "daysLeftPlural": "{{count}} दिनानि शेषाणि",
-      "dueLabel": "Due"
+      "dueLabel": "अन्तिमतिथिः"
     },
     "timeline": {
       "complaintReceived": "आक्षेपः प्राप्तः",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "अयं आक्षेपः समाहितः अस्ति।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "प्रस्तुतम्"
     },
     "submit": {
       "title": "आक्षेपं समर्पयन्तु",
@@ -850,14 +850,14 @@
         "back": "पङ्क्तिं प्रति गच्छन्तु",
         "notFound": "आक्षेपः न प्राप्तः",
         "dataPrincipal": "उपयोक्ता",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "इयं परिवादिनी समाहिता अस्ति तथा अधुना पिहिता अस्ति। भवान् साक्षात् एतां पुनः उद्घाटयितुं न शक्नोति — इयं केवलं तदैव पुनः उद्घाटयितुं शक्यते यदि ग्राहकः नूतनं सन्देशं प्रेषयति।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "आक्षेपस्य समाधानं कुर्वन्तु।",
+          "message": "किं भवान् निश्चितः अस्ति यत् भवान् एतां परिदेदाम् समाहिता इति अङ्कयितुम् इच्छति?",
+          "note": "एकदा समाधानं जातं चेत्, यावत् ग्राहकः नूतनं सन्देशं न प्रेषयति, तावत् भवान् पुनः उत्तरं दातुं वा तस्य स्थितिं परिवर्तयितुं वा न शक्ष्यति।",
+          "confirm": "आक्षेपस्य समाधानं कुर्वन्तु।",
+          "processing": "समाधानम्...",
+          "resolveFailed": "किञ्चित् दोषः जातः तथा च परिवादः न परिहृतः। कृपया पुनः प्रयतताम्।"
         }
       }
     }

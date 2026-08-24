@@ -710,7 +710,7 @@
       "overduePlural": "নুমিত {{count}} হেলেমখ্রে",
       "daysLeftSingular": "নুমিত {{count}} ৱাৎলি",
       "daysLeftPlural": "নুমিত {{count}} ৱাৎলি",
-      "dueLabel": "Due"
+      "dueLabel": "ꯃꯇꯝ"
     },
     "timeline": {
       "complaintReceived": "ৱাকৎ ফংখ্রে",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "ৱাকৎ অসি লোইশিনখ্রে।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "ꯃꯁꯤꯒꯤ ꯋꯥꯀꯠ ꯑꯁꯤ ꯇꯥꯡ ꯑꯁꯤꯗ ꯄꯤꯁꯤꯟꯈ꯭ꯔꯦ"
     },
     "submit": {
       "title": "ৱাকৎ অমা পিশিনবা",
@@ -850,14 +850,14 @@
         "back": "ক্যু দা হনবা",
         "notFound": "ৱাকৎ থেংনদ্রে",
         "dataPrincipal": "শীজিন্নবমী",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ꯃꯁꯤꯒꯤ ꯋꯥꯀꯠ ꯑꯁꯤ ꯂꯣꯏꯁꯤꯟꯈ꯭ꯔꯦ ꯑꯃꯁꯨꯡ ꯍꯧꯖꯤꯛꯇꯤ ꯂꯣꯛ ꯇꯧꯔꯦ꯫ ꯅꯍꯥꯛꯅ ꯃꯁꯤ ꯍꯦꯛ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯥꯡꯗꯣꯛꯄ ꯌꯥꯔꯣꯏ — ꯃꯁꯤ ꯀ꯭ꯂꯥꯏꯑꯦꯟꯇꯅ ꯑꯅꯧꯕ ꯄꯥꯎꯖꯦꯜ ꯑꯃ ꯊꯥꯔꯛꯄ ꯃꯇꯝꯗꯇꯪ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯥꯡꯗꯣꯛꯄ ꯌꯥꯒꯅꯤ꯫",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "ꯋꯥꯀꯠ ꯂꯣꯏꯁꯤꯟꯕ",
+          "message": "ꯅꯍꯥꯛꯅ ꯋꯥꯀꯠꯄ ꯑꯁꯤ ꯂꯣꯏꯁꯤꯟꯈ꯭ꯔꯦ ꯍꯥꯏꯅ ꯃꯥꯔꯛ ꯇꯧꯕ ꯅꯍꯥꯛꯅ ꯁꯣꯏꯗ꯭ꯔꯥ?",
+          "note": "ꯔꯦꯖꯣꯂꯨꯁꯟ ꯇꯧꯔꯕ ꯃꯇꯨꯡꯗ, ꯀ꯭ꯂꯥꯏꯑꯦꯟꯇꯅ ꯑꯅꯧꯕ ꯄꯥꯎꯖꯦꯜ ꯑꯃ ꯊꯥꯗ꯭ꯔꯤꯕꯃꯈꯩ ꯅꯍꯥꯛꯅ ꯄꯥꯎꯈꯨꯝ ꯄꯤꯕ ꯅꯠꯇ꯭ꯔꯒ ꯃꯁꯤꯒꯤ ꯐꯤꯕꯝ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯡꯗꯣꯛꯄ ꯉꯝꯂꯣꯏ꯫",
+          "confirm": "ꯋꯥꯀꯠ ꯂꯣꯏꯁꯤꯟꯕ",
+          "processing": "ꯔꯤꯖꯣꯂꯨꯏꯡ...",
+          "resolveFailed": "ꯀꯔꯤꯒꯨꯝꯕ ꯑꯁꯣꯏꯕ ꯑꯃ ꯊꯣꯛꯈ꯭ꯔꯦ ꯑꯃꯁꯨꯡ ꯋꯥꯀꯠ ꯑꯗꯨ ꯂꯣꯏꯁꯤꯟꯕ ꯌꯥꯗ꯭ꯔꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
         }
       }
     }

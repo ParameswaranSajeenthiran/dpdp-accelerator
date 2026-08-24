@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} दीस मुदत सोंपल्या",
       "daysLeftSingular": "{{count}} दीस उरला",
       "daysLeftPlural": "{{count}} दीस उरल्यात",
-      "dueLabel": "Due"
+      "dueLabel": "मुदत"
     },
     "timeline": {
       "complaintReceived": "कागाळ मेळ्ळी",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "हे कागाळीची सोडवणूक जाल्या."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "सादर केल्लें"
     },
     "submit": {
       "title": "कागाळ नोंद करात",
@@ -850,14 +850,14 @@
         "back": "रांगे कडेन परत वचात",
         "notFound": "कागाळ मेळ्ळी ना",
         "dataPrincipal": "वापरपी",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ही कागाळ सुटावी जाल्या आनी आतां ती बंद केल्या. तुमी ती थेट परत उक्ती करूंक शकनात — ती फकत तेन्नाच परत उक्ती करूंक येता जेन्ना गिरायकान नवो संदेश धाडटा.",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "शिकायत निवारण",
+          "message": "तुमी खात्रीन ही तक्रार सुटावी जाल्या अशें खूण करपाक सोदतात?",
+          "note": "एकदां सुटावें जातकच, जो मेरेन क्लायंट नवो संदेश धाडना, तो मेरेन तुमी परत जाप दिवंक शकचे नात वा ताची स्थिती परत बदलूंक शकचे नात.",
+          "confirm": "शिकायत निवारण",
+          "processing": "सोडोवप...",
+          "resolveFailed": "कांय तरी चूक जाली आनी तक्रार सुटावी जाली ना. उपकार करून परत प्रयत्न करात."
         }
       }
     }

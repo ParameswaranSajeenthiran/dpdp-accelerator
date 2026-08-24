@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} دنوں کی تاخیر",
       "daysLeftSingular": "{{count}} دن باقی ہے",
       "daysLeftPlural": "{{count}} دن باقی ہیں",
-      "dueLabel": "Due"
+      "dueLabel": "آخری تاریخ"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "یہ شکایت حل کر دی گئی ہے۔"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "جمع کرایا گیا"
     },
     "submit": {
       "title": "شکایت درج کریں",
@@ -850,14 +850,14 @@
         "back": "قطار میں واپس جائیں",
         "notFound": "شکایت نہیں ملی",
         "dataPrincipal": "صارف (Data Principal)",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "یہ شکایت حل کر دی گئی ہے اور اب اسے لاک کر دیا گیا ہے۔ آپ اسے براہِ راست دوبارہ نہیں کھول سکتے — اسے صرف اسی صورت میں دوبارہ کھولا جا سکتا ہے اگر کلائنٹ کوئی نیا پیغام بھیجے۔",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "شکایت کا ازالہ کریں",
+          "message": "کیا آپ اس شکایت کو حل شدہ کے طور پر نشان زد کرنا چاہتے ہیں؟",
+          "note": "ایک بار حل ہو جانے کے بعد، آپ دوبارہ جواب دینے یا اس کی حیثیت تبدیل کرنے کے قابل نہیں ہوں گے جب تک کہ کلائنٹ نیا پیغام نہ بھیجے۔",
+          "confirm": "شکایت کا ازالہ کریں",
+          "processing": "حل ہو رہا ہے...",
+          "resolveFailed": "کچھ غلط ہو گیا اور شکایت حل نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔"
         }
       }
     }

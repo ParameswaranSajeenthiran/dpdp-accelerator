@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} দিন বিলম্বিত",
       "daysLeftSingular": "{{count}} দিন বাকি",
       "daysLeftPlural": "{{count}} দিন বাকি",
-      "dueLabel": "Due"
+      "dueLabel": "বাকি তারিখ"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ গৃহীত হয়েছে",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "এই অভিযোগটি মীমাংসা করা হয়েছে।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "জমা দেওয়া হয়েছে"
     },
     "submit": {
       "title": "একটি অভিযোগ জমা দিন",
@@ -850,14 +850,14 @@
         "back": "সারিতে ফিরে যান",
         "notFound": "অভিযোগ পাওয়া যায়নি",
         "dataPrincipal": "ব্যবহারকারী",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "এই অভিযোগটি সমাধান করা হয়েছে এবং এখন এটি লক করা হয়েছে। আপনি এটি সরাসরি পুনরায় খুলতে পারবেন না — এটি কেবল তখনই পুনরায় খোলা যেতে পারে যদি ক্লায়েন্ট একটি নতুন বার্তা পাঠান।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "অভিযোগ নিষ্পত্তি করুন",
+          "message": "আপনি কি নিশ্চিত যে আপনি এই অভিযোগটিকে সমাধান করা হয়েছে হিসেবে চিহ্নিত করতে চান?",
+          "note": "একবার সমাধান হয়ে গেলে, ক্লায়েন্ট নতুন কোনো বার্তা না পাঠানো পর্যন্ত আপনি আর উত্তর দিতে পারবেন না বা এর স্থিতি পরিবর্তন করতে পারবেন না।",
+          "confirm": "অভিযোগ নিষ্পত্তি করুন",
+          "processing": "সমাধান করা হচ্ছে...",
+          "resolveFailed": "কিছু একটা ভুল হয়েছে এবং অভিযোগটি সমাধান করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।"
         }
       }
     }

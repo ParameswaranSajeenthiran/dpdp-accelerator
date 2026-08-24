@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
       "daysLeftSingular": "{{count}} ದಿನ ಉಳಿದಿದೆ",
       "daysLeftPlural": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
-      "dueLabel": "Due"
+      "dueLabel": "ಗಡುವು"
     },
     "timeline": {
       "complaintReceived": "ದೂರು ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "ಈ ದೂರನ್ನು ಪರಿಹರಿಸಲಾಗಿದೆ."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "ಸಲ್ಲಿಸಲಾಗಿದೆ"
     },
     "submit": {
       "title": "ದೂರು ಸಲ್ಲಿಸಿ",
@@ -850,14 +850,14 @@
         "back": "ಸರತಿಗೆ ಹಿಂತಿರುಗಿ",
         "notFound": "ದೂರು ಕಂಡುಬಂದಿಲ್ಲ",
         "dataPrincipal": "ಬಳಕೆದಾರ",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ಈ ದೂರು ಪರಿಹರಿಸಲ್ಪಟ್ಟಿದೆ ಮತ್ತು ಈಗ ಲಾಕ್ ಮಾಡಲಾಗಿದೆ. ನೀವು ಇದನ್ನು ನೇರವಾಗಿ ಮರುತೆರೆಯಲು ಸಾಧ್ಯವಿಲ್ಲ — ಕ್ಲೈಂಟ್ ಹೊಸ ಸಂದೇಶವನ್ನು ಕಳುಹಿಸಿದರೆ ಮಾತ್ರ ಇದನ್ನು ಮರುತೆರೆಯಬಹುದು.",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "ದೂರು ನಿವಾರಣೆ",
+          "message": "ನೀವು ಈ ದೂರನ್ನು ಪರಿಹರಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ಖಚಿತವಾಗಿದ್ದೀರಾ?",
+          "note": "ಪರಿಹರಿಸಲ್ಪಟ್ಟ ನಂತರ, ಕ್ಲೈಂಟ್ ಹೊಸ ಸಂದೇಶವನ್ನು ಕಳುಹಿಸದ ಹೊರತು ನೀವು ಮತ್ತೆ ಉತ್ತರಿಸಲು ಅಥವಾ ಅದರ ಸ್ಥಿತಿಯನ್ನು ಬದಲಾಯಿಸಲು ಸಾಧ್ಯವಾಗುವುದಿಲ್ಲ.",
+          "confirm": "ದೂರು ನಿವಾರಣೆ",
+          "processing": "ಪರಿಹರಿಸಲಾಗುತ್ತಿದೆ...",
+          "resolveFailed": "ಏನೋ ತಪ್ಪಾಗಿದೆ ಮತ್ತು ದೂರು ಪರಿಹರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
         }
       }
     }

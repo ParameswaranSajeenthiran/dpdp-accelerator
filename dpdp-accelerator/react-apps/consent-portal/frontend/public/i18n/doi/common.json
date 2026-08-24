@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} दिन उप्पर होई गेदे न",
       "daysLeftSingular": "{{count}} दिन बची गेदा ऐ",
       "daysLeftPlural": "{{count}} दिन बची गेदे न",
-      "dueLabel": "Due"
+      "dueLabel": "आखरी तारीख"
     },
     "timeline": {
       "complaintReceived": "शिकायत मिली",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "एह् शिकायत हल होई गेदी ऐ।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "जमा कीती गई"
     },
     "submit": {
       "title": "इक शिकायत जमा करो",
@@ -850,14 +850,14 @@
         "back": "कतार च वापस",
         "notFound": "शिकायत नेईं लब्भी",
         "dataPrincipal": "यूजर",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "एह् शिकायत सुलझाई गई ऐ ते हुण एह् बंद ऐ। तुस इस्सी सिधै तौर पर दुबारा नेईं खोली सकदे — एह् सिर्फ तां गै दुबारा खोली जाई सकदी ऐ जेकर क्लाइंट कोई नमां सुनेहा भेजदा ऐ।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "शिकायत दा समाधान करो",
+          "message": "क्या तुस इस शिकायत गी सुलझेआ दे रूप च मार्क करना चाह्‌न्दे ओ?",
+          "note": "इक बारी सुलझने दे बाद, तुस फ्ही थमां जोआब नेईं देई सकगे ओ या ओह्दी स्थिति गी फ्ही नेईं बदली सकदे ओ, जच्चर क्लाइंट कोई नमां सुनेहा नेईं भेजदा।",
+          "confirm": "शिकायत दा समाधान करो",
+          "processing": "समाधान की जा रही है...",
+          "resolveFailed": "कुझु गलत होई गेआ ऐ ते शिकायत दा समाधान नेईं होई सक्या। कृपया फ्ही कोशश करो।"
         }
       }
     }

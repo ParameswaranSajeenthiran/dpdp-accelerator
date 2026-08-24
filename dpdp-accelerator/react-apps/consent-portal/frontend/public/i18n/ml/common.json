@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} ദിവസങ്ങൾ വൈകി",
       "daysLeftSingular": "{{count}} ദിവസം ബാക്കി",
       "daysLeftPlural": "{{count}} ദിവസങ്ങൾ ബാക്കി",
-      "dueLabel": "Due"
+      "dueLabel": "അവസാന തീയതി"
     },
     "timeline": {
       "complaintReceived": "പരാതി ലഭിച്ചു",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "ഈ പരാതി പരിഹരിച്ചു."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "സമർപ്പിച്ചത്"
     },
     "submit": {
       "title": "പരാതി നൽകുക",
@@ -850,14 +850,14 @@
         "back": "ക്യൂവിലേക്ക് മടങ്ങുക",
         "notFound": "പരാതി കണ്ടെത്തിയില്ല",
         "dataPrincipal": "ഉപയോക്താവ്",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ഈ പരാതി പരിഹരിക്കപ്പെടുകയും ഇപ്പോൾ ലോക്ക് ചെയ്യപ്പെടുകയും ചെയ്തിരിക്കുന്നു. നിങ്ങൾക്ക് ഇത് നേരിട്ട് വീണ്ടും തുറക്കാൻ കഴിയില്ല — ക്ലയന്റ് പുതിയൊരു സന്ദേശം അയച്ചാൽ മാത്രമേ ഇത് വീണ്ടും തുറക്കാൻ സാധിക്കൂ.",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "പരാതി പരിഹാരം",
+          "message": "ഈ പരാതി പരിഹരിച്ചതായി രേഖപ്പെടുത്താൻ നിങ്ങൾ തീർച്ചയായും ആഗ്രഹിക്കുന്നുണ്ടോ?",
+          "note": "പരിഹരിക്കപ്പെട്ടുകഴിഞ്ഞാൽ, ക്ലയന്റ് പുതിയൊരു സന്ദേശം അയക്കുന്നത് വരെ നിങ്ങൾക്ക് മറുപടി നൽകാനോ അതിന്റെ നില മാറ്റാനോ കഴിയില്ല.",
+          "confirm": "പരാതി പരിഹാരം",
+          "processing": "പരിഹരിക്കുന്നു...",
+          "resolveFailed": "എന്തോ പിശക് സംഭവിച്ചു, പരാതി പരിഹരിക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
         }
       }
     }

@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} દિવસો વિલંબિત",
       "daysLeftSingular": "{{count}} દિવસ બાકી",
       "daysLeftPlural": "{{count}} દિવસો બાકી",
-      "dueLabel": "Due"
+      "dueLabel": "અંતિમ તારીખ"
     },
     "timeline": {
       "complaintReceived": "ફરિયાદ પ્રાપ્ત થઈ",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "આ ફરિયાદનો ઉકેલ આવી ગયો છે."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "રજૂ કરેલ છે"
     },
     "submit": {
       "title": "ફરિયાદ નોંધાવો",
@@ -850,14 +850,14 @@
         "back": "ક્યૂ પર પાછા જાઓ",
         "notFound": "ફરિયાદ મળતી નથી",
         "dataPrincipal": "વપરાશકર્તા",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "આ ફરિયાદ ઉકેલાઈ ગઈ છે અને હવે તે લોક કરવામાં આવી છે. તમે તેને સીધી રીતે ફરીથી ખોલી શકતા નથી — તે ત્યારે જ ફરીથી ખોલી શકાય છે જો ક્લાયન્ટ નવો સંદેશ મોકલે.",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "ફરિયાદનું નિરાકરણ",
+          "message": "શું તમે ચોક્કસ છો કે તમે આ ફરિયાદને ઉકેલાયેલ તરીકે ચિહ્નિત કરવા માંગો છો?",
+          "note": "એકવાર ઉકેલાઈ ગયા પછી, જ્યાં સુધી ક્લાયન્ટ નવો સંદેશ ન મોકલે ત્યાં સુધી તમે ફરીથી જવાબ આપી શકશો નહીં અથવા તેની સ્થિતિ બદલી શકશો નહીં.",
+          "confirm": "ફરિયાદનું નિરાકરણ",
+          "processing": "ઉકેલાઈ રહ્યું છે...",
+          "resolveFailed": "કંઈક ભૂલ થઈ છે અને ફરિયાદનો ઉકેલ લાવી શકાયો નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
         }
       }
     }

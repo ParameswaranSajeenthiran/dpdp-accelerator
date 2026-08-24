@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} सानफोर हाहैबाय",
       "daysLeftSingular": "{{count}} सान आगोनां",
       "daysLeftPlural": "{{count}} सानफोर आगोनां",
-      "dueLabel": "Due"
+      "dueLabel": "थि अक्ट'"
     },
     "timeline": {
       "complaintReceived": "अजत मोनबाय",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "बे अजतखौ सुस्रांनाय जाबाय।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "दाखिल खालामजाथाय"
     },
     "submit": {
       "title": "अजत गथाय",
@@ -850,14 +850,14 @@
         "back": "फारिलाइआव फिन थां",
         "notFound": "अजत मोनाखै",
         "dataPrincipal": "बाहायग्रा",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "बे अजतखौ सुस्रांनाय जाबाय आरो दा बेखौ बन्द खालामनाय जाबाय। नोंथाङा बेखौ थोंजोङै फिन खेवनो हाया — बेखौ खालि अब्लासो फिन खेवनो हागोन जुदि क्लायन्टआ मोनसे गोदान रादाब दैथायो।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "अजतखौ सुस्रां खालाम",
+          "message": "नोंथाङा बे अजदखौ सुस्रांखाबाय होननानै सिन होनो थारैबो लुबैदों ना?",
+          "note": "खेबसे सुस्रांखांब्ला, क्लायन्टआ मोनसे गोदान रादाब दैथायहरैया जासिम नोंथाङा फिन होनो हानाय नङा एबा बेनि थासारिखौ फिन सोलायनो हानाय नङा।",
+          "confirm": "अजतखौ सुस्रां खालाम",
+          "processing": "सुलुं खालामगासिनो...",
+          "resolveFailed": "मोनसे गोरोन्थि जादों आरो अजतखौ सुस्रांनो हायाखै। अननानै उनाव फिन नाजाफिन।"
         }
       }
     }

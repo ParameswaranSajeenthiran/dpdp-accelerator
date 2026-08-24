@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} ଦିନ ବିଳମ୍ବ",
       "daysLeftSingular": "{{count}} ଦିନ ବାକି",
       "daysLeftPlural": "{{count}} ଦିନ ବାକି",
-      "dueLabel": "Due"
+      "dueLabel": "ଶେଷ ତାରିଖ"
     },
     "timeline": {
       "complaintReceived": "ଅଭିଯୋଗ ଗ୍ରହଣ କରାଗଲା",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "ଏହି ଅଭିଯୋଗର ସମାଧାନ ହୋଇଛି."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "ଦାଖଲ କରାଯାଇଛି"
     },
     "submit": {
       "title": "ଏକ ଅଭିଯୋଗ ଦାଖଲ କରନ୍ତୁ",
@@ -850,14 +850,14 @@
         "back": "ଧାଡିକୁ ଫେରନ୍ତୁ",
         "notFound": "ଅଭିଯୋଗ ମିଳିଲା ନାହିଁ",
         "dataPrincipal": "ଉପଯୋଗକର୍ତ୍ତା",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ଏହି ଅଭିଯୋଗର ସମାଧାନ କରାଯାଇଛି ଏବଂ ଏହା ବର୍ତ୍ତମାନ ଲକ୍ ହୋଇଛି। ଆପଣ ଏହାକୁ ସିଧାସଳଖ ପୁନର୍ବାର ଖୋଲିପାରିବେ ନାହିଁ — ଏହା କେବଳ ସେତେବେଳେ ପୁନର୍ବାର ଖୋଲାଯାଇପାରିବ ଯଦି କ୍ଲାଏଣ୍ଟ ଏକ ନୂତନ ବାର୍ତ୍ତା ପଠାନ୍ତି।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "ଅଭିଯୋଗର ସମାଧାନ",
+          "message": "ଆପଣ ନିଶ୍ଚିତ କି ଆପଣ ଏହି ଅଭିଯୋଗକୁ ସମାଧାନ ହୋଇଥିବା ଭାବେ ଚିହ୍ନିତ କରିବାକୁ ଚାହୁଁଛନ୍ତି?",
+          "note": "ଥରେ ସମାଧାନ ହୋଇଗଲେ, କ୍ଲାଏଣ୍ଟ ଏକ ନୂତନ ବାର୍ତ୍ତା ନପଠାଇବା ପର୍ଯ୍ୟନ୍ତ ଆପଣ ଆଉ ଉତ୍ତର ଦେବାକୁ କିମ୍ବା ଏହାର ସ୍ଥିତି ପରିବର୍ତ୍ତନ କରିବାକୁ ସମର୍ଥ ହେବେ ନାହିଁ।",
+          "confirm": "ଅଭିଯୋଗର ସମାଧାନ",
+          "processing": "ସମାଧାନ କରାଯାଉଛି...",
+          "resolveFailed": "କିଛି ଭୁଲ୍ ହୋଇଗଲା ଏବଂ ଅଭିଯୋଗର ସମାଧାନ ହୋଇପାରିଲା ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
         }
       }
     }

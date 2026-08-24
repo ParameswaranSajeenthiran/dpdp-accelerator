@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!--
+ ~ Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ ~
+ ~ WSO2 LLC. licenses this file to you under the Apache License,
+ ~ Version 2.0 (the "License"); you may not use this file except
+ ~ in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     http://www.apache.org/licenses/LICENSE-2.0
+ ~
+ ~ Unless required by applicable law or agreed to in writing,
+ ~ software distributed under the License is distributed on an
+ ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~ KIND, either express or implied. See the License for the
+ ~ specific language governing permissions and limitations
+ ~ under the License.
+ -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.wso2.dpdp.accelerator</groupId>
+        <artifactId>dpdp-accelerator</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <!--
+      jar packaging for now, while this module is just the endpoint-layer utility classes -
+      switch to war (see org.wso2.dpdp.accelerator.complaint.mgt.endpoint's pom.xml for the
+      Jersey/Servlet dependency set) once actual REST resources land here.
+    -->
+    <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
+    <packaging>jar</packaging>
+
+    <name>WSO2 DPDP Accelerator - Event Notification Endpoint</name>
+
+    <!--
+      org.wso2.carbon.utils 4.12.34 (below) ships class files at bytecode version 65 (Java 21) -
+      IS 7.3.0 itself requires a JDK 21+ runtime (see accelerators/dpdp-is/README.md), so building
+      against it at release 21 carries no extra runtime constraint. This overrides the parent's
+      project-wide maven.compiler.source/target=11 for this module only; build it with a JDK 21+
+      JAVA_HOME.
+    -->
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.event.notifications.service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--
+          PrivilegedCarbonContext - resolves the tenant domain/username from the Carbon runtime's
+          thread-local context (see EndpointTenantUtils). Provided scope: the Identity Server's
+          own OSGi runtime supplies this at deployment time, so it must not be bundled.
+        -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.utils</artifactId>
+            <version>4.12.34</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

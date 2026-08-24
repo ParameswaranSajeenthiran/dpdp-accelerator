@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} दिवस थकीत",
       "daysLeftSingular": "{{count}} दिवस शिल्लक",
       "daysLeftPlural": "{{count}} दिवस शिल्लक",
-      "dueLabel": "Due"
+      "dueLabel": "अंतिम तारीख"
     },
     "timeline": {
       "complaintReceived": "तक्रार प्राप्त झाली",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "या तक्रारीचे निराकरण झाले आहे."
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "सादर केले आहे"
     },
     "submit": {
       "title": "तक्रार नोंदवा",
@@ -850,14 +850,14 @@
         "back": "रांगेत परत जा",
         "notFound": "तक्रार आढळली नाही",
         "dataPrincipal": "वापरकर्ता",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "ही तक्रार सोडवली गेली आहे आणि आता ती लॉक केली आहे. तुम्ही ती थेट पुन्हा उघडू शकत नाही — ती केवळ तेव्हाच पुन्हा उघडली जाऊ शकते जर क्लायंट नवीन संदेश पाठवेल.",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "तक्रार निवारण करा",
+          "message": "तुम्हाला खात्री आहे की तुम्हाला ही तक्रार सोडवली म्हणून चिन्हांकित करायची आहे?",
+          "note": "एकदा सोडवल्यानंतर, जोपर्यंत क्लायंट नवीन संदेश पाठवत नाही, तोपर्यंत तुम्ही पुन्हा उत्तर देऊ शकणार नाही किंवा त्याची स्थिती बदलू शकणार नाही.",
+          "confirm": "तक्रार निवारण करा",
+          "processing": "सोडवत आहे...",
+          "resolveFailed": "काहीतरी चुकले आहे आणि तक्रार सोडवता आली नाही. कृपया पुन्हा प्रयत्न करा."
         }
       }
     }

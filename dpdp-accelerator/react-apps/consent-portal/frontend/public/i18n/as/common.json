@@ -710,7 +710,7 @@
       "overduePlural": "{{count}} দিন পাৰ হৈ গৈছে",
       "daysLeftSingular": "{{count}} দিন বাকী আছে",
       "daysLeftPlural": "{{count}} দিন বাকী আছে",
-      "dueLabel": "Due"
+      "dueLabel": "নিৰ্ধাৰিত তাৰিখ"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ পোৱা গৈছে",
@@ -752,7 +752,7 @@
       "resolved": {
         "note": "এই অভিযোগটো সমাধান কৰা হৈছে।"
       },
-      "submittedOnLabel": "Submitted on"
+      "submittedOnLabel": "দাখিল কৰা হৈছে"
     },
     "submit": {
       "title": "এটা অভিযোগ দাখিল কৰক",
@@ -850,14 +850,14 @@
         "back": "শাৰীলৈ উভতি যাওক",
         "notFound": "অভিযোগ পোৱা নগ'ল",
         "dataPrincipal": "ব্যৱহাৰকাৰী",
-        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolvedLocked": "এই অভিযোগটো সমাধান কৰা হৈছে আৰু এতিয়া ইয়াক লক কৰা হৈছে। আপুনি ইয়াক পোনপটীয়াকৈ পুনৰ খুলিব নোৱাৰে — ইয়াক কেৱল তেতিয়াহে পুনৰ খুলিব পৰা যাব যদিহে গ্ৰাহকে এটা নতুন বাৰ্তা প্ৰেৰণ কৰে।",
         "resolveDialog": {
-          "title": "Resolve Complaint",
-          "message": "Are you sure you want to mark this complaint as resolved?",
-          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
-          "confirm": "Resolve Complaint",
-          "processing": "Resolving...",
-          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+          "title": "অভিযোগ নিষ্পত্তি কৰক",
+          "message": "আপুনি নিশ্চিতনে যে আপুনি এই অভিযোগটো সমাধান হোৱা বুলি চিহ্নিত কৰিব বিচাৰে?",
+          "note": "এবাৰ সমাধান হোৱাৰ পিছত, ক্লায়েণ্টৰ পৰা নতুন বাৰ্তা নোসোৱালৈকে আপুনি পুনৰ উত্তৰ দিব নোৱাৰিব বা ইয়াৰ স্থিতি সলনি কৰিব নোৱাৰিব।",
+          "confirm": "অভিযোগ নিষ্পত্তি কৰক",
+          "processing": "সমাধান কৰা হৈছে...",
+          "resolveFailed": "কিবা এটা ভুল হৈছে আৰু অভিযোগটো সমাধান কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।"
         }
       }
     }
