@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 public class ComplaintAttachmentResponseBean {
 
@@ -30,13 +29,13 @@ public class ComplaintAttachmentResponseBean {
     private String contentType;
     private long sizeBytes;
     private boolean isPublic;
-    private String uploadedTime;
+    private long uploadedTime;
 
     public ComplaintAttachmentResponseBean() {
     }
 
     public ComplaintAttachmentResponseBean(String attachmentId, String complaintEventId, String fileName,
-            String contentType, long sizeBytes, boolean isPublic, String uploadedTime) {
+            String contentType, long sizeBytes, boolean isPublic, long uploadedTime) {
         this.attachmentId = attachmentId;
         this.complaintEventId = complaintEventId;
         this.fileName = fileName;
@@ -49,7 +48,7 @@ public class ComplaintAttachmentResponseBean {
     public static ComplaintAttachmentResponseBean from(ComplaintAttachment attachment) {
         return new ComplaintAttachmentResponseBean(attachment.getAttachmentId(), attachment.getComplaintEventId(),
                 attachment.getFileName(), attachment.getContentType(), attachment.getSizeBytes(),
-                attachment.isPublic(), DateTimeUtil.toIso(attachment.getCreatedTime()));
+                attachment.isPublic(), attachment.getCreatedTime());
     }
 
     public String getAttachmentId() {
@@ -102,11 +101,11 @@ public class ComplaintAttachmentResponseBean {
         this.isPublic = isPublic;
     }
 
-    public String getUploadedTime() {
+    public long getUploadedTime() {
         return uploadedTime;
     }
 
-    public void setUploadedTime(String uploadedTime) {
+    public void setUploadedTime(long uploadedTime) {
         this.uploadedTime = uploadedTime;
     }
 }

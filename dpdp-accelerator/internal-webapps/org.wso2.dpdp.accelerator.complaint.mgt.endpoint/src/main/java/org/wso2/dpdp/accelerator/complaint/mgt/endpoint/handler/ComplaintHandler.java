@@ -72,13 +72,17 @@ public class ComplaintHandler {
 
     // ---- Officer/admin (/complaints/*) ----
 
-    public ComplaintCreateResponseBean createComplaint(String orgId, ComplaintCreateRequestBean request) {
+    public ComplaintCreateResponseBean createComplaint(String orgId, String actorUserId, String actorRole,
+            ComplaintCreateRequestBean request) {
         String userId = request != null ? request.getUserId() : null;
         String subjectCategory = request != null ? request.getSubjectCategory() : null;
         String description = request != null ? request.getDescription() : null;
         // No resolvable display name here - the officer supplies only the Data Principal's userId,
-        // not a token belonging to that user.
-        Complaint complaint = complaintService.createComplaint(orgId, userId, null, subjectCategory, description);
+        // not a token belonging to that user. actorUserId/actorRole identify the officer performing
+        // the intake for the audit trail - resolved by the caller from the bearer token, never from
+        // the request body.
+        Complaint complaint = complaintService.createComplaint(orgId, userId, null, subjectCategory, description,
+                actorUserId, actorRole);
         return ComplaintCreateResponseBean.from(complaint);
     }
 

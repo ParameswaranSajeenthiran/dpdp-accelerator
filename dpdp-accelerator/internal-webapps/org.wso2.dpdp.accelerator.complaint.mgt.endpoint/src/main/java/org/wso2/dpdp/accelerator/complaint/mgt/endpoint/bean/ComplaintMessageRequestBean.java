@@ -24,11 +24,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Body of POST /complaints/{complaintId}/comments (officer/admin) - CmComplaintMessageRequest in
  * the API spec. No actorUserId/actorRole field: the acting officer/system's identity and role are
  * resolved server-side from the caller's bearer token, same as the /me endpoints.
+ *
+ * <p>isPublic is a boxed {@link Boolean}, not a primitive: the spec marks it required, and a
+ * primitive would silently default a missing field to {@code false} (an internal note) instead of
+ * letting the handler reject it with a 422 - in a system whose whole job is gating visibility
+ * correctly, that default is exactly the wrong direction to fail silently in.
  */
 public class ComplaintMessageRequestBean {
 
     private String message;
-    private boolean isPublic;
+    private Boolean isPublic;
     private String toStatus;
 
     public ComplaintMessageRequestBean() {
@@ -43,12 +48,12 @@ public class ComplaintMessageRequestBean {
     }
 
     @JsonProperty("isPublic")
-    public boolean isPublic() {
+    public Boolean isPublic() {
         return isPublic;
     }
 
     @JsonProperty("isPublic")
-    public void setPublic(boolean isPublic) {
+    public void setPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
 

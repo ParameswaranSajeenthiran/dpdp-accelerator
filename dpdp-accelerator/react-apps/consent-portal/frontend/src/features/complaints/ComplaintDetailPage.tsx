@@ -34,7 +34,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import { formatIsoDateTime } from '../../utils/dateTime'
+import { formatEpochTimestamp } from '../../utils/dateTime'
 import ComplaintActivityFeed from './components/ComplaintActivityFeed'
 import ComplaintAttachmentsPanel from './components/ComplaintAttachmentsPanel'
 import ComplaintReplyComposer from './components/ComplaintReplyComposer'
@@ -172,7 +172,7 @@ function ComplaintDetailPage(): React.JSX.Element {
                 {t('complaints.detail.submittedOnLabel')}
               </Typography>
               <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                {formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
+                {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
               </Typography>
             </Box>
           </Stack>
@@ -211,19 +211,22 @@ function ComplaintDetailPage(): React.JSX.Element {
                 canPostInternalNote={false}
                 statusOptions={[]}
                 getStatusLabel={() => ''}
+                isSending={sendMessageMutation.isPending}
                 onSend={(message, files, _visibility, _nextStatus, onSent) => {
                   const toStatus =
                     complaint.status === 'AWAITING_INTERNAL_REVIEW'
                       ? undefined
                       : 'AWAITING_INTERNAL_REVIEW'
 
-                  sendMessageMutation.mutate({
-                    complaintId: complaint.id,
-                    message,
-                    files,
-                    toStatus,
-                  })
-                  onSent()
+                  sendMessageMutation.mutate(
+                    {
+                      complaintId: complaint.id,
+                      message,
+                      files,
+                      toStatus,
+                    },
+                    { onSuccess: () => onSent() },
+                  )
                 }}
               />
               <ComplaintActivityFeed

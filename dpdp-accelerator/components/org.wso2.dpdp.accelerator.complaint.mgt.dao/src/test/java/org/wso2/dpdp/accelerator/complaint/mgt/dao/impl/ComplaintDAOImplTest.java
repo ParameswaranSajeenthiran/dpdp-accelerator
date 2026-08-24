@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
@@ -52,7 +53,11 @@ class ComplaintDAOImplTest {
             "DESCRIPTION VARCHAR(4000), " +
             "CREATED_TIME BIGINT, " +
             "UPDATED_TIME BIGINT, " +
-            "STATUTORY_DUE_TIME BIGINT)";
+            "STATUTORY_DUE_TIME BIGINT, " +
+            // Mirrors UQ_COMPLAINT_REFERENCE in mysql.sql - without it here, addComplaintThrows
+            // DuplicateReferenceIdExceptionOnReferenceIdCollision below would pass for the wrong
+            // reason (or not at all), since H2 would happily accept the duplicate row.
+            "CONSTRAINT UQ_COMPLAINT_REFERENCE UNIQUE (ORG_ID, REFERENCE_ID))";
 
     private final ComplaintDAOImpl dao = new ComplaintDAOImpl();
 
@@ -93,6 +98,16 @@ class ComplaintDAOImplTest {
 
         assertThrows(ComplaintDAOException.class,
                 () -> dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 200L, 200L)));
+    }
+
+    @Test
+    void addComplaintThrowsDuplicateReferenceIdExceptionOnReferenceIdCollision() {
+        dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+
+        Complaint collidingReferenceId = new Complaint("c2", "org1", "user2", "user2-name", "CMP-2026-c1",
+                "DATA_BREACH", "HIGH", "OPEN", "desc c2", 200L, 200L, 1200L);
+
+        assertThrows(DuplicateReferenceIdException.class, () -> dao.addComplaint(collidingReferenceId));
     }
 
     @Test

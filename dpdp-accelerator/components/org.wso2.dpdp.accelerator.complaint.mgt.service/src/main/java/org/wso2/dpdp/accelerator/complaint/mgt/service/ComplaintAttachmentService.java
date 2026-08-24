@@ -34,6 +34,15 @@ public interface ComplaintAttachmentService {
     List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName, String actorRole);
 
+    /**
+     * Same as {@link #uploadComplaintAttachments}, for the /me/* upload endpoint - additionally
+     * verifies the complaint belongs to ownerUserId before uploading (isPublic is always true,
+     * actorRole always USER). This is defense-in-depth alongside the handler's own ownership check
+     * - the service must not rely solely on callers remembering to check first.
+     */
+    List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId, String ownerUserId,
+            String ownerUserName, List<UploadedFile> files);
+
     /** Metadata (no file content) for attachments bound to the complaint. */
     List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId);
 
@@ -45,6 +54,14 @@ public interface ComplaintAttachmentService {
      */
     ComplaintAttachment downloadAttachment(String orgId, String complaintId, String attachmentId,
             boolean restrictToPublicOnly);
+
+    /**
+     * Same as {@code downloadAttachment(orgId, complaintId, attachmentId, true)}, for the /me/*
+     * download endpoint - additionally verifies the complaint belongs to ownerUserId first, as
+     * defense-in-depth alongside the handler's own ownership check.
+     */
+    ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId, String ownerUserId,
+            String attachmentId);
 
     /** A single uploaded multipart file, decoupled from any particular HTTP framework's bean type. */
     class UploadedFile {

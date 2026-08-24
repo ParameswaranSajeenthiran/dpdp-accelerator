@@ -26,7 +26,7 @@ import type {
   ComplaintAttachment,
   ComplaintTimelineEntry,
 } from '../../../types/complaint'
-import { formatIsoDateTime } from '../../../utils/dateTime'
+import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { useAttachmentImagePreview } from '../hooks/useAttachmentImagePreview'
 import { downloadComplaintAttachment } from '../utils/downloadAttachment'
 import { getAttachmentFileKind } from '../utils/complaintAttachments'
@@ -212,7 +212,7 @@ function ComplaintActivityFeed({
       : entries
   )
     .slice()
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .sort((a, b) => b.timestamp - a.timestamp)
 
   function renderTimelineMarker(dotColor: string | null, dotSize: number, dotTop: number) {
     return (
@@ -258,7 +258,7 @@ function ComplaintActivityFeed({
             </Box>
             <Typography variant="body2" color="text.secondary">
               {renderLogHeadline(entry, t)} &middot;{' '}
-              {formatIsoDateTime(entry.timestamp, ACTIVITY_DATE_FORMAT_OPTIONS)}
+              {formatEpochTimestamp(entry.timestamp, ACTIVITY_DATE_FORMAT_OPTIONS)}
             </Typography>
           </Stack>
         </Stack>
@@ -344,7 +344,7 @@ function ComplaintActivityFeed({
                 color="text.secondary"
                 sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                {formatIsoDateTime(entry.timestamp, ACTIVITY_DATE_FORMAT_OPTIONS)}
+                {formatEpochTimestamp(entry.timestamp, ACTIVITY_DATE_FORMAT_OPTIONS)}
               </Typography>
             </Stack>
 

@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 public class ComplaintStatusUpdateResponseBean {
 
@@ -28,7 +27,7 @@ public class ComplaintStatusUpdateResponseBean {
     // "Status transition confirmed" wording used in the 200 description for this endpoint.
     private String message;
     private String toStatus;
-    private String updatedAt;
+    private long updatedAt;
 
     public ComplaintStatusUpdateResponseBean() {
     }
@@ -37,7 +36,7 @@ public class ComplaintStatusUpdateResponseBean {
         ComplaintStatusUpdateResponseBean bean = new ComplaintStatusUpdateResponseBean();
         bean.message = "Status transition confirmed";
         bean.toStatus = complaint.getStatus();
-        bean.updatedAt = DateTimeUtil.toIso(complaint.getUpdatedTime());
+        bean.updatedAt = complaint.getUpdatedTime();
         return bean;
     }
 
@@ -57,11 +56,11 @@ public class ComplaintStatusUpdateResponseBean {
         this.toStatus = toStatus;
     }
 
-    public String getUpdatedAt() {
+    public long getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
     }
 }

@@ -32,6 +32,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintExcept
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.util.AttachmentPolicy;
 
 import javax.ws.rs.core.MediaType;
 import java.io.ByteArrayOutputStream;
@@ -83,17 +84,16 @@ public class ComplaintAttachmentHandler {
 
     public List<ComplaintAttachmentResponseBean> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<FormDataBodyPart> fileParts) {
-        complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        List<ComplaintAttachment> result = complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId,
-                files, true, ownerUserId, ownerUserName, ComplaintActorRole.USER.name());
+        List<ComplaintAttachment> result = complaintAttachmentService.uploadOwnComplaintAttachments(orgId,
+                complaintId, ownerUserId, ownerUserName, files);
         return toBeans(result);
     }
 
     public ComplaintAttachmentDownloadResponseBean downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
-        complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
-        return toDownloadBean(complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, true));
+        return toDownloadBean(
+                complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId));
     }
 
     // ---- shared ----
@@ -108,15 +108,25 @@ public class ComplaintAttachmentHandler {
         if (fileParts == null) {
             return files;
         }
+        // Enforced here, before a single byte of any part is read, not just later on the
+        // materialized list in ComplaintAttachmentServiceImpl#validateFiles - otherwise many
+        // individually-small parts would still force this method to buffer all of them in heap
+        // before the count is ever checked.
+        int maxFiles = AttachmentPolicy.getMaxFilesPerUpload();
+        if (fileParts.size() > maxFiles) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, fileParts.size()));
+        }
+
         for (FormDataBodyPart part : fileParts) {
+            String contentType = part.getMediaType() != null
+                    ? part.getMediaType().toString()
+                    : MediaType.APPLICATION_OCTET_STREAM;
+            String fileName = part.getContentDisposition() != null
+                    ? part.getContentDisposition().getFileName()
+                    : null;
             try (InputStream in = part.getValueAs(InputStream.class)) {
-                byte[] data = readAllBytes(in);
-                String contentType = part.getMediaType() != null
-                        ? part.getMediaType().toString()
-                        : MediaType.APPLICATION_OCTET_STREAM;
-                String fileName = part.getContentDisposition() != null
-                        ? part.getContentDisposition().getFileName()
-                        : null;
+                byte[] data = readAllBytes(in, fileName);
                 files.add(new UploadedFile(fileName, contentType, data));
             } catch (IOException e) {
                 throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -126,11 +136,23 @@ public class ComplaintAttachmentHandler {
         return files;
     }
 
-    private byte[] readAllBytes(InputStream in) throws IOException {
+    /**
+     * Enforces {@link AttachmentPolicy#getMaxSizeBytes()} while reading, not after - buffering an
+     * entire oversized part into a byte[] first (then rejecting it) still lets one request force the
+     * JVM to hold the whole thing in heap, defeating the point of a size cap.
+     */
+    private byte[] readAllBytes(InputStream in, String fileName) throws IOException {
+        long maxSize = AttachmentPolicy.getMaxSizeBytes();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] chunk = new byte[8192];
+        long total = 0;
         int read;
         while ((read = in.read(chunk)) != -1) {
+            total += read;
+            if (total > maxSize) {
+                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                        String.format(ComplaintServiceConstants.FILE_SIZE_EXCEEDED_ERROR, fileName, maxSize));
+            }
             buffer.write(chunk, 0, read);
         }
         return buffer.toByteArray();

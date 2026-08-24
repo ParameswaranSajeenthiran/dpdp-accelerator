@@ -26,6 +26,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -33,6 +34,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintExcept
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -59,10 +61,11 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since,
+    public List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since, Long until,
             Boolean isPublic, String order, int limit, int offset, int[] totalOut) {
         complaintService.requireComplaint(orgId, complaintId);
-        return complaintEventDAO.listEvents(orgId, complaintId, since, isPublic, order, limit, offset, totalOut);
+        return complaintEventDAO.listEvents(orgId, complaintId, since, until, isPublic, order, limit, offset,
+                totalOut);
     }
 
     @Override
@@ -73,6 +76,10 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         if (message == null || message.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.MESSAGE_REQUIRED_ERROR);
+        }
+        if (message.length() > ComplaintServiceConstants.MAX_MESSAGE_LENGTH) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    ComplaintServiceConstants.MESSAGE_TOO_LONG_ERROR);
         }
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -109,17 +116,31 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId.trim(),
                 actorUserName, actorRole, isPublic, message.trim(), fromStatus, hasToStatus ? toStatus : null, now);
 
-        boolean added = complaintEventDAO.addEvent(event);
-        if (!added) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
-        }
-
         if (hasToStatus) {
-            boolean statusUpdated = complaintDAO.updateStatus(complaintId, orgId, toStatus, now);
-            if (!statusUpdated) {
+            // The comment and the status change it carries must land together - see
+            // DBUtil#executeInTransaction - otherwise a failure between the two writes could leave
+            // a status-changing comment recorded against a complaint whose status never actually
+            // moved, or vice versa.
+            try {
+                DBUtil.executeInTransaction(conn -> {
+                    if (!complaintEventDAO.addEvent(conn, event)) {
+                        throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                                ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+                    }
+                    if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
+                        throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                                ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
+                    }
+                });
+            } catch (SQLException e) {
                 throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                        ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
+                        ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR, e);
+            }
+        } else {
+            boolean added = complaintEventDAO.addEvent(event);
+            if (!added) {
+                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                        ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
             }
         }
 
@@ -142,6 +163,16 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             String actorRole, String toStatus, String note) {
         Complaint complaint = complaintService.requireComplaint(orgId, complaintId);
 
+        if (actorUserId == null || actorUserId.trim().isEmpty()) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
+        }
+        // SYSTEM is deliberately excluded - only ever written by the server itself, never accepted from a caller.
+        if (!ComplaintActorRole.USER.name().equals(actorRole)
+                && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    ComplaintServiceConstants.ACTOR_ROLE_INVALID_ERROR);
+        }
         if (toStatus == null || toStatus.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.TO_STATUS_REQUIRED_ERROR);
@@ -162,16 +193,29 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         }
 
         long now = System.currentTimeMillis();
-        boolean statusUpdated = complaintDAO.updateStatus(complaintId, orgId, toStatus, now);
-        if (!statusUpdated) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
-        }
-
         String complaintEventId = UUID.randomUUID().toString();
         ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId, actorUserName,
                 actorRole, true, note, fromStatus, toStatus, now);
-        complaintEventDAO.addEvent(event);
+
+        // Status update and its audit event must land together - see DBUtil#executeInTransaction.
+        // Both writes are checked and made to fail the whole transaction (not just skip a write)
+        // so a partial failure can never leave the status changed with no record of why, or vice
+        // versa.
+        try {
+            DBUtil.executeInTransaction(conn -> {
+                if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
+                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                            ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
+                }
+                if (!complaintEventDAO.addEvent(conn, event)) {
+                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                            ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+                }
+            });
+        } catch (SQLException e) {
+            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                    ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR, e);
+        }
 
         complaint.setStatus(toStatus);
         complaint.setUpdatedTime(now);

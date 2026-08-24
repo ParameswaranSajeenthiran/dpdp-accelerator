@@ -49,7 +49,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
         }
     }
 
-    /** Overload for callers composing this write into a caller-owned {@link DBUtil#executeInTransaction}. */
+    @Override
     public boolean addEvent(Connection conn, ComplaintEvent event) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT_EVENT)) {
             ps.setString(1, event.getComplaintEventId());
@@ -95,8 +95,8 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
     }
 
     @Override
-    public List<ComplaintEvent> listEvents(String orgId, String complaintId, Long since, Boolean isPublic,
-            String order, int limit, int offset, int[] totalOut) {
+    public List<ComplaintEvent> listEvents(String orgId, String complaintId, Long since, Long until,
+            Boolean isPublic, String order, int limit, int offset, int[] totalOut) {
         List<ComplaintEvent> events = new ArrayList<>();
         Connection conn = null;
         PreparedStatement ps = null;
@@ -112,6 +112,11 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
             sql.append("AND ACTION_TIME > ? ");
             countSql.append("AND ACTION_TIME > ? ");
             params.add(since);
+        }
+        if (until != null) {
+            sql.append("AND ACTION_TIME <= ? ");
+            countSql.append("AND ACTION_TIME <= ? ");
+            params.add(until);
         }
         if (isPublic != null) {
             sql.append("AND IS_PUBLIC = ? ");

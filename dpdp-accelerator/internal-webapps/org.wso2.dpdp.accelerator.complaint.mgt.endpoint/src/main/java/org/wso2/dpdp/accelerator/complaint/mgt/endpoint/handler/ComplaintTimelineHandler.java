@@ -43,10 +43,8 @@ import java.util.stream.Collectors;
  * bound to the upload event created alongside it (see ComplaintAttachmentServiceImpl), so each
  * timeline entry below carries the attachments uploaded under it.
  *
- * <p>The API spec's fromTime/toTime query params are a two-sided window; only the lower bound
- * (fromTime, mapped to the DAO/service layer's existing "since" param) is implemented here - the
- * DAO has no upper-bound filter today and adding one is a larger change than this rewrite's scope.
- * toTime is accepted but currently ignored; see ComplaintTimelineEndpoint/MeComplaintTimelineEndpoint.
+ * <p>The API spec's fromTime/toTime query params are a two-sided window, mapped directly to the
+ * DAO/service layer's since/until params.
  */
 public class ComplaintTimelineHandler {
 
@@ -67,25 +65,25 @@ public class ComplaintTimelineHandler {
         this.complaintAttachmentService = complaintAttachmentService;
     }
 
-    public TimelineListResponseBean getTimeline(String orgId, String complaintId, Long fromTime, String order,
-            Integer limit, Integer offset) {
-        return getTimeline(orgId, complaintId, fromTime, null, order, limit, offset);
+    public TimelineListResponseBean getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
+            String order, Integer limit, Integer offset) {
+        return getTimeline(orgId, complaintId, fromTime, toTime, null, order, limit, offset);
     }
 
     public TimelineListResponseBean getOwnTimeline(String orgId, String complaintId, String ownerUserId,
-            Long fromTime, String order, Integer limit, Integer offset) {
+            Long fromTime, Long toTime, String order, Integer limit, Integer offset) {
         complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
-        return getTimeline(orgId, complaintId, fromTime, true, order, limit, offset);
+        return getTimeline(orgId, complaintId, fromTime, toTime, true, order, limit, offset);
     }
 
-    private TimelineListResponseBean getTimeline(String orgId, String complaintId, Long fromTime, Boolean isPublic,
-            String order, Integer limit, Integer offset) {
+    private TimelineListResponseBean getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
+            Boolean isPublic, String order, Integer limit, Integer offset) {
         int lim = limit != null && limit > 0 ? Math.min(limit, 100) : 20;
         int off = offset != null && offset >= 0 ? offset : 0;
         int[] totalOut = new int[]{0};
 
-        List<ComplaintEvent> entries = complaintEventService.getTimeline(orgId, complaintId, fromTime, isPublic,
-                order, lim, off, totalOut);
+        List<ComplaintEvent> entries = complaintEventService.getTimeline(orgId, complaintId, fromTime, toTime,
+                isPublic, order, lim, off, totalOut);
 
         Map<String, List<ComplaintAttachmentResponseBean>> attachmentsByEventId = complaintAttachmentService
                 .listAttachmentsForComplaint(orgId, complaintId)

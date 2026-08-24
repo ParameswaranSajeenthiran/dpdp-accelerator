@@ -70,7 +70,7 @@ public class ComplaintTimelineEndpoint {
             @QueryParam("offset") Integer offset) {
         String orgId = TokenIntrospectionFilter.currentPrincipal(requestContext).getOrgId();
         TimelineListResponseBean response =
-                timelineHandler.getTimeline(orgId, complaintId, fromTime, order, limit, offset);
+                timelineHandler.getTimeline(orgId, complaintId, fromTime, toTime, order, limit, offset);
         return Response.ok(response).build();
     }
 }

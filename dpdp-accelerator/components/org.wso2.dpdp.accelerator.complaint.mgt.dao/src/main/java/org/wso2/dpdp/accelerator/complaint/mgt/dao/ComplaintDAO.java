@@ -20,6 +20,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,13 @@ public interface ComplaintDAO {
 
     /** Persists a new complaint row. Returns true if a row was inserted. */
     boolean addComplaint(Complaint complaint);
+
+    /**
+     * Same as {@link #addComplaint(Complaint)}, run against a caller-owned connection so it can be
+     * composed with other writes into one
+     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     */
+    boolean addComplaint(Connection conn, Complaint complaint) throws SQLException;
 
     /** Fetches a single complaint scoped to its org. */
     Optional<Complaint> getComplaintById(String complaintId, String orgId);
@@ -40,6 +49,14 @@ public interface ComplaintDAO {
 
     /** Updates STATUS and UPDATED_TIME for a complaint. Returns true if a row was updated. */
     boolean updateStatus(String complaintId, String orgId, String newStatus, long updatedTime);
+
+    /**
+     * Same as {@link #updateStatus(String, String, String, long)}, run against a caller-owned
+     * connection so it can be composed with other writes into one
+     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     */
+    boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus, long updatedTime)
+            throws SQLException;
 
     /**
      * Lists complaints for an org with optional status/priority/userId filters, sorting, and

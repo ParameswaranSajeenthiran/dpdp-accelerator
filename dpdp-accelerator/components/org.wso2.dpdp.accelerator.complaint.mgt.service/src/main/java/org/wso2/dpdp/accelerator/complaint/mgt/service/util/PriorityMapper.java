@@ -36,6 +36,12 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPri
  * built-in default; it is replaced wholesale by the [categoryPriority] table in deployment.toml
  * when present, via configure() - see AppBootstrap#loadDeploymentConfig in the endpoint webapp
  * module, which is invoked once at servlet context startup by AppContextListener.
+ *
+ * <p>Deliberately a single JVM-wide mapping, not scoped per tenant: like ComplaintCategory itself,
+ * "what priority does this category imply" is treated as an accelerator-wide classification
+ * decision rather than a per-org policy, so every tenant sharing this deployment sees the same
+ * [categoryPriority] override. Do not add an orgId parameter here without also deciding how
+ * deployment.toml should express per-tenant overrides.
  */
 public class PriorityMapper {
 

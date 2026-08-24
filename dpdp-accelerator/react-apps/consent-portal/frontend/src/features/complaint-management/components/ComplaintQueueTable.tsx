@@ -34,7 +34,7 @@ import { CircleSlash, RefreshCw, Search } from '@wso2/oxygen-ui-icons-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { COMPLAINT_PRIORITIES, type ComplaintRecord } from '../../../types/complaint'
-import { formatIsoDateTime } from '../../../utils/dateTime'
+import { formatEpochTimestamp } from '../../../utils/dateTime'
 import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import ComplaintPriorityChip from '../../complaints/components/ComplaintPriorityChip'
 import ComplaintSlaIndicator from '../../complaints/components/ComplaintSlaIndicator'
@@ -83,7 +83,7 @@ function sortRows(
       )
     }
 
-    return new Date(left.statutoryDueDate).getTime() - new Date(right.statutoryDueDate).getTime()
+    return left.statutoryDueDate - right.statutoryDueDate
   })
 
   return sortDirection === 'asc' ? sortedRows : sortedRows.reverse()
@@ -231,7 +231,7 @@ function ComplaintQueueTable({
                       status={row.status}
                     />
                   </TableCell>
-                  <TableCell>{formatIsoDateTime(row.updatedAt, DATE_FORMAT_OPTIONS)}</TableCell>
+                  <TableCell>{formatEpochTimestamp(row.updatedAt, DATE_FORMAT_OPTIONS)}</TableCell>
                 </TableRow>
               ))
             : null}

@@ -38,10 +38,17 @@ public final class ComplaintServiceConstants {
             "Field 'description' is required and must not be blank.";
     public static final String DESCRIPTION_TOO_LONG_ERROR = "Field 'description' must not exceed 5000 characters.";
     public static final String CREATE_COMPLAINT_FAILED_ERROR = "Failed to create complaint.";
+    public static final String CREATE_COMPLAINT_ACTOR_ROLE_INVALID_ERROR =
+            "Field 'actorRole' must be one of COMPLAINT_OFFICER, SYSTEM.";
+    public static final String OFFICER_INTAKE_EVENT_MESSAGE = "Complaint lodged by officer on behalf of citizen.";
     public static final String COMPLAINT_NOT_FOUND_ERROR =
             "No complaint exists with the given ID for this organization.";
     public static final String COMPLAINT_NOT_FOUND_BY_ID_ERROR =
             "No complaint exists with id '%s' for this organization.";
+    public static final String INVALID_STATUS_FILTER_ERROR =
+            "Query param 'status' must be one of the defined ComplaintStatus enum values; received '%s'.";
+    public static final String INVALID_PRIORITY_FILTER_ERROR =
+            "Query param 'priority' must be one of the defined ComplaintPriority enum values; received '%s'.";
 
     public static final String ACTOR_USER_ID_REQUIRED_ERROR =
             "Field 'actorUserId' is required and must not be blank.";
@@ -53,6 +60,8 @@ public final class ComplaintServiceConstants {
             "Requesting user is not authorized to access an attachment bound to a timeline entry with "
                     + "isPublic=false.";
     public static final String FILE_LIST_REQUIRED_ERROR = "At least one file is required.";
+    public static final String TOO_MANY_FILES_ERROR =
+            "A single upload request may contain at most %d file(s); received %d.";
     public static final String UPLOADED_FILE_EMPTY_ERROR = "Uploaded file must not be empty.";
     public static final String UNSUPPORTED_CONTENT_TYPE_ERROR =
             "File contentType '%s' is not one of the supported types.";
@@ -63,6 +72,13 @@ public final class ComplaintServiceConstants {
             "Failed to record the timeline event for an attachment upload.";
 
     public static final String MESSAGE_REQUIRED_ERROR = "Field 'message' is required and must not be blank.";
+    // Matches the 5000-char cap already enforced on complaint descriptions - message/comment text
+    // had no equivalent limit, letting an oversized payload either truncate at the DB column or
+    // throw a raw, unhandled DB error instead of a clean 422.
+    public static final int MAX_MESSAGE_LENGTH = 5000;
+    public static final String MESSAGE_TOO_LONG_ERROR =
+            "Field 'message' must not exceed " + MAX_MESSAGE_LENGTH + " characters.";
+    public static final String IS_PUBLIC_REQUIRED_ERROR = "Field 'isPublic' is required.";
     public static final String ACTOR_ROLE_INVALID_ERROR = "Field 'actorRole' must be one of USER, COMPLAINT_OFFICER.";
     public static final String INTERNAL_NOTE_FORBIDDEN_ERROR =
             "Actor role '%s' cannot set isPublic to false on a timeline entry.";

@@ -61,7 +61,7 @@ export interface AggregatedComplaintAttachment {
   actorName: string
   actorRole: ComplaintActorRole
   isInternal: boolean
-  timestamp: string
+  timestamp: number
 }
 
 export function collectComplaintAttachments(
@@ -84,7 +84,5 @@ export function collectComplaintAttachments(
     })),
   )
 
-  return fromTimeline.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  )
+  return fromTimeline.sort((a, b) => b.timestamp - a.timestamp)
 }

@@ -55,6 +55,9 @@ interface ComplaintReplyComposerProps {
     nextStatus: ComplaintStatus | undefined,
     onSent: () => void,
   ) => void
+  // Whether the caller's send mutation is currently in flight - disables the Send button so a
+  // double-click (or a slow connection) can't post the same message twice.
+  isSending?: boolean
 }
 
 function ComplaintReplyComposer({
@@ -62,6 +65,7 @@ function ComplaintReplyComposer({
   statusOptions,
   getStatusLabel,
   onSend,
+  isSending = false,
 }: ComplaintReplyComposerProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -209,7 +213,7 @@ function ComplaintReplyComposer({
           <ButtonGroup variant="contained" color={sendColor} size="small">
             <Button
               startIcon={sendIcon}
-              disabled={!draft.trim()}
+              disabled={!draft.trim() || isSending}
               onClick={() => {
                 onSend(
                   draft.trim(),

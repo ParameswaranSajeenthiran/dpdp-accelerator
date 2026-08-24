@@ -20,6 +20,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,13 @@ public interface ComplaintEventDAO {
 
     /** Persists a new timeline entry (status change, comment, or internal note). Returns true if a row was inserted. */
     boolean addEvent(ComplaintEvent event);
+
+    /**
+     * Same as {@link #addEvent(ComplaintEvent)}, run against a caller-owned connection so it can be
+     * composed with other writes into one
+     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     */
+    boolean addEvent(Connection conn, ComplaintEvent event) throws SQLException;
 
     /**
      * Fetches a single timeline entry scoped to its complaint and org.
@@ -39,14 +48,16 @@ public interface ComplaintEventDAO {
     Optional<ComplaintEvent> getEventById(String complaintEventId, String orgId, String complaintId);
 
     /**
-     * Lists timeline entries for a complaint with an optional since/isPublic filter, sort order,
-     * and limit/offset pagination.
+     * Lists timeline entries for a complaint with an optional since/until/isPublic filter, sort
+     * order, and limit/offset pagination. since is exclusive (ACTION_TIME &gt; since); until is
+     * inclusive (ACTION_TIME &lt;= until), matching the OpenAPI spec's "at or before" wording for
+     * toTime.
      *
      * <p>totalOut is an out-param, same convention as {@link ComplaintDAO#listComplaints}: pass
      * {@code new int[1]} and, after the call, {@code totalOut[0]} holds the total row count
      * matching the filters (ignoring limit/offset). Pass {@code null} or a zero-length array to
      * skip the count query.
      */
-    List<ComplaintEvent> listEvents(String orgId, String complaintId, Long since, Boolean isPublic, String order,
-            int limit, int offset, int[] totalOut);
+    List<ComplaintEvent> listEvents(String orgId, String complaintId, Long since, Long until, Boolean isPublic,
+            String order, int limit, int offset, int[] totalOut);
 }

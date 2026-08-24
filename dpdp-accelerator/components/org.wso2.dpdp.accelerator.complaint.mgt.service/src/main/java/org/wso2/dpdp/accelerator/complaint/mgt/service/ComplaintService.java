@@ -34,6 +34,17 @@ public interface ComplaintService {
     Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description);
 
+    /**
+     * Same as {@link #createComplaint(String, String, String, String, String)}, for the
+     * officer-assisted intake path (POST /complaints) - additionally records a CREATE audit event
+     * on the new complaint's timeline, atomically with the insert, identifying which officer (or
+     * SYSTEM process) performed the intake. actorUserId/actorRole must be the resolved, authenticated
+     * caller - never anything client-supplied - the same rule every other actor-identity field in
+     * this codebase follows.
+     */
+    Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
+            String description, String actorUserId, String actorRole);
+
     /** Core complaint fields for GET /complaints/{complaintId} (attachments are composed in by the handler). */
     Complaint getComplaint(String orgId, String complaintId);
 

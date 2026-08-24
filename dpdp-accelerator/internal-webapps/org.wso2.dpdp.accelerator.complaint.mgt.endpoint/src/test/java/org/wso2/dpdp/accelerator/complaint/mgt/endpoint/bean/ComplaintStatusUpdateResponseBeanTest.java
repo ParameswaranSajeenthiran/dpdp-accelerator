@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,7 +34,7 @@ class ComplaintStatusUpdateResponseBeanTest {
 
         assertEquals("Status transition confirmed", bean.getMessage());
         assertEquals("IN_PROGRESS", bean.getToStatus());
-        assertEquals(DateTimeUtil.toIso(2L), bean.getUpdatedAt());
+        assertEquals(2L, bean.getUpdatedAt());
     }
 
     @Test
@@ -43,10 +42,10 @@ class ComplaintStatusUpdateResponseBeanTest {
         ComplaintStatusUpdateResponseBean bean = new ComplaintStatusUpdateResponseBean();
         bean.setMessage("custom message");
         bean.setToStatus("RESOLVED");
-        bean.setUpdatedAt("2026-01-01T00:00:00Z");
+        bean.setUpdatedAt(1L);
 
         assertEquals("custom message", bean.getMessage());
         assertEquals("RESOLVED", bean.getToStatus());
-        assertEquals("2026-01-01T00:00:00Z", bean.getUpdatedAt());
+        assertEquals(1L, bean.getUpdatedAt());
     }
 }

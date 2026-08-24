@@ -66,6 +66,7 @@ class ComplaintAttachmentServiceImplTest {
     @AfterEach
     void tearDown() {
         System.clearProperty("CO_MAX_ATTACHMENT_SIZE_BYTES");
+        System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
     }
 
     private UploadedFile pdfFile(String name, int size) {
@@ -109,6 +110,18 @@ class ComplaintAttachmentServiceImplTest {
 
         ComplaintException ex = assertThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(file), true, "user1",
+                        "User One", "USER"));
+
+        assertEquals("CO-4002", ex.getCode());
+    }
+
+    @Test
+    void uploadComplaintAttachmentsThrowsWhenTooManyFilesInOneRequest() {
+        System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
+
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> attachmentService.uploadComplaintAttachments("org1", "c1",
+                        List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 10), pdfFile("c.pdf", 10)), true, "user1",
                         "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -280,5 +293,58 @@ class ComplaintAttachmentServiceImplTest {
         ComplaintAttachment result = attachmentService.downloadAttachment("org1", "c1", "a1", true);
 
         assertEquals("a1", result.getAttachmentId());
+    }
+
+    // ---- own* ownership defense-in-depth ----
+
+    @Test
+    void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() {
+        when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
+                .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
+
+        assertThrows(ComplaintException.class, () -> attachmentService.uploadOwnComplaintAttachments("org1", "c1",
+                "user1", "User One", List.of(pdfFile("a.pdf", 10))));
+
+        verify(attachmentDAO, never()).addAttachment(any());
+    }
+
+    @Test
+    void uploadOwnComplaintAttachmentsVerifiesOwnershipThenUploadsAsPublicUserRole() {
+        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any())).thenReturn(true);
+
+        List<ComplaintAttachment> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1", "user1",
+                "User One", List.of(pdfFile("a.pdf", 10)));
+
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).isPublic());
+        verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
+        ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
+        verify(complaintEventDAO).addEvent(captor.capture());
+        assertEquals("USER", captor.getValue().getActorRole());
+    }
+
+    @Test
+    void downloadOwnAttachmentThrowsWhenComplaintIsNotOwnedByCallerAndNeverFetches() {
+        when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
+                .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
+
+        assertThrows(ComplaintException.class,
+                () -> attachmentService.downloadOwnAttachment("org1", "c1", "user1", "a1"));
+
+        verify(attachmentDAO, never()).getAttachmentWithDataById(any(), any(), any());
+    }
+
+    @Test
+    void downloadOwnAttachmentVerifiesOwnershipThenRestrictsToPublicAttachments() {
+        ComplaintAttachment attachment = new ComplaintAttachment("a1", "org1", "c1", "a.pdf",
+                "application/pdf", new byte[]{1}, false, 100L);
+        when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.of(attachment));
+
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> attachmentService.downloadOwnAttachment("org1", "c1", "user1", "a1"));
+
+        assertEquals("CO-4030", ex.getCode());
+        verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
     }
 }

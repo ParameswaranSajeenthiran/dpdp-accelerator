@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import java.util.List;
 
@@ -46,14 +45,14 @@ class ComplaintTimelineEntryResponseBeanTest {
         assertEquals("hello", bean.getMessage());
         assertEquals("OPEN", bean.getFromStatus());
         assertEquals("IN_PROGRESS", bean.getToStatus());
-        assertEquals(DateTimeUtil.toIso(100L), bean.getCreatedTime());
+        assertEquals(100L, bean.getCreatedTime());
         assertTrue(bean.getAttachments().isEmpty());
     }
 
     @Test
     void fromWithAttachmentsCarriesTheGivenList() {
         ComplaintAttachmentResponseBean attachment =
-                new ComplaintAttachmentResponseBean("a1", "e1", "a.pdf", "application/pdf", 10L, true, "2026-01-01T00:00:00Z");
+                new ComplaintAttachmentResponseBean("a1", "e1", "a.pdf", "application/pdf", 10L, true, 1L);
 
         ComplaintTimelineEntryResponseBean bean =
                 ComplaintTimelineEntryResponseBean.from(sampleEvent(), List.of(attachment));
@@ -73,7 +72,7 @@ class ComplaintTimelineEntryResponseBeanTest {
         bean.setMessage("note");
         bean.setFromStatus(null);
         bean.setToStatus(null);
-        bean.setCreatedTime("2026-01-01T00:00:00Z");
+        bean.setCreatedTime(1L);
 
         assertEquals("e2", bean.getId());
         assertEquals("COMMENT", bean.getType());
@@ -83,6 +82,6 @@ class ComplaintTimelineEntryResponseBeanTest {
         assertEquals("note", bean.getMessage());
         assertEquals(null, bean.getFromStatus());
         assertEquals(null, bean.getToStatus());
-        assertEquals("2026-01-01T00:00:00Z", bean.getCreatedTime());
+        assertEquals(1L, bean.getCreatedTime());
     }
 }

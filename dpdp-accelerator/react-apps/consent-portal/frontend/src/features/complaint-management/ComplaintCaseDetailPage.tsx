@@ -34,7 +34,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import { formatIsoDateTime } from '../../utils/dateTime'
+import { formatEpochTimestamp } from '../../utils/dateTime'
 import ComplaintActivityFeed from '../complaints/components/ComplaintActivityFeed'
 import ComplaintAttachmentsPanel from '../complaints/components/ComplaintAttachmentsPanel'
 import ComplaintPriorityChip from '../complaints/components/ComplaintPriorityChip'
@@ -194,7 +194,7 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   {t('complaints.detail.submittedOnLabel')}
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  {formatIsoDateTime(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
+                  {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
               <Box>
@@ -207,7 +207,7 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   {t('complaints.sla.dueLabel')}
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  {formatIsoDateTime(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
+                  {formatEpochTimestamp(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
             </Box>
@@ -258,6 +258,7 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   getStatusLabel={(status) =>
                     t(`complaints.status.${getComplaintStatusLabelKey(status)}`)
                   }
+                  isSending={sendMessageMutation.isPending}
                   onSend={(message, files, visibility, nextStatus, onSent) => {
                     const isPublic = visibility !== 'internal'
 
@@ -266,14 +267,16 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                       return
                     }
 
-                    sendMessageMutation.mutate({
-                      complaintId: complaint.id,
-                      message,
-                      isPublic,
-                      files,
-                      toStatus: nextStatus,
-                    })
-                    onSent()
+                    sendMessageMutation.mutate(
+                      {
+                        complaintId: complaint.id,
+                        message,
+                        isPublic,
+                        files,
+                        toStatus: nextStatus,
+                      },
+                      { onSuccess: () => onSent() },
+                    )
                   }}
                 />
               )}

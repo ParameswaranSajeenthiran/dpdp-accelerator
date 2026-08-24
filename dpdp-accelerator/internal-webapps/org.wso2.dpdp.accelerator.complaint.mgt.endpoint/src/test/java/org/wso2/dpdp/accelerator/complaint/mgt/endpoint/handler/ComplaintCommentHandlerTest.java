@@ -30,13 +30,16 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintMessageReq
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,14 +78,38 @@ class ComplaintCommentHandlerTest {
     }
 
     @Test
-    void addCommentDefaultsIsPublicToFalseAndFieldsToNullWhenRequestIsNull() {
+    void addCommentThrowsWhenRequestIsNull() {
+        // isPublic is a required field per the spec - a null request (or a request missing
+        // isPublic) must be rejected, not silently treated as isPublic=false (an internal note).
+        assertThrows(ComplaintException.class,
+                () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", null));
+
+        verifyNoInteractions(complaintEventService);
+    }
+
+    @Test
+    void addCommentThrowsWhenIsPublicIsMissingFromRequest() {
+        ComplaintMessageRequestBean request = new ComplaintMessageRequestBean();
+        request.setMessage("hello");
+
+        assertThrows(ComplaintException.class,
+                () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request));
+
+        verifyNoInteractions(complaintEventService);
+    }
+
+    @Test
+    void addCommentHonorsExplicitIsPublicFalse() {
+        ComplaintMessageRequestBean request = new ComplaintMessageRequestBean();
+        request.setMessage("internal note");
+        request.setPublic(false);
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                false, null, null, null, 100L);
+                false, "internal note", null, null, 100L);
         when(complaintEventService.addComment(eq(ORG_ID), eq("c1"), eq("officer1"), eq("Officer One"),
-                eq("COMPLAINT_OFFICER"), isNull(), eq(false), isNull())).thenReturn(event);
+                eq("COMPLAINT_OFFICER"), eq("internal note"), eq(false), isNull())).thenReturn(event);
 
         ComplaintCommentCreateResponseBean response =
-                handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", null);
+                handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
 
         assertEquals("e1", response.getId());
     }

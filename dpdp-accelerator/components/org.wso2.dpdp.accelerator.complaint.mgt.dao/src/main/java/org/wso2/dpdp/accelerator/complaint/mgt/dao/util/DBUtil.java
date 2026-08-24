@@ -78,6 +78,12 @@ public class DBUtil {
      * Runs the given work against a single connection with auto-commit disabled, committing on success and
      * rolling back if the work throws. Lets callers group multiple DAO writes (e.g. a status update and its
      * audit event) into one atomic transaction.
+     *
+     * <p>Catches {@link RuntimeException} as well as {@link SQLException}: every DAO write method in this
+     * module wraps its {@code SQLException} into the unchecked {@link
+     * org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException} before it can propagate this
+     * far, so a {@code catch (SQLException)} alone would silently skip the rollback on the exact failures this
+     * method exists to guard against.
      */
     public static void executeInTransaction(TransactionalWork work) throws SQLException {
         try (Connection conn = getConnection()) {
@@ -85,8 +91,12 @@ public class DBUtil {
             try {
                 work.execute(conn);
                 conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
                 throw e;
             }
         }

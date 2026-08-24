@@ -68,7 +68,10 @@ const STATUS_LABEL_KEYS: Record<ComplaintStatus, string> = {
 }
 
 export function getComplaintStatusLabelKey(status: ComplaintStatus): string {
-  return STATUS_LABEL_KEYS[status]
+  // Falls back to a generic key for a status this closed map doesn't recognize, rather than
+  // returning undefined and having every caller interpolate "complaints.status.undefined" into a
+  // translation lookup.
+  return STATUS_LABEL_KEYS[status] ?? 'unknown'
 }
 
 const CHIP_COLOR_TO_SX_PATH: Record<ChipColor, string> = {
@@ -90,14 +93,14 @@ const SLA_AT_RISK_THRESHOLD_HOURS = 24 * 14
 const DAY_IN_MS = 1000 * 60 * 60 * 24
 
 export function getComplaintSlaState(
-  statutoryDueDate: string,
+  statutoryDueDate: number,
   status: ComplaintStatus,
 ): ComplaintSlaState {
   if (status === 'RESOLVED') {
     return 'met'
   }
 
-  const hoursRemaining = (new Date(statutoryDueDate).getTime() - Date.now()) / (1000 * 60 * 60)
+  const hoursRemaining = (statutoryDueDate - Date.now()) / (1000 * 60 * 60)
 
   if (hoursRemaining < 0) {
     return 'breached'
@@ -110,6 +113,6 @@ export function getComplaintSlaState(
   return 'onTrack'
 }
 
-export function getComplaintSlaDaysRemaining(statutoryDueDate: string): number {
-  return Math.ceil((new Date(statutoryDueDate).getTime() - Date.now()) / DAY_IN_MS)
+export function getComplaintSlaDaysRemaining(statutoryDueDate: number): number {
+  return Math.ceil((statutoryDueDate - Date.now()) / DAY_IN_MS)
 }

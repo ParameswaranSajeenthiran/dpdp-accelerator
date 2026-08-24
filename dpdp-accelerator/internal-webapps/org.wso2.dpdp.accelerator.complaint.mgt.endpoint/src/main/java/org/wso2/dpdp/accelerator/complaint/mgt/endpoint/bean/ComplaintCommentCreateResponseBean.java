@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 public class ComplaintCommentCreateResponseBean {
 
@@ -31,7 +30,7 @@ public class ComplaintCommentCreateResponseBean {
     private boolean isPublic;
     private String fromStatus;
     private String toStatus;
-    private String createdTime;
+    private long createdTime;
 
     public ComplaintCommentCreateResponseBean() {
     }
@@ -45,7 +44,7 @@ public class ComplaintCommentCreateResponseBean {
         bean.isPublic = event.isPublic();
         bean.fromStatus = event.getFromStatus();
         bean.toStatus = event.getToStatus();
-        bean.createdTime = DateTimeUtil.toIso(event.getActionTime());
+        bean.createdTime = event.getActionTime();
         return bean;
     }
 
@@ -91,11 +90,11 @@ public class ComplaintCommentCreateResponseBean {
         this.isPublic = isPublic;
     }
 
-    public String getCreatedTime() {
+    public long getCreatedTime() {
         return createdTime;
     }
 
-    public void setCreatedTime(String createdTime) {
+    public void setCreatedTime(long createdTime) {
         this.createdTime = createdTime;
     }
 

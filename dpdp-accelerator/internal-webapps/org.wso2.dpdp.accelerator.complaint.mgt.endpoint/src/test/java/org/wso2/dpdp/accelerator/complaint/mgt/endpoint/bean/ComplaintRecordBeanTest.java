@@ -21,7 +21,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import java.util.List;
 
@@ -52,9 +51,9 @@ class ComplaintRecordBeanTest {
         assertEquals("OPEN", bean.getStatus());
         assertEquals("user1", bean.getUserId());
         assertEquals("desc", bean.getDescription());
-        assertEquals(DateTimeUtil.toIso(1L), bean.getSubmittedAt());
-        assertEquals(DateTimeUtil.toIso(2L), bean.getUpdatedAt());
-        assertEquals(DateTimeUtil.toIso(3L), bean.getStatutoryDueDate());
+        assertEquals(1L, bean.getSubmittedAt());
+        assertEquals(2L, bean.getUpdatedAt());
+        assertEquals(3L, bean.getStatutoryDueDate());
         assertEquals(1, bean.getAttachments().size());
         assertEquals("a1", bean.getAttachments().get(0).getAttachmentId());
     }
@@ -77,9 +76,9 @@ class ComplaintRecordBeanTest {
         bean.setUserId("user2");
         bean.setDescription("desc2");
         bean.setAttachments(List.of());
-        bean.setSubmittedAt("2026-01-01T00:00:00Z");
-        bean.setUpdatedAt("2026-01-02T00:00:00Z");
-        bean.setStatutoryDueDate("2026-04-01T00:00:00Z");
+        bean.setSubmittedAt(1L);
+        bean.setUpdatedAt(2L);
+        bean.setStatutoryDueDate(3L);
 
         assertEquals("c2", bean.getId());
         assertEquals("CMP-2026-00002", bean.getReferenceId());
@@ -89,8 +88,8 @@ class ComplaintRecordBeanTest {
         assertEquals("user2", bean.getUserId());
         assertEquals("desc2", bean.getDescription());
         assertTrue(bean.getAttachments().isEmpty());
-        assertEquals("2026-01-01T00:00:00Z", bean.getSubmittedAt());
-        assertEquals("2026-01-02T00:00:00Z", bean.getUpdatedAt());
-        assertEquals("2026-04-01T00:00:00Z", bean.getStatutoryDueDate());
+        assertEquals(1L, bean.getSubmittedAt());
+        assertEquals(2L, bean.getUpdatedAt());
+        assertEquals(3L, bean.getStatutoryDueDate());
     }
 }

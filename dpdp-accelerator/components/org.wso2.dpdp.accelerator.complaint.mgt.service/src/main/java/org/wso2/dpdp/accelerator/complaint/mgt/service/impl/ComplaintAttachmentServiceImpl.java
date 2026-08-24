@@ -75,6 +75,21 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         return result;
     }
 
+    @Override
+    public List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId,
+            String ownerUserId, String ownerUserName, List<UploadedFile> files) {
+        complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
+        return uploadComplaintAttachments(orgId, complaintId, files, true, ownerUserId, ownerUserName,
+                ComplaintActorRole.USER.name());
+    }
+
+    @Override
+    public ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId, String ownerUserId,
+            String attachmentId) {
+        complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
+        return downloadAttachment(orgId, complaintId, attachmentId, true);
+    }
+
     private void validateActor(String actorUserId, String actorRole) {
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -134,6 +149,11 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         if (files == null || files.isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.FILE_LIST_REQUIRED_ERROR);
+        }
+        int maxFiles = AttachmentPolicy.getMaxFilesPerUpload();
+        if (files.size() > maxFiles) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, files.size()));
         }
         long maxSize = AttachmentPolicy.getMaxSizeBytes();
         for (UploadedFile file : files) {

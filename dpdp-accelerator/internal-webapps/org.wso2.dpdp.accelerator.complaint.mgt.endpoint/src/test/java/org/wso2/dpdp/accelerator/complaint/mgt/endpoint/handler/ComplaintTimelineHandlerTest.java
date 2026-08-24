@@ -73,32 +73,43 @@ class ComplaintTimelineHandlerTest {
 
     @Test
     void getTimelinePassesFromTimeAndAppliesDefaultLimitAndOffset() {
-        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), eq(1000L), isNull(), isNull(), eq(20), eq(0),
-                any())).thenReturn(List.of());
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), eq(1000L), isNull(), isNull(), isNull(), eq(20),
+                eq(0), any())).thenReturn(List.of());
 
-        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", 1000L, null, null, null);
+        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", 1000L, null, null, null, null);
 
         assertEquals(20, response.getMetadata().getLimit());
         assertEquals(0, response.getMetadata().getOffset());
     }
 
     @Test
+    void getTimelinePassesToTime() {
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), eq(2000L), isNull(), isNull(), eq(20),
+                eq(0), any())).thenReturn(List.of());
+
+        handler.getTimeline(ORG_ID, "c1", null, 2000L, null, null, null);
+
+        verify(complaintEventService).getTimeline(eq(ORG_ID), eq("c1"), isNull(), eq(2000L), isNull(), isNull(),
+                eq(20), eq(0), any());
+    }
+
+    @Test
     void getTimelineCapsLimitAt100() {
-        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), eq(100), eq(0),
-                any())).thenReturn(List.of());
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), isNull(), eq(100),
+                eq(0), any())).thenReturn(List.of());
 
-        handler.getTimeline(ORG_ID, "c1", null, null, 500, null);
+        handler.getTimeline(ORG_ID, "c1", null, null, null, 500, null);
 
-        verify(complaintEventService).getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), eq(100), eq(0),
-                any());
+        verify(complaintEventService).getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), isNull(),
+                eq(100), eq(0), any());
     }
 
     @Test
     void getTimelineComposesEveryEntryRegardlessOfIsPublic() {
-        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), eq(20), eq(0),
-                any())).thenReturn(List.of(entry("e1"), entry("e2")));
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), isNull(), eq(20),
+                eq(0), any())).thenReturn(List.of(entry("e1"), entry("e2")));
 
-        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", null, null, null, null);
+        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 
         assertEquals(2, response.getData().size());
         assertEquals("e1", response.getData().get(0).getId());
@@ -106,14 +117,14 @@ class ComplaintTimelineHandlerTest {
 
     @Test
     void getTimelineGroupsAttachmentsUnderTheEventTheyWereUploadedWith() {
-        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), eq(20), eq(0),
-                any())).thenReturn(List.of(entry("e1"), entry("e2")));
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), isNull(), eq(20),
+                eq(0), any())).thenReturn(List.of(entry("e1"), entry("e2")));
         ComplaintAttachment forE1 = new ComplaintAttachment();
         forE1.setAttachmentId("a1");
         forE1.setComplaintEventId("e1");
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1")).thenReturn(List.of(forE1));
 
-        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", null, null, null, null);
+        TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 
         assertEquals(1, response.getData().get(0).getAttachments().size());
         assertEquals("a1", response.getData().get(0).getAttachments().get(0).getAttachmentId());
@@ -127,10 +138,11 @@ class ComplaintTimelineHandlerTest {
         when(complaintService.requireOwnedComplaint(ORG_ID, "c1", "user1"))
                 .thenReturn(new Complaint("c1", ORG_ID, "user1", "User One", "CMP-1", "DATA_BREACH", "LOW", "OPEN",
                         "d", 1L, 1L, 1L));
-        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), eq(true), isNull(), eq(20), eq(0),
-                any())).thenReturn(List.of(entry("e1")));
+        when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), eq(true), isNull(), eq(20),
+                eq(0), any())).thenReturn(List.of(entry("e1")));
 
-        TimelineListResponseBean response = handler.getOwnTimeline(ORG_ID, "c1", "user1", null, null, null, null);
+        TimelineListResponseBean response =
+                handler.getOwnTimeline(ORG_ID, "c1", "user1", null, null, null, null, null);
 
         assertEquals(1, response.getData().size());
         verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");

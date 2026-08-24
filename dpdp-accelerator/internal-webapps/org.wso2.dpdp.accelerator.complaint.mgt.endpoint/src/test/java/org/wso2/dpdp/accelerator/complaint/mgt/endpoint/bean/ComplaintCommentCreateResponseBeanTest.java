@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,7 +40,7 @@ class ComplaintCommentCreateResponseBeanTest {
         assertTrue(bean.isPublic());
         assertEquals("OPEN", bean.getFromStatus());
         assertEquals("IN_PROGRESS", bean.getToStatus());
-        assertEquals(DateTimeUtil.toIso(100L), bean.getCreatedTime());
+        assertEquals(100L, bean.getCreatedTime());
     }
 
     @Test
@@ -54,7 +53,7 @@ class ComplaintCommentCreateResponseBeanTest {
         bean.setPublic(false);
         bean.setFromStatus("IN_PROGRESS");
         bean.setToStatus("RESOLVED");
-        bean.setCreatedTime("2026-01-01T00:00:00Z");
+        bean.setCreatedTime(1L);
 
         assertEquals("e2", bean.getId());
         assertEquals("officer1", bean.getActorUserId());
@@ -63,6 +62,6 @@ class ComplaintCommentCreateResponseBeanTest {
         assertEquals(false, bean.isPublic());
         assertEquals("IN_PROGRESS", bean.getFromStatus());
         assertEquals("RESOLVED", bean.getToStatus());
-        assertEquals("2026-01-01T00:00:00Z", bean.getCreatedTime());
+        assertEquals(1L, bean.getCreatedTime());
     }
 }

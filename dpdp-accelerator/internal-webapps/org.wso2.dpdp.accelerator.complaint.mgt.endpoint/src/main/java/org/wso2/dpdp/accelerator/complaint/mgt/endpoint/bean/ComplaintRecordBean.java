@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +35,9 @@ public class ComplaintRecordBean {
     private String userName;
     private String description;
     private List<ComplaintAttachmentResponseBean> attachments;
-    private String submittedAt;
-    private String updatedAt;
-    private String statutoryDueDate;
+    private long submittedAt;
+    private long updatedAt;
+    private long statutoryDueDate;
 
     public ComplaintRecordBean() {
     }
@@ -53,9 +52,9 @@ public class ComplaintRecordBean {
         bean.userId = complaint.getUserId();
         bean.userName = complaint.getUserName();
         bean.description = complaint.getDescription();
-        bean.submittedAt = DateTimeUtil.toIso(complaint.getCreatedTime());
-        bean.updatedAt = DateTimeUtil.toIso(complaint.getUpdatedTime());
-        bean.statutoryDueDate = DateTimeUtil.toIso(complaint.getStatutoryDueTime());
+        bean.submittedAt = complaint.getCreatedTime();
+        bean.updatedAt = complaint.getUpdatedTime();
+        bean.statutoryDueDate = complaint.getStatutoryDueTime();
 
         List<ComplaintAttachmentResponseBean> attachmentBeans = new ArrayList<>();
         if (attachments != null) {
@@ -139,27 +138,27 @@ public class ComplaintRecordBean {
         this.attachments = attachments;
     }
 
-    public String getSubmittedAt() {
+    public long getSubmittedAt() {
         return submittedAt;
     }
 
-    public void setSubmittedAt(String submittedAt) {
+    public void setSubmittedAt(long submittedAt) {
         this.submittedAt = submittedAt;
     }
 
-    public String getUpdatedAt() {
+    public long getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public String getStatutoryDueDate() {
+    public long getStatutoryDueDate() {
         return statutoryDueDate;
     }
 
-    public void setStatutoryDueDate(String statutoryDueDate) {
+    public void setStatutoryDueDate(long statutoryDueDate) {
         this.statutoryDueDate = statutoryDueDate;
     }
 }

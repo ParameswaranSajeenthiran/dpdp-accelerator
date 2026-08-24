@@ -19,7 +19,7 @@
 import { Box, Stack, Tooltip, Typography } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintStatus } from '../../../types/complaint'
-import { formatIsoDateTime } from '../../../utils/dateTime'
+import { formatEpochTimestamp } from '../../../utils/dateTime'
 import {
   getComplaintSlaDaysRemaining,
   getComplaintSlaState,
@@ -27,7 +27,7 @@ import {
 } from '../utils/complaintDisplay'
 
 interface ComplaintSlaIndicatorProps {
-  statutoryDueDate: string
+  statutoryDueDate: number
   status: ComplaintStatus
 }
 
@@ -74,7 +74,7 @@ function ComplaintSlaIndicator({
   return (
     <Tooltip
       title={t('complaints.sla.dueDate', {
-        date: formatIsoDateTime(statutoryDueDate, SLA_DATE_FORMAT_OPTIONS),
+        date: formatEpochTimestamp(statutoryDueDate, SLA_DATE_FORMAT_OPTIONS),
       })}
     >
       <Stack direction="row" spacing={0.75} alignItems="center">

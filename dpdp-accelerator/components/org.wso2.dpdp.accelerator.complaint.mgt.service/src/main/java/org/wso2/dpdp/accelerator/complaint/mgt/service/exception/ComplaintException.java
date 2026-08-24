@@ -31,9 +31,21 @@ public class ComplaintException extends RuntimeException {
         this.statusCode = statusCode;
     }
 
+    public ComplaintException(String code, String message, String description, int statusCode, Throwable cause) {
+        super(message, cause);
+        this.code = code;
+        this.description = description;
+        this.statusCode = statusCode;
+    }
+
     /** Preferred constructor - code/statusCode come from the shared ComplaintErrorCode. */
     public ComplaintException(ComplaintErrorCode errorCode, String message) {
         this(errorCode.getCode(), message, message, errorCode.getHttpStatus());
+    }
+
+    /** Same as {@link #ComplaintException(ComplaintErrorCode, String)}, preserving the original cause. */
+    public ComplaintException(ComplaintErrorCode errorCode, String message, Throwable cause) {
+        this(errorCode.getCode(), message, message, errorCode.getHttpStatus(), cause);
     }
 
     public String getCode() {

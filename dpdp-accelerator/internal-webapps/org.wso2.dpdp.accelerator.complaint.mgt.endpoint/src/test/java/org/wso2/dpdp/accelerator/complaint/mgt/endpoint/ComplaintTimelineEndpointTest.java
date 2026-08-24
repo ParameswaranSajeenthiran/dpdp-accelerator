@@ -62,7 +62,7 @@ class ComplaintTimelineEndpointTest {
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
                         Set.of("portal:complaints:read:any")));
         TimelineListResponseBean handlerResponse = new TimelineListResponseBean();
-        when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, "asc", 10, 0)).thenReturn(handlerResponse);
+        when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, null, "asc", 10, 0)).thenReturn(handlerResponse);
 
         Response response = endpoint.getTimeline("c1", 1000L, null, "asc", 10, 0);
 

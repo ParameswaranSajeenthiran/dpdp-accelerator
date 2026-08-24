@@ -21,7 +21,7 @@ import { Lock, Shield, User } from '@wso2/oxygen-ui-icons-react'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintActorRole, ComplaintDetail } from '../../../types/complaint'
-import { formatIsoDateTime } from '../../../utils/dateTime'
+import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { useAttachmentImagePreview } from '../hooks/useAttachmentImagePreview'
 import type { AggregatedComplaintAttachment } from '../utils/complaintAttachments'
 import { collectComplaintAttachments } from '../utils/complaintAttachments'
@@ -117,7 +117,7 @@ function AttachmentRow({
               {item.actorName}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-              {formatIsoDateTime(item.timestamp, ATTACHMENT_DATE_FORMAT_OPTIONS)}
+              {formatEpochTimestamp(item.timestamp, ATTACHMENT_DATE_FORMAT_OPTIONS)}
             </Typography>
           </Stack>
         </Stack>

@@ -85,6 +85,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '500':
@@ -138,6 +142,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -166,6 +174,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ComplaintRecord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -210,7 +222,9 @@ paths:
                   items:
                     type: string
                     format: binary
-                  description: One or more files to upload in a single request.
+                  minItems: 1
+                  maxItems: 5
+                  description: One to five files to upload in a single request.
               encoding:
                 file:
                   contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
@@ -225,6 +239,10 @@ paths:
                   $ref: '#/components/schemas/ComplaintAttachmentResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -260,6 +278,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ComplaintAttachmentDownloadResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: >
             Forbidden — attachment is marked isPublic=false (CO-4030)
@@ -330,6 +350,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimelineListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -370,6 +394,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintCommentCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
           description: >
             Invalid state transition (CO-4090) — only returned when
@@ -418,6 +446,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintStatusUpdateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -470,6 +502,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '500':
@@ -531,6 +567,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintListResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -556,6 +596,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ComplaintRecord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -601,6 +645,9 @@ paths:
                   items:
                     type: string
                     format: binary
+                  minItems: 1
+                  maxItems: 5
+                  description: One to five files to upload in a single request.
                 isPublic:
                   type: boolean
                   default: true
@@ -621,6 +668,10 @@ paths:
                   $ref: '#/components/schemas/ComplaintAttachmentResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '404':
@@ -655,6 +706,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ComplaintAttachmentDownloadResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -718,6 +773,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimelineListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -765,6 +824,8 @@ paths:
                 $ref: '#/components/schemas/ComplaintCommentCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden (CO-4030)
           content:
@@ -821,6 +882,10 @@ paths:
                 $ref: '#/components/schemas/ComplaintStatusUpdateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
         '409':
@@ -868,6 +933,24 @@ components:
         type: string
 
   responses:
+    Unauthorized:
+      description: >
+        Missing, malformed, or inactive bearer token (CO-4010) - see
+        TokenIntrospectionFilter, the sole authentication gate for every
+        operation below.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: >
+        Bearer token does not belong to the requested tenant, or lacks the
+        required scope for this operation (CO-4030) - see
+        TokenIntrospectionFilter/ScopeAuthorizationFilter.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
     BadRequest:
       description: Invalid request body (CO-4001)
       content:
@@ -962,7 +1045,7 @@ components:
         uploadedTime:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
     ComplaintCommentCreateResponse:
       type: object
       required: [id, actorUserId, actorRole, message, isPublic, fromStatus, toStatus, createdTime]
@@ -989,7 +1072,7 @@ components:
         createdTime:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
     ComplaintTimelineEntryResponse:
       type: object
       description: >
@@ -1033,7 +1116,7 @@ components:
         createdTime:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         attachments:
           type: array
           items:
@@ -1076,15 +1159,15 @@ components:
         submittedAt:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         updatedAt:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         statutoryDueDate:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
     ComplaintRecord:
       type: object
       description: >
@@ -1125,15 +1208,15 @@ components:
         submittedAt:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         updatedAt:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         statutoryDueDate:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
     ComplaintListResponse:
       type: object
       required: [data, metadata]
@@ -1191,7 +1274,7 @@ components:
         updatedAt:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
 
     # ---- Me (Data Principal) request schemas ----
     MeComplaintCreateRequest:
@@ -1223,6 +1306,7 @@ components:
       properties:
         message:
           type: string
+          maxLength: 5000
         toStatus:
           allOf:
             - $ref: '#/components/schemas/ComplaintStatus'
@@ -1252,9 +1336,10 @@ components:
         Pure-JSON body for POST /complaints (officer-assisted intake).
         Unlike MeComplaintCreateRequest, userId is required — the officer
         is creating this on behalf of a Data Principal who is not the
-        caller. actorUserId/actorRole identify who performed the intake
-        for audit purposes; they are not the complaint's owner.
-      required: [userId, subjectCategory, description, actorUserId, actorRole]
+        caller. Who performed the intake is resolved from the caller's
+        bearer token (never accepted from this body) and recorded as a
+        CREATE audit event on the new complaint's timeline.
+      required: [userId, subjectCategory, description]
       properties:
         userId:
           type: string
@@ -1264,12 +1349,6 @@ components:
         description:
           type: string
           maxLength: 5000
-        actorUserId:
-          type: string
-          description: Identity of the officer (or SYSTEM process) performing the intake.
-        actorRole:
-          type: string
-          enum: [COMPLAINT_OFFICER, SYSTEM]
     CmComplaintMessageRequest:
       type: object
       description: >
@@ -1283,6 +1362,7 @@ components:
       properties:
         message:
           type: string
+          maxLength: 5000
         isPublic:
           type: boolean
           description: >
@@ -1320,7 +1400,7 @@ components:
         uploadedTime:
           type: integer
           format: int64
-          description: Unix timestamp in milliseconds.
+          description: Unix timestamp, milliseconds.
         content:
           type: string
           format: byte

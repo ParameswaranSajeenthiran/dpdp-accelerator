@@ -18,14 +18,16 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
-/** Body of POST /complaints (officer-assisted intake) - CmComplaintCreateRequest in the API spec. */
+/**
+ * Body of POST /complaints (officer-assisted intake) - CmComplaintCreateRequest in the API spec.
+ * Does not carry actorUserId/actorRole - who performed the intake is resolved from the bearer
+ * token (see ComplaintEndpoint), never accepted from the request body.
+ */
 public class ComplaintCreateRequestBean {
 
     private String userId;
     private String subjectCategory;
     private String description;
-    private String actorUserId;
-    private String actorRole;
 
     public ComplaintCreateRequestBean() {
     }
@@ -36,22 +38,6 @@ public class ComplaintCreateRequestBean {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    public String getActorUserId() {
-        return actorUserId;
-    }
-
-    public void setActorUserId(String actorUserId) {
-        this.actorUserId = actorUserId;
-    }
-
-    public String getActorRole() {
-        return actorRole;
-    }
-
-    public void setActorRole(String actorRole) {
-        this.actorRole = actorRole;
     }
 
     public String getSubjectCategory() {

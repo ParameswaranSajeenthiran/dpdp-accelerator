@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,8 +28,7 @@ class ComplaintAttachmentResponseBeanTest {
     @Test
     void allArgsConstructorPopulatesEveryField() {
         ComplaintAttachmentResponseBean bean =
-                new ComplaintAttachmentResponseBean("a1", "e1", "a.pdf", "application/pdf", 100L, true,
-                        "2026-01-01T00:00:00Z");
+                new ComplaintAttachmentResponseBean("a1", "e1", "a.pdf", "application/pdf", 100L, true, 1L);
 
         assertEquals("a1", bean.getAttachmentId());
         assertEquals("e1", bean.getComplaintEventId());
@@ -38,7 +36,7 @@ class ComplaintAttachmentResponseBeanTest {
         assertEquals("application/pdf", bean.getContentType());
         assertEquals(100L, bean.getSizeBytes());
         assertEquals(true, bean.isPublic());
-        assertEquals("2026-01-01T00:00:00Z", bean.getUploadedTime());
+        assertEquals(1L, bean.getUploadedTime());
     }
 
     @Test
@@ -50,7 +48,7 @@ class ComplaintAttachmentResponseBeanTest {
         bean.setContentType("image/png");
         bean.setSizeBytes(200L);
         bean.setPublic(false);
-        bean.setUploadedTime("2026-02-01T00:00:00Z");
+        bean.setUploadedTime(2L);
 
         assertEquals("a2", bean.getAttachmentId());
         assertEquals("e2", bean.getComplaintEventId());
@@ -58,7 +56,7 @@ class ComplaintAttachmentResponseBeanTest {
         assertEquals("image/png", bean.getContentType());
         assertEquals(200L, bean.getSizeBytes());
         assertEquals(false, bean.isPublic());
-        assertEquals("2026-02-01T00:00:00Z", bean.getUploadedTime());
+        assertEquals(2L, bean.getUploadedTime());
     }
 
     @Test
@@ -75,6 +73,6 @@ class ComplaintAttachmentResponseBeanTest {
         assertEquals("application/pdf", bean.getContentType());
         assertEquals(3L, bean.getSizeBytes());
         assertEquals(true, bean.isPublic());
-        assertEquals(DateTimeUtil.toIso(100L), bean.getUploadedTime());
+        assertEquals(100L, bean.getUploadedTime());
     }
 }

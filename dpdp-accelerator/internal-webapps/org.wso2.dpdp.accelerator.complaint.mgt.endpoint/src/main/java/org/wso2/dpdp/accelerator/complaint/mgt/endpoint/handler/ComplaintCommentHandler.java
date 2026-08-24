@@ -24,6 +24,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintMessageReq
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 
@@ -51,7 +54,12 @@ public class ComplaintCommentHandler {
     public ComplaintCommentCreateResponseBean addComment(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, ComplaintMessageRequestBean request) {
         String message = request != null ? request.getMessage() : null;
-        boolean isPublic = request != null && request.isPublic();
+        Boolean requestedIsPublic = request != null ? request.isPublic() : null;
+        if (requestedIsPublic == null) {
+            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                    ComplaintServiceConstants.IS_PUBLIC_REQUIRED_ERROR);
+        }
+        boolean isPublic = requestedIsPublic;
         String toStatus = request != null ? request.getToStatus() : null;
 
         ComplaintEvent event = complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName,

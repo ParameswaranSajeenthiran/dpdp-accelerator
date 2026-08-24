@@ -87,10 +87,11 @@ class ComplaintHandlerTest {
         request.setUserId("user1");
         request.setSubjectCategory("DATA_BREACH");
         request.setDescription("desc");
-        when(complaintService.createComplaint(ORG_ID, "user1", null, "DATA_BREACH", "desc"))
-                .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
+        when(complaintService.createComplaint(ORG_ID, "user1", null, "DATA_BREACH", "desc", "officer1",
+                "COMPLAINT_OFFICER")).thenReturn(sampleComplaint("c1", "user1", "OPEN"));
 
-        ComplaintCreateResponseBean response = handler.createComplaint(ORG_ID, request);
+        ComplaintCreateResponseBean response =
+                handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request);
 
         assertEquals("c1", response.getId());
         assertEquals("OPEN", response.getStatus());
@@ -98,10 +99,10 @@ class ComplaintHandlerTest {
 
     @Test
     void createComplaintToleratesNullRequestBody() {
-        when(complaintService.createComplaint(eq(ORG_ID), eq(null), eq(null), eq(null), eq(null)))
-                .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
+        when(complaintService.createComplaint(eq(ORG_ID), eq(null), eq(null), eq(null), eq(null), eq("officer1"),
+                eq("COMPLAINT_OFFICER"))).thenReturn(sampleComplaint("c1", "user1", "OPEN"));
 
-        ComplaintCreateResponseBean response = handler.createComplaint(ORG_ID, null);
+        ComplaintCreateResponseBean response = handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", null);
 
         assertEquals("c1", response.getId());
     }

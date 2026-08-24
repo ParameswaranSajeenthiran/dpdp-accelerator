@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.DateTimeUtil;
 
 public class ComplaintCreateResponseBean {
 
@@ -30,9 +29,9 @@ public class ComplaintCreateResponseBean {
     private String status;
     private String userId;
     private String description;
-    private String submittedAt;
-    private String updatedAt;
-    private String statutoryDueDate;
+    private long submittedAt;
+    private long updatedAt;
+    private long statutoryDueDate;
 
     public ComplaintCreateResponseBean() {
     }
@@ -46,9 +45,9 @@ public class ComplaintCreateResponseBean {
         bean.status = complaint.getStatus();
         bean.userId = complaint.getUserId();
         bean.description = complaint.getDescription();
-        bean.submittedAt = DateTimeUtil.toIso(complaint.getCreatedTime());
-        bean.updatedAt = DateTimeUtil.toIso(complaint.getUpdatedTime());
-        bean.statutoryDueDate = DateTimeUtil.toIso(complaint.getStatutoryDueTime());
+        bean.submittedAt = complaint.getCreatedTime();
+        bean.updatedAt = complaint.getUpdatedTime();
+        bean.statutoryDueDate = complaint.getStatutoryDueTime();
         return bean;
     }
 
@@ -108,27 +107,27 @@ public class ComplaintCreateResponseBean {
         this.description = description;
     }
 
-    public String getSubmittedAt() {
+    public long getSubmittedAt() {
         return submittedAt;
     }
 
-    public void setSubmittedAt(String submittedAt) {
+    public void setSubmittedAt(long submittedAt) {
         this.submittedAt = submittedAt;
     }
 
-    public String getUpdatedAt() {
+    public long getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public String getStatutoryDueDate() {
+    public long getStatutoryDueDate() {
         return statutoryDueDate;
     }
 
-    public void setStatutoryDueDate(String statutoryDueDate) {
+    public void setStatutoryDueDate(long statutoryDueDate) {
         this.statutoryDueDate = statutoryDueDate;
     }
 }

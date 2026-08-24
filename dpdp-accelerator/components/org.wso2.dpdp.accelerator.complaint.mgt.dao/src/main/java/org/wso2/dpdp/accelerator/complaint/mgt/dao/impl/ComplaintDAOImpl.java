@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
@@ -28,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,11 +42,17 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean addComplaint(Complaint complaint) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT);
+        try (Connection conn = DBUtil.getConnection()) {
+            return addComplaint(conn, complaint);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
+            throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
+        }
+    }
+
+    @Override
+    public boolean addComplaint(Connection conn, Complaint complaint) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT)) {
             ps.setString(1, complaint.getComplaintId());
             ps.setString(2, complaint.getOrgId());
             ps.setString(3, complaint.getUserId());
@@ -58,11 +66,24 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(11, complaint.getUpdatedTime());
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // Distinguish the UQ_COMPLAINT_REFERENCE (ORG_ID, REFERENCE_ID) collision - the
+            // count-then-format sequence in ReferenceIdGenerator is racy under concurrent submissions
+            // for the same org/year, so this is expected to happen occasionally rather than indicate
+            // real data corruption - from a COMPLAINT_ID primary-key collision, which is a genuine bug
+            // (UUID collision) and should surface as the generic DAO error, not a silent retry.
+            // Neither driver exposes the violated constraint's name as a structured field, so this is
+            // the only portable signal across MySQL and the H2 test database.
+            if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
+                    .contains("UQ_COMPLAINT_REFERENCE")) {
+                LOGGER.log(Level.WARNING, "Duplicate reference ID for org: " + complaint.getOrgId(), e);
+                throw new DuplicateReferenceIdException(e);
+            }
+            LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
+            throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
-        } finally {
-            DBUtil.closeAll(conn, ps, null);
         }
     }
 
@@ -122,7 +143,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         return false;
     }
 
-    /** Overload for callers composing this write into a caller-owned {@link DBUtil#executeInTransaction}. */
+    @Override
     public boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus,
             long updatedTime) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(QueryConstants.UPDATE_COMPLAINT_STATUS)) {

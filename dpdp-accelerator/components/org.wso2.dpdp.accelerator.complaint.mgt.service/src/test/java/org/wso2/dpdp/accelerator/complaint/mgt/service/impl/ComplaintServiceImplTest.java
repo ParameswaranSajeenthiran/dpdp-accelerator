@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +27,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
+import java.sql.Connection;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +48,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,12 +56,25 @@ class ComplaintServiceImplTest {
 
     @Mock
     private ComplaintDAO complaintDAO;
+    @Mock
+    private ComplaintEventDAO complaintEventDAO;
 
     private ComplaintServiceImpl complaintService;
 
+    @BeforeAll
+    static void pointDbUtilAtAnInMemoryDatabase() {
+        // The officer-intake path now runs through DBUtil.executeInTransaction (see
+        // ComplaintServiceImplTest's new createComplaint-with-actor tests below) - complaintDAO/
+        // complaintEventDAO are still plain mocks, so no real SQL executes, but DBUtil.getConnection()
+        // itself needs somewhere real to connect. See H2TestDbSupport in the dao module.
+        System.setProperty("CO_DB_URL", "jdbc:h2:mem:complaint_service_test;DB_CLOSE_DELAY=-1");
+        System.setProperty("CO_DB_USER", "sa");
+        System.setProperty("CO_DB_PASS", "");
+    }
+
     @BeforeEach
     void setUp() {
-        complaintService = new ComplaintServiceImpl(complaintDAO);
+        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
     }
 
     @AfterEach
@@ -150,6 +170,70 @@ class ComplaintServiceImplTest {
     }
 
     @Test
+    void createComplaintRetriesWithAFreshReferenceIdOnCollisionAndSucceeds() {
+        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Complaint.class)))
+                .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
+                .thenReturn(true);
+
+        Complaint complaint = complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
+
+        assertEquals("OPEN", complaint.getStatus());
+        verify(complaintDAO, times(2)).addComplaint(any(Complaint.class));
+    }
+
+    @Test
+    void createComplaintGivesUpAfterExhaustingReferenceIdRetries() {
+        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Complaint.class)))
+                .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")));
+
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc"));
+
+        assertEquals("CO-5000", ex.getCode());
+        assertTrue(ex.getCause() instanceof DuplicateReferenceIdException);
+        verify(complaintDAO, times(3)).addComplaint(any(Complaint.class));
+    }
+
+    @Test
+    void createComplaintForOfficerIntakeRecordsAuditEventAtomically() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+
+        Complaint complaint = complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc",
+                "officer1", "COMPLAINT_OFFICER");
+
+        assertEquals("OPEN", complaint.getStatus());
+        ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
+        verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
+        assertEquals("officer1", captor.getValue().getActorUserId());
+        assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
+        assertEquals("OPEN", captor.getValue().getToStatus());
+        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
+    }
+
+    @Test
+    void createComplaintThrowsWhenIntakeActorRoleIsInvalid() {
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc", "officer1",
+                        "USER"));
+
+        assertEquals("CO-4002", ex.getCode());
+    }
+
+    @Test
+    void createComplaintWithoutActorNeverTouchesComplaintEventDao() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(true);
+
+        complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc");
+
+        verify(complaintEventDAO, never()).addEvent(any(Connection.class), any());
+    }
+
+    @Test
     void requireComplaintThrows404WhenIdOrOrgIsBlank() {
         ComplaintException ex1 = assertThrows(ComplaintException.class,
                 () -> complaintService.requireComplaint("org1", " "));
@@ -225,5 +309,27 @@ class ComplaintServiceImplTest {
         assertTrue(results.isEmpty());
         verify(complaintDAO, times(1)).listComplaints(anyString(), any(), any(), any(), anyInt(), anyInt(), any(),
                 eq(totalOut));
+    }
+
+    @Test
+    void listComplaintsThrowsWhenStatusFilterIsNotARecognizedEnumValue() {
+        int[] totalOut = new int[1];
+
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> complaintService.listComplaints("org1", "OPEN_TYPO", null, null, 10, 0, null, totalOut));
+
+        assertEquals("CO-4002", ex.getCode());
+        verifyNoInteractions(complaintDAO);
+    }
+
+    @Test
+    void listComplaintsThrowsWhenPriorityFilterIsNotARecognizedEnumValue() {
+        int[] totalOut = new int[1];
+
+        ComplaintException ex = assertThrows(ComplaintException.class,
+                () -> complaintService.listComplaints("org1", null, "URGENT", null, 10, 0, null, totalOut));
+
+        assertEquals("CO-4002", ex.getCode());
+        verifyNoInteractions(complaintDAO);
     }
 }

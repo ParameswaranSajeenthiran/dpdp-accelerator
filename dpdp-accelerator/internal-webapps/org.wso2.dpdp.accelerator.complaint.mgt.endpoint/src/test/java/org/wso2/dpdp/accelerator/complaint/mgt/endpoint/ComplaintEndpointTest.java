@@ -73,7 +73,8 @@ class ComplaintEndpointTest {
         stubPrincipal();
         ComplaintCreateRequestBean request = new ComplaintCreateRequestBean();
         ComplaintCreateResponseBean handlerResponse = new ComplaintCreateResponseBean();
-        when(complaintHandler.createComplaint(ORG_ID, request)).thenReturn(handlerResponse);
+        when(complaintHandler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request))
+                .thenReturn(handlerResponse);
 
         Response response = endpoint.createComplaint(request);
 

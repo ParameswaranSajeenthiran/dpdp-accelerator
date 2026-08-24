@@ -79,7 +79,9 @@ public class ComplaintEndpoint {
     @POST
     @RequireScope
     public Response createComplaint(ComplaintCreateRequestBean request) {
-        ComplaintCreateResponseBean response = complaintHandler.createComplaint(currentOrgId(), request);
+        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
+        ComplaintCreateResponseBean response = complaintHandler.createComplaint(principal.getOrgId(),
+                principal.getUserId(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 

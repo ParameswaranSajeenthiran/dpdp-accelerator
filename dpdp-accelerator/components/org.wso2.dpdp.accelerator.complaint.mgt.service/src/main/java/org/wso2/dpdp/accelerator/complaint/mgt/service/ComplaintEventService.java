@@ -27,10 +27,10 @@ public interface ComplaintEventService {
 
     /**
      * Lists timeline entries (status changes, comments, internal notes) for a complaint, optionally
-     * filtered to entries after "since" and/or by isPublic, ordered and paginated. totalOut is an
-     * out-param - see ComplaintDAO#listComplaints for the convention.
+     * filtered to entries after "since", at or before "until", and/or by isPublic, ordered and
+     * paginated. totalOut is an out-param - see ComplaintDAO#listComplaints for the convention.
      */
-    List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since, Boolean isPublic,
+    List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since, Long until, Boolean isPublic,
             String order, int limit, int offset, int[] totalOut);
 
     /**
