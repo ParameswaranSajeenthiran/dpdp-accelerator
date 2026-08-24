@@ -31,6 +31,23 @@ permissions:
 env:
   IS_VERSION: 7.3.0
   ACCELERATOR_VERSION: 1.0.0-SNAPSHOT
+  # TEMPORARY DEFAULT - flip to 'release' once WSO2_SUBSCRIPTION_* secrets exist.
+  #
+  # The vanilla 7.3.0 GA release does not carry the consent-mgt v2 API resources this
+  # accelerator depends on. Confirmed by deploying it fresh in CI, then reproducing
+  # the identical failure in a controlled local test against the exact byte-verified
+  # release asset, then disproving the obvious fix: manually backporting the one
+  # known consent DB migration script from an already-updated pack did not resolve
+  # it either. The actual fix ships only via a WSO2 update (see "Apply WSO2 U2
+  # updates" below), and this repo has no subscription credentials yet.
+  #
+  # Building from product-is's own master branch carries the feature natively, and
+  # is safe to do today: master's stock deployment.toml is byte-identical to this
+  # repo's wso2is-7.3.0-deployment.toml template (diffed directly, 2026-08-24) apart
+  # from the three placeholders configure.sh already substitutes, so no new template
+  # is needed. This can drift as master evolves - if a future e2e run fails at
+  # "Apply the accelerator" specifically, re-diff the two files first.
+  IS_SOURCE: master  # 'release' | 'master'
 
 jobs:
   build:
@@ -75,9 +92,9 @@ jobs:
     name: E2E integration tests
     runs-on: ubuntu-latest
     needs: build
-    # Headroom for up to 4 provisioning restarts (worst case ~5 min each) on top
-    # of the normal run.
-    timeout-minutes: 75
+    # Headroom for an unmeasured product-is master build (large multi-module
+    # reactor, even with tests/checks skipped) plus up to 4 provisioning restarts.
+    timeout-minutes: 110
     env:
       IS_BASE_URL: https://localhost:9443
     steps:
@@ -92,26 +109,25 @@ jobs:
         with:
           node-version: '22'
 
-      # Derived rather than hardcoded so bumping IS_VERSION is a one-line change.
-      - name: Resolve IS_HOME
-        run: echo "IS_HOME=${GITHUB_WORKSPACE}/wso2is-${IS_VERSION}" >> "$GITHUB_ENV"
-
       - uses: actions/download-artifact@v4
         with:
           name: accelerator-zip
           path: dist
 
+      # --- Obtaining the IS pack: two mutually exclusive paths ------------------
+
       # A 420 MB asset. Keyed on version alone, which is correct because a published
       # release asset is immutable - bumping IS_VERSION must be the only way it changes.
       - name: Cache IS pack
         id: is-cache
+        if: env.IS_SOURCE == 'release'
         uses: actions/cache@v4
         with:
           path: ~/is-pack
           key: wso2is-${{ env.IS_VERSION }}
 
       - name: Download IS ${{ env.IS_VERSION }}
-        if: steps.is-cache.outputs.cache-hit != 'true'
+        if: env.IS_SOURCE == 'release' && steps.is-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/is-pack && cd ~/is-pack
           base="https://github.com/wso2/product-is/releases/download/v${IS_VERSION}"
@@ -121,11 +137,67 @@ jobs:
           # startup error.
           echo "$(cut -d' ' -f1 wso2is.sha256)  wso2is.zip" | sha256sum -c -
 
+      # Speeds up repeat runs of the (currently default) master build. Not correctness
+      # -critical - master's dependency set just floats, so a stale hit only costs time,
+      # never wrongness.
+      - name: Cache Maven repo for the product-is build
+        if: env.IS_SOURCE == 'master'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: product-is-master-m2-${{ github.run_id }}
+          restore-keys: |
+            product-is-master-m2-
+
+      # modules/distribution depends on modules/features and modules/p2-profile-gen,
+      # which -am pulls in automatically; modules/integration and modules/tests-utils
+      # are not needed for the runtime pack and are skipped by omission. All the
+      # slow, non-runtime-affecting checks are skipped for build speed, matching how
+      # this accelerator's own build should NOT be treated (that one keeps its
+      # jacoco gate) - this is upstream code we are only borrowing for the moment.
+      - name: Build IS from product-is master
+        if: env.IS_SOURCE == 'master'
+        run: |
+          git clone --depth 1 https://github.com/wso2/product-is.git /tmp/product-is
+          cd /tmp/product-is
+          mvn -B -ntp -pl modules/distribution -am install \
+            -Dmaven.test.skip=true -Dspotbugs.skip=true -Dcheckstyle.skip=true \
+            -Dpmd.skip=true -Drat.skip=true -Dlicense.skip=true \
+            -Dmaven.javadoc.skip=true -Djacoco.skip=true
+        env:
+          MAVEN_OPTS: -Xmx4g
+
+      - name: Stage the built distribution zip
+        if: env.IS_SOURCE == 'master'
+        run: |
+          zip_path=$(find /tmp/product-is/modules/distribution/target -maxdepth 1 -name "wso2is-*.zip" | head -1)
+          if [ -z "${zip_path}" ]; then
+            echo "::error::No wso2is-*.zip under modules/distribution/target - did the module path change?"
+            exit 1
+          fi
+          mkdir -p ~/is-pack
+          cp "${zip_path}" ~/is-pack/wso2is.zip
+          echo "Built $(basename "${zip_path}")"
+
       - name: Unpack IS
         run: unzip -q ~/is-pack/wso2is.zip -d "${GITHUB_WORKSPACE}"
 
-      # OFF BY DEFAULT. Enable per run from the Actions UI, or repo-wide by setting the
-      # APPLY_WSO2_UPDATES variable to "true".
+      # Not hardcoded to IS_VERSION: the release path unpacks to wso2is-7.3.0/, but a
+      # master build's version floats (e.g. wso2is-7.4.0-SNAPSHOT/), so the actual
+      # directory is detected instead of assumed.
+      - name: Resolve IS_HOME
+        run: |
+          dir=$(find "${GITHUB_WORKSPACE}" -maxdepth 1 -type d -name "wso2is-*")
+          if [ -z "${dir}" ]; then
+            echo "::error::No wso2is-* directory found after unpacking"
+            exit 1
+          fi
+          echo "IS_HOME=${dir}" >> "$GITHUB_ENV"
+          echo "Resolved IS_HOME=${dir}"
+
+      # OFF BY DEFAULT, and only meaningful on the release path - the updater expects
+      # a released product, not a from-source snapshot build. Enable per run from the
+      # Actions UI, or repo-wide by setting the APPLY_WSO2_UPDATES variable to "true".
       #
       # Runs before merge.sh so an update cannot clobber our dropins. U2 updates are
       # patches - the product stays 7.3.0 and updates/product.txt still reads
@@ -133,7 +205,7 @@ jobs:
       # valid. The pack ships bin/update_tool_setup.sh, which detects OS/arch and
       # downloads the updater itself, so no encrypted binary needs committing.
       - name: Apply WSO2 U2 updates
-        if: ${{ inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true' }}
+        if: ${{ env.IS_SOURCE == 'release' && (inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true') }}
         env:
           WSO2_USERNAME: ${{ secrets.WSO2_SUBSCRIPTION_USERNAME }}
           WSO2_PASSWORD: ${{ secrets.WSO2_SUBSCRIPTION_U2_PASSWORD }}
@@ -151,10 +223,12 @@ jobs:
             || bin/wso2update_linux -v --username "$WSO2_USERNAME" --password "$WSO2_PASSWORD"
 
       # configure.properties already defaults to localhost / admin / admin / h2 with
-      # APPLY_CONSENT_DB_MIGRATION=true, and the pack ships
-      # dbscripts/migrations/consent/h2-migration.txt - so no edits are needed. Both
-      # scripts are non-interactive, and configure.sh refuses to run while the server
-      # is up, which is why this happens before the start step.
+      # APPLY_CONSENT_DB_MIGRATION=true. On the release path the migration is silently
+      # skipped instead (the GA pack does not ship it - see the IS_SOURCE note above);
+      # on the master build it is expected to be present via whatever consent-mgt
+      # component version master currently pulls in. Both scripts are non-interactive,
+      # and configure.sh refuses to run while the server is up, which is why this
+      # happens before the start step.
       - name: Apply the accelerator
         run: |
           unzip -q dist/wso2-dpdp-is-accelerator-*.zip -d "$IS_HOME"
