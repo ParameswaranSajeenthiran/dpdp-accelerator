@@ -21,6 +21,7 @@
         <packages>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.tenant"/>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.internal"/>
+            <package name="org.wso2.dpdp.accelerator.identity.extensions.notification"/>
         </packages>
     </test>
 </suite>

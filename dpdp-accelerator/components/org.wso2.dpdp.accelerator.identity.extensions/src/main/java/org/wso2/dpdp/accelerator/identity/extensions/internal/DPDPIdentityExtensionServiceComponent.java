@@ -29,9 +29,14 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
@@ -39,7 +44,11 @@ import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.identity.extensions.notification.ComplaintNotificationHandler;
+import org.wso2.dpdp.accelerator.identity.extensions.notification.DPDPNotificationServlet;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
+
+import javax.servlet.ServletException;
 
 /**
  * Registers {@link DPDPIdentityExtensionTenantMgtListener} for future tenants, and provisions
@@ -53,8 +62,18 @@ public class DPDPIdentityExtensionServiceComponent {
 
     private static final Log LOG = LogFactory.getLog(DPDPIdentityExtensionServiceComponent.class);
 
+    // The alias the complaint notification bridge servlet is exposed under - the complaint WAR
+    // (a plain, non-OSGi webapp with no other way to reach IdentityEventService) POSTs here.
+    private static final String NOTIFICATION_SERVLET_ALIAS = "/dpdp-internal/notify";
+
     // Tracked so deactivate() can unregister it and avoid a duplicate on reactivation.
     private ServiceRegistration<TenantMgtListener> tenantMgtListenerRegistration;
+
+    // Tracked so deactivate() only unregisters the servlet alias if activate() actually
+    // registered it - HttpService.unregister() on an alias that was never registered throws.
+    private boolean notificationServletRegistered;
+
+    private HttpService httpService;
 
     @Activate
     protected void activate(ComponentContext context) {
@@ -62,7 +81,19 @@ public class DPDPIdentityExtensionServiceComponent {
         BundleContext bundleContext = context.getBundleContext();
         tenantMgtListenerRegistration = bundleContext.registerService(TenantMgtListener.class,
                 new DPDPIdentityExtensionTenantMgtListener(), null);
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
+        bundleContext.registerService(AbstractEventHandler.class.getName(), new ComplaintNotificationHandler(),
+                null);
+        LOG.debug("DPDP Identity Extensions component activated; tenant management listener and complaint "
+                + "notification handler registered.");
+
+        try {
+            httpService.registerServlet(NOTIFICATION_SERVLET_ALIAS, new DPDPNotificationServlet(), null, null);
+            notificationServletRegistered = true;
+            LOG.debug("Registered the complaint notification bridge servlet at: " + NOTIFICATION_SERVLET_ALIAS);
+        } catch (ServletException | NamespaceException e) {
+            LOG.error("Error registering the complaint notification bridge servlet at: "
+                    + NOTIFICATION_SERVLET_ALIAS, e);
+        }
 
         try {
             TenantInfoBean superTenant = new TenantInfoBean();
@@ -82,6 +113,10 @@ public class DPDPIdentityExtensionServiceComponent {
         if (tenantMgtListenerRegistration != null) {
             tenantMgtListenerRegistration.unregister();
             tenantMgtListenerRegistration = null;
+        }
+        if (notificationServletRegistered) {
+            httpService.unregister(NOTIFICATION_SERVLET_ALIAS);
+            notificationServletRegistered = false;
         }
         LOG.debug("DPDP Identity Extensions component deactivated.");
     }
@@ -213,5 +248,59 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @Reference(
+            service = IdentityEventService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdentityEventService"
+    )
+    protected void setIdentityEventService(IdentityEventService identityEventService) {
+
+        LOG.debug("Setting the Identity Event Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setIdentityEventService(identityEventService);
+    }
+
+    protected void unsetIdentityEventService(IdentityEventService identityEventService) {
+
+        LOG.debug("Unsetting the Identity Event Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setIdentityEventService(null);
+    }
+
+    @Reference(
+            service = NotificationTemplateManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetNotificationTemplateManager"
+    )
+    protected void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Setting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(notificationTemplateManager);
+    }
+
+    protected void unsetNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Unsetting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(null);
+    }
+
+    @Reference(
+            service = HttpService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetHttpService"
+    )
+    protected void setHttpService(HttpService httpService) {
+
+        LOG.debug("Setting the HTTP Service.");
+        this.httpService = httpService;
+    }
+
+    protected void unsetHttpService(HttpService httpService) {
+
+        LOG.debug("Unsetting the HTTP Service.");
+        this.httpService = null;
     }
 }

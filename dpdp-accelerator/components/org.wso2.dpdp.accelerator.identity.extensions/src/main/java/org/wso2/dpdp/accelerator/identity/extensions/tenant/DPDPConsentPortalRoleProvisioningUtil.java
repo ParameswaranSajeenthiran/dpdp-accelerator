@@ -37,7 +37,9 @@ import java.util.List;
 public final class DPDPConsentPortalRoleProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalRoleProvisioningUtil.class);
-    static final String ADMIN_ROLE = "dpdp-consent-admin";
+    // Public so other bundle code (e.g. complaint notification recipient resolution) can look up
+    // role membership without duplicating the role name literal.
+    public static final String ADMIN_ROLE = "dpdp-consent-admin";
     static final String USER_ROLE = "dpdp-consent-user";
     private static final String ROLE_AUDIENCE = "application";
 

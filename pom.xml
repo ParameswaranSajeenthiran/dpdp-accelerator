@@ -438,6 +438,24 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.event</artifactId>
+                <version>${carbon.identity.event.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.governance</artifactId>
+                <version>${carbon.identity.governance.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.osgi</groupId>
+                <artifactId>org.osgi.compendium</artifactId>
+                <version>${osgi.compendium.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.ws.commons.axiom.wso2</groupId>
                 <artifactId>axiom</artifactId>
                 <version>${axiom.version}</version>
@@ -560,13 +578,18 @@
         <carbon.identity.api.resource.mgt.version>7.10.156</carbon.identity.api.resource.mgt.version>
         <carbon.identity.inbound.auth.oauth.version>7.4.99</carbon.identity.inbound.auth.oauth.version>
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
+        <carbon.identity.event.version>7.10.156</carbon.identity.event.version>
+        <carbon.identity.governance.version>1.8.107</carbon.identity.governance.version>
         <axiom.version>1.2.11-wso2v16</axiom.version>
         <securevault.version>1.2.0</securevault.version>
         <commons.logging.version>1.2</commons.logging.version>
         <osgi.service.component.annotations.version>1.4.0</osgi.service.component.annotations.version>
         <osgi.version>7.0.0</osgi.version>
+        <osgi.compendium.version>4.2.0</osgi.compendium.version>
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
+        <osgi.service.http.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.http.imp.pkg.version.range>
+        <javax.servlet.imp.pkg.version.range>[2.6.0, 5.0.0)</javax.servlet.imp.pkg.version.range>
         <commons.logging.imp.pkg.version.range>[1.2.0, 2.0.0)</commons.logging.imp.pkg.version.range>
         <maven.bundle.plugin.version>5.1.9</maven.bundle.plugin.version>
         <maven.war.plugin.version>3.3.2</maven.war.plugin.version>

@@ -35,6 +35,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdate
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
 
 import java.util.List;
@@ -48,18 +49,26 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     private final ComplaintEventDAO complaintEventDAO;
     private final ComplaintDAO complaintDAO;
     private final ComplaintService complaintService;
+    private final NotificationClient notificationClient;
 
     public ComplaintEventServiceImpl() {
         this.complaintEventDAO = new ComplaintEventDAOImpl();
         this.complaintDAO = new ComplaintDAOImpl();
         this.complaintService = new ComplaintServiceImpl(this.complaintDAO);
+        this.notificationClient = new NotificationClient();
     }
 
     public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
             ComplaintService complaintService) {
+        this(complaintEventDAO, complaintDAO, complaintService, new NotificationClient());
+    }
+
+    public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
+            ComplaintService complaintService, NotificationClient notificationClient) {
         this.complaintEventDAO = complaintEventDAO;
         this.complaintDAO = complaintDAO;
         this.complaintService = complaintService;
+        this.notificationClient = notificationClient;
     }
 
     @Override
@@ -147,6 +156,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             }
         }
 
+        notificationClient.notifyCommentAdded(complaint, event);
         return ComplaintCommentCreateResponseDTO.from(event);
     }
 

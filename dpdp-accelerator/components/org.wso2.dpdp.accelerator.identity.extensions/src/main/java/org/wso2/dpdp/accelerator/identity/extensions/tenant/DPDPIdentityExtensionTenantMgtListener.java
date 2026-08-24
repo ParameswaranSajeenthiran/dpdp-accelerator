@@ -26,6 +26,7 @@ import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
+import org.wso2.dpdp.accelerator.identity.extensions.notification.EmailTemplateProvisioningUtil;
 
 import java.util.ArrayList;
 import java.util.List;
