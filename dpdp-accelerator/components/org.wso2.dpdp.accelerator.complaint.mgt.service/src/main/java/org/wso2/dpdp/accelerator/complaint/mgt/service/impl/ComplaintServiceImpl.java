@@ -33,6 +33,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatutoryDuePeriodPolicy;
@@ -53,6 +54,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintDAO complaintDAO;
     private final ComplaintEventDAO complaintEventDAO;
+    private final NotificationClient notificationClient;
 
     public ComplaintServiceImpl() {
         this(new ComplaintDAOImpl(), new ComplaintEventDAOImpl());
@@ -63,8 +65,14 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     public ComplaintServiceImpl(ComplaintDAO complaintDAO, ComplaintEventDAO complaintEventDAO) {
+        this(complaintDAO, complaintEventDAO, new NotificationClient());
+    }
+
+    public ComplaintServiceImpl(ComplaintDAO complaintDAO, ComplaintEventDAO complaintEventDAO,
+            NotificationClient notificationClient) {
         this.complaintDAO = complaintDAO;
         this.complaintEventDAO = complaintEventDAO;
+        this.notificationClient = notificationClient;
     }
 
     @Override
@@ -135,6 +143,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
                     }
                 }
+                notificationClient.notifyComplaintCreated(complaint);
                 return complaint;
             } catch (DuplicateReferenceIdException e) {
                 lastCollision = e;

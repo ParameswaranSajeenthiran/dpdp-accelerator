@@ -21,6 +21,8 @@ package org.wso2.dpdp.accelerator.identity.extensions.internal;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -41,6 +43,8 @@ public final class DPDPIdentityExtensionDataHolder {
     private RoleManagementService roleManagementService;
     private RealmService realmService;
     private DPDPConfigurationService configurationService;
+    private IdentityEventService identityEventService;
+    private NotificationTemplateManager notificationTemplateManager;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -119,5 +123,25 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setConfigurationService(DPDPConfigurationService configurationService) {
 
         this.configurationService = configurationService;
+    }
+
+    public IdentityEventService getIdentityEventService() {
+
+        return identityEventService;
+    }
+
+    public void setIdentityEventService(IdentityEventService identityEventService) {
+
+        this.identityEventService = identityEventService;
+    }
+
+    public NotificationTemplateManager getNotificationTemplateManager() {
+
+        return notificationTemplateManager;
+    }
+
+    public void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        this.notificationTemplateManager = notificationTemplateManager;
     }
 }

@@ -32,6 +32,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
 import java.sql.Connection;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -58,6 +59,8 @@ class ComplaintServiceImplTest {
     private ComplaintDAO complaintDAO;
     @Mock
     private ComplaintEventDAO complaintEventDAO;
+    @Mock
+    private NotificationClient notificationClient;
 
     private ComplaintServiceImpl complaintService;
 
@@ -74,7 +77,7 @@ class ComplaintServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
+        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO, notificationClient);
     }
 
     @AfterEach
@@ -155,6 +158,7 @@ class ComplaintServiceImplTest {
         assertEquals("org1", captor.getValue().getOrgId());
         assertEquals("OPEN", captor.getValue().getStatus());
         assertTrue(captor.getValue().getStatutoryDueTime() > captor.getValue().getCreatedTime());
+        verify(notificationClient).notifyComplaintCreated(captor.getValue());
     }
 
     @Test
@@ -167,6 +171,7 @@ class ComplaintServiceImplTest {
 
         assertEquals("CO-5000", ex.getCode());
         assertEquals(500, ex.getStatusCode());
+        verify(notificationClient, never()).notifyComplaintCreated(any());
     }
 
     @Test
@@ -212,6 +217,7 @@ class ComplaintServiceImplTest {
         assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
         assertEquals("OPEN", captor.getValue().getToStatus());
         assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
+        verify(notificationClient).notifyComplaintCreated(complaint);
     }
 
     @Test

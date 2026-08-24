@@ -81,6 +81,12 @@ app_password= "dashboard"
 #secret_key = ""
 
 # SMTP email sender settings.
+#
+# REQUIRED for the DPDP complaint feature's email notifications (complaint created / comment
+# added - see org.wso2.dpdp.accelerator.identity.extensions's notification package) to actually
+# deliver mail: uncomment this block and fill in real SMTP credentials. Without it, notification
+# events are still resolved and triggered internally, but IS has no configured mail sender to
+# dispatch them through, so no email is ever sent.
 #[output_adapter.email]
 #from_address= "abcd@gmail.com"
 #username= "abcd"
@@ -130,8 +136,14 @@ http_method = "all"
 # the request's tenant context. The super tenant keeps the unqualified
 # /consent-portal path, since tenanted /t/carbon.super URLs are rejected unless
 # require_super_tenant_in_urls is enabled.
+#
+# The complaint-mgt endpoint needs the same treatment - it's one webapp shared
+# across every tenant, not redeployed per tenant - or /t/<tenant>/api/dpdp/
+# complaints/... 404s before it ever reaches the access_control rules below
+# (those only govern auth on a path Tomcat already dispatched; this list is
+# what makes Tomcat dispatch a /t/<tenant>/... path to the webapp at all).
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/"]
+custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 
 # The complaint-mgt endpoint is a plain JAX-RS webapp, not part of Identity
 # Server's own API resource framework, so Carbon's session/valve-based

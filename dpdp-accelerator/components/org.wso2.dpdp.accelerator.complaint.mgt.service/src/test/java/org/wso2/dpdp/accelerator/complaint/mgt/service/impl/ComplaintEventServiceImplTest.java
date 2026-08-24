@@ -31,6 +31,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
 import java.sql.Connection;
 import java.util.List;
@@ -57,6 +58,8 @@ class ComplaintEventServiceImplTest {
     private ComplaintDAO complaintDAO;
     @Mock
     private ComplaintService complaintService;
+    @Mock
+    private NotificationClient notificationClient;
 
     private ComplaintEventServiceImpl eventService;
 
@@ -75,7 +78,8 @@ class ComplaintEventServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        eventService = new ComplaintEventServiceImpl(complaintEventDAO, complaintDAO, complaintService);
+        eventService = new ComplaintEventServiceImpl(complaintEventDAO, complaintDAO, complaintService,
+                notificationClient);
     }
 
     private Complaint openComplaint() {
@@ -163,13 +167,15 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentAllowsMessageAtExactlyMaxLength() {
-        when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
+        Complaint complaint = openComplaint();
+        when(complaintService.requireComplaint("org1", "c1")).thenReturn(complaint);
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
         ComplaintEvent event = eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
         assertEquals(atLimit, event.getComment());
+        verify(notificationClient).notifyCommentAdded(complaint, event);
     }
 
     @Test
@@ -230,7 +236,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentWithValidToStatusUpdatesComplaintStatus() throws Exception {
-        when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
+        Complaint complaint = openComplaint();
+        when(complaintService.requireComplaint("org1", "c1")).thenReturn(complaint);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
@@ -241,6 +248,7 @@ class ComplaintEventServiceImplTest {
         assertEquals("OPEN", event.getFromStatus());
         assertEquals("IN_PROGRESS", event.getToStatus());
         verify(complaintDAO).updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong());
+        verify(notificationClient).notifyCommentAdded(complaint, event);
     }
 
     @Test
@@ -266,6 +274,7 @@ class ComplaintEventServiceImplTest {
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", "hello", true, null));
 
         assertEquals("CO-5000", ex.getCode());
+        verify(notificationClient, never()).notifyCommentAdded(any(), any());
     }
 
     // ---- getTimelineEntry ----

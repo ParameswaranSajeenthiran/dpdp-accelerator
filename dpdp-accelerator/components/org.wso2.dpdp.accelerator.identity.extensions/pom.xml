@@ -86,6 +86,22 @@
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.event</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.governance</groupId>
+            <artifactId>org.wso2.carbon.identity.governance</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -116,6 +132,11 @@
                     </suiteXmlFiles>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                        <!-- Mockito's inline mock maker (needed to mock final methods on Carbon
+                             classes like AbstractUserStoreManager) bundles a Byte Buddy version
+                             that predates official JDK 21 support - this is Byte Buddy's own
+                             documented opt-in to run anyway. -->
+                        <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                     </systemPropertyVariables>
                     <reuseForks>true</reuseForks>
                 </configuration>
@@ -213,8 +234,26 @@
                             org.wso2.carbon.identity.core.util;version="${carbon.identity.core.version}",
                             org.wso2.carbon.identity.organization.management.service.util;version="${carbon.identity.organization.mgt.service.version}",
                             org.wso2.carbon.identity.organization.management.service.exception;version="${carbon.identity.organization.mgt.service.version}",
+
+                            org.wso2.carbon.identity.event;version="${carbon.identity.event.version}",
+                            org.wso2.carbon.identity.event.event;version="${carbon.identity.event.version}",
+                            org.wso2.carbon.identity.event.services;version="${carbon.identity.event.version}",
+                            org.wso2.carbon.identity.event.handler;version="${carbon.identity.event.version}",
+                            org.wso2.carbon.identity.event.bean;version="${carbon.identity.event.version}",
+                            org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
+                            org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
+                            org.wso2.carbon.identity.governance.exceptions.notiification;version="${carbon.identity.governance.version}",
+                            org.osgi.service.http;version="${osgi.service.http.imp.pkg.version.range}",
+                            javax.servlet;version="${javax.servlet.imp.pkg.version.range}",
+                            javax.servlet.http;version="${javax.servlet.imp.pkg.version.range}",
                             *
                         </Import-Package>
+                        <!-- org.eclipse.equinox.http.service.api and tomcat-servlet-api both
+                             advertise the JavaServlet;version=4.0.0 OSGi contract, which bnd
+                             would otherwise use to auto-version javax.servlet/javax.servlet.http
+                             - conflicting with the explicit Import-Package versions above.
+                             Disabling contract processing lets those explicit versions win. -->
+                        <_contract>!JavaServlet</_contract>
                         <_dsannotations>*</_dsannotations>
                     </instructions>
                 </configuration>
