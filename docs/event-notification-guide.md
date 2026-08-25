@@ -34,6 +34,40 @@ administrative scopes.
 | Poll event deliveries | `notifications:events:poll` |
 | Submit delivery completion | `notifications:event-deliveries:complete` |
 
+### Configure publisher and receiver roles
+
+For application-to-application testing, create separate least-privilege roles
+instead of assigning `dpdp-consent-admin` to the publishing and receiving
+users:
+
+| Role | Assign these scopes |
+|---|---|
+| `event-publisher` | `notifications:events:write` |
+| `event-receiver` | `notifications:events:poll`, `notifications:event-deliveries:complete` |
+
+Use the exact role name `event-receiver`. In the Identity Server Console for
+the target tenant:
+
+1. Create the `event-publisher` role and grant it only the
+   `notifications:events:write` scope.
+2. Create the `event-receiver` role and grant it only the
+   `notifications:events:poll` and
+   `notifications:event-deliveries:complete` scopes.
+3. Create or select two test users. Assign `event-publisher` to the publishing
+   user and `event-receiver` to the receiving user. Do not assign either user
+   the `dpdp-consent-admin` role when testing least-privilege access.
+4. Obtain a new access token for each user after assigning the roles. Existing
+   tokens do not gain newly assigned scopes.
+5. Confirm that the publisher token contains `notifications:events:write` and
+   that the receiver token contains both receiver scopes.
+
+Use the publisher token for `POST /events`. Use the receiver token for
+`POST /events/poll` and `POST /deliveries/{deliveryId}/completion`. As negative
+authorization tests, the receiver token must be rejected when publishing an
+event, and the publisher token must be rejected when polling or submitting a
+completion. A correctly authenticated token without the required scope should
+receive HTTP `403`.
+
 ### Tenant-specific URLs
 
 Use the URL for the tenant whose data you want to access:
@@ -62,6 +96,8 @@ IS_BASE_URL="https://is.example.com:9443"
 TENANT_DOMAIN="example.com"
 API_BASE="${IS_BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
 ACCESS_TOKEN="<access-token>"
+PUBLISHER_ACCESS_TOKEN="<event-publisher-access-token>"
+RECEIVER_ACCESS_TOKEN="<event-receiver-access-token>"
 ```
 
 For the super tenant, set `API_BASE` without the `/t/<tenant>` segment.
@@ -283,7 +319,7 @@ created by the current API, use the current tenant domain as the group ID.
 
 ```sh
 curl --request POST "${API_BASE}/events" \
-  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --header "Authorization: Bearer ${PUBLISHER_ACCESS_TOKEN}" \
   --header "Content-Type: application/json" \
   --header "group-id: ${TENANT_DOMAIN}" \
   --data '{
