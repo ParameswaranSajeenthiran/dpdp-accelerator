@@ -67,6 +67,7 @@ public final class DPDPComplaintEventConstants {
     public static final String PLACEHOLDER_STATUS_LABEL = "status-label";
     public static final String PLACEHOLDER_SLA_LABEL = "sla-label";
     public static final String PLACEHOLDER_ACTION_URL = "action-url";
+    public static final String PLACEHOLDER_LOGO_URL = "logo-url";
     public static final String PLACEHOLDER_RECIPIENT_ROLE_LABEL = "recipient-role-label";
     public static final String PLACEHOLDER_HEADLINE_HTML = "headline-html";
     public static final String PLACEHOLDER_FOOTER_TEXT = "footer-text";
