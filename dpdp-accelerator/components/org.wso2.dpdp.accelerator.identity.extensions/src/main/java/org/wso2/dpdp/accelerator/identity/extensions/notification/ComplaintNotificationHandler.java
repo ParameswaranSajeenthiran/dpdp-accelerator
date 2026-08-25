@@ -58,10 +58,20 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
     // depended on directly here, since the actor role already crosses the process boundary as a
     // plain string (see NotificationClient's event properties).
     private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
-    private static final String STATUS_RESOLVED = "RESOLVED";
+    // Mirrors the portal frontend's own status labels exactly (complaintDisplay.ts's
+    // STATUS_LABEL_KEYS + public/i18n/en/common.json's complaints.status.* strings) rather than a
+    // narrative computed here, so the same complaint shows the same status word in both places.
+    private static final Map<String, String> STATUS_LABELS = buildStatusLabels();
     private static final String ROLE_LABEL_GRIEVANCE_OFFICER = "Grievance Officer";
     private static final String ROLE_LABEL_DATA_PRINCIPAL = "Data Principal";
-    private static final String COMPLAINT_DEEP_LINK_PATH = "/consent-portal/complaints/";
+    // The portal has two separate routes for the same complaint (App.tsx): "/complaints/:id" is
+    // the citizen's own self-service view (COMPLAINTS_READ_SELF scope, backed by the /me/
+    // complaints/{id} API), "/complaint-management/:id" is the officer's view (COMPLAINTS_READ_ANY
+    // scope, backed by /complaints/{id}). Linking an officer to the citizen route 404s (the /me/
+    // API only ever resolves the caller's own complaints) - so which path to use depends on who
+    // this email is actually going to, not just the complaint id.
+    private static final String CREATOR_DEEP_LINK_PATH = "/consent-portal/complaints/";
+    private static final String OFFICER_DEEP_LINK_PATH = "/consent-portal/complaint-management/";
     // Same PNG the portal itself serves next to its "Consent Portal" brand title (see
     // MainLayout.tsx's Header.BrandLogo) - referenced by a hosted URL rather than embedded as a
     // data: URI, since several mail clients strip inline base64 images.
@@ -142,12 +152,10 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
                 .orElse(ROLE_LABEL_DATA_PRINCIPAL);
 
         String actorName;
-        String nextActionRoleLabel;
         if (!DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType)) {
             // A new complaint was filed - the citizen who filed it is both the actor and the
             // data principal.
             actorName = dataPrincipalName;
-            nextActionRoleLabel = ROLE_LABEL_GRIEVANCE_OFFICER;
         } else if (notifyingCreator) {
             String actorUserId = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_USER_ID);
             String actorUserName = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_USER_NAME);
@@ -156,24 +164,23 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
                     .map(username -> ComplaintNotificationRecipientResolver.resolveDisplayName(username,
                             tenantDomain))
                     .orElse(ROLE_LABEL_GRIEVANCE_OFFICER);
-            nextActionRoleLabel = ROLE_LABEL_DATA_PRINCIPAL;
         } else {
             actorName = dataPrincipalName;
-            nextActionRoleLabel = ROLE_LABEL_GRIEVANCE_OFFICER;
         }
 
         String status = (String) properties.get(DPDPComplaintEventConstants.PROP_STATUS);
-        String statusLabel = STATUS_RESOLVED.equals(status) ? humanize(status) : "Waiting on " + nextActionRoleLabel;
+        String statusLabel = STATUS_LABELS.getOrDefault(status, humanize(status));
 
         String complaintId = (String) properties.get(DPDPComplaintEventConstants.PROP_COMPLAINT_ID);
+        String deepLinkPath = notifyingCreator ? CREATOR_DEEP_LINK_PATH : OFFICER_DEEP_LINK_PATH;
         String actionUrl = complaintId == null ? IdentityUtil.getServerURL("/consent-portal/", true, false)
-                : IdentityUtil.getServerURL(COMPLAINT_DEEP_LINK_PATH + complaintId, true, false);
+                : IdentityUtil.getServerURL(deepLinkPath + complaintId, true, false);
 
         String referenceId = (String) properties.get(DPDPComplaintEventConstants.PROP_REFERENCE_ID);
         boolean isCommentAdded = DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType);
         String verb = isCommentAdded ? "replied to complaint" : "filed a new complaint";
         String headlineHtml = "<strong>" + htmlEscape(actorName) + "</strong> " + verb + " <strong>"
-                + htmlEscape(referenceId) + "</strong>. It's now waiting on you.";
+                + htmlEscape(referenceId) + "</strong>.";
         String footerText = notifyingCreator
                 ? "You're receiving this because you filed this complaint."
                 : "You're receiving this because you're the assigned Grievance Officer - this is an "
@@ -208,6 +215,17 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
             return "";
         }
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    private static Map<String, String> buildStatusLabels() {
+
+        Map<String, String> labels = new HashMap<>();
+        labels.put("OPEN", "Open");
+        labels.put("IN_PROGRESS", "In Progress");
+        labels.put("WAITING_ON_CLIENT", "Waiting on Client");
+        labels.put("AWAITING_INTERNAL_REVIEW", "Waiting on Internal Review");
+        labels.put("RESOLVED", "Resolved");
+        return labels;
     }
 
     /** {@code "UNAUTHORIZED_DATA_SHARING"} / {@code "CRITICAL"} -> {@code "Unauthorized Data Sharing"} / {@code "Critical"}. */
