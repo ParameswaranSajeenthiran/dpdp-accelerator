@@ -74,6 +74,12 @@ class NotificationClientTest {
         assertEquals("c1", props.get("complaint-id"));
         assertEquals("CMP-2026-00001", props.get("reference-id"));
         assertEquals("DATA_BREACH", props.get("category"));
+        assertEquals("CRITICAL", props.get("priority"));
+        assertEquals("OPEN", props.get("status"));
+        assertEquals("3", props.get("statutory-due-time"));
+        assertEquals("user1", props.get("creator-user-id"));
+        assertEquals("User One", props.get("creator-user-name"));
+        assertEquals("desc", props.get("message-excerpt"));
     }
 
     @Test
@@ -89,6 +95,8 @@ class NotificationClientTest {
         Map<String, Object> props = captor.getValue().getEventProperties();
         assertEquals("ComplaintCommentAdded", props.get("notification-type"));
         assertEquals("COMPLAINT_OFFICER", props.get("actor-role"));
+        assertEquals("officer1", props.get("actor-user-id"));
+        assertEquals("Officer One", props.get("actor-user-name"));
         assertEquals("hello there", props.get("message-excerpt"));
         assertEquals("user1", props.get("creator-user-id"));
         assertEquals("User One", props.get("creator-user-name"));

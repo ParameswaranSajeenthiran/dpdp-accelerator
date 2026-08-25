@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.base.IdentityRuntimeException;
 import org.wso2.carbon.identity.core.bean.context.MessageContext;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.bean.IdentityEventMessageContext;
@@ -32,8 +33,10 @@ import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtens
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles the DPDP complaint notification event: resolves who to notify (complaint officers, or
@@ -50,6 +53,15 @@ import java.util.Optional;
 public class ComplaintNotificationHandler extends AbstractEventHandler {
 
     private static final Log LOG = LogFactory.getLog(ComplaintNotificationHandler.class);
+
+    // Mirrors ComplaintActorRole.COMPLAINT_OFFICER.name() from the complaint.mgt.dao module - not
+    // depended on directly here, since the actor role already crosses the process boundary as a
+    // plain string (see NotificationClient's event properties).
+    private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
+    private static final String STATUS_RESOLVED = "RESOLVED";
+    private static final String ROLE_LABEL_GRIEVANCE_OFFICER = "Grievance Officer";
+    private static final String ROLE_LABEL_DATA_PRINCIPAL = "Data Principal";
+    private static final String COMPLAINT_DEEP_LINK_PATH = "/consent-portal/complaints/";
 
     @Override
     public boolean canHandle(MessageContext messageContext) throws IdentityRuntimeException {
@@ -75,30 +87,29 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
             return;
         }
 
+        String actorRole = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_ROLE);
+        boolean notifyingCreator = DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType)
+                && ACTOR_ROLE_COMPLAINT_OFFICER.equals(actorRole);
+
         List<ComplaintNotificationRecipientResolver.Recipient> recipients = resolveRecipients(properties,
-                tenantDomain, notificationType);
+                tenantDomain, notifyingCreator);
         if (recipients.isEmpty()) {
             LOG.warn("No recipients resolved for a '" + notificationType + "' complaint notification in tenant '"
                     + tenantDomain + "'; nothing to send.");
             return;
         }
 
+        Map<String, Object> placeholders = buildTemplatePlaceholders(properties, tenantDomain, notificationType,
+                notifyingCreator);
         for (ComplaintNotificationRecipientResolver.Recipient recipient : recipients) {
-            triggerNotification(recipient, tenantDomain, notificationType, properties);
+            triggerNotification(recipient, tenantDomain, notificationType, placeholders);
         }
     }
 
     private List<ComplaintNotificationRecipientResolver.Recipient> resolveRecipients(Map<String, Object> properties,
-            String tenantDomain, String notificationType) {
+            String tenantDomain, boolean notifyingCreator) {
 
-        String actorRole = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_ROLE);
-        // "COMPLAINT_OFFICER" mirrors ComplaintActorRole.COMPLAINT_OFFICER.name() from the
-        // complaint.mgt.dao module - not depended on directly here, since the actor role already
-        // crosses the process boundary as a plain string (see DPDPNotificationServlet's payload).
-        boolean notifyCreator = DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType)
-                && "COMPLAINT_OFFICER".equals(actorRole);
-
-        if (!notifyCreator) {
+        if (!notifyingCreator) {
             // Either the complaint was just created (always notify officers), or a citizen
             // commented (notify officers) - both resolve to the same officer-role lookup.
             return ComplaintNotificationRecipientResolver.resolveOfficers(tenantDomain);
@@ -112,25 +123,143 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
     }
 
     /**
+     * Computes every display-ready placeholder the two HTML templates reference (see
+     * {@link EmailTemplateProvisioningUtil}) - the same values for every recipient of a given
+     * event, since they describe the complaint/comment itself rather than who's reading it.
+     */
+    private Map<String, Object> buildTemplatePlaceholders(Map<String, Object> properties, String tenantDomain,
+            String notificationType, boolean notifyingCreator) {
+
+        String creatorUserId = (String) properties.get(DPDPComplaintEventConstants.PROP_CREATOR_USER_ID);
+        String creatorUserName = (String) properties.get(DPDPComplaintEventConstants.PROP_CREATOR_USER_NAME);
+        String dataPrincipalName = ComplaintNotificationRecipientResolver
+                .resolveUsername(creatorUserId, creatorUserName, tenantDomain)
+                .map(username -> ComplaintNotificationRecipientResolver.resolveDisplayName(username, tenantDomain))
+                .orElse(ROLE_LABEL_DATA_PRINCIPAL);
+
+        String actorName;
+        String nextActionRoleLabel;
+        if (!DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType)) {
+            // A new complaint was filed - the citizen who filed it is both the actor and the
+            // data principal.
+            actorName = dataPrincipalName;
+            nextActionRoleLabel = ROLE_LABEL_GRIEVANCE_OFFICER;
+        } else if (notifyingCreator) {
+            String actorUserId = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_USER_ID);
+            String actorUserName = (String) properties.get(DPDPComplaintEventConstants.PROP_ACTOR_USER_NAME);
+            actorName = ComplaintNotificationRecipientResolver.resolveUsername(actorUserId, actorUserName,
+                    tenantDomain)
+                    .map(username -> ComplaintNotificationRecipientResolver.resolveDisplayName(username,
+                            tenantDomain))
+                    .orElse(ROLE_LABEL_GRIEVANCE_OFFICER);
+            nextActionRoleLabel = ROLE_LABEL_DATA_PRINCIPAL;
+        } else {
+            actorName = dataPrincipalName;
+            nextActionRoleLabel = ROLE_LABEL_GRIEVANCE_OFFICER;
+        }
+
+        String status = (String) properties.get(DPDPComplaintEventConstants.PROP_STATUS);
+        String statusLabel = STATUS_RESOLVED.equals(status) ? humanize(status) : "Waiting on " + nextActionRoleLabel;
+
+        String complaintId = (String) properties.get(DPDPComplaintEventConstants.PROP_COMPLAINT_ID);
+        String actionUrl = complaintId == null ? IdentityUtil.getServerURL("/consent-portal/", true, false)
+                : IdentityUtil.getServerURL(COMPLAINT_DEEP_LINK_PATH + complaintId, true, false);
+
+        String referenceId = (String) properties.get(DPDPComplaintEventConstants.PROP_REFERENCE_ID);
+        boolean isCommentAdded = DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType);
+        String verb = isCommentAdded ? "replied to complaint" : "filed a new complaint";
+        String headlineHtml = "<strong>" + htmlEscape(actorName) + "</strong> " + verb + " <strong>"
+                + htmlEscape(referenceId) + "</strong>. It's now waiting on you.";
+        String footerText = notifyingCreator
+                ? "You're receiving this because you filed this complaint."
+                : "You're receiving this because you're the assigned Grievance Officer - this is an "
+                        + "automated notification, please don't reply directly to it.";
+
+        Map<String, Object> placeholders = new HashMap<>();
+        placeholders.put(DPDPComplaintEventConstants.PROP_REFERENCE_ID, referenceId);
+        placeholders.put(DPDPComplaintEventConstants.PROP_MESSAGE_EXCERPT,
+                properties.get(DPDPComplaintEventConstants.PROP_MESSAGE_EXCERPT));
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_DATA_PRINCIPAL_NAME, dataPrincipalName);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_ACTOR_NAME, actorName);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_CATEGORY_LABEL,
+                humanize((String) properties.get(DPDPComplaintEventConstants.PROP_CATEGORY)));
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_PRIORITY_LABEL,
+                humanize((String) properties.get(DPDPComplaintEventConstants.PROP_PRIORITY)));
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_STATUS_LABEL, statusLabel);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_SLA_LABEL,
+                slaLabel((String) properties.get(DPDPComplaintEventConstants.PROP_STATUTORY_DUE_TIME)));
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_ACTION_URL, actionUrl);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_RECIPIENT_ROLE_LABEL,
+                notifyingCreator ? ROLE_LABEL_DATA_PRINCIPAL : ROLE_LABEL_GRIEVANCE_OFFICER);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_HEADLINE_HTML, headlineHtml);
+        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_FOOTER_TEXT, footerText);
+        return placeholders;
+    }
+
+    private static String htmlEscape(String value) {
+
+        if (value == null) {
+            return "";
+        }
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    /** {@code "UNAUTHORIZED_DATA_SHARING"} / {@code "CRITICAL"} -> {@code "Unauthorized Data Sharing"} / {@code "Critical"}. */
+    private static String humanize(String value) {
+
+        if (value == null || value.trim().isEmpty()) {
+            return "";
+        }
+        StringBuilder result = new StringBuilder();
+        for (String word : value.trim().split("_")) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (result.length() > 0) {
+                result.append(' ');
+            }
+            result.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1).toLowerCase(Locale.ENGLISH));
+        }
+        return result.toString();
+    }
+
+    private static String slaLabel(String statutoryDueTimeMillis) {
+
+        if (statutoryDueTimeMillis == null) {
+            return "";
+        }
+        try {
+            long dueTime = Long.parseLong(statutoryDueTimeMillis);
+            long remainingMillis = dueTime - System.currentTimeMillis();
+            long remainingDays = (long) Math.ceil(remainingMillis / (double) TimeUnit.DAYS.toMillis(1));
+            if (remainingDays > 1) {
+                return remainingDays + " days left";
+            } else if (remainingDays == 1) {
+                return "1 day left";
+            } else if (remainingDays == 0) {
+                return "Due today";
+            }
+            long overdueDays = Math.abs(remainingDays);
+            return "Overdue by " + overdueDays + (overdueDays == 1 ? " day" : " days");
+        } catch (NumberFormatException e) {
+            return "";
+        }
+    }
+
+    /**
      * Fires a standard {@code TRIGGER_NOTIFICATION} event for one recipient - the compulsory
      * attributes IS's own notification handler expects are {@code send-to}, {@code user-name} and
      * a template type (see {@link DPDPComplaintEventConstants}).
      */
     private void triggerNotification(ComplaintNotificationRecipientResolver.Recipient recipient,
-            String tenantDomain, String notificationType, Map<String, Object> complaintProperties) {
+            String tenantDomain, String notificationType, Map<String, Object> placeholders) {
 
-        Map<String, Object> triggerProperties = new HashMap<>();
+        Map<String, Object> triggerProperties = new HashMap<>(placeholders);
         triggerProperties.put(DPDPComplaintEventConstants.TRIGGER_PROP_SEND_TO, recipient.getEmail());
         triggerProperties.put(IdentityEventConstants.EventProperty.USER_NAME, recipient.getUsername());
         triggerProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
         triggerProperties.put(DPDPComplaintEventConstants.TRIGGER_PROP_TEMPLATE_TYPE, notificationType);
-        // Placeholders the registered email template body/subject reference.
-        triggerProperties.put(DPDPComplaintEventConstants.PROP_REFERENCE_ID,
-                complaintProperties.get(DPDPComplaintEventConstants.PROP_REFERENCE_ID));
-        triggerProperties.put(DPDPComplaintEventConstants.PROP_CATEGORY,
-                complaintProperties.get(DPDPComplaintEventConstants.PROP_CATEGORY));
-        triggerProperties.put(DPDPComplaintEventConstants.PROP_MESSAGE_EXCERPT,
-                complaintProperties.get(DPDPComplaintEventConstants.PROP_MESSAGE_EXCERPT));
 
         Event triggerEvent = new Event(IdentityEventConstants.Event.TRIGGER_NOTIFICATION, triggerProperties);
         try {

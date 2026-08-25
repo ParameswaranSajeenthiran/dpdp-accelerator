@@ -41,7 +41,7 @@ diagrams. This file is the "what actually changed" companion to that design doc.
   real templated-email + SMTP dispatch.
 - `notification/ComplaintNotificationRecipientResolver.java` — role-membership lookup
   (`dpdp-consent-admin`, via `RoleManagementService`) and email-claim lookup
-  (`http://wso2.org/claims/email`, via `RealmService`/`AbstractUserStoreManager`), mirroring
+  (`http://wso2.org/claims/emailaddress`, via `RealmService`/`AbstractUserStoreManager`), mirroring
   `DPDPConsentPortalRoleProvisioningUtil`'s existing role pattern and
   financial-services-accelerator's `SMSNotificationProvider` claim-lookup pattern.
 - `notification/EmailTemplateProvisioningUtil.java` — auto-provisions the two email templates
@@ -139,6 +139,32 @@ branch for the prior implementation).
    credentials. Without this, notifications are still resolved and triggered internally, but IS
    has no configured sender to dispatch through.
 2. Nothing else — email templates are auto-provisioned per tenant, roles/scopes already exist.
+   `[[event_handler]]` activation (see below) is already in the repo's deployment.toml template.
+
+## Bugs found and fixed during live end-to-end testing
+
+Two issues only surfaced once actually running against a live IS 7.3.0 instance — neither is
+catchable by the unit test suite, since both are IS runtime/config-wiring concerns, not logic bugs:
+
+1. **Registering `ComplaintNotificationHandler` as an OSGi `AbstractEventHandler` service is not
+   enough to activate it.** IS's identity-event framework additionally requires an explicit
+   `[[event_handler]]` entry in `deployment.toml` (`name` + `subscriptions`) or it never even calls
+   `canHandle()`/`handleEvent()` — logging `Properties for <name> is not configured. This event
+   handler will not be activated` instead. Fixed by adding, in
+   `wso2is-7.3.0-deployment.toml`:
+   ```toml
+   [[event_handler]]
+   name = "dpdpComplaintNotificationHandler"
+   subscriptions = ["DPDP_COMPLAINT_NOTIFICATION_EVENT"]
+   ```
+   following the same pattern FSA uses for its own custom handlers (e.g.
+   `name = "userPostSelfRegistration"`, `subscriptions = ["POST_ADD_USER"]`).
+2. **Wrong email claim URI.** `ComplaintNotificationRecipientResolver` looked up
+   `http://wso2.org/claims/email`, which doesn't exist in this IS instance's claim config — it
+   failed with `UserStoreClientException: Mapped attribute cannot be found for claim :
+   http://wso2.org/claims/email in user store : PRIMARY`. The correct URI, confirmed against
+   `repository/conf/claim-config.xml`, is `http://wso2.org/claims/emailaddress`. Fixed in
+   `ComplaintNotificationRecipientResolver` (and both of its tests).
 
 ## Test infrastructure fixes
 

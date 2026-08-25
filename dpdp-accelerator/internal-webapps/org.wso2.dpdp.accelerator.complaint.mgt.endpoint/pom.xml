@@ -44,6 +44,35 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--
+            complaint.mgt.service's NotificationClient references IdentityEventService (provided
+            scope there, so not transitive). Declared here too so this module's own tests that
+            construct real handler/service graphs (e.g. ComplaintCommentHandlerTest
+            #noArgsConstructorWiresRealServices) don't hit NoClassDefFoundError; at actual runtime
+            the class is already on Carbon's OSGi classpath, same as in complaint.mgt.service.
+        -->
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.event</artifactId>
+            <!--
+                Transitively pulls axis2-transport-mail -> axis2-kernel -> javax.ws.rs:jsr311-api
+                1.0 (the pre-JAX-RS-2.0 API artifact). That jar also defines javax.ws.rs.core
+                .Response, just without readEntity()/getMediaType() (added in JAX-RS 2.0) - with
+                both jars on the classpath, whichever loads first wins, so this module's own
+                Jersey/JAX-RS 2.1 code (javax.ws.rs-api below) could silently break depending on
+                classpath order. Excluded rather than relying on Maven's nearest-wins mediation,
+                since jsr311-api and javax.ws.rs-api are different artifactIds entirely - Maven
+                only mediates versions of the *same* artifact, so this conflict isn't otherwise
+                resolvable.
+            -->
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
