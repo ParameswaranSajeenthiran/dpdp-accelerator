@@ -64,15 +64,9 @@ public final class EmailTemplateProvisioningUtil {
                     + "<table role=\"presentation\" width=\"560\" cellpadding=\"0\" cellspacing=\"0\" "
                     + "style=\"background-color:#ffffff;border:1px solid #e5e7eb;border-radius:12px;"
                     + "font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;\">"
-                    // Header: brand + module eyebrow.
-                    + "<tr><td style=\"padding:20px 28px;border-bottom:1px solid #e5e7eb;\">"
-                    + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>"
-                    + "<td style=\"font-size:16px;font-weight:700;color:#111827;\">"
-                    + "<img src=\"{{logo-url}}\" width=\"20\" height=\"20\" alt=\"\" "
-                    + "style=\"vertical-align:middle;margin-right:8px;border:0;\"/>Consent Portal</td>"
-                    + "<td align=\"right\" style=\"font-size:11px;font-weight:600;letter-spacing:0.06em;"
-                    + "color:#9ca3af;text-transform:uppercase;\">Grievance Console</td>"
-                    + "</tr></table></td></tr>"
+                    // Header: brand.
+                    + "<tr><td style=\"padding:20px 28px;border-bottom:1px solid #e5e7eb;"
+                    + "font-size:16px;font-weight:700;color:#111827;\">Consent Portal</td></tr>"
                     // Body: badge, headline, detail card, quoted message, action button.
                     + "<tr><td style=\"padding:28px;\">"
                     + "<span style=\"display:inline-block;background-color:#fee2e2;color:#b91c1c;"
