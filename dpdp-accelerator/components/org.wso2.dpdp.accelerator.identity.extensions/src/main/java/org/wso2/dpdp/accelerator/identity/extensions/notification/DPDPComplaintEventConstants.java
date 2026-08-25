@@ -46,10 +46,30 @@ public final class DPDPComplaintEventConstants {
     public static final String PROP_COMPLAINT_ID = "complaint-id";
     public static final String PROP_REFERENCE_ID = "reference-id";
     public static final String PROP_CATEGORY = "category";
+    public static final String PROP_PRIORITY = "priority";
+    public static final String PROP_STATUS = "status";
+    public static final String PROP_STATUTORY_DUE_TIME = "statutory-due-time";
     public static final String PROP_ACTOR_ROLE = "actor-role";
+    public static final String PROP_ACTOR_USER_ID = "actor-user-id";
+    public static final String PROP_ACTOR_USER_NAME = "actor-user-name";
     public static final String PROP_MESSAGE_EXCERPT = "message-excerpt";
     public static final String PROP_CREATOR_USER_ID = "creator-user-id";
     public static final String PROP_CREATOR_USER_NAME = "creator-user-name";
+
+    // Placeholder keys the two email templates reference (see EmailTemplateProvisioningUtil).
+    // Computed once in ComplaintNotificationHandler#buildTemplatePlaceholders from the raw
+    // properties above, since only that class has RealmService access to resolve a display name
+    // from a username, and only it knows which of the two notification directions is in play.
+    public static final String PLACEHOLDER_DATA_PRINCIPAL_NAME = "data-principal-name";
+    public static final String PLACEHOLDER_ACTOR_NAME = "actor-name";
+    public static final String PLACEHOLDER_CATEGORY_LABEL = "category-label";
+    public static final String PLACEHOLDER_PRIORITY_LABEL = "priority-label";
+    public static final String PLACEHOLDER_STATUS_LABEL = "status-label";
+    public static final String PLACEHOLDER_SLA_LABEL = "sla-label";
+    public static final String PLACEHOLDER_ACTION_URL = "action-url";
+    public static final String PLACEHOLDER_RECIPIENT_ROLE_LABEL = "recipient-role-label";
+    public static final String PLACEHOLDER_HEADLINE_HTML = "headline-html";
+    public static final String PLACEHOLDER_FOOTER_TEXT = "footer-text";
 
     /**
      * Property keys IS's own already-registered internal notification handler expects on a

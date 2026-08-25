@@ -52,7 +52,7 @@ public class ComplaintNotificationRecipientResolverTest {
     private static final String ROLE_AUDIENCE = "application";
     private static final String ADMIN_ROLE_ID = "admin-role-id";
     private static final int TENANT_ID = 1;
-    private static final String EMAIL_CLAIM = "http://wso2.org/claims/email";
+    private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
 
     @Mock
     private ApplicationManagementService applicationManagementService;

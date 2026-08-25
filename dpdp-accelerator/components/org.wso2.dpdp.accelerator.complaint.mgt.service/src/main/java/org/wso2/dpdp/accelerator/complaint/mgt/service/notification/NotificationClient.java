@@ -60,7 +60,12 @@ public class NotificationClient {
     private static final String PROP_COMPLAINT_ID = "complaint-id";
     private static final String PROP_REFERENCE_ID = "reference-id";
     private static final String PROP_CATEGORY = "category";
+    private static final String PROP_PRIORITY = "priority";
+    private static final String PROP_STATUS = "status";
+    private static final String PROP_STATUTORY_DUE_TIME = "statutory-due-time";
     private static final String PROP_ACTOR_ROLE = "actor-role";
+    private static final String PROP_ACTOR_USER_ID = "actor-user-id";
+    private static final String PROP_ACTOR_USER_NAME = "actor-user-name";
     private static final String PROP_MESSAGE_EXCERPT = "message-excerpt";
     private static final String PROP_CREATOR_USER_ID = "creator-user-id";
     private static final String PROP_CREATOR_USER_NAME = "creator-user-name";
@@ -90,6 +95,12 @@ public class NotificationClient {
         putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
         putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
         putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
+        putIfPresent(properties, PROP_PRIORITY, complaint.getPriority());
+        putIfPresent(properties, PROP_STATUS, complaint.getStatus());
+        properties.put(PROP_STATUTORY_DUE_TIME, String.valueOf(complaint.getStatutoryDueTime()));
+        putIfPresent(properties, PROP_CREATOR_USER_ID, complaint.getUserId());
+        putIfPresent(properties, PROP_CREATOR_USER_NAME, complaint.getUserName());
+        putIfPresent(properties, PROP_MESSAGE_EXCERPT, excerpt(complaint.getDescription()));
         fire(properties);
     }
 
@@ -105,7 +116,12 @@ public class NotificationClient {
         putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
         putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
         putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
+        putIfPresent(properties, PROP_PRIORITY, complaint.getPriority());
+        putIfPresent(properties, PROP_STATUS, complaint.getStatus());
+        properties.put(PROP_STATUTORY_DUE_TIME, String.valueOf(complaint.getStatutoryDueTime()));
         putIfPresent(properties, PROP_ACTOR_ROLE, event.getActorRole());
+        putIfPresent(properties, PROP_ACTOR_USER_ID, event.getActorUserId());
+        putIfPresent(properties, PROP_ACTOR_USER_NAME, event.getActorUserName());
         putIfPresent(properties, PROP_MESSAGE_EXCERPT, excerpt(event.getComment()));
         putIfPresent(properties, PROP_CREATOR_USER_ID, complaint.getUserId());
         putIfPresent(properties, PROP_CREATOR_USER_NAME, complaint.getUserName());

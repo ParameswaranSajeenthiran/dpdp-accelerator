@@ -45,7 +45,9 @@ import java.util.Optional;
 public final class ComplaintNotificationRecipientResolver {
 
     private static final Log LOG = LogFactory.getLog(ComplaintNotificationRecipientResolver.class);
-    private static final String EMAIL_CLAIM = "http://wso2.org/claims/email";
+    private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
+    private static final String GIVEN_NAME_CLAIM = "http://wso2.org/claims/givenname";
+    private static final String LAST_NAME_CLAIM = "http://wso2.org/claims/lastname";
     private static final String ROLE_AUDIENCE = "application";
 
     private ComplaintNotificationRecipientResolver() {
@@ -120,17 +122,30 @@ public final class ComplaintNotificationRecipientResolver {
      */
     public static Optional<Recipient> resolveCreator(String userId, String userName, String tenantDomain) {
 
-        String resolvedUsername = userName != null && !userName.trim().isEmpty() ? userName.trim() : null;
-        if (resolvedUsername == null) {
-            resolvedUsername = resolveUsernameById(userId, tenantDomain).orElse(null);
-        }
-        if (resolvedUsername == null) {
+        Optional<String> resolvedUsername = resolveUsername(userId, userName, tenantDomain);
+        if (!resolvedUsername.isPresent()) {
             LOG.warn("Could not resolve a username for complaint creator (userId: " + userId + ") in tenant '"
                     + tenantDomain + "'; cannot notify them.");
             return Optional.empty();
         }
-        String username = resolvedUsername;
+        String username = resolvedUsername.get();
         return resolveEmail(username, tenantDomain).map(email -> new Recipient(username, email));
+    }
+
+    /**
+     * Resolves a username given either a username or a user id - preferring the username when
+     * present (a citizen self-service complaint can have a {@code null} username; see
+     * {@code Complaint#getUserName()}, only populated when the portal app's OIDC client is
+     * configured with a username access-token attribute), falling back to resolving it from the
+     * stored user id otherwise. Used both to resolve a notification recipient and, separately, to
+     * resolve a display name for a template placeholder for the same person.
+     */
+    public static Optional<String> resolveUsername(String userId, String userName, String tenantDomain) {
+
+        if (userName != null && !userName.trim().isEmpty()) {
+            return Optional.of(userName.trim());
+        }
+        return resolveUsernameById(userId, tenantDomain);
     }
 
     private static Optional<String> resolveUsernameById(String userId, String tenantDomain) {
@@ -154,6 +169,38 @@ public final class ComplaintNotificationRecipientResolver {
         } catch (Exception e) {
             LOG.error("Error resolving username for user id '" + userId + "' in tenant: " + tenantDomain, e);
             return Optional.empty();
+        }
+    }
+
+    /**
+     * Resolves a display name ("Given Family") for a template placeholder (e.g. the "Data
+     * Principal" or "replied" actor name shown in a notification email). Falls back to the
+     * username itself when the given-name/last-name claims aren't populated, so a missing profile
+     * field never blocks the notification the way a missing email claim does.
+     */
+    public static String resolveDisplayName(String username, String tenantDomain) {
+
+        try {
+            int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
+            UserRealm userRealm = DPDPIdentityExtensionDataHolder.getInstance().getRealmService()
+                    .getTenantUserRealm(tenantId);
+            if (userRealm == null) {
+                return username;
+            }
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            if (!(userStoreManager instanceof AbstractUserStoreManager)) {
+                return username;
+            }
+            AbstractUserStoreManager abstractUserStoreManager = (AbstractUserStoreManager) userStoreManager;
+            String givenName = abstractUserStoreManager.getUserClaimValue(username, GIVEN_NAME_CLAIM, null);
+            String lastName = abstractUserStoreManager.getUserClaimValue(username, LAST_NAME_CLAIM, null);
+            String displayName = ((givenName == null ? "" : givenName.trim()) + " "
+                    + (lastName == null ? "" : lastName.trim())).trim();
+            return displayName.isEmpty() ? username : displayName;
+        } catch (Exception e) {
+            LOG.warn("Error resolving display name for user '" + username + "' in tenant: " + tenantDomain
+                    + "; falling back to the username.", e);
+            return username;
         }
     }
 

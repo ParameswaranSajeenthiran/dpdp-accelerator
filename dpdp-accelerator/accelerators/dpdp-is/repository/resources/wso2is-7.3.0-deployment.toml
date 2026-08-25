@@ -102,6 +102,19 @@ app_password= "dashboard"
 # IS_ADMIN_PASSWORD placeholders that configure.sh substitutes.
 # =============================================================================
 
+# Activates the complaint notification event handler registered by
+# org.wso2.dpdp.accelerator.identity.extensions (ComplaintNotificationHandler). IS's
+# identity-event framework does not auto-activate a registered AbstractEventHandler OSGi
+# service just because it exists - without a matching [[event_handler]] entry here, IS logs
+# "Properties for dpdpComplaintNotificationHandler is not configured" at startup and never
+# invokes canHandle()/handleEvent() on it at all, regardless of the OSGi registration. The
+# name must exactly match ComplaintNotificationHandler#getName() (NOTIFICATION_HANDLER_NAME)
+# and subscriptions must include the custom event name it fires on
+# (DPDPComplaintEventConstants#COMPLAINT_NOTIFICATION_EVENT).
+[[event_handler]]
+name = "dpdpComplaintNotificationHandler"
+subscriptions = ["DPDP_COMPLAINT_NOTIFICATION_EVENT"]
+
 # Enables the consent management v2 API used by the consent portal. This single
 # switch also re-renders repository/conf/identity/resource-access-control-v2.xml
 # with the v2 rules and registers the v2 API resources together with their

@@ -20,7 +20,10 @@ package org.wso2.dpdp.accelerator.identity.extensions.notification;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
@@ -29,6 +32,7 @@ import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.bean.IdentityEventMessageContext;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.identity.role.v2.mgt.core.model.UserBasicInfo;
@@ -44,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -61,7 +66,7 @@ public class ComplaintNotificationHandlerTest {
     private static final String ROLE_AUDIENCE = "application";
     private static final String ADMIN_ROLE_ID = "admin-role-id";
     private static final int TENANT_ID = 1;
-    private static final String EMAIL_CLAIM = "http://wso2.org/claims/email";
+    private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
 
     @Mock
     private IdentityEventService identityEventService;
@@ -79,11 +84,19 @@ public class ComplaintNotificationHandlerTest {
     private TenantManager tenantManager;
 
     private ComplaintNotificationHandler handler;
+    private MockedStatic<IdentityUtil> identityUtilMock;
 
     @BeforeMethod
     public void setUp() throws Exception {
 
         MockitoAnnotations.openMocks(this);
+        // IdentityUtil.getServerURL(...) resolves against IS's own bootstrap-populated
+        // ConfigurationContextService, which is never set in a bare unit test - statically mocked
+        // here rather than left to throw, since ComplaintNotificationHandler calls it to build the
+        // "Review & Reply" action link for every email it sends.
+        identityUtilMock = Mockito.mockStatic(IdentityUtil.class);
+        identityUtilMock.when(() -> IdentityUtil.getServerURL(anyString(), anyBoolean(), anyBoolean()))
+                .thenReturn("https://localhost:9443/consent-portal/");
         DPDPIdentityExtensionDataHolder.getInstance().setIdentityEventService(identityEventService);
         DPDPIdentityExtensionDataHolder.getInstance().setApplicationManagementService(applicationManagementService);
         DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(roleManagementService);
@@ -107,6 +120,12 @@ public class ComplaintNotificationHandlerTest {
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
 
         handler = new ComplaintNotificationHandler();
+    }
+
+    @AfterMethod
+    public void tearDown() {
+
+        identityUtilMock.close();
     }
 
     private static Event customEvent(Map<String, Object> properties) {

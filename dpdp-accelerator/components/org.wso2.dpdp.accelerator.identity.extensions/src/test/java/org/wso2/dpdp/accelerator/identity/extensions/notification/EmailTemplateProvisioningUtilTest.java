@@ -32,10 +32,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -56,10 +54,7 @@ public class EmailTemplateProvisioningUtilTest {
     }
 
     @Test
-    public void provisionTemplatesCreatesBothTemplatesWhenNeitherExists() throws Exception {
-
-        when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
-                eq(TENANT_DOMAIN))).thenReturn(null);
+    public void provisionTemplatesWritesBothTemplates() throws Exception {
 
         EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
 
@@ -82,45 +77,28 @@ public class EmailTemplateProvisioningUtilTest {
     }
 
     @Test
-    public void provisionTemplatesSkipsATemplateThatAlreadyExists() throws Exception {
+    public void provisionTemplatesStillWritesContentWhenTheTypeIsAlreadyRegistered() throws Exception {
 
-        NotificationTemplate existing = new NotificationTemplate();
-        existing.setType(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED);
-        when(notificationTemplateManager.getNotificationTemplate(EMAIL_CHANNEL,
-                DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED, DEFAULT_LOCALE, TENANT_DOMAIN))
-                .thenReturn(existing);
-        when(notificationTemplateManager.getNotificationTemplate(EMAIL_CHANNEL,
-                DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED, DEFAULT_LOCALE, TENANT_DOMAIN))
-                .thenReturn(null);
-
-        EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
-
-        verify(notificationTemplateManager, never()).addNotificationTemplateType(
-                eq(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED), anyString(), anyString());
-        verify(notificationTemplateManager).addNotificationTemplateType(
-                eq(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED), eq(EMAIL_CHANNEL),
-                eq(TENANT_DOMAIN));
-    }
-
-    @Test
-    public void provisionTemplatesStillAttemptsCreationWhenLookupThrows() throws Exception {
-
-        when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
-                eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException("not found"));
-
-        EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
-
-        verify(notificationTemplateManager, times(2)).addNotificationTemplateType(anyString(), eq(EMAIL_CHANNEL),
-                eq(TENANT_DOMAIN));
-    }
-
-    @Test
-    public void provisionTemplatesDoesNotThrowWhenAddingFails() throws Exception {
-
-        when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
-                eq(TENANT_DOMAIN))).thenReturn(null);
-        org.mockito.Mockito.doThrow(new NotificationTemplateManagerException("boom"))
+        // addNotificationTemplateType throws once a tenant already has the type registered -
+        // unlike addNotificationTemplate, it is not itself upsert-safe. That failure must be
+        // swallowed without skipping the content (re)write below it, since re-running this on
+        // every tenant startup is exactly how an updated template body reaches an already-
+        // provisioned tenant.
+        org.mockito.Mockito.doThrow(new NotificationTemplateManagerException("already exists"))
                 .when(notificationTemplateManager).addNotificationTemplateType(anyString(), anyString(), anyString());
+
+        EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
+
+        verify(notificationTemplateManager, times(2)).addNotificationTemplate(
+                org.mockito.ArgumentMatchers.any(NotificationTemplate.class), eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void provisionTemplatesDoesNotThrowWhenWritingContentFails() throws Exception {
+
+        org.mockito.Mockito.doThrow(new NotificationTemplateManagerException("boom"))
+                .when(notificationTemplateManager).addNotificationTemplate(
+                        org.mockito.ArgumentMatchers.any(NotificationTemplate.class), anyString());
 
         // Must not throw - a provisioning failure for one tenant shouldn't break the caller.
         EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
