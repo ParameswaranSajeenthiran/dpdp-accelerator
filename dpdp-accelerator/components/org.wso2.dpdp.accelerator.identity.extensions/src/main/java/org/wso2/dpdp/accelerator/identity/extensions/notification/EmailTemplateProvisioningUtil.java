@@ -45,9 +45,9 @@ public final class EmailTemplateProvisioningUtil {
     public static void provisionTemplates(String tenantDomain) {
 
         provisionTemplate(tenantDomain, DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED,
-                "New complaint filed: ${reference-id}", EMAIL_BODY);
+                "New complaint filed: {{reference-id}}", EMAIL_BODY);
         provisionTemplate(tenantDomain, DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED,
-                "New reply on complaint ${reference-id}", EMAIL_BODY);
+                "New reply on complaint {{reference-id}}", EMAIL_BODY);
     }
 
     /**
@@ -79,33 +79,33 @@ public final class EmailTemplateProvisioningUtil {
                     + "font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;"
                     + "padding:4px 10px;border-radius:999px;\">Action Needed</span>"
                     + "<p style=\"margin:16px 0 24px 0;font-size:15px;line-height:1.5;color:#111827;\">"
-                    + "${headline-html}</p>"
+                    + "{{headline-html}}</p>"
                     + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
                     + "style=\"border:1px solid #e5e7eb;border-radius:8px;margin-bottom:20px;\">"
-                    + detailCell("Reference ID", "${reference-id}", "Data Principal", "${data-principal-name}", true)
-                    + detailCell("Subject", "${category-label}", "Priority", badge("${priority-label}"), false)
-                    + detailCell("Status", badge("${status-label}"), "SLA",
-                            "<span style=\"font-size:13px;font-weight:700;color:#ea580c;\">${sla-label}</span>",
+                    + detailCell("Reference ID", "{{reference-id}}", "Data Principal", "{{data-principal-name}}", true)
+                    + detailCell("Subject", "{{category-label}}", "Priority", badge("{{priority-label}}"), false)
+                    + detailCell("Status", badge("{{status-label}}"), "SLA",
+                            "<span style=\"font-size:13px;font-weight:700;color:#ea580c;\">{{sla-label}}</span>",
                             false)
                     + "</table>"
                     + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
                     + "style=\"background-color:#fff7ed;border-left:3px solid #f97316;border-radius:4px;"
                     + "margin-bottom:24px;\"><tr><td style=\"padding:14px 18px;\">"
                     + "<div style=\"font-size:13px;font-weight:700;color:#111827;margin-bottom:6px;\">"
-                    + "${actor-name}</div>"
-                    + "<div style=\"font-size:13px;line-height:1.5;color:#374151;\">&quot;${message-excerpt}"
+                    + "{{actor-name}}</div>"
+                    + "<div style=\"font-size:13px;line-height:1.5;color:#374151;\">&quot;{{message-excerpt}}"
                     + "&quot;</div></td></tr></table>"
                     + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" align=\"center\" "
                     + "style=\"margin:0 auto;\"><tr><td style=\"border-radius:24px;background-color:#f97316;\">"
-                    + "<a href=\"${action-url}\" style=\"display:inline-block;padding:12px 32px;font-size:14px;"
+                    + "<a href=\"{{action-url}}\" style=\"display:inline-block;padding:12px 32px;font-size:14px;"
                     + "font-weight:700;color:#ffffff;text-decoration:none;border-radius:24px;\">"
                     + "Review &amp; Reply</a></td></tr></table>"
                     + "</td></tr>"
                     // Footer.
                     + "<tr><td style=\"padding:20px 28px;border-top:1px solid #e5e7eb;font-size:11px;"
                     + "line-height:1.6;color:#9ca3af;text-align:center;\">"
-                    + "${footer-text}<br/>"
-                    + "<a href=\"${action-url}\" style=\"color:#9ca3af;text-decoration:underline;\">"
+                    + "{{footer-text}}<br/>"
+                    + "<a href=\"{{action-url}}\" style=\"color:#9ca3af;text-decoration:underline;\">"
                     + "Open in Consent Portal</a>"
                     + "<p style=\"margin:12px 0 0 0;\">WSO2 LLC. All rights reserved.</p>"
                     + "</td></tr>"
