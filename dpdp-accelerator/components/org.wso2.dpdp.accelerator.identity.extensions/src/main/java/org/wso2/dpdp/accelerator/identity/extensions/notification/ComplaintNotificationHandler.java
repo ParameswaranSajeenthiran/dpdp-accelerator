@@ -72,10 +72,6 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
     // this email is actually going to, not just the complaint id.
     private static final String CREATOR_DEEP_LINK_PATH = "/consent-portal/complaints/";
     private static final String OFFICER_DEEP_LINK_PATH = "/consent-portal/complaint-management/";
-    // Same PNG the portal itself serves next to its "Consent Portal" brand title (see
-    // MainLayout.tsx's Header.BrandLogo) - referenced by a hosted URL rather than embedded as a
-    // data: URI, since several mail clients strip inline base64 images.
-    private static final String LOGO_PATH = "/consent-portal/wso2-logo.png";
 
     @Override
     public boolean canHandle(MessageContext messageContext) throws IdentityRuntimeException {
@@ -200,8 +196,6 @@ public class ComplaintNotificationHandler extends AbstractEventHandler {
         placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_SLA_LABEL,
                 slaLabel((String) properties.get(DPDPComplaintEventConstants.PROP_STATUTORY_DUE_TIME)));
         placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_ACTION_URL, actionUrl);
-        placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_LOGO_URL,
-                IdentityUtil.getServerURL(LOGO_PATH, true, false));
         placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_RECIPIENT_ROLE_LABEL,
                 notifyingCreator ? ROLE_LABEL_DATA_PRINCIPAL : ROLE_LABEL_GRIEVANCE_OFFICER);
         placeholders.put(DPDPComplaintEventConstants.PLACEHOLDER_HEADLINE_HTML, headlineHtml);
