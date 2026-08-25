@@ -91,6 +91,8 @@ public class EventNotificationServiceConstants {
     public static final String WEBHOOK_CHALLENGE_MISMATCH_ERROR_MSG = "Callback URL did not echo back challenge string.";
     public static final String TOPIC_NOT_FOUND_ERROR_MSG = "No topic exists with ID '%s' for this org.";
     public static final String SYSTEM_TOPIC_DELETE_FORBIDDEN_ERROR_MSG = "System topic '%s' is system-defined and cannot be deleted or deactivated.";
+    public static final String SYSTEM_TOPIC_NAME_CONFLICT_ERROR_MSG =
+            "Topic '%s' already exists but is not an active system topic.";
     public static final String TOPIC_ALREADY_DEREGISTERED_ERROR_MSG = "Topic '%s' is already deregistered.";
     public static final String SUBSCRIPTION_IN_FLIGHT_DELIVERIES_ERROR_MSG = "Subscription has pending or in-flight deliveries and cannot be deleted until they complete.";
     public static final String SUBSCRIPTION_CONCURRENT_MODIFICATION_ERROR_MSG = "Subscription status was modified concurrently by another operation.";

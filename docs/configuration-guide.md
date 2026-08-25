@@ -105,6 +105,10 @@ accelerator provisions these values into `dpdp-accelerator.xml`; the ENF
 configuration component then maps them to the typed ENF configuration parser
 before the delivery services activate.
 
+For the user workflow—creating topics and subscriptions, preparing a webhook,
+publishing events, and viewing delivery history—see
+[`event-notification-guide.md`](event-notification-guide.md).
+
 ```toml
 [dpdp_accelerator.event_notifications]
 thread_pool_size = 4

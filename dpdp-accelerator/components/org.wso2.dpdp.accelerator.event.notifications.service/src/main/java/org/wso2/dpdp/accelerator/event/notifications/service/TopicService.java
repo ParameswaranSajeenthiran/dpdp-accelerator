@@ -24,6 +24,8 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 public interface TopicService {
     TopicDTO createTopic(String orgId, String name, String description);
 
+    TopicDTO ensureSystemTopic(String orgId, String name, String description);
+
     PaginatedResult<TopicDTO> listTopics(String orgId, String status, String search, int limit, int offset,
             String sort);
 

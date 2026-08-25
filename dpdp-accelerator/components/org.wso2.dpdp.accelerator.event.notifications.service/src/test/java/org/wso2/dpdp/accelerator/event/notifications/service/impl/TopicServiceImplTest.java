@@ -29,12 +29,15 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Collections;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -131,5 +134,66 @@ public class TopicServiceImplTest {
                         "Duplicate key", null));
 
         topicService.createTopic("org1", "user-consent", "desc");
+    }
+
+    @Test
+    public void testEnsureSystemTopicCreatesProtectedTopic() {
+        when(topicDAO.getTopicByOrgAndName("org1", "consent.update")).thenReturn(Optional.empty());
+        when(topicDAO.addTopic(any(Topic.class))).thenAnswer(invocation -> {
+            Topic topic = invocation.getArgument(0);
+            assertEquals(topic.getOrgId(), "org1");
+            assertEquals(topic.getName(), "consent.update");
+            assertEquals(topic.getInitiatedBy(), Initiator.SYSTEM.getValue());
+            return true;
+        });
+
+        TopicDTO result = topicService.ensureSystemTopic(" org1 ", " consent.update ", " description ");
+
+        assertEquals(result.getName(), "consent.update");
+        assertEquals(result.getDescription(), "description");
+        assertEquals(result.getStatus(), "active");
+        assertEquals(result.getInitiatedBy(), "system");
+    }
+
+    @Test
+    public void testEnsureSystemTopicIsIdempotent() {
+        Topic existing = new Topic("t1", "org1", "consent.update", "desc", "active", "system");
+        when(topicDAO.getTopicByOrgAndName("org1", "consent.update")).thenReturn(Optional.of(existing));
+
+        TopicDTO result = topicService.ensureSystemTopic("org1", "consent.update", "desc");
+
+        assertEquals(result.getTopicId(), "t1");
+        assertEquals(result.getInitiatedBy(), "system");
+        verify(topicDAO, never()).addTopic(any(Topic.class));
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testEnsureSystemTopicRejectsUserTopicCollision() {
+        Topic existing = new Topic("t1", "org1", "consent.update", "desc", "active", "user");
+        when(topicDAO.getTopicByOrgAndName("org1", "consent.update")).thenReturn(Optional.of(existing));
+
+        topicService.ensureSystemTopic("org1", "consent.update", "desc");
+    }
+
+    @Test
+    public void testEnsureSystemTopicHandlesConcurrentSystemCreation() {
+        Topic existing = new Topic("t1", "org1", "consent.update", "desc", "active", "system");
+        when(topicDAO.getTopicByOrgAndName("org1", "consent.update"))
+                .thenReturn(Optional.empty(), Optional.of(existing));
+        when(topicDAO.addTopic(any(Topic.class))).thenThrow(
+                new EventNotificationDuplicateResourceException("Duplicate key", null));
+
+        TopicDTO result = topicService.ensureSystemTopic("org1", "consent.update", "desc");
+
+        assertEquals(result.getTopicId(), "t1");
+        assertEquals(result.getInitiatedBy(), "system");
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testDeleteSystemTopicIsForbidden() {
+        Topic topic = new Topic("t1", "org1", "consent.update", "desc", "active", "system");
+        when(topicDAO.getTopicById("t1", "org1")).thenReturn(Optional.of(topic));
+
+        topicService.deleteTopic("org1", "t1");
     }
 }

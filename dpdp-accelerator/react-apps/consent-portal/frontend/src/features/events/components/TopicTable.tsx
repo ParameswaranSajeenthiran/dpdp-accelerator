@@ -23,6 +23,7 @@ import {
   IconButton,
   LinearProgress,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -48,7 +49,7 @@ interface TopicTableProps {
   hasPreviousPage: boolean
   hasNextPage: boolean
   canWrite: boolean
-  isMutating?: boolean
+  isMutating: boolean
   onPreviousPage: () => void
   onNextPage: () => void
   onRowsPerPageChange: (rowsPerPage: number) => void
@@ -68,7 +69,7 @@ export default function TopicTable({
   hasPreviousPage,
   hasNextPage,
   canWrite,
-  isMutating = false,
+  isMutating,
   onPreviousPage,
   onNextPage,
   onRowsPerPageChange,
@@ -123,19 +124,35 @@ export default function TopicTable({
             {rows.map((topic) => {
               const isActive = topic.status.toUpperCase() === 'ACTIVE'
               const isDeregistered = topic.status.toUpperCase() === 'DEREGISTERED'
+              const isSystemTopic = topic.initiatedBy?.toLowerCase() === 'system'
+              const initiator = topic.initiatedBy?.toUpperCase() || 'USER'
+              let deleteActionTitle = t('topics.actions.delete')
+              if (isSystemTopic) {
+                deleteActionTitle = initiator
+              } else if (isDeregistered) {
+                deleteActionTitle = t('topics.actions.alreadyDeregistered')
+              }
 
               return (
                 <TableRow key={topic.topicId} hover>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {topic.name}
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body2" fontWeight={600}>
+                        {topic.name}
+                      </Typography>
+                      <Chip size="small" variant="outlined" label={initiator} />
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     <CopyableText value={topic.topicId} truncateAt={14} monospace />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ maxWidth: 300 }}
+                    >
                       {topic.description || '-'}
                     </Typography>
                   </TableCell>
@@ -148,18 +165,12 @@ export default function TopicTable({
                   </TableCell>
                   {canWrite ? (
                     <TableCell align="right">
-                      <Tooltip
-                        title={
-                          isDeregistered
-                            ? t('topics.actions.alreadyDeregistered')
-                            : t('topics.actions.delete')
-                        }
-                      >
+                      <Tooltip title={deleteActionTitle}>
                         <span>
                           <IconButton
                             size="small"
                             color="error"
-                            disabled={!isActive || isMutating}
+                            disabled={!isActive || isSystemTopic || isMutating}
                             onClick={() => onDelete(topic)}
                             aria-label={t('topics.actions.delete')}
                           >

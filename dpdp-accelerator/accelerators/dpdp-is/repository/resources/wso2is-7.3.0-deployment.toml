@@ -153,6 +153,20 @@ http_method = "POST,DELETE"
 scopes = ["notifications:subscriptions:write"]
 
 [[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events/poll(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:poll"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/deliveries/([^/]+)/completion"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:event-deliveries:complete"]
+
+[[resource.access_control]]
 context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
 allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
 secure = "true"

@@ -56,8 +56,7 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
             adminPermissions.add(new Permission(scopeName));
         }
         createRoleIfNotExists(roleManagementService, ADMIN_ROLE, adminPermissions, applicationId, tenantDomain);
-        createRoleIfNotExists(roleManagementService, USER_ROLE, Collections.emptyList(), applicationId,
-                tenantDomain);
+        createRoleIfNotExists(roleManagementService, USER_ROLE, Collections.emptyList(), applicationId, tenantDomain);
     }
 
     private static void createRoleIfNotExists(RoleManagementService roleManagementService, String roleName,

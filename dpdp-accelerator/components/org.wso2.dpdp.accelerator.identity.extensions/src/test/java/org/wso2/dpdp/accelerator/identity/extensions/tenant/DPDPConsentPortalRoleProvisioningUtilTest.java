@@ -60,7 +60,9 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     public void createRolesCreatesAdminRoleWithAllScopesAndUserRoleWithNone() throws Exception {
 
         List<String> scopes = Arrays.asList("internal_consent_mgt_consent_view",
-                "internal_consent_mgt_purpose_view");
+                "internal_consent_mgt_purpose_view", "notifications:events:read",
+                "notifications:events:write", "notifications:events:poll",
+                "notifications:event-deliveries:complete");
 
         DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes);
 
@@ -72,7 +74,9 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         for (Permission permission : adminPermissionsCaptor.getValue()) {
             adminPermissionNames.add(permission.getName());
         }
-        assertEquals(adminPermissionNames, scopes);
+        assertEquals(adminPermissionNames, Arrays.asList("internal_consent_mgt_consent_view",
+                "internal_consent_mgt_purpose_view", "notifications:events:read", "notifications:events:write",
+                "notifications:events:poll", "notifications:event-deliveries:complete"));
 
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), eq(Collections.emptyList()),
@@ -99,7 +103,6 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
                 ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(true);
         when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE,
                 ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(false);
-
         DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList());
 
         verify(roleManagementService, never()).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
@@ -107,4 +110,5 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE), anyList(),
                 anyList(), anyList(), eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
     }
+
 }

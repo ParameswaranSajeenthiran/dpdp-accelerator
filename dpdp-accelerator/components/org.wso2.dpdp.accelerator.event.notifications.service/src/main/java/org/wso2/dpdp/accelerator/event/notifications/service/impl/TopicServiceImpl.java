@@ -92,6 +92,70 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public TopicDTO ensureSystemTopic(String orgId, String name, String description) {
+        validateTopicCreationParameters(orgId, name);
+        String normalizedOrgId = orgId.trim();
+        String normalizedName = name.trim();
+
+        Optional<Topic> existing = topicDAO.getTopicByOrgAndName(normalizedOrgId, normalizedName);
+        if (existing.isPresent()) {
+            return mapExistingSystemTopic(existing.get(), normalizedName);
+        }
+
+        String topicId = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicId, normalizedOrgId, normalizedName,
+                description != null ? description.trim() : null,
+                TopicStatus.ACTIVE.getValue(), Initiator.SYSTEM.getValue());
+        try {
+            boolean created = topicDAO.addTopic(topic);
+            if (!created) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                        EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
+                        EventNotificationServiceConstants.FAILED_TO_CREATE_TOPIC_ERROR_MSG,
+                        500);
+            }
+        } catch (EventNotificationDuplicateResourceException e) {
+            Optional<Topic> concurrentlyCreated = topicDAO.getTopicByOrgAndName(normalizedOrgId, normalizedName);
+            if (concurrentlyCreated.isPresent()) {
+                return mapExistingSystemTopic(concurrentlyCreated.get(), normalizedName);
+            }
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                    EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
+                    EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
+                    409);
+        }
+
+        return new TopicDTO(topicId, topic.getName(), topic.getDescription(), TopicStatus.ACTIVE.getValue(),
+                Initiator.SYSTEM.getValue());
+    }
+
+    private void validateTopicCreationParameters(String orgId, String name) {
+        if (orgId == null || orgId.trim().isEmpty() || name == null || name.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.ORG_ID_OR_TOPIC_NAME_MISSING_ERROR_MSG,
+                    400);
+        }
+    }
+
+    private TopicDTO mapExistingSystemTopic(Topic topic, String topicName) {
+        boolean active = TopicStatus.ACTIVE.getValue().equalsIgnoreCase(topic.getStatus());
+        boolean systemInitiated = Initiator.SYSTEM.getValue().equalsIgnoreCase(topic.getInitiatedBy());
+        if (!active || !systemInitiated) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                    EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
+                    String.format(EventNotificationServiceConstants.SYSTEM_TOPIC_NAME_CONFLICT_ERROR_MSG, topicName),
+                    409);
+        }
+        return new TopicDTO(topic.getTopicId(), topic.getName(), topic.getDescription(), topic.getStatus(),
+                topic.getInitiatedBy());
+    }
+
+    @Override
     public PaginatedResult<TopicDTO> listTopics(String orgId, String status, String search, int limit, int offset,
             String sort) {
         if (orgId == null || orgId.trim().isEmpty()) {

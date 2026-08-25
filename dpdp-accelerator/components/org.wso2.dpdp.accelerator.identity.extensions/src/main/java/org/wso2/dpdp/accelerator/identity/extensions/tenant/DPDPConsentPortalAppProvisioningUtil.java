@@ -70,12 +70,16 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     private static final String[] EVENT_NOTIFICATION_API_IDENTIFIERS = {
             "/api/dpdp/event-notifications/v1/topics",
             "/api/dpdp/event-notifications/v1/subscriptions",
-            "/api/dpdp/event-notifications/v1/events"
+            "/api/dpdp/event-notifications/v1/events",
+            "/api/dpdp/event-notifications/v1/events/poll",
+            "/api/dpdp/event-notifications/v1/deliveries"
     };
     private static final String[][] EVENT_NOTIFICATION_API_SCOPES = {
             {"notifications:topics:read", "notifications:topics:write"},
             {"notifications:subscriptions:read", "notifications:subscriptions:write"},
-            {"notifications:events:read", "notifications:events:write"}
+            {"notifications:events:read", "notifications:events:write"},
+            {"notifications:events:poll"},
+            {"notifications:event-deliveries:complete"}
     };
 
     private DPDPConsentPortalAppProvisioningUtil() {
@@ -131,13 +135,21 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     public static void registerEventNotificationAPIs(String tenantDomain) throws Exception {
 
         APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
-        for (int i = 0; i < EVENT_NOTIFICATION_API_IDENTIFIERS.length; i++) {
-            String identifier = EVENT_NOTIFICATION_API_IDENTIFIERS[i];
+        registerAPIResources(apiResourceManager, tenantDomain, EVENT_NOTIFICATION_API_IDENTIFIERS,
+                EVENT_NOTIFICATION_API_SCOPES);
+
+    }
+
+    private static void registerAPIResources(APIResourceManager apiResourceManager, String tenantDomain,
+            String[] identifiers, String[][] scopesByIdentifier) throws Exception {
+
+        for (int i = 0; i < identifiers.length; i++) {
+            String identifier = identifiers[i];
             if (apiResourceManager.getAPIResourceByIdentifier(identifier, tenantDomain) != null) {
                 continue;
             }
             List<Scope> scopes = new ArrayList<>();
-            for (String scopeName : EVENT_NOTIFICATION_API_SCOPES[i]) {
+            for (String scopeName : scopesByIdentifier[i]) {
                 scopes.add(new Scope(null, scopeName, scopeName, "Event Notification API scope: " + scopeName));
             }
             APIResource resource = new APIResource.APIResourceBuilder()

@@ -248,29 +248,40 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
     }
 
     @Test
-    public void authorizeEventNotificationAPIsAuthorizesAllThreeResources() throws Exception {
+    public void authorizeEventNotificationAPIsAuthorizesAllResources() throws Exception {
         Scope topicScope = mockScope("notifications:topics:read");
         Scope subscriptionScope = mockScope("notifications:subscriptions:read");
         Scope eventScope = mockScope("notifications:events:read");
+        Scope pollScope = mockScope("notifications:events:poll");
+        Scope completionScope = mockScope("notifications:event-deliveries:complete");
         APIResource topicsResource = mockResource("event-topics", "/api/dpdp/event-notifications/v1/topics",
                 Arrays.asList(topicScope));
         APIResource subscriptionsResource = mockResource("event-subscriptions", "/api/dpdp/event-notifications/v1/subscriptions",
                 Arrays.asList(subscriptionScope));
         APIResource eventsResource = mockResource("event-events", "/api/dpdp/event-notifications/v1/events",
                 Arrays.asList(eventScope));
+        APIResource pollResource = mockResource("event-poll", "/api/dpdp/event-notifications/v1/events/poll",
+                Arrays.asList(pollScope));
+        APIResource completionResource = mockResource("event-completion", "/api/dpdp/event-notifications/v1/deliveries",
+                Arrays.asList(completionScope));
         when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/topics", TENANT_DOMAIN))
                 .thenReturn(topicsResource);
         when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/subscriptions", TENANT_DOMAIN))
                 .thenReturn(subscriptionsResource);
         when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/events", TENANT_DOMAIN))
                 .thenReturn(eventsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/events/poll", TENANT_DOMAIN))
+                .thenReturn(pollResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/deliveries", TENANT_DOMAIN))
+                .thenReturn(completionResource);
 
         List<String> scopes = DPDPConsentPortalAppProvisioningUtil
                 .authorizeEventNotificationAPIs(APPLICATION_ID, TENANT_DOMAIN);
 
         assertEquals(scopes, Arrays.asList("notifications:topics:read",
-                "notifications:subscriptions:read", "notifications:events:read"));
-        verify(authorizedAPIManagementService, times(3)).addAuthorizedAPI(eq(APPLICATION_ID),
+                "notifications:subscriptions:read", "notifications:events:read",
+                "notifications:events:poll", "notifications:event-deliveries:complete"));
+        verify(authorizedAPIManagementService, times(5)).addAuthorizedAPI(eq(APPLICATION_ID),
                 any(AuthorizedAPI.class), eq(TENANT_DOMAIN));
     }
 
@@ -282,12 +293,16 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(TENANT_DOMAIN);
 
         ArgumentCaptor<APIResource> resourceCaptor = ArgumentCaptor.forClass(APIResource.class);
-        verify(apiResourceManager, times(3)).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
+        verify(apiResourceManager, times(5)).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
         assertEquals(resourceCaptor.getAllValues().get(0).getScopes().size(), 2);
         assertEquals(resourceCaptor.getAllValues().get(1).getScopes().size(), 2);
         assertEquals(resourceCaptor.getAllValues().get(2).getScopes().size(), 2);
         assertEquals(resourceCaptor.getAllValues().get(2).getScopes().get(1).getName(),
                 "notifications:events:write");
+        assertEquals(resourceCaptor.getAllValues().get(3).getScopes().get(0).getName(),
+                "notifications:events:poll");
+        assertEquals(resourceCaptor.getAllValues().get(4).getScopes().get(0).getName(),
+                "notifications:event-deliveries:complete");
     }
 
     @Test
