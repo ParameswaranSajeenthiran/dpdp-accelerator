@@ -34,33 +34,10 @@ import java.util.Set;
 import java.util.Iterator;
 
 /**
- * Resolves a caller's OAuth2 bearer token's subject (userId), org/tenant, and granted scopes by
- * decoding its JWT payload directly, in-process - no signature verification here, and no call out
- * to Identity Server. This is safe only because every request reaching this filter has already
- * passed Carbon's own valve (see the [[resource.access_control]] entries for
- * /api/dpdp/complaints in wso2is-7.3.0-deployment.toml, {@code allowed_auth_handlers =
- * ["OAuthAuthentication"]}), which independently verifies the token's signature, expiry, and
- * active/revoked status before this webapp ever sees the request - re-verifying the signature here
- * would be redundant, not additional safety. This is the only source of truth for identity
- * <strong>and org membership</strong> in this endpoint module - see complaint-server-API.yaml,
- * which requires every /me/* and /complaints/* operation to resolve the caller from the token,
- * never from a client-supplied header, URL segment, or body field. Also rejects a token outright
- * if its {@code client_id}/{@code aud} doesn't match the one registered application this endpoint
- * is meant to serve - otherwise a token minted for a different application, but carrying the same
- * org-agnostic {@code complaints:*} scope strings, would be trusted here too.
- *
- * <p>Configuration is read via ConfigProvider against deployment.toml's
- * [dpdp_accelerator.consent_portal] table (the same client_id the identity.extensions module
- * auto-provisions per tenant - see that table's own comment in wso2is-7.3.0-deployment.toml),
- * with a system-property override beneath that.
- *
- * <p>The human-readable {@code username} claim this class reads is not a default JWT access
- * token claim - it's only present because the DPDP Consent Portal application has the local
- * claim {@code http://wso2.org/claims/username} configured as an Access Token Attribute (see the
- * application's OIDC inbound protocol config, {@code accessTokenAttributes}). Without that
- * configured, tokens carry only the opaque {@code sub} and {@link AuthenticatedPrincipal#getUserName()}
- * is always {@code null}.
- */
+ * Decodes a bearer token's claims to resolve the caller's identity, org, and scopes - the sole
+ * source of identity for every request this endpoint serves.
+ **/
+
 public class TokenIntrospectionClient {
 
     private static final String CONFIG_EXPECTED_CLIENT_ID = "dpdp_accelerator.consent_portal.client_id";
