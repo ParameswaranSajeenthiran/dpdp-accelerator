@@ -37,9 +37,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 
 import javax.xml.stream.XMLStreamException;
@@ -188,6 +190,23 @@ public final class DPDPConfigParser {
         }).orElse(defaultValue);
     }
 
+    private Set<Integer> parseIntSet(String configKey, String rawValue) {
+
+        Set<Integer> values = new HashSet<>();
+        for (String part : rawValue.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            try {
+                values.add(Integer.parseInt(trimmed));
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
+            }
+        }
+        return values;
+    }
+
     public String getJdbcDataSourceName() {
 
         return getConfigurationAsString(DPDPCommonConstants.JDBC_PERSISTENCE_MANAGER_DATA_SOURCE_NAME)
@@ -258,6 +277,19 @@ public final class DPDPConfigParser {
 
         return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL,
                 DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL);
+    }
+
+    public Set<Integer> getEventNotificationAllowedCallbackPorts() {
+
+        return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS)
+                .map(value -> parseIntSet(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS, value))
+                .orElse(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS);
+    }
+
+    public boolean isEventNotificationPrivateNetworkCallbackTargetsAllowed() {
+
+        return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_PRIVATE_NETWORK_CALLBACK_TARGETS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOW_PRIVATE_NETWORK_CALLBACK_TARGETS);
     }
 
     public int getEventNotificationDeliveryWorkerBatchSize() {

@@ -6,6 +6,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -125,6 +126,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(configurationService.getEventNotificationBaseBackoffSeconds()).thenReturn(1L);
         when(configurationService.getEventNotificationMaxRetries()).thenReturn(1);
         when(configurationService.isEventNotificationHttpCallbackUrlAllowed()).thenReturn(true);
+        when(configurationService.getEventNotificationAllowedCallbackPorts())
+                .thenReturn(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS);
+        when(configurationService.isEventNotificationPrivateNetworkCallbackTargetsAllowed()).thenReturn(false);
         when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
         DataSource dataSource = org.mockito.Mockito.mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(connection);

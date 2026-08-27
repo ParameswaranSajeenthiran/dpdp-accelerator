@@ -18,6 +18,11 @@
 
 package org.wso2.dpdp.accelerator.common.constant;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Config file structure and key constants for {@code dpdp-accelerator.xml}.
  */
@@ -40,6 +45,10 @@ public final class DPDPCommonConstants {
     public static final String EVENT_NOTIFICATIONS_MAX_RETRIES = "EventNotifications.MaxRetries";
     public static final String EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL =
             "EventNotifications.AllowHttpCallbackUrl";
+    public static final String EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS =
+            "EventNotifications.AllowedCallbackPorts";
+    public static final String EVENT_NOTIFICATIONS_ALLOW_PRIVATE_NETWORK_CALLBACK_TARGETS =
+            "EventNotifications.AllowPrivateNetworkCallbackTargets";
     public static final String EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE =
             "EventNotifications.DeliveryWorkerBatchSize";
     public static final String EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS =
@@ -65,6 +74,9 @@ public final class DPDPCommonConstants {
     public static final long DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = 5L;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_MAX_RETRIES = 5;
     public static final boolean DEFAULT_EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL = true;
+    public static final Set<Integer> DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(-1, 80, 443, 8443)));
+    public static final boolean DEFAULT_EVENT_NOTIFICATIONS_ALLOW_PRIVATE_NETWORK_CALLBACK_TARGETS = false;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE = 50;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS = 5;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS = 10;

@@ -156,10 +156,11 @@ scheduled run — only one node should log the job firing, not all of them.
 # Configuring Event Notifications
 
 Event Notification Framework runtime settings are configured in the same
-`deployment.toml` file under `[dpdp_accelerator.event_notifications]`. The
-accelerator provisions these values into `dpdp-accelerator.xml`; the ENF
-configuration component then maps them to the typed ENF configuration parser
-before the delivery services activate.
+`deployment.toml` file under `[dpdp_accelerator.event_notifications]` and its
+`[dpdp_accelerator.event_notifications.webhook]` sub-table. The accelerator
+provisions these values into `dpdp-accelerator.xml`; the ENF configuration
+component then maps them to the typed ENF configuration parser before the
+delivery services activate.
 
 For the user workflow—creating topics and subscriptions, preparing a webhook,
 publishing events, and viewing delivery history—see
@@ -167,10 +168,15 @@ publishing events, and viewing delivery history—see
 
 ```toml
 [dpdp_accelerator.event_notifications]
+system_topics_auto_create_enabled = true
+
+[dpdp_accelerator.event_notifications.webhook]
 thread_pool_size = 4
 base_backoff_seconds = 5
 max_retries = 5
 allow_http_callback_url = true
+allowed_callback_ports = "-1,80,443,8443"
+allow_private_network_callback_targets = false
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10

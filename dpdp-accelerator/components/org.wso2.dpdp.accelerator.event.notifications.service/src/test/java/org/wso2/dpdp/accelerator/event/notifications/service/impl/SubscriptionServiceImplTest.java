@@ -41,6 +41,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -84,6 +85,9 @@ public class SubscriptionServiceImplTest {
         when(configurationService.getEventNotificationBaseBackoffSeconds()).thenReturn(5L);
         when(configurationService.getEventNotificationMaxRetries()).thenReturn(5);
         when(configurationService.isEventNotificationHttpCallbackUrlAllowed()).thenReturn(true);
+        when(configurationService.getEventNotificationAllowedCallbackPorts())
+                .thenReturn(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS);
+        when(configurationService.isEventNotificationPrivateNetworkCallbackTargetsAllowed()).thenReturn(false);
         when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
         subscriptionService = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
                 configurationService);
@@ -243,6 +247,51 @@ public class SubscriptionServiceImplTest {
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK, "http://127.0.0.1:8080/callback", "secret123");
 
         subscriptionService.createSubscription("org1", "group1", "user-consent", filter, delivery);
+    }
+
+    @Test
+    public void testCreateWebhookSubscriptionAllowsConfiguredCustomPort() {
+        when(configurationService.getEventNotificationAllowedCallbackPorts())
+                .thenReturn(Collections.singleton(9443));
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+        doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
+                "https://93.184.216.34:9443/callback", "secret123");
+
+        SubscriptionDTO result = subscriptionService.createSubscription("org1", "group1", "user-consent", filter,
+                delivery);
+        assertNotNull(result);
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void testCreateWebhookSubscriptionRejectsPrivateNetworkTargetByDefault() {
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
+                "https://192.168.1.10:443/callback", "secret123");
+
+        subscriptionService.createSubscription("org1", "group1", "user-consent", filter, delivery);
+    }
+
+    @Test
+    public void testCreateWebhookSubscriptionAllowsPrivateNetworkTargetWhenConfigured() {
+        when(configurationService.isEventNotificationPrivateNetworkCallbackTargetsAllowed()).thenReturn(true);
+        Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+        when(topicDAO.getTopicByOrgAndName("org1", "user-consent")).thenReturn(Optional.of(topic));
+        doNothing().when(subscriptionDAO).addSubscription(any(Subscription.class));
+
+        FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
+                "https://192.168.1.10:443/callback", "secret123");
+
+        SubscriptionDTO result = subscriptionService.createSubscription("org1", "group1", "user-consent", filter,
+                delivery);
+        assertNotNull(result);
     }
 
     @Test

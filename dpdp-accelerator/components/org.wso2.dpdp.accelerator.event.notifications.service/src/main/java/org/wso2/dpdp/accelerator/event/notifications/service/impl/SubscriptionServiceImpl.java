@@ -412,7 +412,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.CALLBACK_URL_REQUIRED_ERROR_MSG, 422);
         }
         try {
-            EventNotificationUrlValidator.validate(callbackUrl);
+            EventNotificationUrlValidator.validate(callbackUrl,
+                    getConfiguration().getEventNotificationAllowedCallbackPorts(),
+                    getConfiguration().isEventNotificationPrivateNetworkCallbackTargetsAllowed());
             URI uri = URI.create(callbackUrl.trim());
             String scheme = uri.getScheme();
             if ("http".equalsIgnoreCase(scheme)

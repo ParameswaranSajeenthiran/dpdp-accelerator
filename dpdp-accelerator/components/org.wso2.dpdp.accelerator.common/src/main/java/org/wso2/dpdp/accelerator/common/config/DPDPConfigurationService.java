@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.common.config;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Exposes {@code dpdp-accelerator.xml} configuration as an OSGi service, so other bundles
@@ -41,6 +42,10 @@ public interface DPDPConfigurationService {
     int getEventNotificationMaxRetries();
 
     boolean isEventNotificationHttpCallbackUrlAllowed();
+
+    Set<Integer> getEventNotificationAllowedCallbackPorts();
+
+    boolean isEventNotificationPrivateNetworkCallbackTargetsAllowed();
 
     int getEventNotificationDeliveryWorkerBatchSize();
 

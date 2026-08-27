@@ -239,10 +239,24 @@ client_id = "DPDP_CONSENT_PORTAL"
 
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]
+# Automatically reconciles the DPDP system topics (consent.update, consent.revoke, etc.) for
+# every tenant on create/update. Set false to manage system topics manually instead.
+system_topics_auto_create_enabled = true
+
+# Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
+# subscription-verification behavior.
+[dpdp_accelerator.event_notifications.webhook]
 thread_pool_size = 4
 base_backoff_seconds = 5
 max_retries = 5
 allow_http_callback_url = true
+# Comma-separated destination ports permitted for webhook callback URLs (-1 means no port was
+# specified in the URL). Widen this only to admit a subscriber's genuine non-standard port.
+allowed_callback_ports = "-1,80,443,8443"
+# Set true only for controlled/on-prem deployments where a webhook receiver legitimately lives
+# on a private/internal network (RFC1918, link-local, IPv6 unique-local). Loopback, wildcard,
+# and multicast targets are always rejected regardless of this setting.
+allow_private_network_callback_targets = false
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10
@@ -252,9 +266,6 @@ background_worker_initial_delay_seconds = 10
 pending_subscription_recovery_interval_seconds = 30
 pending_subscription_recovery_batch_size = 20
 worker_shutdown_timeout_seconds = 5
-# Automatically reconciles the DPDP system topics (consent.update, consent.revoke, etc.) for
-# every tenant on create/update. Set false to manage system topics manually instead.
-system_topics_auto_create_enabled = true
 
 # Controls the capture (identity.extensions) and read APIs (consent.mgt.extensions.endpoint)
 # for consent status-audit/history. Set enabled = false to turn off both capture

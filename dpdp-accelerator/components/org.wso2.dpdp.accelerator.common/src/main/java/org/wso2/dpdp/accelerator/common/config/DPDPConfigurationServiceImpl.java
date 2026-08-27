@@ -24,6 +24,7 @@ import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 
 import java.util.Map;
 import java.util.Collections;
+import java.util.Set;
 
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
@@ -99,6 +100,19 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     public boolean isEventNotificationHttpCallbackUrlAllowed() {
 
         return configParser == null || configParser.isEventNotificationHttpCallbackUrlAllowed();
+    }
+
+    @Override
+    public Set<Integer> getEventNotificationAllowedCallbackPorts() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS
+                : configParser.getEventNotificationAllowedCallbackPorts();
+    }
+
+    @Override
+    public boolean isEventNotificationPrivateNetworkCallbackTargetsAllowed() {
+
+        return configParser != null && configParser.isEventNotificationPrivateNetworkCallbackTargetsAllowed();
     }
 
     @Override
