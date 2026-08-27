@@ -4,22 +4,36 @@
 # marks them as required status checks (Settings -> Rules -> Rulesets), so a dev PR
 # still shows a red X without blocking Merge.
 #
-# Needs no secrets on its default path. The IS pack is a public release asset, the
-# accelerator's configure.properties already defaults to localhost/admin/admin/h2,
-# and the test accounts are created per run with a generated password. That is what
-# keeps the plain `pull_request` trigger safe for fork PRs, where the token is
-# read-only and no secrets are exposed.
+# Two triggers, deliberately split - E2E now needs WSO2 subscription credentials
+# (SOLUTIONS_BOT_EMAIL / SOLUTIONS_BOT_U2_PASSWORD) to apply U2 updates, and those
+# secrets are never exposed to a fork PR under plain `pull_request` (GitHub's own
+# security model, not something this workflow controls):
+#   - `pull_request`  -> `build` only. Runs for every PR, including forks. No secrets,
+#     read-only token. This is the fast "does it compile" signal.
+#   - `pull_request_target` -> `e2e`, gated behind the `Action/trigger-e2e` label. A
+#     maintainer applies the label only after reviewing the diff - that's what makes
+#     running untrusted PR code with real subscription credentials acceptable here.
+#     `reset-e2e-label-on-push` strips the label on every new commit, so a stale
+#     approval can never carry over to code nobody looked at.
+#
+# `workflow_dispatch` also runs `e2e` directly (no label needed - it's already a
+# manual, authenticated action) and is the only way to choose `is_source: master`
+# (building product-is from source) instead of the default `release` + U2 update path.
 name: PR checks
 
 on:
   pull_request:
     branches: [main, dev]
+  pull_request_target:
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
     inputs:
-      apply_updates:
-        description: Apply WSO2 U2 updates to the IS pack before testing (needs subscription credentials)
-        type: boolean
-        default: false
+      is_source:
+        description: Where to get the Identity Server pack from
+        type: choice
+        options: [release, master]
+        default: release
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,11 +45,11 @@ permissions:
 env:
   IS_VERSION: 7.3.0
   ACCELERATOR_VERSION: 1.0.0-SNAPSHOT
-  IS_SOURCE: master  # 'release' | 'master'
 
 jobs:
   build:
     name: Build
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -57,38 +71,74 @@ jobs:
         env:
           MAVEN_OPTS: -Xmx4g
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: accelerator-zip
-          path: dpdp-accelerator/accelerators/dpdp-is/target/wso2-dpdp-is-accelerator-*.zip
-          if-no-files-found: error
-          retention-days: 7
+  # Belongs to the pull_request_target trigger, same as `e2e` below - without this, a
+  # label applied to review commit A would silently keep authorizing E2E (with real
+  # secrets) against whatever code commit B/C/... later replace it with.
+  reset-e2e-label-on-push:
+    name: Reset E2E label on push
+    if: >
+      github.event_name == 'pull_request_target' &&
+      (github.event.action == 'synchronize' || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Remove stale Action/trigger-e2e label
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          error_output=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/Action%2Ftrigger-e2e" \
+            -X DELETE 2>&1)
+          exit_code=$?
+          set -e
+          if [ $exit_code -ne 0 ] && ! echo "$error_output" | grep -qi "404\|not found"; then
+            echo "$error_output" >&2
+            exit $exit_code
+          fi
 
   e2e:
     name: E2E integration tests
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request_target' &&
+       github.event.action == 'labeled' &&
+       github.event.label.name == 'Action/trigger-e2e')
     runs-on: ubuntu-latest
-    needs: build
-    # Headroom for an unmeasured product-is master build (large multi-module
-    # reactor, even with tests/checks skipped) plus one provisioning restart.
+    # Generous enough to cover the rare, manually-chosen product-is master build
+    # (large multi-module reactor, even with tests/checks skipped) plus one
+    # provisioning restart. The default release+U2 path finishes in a fraction of this.
     timeout-minutes: 110
     env:
       IS_BASE_URL: https://localhost:9443
+      IS_SOURCE: ${{ github.event_name == 'workflow_dispatch' && inputs.is_source || 'release' }}
     steps:
+      # pull_request_target checks out the TARGET branch by default, which would
+      # silently test the wrong code - explicitly pin to the PR's own head commit. A
+      # plain workflow_dispatch run has no pull_request context, so it falls back to
+      # whatever ref triggered it (actions/checkout's own default).
       - uses: actions/checkout@v5
         with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
           persist-credentials: false
+
       - uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: temurin
+          cache: maven
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: accelerator-zip
-          path: dist
+      # No artifact download from `build`: that job only runs under `pull_request`,
+      # which never fires in the same workflow run as `pull_request_target` or
+      # `workflow_dispatch` - there is nothing to download here, so this job builds
+      # the accelerator itself.
+      - name: Build the accelerator
+        run: mvn -B clean install
+        env:
+          MAVEN_OPTS: -Xmx4g
 
       # --- Obtaining the IS pack: two mutually exclusive paths ------------------
 
@@ -113,9 +163,8 @@ jobs:
           # startup error.
           echo "$(cut -d' ' -f1 wso2is.sha256)  wso2is.zip" | sha256sum -c -
 
-      # Speeds up repeat runs of the (currently default) master build. Not correctness
-      # -critical - master's dependency set just floats, so a stale hit only costs time,
-      # never wrongness.
+      # Only relevant for the manually-dispatched master build; harmless dead weight
+      # otherwise since the step it guards never runs on the default path.
       - name: Cache Maven repo for the product-is build
         if: env.IS_SOURCE == 'master'
         uses: actions/cache@v4
@@ -162,17 +211,22 @@ jobs:
           echo "IS_HOME=${dir}" >> "$GITHUB_ENV"
           echo "Resolved IS_HOME=${dir}"
 
+      # Unconditional on the default (release) path now - this is the whole point of
+      # gating the job behind pull_request_target + a label: without the U2 update, a
+      # vanilla GA pack lacks the consent-mgt v2 API resources this accelerator needs
+      # (see issue history). Never runs for the master path - a source build already
+      # carries whatever is newest.
       - name: Apply WSO2 U2 updates
-        if: ${{ env.IS_SOURCE == 'release' && (inputs.apply_updates == true || vars.APPLY_WSO2_UPDATES == 'true') }}
+        if: env.IS_SOURCE == 'release'
         env:
-          WSO2_USERNAME: ${{ secrets.WSO2_USERNAME }}
-          WSO2_PASSWORD: ${{ secrets.WSO2_U2_PASSWORD }}
+          WSO2_USERNAME: ${{ secrets.SOLUTIONS_BOT_EMAIL }}
+          WSO2_PASSWORD: ${{ secrets.SOLUTIONS_BOT_U2_PASSWORD }}
         run: |
-          # Secrets are never exposed to fork PRs and are not provisioned on this repo
-          # yet, so degrade with a warning instead of failing the run.
           if [ -z "${WSO2_USERNAME}" ] || [ -z "${WSO2_PASSWORD}" ]; then
-            echo "::warning::Updates requested but WSO2 subscription credentials are absent - testing the GA pack"
-            exit 0
+            echo "::error::WSO2_USERNAME/WSO2_PASSWORD are empty - SOLUTIONS_BOT_EMAIL and" \
+                 "SOLUTIONS_BOT_U2_PASSWORD must be configured as repository secrets for the" \
+                 "default release+U2 path to work."
+            exit 1
           fi
           cd "$IS_HOME"
           bash bin/update_tool_setup.sh
@@ -182,7 +236,12 @@ jobs:
 
       - name: Apply the accelerator
         run: |
-          unzip -q dist/wso2-dpdp-is-accelerator-*.zip -d "$IS_HOME"
+          zip_path=$(find dpdp-accelerator/accelerators/dpdp-is/target -maxdepth 1 -name "wso2-dpdp-is-accelerator-*.zip" | head -1)
+          if [ -z "${zip_path}" ]; then
+            echo "::error::No wso2-dpdp-is-accelerator-*.zip under dpdp-accelerator/accelerators/dpdp-is/target"
+            exit 1
+          fi
+          unzip -q "${zip_path}" -d "$IS_HOME"
           cd "${IS_HOME}/wso2-dpdp-is-accelerator-${ACCELERATOR_VERSION}"
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
