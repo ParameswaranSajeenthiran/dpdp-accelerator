@@ -24,13 +24,13 @@ import { useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import type { ComplaintStatus } from '../../types/complaint'
 import { COMPLAINT_QUEUE_ROWS_PER_PAGE_OPTIONS } from '../complaints/constants'
-import { useManagedComplaintListQuery } from '../complaints/hooks/useComplaintQueries'
-import { getComplaintSlaState } from '../complaints/utils/complaintDisplay'
+import {
+  useManagedComplaintListQuery,
+  useManagedComplaintQueueStatsQuery,
+} from '../complaints/hooks/useComplaintQueries'
 import ComplaintQueueFilters from './components/ComplaintQueueFilters'
 import ComplaintQueueTable from './components/ComplaintQueueTable'
 import type { ComplaintQueueFiltersState } from './types'
-
-const OPEN_STATUSES: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'AWAITING_INTERNAL_REVIEW']
 
 const DEFAULT_FILTERS: ComplaintQueueFiltersState = {
   status: 'All',
@@ -43,14 +43,6 @@ const CLOSED_OUT_STATUSES: ComplaintStatus[] = ['RESOLVED']
 const DEFAULT_PAGE = 0
 const DEFAULT_ROWS_PER_PAGE = 10
 
-/**
- * The stat tiles summarize the whole queue, not just the current page, so they're
- * computed from their own unfiltered scan capped at this many complaints - accurate
- * for any org below the cap, an undercount above it. There is no dedicated
- * aggregate/count endpoint to ask the server for exact totals per bucket instead.
- */
-const STATS_SCAN_LIMIT = 500
-
 function ComplaintQueuePage(): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
@@ -58,26 +50,15 @@ function ComplaintQueuePage(): React.JSX.Element {
   const [page, setPage] = useState(DEFAULT_PAGE)
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE)
 
-  const statsQuery = useManagedComplaintListQuery({ limit: STATS_SCAN_LIMIT })
-  const statsComplaints = useMemo(() => statsQuery.data?.rows ?? [], [statsQuery.data])
-
-  const stats = useMemo(() => {
-    const openCount = statsComplaints.filter((complaint) =>
-      OPEN_STATUSES.includes(complaint.status),
-    ).length
-    const awaitingInfoCount = statsComplaints.filter(
-      (complaint) => complaint.status === 'WAITING_ON_CLIENT',
-    ).length
-    const resolvedCount = statsComplaints.filter(
-      (complaint) => complaint.status === 'RESOLVED',
-    ).length
-    const slaBreachedCount = statsComplaints.filter(
-      (complaint) =>
-        getComplaintSlaState(complaint.statutoryDueDate, complaint.status) === 'breached',
-    ).length
-
-    return { openCount, awaitingInfoCount, resolvedCount, slaBreachedCount }
-  }, [statsComplaints])
+  // Server-computed and always unfiltered - the tiles summarize the whole queue regardless of
+  // whatever filter is currently applied to the paginated table beside them.
+  const statsQuery = useManagedComplaintQueueStatsQuery()
+  const stats = statsQuery.data ?? {
+    openCount: 0,
+    awaitingInternalReviewCount: 0,
+    resolvedCount: 0,
+    slaBreachedCount: 0,
+  }
 
   const listQuery = useManagedComplaintListQuery({
     status: filters.status === 'All' ? undefined : filters.status,
@@ -133,8 +114,8 @@ function ComplaintQueuePage(): React.JSX.Element {
             iconColor="info"
           />
           <StatCard
-            value={stats.awaitingInfoCount}
-            label={t('complaints.management.queue.stats.awaitingInfo')}
+            value={stats.awaitingInternalReviewCount}
+            label={t('complaints.status.waitingOnDpo')}
             icon={<Clock3 size={22} />}
             iconColor="warning"
           />

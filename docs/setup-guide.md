@@ -52,7 +52,8 @@ sh bin/configure.sh <IS_HOME>
 
 Edit `repository/conf/configure.properties` first if your hostname, port,
 administrator credentials or database differ from the defaults. This step
-installs `deployment.toml` and applies the consent schema migration.
+installs `deployment.toml` and applies the consent and complaint management
+schema migrations.
 
 > **`deployment.toml` is replaced, not merged.** The accelerator ships a
 > complete file — `repository/resources/wso2is-7.3.0-deployment.toml`, the

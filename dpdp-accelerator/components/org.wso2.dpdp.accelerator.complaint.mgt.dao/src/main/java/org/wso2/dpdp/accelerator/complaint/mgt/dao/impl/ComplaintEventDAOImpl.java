@@ -18,12 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
+import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,19 +35,17 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ComplaintEventDAOImpl implements ComplaintEventDAO {
 
-    private static final Logger LOGGER = Logger.getLogger(ComplaintEventDAOImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(ComplaintEventDAOImpl.class);
 
     @Override
     public boolean addEvent(ComplaintEvent event) {
         try (Connection conn = DBUtil.getConnection()) {
             return addEvent(conn, event);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding event for complaint: " + event.getComplaintId(), e);
+            LOG.error("Error adding event for complaint: " + LogSanitizer.sanitize(event.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding event for complaint: " + event.getComplaintId(), e);
         }
     }
@@ -65,7 +66,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
             ps.setLong(11, event.getActionTime());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding event for complaint: " + event.getComplaintId(), e);
+            LOG.error("Error adding event for complaint: " + LogSanitizer.sanitize(event.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding event for complaint: " + event.getComplaintId(), e);
         }
     }
@@ -86,7 +87,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
                 return Optional.of(mapResultSetToEvent(rs));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting event by ID: " + complaintEventId, e);
+            LOG.error("Error getting event by ID: " + LogSanitizer.sanitize(complaintEventId), e);
             throw new ComplaintDAOException("Error getting event by ID: " + complaintEventId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
@@ -161,7 +162,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
                 events.add(mapResultSetToEvent(rs));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error listing events for complaint: " + complaintId, e);
+            LOG.error("Error listing events for complaint: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error listing events for complaint: " + complaintId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);

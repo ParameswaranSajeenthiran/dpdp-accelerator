@@ -36,7 +36,7 @@ user by IS's default role configuration, so `dpdp-consent-user` only needs to
 exist, not carry anything.
 
 The complaint management API has no such built-in default: it registers its
-own API resource (`/api/dpdp/complaints`, the four `portal:complaints:*`
+own API resource (`/api/dpdp/complaints`, the four `complaints:*`
 scopes) and folds all four straight into the existing `dpdp-consent-admin`
 role, rather than a dedicated complaint role — `dpdp-consent-admin` ends up
 holding every consent management scope *and* every complaint management
@@ -92,9 +92,9 @@ do this in each tenant.
 | Role | Assign to | Grants |
 |---|---|---|
 | `dpdp-consent-user` | Regular users | Managing their own consents. |
-| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog, plus every complaint management scope (`portal:complaints:read/write:self`, `portal:complaints:read/write:any`) — viewing and managing every complaint in the org, including internal notes and status transitions. |
+| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog, plus every complaint management scope (`complaints:read/write:self`, `complaints:read/write:any`) — viewing and managing every complaint in the org, including internal notes and status transitions. |
 
-There is currently no role granting ordinary users `portal:complaints:read/write:self` — only `dpdp-consent-admin` carries complaint scopes at all.
+There is currently no role granting ordinary users `complaints:read/write:self` — only `dpdp-consent-admin` carries complaint scopes at all.
 
 ## 5. Open the portal
 

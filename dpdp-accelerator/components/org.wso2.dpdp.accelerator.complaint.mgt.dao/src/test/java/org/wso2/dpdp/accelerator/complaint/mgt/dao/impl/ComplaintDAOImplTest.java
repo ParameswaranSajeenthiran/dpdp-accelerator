@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
 
@@ -215,5 +216,37 @@ class ComplaintDAOImplTest {
 
         assertEquals("c2", results.get(0).getComplaintId());
         assertEquals("c1", results.get(1).getComplaintId());
+    }
+
+    @Test
+    void getQueueStatsGroupsByStatusBucketAndCountsSlaBreaches() {
+        // statutoryDueTime = createdTime + 1000 for every row - see sampleComplaint.
+        dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c2", "org1", "IN_PROGRESS", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c3", "org1", "AWAITING_INTERNAL_REVIEW", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c4", "org1", "WAITING_ON_CLIENT", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c5", "org1", "RESOLVED", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c6", "org2", "OPEN", "HIGH", "user1", 100L, 100L));
+
+        ComplaintQueueStats stats = dao.getQueueStats("org1", 2000L);
+
+        // openCount is OPEN+IN_PROGRESS only (c1, c2) - AWAITING_INTERNAL_REVIEW gets its own
+        // dedicated bucket instead, and WAITING_ON_CLIENT has no tile at all (c4 counted nowhere).
+        assertEquals(2, stats.getOpenCount());
+        assertEquals(1, stats.getAwaitingInternalReviewCount());
+        assertEquals(1, stats.getResolvedCount());
+        // c1-c4 are all overdue (due 1100 < now 2000); c5 is excluded despite being overdue too,
+        // since RESOLVED never counts as breached; c6 is excluded entirely as a different org.
+        assertEquals(4, stats.getSlaBreachedCount());
+    }
+
+    @Test
+    void getQueueStatsExcludesComplaintsNotYetPastTheirDueTime() {
+        dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+
+        ComplaintQueueStats stats = dao.getQueueStats("org1", 500L);
+
+        assertEquals(1, stats.getOpenCount());
+        assertEquals(0, stats.getSlaBreachedCount());
     }
 }

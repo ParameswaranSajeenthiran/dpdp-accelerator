@@ -35,10 +35,10 @@ export const IS_SCOPES = {
   ELEMENT_VIEW: 'internal_consent_mgt_element_view',
   ELEMENT_CREATE: 'internal_consent_mgt_element_create',
   ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
-  COMPLAINTS_READ_SELF: 'portal:complaints:read:self',
-  COMPLAINTS_WRITE_SELF: 'portal:complaints:write:self',
-  COMPLAINTS_READ_ANY: 'portal:complaints:read:any',
-  COMPLAINTS_WRITE_ANY: 'portal:complaints:write:any',
+  COMPLAINTS_READ_SELF: 'complaints:read:self',
+  COMPLAINTS_WRITE_SELF: 'complaints:write:self',
+  COMPLAINTS_READ_ANY: 'complaints:read:any',
+  COMPLAINTS_WRITE_ANY: 'complaints:write:any',
 } as const
 
 /** Any one of these scopes is enough to unlock the area it guards. */

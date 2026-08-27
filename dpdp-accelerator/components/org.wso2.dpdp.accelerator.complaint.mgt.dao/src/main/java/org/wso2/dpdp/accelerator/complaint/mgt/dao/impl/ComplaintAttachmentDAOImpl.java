@@ -18,12 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
+import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,12 +36,10 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
 
-    private static final Logger LOGGER = Logger.getLogger(ComplaintAttachmentDAOImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(ComplaintAttachmentDAOImpl.class);
 
     @Override
     public boolean addAttachment(ComplaintAttachment attachment) {
@@ -62,7 +63,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
             ps.setLong(9, attachment.getCreatedTime());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding attachment for complaint: " + attachment.getComplaintId(), e);
+            LOG.error("Error adding attachment for complaint: "
+                    + LogSanitizer.sanitize(attachment.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding attachment for complaint: " + attachment.getComplaintId(),
                     e);
         } finally {
@@ -97,7 +99,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
                 return Optional.of(a);
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting attachment metadata by ID: " + attachmentId, e);
+            LOG.error("Error getting attachment metadata by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment metadata by ID: " + attachmentId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
@@ -122,7 +124,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
                 return Optional.of(mapResultSetToAttachment(rs));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting attachment with data by ID: " + attachmentId, e);
+            LOG.error("Error getting attachment with data by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment with data by ID: " + attachmentId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
@@ -156,7 +158,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
                 attachments.add(a);
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error listing attachments for complaint: " + complaintId, e);
+            LOG.error("Error listing attachments for complaint: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error listing attachments for complaint: " + complaintId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);

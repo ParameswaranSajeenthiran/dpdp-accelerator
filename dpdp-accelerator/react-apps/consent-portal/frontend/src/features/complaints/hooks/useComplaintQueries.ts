@@ -30,12 +30,14 @@ import type {
   ComplaintCategoryAPI,
   ComplaintDetail,
   ComplaintPriorityAPI,
+  ComplaintQueueStatsAPI,
   ComplaintRecord,
   ComplaintStatus,
 } from '../../../types/complaint'
 import {
   createMyComplaint,
   getManagedComplaint,
+  getManagedComplaintQueueStats,
   getManagedComplaintTimeline,
   getMyComplaint,
   getMyComplaintTimeline,
@@ -108,6 +110,13 @@ export function useManagedComplaintListQuery(
   params: ComplaintListParams,
 ): UseQueryResult<ComplaintListResult> {
   return useQuery(managedComplaintListQueryOptions(params))
+}
+
+export function useManagedComplaintQueueStatsQuery(): UseQueryResult<ComplaintQueueStatsAPI> {
+  return useQuery({
+    queryKey: ['complaints', 'managed', 'stats'],
+    queryFn: getManagedComplaintQueueStats,
+  })
 }
 
 export function useMyComplaintDetailQuery(id: string | undefined): UseQueryResult<ComplaintDetail> {

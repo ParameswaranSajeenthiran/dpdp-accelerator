@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 
 import java.util.List;
 
@@ -69,4 +70,7 @@ public interface ComplaintService {
      */
     List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
             int offset, String sort, int[] totalOut);
+
+    /** Org-wide counts for the officer/admin queue's summary tiles - see ComplaintDAO#getQueueStats. */
+    ComplaintQueueStats getQueueStats(String orgId);
 }

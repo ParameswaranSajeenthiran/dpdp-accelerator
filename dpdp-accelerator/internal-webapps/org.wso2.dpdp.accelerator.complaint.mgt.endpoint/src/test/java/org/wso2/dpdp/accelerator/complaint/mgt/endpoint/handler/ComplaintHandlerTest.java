@@ -26,11 +26,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.CategoryListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCategoryBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
@@ -156,6 +158,18 @@ class ComplaintHandlerTest {
         assertEquals(2, response.getData().size());
         assertEquals(42, response.getMetadata().getTotal());
         assertEquals(2, response.getMetadata().getCount());
+    }
+
+    @Test
+    void getQueueStatsMapsEachCountFromTheServiceResult() {
+        when(complaintService.getQueueStats(ORG_ID)).thenReturn(new ComplaintQueueStats(3, 1, 2, 1));
+
+        ComplaintQueueStatsResponseBean response = handler.getQueueStats(ORG_ID);
+
+        assertEquals(3, response.getOpenCount());
+        assertEquals(1, response.getAwaitingInternalReviewCount());
+        assertEquals(2, response.getResolvedCount());
+        assertEquals(1, response.getSlaBreachedCount());
     }
 
     @Test

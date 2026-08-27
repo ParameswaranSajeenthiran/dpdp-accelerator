@@ -135,7 +135,7 @@ class ScopeAuthorizationFilterTest {
         when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
         when(requestContext.getMethod()).thenReturn("GET");
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(principalWithScopes("portal:complaints:write:any"));
+                .thenReturn(principalWithScopes("complaints:write:any"));
 
         ComplaintException ex = assertThrows(ComplaintException.class, () -> filter.filter(requestContext));
 

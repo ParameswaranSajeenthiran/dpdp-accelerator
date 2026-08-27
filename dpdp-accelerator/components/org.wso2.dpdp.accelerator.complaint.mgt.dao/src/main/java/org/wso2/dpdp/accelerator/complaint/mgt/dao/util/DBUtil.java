@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.common.config.ConfigProvider;
 
 import javax.naming.InitialContext;
@@ -28,12 +30,10 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class DBUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(DBUtil.class.getName());
+    private static final Log LOG = LogFactory.getLog(DBUtil.class);
     private static DataSource dataSource = null;
 
     private DBUtil() {
@@ -45,24 +45,19 @@ public class DBUtil {
         }
         try {
             InitialContext ctx = new InitialContext();
-            dataSource = (DataSource) ctx.lookup("java:comp/env/jdbc/ComplaintDB");
+            dataSource = (DataSource) ctx.lookup("java:comp/env/jdbc/WSO2DPDP_DB");
             return dataSource.getConnection();
         } catch (NamingException e) {
-            // JNDI is only unavailable outside this accelerator (a plain unit test, or the WAR
-            // run standalone) - deployment.toml's [datasource.ComplaintDB] is still consulted
-            // first there via ConfigProvider, with the CO_DB_* system properties (set directly
-            // by H2TestDbSupport in tests) as the fallback beneath that.
-            // The TOML value is written with "&amp;" (see the comment above [datasource.ComplaintDB]
-            // in the shipped deployment.toml) so Carbon's verbatim, non-escaping transcription into
-            // master-datasources.xml produces a real "&" once that XML is parsed. Read directly off
-            // the TOML here instead, so unescape it back to a literal "&" before using it as a URL.
-            String dbUrl = ConfigProvider.getString("datasource.ComplaintDB.url",
+//            When JNDI isn't available (unit tests, or the WAR run standalone), it falls back to reading the datasource URL/credentials straight from deployment.toml (then CO_DB_* system
+//            properties below that) — and has to manually un-escape &amp; back to & in the URL, since Carbon copies the TOML value verbatim into master-datasources.xml where XML parsing
+//            does that unescaping for it, but reading the TOML directly here bypasses that step.
+            String dbUrl = ConfigProvider.getString("datasource.WSO2DPDP_DB.url",
                     System.getProperty("CO_DB_URL",
                             "jdbc:mysql://localhost:3306/complaint_db?useSSL=false&allowPublicKeyRetrieval=true"))
                     .replace("&amp;", "&");
-            String dbUser = ConfigProvider.getString("datasource.ComplaintDB.username",
+            String dbUser = ConfigProvider.getString("datasource.WSO2DPDP_DB.username",
                     System.getProperty("CO_DB_USER", "root"));
-            String dbPass = ConfigProvider.getString("datasource.ComplaintDB.password",
+            String dbPass = ConfigProvider.getString("datasource.WSO2DPDP_DB.password",
                     System.getProperty("CO_DB_PASS", "root"));
             return DriverManager.getConnection(dbUrl, dbUser, dbPass);
         }
@@ -107,21 +102,21 @@ public class DBUtil {
             try {
                 rs.close();
             } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Error closing ResultSet", e);
+                LOG.warn("Error closing ResultSet", e);
             }
         }
         if (ps != null) {
             try {
                 ps.close();
             } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Error closing PreparedStatement", e);
+                LOG.warn("Error closing PreparedStatement", e);
             }
         }
         if (conn != null) {
             try {
                 conn.close();
             } catch (SQLException e) {
-                LOGGER.log(Level.WARNING, "Error closing Connection", e);
+                LOG.warn("Error closing Connection", e);
             }
         }
     }

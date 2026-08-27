@@ -23,11 +23,7 @@ import java.util.Set;
 
 /**
  * The caller identity/authorization resolved by {@link TokenIntrospectionFilter} from a validated
- * bearer token's {@code sub}, {@code username}, and {@code scope} claims - including
- * {@link #getOrgId()}, which is derived from the token's own {@code username} claim (see
- * {@link TokenIntrospectionClient} and org.wso2.dpdp.common.util.TenantContextUtils), never from
- * anything client-supplied. Stashed on the request so resource methods and
- * {@link ScopeAuthorizationFilter} never need to re-introspect or trust anything client-supplied.
+ * bearer token - see {@link TokenIntrospectionClient} for how each field is derived.
  */
 public class AuthenticatedPrincipal {
 
@@ -47,11 +43,6 @@ public class AuthenticatedPrincipal {
         return userId;
     }
 
-    /**
-     * The introspection response's {@code username} field - a human-readable identity (e.g.
-     * "admin@carbon.super"), as opposed to {@link #getUserId()}'s opaque {@code sub}. May be
-     * {@code null} if the introspection endpoint didn't return one.
-     */
     public String getUserName() {
         return userName;
     }

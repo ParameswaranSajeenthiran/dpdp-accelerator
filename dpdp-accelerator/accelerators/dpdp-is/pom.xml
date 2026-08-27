@@ -104,9 +104,12 @@
                                               includes="org.wso2.dpdp.accelerator.common-*.jar"/>
                                 </copy>
                                 <!-- Backend JAX-RS API, not an SPA - ships as a plain WAR so Tomcat
-                                     hot-deploys it normally rather than pre-exploded. -->
-                                <copy file="../../internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/target/api#dpdp#complaints.war"
-                                      tofile="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#complaints.war"/>
+                                     hot-deploys it normally rather than pre-exploded. Deploys at
+                                     context /api/dpdp/complaints/v1; ComplaintServerJerseyServlet
+                                     itself maps to /* in web.xml, since the /v1 segment already
+                                     comes from this WAR's own name. -->
+                                <copy file="../../internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/target/api#dpdp#complaints#v1.war"
+                                      tofile="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#complaints#v1.war"/>
                             </target>
                         </configuration>
                     </execution>

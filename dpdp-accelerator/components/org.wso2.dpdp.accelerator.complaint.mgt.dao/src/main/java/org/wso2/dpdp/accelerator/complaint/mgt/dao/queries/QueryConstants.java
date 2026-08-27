@@ -49,6 +49,12 @@ public class QueryConstants {
     public static final String COUNT_COMPLAINTS_BASE =
             "SELECT COUNT(*) FROM COMPLAINT WHERE ORG_ID = ? ";
 
+    public static final String COUNT_COMPLAINTS_BY_STATUS =
+            "SELECT STATUS, COUNT(*) FROM COMPLAINT WHERE ORG_ID = ? GROUP BY STATUS";
+
+    public static final String COUNT_SLA_BREACHED_COMPLAINTS =
+            "SELECT COUNT(*) FROM COMPLAINT WHERE ORG_ID = ? AND STATUS != 'RESOLVED' AND STATUTORY_DUE_TIME < ?";
+
     // ---- COMPLAINT_EVENT ----
     public static final String ADD_COMPLAINT_EVENT =
             "INSERT INTO COMPLAINT_EVENT (" + DAOConstants.COLUMN_COMPLAINT_EVENT_ID + ", ORG_ID, COMPLAINT_ID, " +

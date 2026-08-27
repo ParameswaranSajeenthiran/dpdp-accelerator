@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 import org.tomlj.TomlTable;
@@ -27,14 +29,13 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Startup logic (deployment.toml loading + DB schema init) for the Tomcat-deployed WAR,
@@ -42,7 +43,7 @@ import java.util.logging.Logger;
  */
 public final class AppBootstrap {
 
-    private static final Logger LOGGER = Logger.getLogger(AppBootstrap.class.getName());
+    private static final Log LOG = LogFactory.getLog(AppBootstrap.class);
 
     private AppBootstrap() {
     }
@@ -50,17 +51,17 @@ public final class AppBootstrap {
     public static void loadDeploymentConfig() {
         File file = resolveDeploymentConfigFile();
         if (file == null) {
-            LOGGER.info("No deployment.toml found; using built-in defaults for all configuration.");
+            LOG.info("No deployment.toml found; using built-in defaults for all configuration.");
             return;
         }
 
         try {
             TomlParseResult result = Toml.parse(file.toPath());
             if (result.hasErrors()) {
-                result.errors().forEach(error -> LOGGER.warning("deployment.toml parse error: " + error));
+                result.errors().forEach(error -> LOG.warn("deployment.toml parse error: " + error));
                 return;
             }
-            LOGGER.info("Loading configuration from: " + file.getAbsolutePath());
+            LOG.info("Loading configuration from: " + file.getAbsolutePath());
 
             TomlTable database = result.getTable("database");
             if (database != null) {
@@ -92,7 +93,7 @@ public final class AppBootstrap {
                     }
                 }
                 PriorityMapper.configure(overrides);
-                LOGGER.info("Loaded " + overrides.size() + " category-to-priority mappings.");
+                LOG.info("Loaded " + overrides.size() + " category-to-priority mappings.");
             }
 
             TomlTable complaintScopes = result.getTable("complaintScopes");
@@ -105,10 +106,10 @@ public final class AppBootstrap {
                     }
                 }
                 ComplaintScopeRegistry.configure(scopeOverrides);
-                LOGGER.info("Loaded " + scopeOverrides.size() + " complaint scope override(s).");
+                LOG.info("Loaded " + scopeOverrides.size() + " complaint scope override(s).");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Could not read deployment.toml: " + e.getMessage(), e);
+            LOG.warn("Could not read deployment.toml: " + e.getMessage(), e);
         }
     }
 
@@ -155,7 +156,7 @@ public final class AppBootstrap {
 
     public static void initDatabase() {
         // Only used as DBUtil's DriverManager fallback default - applied when no
-        // jdbc/ComplaintDB resource is bound (see META-INF/context.xml) and no CO_DB_*
+        // jdbc/WSO2DPDP_DB resource is bound (see META-INF/context.xml) and no CO_DB_*
         // override is already set. A properly configured deployment goes through the JNDI
         // datasource instead; see DBUtil#getConnection().
         String dbType = System.getProperty("CO_DB_TYPE", System.getenv("CO_DB_TYPE"));
@@ -183,12 +184,9 @@ public final class AppBootstrap {
 
             String dbUrl = conn.getMetaData().getURL();
             boolean isMysql = dbUrl.startsWith("jdbc:mysql:");
-            LOGGER.info("Connected to database (" + (isMysql ? "MySQL" : "H2") + "): " + dbUrl);
+            LOG.info("Connected to database (" + (isMysql ? "MySQL" : "H2") + "): " + dbUrl);
 
-            InputStream is = AppBootstrap.class.getClassLoader().getResourceAsStream("dbscripts/mysql.sql");
-            if (is == null) {
-                is = DBUtil.class.getClassLoader().getResourceAsStream("dbscripts/mysql.sql");
-            }
+            InputStream is = openSchemaScript();
 
             if (is != null) {
                 StringBuilder sqlBuilder = new StringBuilder();
@@ -208,19 +206,47 @@ public final class AppBootstrap {
                         try {
                             stmt.execute(statementToExecute);
                         } catch (Exception ex) {
-                            LOGGER.warning("Warning executing DDL statement [" + statementToExecute + "]: "
+                            LOG.warn("Warning executing DDL statement [" + statementToExecute + "]: "
                                     + ex.getMessage());
                         }
                     }
                 }
 
-                LOGGER.info("Database schema initialized successfully.");
+                LOG.info("Database schema initialized successfully.");
             } else {
-                LOGGER.warning("mysql.sql script not found on classpath, skipping DDL execution.");
+                LOG.warn("mysql.sql script not found under carbon.home or on the classpath, "
+                        + "skipping DDL execution.");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error initializing database tables", e);
+            LOG.warn("Error initializing database tables", e);
         }
+    }
+
+    /**
+     * Locates the complaint schema DDL script, preferring the copy merge.sh installs at
+     * {@code <carbon.home>/dbscripts/dpdp-accelerator/complaint/mysql.sql} (see that script and
+     * the accelerator's own carbon-home/dbscripts layout) - this is the file a real accelerator
+     * deployment actually ships. Falls back to a classpath lookup for a plain-Tomcat deployment
+     * that has no carbon.home at all and instead bundles the script inside a jar/webapp resource.
+     */
+    private static InputStream openSchemaScript() {
+        String carbonHome = System.getProperty("carbon.home");
+        if (carbonHome != null) {
+            File file = new File(carbonHome, "dbscripts/dpdp-accelerator/complaint/mysql.sql");
+            if (file.isFile()) {
+                try {
+                    return new FileInputStream(file);
+                } catch (java.io.FileNotFoundException e) {
+                    LOG.warn("Could not open " + file.getAbsolutePath(), e);
+                }
+            }
+        }
+
+        InputStream is = AppBootstrap.class.getClassLoader().getResourceAsStream("dbscripts/mysql.sql");
+        if (is == null) {
+            is = DBUtil.class.getClassLoader().getResourceAsStream("dbscripts/mysql.sql");
+        }
+        return is;
     }
 
     private static void setSystemPropertyIfAbsent(String property, String value) {

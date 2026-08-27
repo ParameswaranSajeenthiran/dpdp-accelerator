@@ -30,9 +30,9 @@ username = "wso2carbon"
 password = "wso2carbon"
 driver = "org.h2.Driver"
 
-[datasource.ComplaintDB]
-id = "ComplaintDB"
-url = "jdbc:h2:./repository/database/WSO2COMPLAINT_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
 username = "wso2carbon"
 password = "wso2carbon"
 driver = "org.h2.Driver"
@@ -124,21 +124,12 @@ context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
 
-# Serves the portal tenant-qualified, the same way the server treats the My
-# Account and Console applications: the TenantContextRewriteValve resolves
-# /t/<tenant>/consent-portal/... to the deployed webapp with that tenant set as
-# the request's tenant context. The super tenant keeps the unqualified
-# /consent-portal path, since tenanted /t/carbon.super URLs are rejected unless
-# require_super_tenant_in_urls is enabled.
-#
-# The complaint-mgt endpoint needs the same treatment - it's one webapp shared
-# across every tenant, not redeployed per tenant - or /t/<tenant>/api/dpdp/
-# complaints/... 404s before it ever reaches the access_control rules below
-# (those only govern auth on a path Tomcat already dispatched; this list is
-# what makes Tomcat dispatch a /t/<tenant>/... path to the webapp at all). The
-# TenantContextRewriteValve strips the /t/<tenant>/ prefix before forwarding,
-# which is why TokenIntrospectionFilter reads the pre-forward URI from the
-# standard javax.servlet.forward.request_uri attribute instead of UriInfo.
+# Lets TenantContextRewriteValve dispatch /t/<tenant>/... to these single, non-per-tenant
+# webapps (like My Account/Console) instead of hitting 404 before access_control below even applies.
+# Super tenant keeps the unqualified path, since /t/carbon.super is rejected unless
+# require_super_tenant_in_urls is enabled. The valve strips the /t/<tenant>/ prefix before
+# forwarding, which is why TokenIntrospectionFilter reads the pre-forward URI from
+# javax.servlet.forward.request_uri instead of UriInfo.
 [tenant_context.rewrite]
 custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 
@@ -147,7 +138,7 @@ custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 # "secured" default does not know how to authenticate a request against it -
 # it would demand a Carbon session or Basic auth credentials the browser never
 # has. Each route below instead has Carbon's own valve enforce OAuth2 bearer
-# auth plus the exact portal:complaints:* scope that route requires, per
+# auth plus the exact complaints:* scope that route requires, per
 # complaint-server-API.yaml - /me/* routes require the :self scope, the plain
 # /complaints/* (officer/admin) routes require the :any scope. This is
 # defense-in-depth alongside - not a replacement for - the endpoint module's
@@ -167,56 +158,56 @@ context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments/[^/]+"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:self"]
+scopes = ["complaints:read:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:self"]
+scopes = ["complaints:write:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/comments"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:self"]
+scopes = ["complaints:write:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/timeline"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:self"]
+scopes = ["complaints:read:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/status"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:self"]
+scopes = ["complaints:write:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:self"]
+scopes = ["complaints:read:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:self"]
+scopes = ["complaints:write:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:self"]
+scopes = ["complaints:read:self"]
 
 # ---- /complaints/* (Complaint Officer/admin, :any scopes) ----
 [[resource.access_control]]
@@ -224,76 +215,56 @@ context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/attachments/[^/]+"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:any"]
+scopes = ["complaints:read:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/attachments"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:any"]
+scopes = ["complaints:write:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/comments"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:any"]
+scopes = ["complaints:write:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/timeline"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:any"]
+scopes = ["complaints:read:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/status"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:any"]
+scopes = ["complaints:write:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:any"]
+scopes = ["complaints:read:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "POST"
 secure = "true"
-scopes = ["portal:complaints:write:any"]
+scopes = ["complaints:write:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/complaints"
 allowed_auth_handlers = ["OAuthAuthentication"]
 http_method = "GET"
 secure = "true"
-scopes = ["portal:complaints:read:any"]
-
-# Fallback for anything under this webapp not matched by a rule above (there
-# shouldn't be any) - unsecured at the Carbon level so it doesn't 401 on a
-# Carbon session/Basic-auth challenge the browser never has; the endpoint
-# module's own filters still gate it in-process either way.
-[[resource.access_control]]
-context = "(.*)/api/dpdp/complaints(.*)"
-secure = "false"
-http_method = "all"
-
-# The complaint-mgt endpoint's TokenIntrospectionFilter/TokenIntrospectionClient decode a caller's
-# bearer token's JWT claims directly, in-process - no call out to Identity Server, and no
-# signature check here, since Carbon's own valve (see the [[resource.access_control]] entries
-# above) already verified the token's signature/expiry/revocation status before this webapp ever
-# saw the request.
-[complaint_mgt.oauth2_introspection]
-# The only OAuth2 application whose tokens this endpoint accepts - must match the
-# client_id auto-provisioned per tenant (see [dpdp_accelerator.consent_portal] below).
-# A token decoding successfully but minted for any other application is rejected.
-expected_client_id = "DPDP_CONSENT_PORTAL"
+scopes = ["complaints:read:any"]
 
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
@@ -301,7 +272,15 @@ expected_client_id = "DPDP_CONSENT_PORTAL"
 # hand instead - this does not disable the portal itself, only the automatic
 # creation of its application and roles.
 # client_id must match whatever the deployed portal's own configuration expects -
-# changing it here without updating that too will break sign-in.
+# changing it here without updating that too will break sign-in. Also read directly by the
+# complaint-mgt endpoint's TokenIntrospectionClient as the only client_id whose tokens it accepts.
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# How many days after submission a complaint's statutory due date falls (see
+# StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
+# Falls back to the CO_STATUTORY_DUE_PERIOD_DAYS system property, then to 90, if unset or not a
+# valid integer.
+[complaint_mgt]
+statutory_due_period_days = "90"

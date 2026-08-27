@@ -112,8 +112,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             // complaint scopes (see DPDPConsentPortalRoleProvisioningUtil).
             List<String> adminScopes = new ArrayList<>(authorizedConsentScopes);
             adminScopes.addAll(authorizedComplaintScopes);
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes,
-                    tenantInfoBean);
+            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

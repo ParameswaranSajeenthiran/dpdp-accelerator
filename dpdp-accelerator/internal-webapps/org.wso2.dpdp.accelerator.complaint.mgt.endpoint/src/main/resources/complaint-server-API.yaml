@@ -31,8 +31,10 @@ info:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
 servers:
-  - url: http://0.0.0.0:8091/api/v1
-    description: Local development
+  - url: /t/{tenant-domain}/api/dpdp/complaints/v1
+    variables:
+      tenant-domain:
+        default: carbon.super
 tags:
   - name: Me - Complaints
     description: Data Principal (normal user) operations on their own complaints
@@ -64,11 +66,11 @@ paths:
         The owning userId is resolved server-side from the bearer
         token's `sub` claim, not from the request body.
 
-        Required scope: `portal:complaints:write:self`
+        Required scope: `complaints:write:self`
       operationId: meCreateComplaint
       security:
         - OAuth2:
-            - portal:complaints:write:self
+            - complaints:write:self
       parameters:
       requestBody:
         required: true
@@ -100,11 +102,11 @@ paths:
         Returns only complaints owned by the authenticated Data Principal
         (scoped by the caller's bearer token). 
 
-        Required scope: `portal:complaints:read:self`
+        Required scope: `complaints:read:self`
       operationId: meListComplaints
       security:
         - OAuth2:
-            - portal:complaints:read:self
+            - complaints:read:self
       parameters:
         - name: status
           in: query
@@ -160,11 +162,11 @@ paths:
         who shouldn't see it. Does not include attachments — use
         GET .../timeline for those.
 
-        Required scope: `portal:complaints:read:self`
+        Required scope: `complaints:read:self`
       operationId: meGetComplaint
       security:
         - OAuth2:
-            - portal:complaints:read:self
+            - complaints:read:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       responses:
@@ -202,11 +204,11 @@ paths:
         role USER) and binds every attachment in the request to it — see
         ComplaintTimelineEntryResponse.attachments.
 
-        Required scope: `portal:complaints:write:self`
+        Required scope: `complaints:write:self`
       operationId: meUploadComplaintAttachment
       security:
         - OAuth2:
-            - portal:complaints:write:self
+            - complaints:write:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -259,11 +261,11 @@ paths:
         base64-encoded. Only attachments with `isPublic=true` are
         accessible here.
 
-        Required scope: `portal:complaints:read:self`
+        Required scope: `complaints:read:self`
       operationId: meDownloadComplaintAttachment
       security:
         - OAuth2:
-            - portal:complaints:read:self
+            - complaints:read:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
         - name: attachmentId
@@ -302,11 +304,11 @@ paths:
         Each entry's `attachments` lists the isPublic=true attachments
         uploaded alongside it.
 
-        Required scope: `portal:complaints:read:self`
+        Required scope: `complaints:read:self`
       operationId: meGetComplaintTimeline
       security:
         - OAuth2:
-            - portal:complaints:read:self
+            - complaints:read:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
         - name: fromTime
@@ -366,11 +368,11 @@ paths:
       description: >
         Adds a public reply from the Data Principal. 
 
-        Required scope: `portal:complaints:write:self`
+        Required scope: `complaints:write:self`
       operationId: meAddComplaintMessage
       security:
         - OAuth2:
-            - portal:complaints:write:self
+            - complaints:write:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -422,11 +424,11 @@ paths:
         Lets the Data Principal change the status of their own complaint
         directly — e.g. 
 
-        Required scope: `portal:complaints:write:self`
+        Required scope: `complaints:write:self`
       operationId: meUpdateComplaintStatus
       security:
         - OAuth2:
-            - portal:complaints:write:self
+            - complaints:write:self
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -476,11 +478,11 @@ paths:
         rather than submitted by the Data Principal themselves via
         POST /me/complaints. 
 
-        Required scope: `portal:complaints:write:any`
+        Required scope: `complaints:write:any`
       operationId: cmCreateComplaint
       security:
         - OAuth2:
-            - portal:complaints:write:any
+            - complaints:write:any
       parameters:
       requestBody:
         required: true
@@ -517,11 +519,11 @@ paths:
         Officer/admin search across all complaints in the org, not
         restricted to a single user.
 
-        Required scope: `portal:complaints:read:any`
+        Required scope: `complaints:read:any`
       operationId: cmListComplaints
       security:
         - OAuth2:
-            - portal:complaints:read:any
+            - complaints:read:any
       parameters:
         - name: status
           in: query
@@ -574,17 +576,44 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /complaints/stats:
+    get:
+      tags: [Complaint Management - Complaints]
+      summary: Org-wide complaint counts for the queue dashboard's summary tiles
+      description: >
+        Always unfiltered by status/priority — a whole-queue summary, independent
+        of whatever filter is currently applied to GET /complaints alongside it.
+
+        Required scope: `complaints:read:any`
+      operationId: cmGetQueueStats
+      security:
+        - OAuth2:
+            - complaints:read:any
+      responses:
+        '200':
+          description: Org-wide complaint counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplaintQueueStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /complaints/{complaintId}:
     get:
       tags: [Complaint Management - Complaints]
       summary: Get any complaint
       description: >
 
-        Required scope: `portal:complaints:read:any`
+        Required scope: `complaints:read:any`
       operationId: cmGetComplaint
       security:
         - OAuth2:
-            - portal:complaints:read:any
+            - complaints:read:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       responses:
@@ -625,11 +654,11 @@ paths:
         Data Principal — this also marks the upload's timeline entry
         internal.
 
-        Required scope: `portal:complaints:write:any`
+        Required scope: `complaints:write:any`
       operationId: cmUploadComplaintAttachment
       security:
         - OAuth2:
-            - portal:complaints:write:any
+            - complaints:write:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -687,11 +716,11 @@ paths:
         Officers have full access regardless of the `isPublic` flag on
         the attachment.
 
-        Required scope: `portal:complaints:read:any`
+        Required scope: `complaints:read:any`
       operationId: cmDownloadComplaintAttachment
       security:
         - OAuth2:
-            - portal:complaints:read:any
+            - complaints:read:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
         - name: attachmentId
@@ -725,11 +754,11 @@ paths:
         `attachments` lists every attachment uploaded alongside it,
         regardless of isPublic.
 
-        Required scope: `portal:complaints:read:any`
+        Required scope: `complaints:read:any`
       operationId: cmGetComplaintTimeline
       security:
         - OAuth2:
-            - portal:complaints:read:any
+            - complaints:read:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
         - name: fromTime
@@ -798,11 +827,11 @@ paths:
         for status-only transitions with no accompanying message (e.g.
         automated SYSTEM transitions).
 
-        Required scope: `portal:complaints:write:any`
+        Required scope: `complaints:write:any`
       operationId: cmAddComplaintMessage
       security:
         - OAuth2:
-            - portal:complaints:write:any
+            - complaints:write:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -857,11 +886,11 @@ paths:
         use POST /complaints/{complaintId}/comments
         with toStatus set instead.
 
-        Required scope: `portal:complaints:write:any`
+        Required scope: `complaints:write:any`
       operationId: cmUpdateComplaintStatus
       security:
         - OAuth2:
-            - portal:complaints:write:any
+            - complaints:write:any
       parameters:
         - $ref: '#/components/parameters/ComplaintId'
       requestBody:
@@ -911,19 +940,19 @@ components:
         token belonging to one user can never be used to act on another
         user's complaint. Scopes additionally gate which resource breadth
         (self vs any) and which HTTP verbs the token is authorized for:
-        - `portal:complaints:read:self` — GET on /me/* endpoints
-        - `portal:complaints:write:self` — POST/PUT/DELETE on /me/* endpoints
-        - `portal:complaints:read:any` — GET on /complaints/* (officer/admin) endpoints
-        - `portal:complaints:write:any` — POST/PUT/DELETE on /complaints/* (officer/admin) endpoints
+        - `complaints:read:self` — GET on /me/* endpoints
+        - `complaints:write:self` — POST/PUT/DELETE on /me/* endpoints
+        - `complaints:read:any` — GET on /complaints/* (officer/admin) endpoints
+        - `complaints:write:any` — POST/PUT/DELETE on /complaints/* (officer/admin) endpoints
       flows:
         authorizationCode:
           authorizationUrl: https://localhost:9443/oauth2/authorize
           tokenUrl: https://localhost:9443/oauth2/token
           scopes:
-            portal:complaints:read:self: Read the caller's own complaints, comments, timeline, and attachments
-            portal:complaints:write:self: Create or update the caller's own complaints, comments, attachments, and status
-            portal:complaints:read:any: Read any complaint in the org (officer/admin)
-            portal:complaints:write:any: Create or update any complaint in the org (officer/admin)
+            complaints:read:self: Read the caller's own complaints, comments, timeline, and attachments
+            complaints:write:self: Create or update the caller's own complaints, comments, attachments, and status
+            complaints:read:any: Read any complaint in the org (officer/admin)
+            complaints:write:any: Create or update any complaint in the org (officer/admin)
   parameters:
     ComplaintId:
       name: complaintId
@@ -1237,6 +1266,22 @@ components:
               type: integer
             limit:
               type: integer
+    ComplaintQueueStatsResponse:
+      type: object
+      required: [openCount, awaitingInternalReviewCount, resolvedCount, slaBreachedCount]
+      properties:
+        openCount:
+          type: integer
+          description: OPEN and IN_PROGRESS combined.
+        awaitingInternalReviewCount:
+          type: integer
+          description: AWAITING_INTERNAL_REVIEW.
+        resolvedCount:
+          type: integer
+          description: RESOLVED.
+        slaBreachedCount:
+          type: integer
+          description: Not yet RESOLVED and past statutoryDueDate.
     TimelineListResponse:
       type: object
       description: >

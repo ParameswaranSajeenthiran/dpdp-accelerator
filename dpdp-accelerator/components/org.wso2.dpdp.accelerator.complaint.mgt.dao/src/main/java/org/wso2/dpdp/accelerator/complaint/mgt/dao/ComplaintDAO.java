@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.dao;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -70,4 +71,16 @@ public interface ComplaintDAO {
      */
     List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
             int offset, String sort, int[] totalOut);
+
+    /**
+     * Org-wide counts for the officer/admin queue's summary tiles - open (OPEN/IN_PROGRESS
+     * combined), awaiting internal review (AWAITING_INTERNAL_REVIEW), resolved, and SLA-breached
+     * (STATUTORY_DUE_TIME already passed on a still-open complaint, judged against {@code now} -
+     * passed in rather than read here, same as every other DAO write's timestamp, so the whole
+     * call is deterministic and testable). WAITING_ON_CLIENT has no dedicated tile, so it isn't
+     * counted in any bucket here. Always unfiltered by status/priority - the tiles summarize the
+     * whole queue regardless of whatever filter is currently applied to the paginated list beside
+     * them.
+     */
+    ComplaintQueueStats getQueueStats(String orgId, long now);
 }

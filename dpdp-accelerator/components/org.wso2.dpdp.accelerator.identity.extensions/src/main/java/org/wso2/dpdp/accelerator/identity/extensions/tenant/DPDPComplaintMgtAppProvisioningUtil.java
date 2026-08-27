@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Registers the complaint management API resource (the {@code portal:complaints:*} scopes) and
+ * Registers the complaint management API resource (the {@code complaints:*} scopes) and
  * authorizes the DPDP Consent Portal application for it - the complaint management equivalent of
  * {@link DPDPConsentPortalAppProvisioningUtil#authorizeConsentManagementAPIs}.
  *
@@ -52,10 +52,10 @@ public final class DPDPComplaintMgtAppProvisioningUtil {
     private static final String API_RESOURCE_NAME = "DPDP Complaint Management API";
     private static final String AUTHORIZED_API_POLICY = "RBAC";
 
-    static final String SCOPE_READ_SELF = "portal:complaints:read:self";
-    static final String SCOPE_WRITE_SELF = "portal:complaints:write:self";
-    static final String SCOPE_READ_ANY = "portal:complaints:read:any";
-    static final String SCOPE_WRITE_ANY = "portal:complaints:write:any";
+    static final String SCOPE_READ_SELF = "complaints:read:self";
+    static final String SCOPE_WRITE_SELF = "complaints:write:self";
+    static final String SCOPE_READ_ANY = "complaints:read:any";
+    static final String SCOPE_WRITE_ANY = "complaints:write:any";
 
     private DPDPComplaintMgtAppProvisioningUtil() {
 

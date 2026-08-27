@@ -131,6 +131,14 @@ export interface ComplaintListResponseAPI {
   metadata: PageMetadataAPI
 }
 
+/** Org-wide counts for the officer/admin queue's summary tiles - always unfiltered. */
+export interface ComplaintQueueStatsAPI {
+  openCount: number
+  awaitingInternalReviewCount: number
+  resolvedCount: number
+  slaBreachedCount: number
+}
+
 export interface ComplaintListQueryParamsAPI {
   status?: ComplaintStatus
   priority?: ComplaintPriorityAPI

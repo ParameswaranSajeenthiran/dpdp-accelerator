@@ -75,7 +75,7 @@ class TokenIntrospectionClientTest {
         Map<String, Object> claims = baseClaims();
         claims.put("sub", "user-123");
         claims.put("org_handle", "example.com");
-        claims.put("scope", "portal:complaints:read:self");
+        claims.put("scope", "complaints:read:self");
 
         AuthenticatedPrincipal principal = client.introspect(token(claims));
 

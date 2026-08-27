@@ -26,20 +26,12 @@ import type {
   ComplaintListQueryParamsAPI,
   ComplaintListResponseAPI,
   ComplaintMessageRequestAPI,
+  ComplaintQueueStatsAPI,
   ComplaintRecordAPI,
   ComplaintTimelineListResponseAPI,
 } from '../../../types/complaint'
 import { apiRequest } from '../../../utils/apiClient'
 
-// The complaint-mgt endpoint deploys as its own WAR inside Identity Server, at the context path
-// derived from its `#`-separated finalName (api#dpdp#complaints -> /api/dpdp/complaints), with its
-// Jersey servlet mapped at /v1/*. This is NOT the same as complaint-server-API.yaml's `servers:`
-// entry (http://0.0.0.0:8091/api/v1), which describes running that WAR standalone on its own port
-// for local dev - don't "fix" this back to /api/v1 to match the spec literally.
-//
-// There is no BFF in this portal (see catalogApi.ts's CONSENT_MGT_V2 for the same direct-to-backend
-// pattern): apiRequest attaches the caller's IS-issued bearer token automatically, and the
-// complaint-mgt endpoint validates it itself via OAuth2 introspection - no custom headers needed.
 const COMPLAINT_MGT_V1 = '/api/dpdp/complaints/v1'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
@@ -64,7 +56,7 @@ function uploadFilesFormData(files: File[], isPublic?: boolean): FormData {
   return formData
 }
 
-// -- Data Principal surface (/me/complaints/*, portal:complaints:{read,write}:self) -------------
+// -- Data Principal surface (/me/complaints/*, complaints:{read,write}:self) -------------
 
 export async function listMyComplaints(
   params: ComplaintListQueryParamsAPI,
@@ -145,7 +137,7 @@ export async function downloadMyComplaintAttachment(
   )
 }
 
-// -- Complaint Officer surface (/complaints/*, portal:complaints:{read,write}:any) ---------------
+// -- Complaint Officer surface (/complaints/*, complaints:{read,write}:any) ---------------
 
 export async function listManagedComplaints(
   params: ComplaintListQueryParamsAPI,
@@ -153,6 +145,12 @@ export async function listManagedComplaints(
   return apiRequest<ComplaintListResponseAPI>(`${COMPLAINT_MGT_V1}/complaints`, {
     method: 'GET',
     query: listQuery(params),
+  })
+}
+
+export async function getManagedComplaintQueueStats(): Promise<ComplaintQueueStatsAPI> {
+  return apiRequest<ComplaintQueueStatsAPI>(`${COMPLAINT_MGT_V1}/complaints/stats`, {
+    method: 'GET',
   })
 }
 

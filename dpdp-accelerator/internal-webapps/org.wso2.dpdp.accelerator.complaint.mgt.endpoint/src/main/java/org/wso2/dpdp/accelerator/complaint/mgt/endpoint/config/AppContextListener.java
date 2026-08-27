@@ -18,23 +18,25 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import java.util.logging.Logger;
 
 /**
  * Runs the deployment.toml loading + DB schema init on Tomcat's servlet lifecycle.
  */
 public class AppContextListener implements ServletContextListener {
 
-    private static final Logger LOGGER = Logger.getLogger(AppContextListener.class.getName());
+    private static final Log LOG = LogFactory.getLog(AppContextListener.class);
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        LOGGER.info("Initializing WSO2 DPDP Complaint Server webapp...");
+        LOG.info("Initializing WSO2 DPDP Complaint Server webapp...");
         AppBootstrap.loadDeploymentConfig();
         AppBootstrap.initDatabase();
-        LOGGER.info("WSO2 DPDP Complaint Server webapp initialized.");
+        LOG.info("WSO2 DPDP Complaint Server webapp initialized.");
     }
 
     @Override

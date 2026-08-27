@@ -15,9 +15,9 @@
     "internal_consent_mgt_element_view",
     "internal_consent_mgt_element_create",
     "internal_consent_mgt_element_delete",
-    "portal:complaints:read:self",
-    "portal:complaints:write:self",
-    "portal:complaints:read:any",
-    "portal:complaints:write:any"
+    "complaints:read:self",
+    "complaints:write:self",
+    "complaints:read:any",
+    "complaints:write:any"
   ]
 }

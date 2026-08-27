@@ -20,11 +20,13 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.CategoryListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCategoryBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
@@ -96,6 +98,11 @@ public class ComplaintHandler {
     public ComplaintListResponseBean listComplaints(String orgId, String status, String priority, String userId,
             Integer limit, Integer offset, String sort) {
         return listComplaints(orgId, status, priority, userId, limit, offset, sort, false);
+    }
+
+    public ComplaintQueueStatsResponseBean getQueueStats(String orgId) {
+        ComplaintQueueStats stats = complaintService.getQueueStats(orgId);
+        return ComplaintQueueStatsResponseBean.from(stats);
     }
 
     public CategoryListResponseBean getCategories() {

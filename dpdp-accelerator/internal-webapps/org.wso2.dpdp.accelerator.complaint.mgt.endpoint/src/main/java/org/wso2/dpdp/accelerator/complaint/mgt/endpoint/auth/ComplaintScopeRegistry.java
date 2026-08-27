@@ -40,10 +40,10 @@ import java.util.Set;
  */
 public final class ComplaintScopeRegistry {
 
-    public static final String READ_SELF = "portal:complaints:read:self";
-    public static final String WRITE_SELF = "portal:complaints:write:self";
-    public static final String READ_ANY = "portal:complaints:read:any";
-    public static final String WRITE_ANY = "portal:complaints:write:any";
+    public static final String READ_SELF = "complaints:read:self";
+    public static final String WRITE_SELF = "complaints:write:self";
+    public static final String READ_ANY = "complaints:read:any";
+    public static final String WRITE_ANY = "complaints:write:any";
 
     private static final Set<String> KNOWN_SCOPES = new HashSet<>(
             Arrays.asList(READ_SELF, WRITE_SELF, READ_ANY, WRITE_ANY));
@@ -58,6 +58,7 @@ public final class ComplaintScopeRegistry {
 
         defaults.put("POST /complaints", WRITE_ANY);
         defaults.put("GET /complaints", READ_ANY);
+        defaults.put("GET /complaints/stats", READ_ANY);
         defaults.put("GET /complaints/categories", READ_ANY);
         defaults.put("GET /complaints/{complaintId}", READ_ANY);
         defaults.put("POST /complaints/{complaintId}/status", WRITE_ANY);
@@ -81,7 +82,7 @@ public final class ComplaintScopeRegistry {
 
     /**
      * Merges {@code overrides} on top of the current mapping, one key at a time. An entry whose
-     * value isn't one of the four known {@code portal:complaints:*} scopes is dropped rather than
+     * value isn't one of the four known {@code complaints:*} scopes is dropped rather than
      * applied; an entry whose key doesn't match any real operation is harmless (never looked up)
      * and is kept as-is rather than rejected, so a deployment.toml written against a newer version
      * of this module still loads cleanly on an older one.

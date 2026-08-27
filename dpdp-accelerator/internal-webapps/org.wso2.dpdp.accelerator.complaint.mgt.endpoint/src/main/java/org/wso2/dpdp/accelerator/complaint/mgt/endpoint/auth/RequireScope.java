@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a resource method as requiring an OAuth2 scope check. Carries no value itself - the
- * required scope (one of the four {@code portal:complaints:*} scopes in complaint-server-API.yaml)
+ * required scope (one of the four {@code complaints:*} scopes in complaint-server-API.yaml)
  * is looked up by {@link ScopeAuthorizationFilter} from {@link ComplaintScopeRegistry}, keyed by
  * "{@code <HTTP method> <path template>}" (e.g. {@code "GET /complaints/{complaintId}"}), so the
  * actual scope-per-operation mapping lives in deployment.toml's {@code [complaintScopes]} table

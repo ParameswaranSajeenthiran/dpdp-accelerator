@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -213,6 +214,11 @@ public class ComplaintServiceImpl implements ComplaintService {
                     String.format(ComplaintServiceConstants.INVALID_PRIORITY_FILTER_ERROR, priority));
         }
         return complaintDAO.listComplaints(orgId, status, priority, userId, limit, offset, sort, totalOut);
+    }
+
+    @Override
+    public ComplaintQueueStats getQueueStats(String orgId) {
+        return complaintDAO.getQueueStats(orgId, System.currentTimeMillis());
     }
 
     private boolean isValidCategory(String category) {

@@ -25,6 +25,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.CategoryListRespons
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
@@ -44,7 +45,7 @@ import javax.ws.rs.core.Response;
 
 /**
  * Complaint Management (officer/admin) namespace - see complaint-server-API.yaml. Every operation
- * requires portal:complaints:{read,write}:any; the acting officer/system's identity comes from the
+ * requires complaints:{read,write}:any; the acting officer/system's identity comes from the
  * validated bearer token (TokenIntrospectionFilter), never a client-supplied header.
  */
 @Path("/complaints")
@@ -96,6 +97,14 @@ public class ComplaintEndpoint {
             @QueryParam("sort") String sort) {
         ComplaintListResponseBean response =
                 complaintHandler.listComplaints(currentOrgId(), status, priority, userId, limit, offset, sort);
+        return Response.ok(response).build();
+    }
+
+    @GET
+    @Path("/stats")
+    @RequireScope
+    public Response getQueueStats() {
+        ComplaintQueueStatsResponseBean response = complaintHandler.getQueueStats(currentOrgId());
         return Response.ok(response).build();
     }
 

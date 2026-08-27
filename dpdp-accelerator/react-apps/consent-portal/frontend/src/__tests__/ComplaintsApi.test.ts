@@ -50,13 +50,6 @@ function sentFormData(): FormData {
   return call[0].data
 }
 
-/**
- * Reported bug: "only the last selected file is being uploaded". uploadFilesFormData
- * (complaintsApi.ts, not exported) does `files.forEach(file => formData.append('file', file))`,
- * which looks correct - these tests exercise the real exported functions end to end (through the
- * real FormData API, not a stub) to settle whether the outgoing request body actually carries
- * every file or only the last one.
- */
 describe('complaintsApi attachment uploads', () => {
   it('uploadManagedComplaintAttachments appends every file under repeated "file" fields', async () => {
     respondWith([])

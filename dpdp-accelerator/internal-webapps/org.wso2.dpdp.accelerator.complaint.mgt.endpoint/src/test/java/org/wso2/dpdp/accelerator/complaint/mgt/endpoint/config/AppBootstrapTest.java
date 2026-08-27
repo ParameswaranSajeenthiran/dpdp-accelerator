@@ -177,19 +177,41 @@ class AppBootstrapTest {
         System.setProperty("CO_DB_USER", "sa");
         System.setProperty("CO_DB_PASS", "");
 
-        AppBootstrap.initDatabase();
+        // initDatabase() reads the DDL script from <carbon.home>/dbscripts/dpdp-accelerator/complaint/mysql.sql
+        // (the layout merge.sh installs it under) rather than the classpath - see AppBootstrap#openSchemaScript.
+        Path carbonHome = Files.createTempDirectory("carbon-home");
+        Path scriptDir = carbonHome.resolve("dbscripts").resolve("dpdp-accelerator").resolve("complaint");
+        try {
+            Files.createDirectories(scriptDir);
+            Files.writeString(scriptDir.resolve("mysql.sql"),
+                    "CREATE TABLE IF NOT EXISTS `COMPLAINT` (`COMPLAINT_ID` char(36) NOT NULL,"
+                            + " PRIMARY KEY (`COMPLAINT_ID`));\n"
+                            + "CREATE TABLE IF NOT EXISTS `COMPLAINT_EVENT` (`COMPLAINT_EVENT_ID` char(36) NOT NULL,"
+                            + " PRIMARY KEY (`COMPLAINT_EVENT_ID`));\n"
+                            + "CREATE TABLE IF NOT EXISTS `COMPLAINT_ATTACHMENT` (`ATTACHMENT_ID` char(36) NOT NULL,"
+                            + " PRIMARY KEY (`ATTACHMENT_ID`));\n");
+            System.setProperty("carbon.home", carbonHome.toString());
 
-        try (Connection conn = DriverManager.getConnection(url, "sa", "");
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(
-                        "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'")) {
-            Set<String> tables = new HashSet<>();
-            while (rs.next()) {
-                tables.add(rs.getString(1));
+            AppBootstrap.initDatabase();
+
+            try (Connection conn = DriverManager.getConnection(url, "sa", "");
+                    Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery(
+                            "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'")) {
+                Set<String> tables = new HashSet<>();
+                while (rs.next()) {
+                    tables.add(rs.getString(1));
+                }
+                assertTrue(tables.contains("COMPLAINT"));
+                assertTrue(tables.contains("COMPLAINT_EVENT"));
+                assertTrue(tables.contains("COMPLAINT_ATTACHMENT"));
             }
-            assertTrue(tables.contains("COMPLAINT"));
-            assertTrue(tables.contains("COMPLAINT_EVENT"));
-            assertTrue(tables.contains("COMPLAINT_ATTACHMENT"));
+        } finally {
+            Files.deleteIfExists(scriptDir.resolve("mysql.sql"));
+            Files.deleteIfExists(scriptDir);
+            Files.deleteIfExists(scriptDir.getParent());
+            Files.deleteIfExists(carbonHome.resolve("dbscripts"));
+            Files.deleteIfExists(carbonHome);
         }
     }
 

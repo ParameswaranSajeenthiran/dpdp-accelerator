@@ -18,21 +18,22 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.common.util.LogSanitizer;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Provider
 public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
 
-    private static final Logger LOGGER = Logger.getLogger(ComplaintExceptionMapper.class.getName());
+    private static final Log LOG = LogFactory.getLog(ComplaintExceptionMapper.class);
 
     @Override
     public Response toResponse(Throwable exception) {
@@ -50,7 +51,7 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                     .build();
         }
 
-        LOGGER.log(Level.SEVERE, "Unhandled exception in Complaint API: " + exception.getMessage(), exception);
+        LOG.error("Unhandled exception in Complaint API: " + LogSanitizer.sanitize(exception.getMessage()), exception);
 
         ErrorEnvelope envelope = new ErrorEnvelope(
                 ComplaintErrorCode.INTERNAL_ERROR.getCode(),

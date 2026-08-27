@@ -45,6 +45,7 @@ class ComplaintScopeRegistryTest {
         Map<String, String> defaults = new HashMap<>();
         defaults.put("POST /complaints", ComplaintScopeRegistry.WRITE_ANY);
         defaults.put("GET /complaints", ComplaintScopeRegistry.READ_ANY);
+        defaults.put("GET /complaints/stats", ComplaintScopeRegistry.READ_ANY);
         defaults.put("GET /complaints/categories", ComplaintScopeRegistry.READ_ANY);
         defaults.put("GET /complaints/{complaintId}", ComplaintScopeRegistry.READ_ANY);
         defaults.put("POST /complaints/{complaintId}/status", ComplaintScopeRegistry.WRITE_ANY);

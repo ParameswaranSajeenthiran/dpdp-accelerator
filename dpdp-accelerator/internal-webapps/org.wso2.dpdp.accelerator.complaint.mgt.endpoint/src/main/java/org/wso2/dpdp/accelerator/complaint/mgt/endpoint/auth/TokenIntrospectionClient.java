@@ -47,12 +47,12 @@ import java.util.Iterator;
  * never from a client-supplied header, URL segment, or body field. Also rejects a token outright
  * if its {@code client_id}/{@code aud} doesn't match the one registered application this endpoint
  * is meant to serve - otherwise a token minted for a different application, but carrying the same
- * org-agnostic {@code portal:complaints:*} scope strings, would be trusted here too.
+ * org-agnostic {@code complaints:*} scope strings, would be trusted here too.
  *
- * <p>Configuration is read the same way DBUtil reads [datasource.ComplaintDB] - via
- * ConfigProvider against deployment.toml's [complaint_mgt.oauth2_introspection] table, with a
- * system-property override beneath that (see wso2is-7.3.0-deployment.toml for the shipped
- * default).
+ * <p>Configuration is read the same way DBUtil reads [datasource.WSO2DPDP_DB] - via
+ * ConfigProvider against deployment.toml's [dpdp_accelerator.consent_portal] table (the same
+ * client_id the identity.extensions module auto-provisions per tenant - see that table's own
+ * comment in wso2is-7.3.0-deployment.toml), with a system-property override beneath that.
  *
  * <p>The human-readable {@code username} claim this class reads is not a default JWT access
  * token claim - it's only present because the DPDP Consent Portal application has the local
@@ -63,7 +63,7 @@ import java.util.Iterator;
  */
 public class TokenIntrospectionClient {
 
-    private static final String CONFIG_EXPECTED_CLIENT_ID = "complaint_mgt.oauth2_introspection.expected_client_id";
+    private static final String CONFIG_EXPECTED_CLIENT_ID = "dpdp_accelerator.consent_portal.client_id";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String expectedClientId;
@@ -102,7 +102,7 @@ public class TokenIntrospectionClient {
         }
 
         // Without this, a token minted for a completely different registered application - but
-        // carrying the same portal:complaints:* scope strings, which are org-agnostic by design -
+        // carrying the same complaints:* scope strings, which are org-agnostic by design -
         // would be accepted here too. Pinning to the one client this endpoint is meant to serve
         // closes that token-confusion gap. WSO2 IS JWT access tokens carry the client id as both a
         // "client_id" claim and (per the JWT "aud" convention) inside "aud" - prefer the explicit

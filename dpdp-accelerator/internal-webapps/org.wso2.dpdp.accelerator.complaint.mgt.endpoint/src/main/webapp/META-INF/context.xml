@@ -19,15 +19,15 @@
 
 <!--
     Tomcat picks this up automatically as this webapp's Context configuration. The
-    ResourceLink below binds this webapp's local java:comp/env/jdbc/ComplaintDB name (see
+    ResourceLink below binds this webapp's local java:comp/env/jdbc/WSO2DPDP_DB name (see
     DBUtil#getConnection() in the DAO module for the JNDI lookup, and web.xml's
     <resource-ref> for the declaration) to the Carbon-managed pooled javax.sql.DataSource
-    Carbon registers globally as jdbc/ComplaintDB from the [datasource.ComplaintDB] block in
+    Carbon registers globally as jdbc/WSO2DPDP_DB from the [datasource.WSO2DPDP_DB] block in
     deployment.toml - see repository/resources/wso2is-7.3.0-deployment.toml. Edit
     configure.properties, not this file or deployment.toml directly, to change the database
     target; bin/configure.sh substitutes it into deployment.toml the same way it substitutes
     IS_HOSTNAME/IS_ADMIN_USERNAME/IS_ADMIN_PASSWORD.
 -->
 <Context>
-    <ResourceLink name="jdbc/ComplaintDB" global="jdbc/ComplaintDB" type="javax.sql.DataSource"/>
+    <ResourceLink name="jdbc/WSO2DPDP_DB" global="jdbc/WSO2DPDP_DB" type="javax.sql.DataSource"/>
 </Context>

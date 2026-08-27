@@ -26,11 +26,6 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.identity.role.v2.mgt.core.model.Permission;
 import org.wso2.carbon.identity.role.v2.mgt.core.model.RoleBasicInfo;
-import org.wso2.carbon.identity.role.v2.mgt.core.model.UserBasicInfo;
-import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
-import org.wso2.carbon.user.api.UserRealm;
-import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
-import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.ArrayList;
@@ -55,45 +50,22 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     private static final String ROLE_AUDIENCE = "application";
     private static final String ADMIN_ROLE_ID = "admin-role-id";
     private static final String USER_ROLE_ID = "user-role-id";
-    private static final int TENANT_ID = 1;
-    private static final String TENANT_ADMIN_USERNAME = "admin";
-    private static final String TENANT_ADMIN_USER_ID = "admin-user-id";
 
     @Mock
     private RoleManagementService roleManagementService;
-    @Mock
-    private RealmService realmService;
-    @Mock
-    private UserRealm userRealm;
-    @Mock
-    private AbstractUserStoreManager userStoreManager;
-
-    private TenantInfoBean tenantInfoBean;
 
     @BeforeMethod
     public void setUp() throws Exception {
 
         MockitoAnnotations.openMocks(this);
         DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(roleManagementService);
-        DPDPIdentityExtensionDataHolder.getInstance().setRealmService(realmService);
 
-        tenantInfoBean = new TenantInfoBean();
-        tenantInfoBean.setTenantId(TENANT_ID);
-        tenantInfoBean.setAdmin(TENANT_ADMIN_USERNAME);
-
-        // Resolves the tenant admin's user id by default in every test - only the tests that
-        // specifically cover the assignment behaviour assert on it.
-        when(realmService.getTenantUserRealm(TENANT_ID)).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(userStoreManager.getUserIDFromUserName(TENANT_ADMIN_USERNAME)).thenReturn(TENANT_ADMIN_USER_ID);
         when(roleManagementService.addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE), anyList(),
                 anyList(), anyList(), anyString(), anyString(), anyString()))
                 .thenReturn(new RoleBasicInfo(ADMIN_ROLE_ID, DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE));
         when(roleManagementService.addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE), anyList(), anyList(),
                 anyList(), anyString(), anyString(), anyString()))
                 .thenReturn(new RoleBasicInfo(USER_ROLE_ID, DPDPConsentPortalRoleProvisioningUtil.USER_ROLE));
-        // No one assigned yet by default, so the assignment path runs unless a test says otherwise.
-        when(roleManagementService.getUserListOfRole(anyString(), anyString())).thenReturn(Collections.emptyList());
     }
 
     private static List<String> permissionNames(List<Permission> permissions) {
@@ -109,9 +81,9 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     public void createRolesCreatesAdminRoleWithAllScopesAndUserRoleWithOnlySelfScopedOnes() throws Exception {
 
         List<String> scopes = Arrays.asList("internal_consent_mgt_consent_view",
-                "portal:complaints:read:self", "portal:complaints:read:any");
+                "complaints:read:self", "complaints:read:any");
 
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes, tenantInfoBean);
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes);
 
         ArgumentCaptor<List<Permission>> adminPermissionsCaptor = ArgumentCaptor.forClass(List.class);
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
@@ -124,7 +96,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
                 eq(Collections.emptyList()), eq(Collections.emptyList()), userPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
         assertEquals(permissionNames(userPermissionsCaptor.getValue()),
-                Collections.singletonList("portal:complaints:read:self"));
+                Collections.singletonList("complaints:read:self"));
 
         verify(roleManagementService, times(2)).addRole(anyString(), anyList(), anyList(), anyList(), anyString(),
                 anyString(), anyString());
@@ -133,8 +105,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     @Test
     public void createRolesHandlesEmptyScopeList() throws Exception {
 
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList(),
-                tenantInfoBean);
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList());
 
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), eq(Collections.emptyList()),
@@ -147,7 +118,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     @Test
     public void createRolesAddsOnlyTheMissingScopesToAnAlreadyExistingRole() throws Exception {
 
-        // dpdp-consent-admin already exists (e.g. created before portal:complaints:* scopes
+        // dpdp-consent-admin already exists (e.g. created before complaints:* scopes
         // existed) and already carries the consent-mgt scope - only the two new complaint scopes
         // should be added, and nothing already granted should be touched or removed.
         when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE,
@@ -159,10 +130,10 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         when(roleManagementService.getPermissionListOfRole(ADMIN_ROLE_ID, TENANT_DOMAIN))
                 .thenReturn(Collections.singletonList(new Permission("internal_consent_mgt_consent_view")));
 
-        List<String> scopes = Arrays.asList("internal_consent_mgt_consent_view", "portal:complaints:read:any",
-                "portal:complaints:write:any");
+        List<String> scopes = Arrays.asList("internal_consent_mgt_consent_view", "complaints:read:any",
+                "complaints:write:any");
 
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes, tenantInfoBean);
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes);
 
         verify(roleManagementService, never()).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
                 anyList(), anyList(), anyList(), anyString(), anyString(), anyString());
@@ -171,7 +142,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         verify(roleManagementService).updatePermissionListOfRole(eq(ADMIN_ROLE_ID), addedCaptor.capture(),
                 eq(Collections.emptyList()), eq(TENANT_DOMAIN));
         assertEquals(permissionNames(addedCaptor.getValue()),
-                Arrays.asList("portal:complaints:read:any", "portal:complaints:write:any"));
+                Arrays.asList("complaints:read:any", "complaints:write:any"));
 
         // USER_ROLE didn't exist, so it's created fresh with only the :self-scoped permission -
         // none of the :any ones apply to it.
@@ -189,47 +160,12 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         when(roleManagementService.getRoleIdByName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE, ROLE_AUDIENCE,
                 APPLICATION_ID, TENANT_DOMAIN)).thenReturn(USER_ROLE_ID);
         when(roleManagementService.getPermissionListOfRole(USER_ROLE_ID, TENANT_DOMAIN))
-                .thenReturn(Collections.singletonList(new Permission("portal:complaints:read:self")));
+                .thenReturn(Collections.singletonList(new Permission("complaints:read:self")));
 
         DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN,
-                Collections.singletonList("portal:complaints:read:self"), tenantInfoBean);
+                Collections.singletonList("complaints:read:self"));
 
         verify(roleManagementService, never()).updatePermissionListOfRole(anyString(), anyList(), anyList(),
                 anyString());
-    }
-
-    @Test
-    public void createRolesAssignsTheTenantAdminToTheAdminRoleWhenNotAlreadyAMember() throws Exception {
-
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN,
-                Collections.singletonList("portal:complaints:read:any"), tenantInfoBean);
-
-        verify(roleManagementService).updateUserListOfRole(ADMIN_ROLE_ID,
-                Collections.singletonList(TENANT_ADMIN_USER_ID), Collections.emptyList(), TENANT_DOMAIN);
-    }
-
-    @Test
-    public void createRolesDoesNotReassignATenantAdminAlreadyInTheAdminRole() throws Exception {
-
-        when(roleManagementService.getUserListOfRole(ADMIN_ROLE_ID, TENANT_DOMAIN))
-                .thenReturn(Collections.singletonList(new UserBasicInfo(TENANT_ADMIN_USER_ID, TENANT_ADMIN_USERNAME)));
-
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN,
-                Collections.singletonList("portal:complaints:read:any"), tenantInfoBean);
-
-        verify(roleManagementService, never()).updateUserListOfRole(anyString(), anyList(), anyList(), anyString());
-    }
-
-    @Test
-    public void createRolesSkipsAssignmentWhenTheTenantUserRealmIsUnavailable() throws Exception {
-
-        when(realmService.getTenantUserRealm(TENANT_ID)).thenReturn(null);
-
-        // Must not throw - a provisioning run that can't resolve the admin's user id should still
-        // finish creating/updating the roles themselves.
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN,
-                Collections.singletonList("portal:complaints:read:any"), tenantInfoBean);
-
-        verify(roleManagementService, never()).updateUserListOfRole(anyString(), anyList(), anyList(), anyString());
     }
 }

@@ -61,7 +61,7 @@ class ComplaintCommentEndpointTest {
     void addComplaintMessageResolvesActorFromTokenAndReturns200WithHandlerResponse() {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("portal:complaints:write:any")));
+                        Set.of("complaints:write:any")));
         ComplaintMessageRequestBean request = new ComplaintMessageRequestBean();
         ComplaintCommentCreateResponseBean handlerResponse = new ComplaintCommentCreateResponseBean();
         when(commentHandler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request))

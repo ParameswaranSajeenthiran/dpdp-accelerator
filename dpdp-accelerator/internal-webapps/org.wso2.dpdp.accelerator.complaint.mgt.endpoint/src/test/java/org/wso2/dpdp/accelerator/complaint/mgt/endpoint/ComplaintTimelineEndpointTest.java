@@ -60,7 +60,7 @@ class ComplaintTimelineEndpointTest {
     void getTimelineReturns200WithHandlerResponse() {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("portal:complaints:read:any")));
+                        Set.of("complaints:read:any")));
         TimelineListResponseBean handlerResponse = new TimelineListResponseBean();
         when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, null, "asc", 10, 0)).thenReturn(handlerResponse);
 

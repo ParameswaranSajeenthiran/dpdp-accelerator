@@ -22,10 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.identity.role.v2.mgt.core.model.Permission;
-import org.wso2.carbon.identity.role.v2.mgt.core.model.UserBasicInfo;
-import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
-import org.wso2.carbon.user.api.UserRealm;
-import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.ArrayList;
@@ -42,12 +38,11 @@ import java.util.stream.Collectors;
  * registering the application itself.
  *
  * <p>{@code dpdp-consent-admin} gets every authorized scope (consent-mgt and
- * {@code portal:complaints:*}, both {@code :self} and {@code :any}); {@code dpdp-consent-user}
+ * {@code complaints:*}, both {@code :self} and {@code :any}); {@code dpdp-consent-user}
  * gets only the {@code :self}-suffixed ones, so an ordinary citizen can file/view their own
  * complaints via {@code /me/*} but never reach the officer-facing {@code /complaints/*} routes.
- * The tenant's admin user is also added as a member of {@code dpdp-consent-admin} - role creation
- * alone grants no one membership, so without this no one could use either the consent or
- * complaint admin features until someone manually assigned themselves the role via the Console.
+ * Creating a role grants no one membership - an administrator must assign a user to
+ * {@code dpdp-consent-admin} via the Console before anyone can use the admin features.
  */
 public final class DPDPConsentPortalRoleProvisioningUtil {
 
@@ -61,8 +56,7 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
 
     }
 
-    public static void createRoles(String applicationId, String tenantDomain, List<String> authorizedScopeNames,
-            TenantInfoBean tenantInfoBean) throws Exception {
+    public static void createRoles(String applicationId, String tenantDomain, List<String> authorizedScopeNames) throws Exception {
 
         RoleManagementService roleManagementService = DPDPIdentityExtensionDataHolder.getInstance()
                 .getRoleManagementService();
@@ -74,14 +68,12 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
         String adminRoleId = createOrUpdateRole(roleManagementService, ADMIN_ROLE, authorizedScopeNames,
                 applicationId, tenantDomain);
         createOrUpdateRole(roleManagementService, USER_ROLE, selfScopeNames, applicationId, tenantDomain);
-
-        assignTenantAdminIfMissing(roleManagementService, adminRoleId, tenantInfoBean, tenantDomain);
     }
 
     /**
      * Creates the role fresh (with every one of {@code scopeNames} as a permission) if it doesn't
      * exist yet. If it already exists - e.g. this tenant's role predates a scope this accelerator
-     * only started granting later, such as when {@code portal:complaints:*} scopes were added
+     * only started granting later, such as when {@code complaints:*} scopes were added
      * after {@code dpdp-consent-admin} already existed - only the scopes it's still missing are
      * added; nothing already granted is ever removed.
      *
@@ -121,57 +113,5 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
                     + "' for application: " + applicationId);
         }
         return roleId;
-    }
-
-    /**
-     * Adds the tenant's admin user as a member of {@code dpdp-consent-admin} unless they're
-     * already a member (of this role specifically, or via some other route) - re-running this on
-     * every tenant update must not re-add a user who was deliberately removed from the role since
-     * the last run.
-     */
-    private static void assignTenantAdminIfMissing(RoleManagementService roleManagementService, String adminRoleId,
-            TenantInfoBean tenantInfoBean, String tenantDomain) throws Exception {
-
-        String adminUserId = resolveUserId(tenantInfoBean);
-        if (adminUserId == null) {
-            LOG.warn("Could not resolve a user id for tenant admin '" + tenantInfoBean.getAdmin() + "' in tenant '"
-                    + tenantDomain + "'; skipping automatic " + ADMIN_ROLE + " membership.");
-            return;
-        }
-
-        boolean alreadyAssigned = roleManagementService.getUserListOfRole(adminRoleId, tenantDomain).stream()
-                .map(UserBasicInfo::getId)
-                .anyMatch(adminUserId::equals);
-        if (alreadyAssigned) {
-            LOG.debug("Tenant admin '" + tenantInfoBean.getAdmin() + "' is already a member of " + ADMIN_ROLE
-                    + " for tenant: " + tenantDomain);
-            return;
-        }
-
-        roleManagementService.updateUserListOfRole(adminRoleId, Collections.singletonList(adminUserId),
-                Collections.emptyList(), tenantDomain);
-        LOG.debug("Assigned tenant admin '" + tenantInfoBean.getAdmin() + "' to " + ADMIN_ROLE + " for tenant: "
-                + tenantDomain);
-    }
-
-    /**
-     * Resolves the tenant admin's user id from their username via the tenant's own user store -
-     * role membership is tracked by user id, not username, in the role v2 model. Returns
-     * {@code null} (rather than throwing) if the tenant's user realm isn't available or its user
-     * store isn't the unique-id-capable kind this accelerator requires - callers must treat that
-     * as "can't determine", not fail the whole provisioning run over it.
-     */
-    private static String resolveUserId(TenantInfoBean tenantInfoBean) throws Exception {
-
-        UserRealm userRealm = DPDPIdentityExtensionDataHolder.getInstance().getRealmService()
-                .getTenantUserRealm(tenantInfoBean.getTenantId());
-        if (userRealm == null) {
-            return null;
-        }
-        org.wso2.carbon.user.api.UserStoreManager userStoreManager = userRealm.getUserStoreManager();
-        if (!(userStoreManager instanceof AbstractUserStoreManager)) {
-            return null;
-        }
-        return ((AbstractUserStoreManager) userStoreManager).getUserIDFromUserName(tenantInfoBean.getAdmin());
     }
 }

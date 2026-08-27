@@ -36,7 +36,7 @@ Building from source? See the [repository README](../../../README.md#build)
    Edit `repository/conf/configure.properties` first if your hostname, port,
    administrator credentials or database differ from the defaults. This step
    installs `deployment.toml`, writes `dpdp-portal.properties`, and applies the
-   consent schema migration.
+   consent and complaint management schema migrations.
 
    > **`deployment.toml` is replaced, not merged.** The accelerator ships a
    > complete file — `repository/resources/wso2is-7.3.0-deployment.toml`, the

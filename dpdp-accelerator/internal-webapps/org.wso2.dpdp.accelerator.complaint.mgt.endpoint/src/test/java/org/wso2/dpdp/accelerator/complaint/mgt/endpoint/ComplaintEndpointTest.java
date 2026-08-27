@@ -30,6 +30,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.CategoryListRespons
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
@@ -65,7 +66,7 @@ class ComplaintEndpointTest {
     private void stubPrincipal() {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("portal:complaints:read:any")));
+                        Set.of("complaints:read:any")));
     }
 
     @Test
@@ -90,6 +91,18 @@ class ComplaintEndpointTest {
                 .thenReturn(handlerResponse);
 
         Response response = endpoint.listComplaints("OPEN", "HIGH", "user1", 10, 0, "updatedTime");
+
+        assertEquals(200, response.getStatus());
+        assertSame(handlerResponse, response.getEntity());
+    }
+
+    @Test
+    void getQueueStatsReturns200WithHandlerResponse() {
+        stubPrincipal();
+        ComplaintQueueStatsResponseBean handlerResponse = new ComplaintQueueStatsResponseBean();
+        when(complaintHandler.getQueueStats(ORG_ID)).thenReturn(handlerResponse);
+
+        Response response = endpoint.getQueueStats();
 
         assertEquals(200, response.getStatus());
         assertSame(handlerResponse, response.getEntity());

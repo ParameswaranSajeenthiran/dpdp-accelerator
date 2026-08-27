@@ -18,15 +18,15 @@
 
 package org.wso2.dpdp.common.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
 
 import java.io.File;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * Read-only access to deployment.toml by dotted key path (e.g. "datasource.ComplaintDB.url"),
+ * Read-only access to deployment.toml by dotted key path (e.g. "datasource.WSO2DPDP_DB.url"),
  * shared across every accelerator module so each one doesn't reparse the file on its own. Parsed
  * lazily, once, on first use, and cached for the lifetime of the JVM - deployment.toml is read at
  * startup in every real deployment, never hot-reloaded.
@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  */
 public final class ConfigProvider {
 
-    private static final Logger LOGGER = Logger.getLogger(ConfigProvider.class.getName());
+    private static final Log LOG = LogFactory.getLog(ConfigProvider.class);
 
     private static volatile boolean loaded;
     private static volatile TomlParseResult config;
@@ -50,15 +50,23 @@ public final class ConfigProvider {
     /**
      * Returns the value at {@code dottedKey} in deployment.toml (tomlj resolves a dotted key
      * through nested tables directly), or {@code defaultValue} if deployment.toml could not be
-     * found/parsed, or the key isn't present.
+     * found/parsed, the key isn't present, or its value isn't a TOML string (e.g. an unquoted
+     * number or boolean) - every caller treats config values as strings to parse themselves, so a
+     * type mismatch here should fail soft the same way a missing key does, not surface as an
+     * uncaught exception all the way up to the caller.
      */
     public static String getString(String dottedKey, String defaultValue) {
         TomlParseResult toml = getConfig();
         if (toml == null || dottedKey == null || dottedKey.isEmpty()) {
             return defaultValue;
         }
-        String value = toml.getString(dottedKey);
-        return value != null ? value : defaultValue;
+        try {
+            String value = toml.getString(dottedKey);
+            return value != null ? value : defaultValue;
+        } catch (RuntimeException e) {
+            LOG.warn("deployment.toml key '" + dottedKey + "' is not a string; using the default instead.", e);
+            return defaultValue;
+        }
     }
 
     /** Test-only seam: forces the next getString() call to reparse rather than reuse the cached result. */
@@ -82,20 +90,20 @@ public final class ConfigProvider {
     private static TomlParseResult loadDeploymentConfig() {
         File file = resolveDeploymentConfigFile();
         if (file == null) {
-            LOGGER.info("No deployment.toml found; ConfigProvider will return every caller's own default.");
+            LOG.info("No deployment.toml found; ConfigProvider will return every caller's own default.");
             return null;
         }
 
         try {
             TomlParseResult result = Toml.parse(file.toPath());
             if (result.hasErrors()) {
-                result.errors().forEach(error -> LOGGER.warning("deployment.toml parse error: " + error));
+                result.errors().forEach(error -> LOG.warn("deployment.toml parse error: " + error));
                 return null;
             }
-            LOGGER.info("ConfigProvider loaded configuration from: " + file.getAbsolutePath());
+            LOG.info("ConfigProvider loaded configuration from: " + file.getAbsolutePath());
             return result;
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Could not read deployment.toml: " + e.getMessage(), e);
+            LOG.warn("Could not read deployment.toml: " + e.getMessage(), e);
             return null;
         }
     }

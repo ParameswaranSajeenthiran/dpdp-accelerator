@@ -31,6 +31,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import java.sql.Connection;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -331,5 +333,16 @@ class ComplaintServiceImplTest {
 
         assertEquals("CO-4002", ex.getCode());
         verifyNoInteractions(complaintDAO);
+    }
+
+    @Test
+    void getQueueStatsDelegatesToDao() {
+        ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
+        when(complaintDAO.getQueueStats(eq("org1"), anyLong())).thenReturn(stats);
+
+        ComplaintQueueStats result = complaintService.getQueueStats("org1");
+
+        assertEquals(stats, result);
+        verify(complaintDAO).getQueueStats(eq("org1"), anyLong());
     }
 }

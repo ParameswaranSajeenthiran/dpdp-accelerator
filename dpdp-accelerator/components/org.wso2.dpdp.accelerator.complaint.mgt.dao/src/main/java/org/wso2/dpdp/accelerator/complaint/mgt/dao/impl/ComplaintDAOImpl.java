@@ -18,12 +18,17 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
+import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,19 +38,17 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ComplaintDAOImpl implements ComplaintDAO {
 
-    private static final Logger LOGGER = Logger.getLogger(ComplaintDAOImpl.class.getName());
+    private static final Log LOG = LogFactory.getLog(ComplaintDAOImpl.class);
 
     @Override
     public boolean addComplaint(Complaint complaint) {
         try (Connection conn = DBUtil.getConnection()) {
             return addComplaint(conn, complaint);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
+            LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
         }
     }
@@ -67,22 +70,18 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
         } catch (SQLIntegrityConstraintViolationException e) {
-            // Distinguish the UQ_COMPLAINT_REFERENCE (ORG_ID, REFERENCE_ID) collision - the
-            // count-then-format sequence in ReferenceIdGenerator is racy under concurrent submissions
-            // for the same org/year, so this is expected to happen occasionally rather than indicate
-            // real data corruption - from a COMPLAINT_ID primary-key collision, which is a genuine bug
-            // (UUID collision) and should surface as the generic DAO error, not a silent retry.
-            // Neither driver exposes the violated constraint's name as a structured field, so this is
-            // the only portable signal across MySQL and the H2 test database.
+
+//            Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID collision (real bug) by checking the driver's error message text — the only portable way,
+//            since neither driver exposes the violated constraint as a structured field.
             if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
                     .contains("UQ_COMPLAINT_REFERENCE")) {
-                LOGGER.log(Level.WARNING, "Duplicate reference ID for org: " + complaint.getOrgId(), e);
+                LOG.warn("Duplicate reference ID for org: " + complaint.getOrgId(), e);
                 throw new DuplicateReferenceIdException(e);
             }
-            LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
+            LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error adding complaint for org: " + complaint.getOrgId(), e);
+            LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
         }
     }
@@ -102,7 +101,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                 return Optional.of(mapResultSetToComplaint(rs));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error getting complaint by ID: " + complaintId, e);
+            LOG.error("Error getting complaint by ID: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error getting complaint by ID: " + complaintId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
@@ -125,7 +124,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error counting complaints by reference prefix for org: " + orgId, e);
+            LOG.error("Error counting complaints by reference prefix for org: " + orgId, e);
             throw new ComplaintDAOException("Error counting complaints by reference prefix for org: " + orgId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
@@ -138,7 +137,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         try (Connection conn = DBUtil.getConnection()) {
             return updateStatus(conn, complaintId, orgId, newStatus, updatedTime);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error updating status for complaint: " + complaintId, e);
+            LOG.error("Error updating status for complaint: " + LogSanitizer.sanitize(complaintId), e);
         }
         return false;
     }
@@ -153,7 +152,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setString(4, orgId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error updating status for complaint: " + complaintId, e);
+            LOG.error("Error updating status for complaint: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error updating status for complaint: " + complaintId, e);
         }
     }
@@ -247,12 +246,58 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                 complaints.add(mapResultSetToComplaint(rs));
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error listing complaints for org: " + orgId, e);
+            LOG.error("Error listing complaints for org: " + orgId, e);
             throw new ComplaintDAOException("Error listing complaints for org: " + orgId, e);
         } finally {
             DBUtil.closeAll(conn, ps, rs);
         }
         return complaints;
+    }
+
+    @Override
+    public ComplaintQueueStats getQueueStats(String orgId, long now) {
+        int openCount = 0;
+        int awaitingInternalReviewCount = 0;
+        int resolvedCount = 0;
+
+        Connection conn = null;
+        PreparedStatement statusPs = null;
+        ResultSet statusRs = null;
+        PreparedStatement breachedPs = null;
+        ResultSet breachedRs = null;
+        try {
+            conn = DBUtil.getConnection();
+
+            statusPs = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_BY_STATUS);
+            statusPs.setString(1, orgId);
+            statusRs = statusPs.executeQuery();
+            while (statusRs.next()) {
+                String status = statusRs.getString(1);
+                int count = statusRs.getInt(2);
+                if (ComplaintStatus.OPEN.name().equals(status) || ComplaintStatus.IN_PROGRESS.name().equals(status)) {
+                    openCount += count;
+                } else if (ComplaintStatus.AWAITING_INTERNAL_REVIEW.name().equals(status)) {
+                    awaitingInternalReviewCount += count;
+                } else if (ComplaintStatus.RESOLVED.name().equals(status)) {
+                    resolvedCount += count;
+                }
+                // WAITING_ON_CLIENT has no dedicated tile - not counted in any bucket here.
+            }
+
+            breachedPs = conn.prepareStatement(QueryConstants.COUNT_SLA_BREACHED_COMPLAINTS);
+            breachedPs.setString(1, orgId);
+            breachedPs.setLong(2, now);
+            breachedRs = breachedPs.executeQuery();
+            int slaBreachedCount = breachedRs.next() ? breachedRs.getInt(1) : 0;
+
+            return new ComplaintQueueStats(openCount, awaitingInternalReviewCount, resolvedCount, slaBreachedCount);
+        } catch (SQLException e) {
+            LOG.error("Error computing queue stats for org: " + orgId, e);
+            throw new ComplaintDAOException("Error computing queue stats for org: " + orgId, e);
+        } finally {
+            DBUtil.closeAll(null, breachedPs, breachedRs);
+            DBUtil.closeAll(conn, statusPs, statusRs);
+        }
     }
 
     private Complaint mapResultSetToComplaint(ResultSet rs) throws SQLException {

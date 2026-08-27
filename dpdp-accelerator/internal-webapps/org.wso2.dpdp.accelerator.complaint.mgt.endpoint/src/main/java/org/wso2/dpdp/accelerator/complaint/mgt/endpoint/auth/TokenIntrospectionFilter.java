@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
@@ -31,15 +33,13 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Runs on every request to this endpoint. Carbon's own session-based valve does not gate this
  * webapp by default (see the [[resource.access_control]] entries for /api/dpdp/complaints in
  * wso2is-7.3.0-deployment.toml) - per-route entries there have Carbon's OAuthAuthentication
  * handler independently validate the bearer token's signature/expiry/revocation status and the
- * required portal:complaints:* scope before this webapp ever sees the request. This filter is the
+ * required complaints:* scope before this webapp ever sees the request. This filter is the
  * authoritative, in-process gate on top of that: it extracts the Authorization: Bearer token,
  * decodes its claims via {@link TokenIntrospectionClient} (no signature re-check - see that
  * class's javadoc for why relying on Carbon's valve for that is safe), and stashes the resolved
@@ -52,7 +52,7 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
 
     public static final String PRINCIPAL_PROPERTY = "complaint.authenticatedPrincipal";
 
-    private static final Logger LOGGER = Logger.getLogger(TokenIntrospectionFilter.class.getName());
+    private static final Log LOG = LogFactory.getLog(TokenIntrospectionFilter.class);
     private static final String BEARER_PREFIX = "Bearer ";
 
     private static final String FORWARD_REQUEST_URI_ATTRIBUTE = "javax.servlet.forward.request_uri";
@@ -111,7 +111,7 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
         try {
             principal = introspectionClient.introspect(token);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failed to decode bearer token claims", e);
+            LOG.warn("Failed to decode bearer token claims", e);
             throw new ComplaintException(ComplaintErrorCode.UNAUTHENTICATED, "Could not decode the bearer token.");
         }
 

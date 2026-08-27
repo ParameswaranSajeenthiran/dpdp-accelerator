@@ -65,7 +65,7 @@ class ComplaintAttachmentEndpointTest {
     void uploadComplaintAttachmentReturns201WithHandlerResponse() {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("portal:complaints:write:any")));
+                        Set.of("complaints:write:any")));
         List<ComplaintAttachmentResponseBean> handlerResponse = List.of();
         when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                 "Officer One")).thenReturn(handlerResponse);
@@ -80,7 +80,7 @@ class ComplaintAttachmentEndpointTest {
     void downloadComplaintAttachmentReturns200WithHandlerResponse() {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("portal:complaints:read:any")));
+                        Set.of("complaints:read:any")));
         ComplaintAttachmentDownloadResponseBean handlerResponse =
                 new ComplaintAttachmentDownloadResponseBean("att1", "a.pdf", "application/pdf", new byte[]{1});
         when(attachmentHandler.downloadAttachment(ORG_ID, "c1", "att1")).thenReturn(handlerResponse);

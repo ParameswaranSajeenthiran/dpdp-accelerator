@@ -33,11 +33,11 @@ describe('scope requirements', () => {
 
   it('never invents a scope vocabulary the server does not define', () => {
     // internal_* scopes are Identity Server's own built-in RBAC scopes (consent/purpose/element).
-    // portal:complaints:* scopes are real OAuth2 scopes on a registered API resource - the
+    // complaints:* scopes are real OAuth2 scopes on a registered API resource - the
     // complaint-mgt endpoint's own resource, not an IS built-in - see complaint-server-API.yaml's
     // securitySchemes.OAuth2. Either way, the portal never makes up scope names of its own.
     Object.values(IS_SCOPES).forEach((scope) => {
-      expect(scope.startsWith('internal_') || scope.startsWith('portal:complaints:')).toBe(true)
+      expect(scope.startsWith('internal_') || scope.startsWith('complaints:')).toBe(true)
     })
   })
 

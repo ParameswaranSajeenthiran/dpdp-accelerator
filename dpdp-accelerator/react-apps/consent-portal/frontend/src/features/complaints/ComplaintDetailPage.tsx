@@ -213,10 +213,13 @@ function ComplaintDetailPage(): React.JSX.Element {
                 getStatusLabel={() => ''}
                 isSending={sendMessageMutation.isPending}
                 onSend={(message, files, _visibility, _nextStatus, onSent) => {
+                  // A reply only advances the workflow when the officer was waiting on the
+                  // client for more information - any other status (IN_PROGRESS, OPEN, etc.)
+                  // is left unchanged, since the officer hasn't asked for anything here.
                   const toStatus =
-                    complaint.status === 'AWAITING_INTERNAL_REVIEW'
-                      ? undefined
-                      : 'AWAITING_INTERNAL_REVIEW'
+                    complaint.status === 'WAITING_ON_CLIENT'
+                      ? 'AWAITING_INTERNAL_REVIEW'
+                      : undefined
 
                   sendMessageMutation.mutate(
                     {
