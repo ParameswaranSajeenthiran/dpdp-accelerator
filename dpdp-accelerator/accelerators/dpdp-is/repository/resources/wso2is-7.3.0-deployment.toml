@@ -30,6 +30,13 @@ username = "wso2carbon"
 password = "wso2carbon"
 driver = "org.h2.Driver"
 
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+driver = "org.h2.Driver"
+
 [keystore.primary]
 file_name = "wso2carbon.p12"
 password = "wso2carbon"
@@ -117,6 +124,62 @@ context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
 
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:topics:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:topics:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:subscriptions:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:subscriptions:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events/poll(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:poll"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/deliveries/([^/]+)/completion"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:event-deliveries:complete"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:events:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:write"]
+
 # The four consent-history read routes.
 [[resource.access_control]]
 context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/status-history"
@@ -142,14 +205,12 @@ secure = "true"
 http_method = "GET"
 scopes = ["consent:history:view:self"]
 
-# Serves the portal and the consent-history API tenant-qualified, the same way
-# the server treats the My Account and Console applications: the
-# TenantContextRewriteValve resolves /t/<tenant>/... to the deployed webapp
-# with that tenant set as the request's tenant context. The super tenant keeps
-# the unqualified path, since tenanted /t/carbon.super URLs are rejected unless
-# require_super_tenant_in_urls is enabled.
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/", "/api/dpdp/consent-mgt/v1/"]
+custom_webapps = [
+    "/consent-portal/",
+    "/api/dpdp/event-notifications/v1/",
+    "/api/dpdp/consent-mgt/v1/"
+]
 
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
@@ -161,6 +222,22 @@ custom_webapps = ["/consent-portal/", "/api/dpdp/consent-mgt/v1/"]
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# Event Notification Framework runtime settings.
+[dpdp_accelerator.event_notifications]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 5
+allow_http_callback_url = true
+delivery_worker_batch_size = 50
+delivery_worker_poll_seconds = 5
+stuck_inflight_threshold_seconds = 10
+max_verification_response_body_bytes = 4096
+pending_subscription_recovery_threshold_seconds = 60
+background_worker_initial_delay_seconds = 10
+pending_subscription_recovery_interval_seconds = 30
+pending_subscription_recovery_batch_size = 20
+worker_shutdown_timeout_seconds = 5
 
 # Controls the capture (identity.extensions) and read APIs (consent.mgt.extensions.endpoint)
 # for consent status-audit/history. Set enabled = false to turn off both capture

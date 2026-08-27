@@ -25,6 +25,7 @@ import {
 } from '@asgardeo/auth-spa'
 
 import { runtimeBasePath, serverBaseUrl } from './basePath'
+import { EVENT_SCOPES, IS_SCOPES } from './scopes'
 
 /**
  * OIDC authentication for the portal, the way the Identity Server's own SPAs
@@ -65,21 +66,12 @@ const RETURN_PATH_KEY = 'consent-portal.returnPath'
 const DEFAULT_SCOPE: string[] = [
   'openid',
   'profile',
-  'internal_login',
-  'internal_consent_mgt_consent_view',
-  'internal_consent_mgt_consent_create',
-  'internal_consent_mgt_consent_update',
-  'internal_consent_mgt_purpose_view',
-  'internal_consent_mgt_purpose_create',
-  'internal_consent_mgt_purpose_update',
-  'internal_consent_mgt_purpose_delete',
-  'internal_consent_mgt_element_view',
-  'internal_consent_mgt_element_create',
-  'internal_consent_mgt_element_delete',
-  'consent:status-history:view:any',
-  'consent:status-history:view:self',
-  'consent:history:view:any',
-  'consent:history:view:self',
+  ...Object.values(IS_SCOPES),
+  ...Object.values(EVENT_SCOPES),
+    'consent:status-history:view:any',
+    'consent:status-history:view:self',
+    'consent:history:view:any',
+    'consent:history:view:self',
 ]
 
 let initPromise: Promise<void> | undefined

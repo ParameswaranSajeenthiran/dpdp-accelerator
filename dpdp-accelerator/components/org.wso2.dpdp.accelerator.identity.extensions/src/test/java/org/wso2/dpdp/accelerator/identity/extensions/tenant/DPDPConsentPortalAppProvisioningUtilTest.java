@@ -26,9 +26,7 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
 import org.wso2.carbon.identity.application.common.model.APIResource;
-import org.wso2.carbon.identity.application.common.model.AssociatedRolesConfig;
 import org.wso2.carbon.identity.application.common.model.AuthorizedAPI;
-import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
@@ -250,24 +248,72 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
     }
 
     @Test
-    public void associateOrganizationRolesSetsOrganizationAudienceAndAttachesTheGivenRoles() throws Exception {
+    public void authorizeEventNotificationAPIsAuthorizesAllResources() throws Exception {
+        Scope topicScope = mockScope("notifications:topics:read");
+        Scope subscriptionScope = mockScope("notifications:subscriptions:read");
+        Scope eventScope = mockScope("notifications:events:read");
+        Scope pollScope = mockScope("notifications:events:poll");
+        Scope completionScope = mockScope("notifications:event-deliveries:complete");
+        APIResource topicsResource = mockResource("event-topics", "/api/dpdp/event-notifications/v1/topics",
+                Arrays.asList(topicScope));
+        APIResource subscriptionsResource = mockResource("event-subscriptions", "/api/dpdp/event-notifications/v1/subscriptions",
+                Arrays.asList(subscriptionScope));
+        APIResource eventsResource = mockResource("event-events", "/api/dpdp/event-notifications/v1/events",
+                Arrays.asList(eventScope));
+        APIResource pollResource = mockResource("event-poll", "/api/dpdp/event-notifications/v1/events/poll",
+                Arrays.asList(pollScope));
+        APIResource completionResource = mockResource("event-completion", "/api/dpdp/event-notifications/v1/deliveries",
+                Arrays.asList(completionScope));
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/topics", TENANT_DOMAIN))
+                .thenReturn(topicsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/subscriptions", TENANT_DOMAIN))
+                .thenReturn(subscriptionsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/events", TENANT_DOMAIN))
+                .thenReturn(eventsResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/events/poll", TENANT_DOMAIN))
+                .thenReturn(pollResource);
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/event-notifications/v1/deliveries", TENANT_DOMAIN))
+                .thenReturn(completionResource);
 
-        ServiceProvider serviceProvider = new ServiceProvider();
-        when(applicationManagementService.getApplicationExcludingFileBasedSPs(
-                DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME, TENANT_DOMAIN)).thenReturn(serviceProvider);
+        List<String> scopes = DPDPConsentPortalAppProvisioningUtil
+                .authorizeEventNotificationAPIs(APPLICATION_ID, TENANT_DOMAIN);
 
-        List<RoleV2> roles = Arrays.asList(new RoleV2("role-admin-1234", "dpdp-consent-admin"),
-                new RoleV2("role-user-1234", "dpdp-consent-user"));
+        assertEquals(scopes, Arrays.asList("notifications:topics:read",
+                "notifications:subscriptions:read", "notifications:events:read",
+                "notifications:events:poll", "notifications:event-deliveries:complete"));
+        verify(authorizedAPIManagementService, times(5)).addAuthorizedAPI(eq(APPLICATION_ID),
+                any(AuthorizedAPI.class), eq(TENANT_DOMAIN));
+    }
 
-        DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(TENANT_DOMAIN, "admin", roles);
+    @Test
+    public void registerEventNotificationAPIsRegistersMissingResourcesWithAllScopes() throws Exception {
 
-        ArgumentCaptor<ServiceProvider> spCaptor = ArgumentCaptor.forClass(ServiceProvider.class);
-        verify(applicationManagementService).updateApplication(spCaptor.capture(), eq(TENANT_DOMAIN), eq("admin"));
-        AssociatedRolesConfig associatedRolesConfig = spCaptor.getValue().getAssociatedRolesConfig();
-        assertEquals(associatedRolesConfig.getAllowedAudience(), "ORGANIZATION");
-        assertEquals(associatedRolesConfig.getRoles().length, 2);
-        assertEquals(associatedRolesConfig.getRoles()[0].getName(), "dpdp-consent-admin");
-        assertEquals(associatedRolesConfig.getRoles()[1].getName(), "dpdp-consent-user");
+        when(apiResourceManager.getAPIResourceByIdentifier(anyString(), eq(TENANT_DOMAIN))).thenReturn(null);
+
+        DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(TENANT_DOMAIN);
+
+        ArgumentCaptor<APIResource> resourceCaptor = ArgumentCaptor.forClass(APIResource.class);
+        verify(apiResourceManager, times(5)).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
+        assertEquals(resourceCaptor.getAllValues().get(0).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(1).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(2).getScopes().size(), 2);
+        assertEquals(resourceCaptor.getAllValues().get(2).getScopes().get(1).getName(),
+                "notifications:events:write");
+        assertEquals(resourceCaptor.getAllValues().get(3).getScopes().get(0).getName(),
+                "notifications:events:poll");
+        assertEquals(resourceCaptor.getAllValues().get(4).getScopes().get(0).getName(),
+                "notifications:event-deliveries:complete");
+    }
+
+    @Test
+    public void registerEventNotificationAPIsDoesNotDuplicateExistingResources() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(anyString(), eq(TENANT_DOMAIN)))
+                .thenReturn(mock(APIResource.class));
+
+        DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(TENANT_DOMAIN);
+
+        verify(apiResourceManager, never()).addAPIResource(any(APIResource.class), anyString());
     }
 
     private static Scope mockScope(String name) {

@@ -58,12 +58,12 @@ export interface RequestOptions {
 const DEFAULT_ERROR_CODE = 'API_REQUEST_FAILED'
 
 /**
- * Where the consent APIs live. An absolute VITE_API_BASE_URL points a dev
- * server at a remote Identity Server; otherwise the APIs are same-origin and
- * tenant-qualified, exactly like the page itself.
+ * Where the Identity Server APIs live. In WAR production this is empty — the IS is
+ * same-origin and tenant-qualified. Set VITE_IS_BASE_URL during local dev
+ * to point at a remote IS instance.
  */
 function apiBaseUrl(): string {
-  const configured = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+  const configured = (import.meta.env.VITE_IS_BASE_URL as string | undefined) ?? ''
   if (/^https?:\/\//i.test(configured)) {
     return configured.endsWith('/') ? configured.slice(0, -1) : configured
   }

@@ -17,7 +17,7 @@
  */
 
 import { Sidebar } from '@wso2/oxygen-ui'
-import { Blocks, Clock3, House, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
+import { Activity, BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'
@@ -59,6 +59,30 @@ const CONSENT_ITEMS: SidebarItem[] = [
     path: '/consents?state=PENDING',
     icon: <Clock3 size={18} />,
     requiredScope: REQUIRED_SCOPES.CONSENTS_READ_SELF,
+  },
+]
+
+const EVENT_ITEMS: SidebarItem[] = [
+  {
+    id: 'topics',
+    labelKey: 'sidebar.topics',
+    path: '/events/topics',
+    icon: <Radio size={18} />,
+    requiredScope: REQUIRED_SCOPES.EVENT_TOPICS_READ,
+  },
+  {
+    id: 'subscriptions',
+    labelKey: 'sidebar.subscriptions',
+    path: '/events/subscriptions',
+    icon: <BellRing size={18} />,
+    requiredScope: REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ,
+  },
+  {
+    id: 'events',
+    labelKey: 'sidebar.events',
+    path: '/events',
+    icon: <Activity size={18} />,
+    requiredScope: REQUIRED_SCOPES.EVENTS_READ,
   },
 ]
 
@@ -108,6 +132,18 @@ function mapPathToMenuId(pathname: string, search: string): string {
     return 'all-consents'
   }
 
+  if (pathname.startsWith('/events/topics')) {
+    return 'topics'
+  }
+
+  if (pathname.startsWith('/events/subscriptions')) {
+    return 'subscriptions'
+  }
+
+  if (pathname.startsWith('/events')) {
+    return 'events'
+  }
+
   if (pathname.startsWith('/purposes')) {
     return 'purposes'
   }
@@ -134,9 +170,16 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const consentItems = hideSelfConsents
     ? []
     : CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
+  const eventItems = EVENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const catalogItems = CATALOG_ITEMS.filter((item) => hasScope(item.requiredScope))
   const administrationItems = ADMINISTRATION_ITEMS.filter((item) => hasScope(item.requiredScope))
-  const visibleItems = [...dashboardItems, ...consentItems, ...catalogItems, ...administrationItems]
+  const visibleItems = [
+    ...dashboardItems,
+    ...consentItems,
+    ...eventItems,
+    ...catalogItems,
+    ...administrationItems,
+  ]
 
   const activeItem = mapPathToMenuId(location.pathname, location.search)
 
@@ -169,6 +212,18 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
           <Sidebar.Category>
             <Sidebar.CategoryLabel>{t('sidebar.consent')}</Sidebar.CategoryLabel>
             {consentItems.map((item) => (
+              <Sidebar.Item key={item.id} id={item.id}>
+                <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
+                <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>
+              </Sidebar.Item>
+            ))}
+          </Sidebar.Category>
+        ) : null}
+
+        {eventItems.length > 0 ? (
+          <Sidebar.Category>
+            <Sidebar.CategoryLabel>{t('sidebar.events')}</Sidebar.CategoryLabel>
+            {eventItems.map((item) => (
               <Sidebar.Item key={item.id} id={item.id}>
                 <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
                 <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>

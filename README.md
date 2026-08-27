@@ -25,6 +25,9 @@ installation.
   and starting the Identity Server.
 - [`docs/configuration-guide.md`](docs/configuration-guide.md) — registering
   the consent portal application on a running Identity Server.
+- [`docs/event-notification-guide.md`](docs/event-notification-guide.md) —
+  creating topics and webhook subscriptions, publishing events, and inspecting
+  delivery history.
 - [`docs/localization-guide.md`](docs/localization-guide.md) — correcting UI
   wording and localizing Purposes/Elements on a running deployment.
 

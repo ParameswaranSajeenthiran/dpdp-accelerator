@@ -17,7 +17,7 @@
  */
 
 export interface ContentSecurityPolicyOptions {
-  apiBaseURL: string
+  isBaseURL: string
   includeFrameAncestors?: boolean
   upgradeInsecureRequests?: boolean
 }
@@ -25,18 +25,18 @@ export interface ContentSecurityPolicyOptions {
 function httpOrigin(value: string): string {
   const url = new URL(value)
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error('VITE_API_BASE_URL must use the http or https scheme.')
+    throw new Error('VITE_IS_BASE_URL must use the http or https scheme.')
   }
   return url.origin
 }
 
-function connectSrc(apiBaseURL: string): string {
+function connectSrc(isBaseURL: string): string {
   // A relative or empty base means the Identity Server APIs are same-origin
   // (the portal is deployed inside it): 'self' covers them.
-  if (!apiBaseURL || apiBaseURL.startsWith('/')) {
+  if (!isBaseURL || isBaseURL.startsWith('/')) {
     return "connect-src 'self'"
   }
-  return `connect-src 'self' ${httpOrigin(apiBaseURL)}`
+  return `connect-src 'self' ${httpOrigin(isBaseURL)}`
 }
 
 /** Builds the production portal CSP from exact deployment origins. */
@@ -47,7 +47,7 @@ export function contentSecurityPolicy(options: ContentSecurityPolicyOptions): st
     // Oxygen UI uses Emotion to create runtime style elements. Replace this
     // exception with a style nonce when the static host supports per-request HTML.
     "style-src 'self' 'unsafe-inline'",
-    connectSrc(options.apiBaseURL),
+    connectSrc(options.isBaseURL),
     // The auth SDK keeps tokens in a web worker it starts from a blob URL, so
     // the page never holds an access token.
     "worker-src 'self' blob:",

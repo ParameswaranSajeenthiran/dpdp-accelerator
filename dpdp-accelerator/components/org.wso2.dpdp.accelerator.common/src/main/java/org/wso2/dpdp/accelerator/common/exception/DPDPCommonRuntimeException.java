@@ -23,6 +23,11 @@ package org.wso2.dpdp.accelerator.common.exception;
  */
 public class DPDPCommonRuntimeException extends RuntimeException {
 
+    public DPDPCommonRuntimeException(String message) {
+
+        super(message);
+    }
+
     public DPDPCommonRuntimeException(String message, Throwable cause) {
 
         super(message, cause);

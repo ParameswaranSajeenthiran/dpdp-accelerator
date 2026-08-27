@@ -38,6 +38,14 @@
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.event.notifications.common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.event.notifications.service</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.core</artifactId>
         </dependency>
@@ -206,6 +214,8 @@
                         </Export-Package>
                         <Import-Package>
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.event.notifications.common.enums;version="${project.version}",
+                            org.wso2.dpdp.accelerator.event.notifications.service;version="${project.version}",
                             org.wso2.dpdp.accelerator.consent.extensions.service;version="${project.version}",
                             org.wso2.dpdp.accelerator.consent.extensions.service.constants;version="${project.version}",
                             org.wso2.dpdp.accelerator.consent.extensions.service.models;version="${project.version}",

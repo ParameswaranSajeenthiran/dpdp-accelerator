@@ -10,6 +10,7 @@ replay_pid*
 
 # Maven
 target/
+**/target/
 release.properties
 pom.xml.releaseBackup
 
@@ -22,7 +23,8 @@ npm-debug.log*
 # Accelerator overlay: the exploded webapp and OSGi bundle jars are generated
 # at package time.
 **/carbon-home/repository/deployment/server/webapps/
-**/carbon-home/repository/components/dropins/
+**/carbon-home/repository/components/dropins/*.jar
+*.jar
 
 # openapi-generator's own change-tracking cache - src/gen/java itself is committed,
 # this file isn't needed to regenerate it.
@@ -32,6 +34,10 @@ npm-debug.log*
 .idea/
 *.iml
 .vscode/
+.claude/
+.classpath
+.project
+.settings/
 .DS_Store
 
 # Env

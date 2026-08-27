@@ -44,6 +44,15 @@ export const IS_SCOPES = {
   HISTORY_VIEW_SELF: 'consent:history:view:self',
 } as const
 
+export const EVENT_SCOPES = {
+  EVENT_SUBSCRIPTIONS_READ: 'notifications:subscriptions:read',
+  EVENT_SUBSCRIPTIONS_WRITE: 'notifications:subscriptions:write',
+  EVENT_TOPICS_READ: 'notifications:topics:read',
+  EVENT_TOPICS_WRITE: 'notifications:topics:write',
+  EVENTS_READ: 'notifications:events:read',
+  EVENTS_WRITE: 'notifications:events:write',
+} as const
+
 /** Any one of these scopes is enough to unlock the area it guards. */
 export type ScopeRequirement = readonly string[]
 
@@ -60,6 +69,12 @@ export const REQUIRED_SCOPES = {
   PURPOSES_WRITE: [IS_SCOPES.PURPOSE_CREATE, IS_SCOPES.PURPOSE_UPDATE, IS_SCOPES.PURPOSE_DELETE],
   ELEMENTS_READ: [IS_SCOPES.ELEMENT_VIEW],
   ELEMENTS_WRITE: [IS_SCOPES.ELEMENT_CREATE, IS_SCOPES.ELEMENT_DELETE],
+  EVENT_SUBSCRIPTIONS_READ: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_READ],
+  EVENT_SUBSCRIPTIONS_WRITE: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_WRITE],
+  EVENT_TOPICS_READ: [EVENT_SCOPES.EVENT_TOPICS_READ],
+  EVENT_TOPICS_WRITE: [EVENT_SCOPES.EVENT_TOPICS_WRITE],
+  EVENTS_READ: [EVENT_SCOPES.EVENTS_READ],
+  EVENTS_WRITE: [EVENT_SCOPES.EVENTS_WRITE],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */

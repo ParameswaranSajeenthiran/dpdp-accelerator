@@ -53,7 +53,7 @@ function requestConfig(index = 0): {
 }
 
 beforeEach(() => {
-  vi.stubEnv('VITE_API_BASE_URL', 'http://api.example/')
+  vi.stubEnv('VITE_IS_BASE_URL', 'http://api.example/')
   authMocks.isAuthEnabled.mockReturnValue(true)
   authMocks.login.mockResolvedValue()
 })
@@ -188,7 +188,7 @@ describe('authenticated API client', () => {
   })
 
   it('treats an empty API base URL as same-origin', async () => {
-    vi.stubEnv('VITE_API_BASE_URL', '')
+    vi.stubEnv('VITE_IS_BASE_URL', '')
     authMocks.httpRequest.mockResolvedValue(sdkResponse({}))
 
     await apiRequest('/consents')

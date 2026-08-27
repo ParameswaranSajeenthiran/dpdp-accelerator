@@ -22,15 +22,15 @@ import { contentSecurityPolicy, staticHeadersFile } from '../security/contentSec
 describe('frontend content security policy', () => {
   it('restricts executable content and connects only to the exact API origin', () => {
     const policy = contentSecurityPolicy({
-      apiBaseURL: 'https://bff.example.com/api',
+      isBaseURL: 'https://is.example.com/api',
       upgradeInsecureRequests: true,
     })
 
     expect(policy).toContain("default-src 'self'")
     expect(policy).toContain("script-src 'self'")
-    expect(policy).toContain("connect-src 'self' https://bff.example.com")
+    expect(policy).toContain("connect-src 'self' https://is.example.com")
     // The auth SDK holds the tokens in a worker it builds from a blob.
-    expect(policy).toContain("connect-src 'self' https://bff.example.com; worker-src 'self' blob:")
+    expect(policy).toContain("connect-src 'self' https://is.example.com; worker-src 'self' blob:")
     expect(policy).toContain("object-src 'none'")
     expect(policy).toContain("base-uri 'none'")
     expect(policy).toContain("frame-ancestors 'none'")
@@ -41,7 +41,7 @@ describe('frontend content security policy', () => {
   })
 
   it('allows the data URIs the build inlines its fonts as', () => {
-    const policy = contentSecurityPolicy({ apiBaseURL: '' })
+    const policy = contentSecurityPolicy({ isBaseURL: '' })
 
     // Without this every @font-face fails to load and the app falls back to
     // the system sans-serif.
@@ -49,7 +49,7 @@ describe('frontend content security policy', () => {
   })
 
   it('keeps the temporary Emotion exception limited to styles', () => {
-    const policy = contentSecurityPolicy({ apiBaseURL: 'http://localhost:8080' })
+    const policy = contentSecurityPolicy({ isBaseURL: 'http://localhost:8080' })
 
     expect(policy).toContain("style-src 'self' 'unsafe-inline'")
     expect(policy).not.toContain('upgrade-insecure-requests')
@@ -57,7 +57,7 @@ describe('frontend content security policy', () => {
 
   it('omits header-only directives from the meta policy', () => {
     const policy = contentSecurityPolicy({
-      apiBaseURL: 'https://bff.example.com',
+      isBaseURL: 'https://is.example.com',
       includeFrameAncestors: false,
     })
 
@@ -65,13 +65,13 @@ describe('frontend content security policy', () => {
   })
 
   it('rejects non-HTTP API origins', () => {
-    expect(() => contentSecurityPolicy({ apiBaseURL: `javascript${':'}alert(1)` })).toThrow(
+    expect(() => contentSecurityPolicy({ isBaseURL: `javascript${':'}alert(1)` })).toThrow(
       'must use the http or https scheme',
     )
   })
 
   it('emits the enforced policy and companion security headers', () => {
-    const policy = contentSecurityPolicy({ apiBaseURL: 'https://bff.example.com' })
+    const policy = contentSecurityPolicy({ isBaseURL: 'https://is.example.com' })
     const headers = staticHeadersFile(policy)
 
     expect(headers).toContain(`Content-Security-Policy: ${policy}`)
