@@ -82,20 +82,32 @@ before self-service account deletion existed gets `account:self:delete` on
 
 ## 4. Assign portal roles
 
-Every user of the portal needs one of these two roles, assigned in the
-Console under **User Management → Users → *user* → Roles**. Roles belong to
-one tenant, so do this in each tenant.
+Roles are assigned in the Console under **User Management → Users → *user* →
+Roles**. Roles belong to one tenant, so do this in each tenant.
+
+**Signing in and managing your own consents needs no role at all.** Every
+authenticated user gets `internal_login`, and the self-service consent API
+scopes every call to the caller, so a user with no portal role can sign in,
+see their dashboard and manage their own consents. The two roles below grant
+what is *beyond* that.
 
 | Role | Assign to | Grants |
 |---|---|---|
-| `dpdp-consent-user` | Regular users | Managing their own consents, and deleting their own account. |
-| `dpdp-consent-admin` | Administrators | Administering *other people's* consents and editing the purpose and element catalog. Managing one's own consents needs no scope beyond a login, so administrators keep that too — but **not** self-service account deletion, which is `dpdp-consent-user` only. |
+| `dpdp-consent-user` | Regular users | Deleting their own account. Nothing else — self-service consent management works without it. |
+| `dpdp-consent-admin` | Administrators | Administering *other people's* consents and editing the purpose and element catalog. **Not** self-service account deletion, which is `dpdp-consent-user` only. |
+
+> **Users who don't hold `dpdp-consent-user` will not see "Delete my
+> account".** The option is gated on the `account:self:delete` scope that
+> only this role grants, so assign it to every user who should be able to
+> delete their own account. Before self-service deletion existed this role
+> granted nothing, so accounts created earlier are unlikely to hold it —
+> check rather than assume.
 
 > **Assigning both roles to one user re-enables self-deletion for them.** The
 > two roles' permissions add up, so an administrator who also holds
 > `dpdp-consent-user` receives `account:self:delete` and can delete their own
 > account. Keep administrators out of `dpdp-consent-user` if that matters —
-> they lose nothing by not holding it.
+> they lose nothing else by not holding it.
 
 ## 5. Open the portal
 
@@ -118,6 +130,10 @@ A user holding `dpdp-consent-user` sees **Delete my account** in the portal's
 profile menu, beside Sign out. Confirming it calls `DELETE /scim2/Me`, clears
 the browser session and lands the user on a public confirmation page. The
 deletion is immediate and irreversible.
+
+Users without that role do not see the option, and the portal is perfectly
+usable without it — so assigning it is a deliberate step, not something
+existing accounts have already. See [Assign portal roles](#4-assign-portal-roles).
 
 ### How it is restricted
 

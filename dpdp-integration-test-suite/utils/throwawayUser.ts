@@ -62,7 +62,9 @@ export async function createThrowawayUser(
     headers: adminHeaders(admin),
     body: JSON.stringify({
       schemas: [SCIM2_USER_SCHEMA],
-      userName: `DEFAULT/${username}`,
+      // Unqualified: SCIM2 puts the user in the primary user store. Prefixing a store
+      // name that doesn't exist on the server fails with "Invalid user store name".
+      userName: username,
       password,
       name: { givenName: 'Throwaway', familyName: 'Account' },
       emails: [{ primary: true, value: `${username}@dpdp-e2e.invalid` }],
