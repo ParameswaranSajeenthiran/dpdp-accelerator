@@ -38,7 +38,10 @@
     "dataProcessors": "তথ্য প্ৰক্ৰিয়াকৰ্তা",
     "dataProcessorTopics": "বিষয়সমূহ",
     "dataProcessorSubscriptions": "গ্ৰাহকভুক্তি",
-    "dataProcessorEvents": "ইভেণ্টসমূহ"
+    "dataProcessorEvents": "ইভেণ্টসমূহ",
+    "events": "Events",
+    "topics": "Topics",
+    "subscriptions": "Subscriptions"
   },
   "layout": {
     "home": "হ'ম",
@@ -958,5 +961,257 @@
     "rowsPerPage": "প্ৰতি পৃষ্ঠাত শাৰী",
     "previous": "পূৰ্বৱৰ্তী",
     "next": "পৰৱৰ্তী"
+  },
+  "topics": {
+    "title": "Topics",
+    "subtitle": "View and manage registered event notification topics across your organization",
+    "loadFailed": "Unable to load topics right now.",
+    "status": {
+      "active": "Active",
+      "deregistered": "Deregistered"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by topic name, ID, or description",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "search": "Search",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "ariaLabel": "Topics management table",
+      "name": "Topic Name",
+      "topicId": "Topic ID",
+      "description": "Description",
+      "status": "Status",
+      "actions": "Actions",
+      "empty": "No registered topics found."
+    },
+    "actions": {
+      "register": "Register Topic",
+      "delete": "Deregister topic",
+      "alreadyDeregistered": "This topic is already deregistered"
+    },
+    "dialog": {
+      "registerTitle": "Register Topic",
+      "registerSubtitle": "Register a new event notification topic for your organization",
+      "nameLabel": "Topic Name",
+      "namePlaceholder": "e.g. consent.revoke",
+      "nameRequired": "Topic name is required.",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional description of the topic purpose",
+      "registering": "Registering...",
+      "registerSubmit": "Register Topic"
+    },
+    "deleteModal": {
+      "title": "Confirm Deregistration",
+      "message": "Are you sure you want to deregister topic \"{{name}}\"?",
+      "note": "Deregistering a topic prevents new subscriptions and publication of events to this topic.",
+      "confirm": "Deregister Topic"
+    }
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "subtitle": "Manage and monitor event notification subscriptions for your organization",
+    "loadFailed": "Unable to load subscriptions right now.",
+    "status": {
+      "active": "Active",
+      "pending": "Pending",
+      "stale": "Stale",
+      "deleted": "Deleted"
+    },
+    "deliveryMode": {
+      "webhook": "Webhook",
+      "poll": "Poll"
+    },
+    "filterType": {
+      "all": "All Events",
+      "allDescription": "Listens to all events published to this topic",
+      "specific": "Specific Purposes",
+      "all_except": "All Except Purposes"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by subscription ID, topic, group, purpose, or URL",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "deliveryMode": "Delivery Mode",
+      "allModes": "All Modes",
+      "search": "Search",
+      "clear": "Clear filters"
+    },
+    "table": {
+      "ariaLabel": "Subscriptions management table",
+      "subscriptionId": "Subscription ID",
+      "topic": "Topic",
+      "groupId": "Group ID",
+      "filter": "Filter",
+      "deliveryMode": "Delivery Mode",
+      "status": "Status",
+      "occurredAt": "Occurred At",
+      "deliveryId": "Delivery ID",
+      "eventId": "Event ID",
+      "actions": "Actions",
+      "empty": "No subscriptions found."
+    },
+    "actions": {
+      "register": "Register Subscription",
+      "view": "View Details",
+      "verify": "Re-verify webhook",
+      "delete": "Delete subscription",
+      "alreadyDeleted": "This subscription is already deleted",
+      "backToList": "Back to Subscriptions",
+      "close": "Close"
+    },
+    "dialog": {
+      "registerTitle": "Register Subscription",
+      "registerSubtitle": "Configure a new event notification subscription and delivery mode",
+      "topicLabel": "Topic",
+      "topicRequired": "Topic is required.",
+      "filterModeLabel": "Purpose Filter Mode",
+      "purposesLabel": "Purposes (comma-separated)",
+      "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
+      "purposesHelper": "Comma-separated list of consent purposes to filter",
+      "purposesRequired": "Purposes are required when filtering by specific or all-except.",
+      "deliveryModeLabel": "Delivery Mode",
+      "callbackUrlLabel": "Webhook Callback URL",
+      "callbackUrlRequired": "Callback URL is required for webhook subscriptions.",
+      "callbackUrlInvalid": "Please provide a valid absolute URL (http:// or https://).",
+      "secretLabel": "Shared Secret",
+      "secretRequired": "Shared secret is required.",
+      "secretHelper": "Used to sign webhook payloads or authenticate poll requests",
+      "generateSecret": "Generate new secret",
+      "registering": "Registering...",
+      "registerSubmit": "Register Subscription"
+    },
+    "deleteModal": {
+      "title": "Confirm Subscription Deletion",
+      "message": "Are you sure you want to delete subscription \"{{id}}\"?",
+      "note": "Deleting this subscription prevents new events from being dispatched to this subscriber endpoint.",
+      "confirm": "Delete Subscription"
+    },
+    "verification": {
+      "success": "Verification ping dispatched successfully.",
+      "failed": "Webhook verification failed. Please check endpoint reachability."
+    },
+    "details": {
+      "loadFailed": "Unable to load subscription details.",
+      "configTitle": "Subscription Configuration",
+      "configSubtitle": "General metadata, routing parameters, and filtering rules",
+      "eventsTitle": "Delivery History & Execution Log",
+      "eventsSubtitle": "Recent event deliveries and retry attempts dispatched to this subscriber",
+      "createdAt": "Created At",
+      "updatedAt": "Last Updated"
+    },
+    "deliveryEvents": {
+      "ariaLabel": "Delivery events log table",
+      "empty": "No delivery events recorded yet.",
+      "auditAction": "Attempts",
+      "viewHistory": "View Delivery Attempts"
+    },
+    "deliveryHistory": {
+      "title": "Event Delivery Execution Audit",
+      "loadFailed": "Unable to load delivery history.",
+      "completion": "Completion Evidence",
+      "attemptsTitle": "Delivery Attempts Chronology",
+      "attemptNumber": "Attempt",
+      "attemptStatus": "Status",
+      "httpStatus": "HTTP Status",
+      "timestamp": "Timestamp",
+      "errorDetails": "Error Details",
+      "noAttempts": "No execution attempts recorded."
+    }
+  },
+  "events": {
+    "title": "Events",
+    "subtitle": "View published events and monitor event notifications across your organization",
+    "loadFailed": "Unable to load events.",
+    "filters": {
+      "searchPlaceholder": "Search by delivery ID, event ID, or topic...",
+      "status": "Status",
+      "allStatuses": "All Statuses",
+      "topic": "Topic",
+      "allTopics": "All Topics",
+      "groupId": "Group ID",
+      "groupIdPlaceholder": "Filter by Group ID...",
+      "search": "Search",
+      "clear": "Clear"
+    },
+    "status": {
+      "all": "All",
+      "pending": "Pending",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "completed": "Completed",
+      "acknowledged": "Acknowledged",
+      "in_flight": "In Flight",
+      "expired": "Expired"
+    },
+    "purposes": {
+      "all": "ALL"
+    },
+    "table": {
+      "ariaLabel": "Published events list table",
+      "deliveryId": "Delivery ID",
+      "eventId": "Event ID",
+      "topic": "Topic",
+      "groupId": "Group ID",
+      "mode": "Mode",
+      "purposes": "Purposes",
+      "deliveries": "Deliveries",
+      "subscriber": "Subscriber",
+      "subscribers": "Subscribers",
+      "noSubscribers": "No Subscribers",
+      "status": "Status",
+      "occurredAt": "Occurred At",
+      "actions": "Actions",
+      "empty": "No events found."
+    },
+    "actions": {
+      "publish": "Publish Event",
+      "view": "View Details",
+      "copyPayload": "Copy Payload",
+      "close": "Close"
+    },
+    "dialog": {
+      "publishTitle": "Publish Event",
+      "publishSubtitle": "Publish an event notification to trigger subscriber fan-out",
+      "topicLabel": "Topic",
+      "topicRequired": "Topic is required.",
+      "groupIdLabel": "Group ID (Optional)",
+      "groupIdPlaceholder": "e.g. consumer-group-01",
+      "groupIdHelper": "Optional group identifier for targeted delivery",
+      "purposesLabel": "Purposes (Optional, comma-separated)",
+      "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
+      "purposesHelper": "Comma-separated list of consent purposes associated with this event",
+      "payloadLabel": "Payload (JSON)",
+      "payloadHelper": "Valid JSON object representing the event data",
+      "payloadRequired": "Payload is required.",
+      "payloadMustBeObject": "Payload must be a valid JSON object.",
+      "invalidJson": "Please provide valid JSON format.",
+      "publishing": "Publishing...",
+      "publishSubmit": "Publish Event",
+      "publishSuccess": "Event published successfully."
+    },
+    "details": {
+      "title": "Event Details",
+      "backToEvents": "Back to Events",
+      "loadFailed": "Unable to load event details.",
+      "metadataTitle": "Event Metadata",
+      "metadataSubtitle": "Identifiers, topics, and dispatch timestamps",
+      "payloadTitle": "Event Payload",
+      "historyTitle": "Delivery Attempt History",
+      "historySubtitle": "Chronological execution attempts and HTTP response status",
+      "noHistory": "No delivery attempts recorded.",
+      "completionTitle": "Completion Evidence",
+      "allPurposes": "All Purposes",
+      "createdAt": "Created At",
+      "deliveriesTitle": "Downstream Subscriber Deliveries",
+      "deliveriesSubtitle": "All deliveries and completion statuses generated for this event",
+      "noDeliveries": "No Deliveries Generated",
+      "noDeliveriesMessage": "No active subscriptions matched this topic when the event occurred.",
+      "copyPayloadSuccess": "Payload copied to clipboard.",
+      "copyPayloadFailed": "Failed to copy payload to clipboard.",
+      "subscriber": "Subscriber",
+      "subscribers": "Subscribers"
+    }
   }
 }

@@ -19,11 +19,14 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { IS_SCOPES, REQUIRED_SCOPES, parseScopes } from '../utils/scopes'
+import { EVENT_SCOPES, IS_SCOPES, REQUIRED_SCOPES, parseScopes } from '../utils/scopes'
 
 describe('scope requirements', () => {
-  it('only ever asks for real Identity Server scopes', () => {
-    const known = new Set<string>(Object.values(IS_SCOPES))
+  it('only ever asks for real Identity Server and portal scopes', () => {
+    const known = new Set<string>([
+      ...Object.values(IS_SCOPES),
+      ...Object.values(EVENT_SCOPES),
+    ])
     Object.values(REQUIRED_SCOPES)
       .flat()
       .forEach((scope) => {
@@ -65,6 +68,9 @@ describe('scope requirements', () => {
     const requested = new Set(config.scope)
 
     Object.values(IS_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(EVENT_SCOPES).forEach((scope) => {
       expect(requested).toContain(scope)
     })
   })

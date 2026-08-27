@@ -27,7 +27,6 @@ import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -102,17 +101,16 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                         + "; reconciling its API authorization and roles.");
             }
 
+            DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
+            List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
             List<String> authorizedConsentScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             List<String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
                     .authorizeComplaintManagementAPI(applicationId, tenantDomain);
 
-            // No dedicated complaint role - the complaint scopes are folded into dpdp-consent-admin
-            // alongside the consent-mgt ones; dpdp-consent-user gets only the :self-suffixed
-            // complaint scopes (see DPDPConsentPortalRoleProvisioningUtil).
-            List<String> adminScopes = new ArrayList<>(authorizedConsentScopes);
-            adminScopes.addAll(authorizedComplaintScopes);
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes);
+            authorizedScopes.addAll(DPDPConsentPortalAppProvisioningUtil
+                    .authorizeEventNotificationAPIs(applicationId, tenantDomain));
+            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

@@ -124,15 +124,68 @@ context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
 
-# Lets TenantContextRewriteValve dispatch /t/<tenant>/... to these single, non-per-tenant
-# webapps (like My Account/Console) instead of hitting 404 before access_control below even applies.
-# Super tenant keeps the unqualified path, since /t/carbon.super is rejected unless
-# require_super_tenant_in_urls is enabled. The valve strips the /t/<tenant>/ prefix before
-# forwarding, which is why TokenIntrospectionFilter reads the pre-forward URI from
-# javax.servlet.forward.request_uri instead of UriInfo.
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:topics:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:topics:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:subscriptions:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:subscriptions:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events/poll(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:poll"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/deliveries/([^/]+)/completion"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:event-deliveries:complete"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:events:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication", "BasicAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:write"]
+
 [tenant_context.rewrite]
 custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
-
+custom_webapps = [
+    "/consent-portal/",
+    "/api/dpdp/event-notifications/v1/"
+]
 # ---- /me/complaints/* (Data Principal, :self scopes) ----
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments/[^/]+"
@@ -247,6 +300,7 @@ http_method = "GET"
 secure = "true"
 scopes = ["complaints:read:any"]
 
+
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
 # Set auto_provisioning_enabled = false to manage the application and roles by
@@ -258,6 +312,22 @@ scopes = ["complaints:read:any"]
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# Event Notification Framework runtime settings.
+[dpdp_accelerator.event_notifications]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 5
+allow_http_callback_url = true
+delivery_worker_batch_size = 50
+delivery_worker_poll_seconds = 5
+stuck_inflight_threshold_seconds = 10
+max_verification_response_body_bytes = 4096
+pending_subscription_recovery_threshold_seconds = 60
+background_worker_initial_delay_seconds = 10
+pending_subscription_recovery_interval_seconds = 30
+pending_subscription_recovery_batch_size = 20
+worker_shutdown_timeout_seconds = 5
 
 # How many days after submission a complaint's statutory due date falls (see
 # StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.

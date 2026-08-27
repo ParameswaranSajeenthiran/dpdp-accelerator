@@ -50,6 +50,16 @@ describe('toEpochMilliseconds', () => {
     expect(toEpochMilliseconds(99_999_999_999)).toBe(99_999_999_999_000)
     expect(toEpochMilliseconds(100_000_000_001)).toBe(100_000_000_001)
   })
+
+  it('handles string timestamps (numeric strings and ISO strings)', () => {
+    expect(toEpochMilliseconds('1710000000')).toBe(1710000000000)
+    expect(toEpochMilliseconds('1710000000000')).toBe(1710000000000)
+    expect(toEpochMilliseconds('2026-03-02T15:29:57Z')).toBe(
+      new Date('2026-03-02T15:29:57Z').getTime(),
+    )
+    expect(toEpochMilliseconds('')).toBeNull()
+    expect(toEpochMilliseconds('invalid-date')).toBeNull()
+  })
 })
 
 describe('formatEpochTimestamp', () => {
@@ -58,6 +68,18 @@ describe('formatEpochTimestamp', () => {
     expect(formatEpochTimestamp(null)).toBe('-')
     expect(formatEpochTimestamp(Number.NaN)).toBe('-')
     expect(formatEpochTimestamp(Number.POSITIVE_INFINITY)).toBe('-')
+    expect(formatEpochTimestamp('')).toBe('-')
+    expect(formatEpochTimestamp('invalid-date')).toBe('-')
+  })
+
+  it('formats string timestamps using locale and options', () => {
+    const isoDateTime = '2026-03-02T15:29:57Z'
+    const expected = new Date(isoDateTime).toLocaleString('en-US', DATE_TIME_FORMAT_OPTIONS)
+    expect(formatEpochTimestamp(isoDateTime, DATE_TIME_FORMAT_OPTIONS, 'en-US')).toBe(expected)
+
+    const epochInSecondsString = '1710000000'
+    const expectedFromSec = new Date(1710000000 * 1000).toLocaleString('en-US', DATE_TIME_FORMAT_OPTIONS)
+    expect(formatEpochTimestamp(epochInSecondsString, DATE_TIME_FORMAT_OPTIONS, 'en-US')).toBe(expectedFromSec)
   })
 
   it('formats epoch seconds using locale and options', () => {

@@ -37,5 +37,9 @@
         <module>components/org.wso2.dpdp.accelerator.complaint.mgt.dao</module>
         <module>components/org.wso2.dpdp.accelerator.complaint.mgt.service</module>
         <module>internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint</module>
+        <module>components/org.wso2.dpdp.accelerator.event.notifications.common</module>
+        <module>components/org.wso2.dpdp.accelerator.event.notifications.dao</module>
+        <module>components/org.wso2.dpdp.accelerator.event.notifications.service</module>
+        <module>internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint</module>
     </modules>
 </project>

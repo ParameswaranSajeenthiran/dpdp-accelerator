@@ -34,11 +34,22 @@ export const IS_SCOPES = {
   PURPOSE_DELETE: 'internal_consent_mgt_purpose_delete',
   ELEMENT_VIEW: 'internal_consent_mgt_element_view',
   ELEMENT_CREATE: 'internal_consent_mgt_element_create',
-  ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
+  ELEMENT_DELETE: 'internal_consent_mgt_element_delete'
+} as const
+
+export const  COMPLAINT_SCOPES = {
   COMPLAINTS_READ_SELF: 'complaints:read:self',
   COMPLAINTS_WRITE_SELF: 'complaints:write:self',
   COMPLAINTS_READ_ANY: 'complaints:read:any',
   COMPLAINTS_WRITE_ANY: 'complaints:write:any',
+}
+export const EVENT_SCOPES = {
+  EVENT_SUBSCRIPTIONS_READ: 'notifications:subscriptions:read',
+  EVENT_SUBSCRIPTIONS_WRITE: 'notifications:subscriptions:write',
+  EVENT_TOPICS_READ: 'notifications:topics:read',
+  EVENT_TOPICS_WRITE: 'notifications:topics:write',
+  EVENTS_READ: 'notifications:events:read',
+  EVENTS_WRITE: 'notifications:events:write',
 } as const
 
 /** Any one of these scopes is enough to unlock the area it guards. */
@@ -57,10 +68,16 @@ export const REQUIRED_SCOPES = {
   PURPOSES_WRITE: [IS_SCOPES.PURPOSE_CREATE, IS_SCOPES.PURPOSE_UPDATE, IS_SCOPES.PURPOSE_DELETE],
   ELEMENTS_READ: [IS_SCOPES.ELEMENT_VIEW],
   ELEMENTS_WRITE: [IS_SCOPES.ELEMENT_CREATE, IS_SCOPES.ELEMENT_DELETE],
-  COMPLAINTS_READ_SELF: [IS_SCOPES.COMPLAINTS_READ_SELF],
-  COMPLAINTS_WRITE_SELF: [IS_SCOPES.COMPLAINTS_WRITE_SELF],
-  COMPLAINTS_READ_ANY: [IS_SCOPES.COMPLAINTS_READ_ANY],
-  COMPLAINTS_WRITE_ANY: [IS_SCOPES.COMPLAINTS_WRITE_ANY],
+  EVENT_SUBSCRIPTIONS_READ: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_READ],
+  EVENT_SUBSCRIPTIONS_WRITE: [EVENT_SCOPES.EVENT_SUBSCRIPTIONS_WRITE],
+  EVENT_TOPICS_READ: [EVENT_SCOPES.EVENT_TOPICS_READ],
+  EVENT_TOPICS_WRITE: [EVENT_SCOPES.EVENT_TOPICS_WRITE],
+  EVENTS_READ: [EVENT_SCOPES.EVENTS_READ],
+  EVENTS_WRITE: [EVENT_SCOPES.EVENTS_WRITE],
+  COMPLAINTS_READ_SELF: [COMPLAINT_SCOPES.COMPLAINTS_READ_SELF],
+  COMPLAINTS_WRITE_SELF: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_SELF],
+  COMPLAINTS_READ_ANY: [COMPLAINT_SCOPES.COMPLAINTS_READ_ANY],
+  COMPLAINTS_WRITE_ANY: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_ANY],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */

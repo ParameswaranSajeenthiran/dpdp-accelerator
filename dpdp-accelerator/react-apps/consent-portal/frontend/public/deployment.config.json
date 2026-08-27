@@ -18,6 +18,12 @@
     "complaints:read:self",
     "complaints:write:self",
     "complaints:read:any",
-    "complaints:write:any"
+    "complaints:write:any",
+    "notifications:subscriptions:read",
+    "notifications:subscriptions:write",
+    "notifications:topics:read",
+    "notifications:topics:write",
+    "notifications:events:read",
+    "notifications:events:write"
   ]
 }

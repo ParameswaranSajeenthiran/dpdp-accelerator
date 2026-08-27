@@ -31,4 +31,71 @@
         <ClientId>DPDP_CONSENT_PORTAL</ClientId>
         {% endif %}
     </ConsentPortal>
+    <EventNotifications>
+        {% if dpdp_accelerator.event_notifications.thread_pool_size is defined %}
+        <ThreadPoolSize>{{dpdp_accelerator.event_notifications.thread_pool_size}}</ThreadPoolSize>
+        {% else %}
+        <ThreadPoolSize>4</ThreadPoolSize>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.base_backoff_seconds is defined %}
+        <BaseBackoffSeconds>{{dpdp_accelerator.event_notifications.base_backoff_seconds}}</BaseBackoffSeconds>
+        {% else %}
+        <BaseBackoffSeconds>5</BaseBackoffSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.max_retries is defined %}
+        <MaxRetries>{{dpdp_accelerator.event_notifications.max_retries}}</MaxRetries>
+        {% else %}
+        <MaxRetries>5</MaxRetries>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.allow_http_callback_url is defined %}
+        <AllowHttpCallbackUrl>{{dpdp_accelerator.event_notifications.allow_http_callback_url}}</AllowHttpCallbackUrl>
+        {% else %}
+        <AllowHttpCallbackUrl>true</AllowHttpCallbackUrl>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.delivery_worker_batch_size is defined %}
+        <DeliveryWorkerBatchSize>{{dpdp_accelerator.event_notifications.delivery_worker_batch_size}}</DeliveryWorkerBatchSize>
+        {% else %}
+        <DeliveryWorkerBatchSize>50</DeliveryWorkerBatchSize>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.delivery_worker_poll_seconds is defined %}
+        <DeliveryWorkerPollSeconds>{{dpdp_accelerator.event_notifications.delivery_worker_poll_seconds}}</DeliveryWorkerPollSeconds>
+        {% else %}
+        <DeliveryWorkerPollSeconds>5</DeliveryWorkerPollSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.stuck_inflight_threshold_seconds is defined %}
+        <StuckInFlightThresholdSeconds>{{dpdp_accelerator.event_notifications.stuck_inflight_threshold_seconds}}</StuckInFlightThresholdSeconds>
+        {% else %}
+        <StuckInFlightThresholdSeconds>10</StuckInFlightThresholdSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.max_verification_response_body_bytes is defined %}
+        <MaxVerificationResponseBodyBytes>{{dpdp_accelerator.event_notifications.max_verification_response_body_bytes}}</MaxVerificationResponseBodyBytes>
+        {% else %}
+        <MaxVerificationResponseBodyBytes>4096</MaxVerificationResponseBodyBytes>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_threshold_seconds is defined %}
+        <PendingSubscriptionRecoveryThresholdSeconds>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_threshold_seconds}}</PendingSubscriptionRecoveryThresholdSeconds>
+        {% else %}
+        <PendingSubscriptionRecoveryThresholdSeconds>60</PendingSubscriptionRecoveryThresholdSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds is defined %}
+        <BackgroundWorkerInitialDelaySeconds>{{dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds}}</BackgroundWorkerInitialDelaySeconds>
+        {% else %}
+        <BackgroundWorkerInitialDelaySeconds>10</BackgroundWorkerInitialDelaySeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds is defined %}
+        <PendingSubscriptionRecoveryIntervalSeconds>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds}}</PendingSubscriptionRecoveryIntervalSeconds>
+        {% else %}
+        <PendingSubscriptionRecoveryIntervalSeconds>30</PendingSubscriptionRecoveryIntervalSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size is defined %}
+        <PendingSubscriptionRecoveryBatchSize>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size}}</PendingSubscriptionRecoveryBatchSize>
+        {% else %}
+        <PendingSubscriptionRecoveryBatchSize>20</PendingSubscriptionRecoveryBatchSize>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds is defined %}
+        <WorkerShutdownTimeoutSeconds>{{dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds}}</WorkerShutdownTimeoutSeconds>
+        {% else %}
+        <WorkerShutdownTimeoutSeconds>5</WorkerShutdownTimeoutSeconds>
+        {% endif %}
+    </EventNotifications>
 </DPDPAccelerator>
