@@ -30,18 +30,18 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
 
 import java.util.List;
 
@@ -82,22 +82,22 @@ class ComplaintHandlerTest {
         return new ComplaintAttachment(id, ORG_ID, "c1", "f.pdf", "application/pdf", new byte[]{1}, isPublic, 1L);
     }
 
-    private ComplaintAttachmentResponseBean attachmentBean(String id, boolean isPublic) {
-        return ComplaintAttachmentResponseBean.from(attachment(id, isPublic));
+    private ComplaintAttachmentResponseDTO attachmentBean(String id, boolean isPublic) {
+        return ComplaintAttachmentResponseDTO.from(attachment(id, isPublic));
     }
 
     // ---- officer/admin ----
 
     @Test
     void createComplaintPassesRequestFieldsThroughToService() {
-        ComplaintCreateRequestBean request = new ComplaintCreateRequestBean();
+        ComplaintCreateRequestDTO request = new ComplaintCreateRequestDTO();
         request.setUserId("user1");
         request.setSubjectCategory("DATA_BREACH");
         request.setDescription("desc");
         when(complaintService.createComplaint(ORG_ID, "user1", null, "DATA_BREACH", "desc", "officer1",
-                "COMPLAINT_OFFICER")).thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1", "OPEN")));
+                "COMPLAINT_OFFICER")).thenReturn(ComplaintCreateResponseDTO.from(sampleComplaint("c1", "user1", "OPEN")));
 
-        ComplaintCreateResponseBean response =
+        ComplaintCreateResponseDTO response =
                 handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request);
 
         assertEquals("c1", response.getId());
@@ -107,10 +107,10 @@ class ComplaintHandlerTest {
     @Test
     void createComplaintToleratesNullRequestBody() {
         when(complaintService.createComplaint(eq(ORG_ID), eq(null), eq(null), eq(null), eq(null), eq("officer1"),
-                eq("COMPLAINT_OFFICER"))).thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1",
+                eq("COMPLAINT_OFFICER"))).thenReturn(ComplaintCreateResponseDTO.from(sampleComplaint("c1", "user1",
                 "OPEN")));
 
-        ComplaintCreateResponseBean response = handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", null);
+        ComplaintCreateResponseDTO response = handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", null);
 
         assertEquals("c1", response.getId());
     }
@@ -121,7 +121,7 @@ class ComplaintHandlerTest {
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
                 .thenReturn(List.of(attachmentBean("a1", false)));
 
-        ComplaintRecordBean bean = handler.getComplaint(ORG_ID, "c1");
+        ComplaintRecordDTO bean = handler.getComplaint(ORG_ID, "c1");
 
         assertEquals("c1", bean.getId());
         assertEquals(1, bean.getAttachments().size());
@@ -132,7 +132,7 @@ class ComplaintHandlerTest {
         when(complaintService.listComplaints(eq(ORG_ID), any(), any(), any(), eq(10), eq(0), any(), any()))
                 .thenReturn(List.of());
 
-        ComplaintListResponseBean response = handler.listComplaints(ORG_ID, null, null, null, null, null, null);
+        ComplaintListResponseDTO response = handler.listComplaints(ORG_ID, null, null, null, null, null, null);
 
         assertEquals(10, response.getMetadata().getLimit());
         assertEquals(0, response.getMetadata().getOffset());
@@ -143,7 +143,7 @@ class ComplaintHandlerTest {
         when(complaintService.listComplaints(eq(ORG_ID), any(), any(), any(), eq(100), eq(0), any(), any()))
                 .thenReturn(List.of());
 
-        ComplaintListResponseBean response = handler.listComplaints(ORG_ID, null, null, null, 500, null, null);
+        ComplaintListResponseDTO response = handler.listComplaints(ORG_ID, null, null, null, 500, null, null);
 
         assertEquals(100, response.getMetadata().getLimit());
     }
@@ -159,7 +159,7 @@ class ComplaintHandlerTest {
                 });
         when(complaintAttachmentService.listAttachmentsForComplaint(eq(ORG_ID), anyString())).thenReturn(List.of());
 
-        ComplaintListResponseBean response = handler.listComplaints(ORG_ID, null, null, null, null, null, null);
+        ComplaintListResponseDTO response = handler.listComplaints(ORG_ID, null, null, null, null, null, null);
 
         assertEquals(2, response.getData().size());
         assertEquals(42, response.getMetadata().getTotal());
@@ -169,9 +169,9 @@ class ComplaintHandlerTest {
     @Test
     void getQueueStatsMapsEachCountFromTheServiceResult() {
         when(complaintService.getQueueStats(ORG_ID))
-                .thenReturn(ComplaintQueueStatsResponseBean.from(new ComplaintQueueStats(3, 1, 2, 1)));
+                .thenReturn(ComplaintQueueStatsResponseDTO.from(new ComplaintQueueStats(3, 1, 2, 1)));
 
-        ComplaintQueueStatsResponseBean response = handler.getQueueStats(ORG_ID);
+        ComplaintQueueStatsResponseDTO response = handler.getQueueStats(ORG_ID);
 
         assertEquals(3, response.getOpenCount());
         assertEquals(1, response.getAwaitingInternalReviewCount());
@@ -181,11 +181,11 @@ class ComplaintHandlerTest {
 
     @Test
     void getCategoriesReturnsEveryKnownCategoryWithItsPriority() {
-        CategoryListResponseBean response = handler.getCategories();
+        CategoryListResponseDTO response = handler.getCategories();
 
         assertEquals(10, response.getData().size());
         boolean foundDataBreach = false;
-        for (ComplaintCategoryBean bean : response.getData()) {
+        for (ComplaintCategoryDTO bean : response.getData()) {
             if ("DATA_BREACH".equals(bean.getCategory())) {
                 assertEquals("CRITICAL", bean.getPriority());
                 foundDataBreach = true;
@@ -196,14 +196,14 @@ class ComplaintHandlerTest {
 
     @Test
     void updateStatusPassesRequestFieldsThroughToEventService() {
-        ComplaintStatusUpdateRequestBean request = new ComplaintStatusUpdateRequestBean();
+        ComplaintStatusUpdateRequestDTO request = new ComplaintStatusUpdateRequestDTO();
         request.setToStatus("IN_PROGRESS");
         request.setNote("note");
         when(complaintEventService.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                "IN_PROGRESS", "note")).thenReturn(ComplaintStatusUpdateResponseBean.from(sampleComplaint("c1",
+                "IN_PROGRESS", "note")).thenReturn(ComplaintStatusUpdateResponseDTO.from(sampleComplaint("c1",
                 "user1", "IN_PROGRESS")));
 
-        ComplaintStatusUpdateResponseBean response =
+        ComplaintStatusUpdateResponseDTO response =
                 handler.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
 
         assertEquals("IN_PROGRESS", response.getToStatus());
@@ -213,13 +213,13 @@ class ComplaintHandlerTest {
 
     @Test
     void createOwnComplaintUsesCallerAsOwnerRegardlessOfRequestBody() {
-        MeComplaintCreateRequestBean request = new MeComplaintCreateRequestBean();
+        MeComplaintCreateRequestDTO request = new MeComplaintCreateRequestDTO();
         request.setSubjectCategory("DATA_BREACH");
         request.setDescription("desc");
         when(complaintService.createComplaint(ORG_ID, "user1", "User One", "DATA_BREACH", "desc"))
-                .thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1", "OPEN")));
+                .thenReturn(ComplaintCreateResponseDTO.from(sampleComplaint("c1", "user1", "OPEN")));
 
-        ComplaintCreateResponseBean response = handler.createOwnComplaint(ORG_ID, "user1", "User One", request);
+        ComplaintCreateResponseDTO response = handler.createOwnComplaint(ORG_ID, "user1", "User One", request);
 
         assertEquals("c1", response.getId());
     }
@@ -231,7 +231,7 @@ class ComplaintHandlerTest {
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
                 .thenReturn(List.of(attachmentBean("a1", true), attachmentBean("a2", false)));
 
-        ComplaintRecordBean bean = handler.getOwnComplaint(ORG_ID, "c1", "user1");
+        ComplaintRecordDTO bean = handler.getOwnComplaint(ORG_ID, "c1", "user1");
 
         assertEquals(1, bean.getAttachments().size());
         assertEquals("a1", bean.getAttachments().get(0).getAttachmentId());
@@ -244,7 +244,7 @@ class ComplaintHandlerTest {
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
                 .thenReturn(List.of(attachmentBean("a1", false)));
 
-        ComplaintListResponseBean response = handler.listOwnComplaints(ORG_ID, "user1", null, null, null, null);
+        ComplaintListResponseDTO response = handler.listOwnComplaints(ORG_ID, "user1", null, null, null, null);
 
         assertEquals(1, response.getData().size());
         assertEquals(0, response.getData().get(0).getAttachments().size());
@@ -254,12 +254,12 @@ class ComplaintHandlerTest {
     void updateOwnStatusVerifiesOwnershipAndForcesUserRole() {
         when(complaintService.requireOwnedComplaint(ORG_ID, "c1", "user1"))
                 .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
-        MeComplaintStatusUpdateRequestBean request = new MeComplaintStatusUpdateRequestBean();
+        MeComplaintStatusUpdateRequestDTO request = new MeComplaintStatusUpdateRequestDTO();
         request.setToStatus("RESOLVED");
         when(complaintEventService.updateStatus(ORG_ID, "c1", "user1", "User One", "USER", "RESOLVED", null))
-                .thenReturn(ComplaintStatusUpdateResponseBean.from(sampleComplaint("c1", "user1", "RESOLVED")));
+                .thenReturn(ComplaintStatusUpdateResponseDTO.from(sampleComplaint("c1", "user1", "RESOLVED")));
 
-        ComplaintStatusUpdateResponseBean response =
+        ComplaintStatusUpdateResponseDTO response =
                 handler.updateOwnStatus(ORG_ID, "c1", "user1", "User One", request);
 
         assertEquals("RESOLVED", response.getToStatus());

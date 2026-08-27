@@ -34,8 +34,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import java.lang.reflect.Field;
@@ -151,7 +151,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(true);
 
-        ComplaintCreateResponseBean complaint =
+        ComplaintCreateResponseDTO complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
 
         assertEquals("CRITICAL", complaint.getPriority());
@@ -186,7 +186,7 @@ class ComplaintServiceImplTest {
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
                 .thenReturn(true);
 
-        ComplaintCreateResponseBean complaint =
+        ComplaintCreateResponseDTO complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -213,7 +213,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCreateResponseBean complaint = complaintService.createComplaint("org1", "user1", null,
+        ComplaintCreateResponseDTO complaint = complaintService.createComplaint("org1", "user1", null,
                 "DATA_BREACH", "desc", "officer1", "COMPLAINT_OFFICER");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -349,7 +349,7 @@ class ComplaintServiceImplTest {
         ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
         when(complaintDAO.getQueueStats(eq("org1"), anyLong())).thenReturn(stats);
 
-        ComplaintQueueStatsResponseBean result = complaintService.getQueueStats("org1");
+        ComplaintQueueStatsResponseDTO result = complaintService.getQueueStats("org1");
 
         assertEquals(stats.getOpenCount(), result.getOpenCount());
         assertEquals(stats.getAwaitingInternalReviewCount(), result.getAwaitingInternalReviewCount());

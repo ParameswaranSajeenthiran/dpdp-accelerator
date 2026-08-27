@@ -22,19 +22,19 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
@@ -73,8 +73,8 @@ public class ComplaintHandler {
 
     // ---- Officer/admin (/complaints/*) ----
 
-    public ComplaintCreateResponseBean createComplaint(String orgId, String actorUserId, String actorRole,
-            ComplaintCreateRequestBean request) {
+    public ComplaintCreateResponseDTO createComplaint(String orgId, String actorUserId, String actorRole,
+            ComplaintCreateRequestDTO request) {
         String userId = request != null ? request.getUserId() : null;
         String subjectCategory = request != null ? request.getSubjectCategory() : null;
         String description = request != null ? request.getDescription() : null;
@@ -86,33 +86,33 @@ public class ComplaintHandler {
                 actorRole);
     }
 
-    public ComplaintRecordBean getComplaint(String orgId, String complaintId) {
+    public ComplaintRecordDTO getComplaint(String orgId, String complaintId) {
         Complaint complaint = complaintService.getComplaint(orgId, complaintId);
-        List<ComplaintAttachmentResponseBean> attachments =
+        List<ComplaintAttachmentResponseDTO> attachments =
                 complaintAttachmentService.listAttachmentsForComplaint(orgId, complaintId);
-        return ComplaintRecordBean.from(complaint, attachments);
+        return ComplaintRecordDTO.from(complaint, attachments);
     }
 
-    public ComplaintListResponseBean listComplaints(String orgId, String status, String priority, String userId,
+    public ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
             Integer limit, Integer offset, String sort) {
         return listComplaints(orgId, status, priority, userId, limit, offset, sort, false);
     }
 
-    public ComplaintQueueStatsResponseBean getQueueStats(String orgId) {
+    public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
         return complaintService.getQueueStats(orgId);
     }
 
-    public CategoryListResponseBean getCategories() {
+    public CategoryListResponseDTO getCategories() {
         Map<String, String> categoryPriorities = new TreeMap<>(PriorityMapper.getCategoryPriorities());
-        List<ComplaintCategoryBean> beanList = new ArrayList<>();
+        List<ComplaintCategoryDTO> beanList = new ArrayList<>();
         for (Map.Entry<String, String> entry : categoryPriorities.entrySet()) {
-            beanList.add(new ComplaintCategoryBean(entry.getKey(), entry.getValue()));
+            beanList.add(new ComplaintCategoryDTO(entry.getKey(), entry.getValue()));
         }
-        return new CategoryListResponseBean(beanList);
+        return new CategoryListResponseDTO(beanList);
     }
 
-    public ComplaintStatusUpdateResponseBean updateStatus(String orgId, String complaintId, String actorUserId,
-            String actorUserName, String actorRole, ComplaintStatusUpdateRequestBean request) {
+    public ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, ComplaintStatusUpdateRequestDTO request) {
         String toStatus = request != null ? request.getToStatus() : null;
         String note = request != null ? request.getNote() : null;
 
@@ -122,27 +122,27 @@ public class ComplaintHandler {
 
     // ---- Data Principal (/me/complaints/*) ----
 
-    public ComplaintCreateResponseBean createOwnComplaint(String orgId, String ownerUserId, String ownerUserName,
-            MeComplaintCreateRequestBean request) {
+    public ComplaintCreateResponseDTO createOwnComplaint(String orgId, String ownerUserId, String ownerUserName,
+            MeComplaintCreateRequestDTO request) {
         String subjectCategory = request != null ? request.getSubjectCategory() : null;
         String description = request != null ? request.getDescription() : null;
         return complaintService.createComplaint(orgId, ownerUserId, ownerUserName, subjectCategory, description);
     }
 
-    public ComplaintRecordBean getOwnComplaint(String orgId, String complaintId, String ownerUserId) {
+    public ComplaintRecordDTO getOwnComplaint(String orgId, String complaintId, String ownerUserId) {
         Complaint complaint = complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
-        List<ComplaintAttachmentResponseBean> attachments =
+        List<ComplaintAttachmentResponseDTO> attachments =
                 complaintAttachmentService.listAttachmentsForComplaint(orgId, complaintId);
-        return ComplaintRecordBean.from(complaint, publicOnly(attachments));
+        return ComplaintRecordDTO.from(complaint, publicOnly(attachments));
     }
 
-    public ComplaintListResponseBean listOwnComplaints(String orgId, String ownerUserId, String status,
+    public ComplaintListResponseDTO listOwnComplaints(String orgId, String ownerUserId, String status,
             Integer limit, Integer offset, String sort) {
         return listComplaints(orgId, status, null, ownerUserId, limit, offset, sort, true);
     }
 
-    public ComplaintStatusUpdateResponseBean updateOwnStatus(String orgId, String complaintId, String ownerUserId,
-            String ownerUserName, MeComplaintStatusUpdateRequestBean request) {
+    public ComplaintStatusUpdateResponseDTO updateOwnStatus(String orgId, String complaintId, String ownerUserId,
+            String ownerUserName, MeComplaintStatusUpdateRequestDTO request) {
         complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
         String toStatus = request != null ? request.getToStatus() : null;
         return complaintEventService.updateStatus(orgId, complaintId, ownerUserId, ownerUserName, "USER", toStatus,
@@ -151,7 +151,7 @@ public class ComplaintHandler {
 
     // ---- shared ----
 
-    private ComplaintListResponseBean listComplaints(String orgId, String status, String priority, String userId,
+    private ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
             Integer limit, Integer offset, String sort, boolean restrictToPublicAttachments) {
         int lim = limit != null && limit > 0 ? Math.min(limit, 100) : 10;
         int off = offset != null && offset >= 0 ? offset : 0;
@@ -160,19 +160,19 @@ public class ComplaintHandler {
         List<Complaint> list = complaintService.listComplaints(orgId, status, priority, userId, lim, off, sort,
                 totalOut);
 
-        List<ComplaintRecordBean> beanList = new ArrayList<>();
+        List<ComplaintRecordDTO> beanList = new ArrayList<>();
         for (Complaint complaint : list) {
-            List<ComplaintAttachmentResponseBean> attachments = complaintAttachmentService
+            List<ComplaintAttachmentResponseDTO> attachments = complaintAttachmentService
                     .listAttachmentsForComplaint(orgId, complaint.getComplaintId());
-            beanList.add(ComplaintRecordBean.from(complaint,
+            beanList.add(ComplaintRecordDTO.from(complaint,
                     restrictToPublicAttachments ? publicOnly(attachments) : attachments));
         }
 
-        PageMetadataBean metadata = new PageMetadataBean(totalOut[0], off, beanList.size(), lim);
-        return new ComplaintListResponseBean(beanList, metadata);
+        PageMetadataDTO metadata = new PageMetadataDTO(totalOut[0], off, beanList.size(), lim);
+        return new ComplaintListResponseDTO(beanList, metadata);
     }
 
-    private List<ComplaintAttachmentResponseBean> publicOnly(List<ComplaintAttachmentResponseBean> attachments) {
-        return attachments.stream().filter(ComplaintAttachmentResponseBean::isPublic).collect(Collectors.toList());
+    private List<ComplaintAttachmentResponseDTO> publicOnly(List<ComplaintAttachmentResponseDTO> attachments) {
+        return attachments.stream().filter(ComplaintAttachmentResponseDTO::isPublic).collect(Collectors.toList());
     }
 }

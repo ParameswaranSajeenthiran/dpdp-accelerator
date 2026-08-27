@@ -32,8 +32,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -71,13 +71,13 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName,
+    public ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName,
             String subjectCategory, String description) {
         return createComplaint(orgId, userId, userName, subjectCategory, description, null, null);
     }
 
     @Override
-    public ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName,
+    public ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName,
             String subjectCategory, String description, String actorUserId, String actorRole) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.INVALID_REQUEST_BODY,
@@ -138,7 +138,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
                     }
                 }
-                return ComplaintCreateResponseBean.from(complaint);
+                return ComplaintCreateResponseDTO.from(complaint);
             } catch (DuplicateReferenceIdException e) {
                 lastCollision = e;
             }
@@ -220,9 +220,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintQueueStatsResponseBean getQueueStats(String orgId) {
+    public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
         ComplaintQueueStats stats = complaintDAO.getQueueStats(orgId, System.currentTimeMillis());
-        return ComplaintQueueStatsResponseBean.from(stats);
+        return ComplaintQueueStatsResponseDTO.from(stats);
     }
 
     private boolean isValidCategory(String category) {

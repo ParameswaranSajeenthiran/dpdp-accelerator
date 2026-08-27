@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.GET;
@@ -69,7 +69,7 @@ public class ComplaintTimelineEndpoint {
             @QueryParam("limit") Integer limit,
             @QueryParam("offset") Integer offset) {
         String orgId = TokenIntrospectionFilter.currentPrincipal(requestContext).getOrgId();
-        TimelineListResponseBean response =
+        TimelineListResponseDTO response =
                 timelineHandler.getTimeline(orgId, complaintId, fromTime, toTime, order, limit, offset);
         return Response.ok(response).build();
     }

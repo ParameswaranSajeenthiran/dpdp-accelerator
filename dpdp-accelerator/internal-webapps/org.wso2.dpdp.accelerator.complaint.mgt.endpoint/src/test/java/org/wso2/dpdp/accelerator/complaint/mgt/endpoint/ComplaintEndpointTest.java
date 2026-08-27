@@ -26,14 +26,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -72,8 +72,8 @@ class ComplaintEndpointTest {
     @Test
     void createComplaintReturns201WithHandlerResponse() {
         stubPrincipal();
-        ComplaintCreateRequestBean request = new ComplaintCreateRequestBean();
-        ComplaintCreateResponseBean handlerResponse = new ComplaintCreateResponseBean();
+        ComplaintCreateRequestDTO request = new ComplaintCreateRequestDTO();
+        ComplaintCreateResponseDTO handlerResponse = new ComplaintCreateResponseDTO();
         when(complaintHandler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 
@@ -86,7 +86,7 @@ class ComplaintEndpointTest {
     @Test
     void listComplaintsReturns200WithHandlerResponse() {
         stubPrincipal();
-        ComplaintListResponseBean handlerResponse = new ComplaintListResponseBean();
+        ComplaintListResponseDTO handlerResponse = new ComplaintListResponseDTO();
         when(complaintHandler.listComplaints(ORG_ID, "OPEN", "HIGH", "user1", 10, 0, "updatedTime"))
                 .thenReturn(handlerResponse);
 
@@ -99,7 +99,7 @@ class ComplaintEndpointTest {
     @Test
     void getQueueStatsReturns200WithHandlerResponse() {
         stubPrincipal();
-        ComplaintQueueStatsResponseBean handlerResponse = new ComplaintQueueStatsResponseBean();
+        ComplaintQueueStatsResponseDTO handlerResponse = new ComplaintQueueStatsResponseDTO();
         when(complaintHandler.getQueueStats(ORG_ID)).thenReturn(handlerResponse);
 
         Response response = endpoint.getQueueStats();
@@ -110,7 +110,7 @@ class ComplaintEndpointTest {
 
     @Test
     void getCategoriesReturns200WithHandlerResponse() {
-        CategoryListResponseBean handlerResponse = new CategoryListResponseBean();
+        CategoryListResponseDTO handlerResponse = new CategoryListResponseDTO();
         when(complaintHandler.getCategories()).thenReturn(handlerResponse);
 
         Response response = endpoint.getCategories();
@@ -122,7 +122,7 @@ class ComplaintEndpointTest {
     @Test
     void getComplaintReturns200WithHandlerResponse() {
         stubPrincipal();
-        ComplaintRecordBean handlerResponse = new ComplaintRecordBean();
+        ComplaintRecordDTO handlerResponse = new ComplaintRecordDTO();
         when(complaintHandler.getComplaint(ORG_ID, "c1")).thenReturn(handlerResponse);
 
         Response response = endpoint.getComplaint("c1");
@@ -134,8 +134,8 @@ class ComplaintEndpointTest {
     @Test
     void updateComplaintStatusReturns200WithHandlerResponse() {
         stubPrincipal();
-        ComplaintStatusUpdateRequestBean request = new ComplaintStatusUpdateRequestBean();
-        ComplaintStatusUpdateResponseBean handlerResponse = new ComplaintStatusUpdateResponseBean();
+        ComplaintStatusUpdateRequestDTO request = new ComplaintStatusUpdateRequestDTO();
+        ComplaintStatusUpdateResponseDTO handlerResponse = new ComplaintStatusUpdateResponseDTO();
         when(complaintHandler.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 

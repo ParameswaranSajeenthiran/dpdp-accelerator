@@ -23,8 +23,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import javax.ws.rs.Consumes;
@@ -76,7 +76,7 @@ public class ComplaintAttachmentEndpoint {
             @FormDataParam("file") List<FormDataBodyPart> fileParts,
             @FormDataParam("isPublic") Boolean isPublic) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        List<ComplaintAttachmentResponseBean> response = attachmentHandler.uploadComplaintAttachments(
+        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadComplaintAttachments(
                 principal.getOrgId(), complaintId, fileParts, isPublic, principal.getUserId(),
                 principal.getUserName());
         return Response.status(Response.Status.CREATED).entity(response).build();
@@ -90,7 +90,7 @@ public class ComplaintAttachmentEndpoint {
             @PathParam("complaintId") String complaintId,
             @PathParam("attachmentId") String attachmentId) {
         String orgId = TokenIntrospectionFilter.currentPrincipal(requestContext).getOrgId();
-        ComplaintAttachmentDownloadResponseBean response =
+        ComplaintAttachmentDownloadResponseDTO response =
                 attachmentHandler.downloadAttachment(orgId, complaintId, attachmentId);
         return Response.ok(response).build();
     }

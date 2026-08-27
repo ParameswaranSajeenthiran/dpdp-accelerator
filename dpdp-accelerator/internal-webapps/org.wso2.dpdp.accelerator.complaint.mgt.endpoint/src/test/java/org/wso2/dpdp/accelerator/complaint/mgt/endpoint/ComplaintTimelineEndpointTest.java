@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -61,7 +61,7 @@ class ComplaintTimelineEndpointTest {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
                         Set.of("complaints:read:any")));
-        TimelineListResponseBean handlerResponse = new TimelineListResponseBean();
+        TimelineListResponseDTO handlerResponse = new TimelineListResponseDTO();
         when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, null, "asc", 10, 0)).thenReturn(handlerResponse);
 
         Response response = endpoint.getTimeline("c1", 1000L, null, "asc", 10, 0);

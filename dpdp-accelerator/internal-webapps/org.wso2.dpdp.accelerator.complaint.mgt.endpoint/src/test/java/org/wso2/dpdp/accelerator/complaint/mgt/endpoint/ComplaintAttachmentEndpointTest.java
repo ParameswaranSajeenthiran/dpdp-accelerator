@@ -27,8 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -66,7 +66,7 @@ class ComplaintAttachmentEndpointTest {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
                         Set.of("complaints:write:any")));
-        List<ComplaintAttachmentResponseBean> handlerResponse = List.of();
+        List<ComplaintAttachmentResponseDTO> handlerResponse = List.of();
         when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                 "Officer One")).thenReturn(handlerResponse);
 
@@ -81,8 +81,8 @@ class ComplaintAttachmentEndpointTest {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
                         Set.of("complaints:read:any")));
-        ComplaintAttachmentDownloadResponseBean handlerResponse =
-                new ComplaintAttachmentDownloadResponseBean("att1", "a.pdf", "application/pdf", new byte[]{1});
+        ComplaintAttachmentDownloadResponseDTO handlerResponse =
+                new ComplaintAttachmentDownloadResponseDTO("att1", "a.pdf", "application/pdf", new byte[]{1});
         when(attachmentHandler.downloadAttachment(ORG_ID, "c1", "att1")).thenReturn(handlerResponse);
 
         Response response = endpoint.downloadComplaintAttachment("c1", "att1");

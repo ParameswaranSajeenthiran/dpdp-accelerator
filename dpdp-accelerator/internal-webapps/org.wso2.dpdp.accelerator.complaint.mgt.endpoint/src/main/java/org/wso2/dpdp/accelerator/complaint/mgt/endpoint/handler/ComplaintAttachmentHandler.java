@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -63,7 +63,7 @@ public class ComplaintAttachmentHandler {
 
     // ---- Officer/admin ----
 
-    public List<ComplaintAttachmentResponseBean> uploadComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
             List<FormDataBodyPart> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
         return complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId, files,
@@ -71,21 +71,21 @@ public class ComplaintAttachmentHandler {
                 ComplaintActorRole.COMPLAINT_OFFICER.name());
     }
 
-    public ComplaintAttachmentDownloadResponseBean downloadAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
             String attachmentId) {
         return complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, false);
     }
 
     // ---- Data Principal ----
 
-    public List<ComplaintAttachmentResponseBean> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<FormDataBodyPart> fileParts) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
         return complaintAttachmentService.uploadOwnComplaintAttachments(orgId, complaintId, ownerUserId,
                 ownerUserName, files);
     }
 
-    public ComplaintAttachmentDownloadResponseBean downloadOwnAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
         return complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId);
     }

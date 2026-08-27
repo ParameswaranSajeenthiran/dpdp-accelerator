@@ -30,8 +30,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -71,7 +71,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public ComplaintCommentCreateResponseBean addComment(String orgId, String complaintId, String actorUserId,
+    public ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String message, boolean isPublic, String toStatus) {
         Complaint complaint = complaintService.requireComplaint(orgId, complaintId);
 
@@ -147,7 +147,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             }
         }
 
-        return ComplaintCommentCreateResponseBean.from(event);
+        return ComplaintCommentCreateResponseDTO.from(event);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public ComplaintStatusUpdateResponseBean updateStatus(String orgId, String complaintId, String actorUserId,
+    public ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String toStatus, String note) {
         Complaint complaint = complaintService.requireComplaint(orgId, complaintId);
 
@@ -223,6 +223,6 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
 
         complaint.setStatus(toStatus);
         complaint.setUpdatedTime(now);
-        return ComplaintStatusUpdateResponseBean.from(complaint);
+        return ComplaintStatusUpdateResponseDTO.from(complaint);
     }
 }

@@ -21,14 +21,14 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.Consumes;
@@ -79,9 +79,9 @@ public class ComplaintEndpoint {
 
     @POST
     @RequireScope
-    public Response createComplaint(ComplaintCreateRequestBean request) {
+    public Response createComplaint(ComplaintCreateRequestDTO request) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintCreateResponseBean response = complaintHandler.createComplaint(principal.getOrgId(),
+        ComplaintCreateResponseDTO response = complaintHandler.createComplaint(principal.getOrgId(),
                 principal.getUserId(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -95,7 +95,7 @@ public class ComplaintEndpoint {
             @QueryParam("limit") Integer limit,
             @QueryParam("offset") Integer offset,
             @QueryParam("sort") String sort) {
-        ComplaintListResponseBean response =
+        ComplaintListResponseDTO response =
                 complaintHandler.listComplaints(currentOrgId(), status, priority, userId, limit, offset, sort);
         return Response.ok(response).build();
     }
@@ -104,7 +104,7 @@ public class ComplaintEndpoint {
     @Path("/stats")
     @RequireScope
     public Response getQueueStats() {
-        ComplaintQueueStatsResponseBean response = complaintHandler.getQueueStats(currentOrgId());
+        ComplaintQueueStatsResponseDTO response = complaintHandler.getQueueStats(currentOrgId());
         return Response.ok(response).build();
     }
 
@@ -112,7 +112,7 @@ public class ComplaintEndpoint {
     @Path("/categories")
     @RequireScope
     public Response getCategories() {
-        CategoryListResponseBean response = complaintHandler.getCategories();
+        CategoryListResponseDTO response = complaintHandler.getCategories();
         return Response.ok(response).build();
     }
 
@@ -120,7 +120,7 @@ public class ComplaintEndpoint {
     @Path("/{complaintId}")
     @RequireScope
     public Response getComplaint(@PathParam("complaintId") String complaintId) {
-        ComplaintRecordBean response = complaintHandler.getComplaint(currentOrgId(), complaintId);
+        ComplaintRecordDTO response = complaintHandler.getComplaint(currentOrgId(), complaintId);
         return Response.ok(response).build();
     }
 
@@ -129,9 +129,9 @@ public class ComplaintEndpoint {
     @RequireScope
     public Response updateComplaintStatus(
             @PathParam("complaintId") String complaintId,
-            ComplaintStatusUpdateRequestBean request) {
+            ComplaintStatusUpdateRequestDTO request) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintStatusUpdateResponseBean response = complaintHandler.updateStatus(principal.getOrgId(), complaintId,
+        ComplaintStatusUpdateResponseDTO response = complaintHandler.updateStatus(principal.getOrgId(), complaintId,
                 principal.getUserId(), principal.getUserName(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.ok(response).build();
     }

@@ -33,8 +33,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import java.lang.reflect.Field;
@@ -186,7 +186,7 @@ class ComplaintEventServiceImplTest {
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
-        ComplaintCommentCreateResponseBean event =
+        ComplaintCommentCreateResponseDTO event =
                 eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
         assertEquals(atLimit, event.getMessage());
@@ -228,7 +228,7 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCommentCreateResponseBean event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "internal note", false, null);
 
         assertEquals(false, event.isPublic());
@@ -255,7 +255,7 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
 
-        ComplaintCommentCreateResponseBean event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "note", true, "IN_PROGRESS");
 
         assertEquals("OPEN", event.getFromStatus());
@@ -377,7 +377,7 @@ class ComplaintEventServiceImplTest {
                 .thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintStatusUpdateResponseBean result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
+        ComplaintStatusUpdateResponseDTO result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "IN_PROGRESS", null);
 
         assertEquals("IN_PROGRESS", result.getToStatus());

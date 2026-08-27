@@ -23,8 +23,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import javax.ws.rs.Consumes;
@@ -73,7 +73,7 @@ public class MeComplaintAttachmentEndpoint {
             @PathParam("complaintId") String complaintId,
             @FormDataParam("file") List<FormDataBodyPart> fileParts) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        List<ComplaintAttachmentResponseBean> response = attachmentHandler.uploadOwnComplaintAttachments(
+        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadOwnComplaintAttachments(
                 principal.getOrgId(), complaintId, principal.getUserId(), principal.getUserName(), fileParts);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -85,7 +85,7 @@ public class MeComplaintAttachmentEndpoint {
             @PathParam("complaintId") String complaintId,
             @PathParam("attachmentId") String attachmentId) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintAttachmentDownloadResponseBean response = attachmentHandler.downloadOwnAttachment(
+        ComplaintAttachmentDownloadResponseDTO response = attachmentHandler.downloadOwnAttachment(
                 principal.getOrgId(), complaintId, principal.getUserId(), attachmentId);
         return Response.ok(response).build();
     }

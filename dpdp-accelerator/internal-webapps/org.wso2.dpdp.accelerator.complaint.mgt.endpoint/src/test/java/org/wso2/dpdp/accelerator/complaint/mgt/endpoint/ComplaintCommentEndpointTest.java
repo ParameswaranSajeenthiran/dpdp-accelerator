@@ -26,8 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -62,8 +62,8 @@ class ComplaintCommentEndpointTest {
         when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
                 .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
                         Set.of("complaints:write:any")));
-        ComplaintMessageRequestBean request = new ComplaintMessageRequestBean();
-        ComplaintCommentCreateResponseBean handlerResponse = new ComplaintCommentCreateResponseBean();
+        ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
+        ComplaintCommentCreateResponseDTO handlerResponse = new ComplaintCommentCreateResponseDTO();
         when(commentHandler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 

@@ -21,7 +21,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.GET;
@@ -70,7 +70,7 @@ public class MeComplaintTimelineEndpoint {
             @QueryParam("limit") Integer limit,
             @QueryParam("offset") Integer offset) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        TimelineListResponseBean response = timelineHandler.getOwnTimeline(principal.getOrgId(), complaintId,
+        TimelineListResponseDTO response = timelineHandler.getOwnTimeline(principal.getOrgId(), complaintId,
                 principal.getUserId(), fromTime, toTime, order, limit, offset);
         return Response.ok(response).build();
     }

@@ -20,9 +20,9 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -50,8 +50,8 @@ public class ComplaintCommentHandler {
         this.complaintEventService = complaintEventService;
     }
 
-    public ComplaintCommentCreateResponseBean addComment(String orgId, String complaintId, String actorUserId,
-            String actorUserName, String actorRole, ComplaintMessageRequestBean request) {
+    public ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, ComplaintMessageRequestDTO request) {
         String message = request != null ? request.getMessage() : null;
         Boolean requestedIsPublic = request != null ? request.isPublic() : null;
         if (requestedIsPublic == null) {
@@ -65,8 +65,8 @@ public class ComplaintCommentHandler {
                 isPublic, toStatus);
     }
 
-    public ComplaintCommentCreateResponseBean addOwnComment(String orgId, String complaintId, String ownerUserId,
-            String ownerUserName, MeComplaintMessageRequestBean request) {
+    public ComplaintCommentCreateResponseDTO addOwnComment(String orgId, String complaintId, String ownerUserId,
+            String ownerUserName, MeComplaintMessageRequestDTO request) {
         complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
         String message = request != null ? request.getMessage() : null;
         String toStatus = request != null ? request.getToStatus() : null;

@@ -31,8 +31,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
@@ -93,12 +93,12 @@ class ComplaintAttachmentHandlerTest {
         return new ComplaintAttachment(id, ORG_ID, "c1", "a.pdf", "application/pdf", new byte[]{1}, isPublic, 1L);
     }
 
-    private ComplaintAttachmentResponseBean attachmentBean(String id, boolean isPublic) {
-        return ComplaintAttachmentResponseBean.from(attachment(id, isPublic));
+    private ComplaintAttachmentResponseDTO attachmentBean(String id, boolean isPublic) {
+        return ComplaintAttachmentResponseDTO.from(attachment(id, isPublic));
     }
 
-    private ComplaintAttachmentDownloadResponseBean downloadBean(ComplaintAttachment attachment) {
-        return new ComplaintAttachmentDownloadResponseBean(attachment.getAttachmentId(), attachment.getFileName(),
+    private ComplaintAttachmentDownloadResponseDTO downloadBean(ComplaintAttachment attachment) {
+        return new ComplaintAttachmentDownloadResponseDTO(attachment.getAttachmentId(), attachment.getFileName(),
                 attachment.getContentType(), attachment.getFileData());
     }
 
@@ -124,7 +124,7 @@ class ComplaintAttachmentHandlerTest {
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER")))
                 .thenReturn(List.of(attachmentBean("att1", false)));
 
-        List<ComplaintAttachmentResponseBean> result = handler.uploadComplaintAttachments(ORG_ID, "c1",
+        List<ComplaintAttachmentResponseDTO> result = handler.uploadComplaintAttachments(ORG_ID, "c1",
                 List.of(filePart), false, "officer1", "Officer One");
 
         assertEquals(1, result.size());
@@ -217,7 +217,7 @@ class ComplaintAttachmentHandlerTest {
         when(complaintAttachmentService.downloadAttachment(ORG_ID, "c1", "att1", false))
                 .thenReturn(downloadBean(attachment));
 
-        ComplaintAttachmentDownloadResponseBean response = handler.downloadAttachment(ORG_ID, "c1", "att1");
+        ComplaintAttachmentDownloadResponseDTO response = handler.downloadAttachment(ORG_ID, "c1", "att1");
 
         assertEquals("att1", response.getAttachmentId());
         assertEquals(Base64.getEncoder().encodeToString(content), response.getContent());
@@ -232,7 +232,7 @@ class ComplaintAttachmentHandlerTest {
         when(complaintAttachmentService.uploadOwnComplaintAttachments(eq(ORG_ID), eq("c1"), eq("user1"),
                 eq("User One"), any())).thenReturn(List.of(attachmentBean("att1", true)));
 
-        List<ComplaintAttachmentResponseBean> result =
+        List<ComplaintAttachmentResponseDTO> result =
                 handler.uploadOwnComplaintAttachments(ORG_ID, "c1", "user1", "User One", List.of());
 
         assertEquals(1, result.size());
@@ -248,7 +248,7 @@ class ComplaintAttachmentHandlerTest {
         when(complaintAttachmentService.downloadOwnAttachment(ORG_ID, "c1", "user1", "att1"))
                 .thenReturn(downloadBean(attachment));
 
-        ComplaintAttachmentDownloadResponseBean response =
+        ComplaintAttachmentDownloadResponseDTO response =
                 handler.downloadOwnAttachment(ORG_ID, "c1", "user1", "att1");
 
         assertEquals("att1", response.getAttachmentId());

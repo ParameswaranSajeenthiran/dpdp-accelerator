@@ -27,8 +27,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -59,7 +59,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     @Override
-    public List<ComplaintAttachmentResponseBean> uploadComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName,
             String actorRole) {
         complaintService.requireComplaint(orgId, complaintId);
@@ -70,16 +70,16 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         String complaintEventId = recordUploadEvent(orgId, complaintId, isPublic, actorUserId, actorUserName,
                 actorRole, now);
 
-        List<ComplaintAttachmentResponseBean> result = new ArrayList<>();
+        List<ComplaintAttachmentResponseDTO> result = new ArrayList<>();
         for (UploadedFile file : files) {
-            result.add(ComplaintAttachmentResponseBean.from(
+            result.add(ComplaintAttachmentResponseDTO.from(
                     store(orgId, complaintId, complaintEventId, file, isPublic, now)));
         }
         return result;
     }
 
     @Override
-    public List<ComplaintAttachmentResponseBean> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<UploadedFile> files) {
         complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
         return uploadComplaintAttachments(orgId, complaintId, files, true, ownerUserId, ownerUserName,
@@ -87,7 +87,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     @Override
-    public ComplaintAttachmentDownloadResponseBean downloadOwnAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
         complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
         return downloadAttachment(orgId, complaintId, attachmentId, true);
@@ -125,16 +125,16 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     @Override
-    public List<ComplaintAttachmentResponseBean> listAttachmentsForComplaint(String orgId, String complaintId) {
-        List<ComplaintAttachmentResponseBean> beans = new ArrayList<>();
+    public List<ComplaintAttachmentResponseDTO> listAttachmentsForComplaint(String orgId, String complaintId) {
+        List<ComplaintAttachmentResponseDTO> beans = new ArrayList<>();
         for (ComplaintAttachment attachment : attachmentDAO.listAttachmentsForComplaint(orgId, complaintId)) {
-            beans.add(ComplaintAttachmentResponseBean.from(attachment));
+            beans.add(ComplaintAttachmentResponseDTO.from(attachment));
         }
         return beans;
     }
 
     @Override
-    public ComplaintAttachmentDownloadResponseBean downloadAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
             String attachmentId, boolean restrictToPublicOnly) {
         Optional<ComplaintAttachment> attachmentOpt =
                 attachmentDAO.getAttachmentWithDataById(attachmentId, orgId, complaintId);
@@ -149,7 +149,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
                     ComplaintServiceConstants.INTERNAL_ATTACHMENT_ACCESS_DENIED_ERROR);
         }
 
-        return new ComplaintAttachmentDownloadResponseBean(attachment.getAttachmentId(), attachment.getFileName(),
+        return new ComplaintAttachmentDownloadResponseDTO(attachment.getAttachmentId(), attachment.getFileName(),
                 attachment.getContentType(), attachment.getFileData());
     }
 

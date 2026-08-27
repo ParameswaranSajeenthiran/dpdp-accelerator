@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
 import javax.ws.rs.Consumes;
@@ -63,9 +63,9 @@ public class MeComplaintCommentEndpoint {
     @RequireScope
     public Response addComplaintMessage(
             @PathParam("complaintId") String complaintId,
-            MeComplaintMessageRequestBean request) {
+            MeComplaintMessageRequestDTO request) {
         AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintCommentCreateResponseBean response = commentHandler.addOwnComment(principal.getOrgId(), complaintId,
+        ComplaintCommentCreateResponseDTO response = commentHandler.addOwnComment(principal.getOrgId(), complaintId,
                 principal.getUserId(), principal.getUserName(), request);
         return Response.ok(response).build();
     }
