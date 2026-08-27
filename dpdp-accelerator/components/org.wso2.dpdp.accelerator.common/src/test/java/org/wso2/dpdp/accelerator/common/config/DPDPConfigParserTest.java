@@ -42,6 +42,7 @@ import static org.testng.Assert.expectThrows;
 public class DPDPConfigParserTest {
 
     private static final String CUSTOM_CLIENT_ID = "CUSTOM_TEST_CLIENT_ID";
+    private static final int CUSTOM_STATUTORY_DUE_PERIOD_DAYS = 45;
 
     @BeforeClass
     public void writeConfigFileAndSetCarbonConfigDir() throws IOException {
@@ -52,6 +53,9 @@ public class DPDPConfigParserTest {
                 + "<ConsentPortal>"
                 + "<ClientId>" + CUSTOM_CLIENT_ID + "</ClientId>"
                 + "</ConsentPortal>"
+                + "<Complaints>"
+                + "<StatutoryDuePeriodDays>" + CUSTOM_STATUTORY_DUE_PERIOD_DAYS + "</StatutoryDuePeriodDays>"
+                + "</Complaints>"
                 + "<EventNotifications>"
                 + "<ThreadPoolSize>8</ThreadPoolSize>"
                 + "<BaseBackoffSeconds>12</BaseBackoffSeconds>"
@@ -89,6 +93,7 @@ public class DPDPConfigParserTest {
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertEquals(service.getConsentPortalClientId(), CUSTOM_CLIENT_ID);
         assertTrue(service.isConsentPortalProvisioningEnabled());
+        assertEquals(service.getComplaintsStatutoryDuePeriodDays(), CUSTOM_STATUTORY_DUE_PERIOD_DAYS);
         assertEquals(service.getEventNotificationThreadPoolSize(), 8);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 12L);
         assertEquals(service.getEventNotificationMaxRetries(), 7);
@@ -109,6 +114,7 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl(false);
         assertEquals(service.getConfigurations().size(), 0);
+        assertEquals(service.getComplaintsStatutoryDuePeriodDays(), 90);
         assertEquals(service.getEventNotificationThreadPoolSize(), 4);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 5L);
         assertEquals(service.getEventNotificationMaxRetries(), 5);
@@ -161,6 +167,10 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 30);
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 20);
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 5);
+
+        values.put("Complaints.StatutoryDuePeriodDays", "0");
+        expectThrows(IllegalStateException.class, service::getComplaintsStatutoryDuePeriodDays);
+        values.put("Complaints.StatutoryDuePeriodDays", String.valueOf(CUSTOM_STATUTORY_DUE_PERIOD_DAYS));
 
         values.put("EventNotifications.ThreadPoolSize", "0");
         expectThrows(IllegalStateException.class, service::getEventNotificationThreadPoolSize);

@@ -32,6 +32,8 @@ public interface DPDPConfigurationService {
 
     String getConsentPortalClientId();
 
+    int getComplaintsStatutoryDuePeriodDays();
+
     int getEventNotificationThreadPoolSize();
 
     long getEventNotificationBaseBackoffSeconds();

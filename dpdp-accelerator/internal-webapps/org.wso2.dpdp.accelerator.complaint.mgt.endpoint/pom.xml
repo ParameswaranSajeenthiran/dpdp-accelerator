@@ -59,6 +59,18 @@
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
         </dependency>
+        <!--
+             The root pom's dependencyManagement pins jersey-common to `test` scope (for
+             event-notifications' own test-only usage), which otherwise drags this transitive
+             dependency of jersey-container-servlet-core down to `test` scope here too, excluding
+             it from WEB-INF/lib and causing NoClassDefFoundError: ExtendedLogger on deploy.
+             Overridden back to compile scope for this module explicitly.
+        -->
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>

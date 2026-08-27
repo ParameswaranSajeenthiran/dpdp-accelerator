@@ -30,6 +30,8 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";
 
+    public static final String COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS = "Complaints.StatutoryDuePeriodDays";
+
     public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
     public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";
     public static final String EVENT_NOTIFICATIONS_MAX_RETRIES = "EventNotifications.MaxRetries";

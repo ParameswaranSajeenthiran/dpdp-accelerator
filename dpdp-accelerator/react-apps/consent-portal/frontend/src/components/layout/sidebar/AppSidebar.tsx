@@ -17,7 +17,19 @@
  */
 
 import { Sidebar } from '@wso2/oxygen-ui'
-import { Activity, BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
+import {
+  Activity,
+  AlertTriangle,
+  BellRing,
+  Blocks,
+  Clock3,
+  House,
+  Inbox,
+  Radio,
+  ShieldCheck,
+  ShieldPlus,
+  Target,
+} from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'

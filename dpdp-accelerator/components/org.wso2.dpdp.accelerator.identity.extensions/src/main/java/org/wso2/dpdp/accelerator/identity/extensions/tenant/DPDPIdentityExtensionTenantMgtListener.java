@@ -27,6 +27,7 @@ import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -101,15 +102,24 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                         + "; reconciling its API authorization and roles.");
             }
 
-            DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
-            List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
             List<String> authorizedConsentScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             List<String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
                     .authorizeComplaintManagementAPI(applicationId, tenantDomain);
 
-            authorizedScopes.addAll(DPDPConsentPortalAppProvisioningUtil
-                    .authorizeEventNotificationAPIs(applicationId, tenantDomain));
+            // Registers the event notification API resources themselves (if not already present)
+            // before authorizing this application for them - authorizing an application for a
+            // resource that doesn't exist yet would fail.
+            DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
+            List<String> authorizedEventScopes = DPDPConsentPortalAppProvisioningUtil
+                    .authorizeEventNotificationAPIs(applicationId, tenantDomain);
+
+            // No dedicated complaint/event role - their scopes are folded into dpdp-consent-admin
+            // alongside the consent-mgt ones; dpdp-consent-user gets only the :self-suffixed
+            // complaint scopes (see DPDPConsentPortalRoleProvisioningUtil).
+            List<String> authorizedScopes = new ArrayList<>(authorizedConsentScopes);
+            authorizedScopes.addAll(authorizedComplaintScopes);
+            authorizedScopes.addAll(authorizedEventScopes);
             DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);

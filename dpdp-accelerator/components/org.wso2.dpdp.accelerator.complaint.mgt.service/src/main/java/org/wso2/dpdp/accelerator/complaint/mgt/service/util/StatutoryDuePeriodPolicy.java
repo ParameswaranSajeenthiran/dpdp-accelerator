@@ -18,31 +18,24 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.wso2.dpdp.common.config.ConfigProvider;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 
 /**
  * Statutory due period for grievance redressal under the DPDP Act. Configurable via
- * deployment.toml's [complaint_mgt] statutory_due_period_days, with the
- * CO_STATUTORY_DUE_PERIOD_DAYS system property as a fallback beneath that (see ConfigProvider),
- * defaulting to 90 days if neither is set.
+ * deployment.toml's [dpdp_accelerator.complaints] statutory_due_period_days, the same way
+ * event notification settings are read - see DPDPConfigurationService, templated into
+ * dpdp-accelerator.xml at server startup. Defaults to 90 days if unset.
  */
 public class StatutoryDuePeriodPolicy {
 
-    private static final String CONFIG_DUE_PERIOD_DAYS = "complaint_mgt.statutory_due_period_days";
-    private static final int DEFAULT_DUE_PERIOD_DAYS = 90;
+    private static final DPDPConfigurationService CONFIGURATION_SERVICE = new DPDPConfigurationServiceImpl();
 
     private StatutoryDuePeriodPolicy() {
     }
 
     public static long getDuePeriodMillis() {
-        String configured = ConfigProvider.getString(CONFIG_DUE_PERIOD_DAYS,
-                System.getProperty("CO_STATUTORY_DUE_PERIOD_DAYS", String.valueOf(DEFAULT_DUE_PERIOD_DAYS)));
-        int days;
-        try {
-            days = Integer.parseInt(configured.trim());
-        } catch (NumberFormatException e) {
-            days = DEFAULT_DUE_PERIOD_DAYS;
-        }
+        int days = CONFIGURATION_SERVICE.getComplaintsStatutoryDuePeriodDays();
         return days * 24L * 60 * 60 * 1000;
     }
 }

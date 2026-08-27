@@ -37,12 +37,12 @@ export const IS_SCOPES = {
   ELEMENT_DELETE: 'internal_consent_mgt_element_delete'
 } as const
 
-export const  COMPLAINT_SCOPES = {
+export const COMPLAINT_SCOPES = {
   COMPLAINTS_READ_SELF: 'complaints:read:self',
   COMPLAINTS_WRITE_SELF: 'complaints:write:self',
   COMPLAINTS_READ_ANY: 'complaints:read:any',
   COMPLAINTS_WRITE_ANY: 'complaints:write:any',
-}
+} as const
 export const EVENT_SCOPES = {
   EVENT_SUBSCRIPTIONS_READ: 'notifications:subscriptions:read',
   EVENT_SUBSCRIPTIONS_WRITE: 'notifications:subscriptions:write',

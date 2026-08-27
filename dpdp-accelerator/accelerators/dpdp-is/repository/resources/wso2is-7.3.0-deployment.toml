@@ -181,9 +181,9 @@ http_method = "POST"
 scopes = ["notifications:events:write"]
 
 [tenant_context.rewrite]
-custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 custom_webapps = [
     "/consent-portal/",
+    "/api/dpdp/complaints/",
     "/api/dpdp/event-notifications/v1/"
 ]
 # ---- /me/complaints/* (Data Principal, :self scopes) ----
@@ -313,6 +313,11 @@ scopes = ["complaints:read:any"]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
 
+# How many days after submission a complaint's statutory due date falls (see
+# StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
+[dpdp_accelerator.complaints]
+statutory_due_period_days = 90
+
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]
 thread_pool_size = 4
@@ -328,10 +333,3 @@ background_worker_initial_delay_seconds = 10
 pending_subscription_recovery_interval_seconds = 30
 pending_subscription_recovery_batch_size = 20
 worker_shutdown_timeout_seconds = 5
-
-# How many days after submission a complaint's statutory due date falls (see
-# StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
-# Falls back to the CO_STATUTORY_DUE_PERIOD_DAYS system property, then to 90, if unset or not a
-# valid integer.
-[complaint_mgt]
-statutory_due_period_days = "90"

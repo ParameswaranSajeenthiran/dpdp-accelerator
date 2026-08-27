@@ -31,6 +31,13 @@
         <ClientId>DPDP_CONSENT_PORTAL</ClientId>
         {% endif %}
     </ConsentPortal>
+    <Complaints>
+        {% if dpdp_accelerator.complaints.statutory_due_period_days is defined %}
+        <StatutoryDuePeriodDays>{{dpdp_accelerator.complaints.statutory_due_period_days}}</StatutoryDuePeriodDays>
+        {% else %}
+        <StatutoryDuePeriodDays>90</StatutoryDuePeriodDays>
+        {% endif %}
+    </Complaints>
     <EventNotifications>
         {% if dpdp_accelerator.event_notifications.thread_pool_size is defined %}
         <ThreadPoolSize>{{dpdp_accelerator.event_notifications.thread_pool_size}}</ThreadPoolSize>

@@ -16,17 +16,7 @@
  ~ specific language governing permissions and limitations
  ~ under the License.
  -->
-
-<!--
-    This webapp is a self-contained JAX-RS service (JDBC + Jersey/Jackson, all bundled in
-    WEB-INF/lib) with no dependency on any Carbon/OSGi service. The container default pulls in
-    the "Carbon" environment for every webapp, which exposes an OSGi-provided Jackson
-    (jackson-datatype-jdk8) that is a different version from the one bundled here. Jersey's
-    ServiceLoader-based module discovery then sees both copies of com.fasterxml.jackson.databind.Module
-    loaded by different classloaders and fails with "not a subtype". Opting out of the Carbon
-    environment avoids the split entirely.
--->
 <Classloading xmlns="http://wso2.org/projects/as/classloading">
     <ParentFirst>false</ParentFirst>
-    <Environments></Environments>
+    <Environments>CXF3,Carbon</Environments>
 </Classloading>

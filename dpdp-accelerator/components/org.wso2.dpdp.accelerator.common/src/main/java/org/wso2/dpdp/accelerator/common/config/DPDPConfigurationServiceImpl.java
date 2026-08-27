@@ -28,6 +28,7 @@ import java.util.Collections;
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
     private static final Log LOG = LogFactory.getLog(DPDPConfigurationServiceImpl.class);
+    private static final int DEFAULT_STATUTORY_DUE_PERIOD_DAYS = 90;
     private static final int DEFAULT_THREAD_POOL_SIZE = 4;
     private static final long DEFAULT_BASE_BACKOFF_SECONDS = 5L;
     private static final int DEFAULT_MAX_RETRIES = 5;
@@ -78,6 +79,12 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     public String getConsentPortalClientId() {
 
         return configParser == null ? "DPDP_CONSENT_PORTAL" : configParser.getConsentPortalClientId();
+    }
+
+    @Override
+    public int getComplaintsStatutoryDuePeriodDays() {
+        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS,
+                DEFAULT_STATUTORY_DUE_PERIOD_DAYS);
     }
 
     @Override

@@ -49,7 +49,7 @@ describe('frontend content security policy', () => {
   })
 
   it('allows blob: image sources for locally-selected attachment previews', () => {
-    const policy = contentSecurityPolicy({ apiBaseURL: '' })
+    const policy = contentSecurityPolicy({ isBaseURL: '' })
 
     // Attachment thumbnails are rendered from URL.createObjectURL(file)
     // before the file is ever uploaded, so img-src must permit blob:.
