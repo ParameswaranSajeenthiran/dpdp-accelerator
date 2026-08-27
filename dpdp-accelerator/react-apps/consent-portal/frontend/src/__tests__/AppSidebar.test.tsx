@@ -174,4 +174,42 @@ describe('AppSidebar', () => {
     expect(screen.getByText('My Consents')).toBeInTheDocument()
     expect(screen.getByText('My Pending Consents')).toBeInTheDocument()
   })
+
+  it('renders and navigates to events list, topics, and subscriptions', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/events/subscriptions']}>
+            <TestAuthorizationProvider
+              scopes={[
+                REQUIRED_SCOPES.EVENTS_READ,
+                REQUIRED_SCOPES.EVENT_TOPICS_READ,
+                REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ,
+              ]}
+            >
+              <Routes>
+                <Route
+                  path="*"
+                  element={
+                    <>
+                      <AppSidebar collapsed={false} />
+                      <LocationProbe />
+                    </>
+                  }
+                />
+              </Routes>
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.getAllByText('Events').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Topics')).toBeInTheDocument()
+    expect(screen.getByText('Subscriptions')).toBeInTheDocument()
+    expect(screen.getByText('/events/subscriptions')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Topics'))
+    expect(screen.getByText('/events/topics')).toBeInTheDocument()
+  })
 })

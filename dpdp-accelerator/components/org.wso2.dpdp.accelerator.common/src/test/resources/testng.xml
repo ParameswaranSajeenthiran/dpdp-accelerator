@@ -20,6 +20,8 @@
     <test name="dpdp-common-tests">
         <packages>
             <package name="org.wso2.dpdp.accelerator.common.config"/>
+            <package name="org.wso2.dpdp.accelerator.common.persistence"/>
+            <package name="org.wso2.dpdp.accelerator.common.util"/>
         </packages>
     </test>
 </suite>

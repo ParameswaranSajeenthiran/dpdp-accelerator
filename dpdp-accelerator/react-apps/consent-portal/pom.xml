@@ -88,7 +88,7 @@
                           resolved from the browser URL at runtime rather than
                           being baked in here.
                         -->
-                        <VITE_API_BASE_URL></VITE_API_BASE_URL>
+                        <VITE_IS_BASE_URL></VITE_IS_BASE_URL>
                         <VITE_BASE_PATH>${portal.context.path}/</VITE_BASE_PATH>
                         <VITE_AUTH_ENABLED>true</VITE_AUTH_ENABLED>
                         <!-- Sandbox npm caches inside the module to keep CI builds hermetic. -->

@@ -31,8 +31,30 @@ export const DEFAULT_DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
 }
 
-export function toEpochMilliseconds(epochTimestamp: number | null | undefined): number | null {
-  if (epochTimestamp == null || !Number.isFinite(epochTimestamp)) {
+export function toEpochMilliseconds(
+  epochTimestamp: number | string | null | undefined,
+): number | null {
+  if (epochTimestamp == null) {
+    return null
+  }
+
+  if (typeof epochTimestamp === 'string') {
+    const trimmed = epochTimestamp.trim()
+    if (trimmed === '') {
+      return null
+    }
+
+    const numeric = Number(trimmed)
+    if (Number.isFinite(numeric)) {
+      return numeric < EPOCH_MILLISECONDS_CUTOFF ? numeric * 1000 : numeric
+    }
+
+    const parsedDate = new Date(trimmed)
+    const time = parsedDate.getTime()
+    return Number.isNaN(time) ? null : time
+  }
+
+  if (!Number.isFinite(epochTimestamp)) {
     return null
   }
 
@@ -40,7 +62,7 @@ export function toEpochMilliseconds(epochTimestamp: number | null | undefined): 
 }
 
 export function formatEpochTimestamp(
-  epochTimestamp: number | null | undefined,
+  epochTimestamp: number | string | null | undefined,
   options?: Intl.DateTimeFormatOptions,
   locales?: Intl.LocalesArgument,
 ): string {
