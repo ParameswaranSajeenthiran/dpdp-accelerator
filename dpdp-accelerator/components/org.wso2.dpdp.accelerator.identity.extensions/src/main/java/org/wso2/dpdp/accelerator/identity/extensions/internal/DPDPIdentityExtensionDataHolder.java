@@ -23,6 +23,7 @@ import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
@@ -42,6 +43,7 @@ public final class DPDPIdentityExtensionDataHolder {
     private AuthorizedAPIManagementService authorizedAPIManagementService;
     private APIResourceManager apiResourceManager;
     private RoleManagementService roleManagementService;
+    private OrganizationManager organizationManager;
     private RealmService realmService;
     private DPDPConfigurationService configurationService;
     private PrivilegedConsentManager privilegedConsentManager;
@@ -105,6 +107,16 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setRoleManagementService(RoleManagementService roleManagementService) {
 
         this.roleManagementService = roleManagementService;
+    }
+
+    public OrganizationManager getOrganizationManager() {
+
+        return organizationManager;
+    }
+
+    public void setOrganizationManager(OrganizationManager organizationManager) {
+
+        this.organizationManager = organizationManager;
     }
 
     public RealmService getRealmService() {

@@ -35,6 +35,7 @@ import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
@@ -186,6 +187,24 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the Role Management Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setRoleManagementService(null);
+    }
+
+    @Reference(
+            service = OrganizationManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetOrganizationManager"
+    )
+    protected void setOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Setting the Organization Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setOrganizationManager(organizationManager);
+    }
+
+    protected void unsetOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Unsetting the Organization Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setOrganizationManager(null);
     }
 
     @Reference(

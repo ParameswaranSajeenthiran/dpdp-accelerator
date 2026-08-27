@@ -35,6 +35,7 @@ import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -72,6 +73,17 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
     public void recordStatusAudit(String tenantDomain, String consentId, String previousStatus,
             String currentStatus, ActionType actionType, String actionBy)
             throws ConsentHistoryDataInsertionException {
+
+        // A status-audit row means "the status changed here" - previousStatus and currentStatus
+        // being equal (e.g. an UPDATE, which never touches lifecycle status; or one authorizer's
+        // approval when others are still pending) isn't a transition, so there is nothing to
+        // record. DPDP_CONSENT_HISTORY already captures every action regardless, with full detail,
+        // so nothing is lost by skipping a no-op row here.
+        if (Objects.equals(previousStatus, currentStatus)) {
+            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: " + consentId
+                    + " - status did not change (" + currentStatus + ").");
+            return;
+        }
 
         ConsentStatusAuditRecord record = new ConsentStatusAuditRecord();
         record.setAuditId(UUID.randomUUID().toString());

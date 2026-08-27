@@ -63,7 +63,7 @@ public class ConsentExpiryJobActivator {
                 scheduler.deleteJob(job.getKey());
             }
             scheduler.scheduleJob(job, trigger);
-            LOG.debug("Consent expiry job scheduled with cron: " + sanitize(cronValue));
+            LOG.info("Consent expiry job scheduled with cron: " + sanitize(cronValue));
         } catch (SchedulerException e) {
             LOG.error("Error while scheduling the consent expiry job.", e);
         }

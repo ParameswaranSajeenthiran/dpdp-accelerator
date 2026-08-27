@@ -76,6 +76,10 @@ const DEFAULT_SCOPE: string[] = [
   'internal_consent_mgt_element_view',
   'internal_consent_mgt_element_create',
   'internal_consent_mgt_element_delete',
+  'consent:status-history:view:any',
+  'consent:status-history:view:self',
+  'consent:history:view:any',
+  'consent:history:view:self',
 ]
 
 let initPromise: Promise<void> | undefined

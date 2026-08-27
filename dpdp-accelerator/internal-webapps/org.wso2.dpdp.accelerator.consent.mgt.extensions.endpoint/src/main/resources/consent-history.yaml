@@ -16,14 +16,16 @@ tags:
       anything in this webapp.
   - name: self
     description: >-
-      Requires only internal_login (any authenticated user); ownership of the consent is checked
-      in code by comparing the caller's username against the consent's PII principal ID.
+      Requires the named consent:<resource>:view:self scope; ownership of the specific consent is
+      additionally checked in code by comparing the caller's username against the consent's PII
+      principal ID - the scope only gates whether the caller can reach the route at all, never
+      which row they're allowed to see.
 paths:
   /consents/{consentId}/status-history:
     get:
       tags: [admin]
       summary: Get the status-audit trail for a consent
-      description: Requires the internal_consent_mgt_status_history_view scope.
+      description: Requires the consent:status-history:view:any scope.
       operationId: getStatusHistoryAsAdmin
       parameters:
         - $ref: '#/components/parameters/consentId'
@@ -42,7 +44,7 @@ paths:
     get:
       tags: [admin]
       summary: Get the full pre/post-mutation snapshot history for a consent
-      description: Requires the internal_consent_mgt_history_view scope.
+      description: Requires the consent:history:view:any scope.
       operationId: getHistoryAsAdmin
       parameters:
         - $ref: '#/components/parameters/consentId'
@@ -61,6 +63,7 @@ paths:
     get:
       tags: [self]
       summary: Get the status-audit trail for a consent the caller owns
+      description: Requires the consent:status-history:view:self scope.
       operationId: getStatusHistoryAsSelf
       parameters:
         - $ref: '#/components/parameters/consentId'
@@ -81,6 +84,7 @@ paths:
     get:
       tags: [self]
       summary: Get the full pre/post-mutation snapshot history for a consent the caller owns
+      description: Requires the consent:history:view:self scope.
       operationId: getHistoryAsSelf
       parameters:
         - $ref: '#/components/parameters/consentId'
@@ -244,10 +248,17 @@ components:
           $ref: '#/components/schemas/PaginationDTO'
     ActionType:
       type: string
-      description: What triggered this entry. No EXPIRE value - expiry handling is a separate, later task.
+      description: >-
+        What triggered this entry. AUTHORIZE_APPROVE/AUTHORIZE_REJECT/AUTHORIZE_REVOKE reflect the
+        specific per-authorizer decision rather than a single generic AUTHORIZE, since one value
+        covering all three reads ambiguously. EXPIRE is written by the consent expiry job/lazy
+        reconciliation, with actionBy=SYSTEM rather than a real user.
       enum:
         - CREATE
         - UPDATE
         - REVOKE
-        - AUTHORIZE
+        - AUTHORIZE_APPROVE
+        - AUTHORIZE_REJECT
+        - AUTHORIZE_REVOKE
         - DELETE
+        - EXPIRE

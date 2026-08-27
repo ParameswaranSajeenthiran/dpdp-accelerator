@@ -31,9 +31,11 @@ describe('scope requirements', () => {
       })
   })
 
-  it('never invents a portal specific scope vocabulary', () => {
+  it('never invents a scope with nothing on the server to back it', () => {
+    // Either a raw Identity Server built-in scope, or one the accelerator itself registers
+    // server-side via DPDPConsentHistoryApiProvisioningUtil - never a frontend-only fiction.
     Object.values(IS_SCOPES).forEach((scope) => {
-      expect(scope.startsWith('internal_')).toBe(true)
+      expect(scope.startsWith('internal_') || scope.startsWith('consent:')).toBe(true)
     })
   })
 

@@ -22,12 +22,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.testng.annotations.Test;
 import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
+import org.wso2.carbon.consent.mgt.core.model.ConsentPurpose;
+import org.wso2.carbon.consent.mgt.core.model.PIICategoryValidity;
 import org.wso2.carbon.consent.mgt.core.model.Receipt;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptService;
 
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class DPDPConsentSnapshotBuilderTest {
@@ -36,10 +41,8 @@ public class DPDPConsentSnapshotBuilderTest {
     public void buildSnapshotJsonIncludesReceiptFieldsAndAuthorizations() {
 
         Receipt receipt = new Receipt();
-        receipt.setConsentReceiptId("consent-1234");
         receipt.setState("ACTIVE");
         receipt.setPiiPrincipalId("jdoe@carbon.super");
-        receipt.setTenantDomain("tenant-a.com");
 
         ConsentAuthorization authorization = new ConsentAuthorization("consent-1234", "jdoe@carbon.super",
                 ConsentAuthorization.AuthorizationStatus.APPROVED, 1755504000000L, "primary");
@@ -48,7 +51,8 @@ public class DPDPConsentSnapshotBuilderTest {
         String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, authorizations);
 
         JsonObject snapshot = JsonParser.parseString(snapshotJson).getAsJsonObject();
-        assertEquals(snapshot.get("consentReceiptId").getAsString(), "consent-1234");
+        assertTrue(!snapshot.has("consentReceiptId"), "consentReceiptId is redundant with the enclosing "
+                + "history entry's own consentId and must not be duplicated into the snapshot");
         assertEquals(snapshot.get("state").getAsString(), "ACTIVE");
         assertEquals(snapshot.get("piiPrincipalId").getAsString(), "jdoe@carbon.super");
         assertTrue(snapshot.has("authorizations"));
@@ -68,5 +72,53 @@ public class DPDPConsentSnapshotBuilderTest {
 
         JsonObject snapshot = JsonParser.parseString(snapshotJson).getAsJsonObject();
         assertEquals(snapshot.getAsJsonArray("authorizations").size(), 0);
+    }
+
+    @Test
+    public void buildSnapshotJsonMapsServicesPurposesAndElementsWhilstDroppingNoiseFields() {
+
+        PIICategoryValidity element = new PIICategoryValidity(5, "email_address", true);
+        element.setName("email_address");
+        element.setDisplayName("Email Address");
+        element.setConsented(true);
+
+        ConsentPurpose purpose = new ConsentPurpose();
+        purpose.setPurpose("DPDP Manual Test Purpose");
+        purpose.setUuid("aeed17ae-8fbd-4af6-a95a-aae35319992e");
+        purpose.setPrimaryPurpose(true);
+        purpose.setPiiCategory(Collections.singletonList(element));
+
+        ReceiptService service = new ReceiptService();
+        service.setService("clientId");
+        service.setSpDisplayName("clientId");
+        service.setPurposes(Collections.singletonList(purpose));
+
+        Receipt receipt = new Receipt();
+        receipt.setState("ACTIVE");
+        receipt.setPiiPrincipalId("mark@gold.com");
+        receipt.setLanguage("en");
+        receipt.setExpiryTime(new Timestamp(1787624977824L));
+        receipt.setServices(Collections.singletonList(service));
+        receipt.setPublicKey("should-be-dropped");
+        receipt.setPolicyUrl("should-be-dropped");
+
+        String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, Collections.emptyList());
+
+        JsonObject snapshot = JsonParser.parseString(snapshotJson).getAsJsonObject();
+        assertFalse(snapshot.has("publicKey"), "publicKey carries no audit value and must be dropped");
+        assertFalse(snapshot.has("policyUrl"), "policyUrl carries no audit value and must be dropped");
+        assertEquals(snapshot.get("expiryTime").getAsLong(), 1787624977824L);
+
+        JsonObject serviceJson = snapshot.getAsJsonArray("services").get(0).getAsJsonObject();
+        assertEquals(serviceJson.get("service").getAsString(), "clientId");
+
+        JsonObject purposeJson = serviceJson.getAsJsonArray("purposes").get(0).getAsJsonObject();
+        assertEquals(purposeJson.get("purpose").getAsString(), "DPDP Manual Test Purpose");
+        assertTrue(purposeJson.get("primaryPurpose").getAsBoolean());
+
+        JsonObject elementJson = purposeJson.getAsJsonArray("elements").get(0).getAsJsonObject();
+        assertEquals(elementJson.get("name").getAsString(), "email_address");
+        assertEquals(elementJson.get("displayName").getAsString(), "Email Address");
+        assertTrue(elementJson.get("consented").getAsBoolean());
     }
 }

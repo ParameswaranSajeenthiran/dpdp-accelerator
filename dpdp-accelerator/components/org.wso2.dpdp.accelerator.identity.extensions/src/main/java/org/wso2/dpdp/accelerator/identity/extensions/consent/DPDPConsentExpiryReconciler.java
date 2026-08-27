@@ -91,6 +91,11 @@ public final class DPDPConsentExpiryReconciler {
         try {
             List<ConsentExpiryRecord> dueExpiries = DPDPIdentityExtensionDataHolder.getInstance()
                     .getConsentExpiryService().findDueExpiries(System.currentTimeMillis(), batchSize);
+            if (!dueExpiries.isEmpty()) {
+                LOG.info("Consent expiry job found " + dueExpiries.size() + " due consent(s) to expire.");
+            } else {
+                LOG.debug("Consent expiry job found no due consents.");
+            }
             for (ConsentExpiryRecord dueExpiry : dueExpiries) {
                 PrivilegedCarbonContext.startTenantFlow();
                 try {

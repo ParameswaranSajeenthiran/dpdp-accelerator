@@ -71,7 +71,7 @@ public class ConsentHistoryServiceImplTest {
     public void recordStatusAuditInsertsAndCommits() throws Exception {
 
         consentHistoryService.recordStatusAudit(TENANT_DOMAIN, CONSENT_ID, "PENDING", "ACTIVE",
-                ActionType.AUTHORIZE, "jdoe@carbon.super");
+                ActionType.AUTHORIZE_APPROVE, "jdoe@carbon.super");
 
         ArgumentCaptor<ConsentStatusAuditRecord> captor = ArgumentCaptor.forClass(ConsentStatusAuditRecord.class);
         verify(consentHistoryDAO).insertStatusAudit(any(Connection.class), captor.capture());
@@ -80,8 +80,29 @@ public class ConsentHistoryServiceImplTest {
         assertEquals(record.getOrgId(), TENANT_DOMAIN);
         assertEquals(record.getPreviousStatus(), "PENDING");
         assertEquals(record.getCurrentStatus(), "ACTIVE");
-        assertEquals(record.getActionType(), "AUTHORIZE");
+        assertEquals(record.getActionType(), "AUTHORIZE_APPROVE");
         assertEquals(record.getActionBy(), "jdoe@carbon.super");
+    }
+
+    @Test
+    public void recordStatusAuditSkipsWhenStatusIsUnchanged() throws Exception {
+
+        consentHistoryService.recordStatusAudit(TENANT_DOMAIN, CONSENT_ID, "ACTIVE", "ACTIVE", ActionType.UPDATE,
+                "jdoe@carbon.super");
+
+        verify(consentHistoryDAO, never()).insertStatusAudit(any(Connection.class), any());
+    }
+
+    @Test
+    public void recordStatusAuditInsertsWhenPreviousStatusIsNull() throws Exception {
+
+        consentHistoryService.recordStatusAudit(TENANT_DOMAIN, CONSENT_ID, null, "ACTIVE", ActionType.CREATE,
+                "jdoe@carbon.super");
+
+        ArgumentCaptor<ConsentStatusAuditRecord> captor = ArgumentCaptor.forClass(ConsentStatusAuditRecord.class);
+        verify(consentHistoryDAO).insertStatusAudit(any(Connection.class), captor.capture());
+        assertEquals(captor.getValue().getPreviousStatus(), null);
+        assertEquals(captor.getValue().getCurrentStatus(), "ACTIVE");
     }
 
     @Test
@@ -160,7 +181,7 @@ public class ConsentHistoryServiceImplTest {
         org.mockito.Mockito.doThrow(failure).when(consentHistoryDAO)
                 .insertStatusAudit(any(Connection.class), any(ConsentStatusAuditRecord.class));
 
-        consentHistoryService.recordStatusAudit(TENANT_DOMAIN, CONSENT_ID, "PENDING", "ACTIVE", ActionType.AUTHORIZE,
+        consentHistoryService.recordStatusAudit(TENANT_DOMAIN, CONSENT_ID, "PENDING", "ACTIVE", ActionType.AUTHORIZE_APPROVE,
                 "jdoe@carbon.super");
     }
 }

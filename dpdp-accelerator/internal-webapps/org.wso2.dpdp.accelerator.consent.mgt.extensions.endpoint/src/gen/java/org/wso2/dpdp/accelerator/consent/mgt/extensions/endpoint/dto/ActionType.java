@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * What triggered this entry. No EXPIRE value - expiry handling is a separate, later task.
+ * What triggered this entry. AUTHORIZE_APPROVE/AUTHORIZE_REJECT/AUTHORIZE_REVOKE reflect the specific per-authorizer decision rather than a single generic AUTHORIZE, since one value covering all three reads ambiguously. EXPIRE is written by the consent expiry job/lazy reconciliation, with actionBy&#x3D;SYSTEM rather than a real user.
  */
 public enum ActionType {
   
@@ -16,9 +16,15 @@ public enum ActionType {
   
   REVOKE("REVOKE"),
   
-  AUTHORIZE("AUTHORIZE"),
+  AUTHORIZE_APPROVE("AUTHORIZE_APPROVE"),
   
-  DELETE("DELETE");
+  AUTHORIZE_REJECT("AUTHORIZE_REJECT"),
+  
+  AUTHORIZE_REVOKE("AUTHORIZE_REVOKE"),
+  
+  DELETE("DELETE"),
+  
+  EXPIRE("EXPIRE");
 
   private String value;
 

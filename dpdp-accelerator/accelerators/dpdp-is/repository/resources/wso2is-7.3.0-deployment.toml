@@ -117,34 +117,30 @@ context = "(.*)/consent-portal(.*)"
 secure = "false"
 http_method = "all"
 
-# The four consent-history read routes. Admin routes require the IS-native
-# consent-history scopes (seeded by identity.extensions at startup, the same
-# way enable_v2_api above seeds internal_consent_mgt_* for the v2 API); self
-# routes only require internal_login, since ownership is enforced in the
-# endpoint's own code rather than by scope.
+# The four consent-history read routes.
 [[resource.access_control]]
 context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/status-history"
 secure = "true"
 http_method = "GET"
-scopes = ["internal_consent_mgt_status_history_view"]
+scopes = ["consent:status-history:view:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/history"
 secure = "true"
 http_method = "GET"
-scopes = ["internal_consent_mgt_history_view"]
+scopes = ["consent:history:view:any"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/status-history"
 secure = "true"
 http_method = "GET"
-scopes = ["internal_login"]
+scopes = ["consent:status-history:view:self"]
 
 [[resource.access_control]]
 context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/history"
 secure = "true"
 http_method = "GET"
-scopes = ["internal_login"]
+scopes = ["consent:history:view:self"]
 
 # Serves the portal and the consent-history API tenant-qualified, the same way
 # the server treats the My Account and Console applications: the

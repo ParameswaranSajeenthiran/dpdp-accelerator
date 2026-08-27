@@ -19,19 +19,21 @@
 package org.wso2.dpdp.accelerator.identity.extensions.consent;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
+import org.wso2.carbon.consent.mgt.core.model.ConsentPurpose;
+import org.wso2.carbon.consent.mgt.core.model.PIICategoryValidity;
 import org.wso2.carbon.consent.mgt.core.model.Receipt;
+import org.wso2.carbon.consent.mgt.core.model.ReceiptService;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.AuthorizationSnapshot;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.ElementSnapshot;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.PurposeSnapshot;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.ServiceSnapshot;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Builds the JSON snapshot stored in {@code DPDP_CONSENT_HISTORY}. {@link Receipt} carries no
- * {@code authorizations} field of its own - {@link org.wso2.carbon.consent.mgt.core.ConsentManager#getConsentAuthorizations}
- * is a separate call, so its result is attached here as an extra field. Serializes the raw
- * {@link Receipt}/{@link ConsentAuthorization} objects field-for-field rather than reshaping them
- * to match the public REST API's response DTO - that mapping lives in a class this accelerator
- * has no dependency on and no visibility into.
+ * Builds the JSON snapshot stored in {@code DPDP_CONSENT_HISTORY}
  */
 public final class DPDPConsentSnapshotBuilder {
 
@@ -43,8 +45,73 @@ public final class DPDPConsentSnapshotBuilder {
 
     public static String buildSnapshotJson(Receipt receipt, List<ConsentAuthorization> authorizations) {
 
-        JsonObject snapshot = GSON.toJsonTree(receipt).getAsJsonObject();
-        snapshot.add("authorizations", GSON.toJsonTree(authorizations));
+        DPDPConsentSnapshotDTO snapshot = new DPDPConsentSnapshotDTO();
+        snapshot.setState(receipt.getState());
+        snapshot.setPiiPrincipalId(receipt.getPiiPrincipalId());
+        snapshot.setLanguage(receipt.getLanguage());
+        snapshot.setExpiryTime(receipt.getExpiryTime() == null ? null : receipt.getExpiryTime().getTime());
+        snapshot.setProperties(receipt.getProperties());
+        snapshot.setServices(toServiceSnapshots(receipt.getServices()));
+        snapshot.setAuthorizations(toAuthorizationSnapshots(authorizations));
         return GSON.toJson(snapshot);
+    }
+
+    private static List<ServiceSnapshot> toServiceSnapshots(List<ReceiptService> services) {
+
+        if (services == null) {
+            return null;
+        }
+        return services.stream().map(service -> {
+            ServiceSnapshot serviceSnapshot = new ServiceSnapshot();
+            serviceSnapshot.setService(service.getService());
+            serviceSnapshot.setSpDisplayName(service.getSpDisplayName());
+            serviceSnapshot.setPurposes(toPurposeSnapshots(service.getPurposes()));
+            return serviceSnapshot;
+        }).collect(Collectors.toList());
+    }
+
+    private static List<PurposeSnapshot> toPurposeSnapshots(List<ConsentPurpose> purposes) {
+
+        if (purposes == null) {
+            return null;
+        }
+        return purposes.stream().map(purpose -> {
+            PurposeSnapshot purposeSnapshot = new PurposeSnapshot();
+            purposeSnapshot.setPurpose(purpose.getPurpose());
+            purposeSnapshot.setUuid(purpose.getUuid());
+            purposeSnapshot.setPrimaryPurpose(purpose.isPrimaryPurpose());
+            purposeSnapshot.setElements(toElementSnapshots(purpose.getPiiCategory()));
+            return purposeSnapshot;
+        }).collect(Collectors.toList());
+    }
+
+    private static List<ElementSnapshot> toElementSnapshots(List<PIICategoryValidity> elements) {
+
+        if (elements == null) {
+            return null;
+        }
+        return elements.stream().map(element -> {
+            ElementSnapshot elementSnapshot = new ElementSnapshot();
+            elementSnapshot.setName(element.getName());
+            elementSnapshot.setDisplayName(element.getDisplayName());
+            elementSnapshot.setConsented(element.isConsented());
+            return elementSnapshot;
+        }).collect(Collectors.toList());
+    }
+
+    private static List<AuthorizationSnapshot> toAuthorizationSnapshots(List<ConsentAuthorization> authorizations) {
+
+        if (authorizations == null) {
+            return null;
+        }
+        return authorizations.stream().map(authorization -> {
+            AuthorizationSnapshot authorizationSnapshot = new AuthorizationSnapshot();
+            authorizationSnapshot.setUserId(authorization.getUserId());
+            authorizationSnapshot.setType(authorization.getType());
+            authorizationSnapshot.setStatus(
+                    authorization.getStatus() == null ? null : authorization.getStatus().toString());
+            authorizationSnapshot.setUpdatedTime(authorization.getUpdatedTime());
+            return authorizationSnapshot;
+        }).collect(Collectors.toList());
     }
 }

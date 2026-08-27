@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
 import org.wso2.carbon.identity.application.common.model.APIResource;
+import org.wso2.carbon.identity.application.common.model.AssociatedRolesConfig;
 import org.wso2.carbon.identity.application.common.model.AuthorizedAPI;
 import org.wso2.carbon.identity.application.common.model.Claim;
 import org.wso2.carbon.identity.application.common.model.ClaimConfig;
@@ -30,6 +31,7 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.InboundAuthenticationConfig;
 import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
 import org.wso2.carbon.identity.application.common.model.LocalAndOutboundAuthenticationConfig;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.application.common.model.Scope;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
@@ -132,6 +134,30 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             }
         }
         return authorizedScopeNames;
+    }
+
+    private static final String ASSOCIATED_ROLES_ALLOWED_AUDIENCE = "ORGANIZATION";
+
+    /**
+     * Configures the application to consume organization-audience roles by setting its Role Audience
+     * to Organization and assigning the specified roles.
+     */
+    public static void associateOrganizationRoles(String tenantDomain, String username, List<RoleV2> roles)
+            throws IdentityApplicationManagementException {
+
+        ServiceProvider serviceProvider = DPDPIdentityExtensionDataHolder.getInstance()
+                .getApplicationManagementService().getApplicationExcludingFileBasedSPs(APPLICATION_NAME,
+                        tenantDomain);
+
+        AssociatedRolesConfig associatedRolesConfig = new AssociatedRolesConfig();
+        associatedRolesConfig.setAllowedAudience(ASSOCIATED_ROLES_ALLOWED_AUDIENCE);
+        associatedRolesConfig.setRoles(roles.toArray(new RoleV2[0]));
+        serviceProvider.setAssociatedRolesConfig(associatedRolesConfig);
+
+        DPDPIdentityExtensionDataHolder.getInstance().getApplicationManagementService()
+                .updateApplication(serviceProvider, tenantDomain, username);
+        LOG.debug("Set the Role Audience to organization and associated " + roles.size()
+                + " role(s) for application: " + APPLICATION_NAME + ", tenant: " + tenantDomain);
     }
 
     static void registerOAuthApplication(String tenantDomain, String callbackUrl, String clientId)

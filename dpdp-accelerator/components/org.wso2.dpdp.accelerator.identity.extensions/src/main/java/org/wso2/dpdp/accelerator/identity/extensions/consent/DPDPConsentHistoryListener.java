@@ -27,7 +27,6 @@ import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.carbon.consent.mgt.core.model.ReceiptInput;
 import org.wso2.carbon.consent.mgt.core.model.ReceiptUpdateInput;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
@@ -36,9 +35,9 @@ import java.util.List;
 
 /**
  * Captures consent lifecycle events into {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}.
- * Snapshots are captured on the {@code pre*} hooks, not {@code post*} - a post-revoke snapshot
- * just re-states "revoked" (already visible on the live record), while a pre-revoke snapshot
- * captures what's about to be lost, which is the actual point of an audit trail.
+ * Snapshots are captured on the {@code post*} hooks, tagged directly with the action that just ran -
+ * each one means exactly what its label says, since it shows the state that action actually
+ * produced.
  *
  * <p>Also maintains {@code DPDP_CONSENT_EXPIRY_TRACKER} (tracked/untracked alongside every
  * status-audit write below) and, on every {@code pre*} hook, checks whether this consent already
@@ -75,38 +74,29 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     @Override
     public void postAddConsent(ReceiptInput receiptInput, String tenantDomain) {
 
-        // Nothing to snapshot pre-creation; the created state would already be on hand here,
-        // except receiptInput.getState() is null whenever the caller's request omits "state" -
-        // the REST layer's documented ACTIVE default is applied at the DB/schema level, never
-        // written back onto this object, so a null here must be resolved with a live read
-        // instead of being passed straight through to a NOT NULL column.
+        // receiptInput.getState() is null whenever the caller's request omits "state" - the REST
+        // layer's documented ACTIVE default is applied at the DB/schema level, never written back
+        // onto this object. Resolved from the request's own shape rather than a live read: a live
+        // read (getReceiptWithExtendedSchema) applies resolveConsentState()'s dynamic expiry check,
+        // which would misreport a consent created with an already-past expiryTime as EXPIRED
+        // instead of its true, as-persisted ACTIVE/PENDING creation state. REJECTED never hits this
+        // fallback - it requires an explicit, non-null "state" in the request.
         String currentStatus = receiptInput.getState();
         if (currentStatus == null) {
-            currentStatus = resolveCurrentStatus(receiptInput.getConsentReceiptId());
+            boolean hasAuthorizations = receiptInput.getAuthorizations() != null
+                    && !receiptInput.getAuthorizations().isEmpty();
+            currentStatus = hasAuthorizations ? PENDING_STATUS : ACTIVE_STATUS;
         }
-        if (currentStatus != null) {
-            recordStatusAudit(receiptInput.getConsentReceiptId(), tenantDomain, null, currentStatus,
-                    ActionType.CREATE);
-        }
+        recordStatusAudit(receiptInput.getConsentReceiptId(), tenantDomain, null, currentStatus, ActionType.CREATE);
+        captureSnapshot(receiptInput.getConsentReceiptId(), tenantDomain, ActionType.CREATE);
         trackExpiry(receiptInput.getConsentReceiptId(), tenantDomain, receiptInput.getExpiryTime());
-    }
-
-    private String resolveCurrentStatus(String consentId) {
-
-        try {
-            return DPDPIdentityExtensionDataHolder.getInstance().getPrivilegedConsentManager()
-                    .getReceiptWithExtendedSchema(consentId).getState();
-        } catch (Exception e) {
-            LOG.error("Error resolving the current status for consent: " + sanitize(consentId), e);
-            return null;
-        }
     }
 
     @Override
     public void preUpdateConsent(ReceiptUpdateInput updateInput, String tenantDomain) {
 
         DPDPConsentExpiryReconciler.expireConsentIfDue(tenantDomain, updateInput.getConsentReceiptId());
-        captureSnapshot(updateInput.getConsentReceiptId(), tenantDomain, ActionType.UPDATE);
+        capturePreviousStatus(updateInput.getConsentReceiptId());
     }
 
     @Override
@@ -117,6 +107,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
         String previousStatus = takePreviousStatus();
         recordStatusAudit(updateInput.getConsentReceiptId(), tenantDomain, previousStatus, previousStatus,
                 ActionType.UPDATE);
+        captureSnapshot(updateInput.getConsentReceiptId(), tenantDomain, ActionType.UPDATE);
 
         // isClearExpiry() and getExpiryTime() are the two distinct signals an update can carry -
         // neither set means this update didn't touch expiry at all, so the tracker is left alone.
@@ -131,13 +122,14 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     public void preRevokeConsent(String receiptId, String tenantDomain) {
 
         DPDPConsentExpiryReconciler.expireConsentIfDue(tenantDomain, receiptId);
-        captureSnapshot(receiptId, tenantDomain, ActionType.REVOKE);
+        capturePreviousStatus(receiptId);
     }
 
     @Override
     public void postRevokeConsent(String receiptId, String tenantDomain) {
 
         recordStatusAudit(receiptId, tenantDomain, takePreviousStatus(), REVOKED_STATUS, ActionType.REVOKE);
+        captureSnapshot(receiptId, tenantDomain, ActionType.REVOKE);
         untrackExpiry(receiptId, tenantDomain);
     }
 
@@ -145,7 +137,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     public void preDeleteConsent(String receiptId, String tenantDomain) {
 
         DPDPConsentExpiryReconciler.expireConsentIfDue(tenantDomain, receiptId);
-        captureSnapshot(receiptId, tenantDomain, ActionType.DELETE);
+        capturePreDeleteSnapshot(receiptId, tenantDomain);
     }
 
     @Override
@@ -163,7 +155,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     public void preAuthorizeConsent(String consentId, String userId, String authStatus, String tenantDomain) {
 
         DPDPConsentExpiryReconciler.expireConsentIfDue(tenantDomain, consentId);
-        captureSnapshot(consentId, tenantDomain, ActionType.AUTHORIZE);
+        capturePreviousStatus(consentId);
     }
 
     @Override
@@ -173,10 +165,13 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
         // the consent's own recomputed overall state, so the current status is re-read live.
         String previousStatus = takePreviousStatus();
         try {
-            Receipt receipt = DPDPIdentityExtensionDataHolder.getInstance().getPrivilegedConsentManager()
-                    .getReceiptWithExtendedSchema(consentId);
+            PrivilegedConsentManager consentManager = DPDPIdentityExtensionDataHolder.getInstance()
+                    .getPrivilegedConsentManager();
+            Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
             String currentStatus = receipt.getState();
-            recordStatusAudit(consentId, tenantDomain, previousStatus, currentStatus, ActionType.AUTHORIZE);
+            ActionType actionType = mapAuthorizeActionType(authStatus);
+            recordStatusAudit(consentId, tenantDomain, previousStatus, currentStatus, actionType);
+            captureAuthorizeSnapshot(tenantDomain, consentId, actionType, consentManager, receipt);
 
             // REJECTED/REVOKED can never resolve to EXPIRED (see DPDPConsentExpiryReconciler) -
             // only ACTIVE/PENDING are worth tracking. Re-checked on every call, so a consent that
@@ -192,6 +187,43 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
         }
     }
 
+    /**
+     * {@code authStatus} matches {@link ConsentAuthorization.AuthorizationStatus}'s names
+     * (APPROVED/REJECTED/REVOKED) - anything else defaults to APPROVE rather than throwing, since
+     * this is invoked from a listener hook that must never let a mutation-blocking exception
+     * escape.
+     */
+    private static ActionType mapAuthorizeActionType(String authStatus) {
+
+        if ("REJECTED".equals(authStatus)) {
+            return ActionType.AUTHORIZE_REJECT;
+        }
+        if ("REVOKED".equals(authStatus)) {
+            return ActionType.AUTHORIZE_REVOKE;
+        }
+        return ActionType.AUTHORIZE_APPROVE;
+    }
+
+    /**
+     * Reads and remembers the consent's status before a mutation that changes it, purely so the
+     * corresponding {@code post*} hook can report the correct {@code previousStatus} on its
+     * status-audit row - the snapshot itself is captured after the mutation completes (see
+     * {@link #captureSnapshot}), not here.
+     */
+    private void capturePreviousStatus(String consentId) {
+
+        try {
+            Receipt receipt = DPDPIdentityExtensionDataHolder.getInstance().getPrivilegedConsentManager()
+                    .getReceiptWithExtendedSchema(consentId);
+            PREVIOUS_STATUS.set(receipt.getState());
+        } catch (Exception e) {
+            LOG.error("Error reading the pre-mutation status for consent: " + sanitize(consentId), e);
+        }
+    }
+
+    /**
+     * Captures a fresh, post-mutation snapshot tagged with the action that just produced it.
+     */
     private void captureSnapshot(String consentId, String tenantDomain, ActionType actionType) {
 
         try {
@@ -199,15 +231,57 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
                     .getPrivilegedConsentManager();
             Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
             List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
-            PREVIOUS_STATUS.set(receipt.getState());
-
-            String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, authorizations);
-            DPDPIdentityExtensionDataHolder.getInstance().getConsentHistoryService()
-                    .recordHistorySnapshot(tenantDomain, consentId, actionType, snapshotJson, getActionBy());
+            storeSnapshot(tenantDomain, consentId, actionType, receipt, authorizations);
         } catch (Exception e) {
-            LOG.error("Error capturing a consent history snapshot for a '" + actionType + "' action on consent: "
+            LOG.error("Error capturing a '" + actionType + "' consent history snapshot for consent: "
                     + sanitize(consentId), e);
         }
+    }
+
+    /**
+     * {@code postAuthorizeConsent} already has the receipt in hand from resolving the current
+     * status - reused here instead of a second, redundant fetch. Caught separately from that
+     * caller's own try block so a snapshot failure can't also skip the expiry tracking that
+     * follows it.
+     */
+    private void captureAuthorizeSnapshot(String tenantDomain, String consentId, ActionType actionType,
+            PrivilegedConsentManager consentManager, Receipt receipt) {
+
+        try {
+            List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
+            storeSnapshot(tenantDomain, consentId, actionType, receipt, authorizations);
+        } catch (Exception e) {
+            LOG.error("Error capturing a '" + actionType + "' consent history snapshot for consent: "
+                    + sanitize(consentId), e);
+        }
+    }
+
+    /**
+     * Delete is the one action where the receipt row is gone immediately afterward, so this is
+     * the only chance to capture anything - previous-status tracking and the snapshot itself have
+     * to share this single pre-mutation read.
+     */
+    private void capturePreDeleteSnapshot(String consentId, String tenantDomain) {
+
+        try {
+            PrivilegedConsentManager consentManager = DPDPIdentityExtensionDataHolder.getInstance()
+                    .getPrivilegedConsentManager();
+            Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
+            List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
+            PREVIOUS_STATUS.set(receipt.getState());
+            storeSnapshot(tenantDomain, consentId, ActionType.DELETE, receipt, authorizations);
+        } catch (Exception e) {
+            LOG.error("Error capturing the pre-delete consent history snapshot for consent: " + sanitize(consentId),
+                    e);
+        }
+    }
+
+    private void storeSnapshot(String tenantDomain, String consentId, ActionType actionType, Receipt receipt,
+            List<ConsentAuthorization> authorizations) throws Exception {
+
+        String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, authorizations);
+        DPDPIdentityExtensionDataHolder.getInstance().getConsentHistoryService()
+                .recordHistorySnapshot(tenantDomain, consentId, actionType, snapshotJson, getActionBy());
     }
 
     private void recordStatusAudit(String consentId, String tenantDomain, String previousStatus,

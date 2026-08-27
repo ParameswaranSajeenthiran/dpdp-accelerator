@@ -21,12 +21,15 @@ package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -101,9 +104,26 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                         + "; reconciling its API authorization and roles.");
             }
 
-            List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
+            List<String> consentMgtScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
+
+            DPDPConsentHistoryApiProvisioningUtil.registerApiResource(tenantDomain);
+            DPDPConsentHistoryApiProvisioningUtil.authorizeApiForApplication(applicationId, tenantDomain);
+
+            List<String> adminScopes = new ArrayList<>(consentMgtScopes);
+            // Admins get the :self scopes too, alongside :any - an admin is still a user who can
+            // hit the /me endpoints for their own consents, not only the admin-only ones.
+            adminScopes.addAll(Arrays.asList(DPDPConsentHistoryApiProvisioningUtil.STATUS_HISTORY_VIEW_ANY,
+                    DPDPConsentHistoryApiProvisioningUtil.HISTORY_VIEW_ANY,
+                    DPDPConsentHistoryApiProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
+                    DPDPConsentHistoryApiProvisioningUtil.HISTORY_VIEW_SELF));
+            List<String> userScopes = Arrays.asList(DPDPConsentHistoryApiProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
+                    DPDPConsentHistoryApiProvisioningUtil.HISTORY_VIEW_SELF);
+
+            List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(tenantDomain, adminScopes,
+                    userScopes);
+            DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(tenantDomain, tenantInfoBean.getAdmin(),
+                    roles);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

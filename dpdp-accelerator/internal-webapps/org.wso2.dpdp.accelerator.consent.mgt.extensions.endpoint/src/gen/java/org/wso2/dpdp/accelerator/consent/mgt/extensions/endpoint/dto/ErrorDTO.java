@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ErrorDTO  {
   
-  @ApiModelProperty(value = "One of the DPDPCH-000NN codes above.")
+  @ApiModelProperty(value = "One of the CH-<HTTP status><sequence> codes above.")
  /**
-   * One of the DPDPCH-000NN codes above.
+   * One of the CH-<HTTP status><sequence> codes above.
   **/
   private String code;
 
@@ -30,7 +30,7 @@ public class ErrorDTO  {
   **/
   private String traceId;
  /**
-   * One of the DPDPCH-000NN codes above.
+   * One of the CH-&lt;HTTP status&gt;&lt;sequence&gt; codes above.
    * @return code
   **/
   @JsonProperty("code")

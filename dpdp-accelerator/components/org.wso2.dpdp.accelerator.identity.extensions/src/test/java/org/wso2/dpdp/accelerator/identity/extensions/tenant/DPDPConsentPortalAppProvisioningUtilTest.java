@@ -26,7 +26,9 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
 import org.wso2.carbon.identity.application.common.model.APIResource;
+import org.wso2.carbon.identity.application.common.model.AssociatedRolesConfig;
 import org.wso2.carbon.identity.application.common.model.AuthorizedAPI;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
@@ -245,6 +247,27 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
 
         verify(authorizedAPIManagementService, never()).addAuthorizedAPI(anyString(), any(AuthorizedAPI.class),
                 anyString());
+    }
+
+    @Test
+    public void associateOrganizationRolesSetsOrganizationAudienceAndAttachesTheGivenRoles() throws Exception {
+
+        ServiceProvider serviceProvider = new ServiceProvider();
+        when(applicationManagementService.getApplicationExcludingFileBasedSPs(
+                DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME, TENANT_DOMAIN)).thenReturn(serviceProvider);
+
+        List<RoleV2> roles = Arrays.asList(new RoleV2("role-admin-1234", "dpdp-consent-admin"),
+                new RoleV2("role-user-1234", "dpdp-consent-user"));
+
+        DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(TENANT_DOMAIN, "admin", roles);
+
+        ArgumentCaptor<ServiceProvider> spCaptor = ArgumentCaptor.forClass(ServiceProvider.class);
+        verify(applicationManagementService).updateApplication(spCaptor.capture(), eq(TENANT_DOMAIN), eq("admin"));
+        AssociatedRolesConfig associatedRolesConfig = spCaptor.getValue().getAssociatedRolesConfig();
+        assertEquals(associatedRolesConfig.getAllowedAudience(), "ORGANIZATION");
+        assertEquals(associatedRolesConfig.getRoles().length, 2);
+        assertEquals(associatedRolesConfig.getRoles()[0].getName(), "dpdp-consent-admin");
+        assertEquals(associatedRolesConfig.getRoles()[1].getName(), "dpdp-consent-user");
     }
 
     private static Scope mockScope(String name) {

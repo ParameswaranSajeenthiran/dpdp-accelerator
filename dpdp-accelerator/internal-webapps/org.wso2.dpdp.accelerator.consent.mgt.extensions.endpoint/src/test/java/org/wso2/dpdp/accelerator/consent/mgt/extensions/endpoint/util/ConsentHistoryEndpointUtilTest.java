@@ -93,7 +93,7 @@ public class ConsentHistoryEndpointUtilTest {
         ConsentStatusAuditRecord record = new ConsentStatusAuditRecord();
         record.setPreviousStatus("PENDING");
         record.setCurrentStatus("ACTIVE");
-        record.setActionType("AUTHORIZE");
+        record.setActionType("AUTHORIZE_APPROVE");
         record.setActionBy("jdoe@carbon.super");
         record.setActionTime(1755504000000L);
         PagedResult<ConsentStatusAuditRecord> result = new PagedResult<>(Collections.singletonList(record), 1);

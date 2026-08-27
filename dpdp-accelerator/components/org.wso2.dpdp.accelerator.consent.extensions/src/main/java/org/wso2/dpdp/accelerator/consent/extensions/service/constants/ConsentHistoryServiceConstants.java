@@ -31,13 +31,17 @@ public final class ConsentHistoryServiceConstants {
     }
 
     /**
-     * What triggered a status-audit/history row.
+     * What triggered a status-audit/history row. AUTHORIZE is split into APPROVE/REJECT/REVOKE by
+     * the actual per-authorizer decision, rather than one generic value that reads ambiguously
+     * regardless of outcome.
      */
     public enum ActionType {
         CREATE,
         UPDATE,
         REVOKE,
-        AUTHORIZE,
+        AUTHORIZE_APPROVE,
+        AUTHORIZE_REJECT,
+        AUTHORIZE_REVOKE,
         DELETE,
         EXPIRE
     }
