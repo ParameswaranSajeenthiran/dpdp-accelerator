@@ -32,6 +32,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
 
@@ -53,12 +54,12 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         this.complaintEventDAO = new ComplaintEventDAOImpl();
         this.complaintDAO = new ComplaintDAOImpl();
         this.complaintService = new ComplaintServiceImpl(this.complaintDAO);
-        this.notificationClient = new NotificationClient();
+        this.notificationClient = new EmailNotificationClient();
     }
 
     public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
             ComplaintService complaintService) {
-        this(complaintEventDAO, complaintDAO, complaintService, new NotificationClient());
+        this(complaintEventDAO, complaintDAO, complaintService, new EmailNotificationClient());
     }
 
     public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
@@ -153,7 +154,17 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             }
         }
 
-        notificationClient.notifyCommentAdded(complaint, event);
+        if (hasToStatus) {
+            // complaint was fetched before the DB status update above; without this, the
+            // notification would carry the complaint's pre-transition status.
+            complaint.setStatus(toStatus);
+            complaint.setUpdatedTime(now);
+        }
+        if (isPublic) {
+            // An internal note (isPublic=false, officer-only per the check above) is never shown
+            // to the citizen in the timeline - notifying them about it would leak its existence.
+            notificationClient.notifyCommentAdded(complaint, event);
+        }
         return event;
     }
 

@@ -86,10 +86,6 @@
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.event</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.wso2.carbon.identity.governance</groupId>
             <artifactId>org.wso2.carbon.identity.governance</artifactId>
         </dependency>
@@ -227,11 +223,6 @@
                             org.wso2.carbon.identity.organization.management.service.util;version="${carbon.identity.organization.mgt.service.version}",
                             org.wso2.carbon.identity.organization.management.service.exception;version="${carbon.identity.organization.mgt.service.version}",
 
-                            org.wso2.carbon.identity.event;version="${carbon.identity.event.version}",
-                            org.wso2.carbon.identity.event.event;version="${carbon.identity.event.version}",
-                            org.wso2.carbon.identity.event.services;version="${carbon.identity.event.version}",
-                            org.wso2.carbon.identity.event.handler;version="${carbon.identity.event.version}",
-                            org.wso2.carbon.identity.event.bean;version="${carbon.identity.event.version}",
                             org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.exceptions.notiification;version="${carbon.identity.governance.version}",

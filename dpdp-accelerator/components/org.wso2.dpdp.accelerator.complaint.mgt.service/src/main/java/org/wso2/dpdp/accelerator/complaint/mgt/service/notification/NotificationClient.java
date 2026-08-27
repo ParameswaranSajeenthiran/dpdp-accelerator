@@ -18,145 +18,30 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
 
-import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.carbon.identity.event.IdentityEventConstants;
-import org.wso2.carbon.identity.event.event.Event;
-import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
- * Notifies the {@code org.wso2.dpdp.accelerator.identity.extensions} OSGi bundle of complaint
- * events, so its {@code ComplaintNotificationHandler} can resolve recipients and trigger IS's
- * native email notification mechanism (see that bundle's {@code notification} package).
+ * Notifies interested parties about complaint lifecycle events - a complaint being filed, or a
+ * comment being added to one. {@link EmailNotificationClient} is the only implementation today,
+ * routing through WSO2 IS's own email notification mechanism (see that class's javadoc for the
+ * OSGi bridge mechanics) - this interface exists so a future channel (SMS, push, ...) could be
+ * added as a sibling implementation without either caller (
+ * {@code ComplaintServiceImpl}, {@code ComplaintEventServiceImpl}) changing at all.
  *
- * <p>This plain, non-OSGi module has no {@code BundleContext} of its own, but
- * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)} resolves OSGi
- * services via a static holder ({@code org.wso2.carbon.context.internal.OSGiDataHolder}) that is
- * populated wherever the {@code org.wso2.carbon.context} classes are loaded from Carbon's shared
- * classloader rather than bundled per-webapp - which is exactly why
- * {@code org.wso2.carbon.utils}/{@code org.wso2.carbon.identity.event} are declared {@code
- * provided} in this module's pom rather than bundled into the WAR. This is the same lookup
- * mechanism used throughout Carbon-hosted custom webapps to reach an OSGi service without being
- * an OSGi bundle themselves.
- *
- * <p>Never lets a notification failure propagate to the caller - every public method here is
- * fire-and-forget by design, since a complaint or comment write must succeed independently of
- * whether anyone could be notified about it.
+ * <p>Implementations must never let a notification failure propagate to the caller - every method
+ * here is fire-and-forget by design, since a complaint or comment write must succeed independently
+ * of whether anyone could be notified about it.
  */
-public class NotificationClient {
-
-    private static final Logger LOGGER = Logger.getLogger(NotificationClient.class.getName());
-
-    /** Mirrors identity.extensions' DPDPComplaintEventConstants - the source of truth for this event contract. */
-    private static final String COMPLAINT_NOTIFICATION_EVENT = "DPDP_COMPLAINT_NOTIFICATION_EVENT";
-    private static final String PROP_NOTIFICATION_TYPE = "notification-type";
-    private static final String PROP_COMPLAINT_ID = "complaint-id";
-    private static final String PROP_REFERENCE_ID = "reference-id";
-    private static final String PROP_CATEGORY = "category";
-    private static final String PROP_PRIORITY = "priority";
-    private static final String PROP_STATUS = "status";
-    private static final String PROP_STATUTORY_DUE_TIME = "statutory-due-time";
-    private static final String PROP_ACTOR_ROLE = "actor-role";
-    private static final String PROP_ACTOR_USER_ID = "actor-user-id";
-    private static final String PROP_ACTOR_USER_NAME = "actor-user-name";
-    private static final String PROP_MESSAGE_EXCERPT = "message-excerpt";
-    private static final String PROP_CREATOR_USER_ID = "creator-user-id";
-    private static final String PROP_CREATOR_USER_NAME = "creator-user-name";
-
-    private static final String NOTIFICATION_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
-    private static final String NOTIFICATION_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
-
-    private static final int MAX_EXCERPT_LENGTH = 300;
-
-    private final Supplier<IdentityEventService> eventServiceSupplier;
-
-    public NotificationClient() {
-        this(() -> (IdentityEventService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                .getOSGiService(IdentityEventService.class, null));
-    }
-
-    /** Test seam - lets a test inject a mock supplier instead of a real OSGi lookup. */
-    NotificationClient(Supplier<IdentityEventService> eventServiceSupplier) {
-        this.eventServiceSupplier = eventServiceSupplier;
-    }
+public interface NotificationClient {
 
     /** Notifies the complaint officers (dpdp-consent-admin role members) that a complaint was filed. */
-    public void notifyComplaintCreated(Complaint complaint) {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(PROP_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMPLAINT_CREATED);
-        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, complaint.getOrgId());
-        putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
-        putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
-        putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
-        putIfPresent(properties, PROP_PRIORITY, complaint.getPriority());
-        putIfPresent(properties, PROP_STATUS, complaint.getStatus());
-        properties.put(PROP_STATUTORY_DUE_TIME, String.valueOf(complaint.getStatutoryDueTime()));
-        putIfPresent(properties, PROP_CREATOR_USER_ID, complaint.getUserId());
-        putIfPresent(properties, PROP_CREATOR_USER_NAME, complaint.getUserName());
-        putIfPresent(properties, PROP_MESSAGE_EXCERPT, excerpt(complaint.getDescription()));
-        fire(properties);
-    }
+    void notifyComplaintCreated(Complaint complaint);
 
     /**
      * Notifies the other party of a new comment: complaint officers when a citizen comments, or
      * the complaint's original creator when an officer comments (see
      * {@code ComplaintNotificationHandler} for how the actor role decides this).
      */
-    public void notifyCommentAdded(Complaint complaint, ComplaintEvent event) {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(PROP_NOTIFICATION_TYPE, NOTIFICATION_TYPE_COMMENT_ADDED);
-        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, complaint.getOrgId());
-        putIfPresent(properties, PROP_COMPLAINT_ID, complaint.getComplaintId());
-        putIfPresent(properties, PROP_REFERENCE_ID, complaint.getReferenceId());
-        putIfPresent(properties, PROP_CATEGORY, complaint.getCategory());
-        putIfPresent(properties, PROP_PRIORITY, complaint.getPriority());
-        putIfPresent(properties, PROP_STATUS, complaint.getStatus());
-        properties.put(PROP_STATUTORY_DUE_TIME, String.valueOf(complaint.getStatutoryDueTime()));
-        putIfPresent(properties, PROP_ACTOR_ROLE, event.getActorRole());
-        putIfPresent(properties, PROP_ACTOR_USER_ID, event.getActorUserId());
-        putIfPresent(properties, PROP_ACTOR_USER_NAME, event.getActorUserName());
-        putIfPresent(properties, PROP_MESSAGE_EXCERPT, excerpt(event.getComment()));
-        putIfPresent(properties, PROP_CREATOR_USER_ID, complaint.getUserId());
-        putIfPresent(properties, PROP_CREATOR_USER_NAME, complaint.getUserName());
-        fire(properties);
-    }
-
-    private static void putIfPresent(Map<String, Object> properties, String key, String value) {
-        if (value != null && !value.trim().isEmpty()) {
-            properties.put(key, value);
-        }
-    }
-
-    private static String excerpt(String message) {
-        if (message == null) {
-            return "";
-        }
-        return message.length() <= MAX_EXCERPT_LENGTH ? message : message.substring(0, MAX_EXCERPT_LENGTH) + "...";
-    }
-
-    private void fire(Map<String, Object> properties) {
-        try {
-            IdentityEventService eventService = eventServiceSupplier.get();
-            if (eventService == null) {
-                LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
-                        + "complaint notification not sent.");
-                return;
-            }
-            eventService.handleEvent(new Event(COMPLAINT_NOTIFICATION_EVENT, properties));
-        } catch (Throwable t) {
-            // Deliberately never rethrown - see class javadoc. The complaint/comment write this
-            // is called after has already committed; a notification failure must not surface as
-            // one. Catches Throwable, not just Exception, because a misconfigured deployment
-            // (org.wso2.carbon.context classes not actually on Carbon's shared classloader) would
-            // surface as a LinkageError/NoClassDefFoundError, not a checked exception.
-            LOGGER.log(Level.WARNING, "Error sending complaint notification", t);
-        }
-    }
+    void notifyCommentAdded(Complaint complaint, ComplaintEvent event);
 }

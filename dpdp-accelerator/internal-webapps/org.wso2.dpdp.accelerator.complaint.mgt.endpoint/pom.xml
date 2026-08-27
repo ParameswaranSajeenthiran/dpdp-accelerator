@@ -45,12 +45,22 @@
         </dependency>
 
         <!--
-            complaint.mgt.service's NotificationClient references IdentityEventService (provided
-            scope there, so not transitive). Declared here too so this module's own tests that
-            construct real handler/service graphs (e.g. ComplaintCommentHandlerTest
-            #noArgsConstructorWiresRealServices) don't hit NoClassDefFoundError; at actual runtime
-            the class is already on Carbon's OSGi classpath, same as in complaint.mgt.service.
+            complaint.mgt.service's NotificationClient references IdentityEventService, (for the
+            officer deep link) ApplicationManagementService, and (for resolving dpdp-consent-admin
+            membership) RoleManagementService - all provided scope there, so not transitive.
+            Declared here too so this module's own tests that construct real handler/service
+            graphs (e.g. ComplaintCommentHandlerTest #noArgsConstructorWiresRealServices) don't
+            hit NoClassDefFoundError; at actual runtime these classes are already on Carbon's OSGi
+            classpath, same as in complaint.mgt.service.
         -->
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.application.mgt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.role.v2.mgt.core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event</artifactId>

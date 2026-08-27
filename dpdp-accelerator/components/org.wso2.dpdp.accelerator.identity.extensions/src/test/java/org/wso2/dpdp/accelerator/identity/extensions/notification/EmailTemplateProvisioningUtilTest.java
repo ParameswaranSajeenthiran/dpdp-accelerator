@@ -54,22 +54,26 @@ public class EmailTemplateProvisioningUtilTest {
     }
 
     @Test
-    public void provisionTemplatesWritesBothTemplates() throws Exception {
+    public void provisionTemplatesWritesAllThreeTemplates() throws Exception {
 
         EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
 
         verify(notificationTemplateManager).addNotificationTemplateType(
-                eq(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED), eq(EMAIL_CHANNEL),
+                eq("ComplaintCreated"), eq(EMAIL_CHANNEL),
                 eq(TENANT_DOMAIN));
         verify(notificationTemplateManager).addNotificationTemplateType(
-                eq(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED), eq(EMAIL_CHANNEL),
+                eq("ComplaintCommentAdded"), eq(EMAIL_CHANNEL),
+                eq(TENANT_DOMAIN));
+        verify(notificationTemplateManager).addNotificationTemplateType(
+                eq("ComplaintAcknowledged"), eq(EMAIL_CHANNEL),
                 eq(TENANT_DOMAIN));
 
         ArgumentCaptor<NotificationTemplate> captor = ArgumentCaptor.forClass(NotificationTemplate.class);
-        verify(notificationTemplateManager, times(2)).addNotificationTemplate(captor.capture(), eq(TENANT_DOMAIN));
+        verify(notificationTemplateManager, times(3)).addNotificationTemplate(captor.capture(), eq(TENANT_DOMAIN));
         List<String> types = captor.getAllValues().stream().map(NotificationTemplate::getType).toList();
-        assertTrue(types.contains(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED));
-        assertTrue(types.contains(DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED));
+        assertTrue(types.contains("ComplaintCreated"));
+        assertTrue(types.contains("ComplaintCommentAdded"));
+        assertTrue(types.contains("ComplaintAcknowledged"));
         for (NotificationTemplate template : captor.getAllValues()) {
             assertEquals(template.getNotificationChannel(), EMAIL_CHANNEL);
             assertEquals(template.getLocale(), DEFAULT_LOCALE);
@@ -89,7 +93,7 @@ public class EmailTemplateProvisioningUtilTest {
 
         EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
 
-        verify(notificationTemplateManager, times(2)).addNotificationTemplate(
+        verify(notificationTemplateManager, times(3)).addNotificationTemplate(
                 org.mockito.ArgumentMatchers.any(NotificationTemplate.class), eq(TENANT_DOMAIN));
     }
 

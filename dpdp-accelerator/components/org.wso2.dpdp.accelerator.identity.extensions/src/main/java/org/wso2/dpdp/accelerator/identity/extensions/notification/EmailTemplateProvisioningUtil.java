@@ -25,8 +25,12 @@ import org.wso2.carbon.identity.governance.model.NotificationTemplate;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
- * Registers the two complaint notification email templates for a tenant, idempotently, so no
+ * Registers the three complaint notification email templates for a tenant, idempotently, so no
  * manual IS Console step is needed - mirrors the "only add what's missing" idiom already used for
  * role permissions in {@code DPDPConsentPortalRoleProvisioningUtil}. Called once per tenant
  * alongside role provisioning (see {@code DPDPIdentityExtensionTenantMgtListener}).
@@ -38,94 +42,42 @@ public final class EmailTemplateProvisioningUtil {
     private static final String DEFAULT_LOCALE = "en_US";
     private static final String CONTENT_TYPE = "text/html";
 
+    // Template types - each mirrors the TEMPLATE_TYPE value the notification's own trigger sets
+    // (see complaint.mgt.service's EmailNotificationClient, which fires TRIGGER_NOTIFICATION
+    // directly and duplicates these same three literals rather than depending on this bundle).
+    private static final String TEMPLATE_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
+    private static final String TEMPLATE_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
+    private static final String TEMPLATE_TYPE_COMPLAINT_ACKNOWLEDGED = "ComplaintAcknowledged";
+
     private EmailTemplateProvisioningUtil() {
 
     }
 
     public static void provisionTemplates(String tenantDomain) {
 
-        provisionTemplate(tenantDomain, DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMPLAINT_CREATED,
+        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMPLAINT_CREATED,
                 "New complaint filed: {{reference-id}}", EMAIL_BODY);
-        provisionTemplate(tenantDomain, DPDPComplaintEventConstants.NOTIFICATION_TYPE_COMMENT_ADDED,
+        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMMENT_ADDED,
                 "New reply on complaint {{reference-id}}", EMAIL_BODY);
+        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMPLAINT_ACKNOWLEDGED,
+                "We've received your complaint: {{reference-id}}", EMAIL_BODY);
     }
 
-    /**
-     * Shared HTML shell for both notification types - every visible piece of content is a
-     * placeholder computed per-event by {@code ComplaintNotificationHandler#buildTemplatePlaceholders}
-     * (headline wording, badges, the quoted message, the action link), so one body serves both
-     * "a complaint was filed" and "a reply was posted" without templateType-specific branching
-     * here. Table-based layout with inline styles throughout, no CSS classes/external assets/
-     * gradients - the common denominator that survives Gmail's and Outlook's HTML sanitizers.
-     */
-    private static final String EMAIL_BODY =
-            "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
-                    + "style=\"background-color:#f3f4f6;padding:24px 0;\"><tr><td align=\"center\">"
-                    + "<table role=\"presentation\" width=\"560\" cellpadding=\"0\" cellspacing=\"0\" "
-                    + "style=\"background-color:#ffffff;border:1px solid #e5e7eb;border-radius:12px;"
-                    + "font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;\">"
-                    // Header: brand.
-                    + "<tr><td style=\"padding:20px 28px;border-bottom:1px solid #e5e7eb;"
-                    + "font-size:16px;font-weight:700;color:#111827;\">Consent Portal</td></tr>"
-                    // Body: badge, headline, detail card, quoted message, action button.
-                    + "<tr><td style=\"padding:28px;\">"
-                    + "<span style=\"display:inline-block;background-color:#fee2e2;color:#b91c1c;"
-                    + "font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;"
-                    + "padding:4px 10px;border-radius:999px;\">Action Needed</span>"
-                    + "<p style=\"margin:16px 0 24px 0;font-size:15px;line-height:1.5;color:#111827;\">"
-                    + "{{headline-html}}</p>"
-                    + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
-                    + "style=\"border:1px solid #e5e7eb;border-radius:8px;margin-bottom:20px;\">"
-                    + detailCell("Reference ID", "{{reference-id}}", "Data Principal", "{{data-principal-name}}", true)
-                    + detailCell("Subject", "{{category-label}}", "Priority", badge("{{priority-label}}"), false)
-                    + detailCell("Status", badge("{{status-label}}"), "SLA",
-                            "<span style=\"font-size:13px;font-weight:700;color:#ea580c;\">{{sla-label}}</span>",
-                            false)
-                    + "</table>"
-                    + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" "
-                    + "style=\"background-color:#fff7ed;border-left:3px solid #f97316;border-radius:4px;"
-                    + "margin-bottom:24px;\"><tr><td style=\"padding:14px 18px;\">"
-                    + "<div style=\"font-size:13px;font-weight:700;color:#111827;margin-bottom:6px;\">"
-                    + "{{actor-name}}</div>"
-                    + "<div style=\"font-size:13px;line-height:1.5;color:#374151;\">{{message-excerpt}}</div>"
-                    + "</td></tr></table>"
-                    + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" align=\"center\" "
-                    + "style=\"margin:0 auto;\"><tr><td style=\"border-radius:24px;background-color:#f97316;\">"
-                    + "<a href=\"{{action-url}}\" style=\"display:inline-block;padding:12px 32px;font-size:14px;"
-                    + "font-weight:700;color:#ffffff;text-decoration:none;border-radius:24px;\">"
-                    + "Review &amp; Reply</a></td></tr></table>"
-                    + "</td></tr>"
-                    // Footer.
-                    + "<tr><td style=\"padding:20px 28px;border-top:1px solid #e5e7eb;font-size:11px;"
-                    + "line-height:1.6;color:#9ca3af;text-align:center;\">"
-                    + "{{footer-text}}<br/>"
-                    + "<a href=\"{{action-url}}\" style=\"color:#9ca3af;text-decoration:underline;\">"
-                    + "Open in Consent Portal</a>"
-                    + "<p style=\"margin:12px 0 0 0;\">WSO2 LLC. All rights reserved.</p>"
-                    + "</td></tr>"
-                    + "</table></td></tr></table>";
+    // Shared HTML shell for all three notification types, bundled as an OSGi resource rather than
+    // an inline Java string - see that file's own header comment for what it contains and why.
+    private static final String EMAIL_BODY_RESOURCE = "/notification/complaint-email-body.html";
+    private static final String EMAIL_BODY = loadResource(EMAIL_BODY_RESOURCE);
 
-    private static String badge(String textPlaceholder) {
+    private static String loadResource(String path) {
 
-        return "<span style=\"display:inline-block;background-color:#fee2e2;color:#b91c1c;font-size:11px;"
-                + "font-weight:700;padding:3px 10px;border-radius:999px;\">" + textPlaceholder + "</span>";
-    }
-
-    /** One two-column row of the detail card - {@code topRow} adds no top border/padding (it's the card's first row). */
-    private static String detailCell(String leftLabel, String leftValue, String rightLabel, String rightValue,
-            boolean topRow) {
-
-        String padding = topRow ? "padding:16px 20px;" : "padding:16px 20px 16px 20px;border-top:1px solid #e5e7eb;";
-        return "<tr>"
-                + "<td style=\"" + padding + "width:50%;border-right:1px solid #e5e7eb;\">"
-                + "<div style=\"font-size:10px;font-weight:700;letter-spacing:0.05em;color:#9ca3af;"
-                + "text-transform:uppercase;margin-bottom:4px;\">" + leftLabel + "</div>"
-                + "<div style=\"font-size:14px;font-weight:600;color:#111827;\">" + leftValue + "</div></td>"
-                + "<td style=\"" + padding + "width:50%;\">"
-                + "<div style=\"font-size:10px;font-weight:700;letter-spacing:0.05em;color:#9ca3af;"
-                + "text-transform:uppercase;margin-bottom:4px;\">" + rightLabel + "</div>"
-                + "<div style=\"font-size:14px;font-weight:600;color:#111827;\">" + rightValue + "</div></td>"
-                + "</tr>";
+        try (InputStream in = EmailTemplateProvisioningUtil.class.getResourceAsStream(path)) {
+            if (in == null) {
+                throw new IllegalStateException("Missing bundled resource: " + path);
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error loading bundled resource: " + path, e);
+        }
     }
 
     /**
