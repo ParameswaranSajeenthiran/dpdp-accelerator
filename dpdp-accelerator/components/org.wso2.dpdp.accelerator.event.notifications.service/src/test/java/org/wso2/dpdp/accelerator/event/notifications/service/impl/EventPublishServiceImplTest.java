@@ -27,11 +27,18 @@ import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -75,6 +82,7 @@ public class EventPublishServiceImplTest {
     private EventFanOutService fanOutService;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
+    private SubscriptionDAO subscriptionDAO;
     private EventPublishServiceImpl publishService;
     private Connection connection;
 
@@ -85,13 +93,15 @@ public class EventPublishServiceImplTest {
         fanOutService = mock(EventFanOutService.class);
         deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
         deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
+        subscriptionDAO = mock(SubscriptionDAO.class);
         connection = mock(Connection.class);
         DataSource dataSource = mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(connection);
         setStaticInstance(null);
         setStaticDataSource(dataSource);
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO);
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
+                subscriptionDAO);
     }
 
     @AfterMethod
@@ -140,6 +150,64 @@ public class EventPublishServiceImplTest {
 
         verify(eventDAO, times(1)).addEventPurposes(eq(connection), eq(dto.getEventId()), eq(Arrays.asList("marketing")));
         verify(fanOutService, times(1)).fanOutEvent(eq(connection), any(Event.class), eq(Arrays.asList("marketing")));
+    }
+
+    @Test
+    public void pollEventsUpdatesAckAndErrorDeliveriesAndReturnsEventPayloads() {
+        EventPollingRequestDTO request = new EventPollingRequestDTO();
+        request.setMaxEvents(10);
+        request.setAck(Collections.singletonList("ack-delivery"));
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error-delivery", "consumer failure");
+        request.setErrors(errors);
+
+        Event event = new Event("event-1", "org1", "group-1", "topic-1", "{\"value\":1}",
+                new Timestamp(System.currentTimeMillis()));
+        event.setTopic("accounts");
+        event.setPurposes(Collections.singletonList("payments"));
+        when(eventDAO.getEventById("event-1", "org1")).thenReturn(Optional.of(event));
+        when(deliveryDAO.getPendingPollDeliveries("org1", "group-1", 10)).thenReturn(Collections.singletonList(
+                new PollDelivery("pending-delivery", "subscription-1", "event-1", "pending",
+                        event.getCreatedAt(), null)));
+
+        EventPollingResponseDTO response = publishService.pollEvents("org1", "group-1", request);
+
+        verify(deliveryDAO).updatePollDeliveryStatusesByDeliveryIds(eq("org1"), eq("group-1"),
+                eq(Collections.singletonList("ack-delivery")), eq(errors));
+        assertEquals(response.getEvents().size(), 1);
+        assertEquals(response.getEvents().get(0).getDeliveryId(), "pending-delivery");
+        assertEquals(response.getEvents().get(0).getPayload(), "{\"value\":1}");
+        assertEquals(response.getEvents().get(0).getPurposes(), Collections.singletonList("payments"));
+    }
+
+    @Test
+    public void completeDelivery_verifiesHmacAndPersistsCompletion() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()), null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("Group-A");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{\"completionStatus\":\"completed\",\"completionEvidence\":\"https://processor/evidence\"}";
+        String signature = "sha256=" + HmacSigner.sign("shared-secret", body);
+
+        publishService.completeDelivery("org1", "group-a", "delivery-1", body, signature);
+
+        verify(deliveryAckDAO).addDeliveryAck(any());
+    }
+
+    @Test(expectedExceptions = EventNotificationException.class)
+    public void completeDelivery_rejectsInvalidSignature() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+
+        publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
     }
 
     @Test

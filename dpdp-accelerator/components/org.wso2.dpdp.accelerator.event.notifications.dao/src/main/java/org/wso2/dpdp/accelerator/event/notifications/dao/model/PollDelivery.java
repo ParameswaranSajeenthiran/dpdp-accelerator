@@ -26,6 +26,7 @@ public class PollDelivery {
     private String subscriptionId;
     private String eventId;
     private String status;
+    private String errorDetail;
     private Timestamp createdAt;
     private Timestamp completedAt;
 
@@ -33,10 +34,16 @@ public class PollDelivery {
     }
 
     public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status, Timestamp createdAt, Timestamp completedAt) {
+        this(deliveryId, subscriptionId, eventId, status, null, createdAt, completedAt);
+    }
+
+    public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status, String errorDetail,
+            Timestamp createdAt, Timestamp completedAt) {
         this.deliveryId = deliveryId;
         this.subscriptionId = subscriptionId;
         this.eventId = eventId;
         this.status = status;
+        this.errorDetail = errorDetail;
         this.createdAt = createdAt;
         this.completedAt = completedAt;
     }
@@ -71,6 +78,16 @@ public class PollDelivery {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getErrorDetail() {
+
+        return errorDetail;
+    }
+
+    public void setErrorDetail(String errorDetail) {
+
+        this.errorDetail = errorDetail;
     }
 
     public Timestamp getCreatedAt() {

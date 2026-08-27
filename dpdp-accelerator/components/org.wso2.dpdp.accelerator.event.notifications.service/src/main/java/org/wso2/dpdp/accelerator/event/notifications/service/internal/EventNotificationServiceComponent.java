@@ -76,7 +76,7 @@ public class EventNotificationServiceComponent {
                 new EventFanOutServiceImpl(daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO());
         EventPublishService eventPublishService = new EventPublishServiceImpl(
                 daoProvider.getEventDAO(), daoProvider.getTopicDAO(), eventFanOutService,
-                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO());
+                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO(), daoProvider.getSubscriptionDAO());
         deliveryRecoveryService = new DeliveryRecoveryService(
                 daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO(),
                 subscriptionService, configurationService);

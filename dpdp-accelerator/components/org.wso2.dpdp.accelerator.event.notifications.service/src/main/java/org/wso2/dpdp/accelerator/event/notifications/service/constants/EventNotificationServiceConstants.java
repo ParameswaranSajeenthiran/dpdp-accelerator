@@ -39,6 +39,7 @@ public class EventNotificationServiceConstants {
     public static final String ERROR_CODE_EVENT_NOT_FOUND = "EN-4043";
     public static final String ERROR_CODE_RESOURCE_EXISTS = "EN-4090";
     public static final String ERROR_CODE_WEBHOOK_VERIFICATION_FAILED = "EN-4220";
+    public static final String ERROR_CODE_INVALID_SIGNATURE = "EN-4010";
     public static final String ERROR_CODE_EVENT_PUBLISH_FAILED = "EN-5001";
     public static final String ERROR_CODE_INTERNAL_ERROR = "EN-5000";
 
@@ -100,4 +101,10 @@ public class EventNotificationServiceConstants {
     public static final String TOPIC_NOT_ACTIVE_ERROR_MSG = "Topic '%s' is not active and cannot accept new subscriptions.";
     public static final String FILTER_PURPOSES_REQUIRED_FOR_SPECIFIC_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is SPECIFIC.";
     public static final String FILTER_PURPOSES_REQUIRED_FOR_EXCEPT_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is EXCEPT.";
+    public static final String POLL_ACK_ERROR_OVERLAP_ERROR_MSG = "A delivery cannot be present in both ack and errors.";
+    public static final String POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG = "An error detail is required for every delivery in errors.";
+    public static final String COMPLETION_STATUS_REQUIRED_ERROR_MSG = "completionStatus is required.";
+    public static final String COMPLETION_EVIDENCE_REQUIRED_ERROR_MSG = "completionEvidence is required.";
+    public static final String INVALID_SIGNATURE_ERROR_MSG = "The event-signature is invalid.";
+    public static final int MAX_POLL_ERROR_DETAIL_LENGTH = 1024;
 }

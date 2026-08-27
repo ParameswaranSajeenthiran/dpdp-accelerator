@@ -38,6 +38,7 @@ public final class EventNotificationDBColumns {
     public static final String DELIVERIES_COUNT = "DELIVERIES_COUNT";
     public static final String DESCRIPTION = "DESCRIPTION";
     public static final String EVENT_ID = "EVENT_ID";
+    public static final String ERROR_DETAIL = "ERROR_DETAIL";
     public static final String GROUP_ID = "GROUP_ID";
     public static final String INITIATED_BY = "INITIATED_BY";
     public static final String NAME = "NAME";

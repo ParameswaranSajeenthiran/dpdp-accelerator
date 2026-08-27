@@ -25,6 +25,8 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -91,6 +93,21 @@ public class EventEndpointTest {
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");
         }
+    }
+
+    @Test
+    public void pollEvents_returns200WithPollingResponse() {
+        EventPollingRequestDTO request = new EventPollingRequestDTO();
+        request.setMaxEvents(10);
+        request.setReturnImmediately(true);
+        EventPollingResponseDTO pollingResponse = new EventPollingResponseDTO(Collections.emptyList());
+        when(eventHandler.pollEvents(eq("org1"), eq("g1"), eq(request))).thenReturn(pollingResponse);
+
+        Response response = eventEndpoint.pollEvents("g1", request);
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        assertEquals(response.getEntity(), pollingResponse);
+        verify(eventHandler, times(1)).pollEvents("org1", "g1", request);
     }
 
     @Test

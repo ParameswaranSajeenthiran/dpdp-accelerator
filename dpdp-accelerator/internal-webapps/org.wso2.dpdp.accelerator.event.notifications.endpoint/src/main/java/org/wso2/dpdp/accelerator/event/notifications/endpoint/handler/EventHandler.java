@@ -22,6 +22,8 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -57,6 +59,16 @@ public class EventHandler {
         List<String> purposes = request != null ? request.getPurposes() : null;
         Map<String, Object> payload = request != null ? request.getPayload() : null;
         return eventPublishService.publishEvent(orgId, groupId, topicName, purposes, payload);
+    }
+
+    public EventPollingResponseDTO pollEvents(String orgId, String groupId, EventPollingRequestDTO request) {
+
+        return eventPublishService.pollEvents(orgId, groupId, request);
+    }
+
+    public void completeDelivery(String orgId, String groupId, String deliveryId,
+            String requestBody, String signature) {
+        eventPublishService.completeDelivery(orgId, groupId, deliveryId, requestBody, signature);
     }
 
     public PaginatedResult<EventDTO> searchEvents(String orgId, String search, Integer limit, Integer offset) {

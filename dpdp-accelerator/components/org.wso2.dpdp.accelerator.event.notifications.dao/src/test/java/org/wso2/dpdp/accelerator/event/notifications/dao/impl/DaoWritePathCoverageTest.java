@@ -98,6 +98,19 @@ public class DaoWritePathCoverageTest {
     }
 
     @Test
+    public void pollStatusUpdatesUseDeliveryIdsAndPendingOwnershipGuard() throws Exception {
+        DeliveryDAOImpl dao = new DeliveryDAOImpl();
+
+        dao.updatePollDeliveryStatusesByDeliveryIds(" org-1 ", " group-1 ",
+                Arrays.asList(" delivery-1 ", "delivery-1"),
+                Collections.singletonMap("delivery-2", "consumer failure"));
+
+        verify(statement, times(2)).addBatch();
+        verify(statement, times(2)).executeBatch();
+        verify(connection, times(1)).prepareStatement(contains("DELIVERY_ID = ?"));
+    }
+
+    @Test
     public void exercisesTransactionOwnedWrappersAndRetryOutcomes() {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         WebhookDelivery webhook = new WebhookDelivery("d-1", "s-1", "e-1", "pending", 0,

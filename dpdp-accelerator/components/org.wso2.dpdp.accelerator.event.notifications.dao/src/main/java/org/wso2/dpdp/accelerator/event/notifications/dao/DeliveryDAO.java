@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryDi
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface DeliveryDAO {
@@ -89,6 +90,13 @@ public interface DeliveryDAO {
 
     void updatePollDeliveryStatuses(Connection connection, String orgId, String groupId,
             List<String> ackEventIds, List<String> errEventIds);
+
+    /**
+     * Applies OB-style polling acknowledgements and errors to delivery identifiers. Only
+     * pending poll deliveries owned by the supplied tenant and group are updated.
+     */
+    void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId,
+            List<String> ackDeliveryIds, Map<String, String> errorDetails);
 
     boolean claimWebhookDelivery(String deliveryId);
 

@@ -348,7 +348,7 @@ public class WebhookDeliveryTaskTest {
         String body = bodyOf(request);
 
         // The header must be present and prefixed with the algorithm.
-        String signatureHeader = request.headers().firstValue("Event-Signature").orElse(null);
+        String signatureHeader = request.headers().firstValue("event-signature").orElse(null);
         assertNotNull(signatureHeader, "Event-Signature header should be set");
         assertTrue(signatureHeader.startsWith("sha256="),
                 "Event-Signature should be prefixed with 'sha256=', got: " + signatureHeader);
@@ -417,7 +417,7 @@ public class WebhookDeliveryTaskTest {
 
         HttpRequest request = captureRequest();
         String body = bodyOf(request);
-        String signatureHeader = request.headers().firstValue("Event-Signature").orElseThrow();
+        String signatureHeader = request.headers().firstValue("event-signature").orElseThrow();
 
         String signedOverRawPayload = "sha256=" + HmacSigner.sign(SHARED_SECRET, rawPayload);
         assertNotEquals(signatureHeader, signedOverRawPayload,

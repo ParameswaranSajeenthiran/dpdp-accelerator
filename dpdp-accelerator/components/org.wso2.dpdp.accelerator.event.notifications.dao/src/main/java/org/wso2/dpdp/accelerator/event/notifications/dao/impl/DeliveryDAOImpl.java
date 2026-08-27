@@ -43,7 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -390,8 +392,9 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(2, delivery.getSubscriptionId());
             ps.setString(3, delivery.getEventId());
             ps.setString(4, delivery.getStatus());
-            ps.setTimestamp(5, delivery.getCreatedAt());
-            ps.setTimestamp(6, delivery.getCompletedAt());
+            ps.setString(5, delivery.getErrorDetail());
+            ps.setTimestamp(6, delivery.getCreatedAt());
+            ps.setTimestamp(7, delivery.getCompletedAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -415,6 +418,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                                 rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                                 rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
                                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                                 rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
                     }
@@ -445,6 +449,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                                 rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                                 rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
                                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                                 rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
                     }
@@ -529,6 +534,75 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
         }
+    }
+
+    @Override
+    public void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId,
+            List<String> ackDeliveryIds, Map<String, String> errorDetails) {
+        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Organization ID and Group ID cannot be empty when updating poll delivery statuses.");
+        }
+        Set<String> normalizedAckIds = normalizeEventIds(ackDeliveryIds);
+        Map<String, String> normalizedErrors = normalizeErrorDetails(errorDetails);
+        Set<String> normalizedErrIds = normalizedErrors.keySet();
+        if (normalizedAckIds.isEmpty() && normalizedErrIds.isEmpty()) {
+            return;
+        }
+        if (!Collections.disjoint(normalizedAckIds, normalizedErrIds)) {
+            throw new IllegalArgumentException(
+                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
+        }
+
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement updatePs = conn.prepareStatement(
+                    getQueries(conn).getUpdatePollDeliveryStatusByDeliveryAndGroupQuery())) {
+                updatePollDeliveryBatch(updatePs, normalizedAckIds, PollStatus.ACKNOWLEDGED.getValue(),
+                        Collections.emptyMap(), orgId, groupId);
+                updatePollDeliveryBatch(updatePs, normalizedErrIds, PollStatus.ERR.getValue(), normalizedErrors,
+                        orgId, groupId);
+            }
+            DatabaseUtils.commitTransaction(conn);
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    private static void updatePollDeliveryBatch(PreparedStatement updatePs, Set<String> deliveryIds,
+            String status, Map<String, String> errorDetails, String orgId, String groupId) throws SQLException {
+        for (String deliveryId : deliveryIds) {
+            updatePs.setString(1, status);
+            updatePs.setString(2, errorDetails.get(deliveryId));
+            updatePs.setString(3, deliveryId);
+            updatePs.setString(4, orgId.trim());
+            updatePs.setString(5, groupId.trim());
+            updatePs.addBatch();
+        }
+        if (!deliveryIds.isEmpty()) {
+            updatePs.executeBatch();
+        }
+    }
+
+    private static Map<String, String> normalizeErrorDetails(Map<String, String> errorDetails) {
+
+        Map<String, String> normalized = new LinkedHashMap<>();
+        if (errorDetails == null) {
+            return normalized;
+        }
+        for (Map.Entry<String, String> entry : errorDetails.entrySet()) {
+            if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
+                normalized.put(entry.getKey().trim(), entry.getValue());
+            }
+        }
+        return normalized;
     }
 
     private static Set<String> normalizeEventIds(List<String> eventIds) {

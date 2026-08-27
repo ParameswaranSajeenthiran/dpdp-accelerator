@@ -10,7 +10,9 @@ package org.wso2.dpdp.accelerator.event.notifications.common.util;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class HmacSignerTest {
 
@@ -25,5 +27,13 @@ public class HmacSignerTest {
         assertNull(HmacSigner.sign(null, "payload"));
         assertNull(HmacSigner.sign("", "payload"));
         assertNull(HmacSigner.sign("secret", null));
+    }
+
+    @Test
+    public void testVerifiesSignedPayload() {
+        String signature = "sha256=" + HmacSigner.sign("secret", "payload");
+        assertTrue(HmacSigner.verify("secret", "payload", signature));
+        assertFalse(HmacSigner.verify("secret", "changed", signature));
+        assertFalse(HmacSigner.verify("secret", "payload", "invalid"));
     }
 }
