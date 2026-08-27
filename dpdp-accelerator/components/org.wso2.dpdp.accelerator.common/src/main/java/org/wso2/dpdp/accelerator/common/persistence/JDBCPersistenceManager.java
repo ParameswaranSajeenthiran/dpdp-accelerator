@@ -19,6 +19,7 @@ package org.wso2.dpdp.accelerator.common.persistence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
 
@@ -64,17 +65,20 @@ public final class JDBCPersistenceManager {
             if (dataSource != null) {
                 return;
             }
+            String dataSourceName = null;
             try {
+                dataSourceName = DPDPConfigParser.getInstance().getJdbcDataSourceName();
                 InitialContext context = new InitialContext();
                 try {
-                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
+                    dataSource = (DataSource) context.lookup(dataSourceName);
                 } catch (Exception e) {
-                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_DPDP_JNDI_ENV_NAME);
+                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_ENV_CONTEXT_PREFIX
+                            + dataSourceName);
                 }
-                LOG.debug("Resolved the shared DPDP datasource: " + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
+                LOG.debug("Resolved the shared DPDP datasource: " + dataSourceName);
             } catch (Exception e) {
                 throw new DPDPCommonRuntimeException("Unable to resolve the shared DPDP datasource ["
-                        + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME + "]", e);
+                        + dataSourceName + "]", e);
             }
         }
     }

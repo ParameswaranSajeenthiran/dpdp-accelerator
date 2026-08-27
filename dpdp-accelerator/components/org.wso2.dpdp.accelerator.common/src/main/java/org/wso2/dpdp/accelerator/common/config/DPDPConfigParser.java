@@ -188,6 +188,18 @@ public final class DPDPConfigParser {
         }).orElse(defaultValue);
     }
 
+    public String getJdbcDataSourceName() {
+
+        return getConfigurationAsString(DPDPCommonConstants.JDBC_PERSISTENCE_MANAGER_DATA_SOURCE_NAME)
+                .orElse(DPDPCommonConstants.DEFAULT_JDBC_DPDP_DATASOURCE_NAME);
+    }
+
+    public int getJdbcConnectionVerificationTimeoutSeconds() {
+
+        return getPositiveInt(DPDPCommonConstants.JDBC_PERSISTENCE_MANAGER_CONNECTION_VERIFICATION_TIMEOUT_SECONDS,
+                DPDPCommonConstants.DEFAULT_JDBC_CONNECTION_VERIFICATION_TIMEOUT_SECONDS);
+    }
+
     public boolean isConsentPortalProvisioningEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED)

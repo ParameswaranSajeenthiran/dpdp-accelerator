@@ -42,6 +42,7 @@ import static org.testng.Assert.expectThrows;
 public class DPDPConfigParserTest {
 
     private static final String CUSTOM_CLIENT_ID = "CUSTOM_TEST_CLIENT_ID";
+    private static final String CUSTOM_DATASOURCE_NAME = "jdbc/CustomDPDPDataSource";
 
     @BeforeClass
     public void writeConfigFileAndSetCarbonConfigDir() throws IOException {
@@ -49,6 +50,10 @@ public class DPDPConfigParserTest {
         Path configDir = Files.createTempDirectory("dpdp-config-test");
         Path configFile = configDir.resolve("dpdp-accelerator.xml");
         Files.write(configFile, ("<DPDPAccelerator xmlns=\"http://wso2.org/projects/carbon/dpdp-accelerator.xml\">"
+                + "<JDBCPersistenceManager>"
+                + "<DataSource><Name>" + CUSTOM_DATASOURCE_NAME + "</Name></DataSource>"
+                + "<ConnectionVerificationTimeout>3</ConnectionVerificationTimeout>"
+                + "</JDBCPersistenceManager>"
                 + "<ConsentPortal>"
                 + "<ClientId>" + CUSTOM_CLIENT_ID + "</ClientId>"
                 + "</ConsentPortal>"
@@ -75,6 +80,14 @@ public class DPDPConfigParserTest {
     public void readsConfiguredValueFromXml() {
 
         assertEquals(DPDPConfigParser.getInstance().getConsentPortalClientId(), CUSTOM_CLIENT_ID);
+    }
+
+    @Test
+    public void readsConfiguredJdbcPersistenceManagerValuesFromXml() {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        assertEquals(parser.getJdbcDataSourceName(), CUSTOM_DATASOURCE_NAME);
+        assertEquals(parser.getJdbcConnectionVerificationTimeoutSeconds(), 3);
     }
 
     @Test
@@ -133,6 +146,7 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertEquals(service.getConsentPortalClientId(), CUSTOM_CLIENT_ID);
+        assertEquals(service.getJdbcConnectionVerificationTimeoutSeconds(), 3);
         assertTrue(service.isConsentPortalProvisioningEnabled());
         assertEquals(service.getEventNotificationThreadPoolSize(), 8);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 12L);
@@ -154,6 +168,7 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl(false);
         assertEquals(service.getConfigurations().size(), 0);
+        assertEquals(service.getJdbcConnectionVerificationTimeoutSeconds(), 1);
         assertEquals(service.getEventNotificationThreadPoolSize(), 4);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 5L);
         assertEquals(service.getEventNotificationMaxRetries(), 5);

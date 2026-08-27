@@ -24,8 +24,13 @@ package org.wso2.dpdp.accelerator.common.constant;
 public final class DPDPCommonConstants {
 
     public static final String CONFIG_FILE_NAME = "dpdp-accelerator.xml";
-    public static final String JDBC_DPDP_DATASOURCE_NAME = "jdbc/WSO2DPDP_DB";
-    public static final String JDBC_DPDP_JNDI_ENV_NAME = "java:comp/env/jdbc/WSO2DPDP_DB";
+
+    public static final String JDBC_PERSISTENCE_MANAGER_DATA_SOURCE_NAME = "JDBCPersistenceManager.DataSource.Name";
+    public static final String JDBC_PERSISTENCE_MANAGER_CONNECTION_VERIFICATION_TIMEOUT_SECONDS =
+            "JDBCPersistenceManager.ConnectionVerificationTimeout";
+    public static final String JDBC_ENV_CONTEXT_PREFIX = "java:comp/env/";
+    public static final String DEFAULT_JDBC_DPDP_DATASOURCE_NAME = "jdbc/WSO2DPDP_DB";
+    public static final int DEFAULT_JDBC_CONNECTION_VERIFICATION_TIMEOUT_SECONDS = 1;
 
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";

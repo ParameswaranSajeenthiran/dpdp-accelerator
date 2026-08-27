@@ -56,6 +56,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public int getJdbcConnectionVerificationTimeoutSeconds() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_JDBC_CONNECTION_VERIFICATION_TIMEOUT_SECONDS
+                : configParser.getJdbcConnectionVerificationTimeoutSeconds();
+    }
+
+    @Override
     public boolean isConsentPortalProvisioningEnabled() {
 
         return configParser == null || configParser.isConsentPortalProvisioningEnabled();

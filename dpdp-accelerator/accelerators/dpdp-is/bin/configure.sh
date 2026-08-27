@@ -88,8 +88,8 @@ echo "      deployment.toml was REPLACED, not merged - re-apply any local"
 echo "      customisation from the backup before starting the server."
 
 # ------------------------------------------------------------ consent DB migration
-if [ "${APPLY_CONSENT_DB_MIGRATION}" != "true" ]; then
-  echo "[2/3] Skipping the consent schema migration (APPLY_CONSENT_DB_MIGRATION is not true)."
+if [ "${APPLY_IS_CONSENT_MGT_V2_MIGRATION}" != "true" ]; then
+  echo "[2/3] Skipping the consent schema migration (APPLY_IS_CONSENT_MGT_V2_MIGRATION is not true)."
 else
   MIGRATION="${WSO2_IS_HOME}/dbscripts/migrations/consent/${DB_TYPE}-migration.txt"
   if [ ! -f "${MIGRATION}" ]; then

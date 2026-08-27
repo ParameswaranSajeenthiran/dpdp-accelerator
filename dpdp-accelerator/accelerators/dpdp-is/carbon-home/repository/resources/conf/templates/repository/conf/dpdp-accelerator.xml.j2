@@ -19,6 +19,20 @@
 
 <DPDPAccelerator xmlns="http://wso2.org/projects/carbon/dpdp-accelerator.xml"
                  xmlns:svns="http://org.wso2.securevault/configuration">
+    <JDBCPersistenceManager>
+        <DataSource>
+            {% if dpdp_accelerator.jdbc_persistence_manager.data_source_name is defined %}
+            <Name>{{dpdp_accelerator.jdbc_persistence_manager.data_source_name}}</Name>
+            {% else %}
+            <Name>jdbc/WSO2DPDP_DB</Name>
+            {% endif %}
+        </DataSource>
+        {% if dpdp_accelerator.jdbc_persistence_manager.connection_verification_timeout_seconds is defined %}
+        <ConnectionVerificationTimeout>{{dpdp_accelerator.jdbc_persistence_manager.connection_verification_timeout_seconds}}</ConnectionVerificationTimeout>
+        {% else %}
+        <ConnectionVerificationTimeout>1</ConnectionVerificationTimeout>
+        {% endif %}
+    </JDBCPersistenceManager>
     <ConsentPortal>
         {% if dpdp_accelerator.consent_portal.auto_provisioning_enabled is defined %}
         <AutoProvisioningEnabled>{{dpdp_accelerator.consent_portal.auto_provisioning_enabled}}</AutoProvisioningEnabled>

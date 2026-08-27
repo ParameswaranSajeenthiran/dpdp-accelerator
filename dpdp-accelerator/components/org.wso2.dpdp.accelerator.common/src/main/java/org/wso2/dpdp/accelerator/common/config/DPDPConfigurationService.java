@@ -28,6 +28,8 @@ public interface DPDPConfigurationService {
 
     Map<String, Object> getConfigurations();
 
+    int getJdbcConnectionVerificationTimeoutSeconds();
+
     boolean isConsentPortalProvisioningEnabled();
 
     String getConsentPortalClientId();

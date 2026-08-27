@@ -19,24 +19,56 @@
 package org.wso2.dpdp.accelerator.event.notifications.dao.internal;
 
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.expectThrows;
 
+/**
+ * {@code activate()} now verifies the shared DPDP datasource is reachable before publishing the
+ * DAOs, so every test pre-seeds {@link JDBCPersistenceManager}'s static datasource with a mock
+ * (the same reflection approach {@code JDBCPersistenceManagerTest} uses) rather than hitting a
+ * real JNDI context.
+ */
 public class EventNotificationDAOServiceComponentTest {
 
-    @AfterMethod
-    public void tearDown() {
+    private Connection connection;
 
+    @BeforeMethod
+    public void setUpMockDataSource() throws Exception {
+
+        DataSource dataSource = mock(DataSource.class);
+        connection = mock(Connection.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.isValid(anyInt())).thenReturn(true);
+        setStaticDataSource(dataSource);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+
+        setStaticDataSource(null);
+        setStaticInstance(null);
         EventNotificationDAODataHolder.getInstance().clear();
     }
 
     @Test
-    public void shouldPublishAndClearOneInstanceOfEachDAO() {
+    public void shouldPublishAndClearOneInstanceOfEachDAO() throws SQLException {
 
         DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
         EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
@@ -56,6 +88,7 @@ public class EventNotificationDAOServiceComponentTest {
         assertSame(component.getEventDAO(), component.getEventDAO());
         assertSame(component.getDeliveryDAO(), component.getDeliveryDAO());
         assertSame(component.getDeliveryAckDAO(), component.getDeliveryAckDAO());
+        verify(connection).close();
 
         component.deactivate();
 
@@ -67,6 +100,30 @@ public class EventNotificationDAOServiceComponentTest {
         assertNull(EventNotificationDAODataHolder.getInstance().getConfigurationService());
 
         component.unsetDPDPConfigurationService(configurationService);
+    }
+
+    @Test
+    public void activateFailsWhenTheDatabaseConnectionIsNotValid() throws SQLException {
+
+        when(connection.isValid(anyInt())).thenReturn(false);
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
+        component.setDPDPConfigurationService(configurationService);
+
+        expectThrows(DPDPCommonRuntimeException.class, component::activate);
+        verify(connection).close();
+    }
+
+    @Test
+    public void activateFailsWhenTheValidityCheckThrows() throws SQLException {
+
+        when(connection.isValid(anyInt())).thenThrow(new SQLException("boom"));
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
+        component.setDPDPConfigurationService(configurationService);
+
+        expectThrows(DPDPCommonRuntimeException.class, component::activate);
+        verify(connection).close();
     }
 
     @Test
@@ -98,5 +155,19 @@ public class EventNotificationDAOServiceComponentTest {
         assertSame(dataHolder.getDeliveryDAO(), component.getDeliveryDAO());
         assertSame(dataHolder.getDeliveryAckDAO(), component.getDeliveryAckDAO());
         assertSame(dataHolder.getConfigurationService(), configurationService);
+    }
+
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
+
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 }
