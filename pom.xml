@@ -229,18 +229,6 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct</artifactId>
-                <version>${mapstruct.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-core</artifactId>
                 <version>${cxf.version}</version>
@@ -305,15 +293,15 @@
             </dependency>
             <dependency>
                 <groupId>org.wso2.dpdp.accelerator</groupId>
-                <artifactId>consent-portal</artifactId>
+                <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
                 <version>${project.version}</version>
                 <type>war</type>
             </dependency>
             <dependency>
-                <groupId>org.wso2.carbon</groupId>
-                <artifactId>org.wso2.carbon.utils</artifactId>
-                <version>${carbon.kernel.version}</version>
-                <scope>provided</scope>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>consent-portal</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
@@ -400,12 +388,6 @@
                 <version>${gson.version}</version>
                 <scope>provided</scope>
             </dependency>
-            <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${javax.ws.rs.api.version}</version>
-                <scope>provided</scope>
-            </dependency>
             <!-- Annotates the generated DTOs (io.swagger.annotations.ApiModelProperty) - not part
                  of <IS_HOME>/lib/runtimes/cxf3/, so unlike the dependencies above this one is
                  bundled into the WAR rather than provided by the container. -->
@@ -413,18 +395,6 @@
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>${swagger.annotations.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-core</artifactId>
-                <version>${cxf.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-                <version>${cxf.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -449,24 +419,6 @@
                 <artifactId>org.wso2.securevault</artifactId>
                 <version>${securevault.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>${commons.logging.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.service.component.annotations</artifactId>
-                <version>${osgi.service.component.annotations.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2database.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -498,33 +450,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>${maven.antrun.plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>com.github.spotbugs</groupId>
-                    <artifactId>spotbugs-maven-plugin</artifactId>
-                    <version>${spotbugs.maven.plugin.version}</version>
-                    <configuration>
-                        <effort>Max</effort>
-                        <threshold>Low</threshold>
-                        <xmlOutput>true</xmlOutput>
-                        <spotbugsXmlOutputDirectory>${project.build.directory}/spotbugs</spotbugsXmlOutputDirectory>
-                        <plugins>
-                            <plugin>
-                                <groupId>com.h3xstream.findsecbugs</groupId>
-                                <artifactId>findsecbugs-plugin</artifactId>
-                                <version>${findsecbugs.plugin.version}</version>
-                            </plugin>
-                        </plugins>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>analyze-compile</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -559,10 +484,6 @@
         <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <javax.validation.api.version>2.0.1.Final</javax.validation.api.version>
         <jackson.version>2.16.1</jackson.version>
-        <nimbus.jose.jwt.version>9.37.3</nimbus.jose.jwt.version>
-        <lombok.version>1.18.36</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
         <slf4j.version>1.7.36</slf4j.version>
@@ -571,10 +492,7 @@
         <mysql.connector.version>8.3.0</mysql.connector.version>
         <postgresql.driver.version>42.7.3</postgresql.driver.version>
         <sqlite.jdbc.version>3.45.3.0</sqlite.jdbc.version>
-        <cxf.version>3.5.5</cxf.version>
         <jersey.version>2.39</jersey.version>
-        <jacoco.version>0.8.15</jacoco.version>
-        <h2database.version>2.2.224</h2database.version>
         <jacoco.version>0.8.11</jacoco.version>
 
         <carbon.kernel.version>4.12.34</carbon.kernel.version>
@@ -614,7 +532,6 @@
         <!-- Match the exact jars in <IS_HOME>/lib/runtimes/cxf3/ - that directory backs the
              "CXF3" webapp-classloading environment our endpoint webapp declares, so it must
              compile against the same versions it will actually run against. -->
-        <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <cxf.version>3.6.12</cxf.version>
         <jackson.databind.version>2.21.4</jackson.databind.version>
         <jackson.jaxrs.version>2.21.2</jackson.jaxrs.version>
@@ -641,8 +558,6 @@
              DTOs from consent-history.yaml, then set back to true and commit the result. Off by
              default so a normal build doesn't regenerate on every run. -->
         <dpdp.dto.codegen.skip>true</dpdp.dto.codegen.skip>
-        <spotbugs.maven.plugin.version>4.8.2.0</spotbugs.maven.plugin.version>
-        <findsecbugs.plugin.version>1.12.0</findsecbugs.plugin.version>
 
         <npm.executable>npm</npm.executable>
     </properties>
