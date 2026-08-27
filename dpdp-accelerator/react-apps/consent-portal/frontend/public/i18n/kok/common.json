@@ -1198,5 +1198,21 @@
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
     }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
+    }
   }
 }

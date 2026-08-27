@@ -102,11 +102,16 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             }
 
             DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
-            List<String> authorizedScopes = DPDPConsentPortalAppProvisioningUtil
+            DPDPConsentPortalAppProvisioningUtil.registerAccountSelfServiceAPI(tenantDomain);
+
+            List<String> adminScopes = DPDPConsentPortalAppProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
-            authorizedScopes.addAll(DPDPConsentPortalAppProvisioningUtil
+            adminScopes.addAll(DPDPConsentPortalAppProvisioningUtil
                     .authorizeEventNotificationAPIs(applicationId, tenantDomain));
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
+            // Self-delete goes to the user role only - an admin token must never carry it.
+            List<String> userScopes = DPDPConsentPortalAppProvisioningUtil
+                    .authorizeAccountSelfServiceAPI(applicationId, tenantDomain);
+            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, adminScopes, userScopes);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

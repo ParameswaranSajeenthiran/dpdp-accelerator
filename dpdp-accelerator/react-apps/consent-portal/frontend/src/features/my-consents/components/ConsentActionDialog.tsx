@@ -32,6 +32,8 @@ import { useTranslation } from 'react-i18next'
 export interface ConsentActionDialogProps {
   open: boolean
   consentId: string
+  /** Caption before the identifier; defaults to the consent ID label. */
+  idLabel?: string
   title: string
   message: string
   note: string
@@ -53,6 +55,7 @@ export interface ConsentActionDialogProps {
 function ConsentActionDialog({
   open,
   consentId,
+  idLabel,
   title,
   message,
   note,
@@ -96,7 +99,7 @@ function ConsentActionDialog({
             {message}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 300 }}>
-            {t('consentRegistry.modals.consentId')}: {consentId}
+            {idLabel ?? t('consentRegistry.modals.consentId')}: {consentId}
           </Typography>
         </Stack>
       </DialogTitle>
@@ -169,6 +172,7 @@ function ConsentActionDialog({
 
 ConsentActionDialog.defaultProps = {
   error: undefined,
+  idLabel: undefined,
 }
 
 export default ConsentActionDialog

@@ -46,6 +46,14 @@ export const EVENT_SCOPES = {
   EVENTS_WRITE: 'notifications:events:write',
 } as const
 
+/**
+ * Guards DELETE /scim2/Me. Granted through the dpdp-consent-user role only, so
+ * administrators never see (or pass) the self-service account deletion.
+ */
+export const ACCOUNT_SCOPES = {
+  SELF_DELETE: 'account:self:delete',
+} as const
+
 /** Any one of these scopes is enough to unlock the area it guards. */
 export type ScopeRequirement = readonly string[]
 
@@ -68,6 +76,7 @@ export const REQUIRED_SCOPES = {
   EVENT_TOPICS_WRITE: [EVENT_SCOPES.EVENT_TOPICS_WRITE],
   EVENTS_READ: [EVENT_SCOPES.EVENTS_READ],
   EVENTS_WRITE: [EVENT_SCOPES.EVENTS_WRITE],
+  ACCOUNT_SELF_DELETE: [ACCOUNT_SCOPES.SELF_DELETE],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */

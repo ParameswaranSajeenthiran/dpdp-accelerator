@@ -17,9 +17,14 @@
  */
 
 import { Alert, Button, Snackbar, UserMenu } from '@wso2/oxygen-ui'
+import { UserX } from '@wso2/oxygen-ui-icons-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import DeleteAccountDialog from '../../../features/account/components/DeleteAccountDialog'
+import useDeleteAccountMutation from '../../../features/account/hooks/useDeleteAccountMutation'
+import useAuthorization from '../../../features/auth/useAuthorization'
 import { getUserProfile, logout } from '../../../utils/authClient'
+import { REQUIRED_SCOPES } from '../../../utils/scopes'
 
 type UserClaims = Record<string, unknown>
 
@@ -44,9 +49,12 @@ function displayName(claims: UserClaims, fallback: string): string {
 
 function UserProfileMenu(): React.JSX.Element {
   const { t } = useTranslation('common')
+  const { hasScope } = useAuthorization()
   const [logoutFailed, setLogoutFailed] = useState(false)
   const [logoutPending, setLogoutPending] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [claims, setClaims] = useState<UserClaims>({})
+  const deleteAccount = useDeleteAccountMutation()
 
   useEffect(() => {
     let cancelled = false
@@ -67,6 +75,7 @@ function UserProfileMenu(): React.JSX.Element {
   const name = displayName(claims, t('layout.userMenu.unknownUser'))
   const email = claim(claims, 'email') ?? claim(claims, 'sub') ?? t('layout.userMenu.noEmail')
   const avatar = claim(claims, 'picture')
+  const canDeleteAccount = hasScope(REQUIRED_SCOPES.ACCOUNT_SELF_DELETE)
 
   const handleLogout = async (): Promise<void> => {
     if (logoutPending) {
@@ -84,14 +93,42 @@ function UserProfileMenu(): React.JSX.Element {
     }
   }
 
+  const handleDeleteDialogClose = (): void => {
+    if (!deleteAccount.isPending) {
+      deleteAccount.reset()
+      setDeleteDialogOpen(false)
+    }
+  }
+
   return (
     <>
       <UserMenu>
         <UserMenu.Trigger name={name} avatar={avatar} />
         <UserMenu.Header name={name} email={email} avatar={avatar} />
         <UserMenu.Divider />
+        {canDeleteAccount ? (
+          <UserMenu.Item
+            icon={<UserX size={16} />}
+            label={t('account.deleteMenuItem')}
+            onClick={() => setDeleteDialogOpen(true)}
+          />
+        ) : null}
         <UserMenu.Logout label={t('layout.userMenu.signOut')} onClick={handleLogout} />
       </UserMenu>
+      {canDeleteAccount ? (
+        <DeleteAccountDialog
+          open={deleteDialogOpen}
+          accountLabel={email}
+          loading={deleteAccount.isPending}
+          error={deleteAccount.isError ? t('account.deleteError') : undefined}
+          onClose={handleDeleteDialogClose}
+          onConfirm={() => {
+            if (!deleteAccount.isPending) {
+              deleteAccount.mutate()
+            }
+          }}
+        />
+      ) : null}
       <Snackbar
         open={logoutFailed}
         onClose={() => setLogoutFailed(false)}

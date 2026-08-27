@@ -45,6 +45,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     private static final String TENANT_DOMAIN = "tenant-a.com";
     private static final String APPLICATION_ID = "app-1234";
     private static final String ROLE_AUDIENCE = "application";
+    private static final String SELF_DELETE_SCOPE = "account:self:delete";
 
     @Mock
     private RoleManagementService roleManagementService;
@@ -57,39 +58,57 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     }
 
     @Test
-    public void createRolesCreatesAdminRoleWithAllScopesAndUserRoleWithNone() throws Exception {
+    public void createRolesCreatesAdminRoleWithAdminScopesAndUserRoleWithUserScopes() throws Exception {
 
-        List<String> scopes = Arrays.asList("internal_consent_mgt_consent_view",
+        List<String> adminScopes = Arrays.asList("internal_consent_mgt_consent_view",
                 "internal_consent_mgt_purpose_view", "notifications:events:read",
                 "notifications:events:write", "notifications:events:poll",
                 "notifications:event-deliveries:complete");
+        List<String> userScopes = Collections.singletonList(SELF_DELETE_SCOPE);
 
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, scopes);
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, adminScopes, userScopes);
 
         ArgumentCaptor<List<Permission>> adminPermissionsCaptor = ArgumentCaptor.forClass(List.class);
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), adminPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
-        List<String> adminPermissionNames = new java.util.ArrayList<>();
-        for (Permission permission : adminPermissionsCaptor.getValue()) {
-            adminPermissionNames.add(permission.getName());
-        }
-        assertEquals(adminPermissionNames, Arrays.asList("internal_consent_mgt_consent_view",
-                "internal_consent_mgt_purpose_view", "notifications:events:read", "notifications:events:write",
-                "notifications:events:poll", "notifications:event-deliveries:complete"));
+        assertEquals(permissionNames(adminPermissionsCaptor.getValue()), adminScopes);
 
+        ArgumentCaptor<List<Permission>> userPermissionsCaptor = ArgumentCaptor.forClass(List.class);
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE),
-                eq(Collections.emptyList()), eq(Collections.emptyList()), eq(Collections.emptyList()),
+                eq(Collections.emptyList()), eq(Collections.emptyList()), userPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
+        assertEquals(permissionNames(userPermissionsCaptor.getValue()),
+                Collections.singletonList(SELF_DELETE_SCOPE));
 
         verify(roleManagementService, times(2)).addRole(anyString(), anyList(), anyList(), anyList(), anyString(),
                 anyString(), anyString());
     }
 
     @Test
-    public void createRolesHandlesEmptyScopeList() throws Exception {
+    public void createRolesNeverGivesAdminRoleTheSelfDeleteScope() throws Exception {
 
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList());
+        List<String> adminScopes = Arrays.asList("internal_consent_mgt_consent_view", "notifications:events:read");
+        List<String> userScopes = Collections.singletonList(SELF_DELETE_SCOPE);
+
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, adminScopes, userScopes);
+
+        ArgumentCaptor<List<Permission>> adminPermissionsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
+                eq(Collections.emptyList()), eq(Collections.emptyList()), adminPermissionsCaptor.capture(),
+                eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
+        for (Permission permission : adminPermissionsCaptor.getValue()) {
+            if (SELF_DELETE_SCOPE.equals(permission.getName())) {
+                throw new AssertionError("The admin role must not receive the self-delete scope.");
+            }
+        }
+    }
+
+    @Test
+    public void createRolesHandlesEmptyScopeLists() throws Exception {
+
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList(),
+                Collections.emptyList());
 
         verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), eq(Collections.emptyList()),
@@ -97,18 +116,57 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     }
 
     @Test
-    public void createRolesSkipsRolesThatAlreadyExist() throws Exception {
+    public void createRolesAddsOnlyMissingPermissionsToExistingRoles() throws Exception {
 
+        String userRoleId = "role-user-1";
         when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE,
-                ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(true);
-        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE,
                 ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(false);
-        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList());
+        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE,
+                ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(true);
+        when(roleManagementService.getRoleIdByName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE,
+                ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(userRoleId);
+        when(roleManagementService.getPermissionListOfRole(userRoleId, TENANT_DOMAIN))
+                .thenReturn(Collections.singletonList(new Permission("operator-added-scope")));
 
-        verify(roleManagementService, never()).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList(),
+                Collections.singletonList(SELF_DELETE_SCOPE));
+
+        verify(roleManagementService, never()).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE),
                 anyList(), anyList(), anyList(), anyString(), anyString(), anyString());
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE), anyList(),
-                anyList(), anyList(), eq(ROLE_AUDIENCE), eq(APPLICATION_ID), eq(TENANT_DOMAIN));
+        ArgumentCaptor<List<Permission>> addedCaptor = ArgumentCaptor.forClass(List.class);
+        verify(roleManagementService).updatePermissionListOfRole(eq(userRoleId), addedCaptor.capture(),
+                eq(Collections.emptyList()), eq(TENANT_DOMAIN));
+        assertEquals(permissionNames(addedCaptor.getValue()), Collections.singletonList(SELF_DELETE_SCOPE));
     }
 
+    @Test
+    public void createRolesLeavesExistingRolesAloneWhenNothingIsMissing() throws Exception {
+
+        String userRoleId = "role-user-1";
+        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE,
+                ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(true);
+        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE,
+                ROLE_AUDIENCE, APPLICATION_ID, TENANT_DOMAIN)).thenReturn(true);
+        when(roleManagementService.getRoleIdByName(anyString(), eq(ROLE_AUDIENCE), eq(APPLICATION_ID),
+                eq(TENANT_DOMAIN))).thenReturn(userRoleId);
+        when(roleManagementService.getPermissionListOfRole(userRoleId, TENANT_DOMAIN))
+                .thenReturn(Collections.singletonList(new Permission(SELF_DELETE_SCOPE)));
+
+        DPDPConsentPortalRoleProvisioningUtil.createRoles(APPLICATION_ID, TENANT_DOMAIN, Collections.emptyList(),
+                Collections.singletonList(SELF_DELETE_SCOPE));
+
+        verify(roleManagementService, never()).addRole(anyString(), anyList(), anyList(), anyList(), anyString(),
+                anyString(), anyString());
+        verify(roleManagementService, never()).updatePermissionListOfRole(anyString(), anyList(), anyList(),
+                anyString());
+    }
+
+    private static List<String> permissionNames(List<Permission> permissions) {
+
+        List<String> names = new java.util.ArrayList<>();
+        for (Permission permission : permissions) {
+            names.add(permission.getName());
+        }
+        return names;
+    }
 }

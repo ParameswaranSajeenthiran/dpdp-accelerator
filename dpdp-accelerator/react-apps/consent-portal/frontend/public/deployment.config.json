@@ -20,6 +20,7 @@
     "notifications:topics:read",
     "notifications:topics:write",
     "notifications:events:read",
-    "notifications:events:write"
+    "notifications:events:write",
+    "account:self:delete"
   ]
 }

@@ -358,6 +358,44 @@ async function loginAs(browser: Browser, personaName: PersonaName, persona: Pers
   return pageForPersonaState(browser, personaState, persona)
 }
 
+export interface ThrowawaySession {
+  page: Page
+  /**
+   * The session's own access token, lifted off the first authenticated request the way
+   * loginAndCaptureState does. Needed because the auth SDK keeps the token in a web worker the
+   * page cannot read, and the account-deletion test has to call SCIM2 directly with exactly this
+   * user's token to prove what its scopes do and don't authorize.
+   */
+  bearerToken: string
+}
+
+/**
+ * Signs an account in on a context of its own, with nothing cached or reused. For the one
+ * account this suite must not share: the throwaway user the account-deletion test creates and
+ * then destroys (see utils/throwawayUser.ts). Every persona above logs in once and is reused for
+ * the whole run, which an account that stops existing partway through cannot be.
+ *
+ * The caller owns the returned page's context and must close it itself.
+ */
+export async function loginAsThrowawayUser(
+  browser: Browser,
+  persona: Persona,
+): Promise<ThrowawaySession> {
+  const context = await browser.newContext({
+    baseURL: env.portalNavigationBaseUrl,
+    ignoreHTTPSErrors: env.ignoreHttpsErrors,
+  })
+  const page = await context.newPage()
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const authenticatedRequest = await ensureSignedIn(page, persona)
+
+  const authorization = authenticatedRequest.headers().authorization
+  if (!authorization) {
+    throw new Error(`No Authorization header found on "${persona.username}"'s sign-in request.`)
+  }
+  return { page, bearerToken: authorization.replace(/^Bearer\s+/i, '') }
+}
+
 export async function loginAsUser(browser: Browser): Promise<Page> {
   return loginAs(browser, 'user', env.user)
 }
@@ -406,4 +444,13 @@ export { expect } from '@playwright/test'
  */
 export function hasSecondUser(): boolean {
   return Boolean(env.secondUser())
+}
+
+/**
+ * The account-deletion test needs an Identity Server administrator to create the throwaway user
+ * it destroys - it cannot use any shared persona, since those have to survive the run. Skips
+ * itself with a clear reason when TEST_IS_ADMIN_USERNAME/PASSWORD aren't configured.
+ */
+export function hasIdentityServerAdmin(): boolean {
+  return Boolean(env.identityServerAdmin())
 }

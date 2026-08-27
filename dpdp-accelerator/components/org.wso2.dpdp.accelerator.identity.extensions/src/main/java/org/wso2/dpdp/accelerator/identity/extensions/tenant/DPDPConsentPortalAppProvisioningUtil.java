@@ -81,6 +81,14 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             {"notifications:events:poll"},
             {"notifications:event-deliveries:complete"}
     };
+    // A virtual API resource: it never serves traffic, it only mints the scope that the
+    // deployment.toml resource.access_control rule for "DELETE /scim2/Me" checks for.
+    private static final String[] ACCOUNT_SELF_SERVICE_API_IDENTIFIERS = {
+            "/api/dpdp/account/v1/self"
+    };
+    private static final String[][] ACCOUNT_SELF_SERVICE_API_SCOPES = {
+            {"account:self:delete"}
+    };
 
     private DPDPConsentPortalAppProvisioningUtil() {
 
@@ -136,12 +144,36 @@ public final class DPDPConsentPortalAppProvisioningUtil {
 
         APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
         registerAPIResources(apiResourceManager, tenantDomain, EVENT_NOTIFICATION_API_IDENTIFIERS,
-                EVENT_NOTIFICATION_API_SCOPES);
+                EVENT_NOTIFICATION_API_SCOPES, "DPDP Event Notification");
 
     }
 
+    /**
+     * Registers the account self-service API resource for a tenant when it is not already
+     * present. The resource itself is virtual - it exists so the tenant has the
+     * {@code account:self:delete} scope that guards {@code DELETE /scim2/Me}. Idempotent, like
+     * the other registrations, because tenant provisioning can be retried.
+     */
+    public static void registerAccountSelfServiceAPI(String tenantDomain) throws Exception {
+
+        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
+        registerAPIResources(apiResourceManager, tenantDomain, ACCOUNT_SELF_SERVICE_API_IDENTIFIERS,
+                ACCOUNT_SELF_SERVICE_API_SCOPES, "DPDP Account Self-Service");
+    }
+
+    /**
+     * Authorizes the account self-service API resource for the tenant's portal application so the
+     * app can receive the {@code account:self:delete} scope in tokens. Idempotent, and separate
+     * from the admin-facing authorizations because its scopes go to the user role only.
+     */
+    public static List<String> authorizeAccountSelfServiceAPI(String applicationId, String tenantDomain)
+            throws Exception {
+
+        return authorizeAPIs(applicationId, tenantDomain, ACCOUNT_SELF_SERVICE_API_IDENTIFIERS);
+    }
+
     private static void registerAPIResources(APIResourceManager apiResourceManager, String tenantDomain,
-            String[] identifiers, String[][] scopesByIdentifier) throws Exception {
+            String[] identifiers, String[][] scopesByIdentifier, String displayName) throws Exception {
 
         for (int i = 0; i < identifiers.length; i++) {
             String identifier = identifiers[i];
@@ -150,13 +182,13 @@ public final class DPDPConsentPortalAppProvisioningUtil {
             }
             List<Scope> scopes = new ArrayList<>();
             for (String scopeName : scopesByIdentifier[i]) {
-                scopes.add(new Scope(null, scopeName, scopeName, "Event Notification API scope: " + scopeName));
+                scopes.add(new Scope(null, scopeName, scopeName, displayName + " API scope: " + scopeName));
             }
             APIResource resource = new APIResource.APIResourceBuilder()
-                    .name("DPDP Event Notification API " + resourceName(identifier))
+                    .name(displayName + " API " + resourceName(identifier))
                     .identifier(identifier)
                     .type(APIResourceManagementConstants.APIResourceTypes.TENANT)
-                    .description("DPDP Event Notification " + resourceName(identifier) + " API")
+                    .description(displayName + " " + resourceName(identifier) + " API")
                     .requiresAuthorization(true)
                     .scopes(scopes)
                     .build();

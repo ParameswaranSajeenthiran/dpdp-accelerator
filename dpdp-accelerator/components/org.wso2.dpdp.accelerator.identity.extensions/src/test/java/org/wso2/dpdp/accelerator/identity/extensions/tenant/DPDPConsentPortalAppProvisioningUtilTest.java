@@ -316,6 +316,69 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         verify(apiResourceManager, never()).addAPIResource(any(APIResource.class), anyString());
     }
 
+    @Test
+    public void registerAccountSelfServiceAPIRegistersTheSelfDeleteScope() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(anyString(), eq(TENANT_DOMAIN))).thenReturn(null);
+
+        DPDPConsentPortalAppProvisioningUtil.registerAccountSelfServiceAPI(TENANT_DOMAIN);
+
+        ArgumentCaptor<APIResource> resourceCaptor = ArgumentCaptor.forClass(APIResource.class);
+        verify(apiResourceManager).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
+        APIResource resource = resourceCaptor.getValue();
+        assertEquals(resource.getScopes().size(), 1);
+        assertEquals(resource.getScopes().get(0).getName(), "account:self:delete");
+    }
+
+    @Test
+    public void registerAccountSelfServiceAPIDoesNotDuplicateAnExistingResource() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/account/v1/self", TENANT_DOMAIN))
+                .thenReturn(mock(APIResource.class));
+
+        DPDPConsentPortalAppProvisioningUtil.registerAccountSelfServiceAPI(TENANT_DOMAIN);
+
+        verify(apiResourceManager, never()).addAPIResource(any(APIResource.class), anyString());
+    }
+
+    @Test
+    public void authorizeAccountSelfServiceAPIAuthorizesTheResourceAndReturnsItsScope() throws Exception {
+
+        Scope selfDeleteScope = mockScope("account:self:delete");
+        APIResource selfServiceResource = mockResource("res-account-self", "/api/dpdp/account/v1/self",
+                Arrays.asList(selfDeleteScope));
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/account/v1/self", TENANT_DOMAIN))
+                .thenReturn(selfServiceResource);
+
+        List<String> scopes = DPDPConsentPortalAppProvisioningUtil
+                .authorizeAccountSelfServiceAPI(APPLICATION_ID, TENANT_DOMAIN);
+
+        assertEquals(scopes, Arrays.asList("account:self:delete"));
+        verify(authorizedAPIManagementService).addAuthorizedAPI(eq(APPLICATION_ID), any(AuthorizedAPI.class),
+                eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void authorizeAccountSelfServiceAPIIsIdempotent() throws Exception {
+
+        Scope selfDeleteScope = mockScope("account:self:delete");
+        APIResource selfServiceResource = mockResource("res-account-self", "/api/dpdp/account/v1/self",
+                Arrays.asList(selfDeleteScope));
+        when(apiResourceManager.getAPIResourceByIdentifier("/api/dpdp/account/v1/self", TENANT_DOMAIN))
+                .thenReturn(selfServiceResource);
+        AuthorizedAPI existingAuthorization = mock(AuthorizedAPI.class);
+        when(existingAuthorization.getScopes()).thenReturn(Arrays.asList(selfDeleteScope));
+        when(authorizedAPIManagementService.getAuthorizedAPI(APPLICATION_ID, "res-account-self", TENANT_DOMAIN))
+                .thenReturn(existingAuthorization);
+
+        List<String> scopes = DPDPConsentPortalAppProvisioningUtil
+                .authorizeAccountSelfServiceAPI(APPLICATION_ID, TENANT_DOMAIN);
+
+        assertEquals(scopes, Arrays.asList("account:self:delete"));
+        verify(authorizedAPIManagementService, never()).addAuthorizedAPI(anyString(), any(AuthorizedAPI.class),
+                anyString());
+    }
+
     private static Scope mockScope(String name) {
 
         Scope scope = mock(Scope.class);

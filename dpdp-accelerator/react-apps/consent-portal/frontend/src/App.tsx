@@ -35,6 +35,7 @@ import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegi
 import ConsentDetailsPage from './features/my-consents/ConsentDetailsPage'
 import ConsentRegistryPage from './features/my-consents/ConsentRegistryPage'
 import DashboardPage from './features/dashboard/DashboardPage'
+import AccountDeletedPage from './features/account/AccountDeletedPage'
 import { AuthorizationProvider } from './features/auth/AuthorizationProvider'
 import useAuthorization from './features/auth/useAuthorization'
 import firstAuthorizedPath from './features/auth/authorizationRoutes'
@@ -177,7 +178,9 @@ function AuthorizedFallback(): React.JSX.Element {
   return fallback ? <Navigate to={fallback} replace /> : <NoAccessPage />
 }
 
-function App(): React.JSX.Element {
+/** Everything behind the sign-in. Extracted unchanged from App so the public
+ * account-deleted route can live outside the authentication gate. */
+function ProtectedRoutes(): React.JSX.Element {
   return (
     <AuthenticationGate>
       <Routes>
@@ -298,6 +301,15 @@ function App(): React.JSX.Element {
         </Route>
       </Routes>
     </AuthenticationGate>
+  )
+}
+
+function App(): React.JSX.Element {
+  return (
+    <Routes>
+      <Route path="/account-deleted" element={<AccountDeletedPage />} />
+      <Route path="/*" element={<ProtectedRoutes />} />
+    </Routes>
   )
 }
 

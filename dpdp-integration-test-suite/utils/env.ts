@@ -90,6 +90,20 @@ export const env = {
     const password = optional('TEST_USER_2_PASSWORD')
     return username && password ? { username, password } : undefined
   },
+
+  /**
+   * Optional: an Identity Server administrator, used only by the account-deletion test to
+   * create the throwaway user it then deletes. Deleting an account is irreversible, so that
+   * test cannot use any persona above - every other test in the run shares those, and they
+   * have to still exist afterwards. Needs the SCIM2 user-management scopes (create, delete
+   * and list users), which the stock `admin` account has; the tests that need it skip
+   * themselves when it isn't configured.
+   */
+  identityServerAdmin: (): Persona | undefined => {
+    const username = optional('TEST_IS_ADMIN_USERNAME')
+    const password = optional('TEST_IS_ADMIN_PASSWORD')
+    return username && password ? { username, password } : undefined
+  },
 }
 
 // The portal has no backend of its own any more (see docs/configuration-guide.md) - the frontend
@@ -113,6 +127,11 @@ export function consentPurposesApiUrl(path: string): string {
 
 export function consentElementsApiUrl(path: string): string {
   return `${env.identityServerBaseUrl}/api/identity/consent-mgt/v2.0/elements${path}`
+}
+
+/** SCIM2 user management, used for the throwaway account the deletion test creates. */
+export function scim2UsersUrl(path: string): string {
+  return `${env.identityServerBaseUrl}/scim2/Users${path}`
 }
 
 export type PersonaName = 'user' | 'user-2' | 'consent-admin'
