@@ -1,8 +1,11 @@
 # Build + end-to-end checks for the DPDP accelerator.
 #
-# Blocking on main, advisory on dev: both branches run these jobs, but only main
-# marks them as required status checks (Settings -> Rules -> Rulesets), so a dev PR
-# still shows a red X without blocking Merge.
+# These jobs run identically on PRs to main and dev, but as of this writing neither
+# branch has a ruleset marking them as required status checks (neither of us has admin
+# access to set one up) - so a red `e2e-required` currently only advises a reviewer not
+# to merge, it doesn't block Merge. Making it a hard block on either branch is a one-line
+# ruleset change for whoever gets admin access (Settings -> Rules -> Rulesets); nothing
+# here would need to change.
 #
 # Two triggers, deliberately split - E2E now needs WSO2 subscription credentials
 # (SOLUTIONS_BOT_EMAIL / SOLUTIONS_BOT_U2_PASSWORD) to apply U2 updates, and those
