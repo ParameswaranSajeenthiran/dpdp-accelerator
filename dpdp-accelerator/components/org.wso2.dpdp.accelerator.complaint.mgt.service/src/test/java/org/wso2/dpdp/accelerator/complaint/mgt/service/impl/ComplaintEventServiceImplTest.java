@@ -195,7 +195,7 @@ class ComplaintEventServiceImplTest {
                 eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
         assertEquals(atLimit, event.getMessage());
-        assertEquals(atLimit, event.getComment());
+        assertEquals(atLimit, event.getMessage());
         verify(notificationClient).notifyCommentAdded(complaint, event);
     }
 
@@ -240,6 +240,9 @@ class ComplaintEventServiceImplTest {
 
         assertEquals(false, event.isPublic());
         assertEquals("internal note", event.getMessage());
+        // An internal note is never shown to the citizen in the timeline - notifying them about it
+        // would leak its existence.
+        verify(notificationClient, never()).notifyCommentAdded(any(), any());
     }
 
     @Test
@@ -269,6 +272,9 @@ class ComplaintEventServiceImplTest {
         assertEquals("OPEN", event.getFromStatus());
         assertEquals("IN_PROGRESS", event.getToStatus());
         verify(complaintDAO).updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong());
+        // The complaint was fetched with its pre-transition status ("OPEN") - the notification
+        // must not carry that stale value now that the transition has actually landed.
+        assertEquals("IN_PROGRESS", complaint.getStatus());
         verify(notificationClient).notifyCommentAdded(complaint, event);
     }
 

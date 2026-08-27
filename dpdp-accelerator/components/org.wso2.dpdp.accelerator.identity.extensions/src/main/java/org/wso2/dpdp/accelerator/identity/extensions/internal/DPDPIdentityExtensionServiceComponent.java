@@ -32,8 +32,6 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
-import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
-import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
@@ -42,7 +40,6 @@ import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.identity.extensions.notification.ComplaintNotificationHandler;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
@@ -66,10 +63,7 @@ public class DPDPIdentityExtensionServiceComponent {
         BundleContext bundleContext = context.getBundleContext();
         tenantMgtListenerRegistration = bundleContext.registerService(TenantMgtListener.class,
                 new DPDPIdentityExtensionTenantMgtListener(), null);
-        bundleContext.registerService(AbstractEventHandler.class.getName(), new ComplaintNotificationHandler(),
-                null);
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener and complaint "
-                + "notification handler registered.");
+        LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
 
         try {
             TenantInfoBean superTenant = new TenantInfoBean();
@@ -220,24 +214,6 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
-    }
-
-    @Reference(
-            service = IdentityEventService.class,
-            cardinality = ReferenceCardinality.MANDATORY,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unsetIdentityEventService"
-    )
-    protected void setIdentityEventService(IdentityEventService identityEventService) {
-
-        LOG.debug("Setting the Identity Event Service.");
-        DPDPIdentityExtensionDataHolder.getInstance().setIdentityEventService(identityEventService);
-    }
-
-    protected void unsetIdentityEventService(IdentityEventService identityEventService) {
-
-        LOG.debug("Unsetting the Identity Event Service.");
-        DPDPIdentityExtensionDataHolder.getInstance().setIdentityEventService(null);
     }
 
     @Reference(

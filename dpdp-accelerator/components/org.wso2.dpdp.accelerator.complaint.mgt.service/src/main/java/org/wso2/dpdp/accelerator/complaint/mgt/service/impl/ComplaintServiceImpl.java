@@ -37,6 +37,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator;
@@ -68,7 +69,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     public ComplaintServiceImpl(ComplaintDAO complaintDAO, ComplaintEventDAO complaintEventDAO) {
-        this(complaintDAO, complaintEventDAO, new NotificationClient());
+        this(complaintDAO, complaintEventDAO, new EmailNotificationClient());
     }
 
     public ComplaintServiceImpl(ComplaintDAO complaintDAO, ComplaintEventDAO complaintEventDAO,
