@@ -18,7 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
-import org.junit.jupiter.api.AfterEach;
+import org.h2.jdbcx.JdbcDataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,14 +27,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
@@ -64,26 +69,28 @@ class ComplaintServiceImplTest {
     private ComplaintServiceImpl complaintService;
 
     @BeforeAll
-    static void pointDbUtilAtAnInMemoryDatabase() {
-        // The officer-intake path now runs through DBUtil.executeInTransaction (see
-        // ComplaintServiceImplTest's new createComplaint-with-actor tests below) - complaintDAO/
-        // complaintEventDAO are still plain mocks, so no real SQL executes, but DBUtil.getConnection()
-        // itself needs somewhere real to connect. See H2TestDbSupport in the dao module.
-        System.setProperty("CO_DB_URL", "jdbc:h2:mem:complaint_service_test;DB_CLOSE_DELAY=-1");
-        System.setProperty("CO_DB_USER", "sa");
-        System.setProperty("CO_DB_PASS", "");
+    static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:complaint_service_test;DB_CLOSE_DELAY=-1");
+        dataSource.setUser("sa");
+        dataSource.setPassword("");
+        setManagerDataSource(dataSource);
+    }
+
+    @AfterAll
+    static void clearPersistenceManagerDataSource() throws Exception {
+        setManagerDataSource(null);
+    }
+
+    private static void setManagerDataSource(Object dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
     }
 
     @BeforeEach
     void setUp() {
         complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
-    }
-
-    @AfterEach
-    void tearDown() {
-        // createComplaint() derives priority via PriorityMapper's static mapping - make sure a run
-        // that mutated it (there isn't one here, but keeps this class order-independent) doesn't leak.
-        System.clearProperty("CO_STATUTORY_DUE_PERIOD_DAYS");
     }
 
     @Test
@@ -144,18 +151,19 @@ class ComplaintServiceImplTest {
         when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(true);
 
-        Complaint complaint = complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
+        ComplaintCreateResponseBean complaint =
+                complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
 
         assertEquals("CRITICAL", complaint.getPriority());
         assertEquals("OPEN", complaint.getStatus());
         assertEquals("desc", complaint.getDescription());
         assertEquals("user1", complaint.getUserId());
-        assertEquals("User One", complaint.getUserName());
 
         ArgumentCaptor<Complaint> captor = ArgumentCaptor.forClass(Complaint.class);
         verify(complaintDAO).addComplaint(captor.capture());
         assertEquals("org1", captor.getValue().getOrgId());
         assertEquals("OPEN", captor.getValue().getStatus());
+        assertEquals("User One", captor.getValue().getUserName());
         assertTrue(captor.getValue().getStatutoryDueTime() > captor.getValue().getCreatedTime());
     }
 
@@ -178,7 +186,8 @@ class ComplaintServiceImplTest {
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
                 .thenReturn(true);
 
-        Complaint complaint = complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
+        ComplaintCreateResponseBean complaint =
+                complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
         assertEquals("OPEN", complaint.getStatus());
         verify(complaintDAO, times(2)).addComplaint(any(Complaint.class));
@@ -204,8 +213,8 @@ class ComplaintServiceImplTest {
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        Complaint complaint = complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc",
-                "officer1", "COMPLAINT_OFFICER");
+        ComplaintCreateResponseBean complaint = complaintService.createComplaint("org1", "user1", null,
+                "DATA_BREACH", "desc", "officer1", "COMPLAINT_OFFICER");
 
         assertEquals("OPEN", complaint.getStatus());
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
@@ -213,7 +222,7 @@ class ComplaintServiceImplTest {
         assertEquals("officer1", captor.getValue().getActorUserId());
         assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
         assertEquals("OPEN", captor.getValue().getToStatus());
-        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
     }
 
     @Test
@@ -340,9 +349,12 @@ class ComplaintServiceImplTest {
         ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
         when(complaintDAO.getQueueStats(eq("org1"), anyLong())).thenReturn(stats);
 
-        ComplaintQueueStats result = complaintService.getQueueStats("org1");
+        ComplaintQueueStatsResponseBean result = complaintService.getQueueStats("org1");
 
-        assertEquals(stats, result);
+        assertEquals(stats.getOpenCount(), result.getOpenCount());
+        assertEquals(stats.getAwaitingInternalReviewCount(), result.getAwaitingInternalReviewCount());
+        assertEquals(stats.getResolvedCount(), result.getResolvedCount());
+        assertEquals(stats.getSlaBreachedCount(), result.getSlaBreachedCount());
         verify(complaintDAO).getQueueStats(eq("org1"), anyLong());
     }
 }

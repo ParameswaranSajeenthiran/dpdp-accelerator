@@ -18,12 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintMessageRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -62,9 +61,8 @@ public class ComplaintCommentHandler {
         boolean isPublic = requestedIsPublic;
         String toStatus = request != null ? request.getToStatus() : null;
 
-        ComplaintEvent event = complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName,
-                actorRole, message, isPublic, toStatus);
-        return ComplaintCommentCreateResponseBean.from(event);
+        return complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName, actorRole, message,
+                isPublic, toStatus);
     }
 
     public ComplaintCommentCreateResponseBean addOwnComment(String orgId, String complaintId, String ownerUserId,
@@ -73,8 +71,7 @@ public class ComplaintCommentHandler {
         String message = request != null ? request.getMessage() : null;
         String toStatus = request != null ? request.getToStatus() : null;
 
-        ComplaintEvent event = complaintEventService.addComment(orgId, complaintId, ownerUserId, ownerUserName,
-                "USER", message, true, toStatus);
-        return ComplaintCommentCreateResponseBean.from(event);
+        return complaintEventService.addComment(orgId, complaintId, ownerUserId, ownerUserName, "USER", message,
+                true, toStatus);
     }
 }

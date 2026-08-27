@@ -20,10 +20,9 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintAttachmentDownloadResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintAttachmentResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -67,16 +66,14 @@ public class ComplaintAttachmentHandler {
     public List<ComplaintAttachmentResponseBean> uploadComplaintAttachments(String orgId, String complaintId,
             List<FormDataBodyPart> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        List<ComplaintAttachment> result = complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId,
-                files, isPublic == null || isPublic, actorUserId, actorUserName,
+        return complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId, files,
+                isPublic == null || isPublic, actorUserId, actorUserName,
                 ComplaintActorRole.COMPLAINT_OFFICER.name());
-        return toBeans(result);
     }
 
     public ComplaintAttachmentDownloadResponseBean downloadAttachment(String orgId, String complaintId,
             String attachmentId) {
-        return toDownloadBean(complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId,
-                false));
+        return complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, false);
     }
 
     // ---- Data Principal ----
@@ -84,23 +81,16 @@ public class ComplaintAttachmentHandler {
     public List<ComplaintAttachmentResponseBean> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<FormDataBodyPart> fileParts) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        List<ComplaintAttachment> result = complaintAttachmentService.uploadOwnComplaintAttachments(orgId,
-                complaintId, ownerUserId, ownerUserName, files);
-        return toBeans(result);
+        return complaintAttachmentService.uploadOwnComplaintAttachments(orgId, complaintId, ownerUserId,
+                ownerUserName, files);
     }
 
     public ComplaintAttachmentDownloadResponseBean downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
-        return toDownloadBean(
-                complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId));
+        return complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId);
     }
 
     // ---- shared ----
-
-    private ComplaintAttachmentDownloadResponseBean toDownloadBean(ComplaintAttachment attachment) {
-        return new ComplaintAttachmentDownloadResponseBean(attachment.getAttachmentId(), attachment.getFileName(),
-                attachment.getContentType(), attachment.getFileData());
-    }
 
     private List<UploadedFile> toUploadedFiles(List<FormDataBodyPart> fileParts) {
         List<UploadedFile> files = new ArrayList<>();
@@ -155,13 +145,5 @@ public class ComplaintAttachmentHandler {
             buffer.write(chunk, 0, read);
         }
         return buffer.toByteArray();
-    }
-
-    private List<ComplaintAttachmentResponseBean> toBeans(List<ComplaintAttachment> attachments) {
-        List<ComplaintAttachmentResponseBean> beans = new ArrayList<>();
-        for (ComplaintAttachment attachment : attachments) {
-            beans.add(ComplaintAttachmentResponseBean.from(attachment));
-        }
-        return beans;
     }
 }

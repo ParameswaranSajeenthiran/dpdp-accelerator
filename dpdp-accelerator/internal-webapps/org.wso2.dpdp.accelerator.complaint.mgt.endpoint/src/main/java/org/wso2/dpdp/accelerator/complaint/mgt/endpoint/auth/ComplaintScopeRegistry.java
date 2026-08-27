@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth;
 
+import org.wso2.dpdp.common.config.ConfigProvider;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,8 +32,9 @@ import java.util.Set;
  * "{@code <HTTP method> <path template>}" (the class's {@code @Path} joined with the method's
  * {@code @Path}, e.g. {@code "POST /complaints/{complaintId}/status"}). Built-in defaults below
  * match complaint-server-API.yaml; {@code configure()} lets deployment.toml's
- * {@code [complaintScopes]} table override individual entries without a rebuild - see
- * AppBootstrap#loadDeploymentConfig in this module, invoked once at servlet context startup.
+ * {@code [complaintScopes]} table override individual entries without a rebuild - read once via
+ * {@link ConfigProvider#getTable(String)} at class-init time, no servlet-container bootstrap step
+ * involved.
  *
  * <p>Unlike {@code PriorityMapper}'s wholesale-replace, overrides here are merged key-by-key on
  * top of the defaults: a partially-specified or malformed {@code [complaintScopes]} table
@@ -49,6 +52,10 @@ public final class ComplaintScopeRegistry {
             Arrays.asList(READ_SELF, WRITE_SELF, READ_ANY, WRITE_ANY));
 
     private static volatile Map<String, String> scopeByOperation = buildDefaultMapping();
+
+    static {
+        configure(ConfigProvider.getTable("complaintScopes"));
+    }
 
     private ComplaintScopeRegistry() {
     }

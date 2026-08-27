@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
@@ -26,15 +28,15 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,8 +71,8 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public ComplaintEvent addComment(String orgId, String complaintId, String actorUserId, String actorUserName,
-            String actorRole, String message, boolean isPublic, String toStatus) {
+    public ComplaintCommentCreateResponseBean addComment(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, String message, boolean isPublic, String toStatus) {
         Complaint complaint = complaintService.requireComplaint(orgId, complaintId);
 
         if (message == null || message.trim().isEmpty()) {
@@ -118,11 +120,11 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
 
         if (hasToStatus) {
             // The comment and the status change it carries must land together - see
-            // DBUtil#executeInTransaction - otherwise a failure between the two writes could leave
-            // a status-changing comment recorded against a complaint whose status never actually
-            // moved, or vice versa.
+            // JDBCPersistenceManager#executeInTransaction - otherwise a failure between the two
+            // writes could leave a status-changing comment recorded against a complaint whose
+            // status never actually moved, or vice versa.
             try {
-                DBUtil.executeInTransaction(conn -> {
+                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
                     if (!complaintEventDAO.addEvent(conn, event)) {
                         throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                                 ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
@@ -131,8 +133,9 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                         throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                                 ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
                     }
+                    return null;
                 });
-            } catch (SQLException e) {
+            } catch (DPDPCommonRuntimeException e) {
                 throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR, e);
             }
@@ -144,7 +147,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             }
         }
 
-        return event;
+        return ComplaintCommentCreateResponseBean.from(event);
     }
 
     @Override
@@ -159,8 +162,8 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public Complaint updateStatus(String orgId, String complaintId, String actorUserId, String actorUserName,
-            String actorRole, String toStatus, String note) {
+    public ComplaintStatusUpdateResponseBean updateStatus(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, String toStatus, String note) {
         Complaint complaint = complaintService.requireComplaint(orgId, complaintId);
 
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
@@ -197,12 +200,12 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId, actorUserName,
                 actorRole, true, note, fromStatus, toStatus, now);
 
-        // Status update and its audit event must land together - see DBUtil#executeInTransaction.
-        // Both writes are checked and made to fail the whole transaction (not just skip a write)
-        // so a partial failure can never leave the status changed with no record of why, or vice
-        // versa.
+        // Status update and its audit event must land together - see
+        // JDBCPersistenceManager#executeInTransaction. Both writes are checked and made to fail
+        // the whole transaction (not just skip a write) so a partial failure can never leave the
+        // status changed with no record of why, or vice versa.
         try {
-            DBUtil.executeInTransaction(conn -> {
+            JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
                 if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
                     throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                             ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
@@ -211,14 +214,15 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                     throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                             ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
                 }
+                return null;
             });
-        } catch (SQLException e) {
+        } catch (DPDPCommonRuntimeException e) {
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR, e);
         }
 
         complaint.setStatus(toStatus);
         complaint.setUpdatedTime(now);
-        return complaint;
+        return ComplaintStatusUpdateResponseBean.from(complaint);
     }
 }

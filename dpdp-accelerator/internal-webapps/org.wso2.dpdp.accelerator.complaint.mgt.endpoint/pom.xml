@@ -108,12 +108,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- TOML parsing for deployment.toml (shared bootstrap logic) -->
-        <dependency>
-            <groupId>org.tomlj</groupId>
-            <artifactId>tomlj</artifactId>
-        </dependency>
-
         <!-- Database drivers -->
         <dependency>
             <groupId>com.h2database</groupId>

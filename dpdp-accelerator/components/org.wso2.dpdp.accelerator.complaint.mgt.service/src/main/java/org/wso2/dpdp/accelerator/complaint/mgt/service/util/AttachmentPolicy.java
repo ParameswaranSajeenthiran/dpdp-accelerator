@@ -18,12 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
+import org.wso2.dpdp.common.config.ConfigProvider;
+
 import java.util.Set;
 
 /**
  * Matches the encoding.file.contentType list declared in the OpenAPI spec for both attachment
- * upload endpoints. Max size is configurable via the CO_MAX_ATTACHMENT_SIZE_BYTES system property
- * (defaults to 10 MB) since the spec references "the configured max" without stating a number.
+ * upload endpoints. Max size is configurable via deployment.toml's {@code attachment.maxSizeBytes}
+ * key, read lazily via {@link ConfigProvider} (defaults to 10 MB) since the spec references "the
+ * configured max" without stating a number.
  */
 public class AttachmentPolicy {
 
@@ -44,7 +47,7 @@ public class AttachmentPolicy {
     }
 
     public static long getMaxSizeBytes() {
-        String configured = System.getProperty("CO_MAX_ATTACHMENT_SIZE_BYTES");
+        String configured = ConfigProvider.getString("attachment.maxSizeBytes", null);
         if (configured != null) {
             try {
                 return Long.parseLong(configured.trim());

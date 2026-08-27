@@ -22,8 +22,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.tomlj.Toml;
 import org.tomlj.TomlParseResult;
+import org.tomlj.TomlTable;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Read-only access to deployment.toml by dotted key path (e.g. "datasource.WSO2DPDP_DB.url"),
@@ -69,8 +73,41 @@ public final class ConfigProvider {
         }
     }
 
-    /** Test-only seam: forces the next getString() call to reparse rather than reuse the cached result. */
-    static void resetForTesting() {
+    /**
+     * Returns every String-valued entry of the table at {@code dottedKey} (e.g. the arbitrary,
+     * deployment-defined keys of a {@code [categoryPriority]} or {@code [complaintScopes]}
+     * table), or an empty map if deployment.toml could not be found/parsed, the key isn't
+     * present, or it isn't a table - callers that self-configure a static override mapping from
+     * this at class-init time (see PriorityMapper, ComplaintScopeRegistry) treat "nothing
+     * configured" the same as "table absent", so failing soft here matches getString().
+     */
+    public static Map<String, String> getTable(String dottedKey) {
+        TomlParseResult toml = getConfig();
+        if (toml == null || dottedKey == null || dottedKey.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        TomlTable table;
+        try {
+            table = toml.getTable(dottedKey);
+        } catch (RuntimeException e) {
+            LOG.warn("deployment.toml key '" + dottedKey + "' is not a table; ignoring.", e);
+            return Collections.emptyMap();
+        }
+        if (table == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> values = new HashMap<>();
+        for (String key : table.keySet()) {
+            String value = table.getString(key);
+            if (value != null) {
+                values.put(key, value);
+            }
+        }
+        return values;
+    }
+
+    /** Test-only seam: forces the next getString()/getTable() call to reparse rather than reuse the cached result. */
+    public static void resetForTesting() {
         loaded = false;
         config = null;
     }

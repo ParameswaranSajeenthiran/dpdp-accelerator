@@ -18,8 +18,9 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
 
 import java.util.List;
 
@@ -39,8 +40,8 @@ public interface ComplaintEventService {
      * complaint is transitioned to that status in the same call, subject to the same state-machine
      * rules as updateStatus (an invalid transition throws CO-4090).
      */
-    ComplaintEvent addComment(String orgId, String complaintId, String actorUserId, String actorUserName,
-            String actorRole, String message, boolean isPublic, String toStatus);
+    ComplaintCommentCreateResponseBean addComment(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, String message, boolean isPublic, String toStatus);
 
     /** Returns the underlying timeline entry, used by the comment-attachment endpoint to verify ownership. */
     ComplaintEvent getTimelineEntry(String orgId, String complaintId, String complaintEventId);
@@ -50,6 +51,6 @@ public interface ComplaintEventService {
      * required when toStatus is RESOLVED. Throws CO-4090 if the transition isn't valid from the
      * complaint's current status - see StatusTransitionValidator.
      */
-    Complaint updateStatus(String orgId, String complaintId, String actorUserId, String actorUserName,
-            String actorRole, String toStatus, String note);
+    ComplaintStatusUpdateResponseBean updateStatus(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, String toStatus, String note);
 }

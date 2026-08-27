@@ -27,20 +27,21 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.CategoryListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCategoryBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintQueueStatsResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestBean;
 
 import java.util.List;
 
@@ -81,6 +82,10 @@ class ComplaintHandlerTest {
         return new ComplaintAttachment(id, ORG_ID, "c1", "f.pdf", "application/pdf", new byte[]{1}, isPublic, 1L);
     }
 
+    private ComplaintAttachmentResponseBean attachmentBean(String id, boolean isPublic) {
+        return ComplaintAttachmentResponseBean.from(attachment(id, isPublic));
+    }
+
     // ---- officer/admin ----
 
     @Test
@@ -90,7 +95,7 @@ class ComplaintHandlerTest {
         request.setSubjectCategory("DATA_BREACH");
         request.setDescription("desc");
         when(complaintService.createComplaint(ORG_ID, "user1", null, "DATA_BREACH", "desc", "officer1",
-                "COMPLAINT_OFFICER")).thenReturn(sampleComplaint("c1", "user1", "OPEN"));
+                "COMPLAINT_OFFICER")).thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1", "OPEN")));
 
         ComplaintCreateResponseBean response =
                 handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request);
@@ -102,7 +107,8 @@ class ComplaintHandlerTest {
     @Test
     void createComplaintToleratesNullRequestBody() {
         when(complaintService.createComplaint(eq(ORG_ID), eq(null), eq(null), eq(null), eq(null), eq("officer1"),
-                eq("COMPLAINT_OFFICER"))).thenReturn(sampleComplaint("c1", "user1", "OPEN"));
+                eq("COMPLAINT_OFFICER"))).thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1",
+                "OPEN")));
 
         ComplaintCreateResponseBean response = handler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", null);
 
@@ -113,7 +119,7 @@ class ComplaintHandlerTest {
     void getComplaintComposesRecordWithAllAttachments() {
         when(complaintService.getComplaint(ORG_ID, "c1")).thenReturn(sampleComplaint("c1", "user1", "OPEN"));
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(attachment("a1", false)));
+                .thenReturn(List.of(attachmentBean("a1", false)));
 
         ComplaintRecordBean bean = handler.getComplaint(ORG_ID, "c1");
 
@@ -162,7 +168,8 @@ class ComplaintHandlerTest {
 
     @Test
     void getQueueStatsMapsEachCountFromTheServiceResult() {
-        when(complaintService.getQueueStats(ORG_ID)).thenReturn(new ComplaintQueueStats(3, 1, 2, 1));
+        when(complaintService.getQueueStats(ORG_ID))
+                .thenReturn(ComplaintQueueStatsResponseBean.from(new ComplaintQueueStats(3, 1, 2, 1)));
 
         ComplaintQueueStatsResponseBean response = handler.getQueueStats(ORG_ID);
 
@@ -193,7 +200,8 @@ class ComplaintHandlerTest {
         request.setToStatus("IN_PROGRESS");
         request.setNote("note");
         when(complaintEventService.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                "IN_PROGRESS", "note")).thenReturn(sampleComplaint("c1", "user1", "IN_PROGRESS"));
+                "IN_PROGRESS", "note")).thenReturn(ComplaintStatusUpdateResponseBean.from(sampleComplaint("c1",
+                "user1", "IN_PROGRESS")));
 
         ComplaintStatusUpdateResponseBean response =
                 handler.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
@@ -209,7 +217,7 @@ class ComplaintHandlerTest {
         request.setSubjectCategory("DATA_BREACH");
         request.setDescription("desc");
         when(complaintService.createComplaint(ORG_ID, "user1", "User One", "DATA_BREACH", "desc"))
-                .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
+                .thenReturn(ComplaintCreateResponseBean.from(sampleComplaint("c1", "user1", "OPEN")));
 
         ComplaintCreateResponseBean response = handler.createOwnComplaint(ORG_ID, "user1", "User One", request);
 
@@ -221,7 +229,7 @@ class ComplaintHandlerTest {
         when(complaintService.requireOwnedComplaint(ORG_ID, "c1", "user1"))
                 .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(attachment("a1", true), attachment("a2", false)));
+                .thenReturn(List.of(attachmentBean("a1", true), attachmentBean("a2", false)));
 
         ComplaintRecordBean bean = handler.getOwnComplaint(ORG_ID, "c1", "user1");
 
@@ -234,7 +242,7 @@ class ComplaintHandlerTest {
         when(complaintService.listComplaints(eq(ORG_ID), any(), any(), eq("user1"), eq(10), eq(0), any(), any()))
                 .thenReturn(List.of(sampleComplaint("c1", "user1", "OPEN")));
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(attachment("a1", false)));
+                .thenReturn(List.of(attachmentBean("a1", false)));
 
         ComplaintListResponseBean response = handler.listOwnComplaints(ORG_ID, "user1", null, null, null, null);
 
@@ -249,7 +257,7 @@ class ComplaintHandlerTest {
         MeComplaintStatusUpdateRequestBean request = new MeComplaintStatusUpdateRequestBean();
         request.setToStatus("RESOLVED");
         when(complaintEventService.updateStatus(ORG_ID, "c1", "user1", "User One", "USER", "RESOLVED", null))
-                .thenReturn(sampleComplaint("c1", "user1", "RESOLVED"));
+                .thenReturn(ComplaintStatusUpdateResponseBean.from(sampleComplaint("c1", "user1", "RESOLVED")));
 
         ComplaintStatusUpdateResponseBean response =
                 handler.updateOwnStatus(ORG_ID, "c1", "user1", "User One", request);

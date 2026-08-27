@@ -18,12 +18,13 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
 
 import java.sql.Connection;
@@ -60,9 +61,14 @@ class ComplaintEventDAOImplTest {
         H2TestDbSupport.setUpDatabase("complaint_event_dao_test", CREATE_TABLE);
     }
 
+    @AfterAll
+    static void tearDownDatabase() {
+        H2TestDbSupport.tearDownDatabase();
+    }
+
     @BeforeEach
     void clearTable() throws SQLException {
-        try (Connection conn = DBUtil.getConnection(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM COMPLAINT_EVENT");
         }
     }

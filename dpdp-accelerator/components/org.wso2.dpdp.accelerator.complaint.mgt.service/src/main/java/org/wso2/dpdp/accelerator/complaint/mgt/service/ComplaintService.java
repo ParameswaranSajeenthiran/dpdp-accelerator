@@ -19,7 +19,8 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public interface ComplaintService {
      * them, when available) - null when the complaint is lodged on the Data Principal's behalf by
      * an officer who only supplied a userId.
      */
-    Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
+    ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description);
 
     /**
@@ -43,7 +44,7 @@ public interface ComplaintService {
      * caller - never anything client-supplied - the same rule every other actor-identity field in
      * this codebase follows.
      */
-    Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
+    ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description, String actorUserId, String actorRole);
 
     /** Core complaint fields for GET /complaints/{complaintId} (attachments are composed in by the handler). */
@@ -72,5 +73,5 @@ public interface ComplaintService {
             int offset, String sort, int[] totalOut);
 
     /** Org-wide counts for the officer/admin queue's summary tiles - see ComplaintDAO#getQueueStats. */
-    ComplaintQueueStats getQueueStats(String orgId);
+    ComplaintQueueStatsResponseBean getQueueStats(String orgId);
 }

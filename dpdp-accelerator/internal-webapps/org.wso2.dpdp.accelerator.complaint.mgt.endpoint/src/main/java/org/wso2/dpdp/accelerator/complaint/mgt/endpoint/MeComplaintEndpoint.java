@@ -21,12 +21,12 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintListResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintRecordBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintStatusUpdateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintCreateRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintStatusUpdateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.Consumes;

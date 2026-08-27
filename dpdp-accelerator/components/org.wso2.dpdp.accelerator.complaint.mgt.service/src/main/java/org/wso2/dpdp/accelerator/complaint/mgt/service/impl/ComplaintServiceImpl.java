@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
@@ -29,8 +31,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -38,7 +41,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatutoryDuePeriodPolicy;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,14 +71,14 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
-            String description) {
+    public ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName,
+            String subjectCategory, String description) {
         return createComplaint(orgId, userId, userName, subjectCategory, description, null, null);
     }
 
     @Override
-    public Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
-            String description, String actorUserId, String actorRole) {
+    public ComplaintCreateResponseBean createComplaint(String orgId, String userId, String userName,
+            String subjectCategory, String description, String actorUserId, String actorRole) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.INVALID_REQUEST_BODY,
                     ComplaintServiceConstants.ORG_ID_HEADER_REQUIRED_ERROR);
@@ -136,7 +138,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
                     }
                 }
-                return complaint;
+                return ComplaintCreateResponseBean.from(complaint);
             } catch (DuplicateReferenceIdException e) {
                 lastCollision = e;
             }
@@ -147,12 +149,12 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     /**
      * Inserts the complaint and its officer-intake audit event together - see
-     * DBUtil#executeInTransaction - so a complaint can never be created with no record of which
-     * officer lodged it, or vice versa.
+     * JDBCPersistenceManager#executeInTransaction - so a complaint can never be created with no
+     * record of which officer lodged it, or vice versa.
      */
     private void persistWithIntakeEvent(Complaint complaint, String actorUserId, String actorRole, long now) {
         try {
-            DBUtil.executeInTransaction(conn -> {
+            JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
                 if (!complaintDAO.addComplaint(conn, complaint)) {
                     throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                             ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
@@ -164,8 +166,9 @@ public class ComplaintServiceImpl implements ComplaintService {
                     throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                             ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
                 }
+                return null;
             });
-        } catch (SQLException e) {
+        } catch (DPDPCommonRuntimeException e) {
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, e);
         }
@@ -217,8 +220,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintQueueStats getQueueStats(String orgId) {
-        return complaintDAO.getQueueStats(orgId, System.currentTimeMillis());
+    public ComplaintQueueStatsResponseBean getQueueStats(String orgId) {
+        ComplaintQueueStats stats = complaintDAO.getQueueStats(orgId, System.currentTimeMillis());
+        return ComplaintQueueStatsResponseBean.from(stats);
     }
 
     private boolean isValidCategory(String category) {

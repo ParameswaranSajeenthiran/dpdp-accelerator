@@ -37,6 +37,14 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- JDBCPersistenceManager - the shared connection/transaction manager event-notifications
+             uses, replacing this module's own former DBUtil. -->
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

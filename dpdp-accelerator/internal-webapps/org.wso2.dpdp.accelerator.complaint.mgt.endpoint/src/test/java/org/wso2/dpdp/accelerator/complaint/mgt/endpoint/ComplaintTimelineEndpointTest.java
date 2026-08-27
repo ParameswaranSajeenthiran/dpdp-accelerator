@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.TimelineListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.container.ContainerRequestContext;

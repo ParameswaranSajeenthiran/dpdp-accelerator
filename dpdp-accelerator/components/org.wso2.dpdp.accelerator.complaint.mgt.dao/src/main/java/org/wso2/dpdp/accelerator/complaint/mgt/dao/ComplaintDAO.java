@@ -34,7 +34,7 @@ public interface ComplaintDAO {
     /**
      * Same as {@link #addComplaint(Complaint)}, run against a caller-owned connection so it can be
      * composed with other writes into one
-     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     * {@link org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager#executeInTransaction} call.
      */
     boolean addComplaint(Connection conn, Complaint complaint) throws SQLException;
 
@@ -54,7 +54,7 @@ public interface ComplaintDAO {
     /**
      * Same as {@link #updateStatus(String, String, String, long)}, run against a caller-owned
      * connection so it can be composed with other writes into one
-     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     * {@link org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager#executeInTransaction} call.
      */
     boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus, long updatedTime)
             throws SQLException;

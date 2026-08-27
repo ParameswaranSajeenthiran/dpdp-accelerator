@@ -8,7 +8,7 @@ import java.sql.SQLException;
  * racy under concurrent submissions, so the caller is expected to catch this, generate a fresh
  * reference ID, and retry rather than surface a generic 500.
  */
-public class DuplicateReferenceIdException extends RuntimeException {
+public class DuplicateReferenceIdException extends ComplaintDAOException {
 
     public DuplicateReferenceIdException(SQLException cause) {
         super("A complaint with this reference ID already exists for this organization.", cause);

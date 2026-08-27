@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.h2.jdbcx.JdbcDataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +27,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
@@ -61,16 +67,29 @@ class ComplaintEventServiceImplTest {
     private ComplaintEventServiceImpl eventService;
 
     @BeforeAll
-    static void pointDbUtilAtAnInMemoryDatabase() {
+    static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
         // addComment (with a toStatus) and updateStatus now run their paired DAO writes through
-        // DBUtil.executeInTransaction, which opens a real Connection - complaintEventDAO/complaintDAO
-        // are still plain Mockito mocks, so no real SQL executes against it, but DBUtil.getConnection()
-        // itself needs somewhere real to connect. See H2TestDbSupport in the dao module for the same
-        // pattern.
-        String url = "jdbc:h2:mem:complaint_event_service_test;DB_CLOSE_DELAY=-1";
-        System.setProperty("CO_DB_URL", url);
-        System.setProperty("CO_DB_USER", "sa");
-        System.setProperty("CO_DB_PASS", "");
+        // JDBCPersistenceManager#executeInTransaction, which opens a real Connection -
+        // complaintEventDAO/complaintDAO are still plain Mockito mocks, so no real SQL executes
+        // against it, but JDBCPersistenceManager.getConnection() itself needs somewhere real to
+        // connect. Same reflection-based DataSource injection as H2TestDbSupport in the dao module,
+        // since JDBCPersistenceManager only resolves its DataSource via JNDI.
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:complaint_event_service_test;DB_CLOSE_DELAY=-1");
+        dataSource.setUser("sa");
+        dataSource.setPassword("");
+        setManagerDataSource(dataSource);
+    }
+
+    @AfterAll
+    static void clearPersistenceManagerDataSource() throws Exception {
+        setManagerDataSource(null);
+    }
+
+    private static void setManagerDataSource(Object dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
     }
 
     @BeforeEach
@@ -167,9 +186,10 @@ class ComplaintEventServiceImplTest {
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
-        ComplaintEvent event = eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
+        ComplaintCommentCreateResponseBean event =
+                eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
-        assertEquals(atLimit, event.getComment());
+        assertEquals(atLimit, event.getMessage());
     }
 
     @Test
@@ -208,11 +228,11 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                "internal note", false, null);
+        ComplaintCommentCreateResponseBean event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+                "COMPLAINT_OFFICER", "internal note", false, null);
 
         assertEquals(false, event.isPublic());
-        assertEquals("internal note", event.getComment());
+        assertEquals("internal note", event.getMessage());
     }
 
     @Test
@@ -235,8 +255,8 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
 
-        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                "note", true, "IN_PROGRESS");
+        ComplaintCommentCreateResponseBean event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+                "COMPLAINT_OFFICER", "note", true, "IN_PROGRESS");
 
         assertEquals("OPEN", event.getFromStatus());
         assertEquals("IN_PROGRESS", event.getToStatus());
@@ -357,10 +377,10 @@ class ComplaintEventServiceImplTest {
                 .thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        Complaint result = eventService.updateStatus("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
-                "IN_PROGRESS", null);
+        ComplaintStatusUpdateResponseBean result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
+                "COMPLAINT_OFFICER", "IN_PROGRESS", null);
 
-        assertEquals("IN_PROGRESS", result.getStatus());
+        assertEquals("IN_PROGRESS", result.getToStatus());
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("OPEN", captor.getValue().getFromStatus());

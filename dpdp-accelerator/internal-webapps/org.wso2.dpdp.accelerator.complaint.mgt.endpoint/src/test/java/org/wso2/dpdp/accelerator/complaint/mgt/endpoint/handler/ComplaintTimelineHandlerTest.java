@@ -27,10 +27,11 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.TimelineListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
 
 import java.util.List;
 
@@ -122,7 +123,8 @@ class ComplaintTimelineHandlerTest {
         ComplaintAttachment forE1 = new ComplaintAttachment();
         forE1.setAttachmentId("a1");
         forE1.setComplaintEventId("e1");
-        when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1")).thenReturn(List.of(forE1));
+        when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
+                .thenReturn(List.of(ComplaintAttachmentResponseBean.from(forE1)));
 
         TimelineListResponseBean response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 

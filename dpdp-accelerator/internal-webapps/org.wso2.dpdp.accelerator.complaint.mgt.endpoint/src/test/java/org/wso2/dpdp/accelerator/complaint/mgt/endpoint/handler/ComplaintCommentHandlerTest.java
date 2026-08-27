@@ -25,11 +25,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintCommentCreateResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintMessageRequestBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,7 +67,7 @@ class ComplaintCommentHandlerTest {
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 true, "hello", "OPEN", "IN_PROGRESS", 100L);
         when(complaintEventService.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", "hello",
-                true, "IN_PROGRESS")).thenReturn(event);
+                true, "IN_PROGRESS")).thenReturn(ComplaintCommentCreateResponseBean.from(event));
 
         ComplaintCommentCreateResponseBean response =
                 handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
@@ -105,7 +105,8 @@ class ComplaintCommentHandlerTest {
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 false, "internal note", null, null, 100L);
         when(complaintEventService.addComment(eq(ORG_ID), eq("c1"), eq("officer1"), eq("Officer One"),
-                eq("COMPLAINT_OFFICER"), eq("internal note"), eq(false), isNull())).thenReturn(event);
+                eq("COMPLAINT_OFFICER"), eq("internal note"), eq(false), isNull()))
+                .thenReturn(ComplaintCommentCreateResponseBean.from(event));
 
         ComplaintCommentCreateResponseBean response =
                 handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
@@ -121,7 +122,7 @@ class ComplaintCommentHandlerTest {
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "user1", "User One", "USER", true, "hello",
                 "OPEN", "RESOLVED", 100L);
         when(complaintEventService.addComment(ORG_ID, "c1", "user1", "User One", "USER", "hello", true, "RESOLVED"))
-                .thenReturn(event);
+                .thenReturn(ComplaintCommentCreateResponseBean.from(event));
 
         ComplaintCommentCreateResponseBean response =
                 handler.addOwnComment(ORG_ID, "c1", "user1", "User One", request);

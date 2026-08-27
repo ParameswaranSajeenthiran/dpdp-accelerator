@@ -49,10 +49,10 @@ import java.util.Iterator;
  * is meant to serve - otherwise a token minted for a different application, but carrying the same
  * org-agnostic {@code complaints:*} scope strings, would be trusted here too.
  *
- * <p>Configuration is read the same way DBUtil reads [datasource.WSO2DPDP_DB] - via
- * ConfigProvider against deployment.toml's [dpdp_accelerator.consent_portal] table (the same
- * client_id the identity.extensions module auto-provisions per tenant - see that table's own
- * comment in wso2is-7.3.0-deployment.toml), with a system-property override beneath that.
+ * <p>Configuration is read via ConfigProvider against deployment.toml's
+ * [dpdp_accelerator.consent_portal] table (the same client_id the identity.extensions module
+ * auto-provisions per tenant - see that table's own comment in wso2is-7.3.0-deployment.toml),
+ * with a system-property override beneath that.
  *
  * <p>The human-readable {@code username} claim this class reads is not a default JWT access
  * token claim - it's only present because the DPDP Consent Portal application has the local

@@ -18,7 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface ComplaintAttachmentService {
      * passes) is visible there, false marks officer-internal evidence. actorUserId/actorRole
      * identify who performed the upload, the same as {@code ComplaintEventService#addComment}.
      */
-    List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
+    List<ComplaintAttachmentResponseBean> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName, String actorRole);
 
     /**
@@ -40,11 +41,11 @@ public interface ComplaintAttachmentService {
      * actorRole always USER). This is defense-in-depth alongside the handler's own ownership check
      * - the service must not rely solely on callers remembering to check first.
      */
-    List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId, String ownerUserId,
-            String ownerUserName, List<UploadedFile> files);
+    List<ComplaintAttachmentResponseBean> uploadOwnComplaintAttachments(String orgId, String complaintId,
+            String ownerUserId, String ownerUserName, List<UploadedFile> files);
 
     /** Metadata (no file content) for attachments bound to the complaint. */
-    List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId);
+    List<ComplaintAttachmentResponseBean> listAttachmentsForComplaint(String orgId, String complaintId);
 
     /**
      * Downloads an attachment including its file content. When restrictToPublicOnly is true (the
@@ -52,16 +53,16 @@ public interface ComplaintAttachmentService {
      * is how officer-internal evidence stays hidden from the Data Principal. Officer/admin callers
      * pass false and see every attachment regardless of isPublic.
      */
-    ComplaintAttachment downloadAttachment(String orgId, String complaintId, String attachmentId,
-            boolean restrictToPublicOnly);
+    ComplaintAttachmentDownloadResponseBean downloadAttachment(String orgId, String complaintId,
+            String attachmentId, boolean restrictToPublicOnly);
 
     /**
      * Same as {@code downloadAttachment(orgId, complaintId, attachmentId, true)}, for the /me/*
      * download endpoint - additionally verifies the complaint belongs to ownerUserId first, as
      * defense-in-depth alongside the handler's own ownership check.
      */
-    ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId, String ownerUserId,
-            String attachmentId);
+    ComplaintAttachmentDownloadResponseBean downloadOwnAttachment(String orgId, String complaintId,
+            String ownerUserId, String attachmentId);
 
     /** A single uploaded multipart file, decoupled from any particular HTTP framework's bean type. */
     class UploadedFile {

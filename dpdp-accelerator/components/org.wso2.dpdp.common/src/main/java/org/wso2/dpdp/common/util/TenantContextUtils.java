@@ -34,57 +34,34 @@ import java.util.regex.Pattern;
 public final class TenantContextUtils {
 
     private static final Pattern TENANT_PATH_SEGMENT = Pattern.compile("/t/([^/]+)/");
-    private static final String TENANT_USERNAME_SEPARATOR = "@";
 
     private TenantContextUtils() {
     }
 
     /**
      * Extracts the tenant domain from the first {@code /t/{tenant-domain}/} segment of
-     * {@code requestPath}, if present. Falls back to {@code defaultOrgId} when the path carries
-     * no such segment - e.g. a super-tenant request, or a caller that reached this endpoint
-     * without going through a tenant-qualified URL at all.
+     * {@code requestPath}, if present. Returns {@code null} when the path carries no such
+     * segment - e.g. a super-tenant request, or a caller that reached this endpoint without
+     * going through a tenant-qualified URL at all. Callers must treat {@code null} as "the URL
+     * made no tenant claim", not as "the caller claims the super tenant" - there is deliberately
+     * no default here, the same fail-closed convention {@code TokenIntrospectionClient} uses for
+     * the token's own org.
      *
      * <p><strong>This value is client-supplied and unauthenticated</strong> - it comes straight
      * off the URL, which the caller controls. It is only safe to use for routing/display; it must
-     * never be trusted as the caller's actual org without cross-checking it against
-     * {@link #extractOrgIdFromUsername} (or an equivalent authenticated claim) first.
+     * never be trusted as the caller's actual org without cross-checking it against an
+     * authenticated claim first.
      */
-    public static String extractOrgId(String requestPath, String defaultOrgId) {
+    public static String extractOrgId(String requestPath) {
         if (requestPath == null) {
-            return defaultOrgId;
+            return null;
         }
         Matcher matcher = TENANT_PATH_SEGMENT.matcher(requestPath);
         if (!matcher.find()) {
-            return defaultOrgId;
-        }
-        String tenantDomain = decode(matcher.group(1)).trim();
-        return tenantDomain.isEmpty() ? defaultOrgId : tenantDomain;
-    }
-
-    /**
-     * Extracts the tenant domain a WSO2-Carbon-style tenant-qualified username belongs to, e.g.
-     * {@code "alice@example.com"} resolves to {@code "example.com"}. A username with no
-     * {@code @tenant-domain} suffix (e.g. plain {@code "admin"}) belongs to the super tenant, so
-     * this returns {@code defaultOrgId} in that case.
-     *
-     * <p>Unlike {@link #extractOrgId}, the input here is expected to come from an
-     * already-authenticated source (e.g. an OAuth2 introspection response's {@code username}
-     * claim) - this is the trusted counterpart callers should verify a request's client-supplied
-     * org id against. Returns {@code null} when {@code username} itself is {@code null}, since
-     * the caller's tenant cannot be determined at all in that case - callers must treat that as
-     * "unverifiable", not as "super tenant".
-     */
-    public static String extractOrgIdFromUsername(String username, String defaultOrgId) {
-        if (username == null) {
             return null;
         }
-        int separatorIndex = username.lastIndexOf(TENANT_USERNAME_SEPARATOR);
-        if (separatorIndex < 0 || separatorIndex == username.length() - 1) {
-            return defaultOrgId;
-        }
-        String tenantDomain = username.substring(separatorIndex + 1).trim();
-        return tenantDomain.isEmpty() ? defaultOrgId : tenantDomain;
+        String tenantDomain = decode(matcher.group(1)).trim();
+        return tenantDomain.isEmpty() ? null : tenantDomain;
     }
 
     private static String decode(String value) {

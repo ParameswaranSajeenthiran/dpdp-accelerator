@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,8 +32,17 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.common.config.ConfigProvider;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,12 +75,22 @@ class ComplaintAttachmentServiceImplTest {
 
     @AfterEach
     void tearDown() {
-        System.clearProperty("CO_MAX_ATTACHMENT_SIZE_BYTES");
         System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
+        ConfigProvider.resetForTesting();
+        System.clearProperty("deployment.config.path");
     }
 
     private UploadedFile pdfFile(String name, int size) {
         return new UploadedFile(name, "application/pdf", new byte[size]);
+    }
+
+    private void useMaxAttachmentSizeBytes(Path tempDir, String maxSizeBytes) throws IOException {
+        Path tomlFile = tempDir.resolve("deployment.toml");
+        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
+            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
+        }
+        System.setProperty("deployment.config.path", tomlFile.toString());
+        ConfigProvider.resetForTesting();
     }
 
     // ---- uploadComplaintAttachments ----
@@ -128,8 +148,8 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize() {
-        System.setProperty("CO_MAX_ATTACHMENT_SIZE_BYTES", "5");
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize(@TempDir Path tempDir) throws IOException {
+        useMaxAttachmentSizeBytes(tempDir, "5");
 
         ComplaintException ex = assertThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
@@ -163,7 +183,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
 
-        List<ComplaintAttachment> result = attachmentService.uploadComplaintAttachments("org1", "c1",
+        List<ComplaintAttachmentResponseBean> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), false, "officer1", "Officer One",
                 "COMPLAINT_OFFICER");
 
@@ -179,7 +199,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
 
-        List<ComplaintAttachment> result = attachmentService.uploadComplaintAttachments("org1", "c1",
+        List<ComplaintAttachmentResponseBean> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), true, "user1", "User One", "USER");
 
         ArgumentCaptor<ComplaintEvent> eventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
@@ -232,7 +252,7 @@ class ComplaintAttachmentServiceImplTest {
         attachment.setSizeBytesOverride(123L);
         when(attachmentDAO.listAttachmentsForComplaint("org1", "c1")).thenReturn(List.of(attachment));
 
-        List<ComplaintAttachment> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
+        List<ComplaintAttachmentResponseBean> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
 
         assertEquals(1, result.size());
         assertEquals("a1", result.get(0).getAttachmentId());
@@ -243,7 +263,7 @@ class ComplaintAttachmentServiceImplTest {
     void listAttachmentsForComplaintReturnsEmptyWhenNoneExist() {
         when(attachmentDAO.listAttachmentsForComplaint("org1", "c1")).thenReturn(List.of());
 
-        List<ComplaintAttachment> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
+        List<ComplaintAttachmentResponseBean> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
 
         assertTrue(result.isEmpty());
     }
@@ -266,10 +286,11 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1, 2, 3}, false, 100L);
         when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.of(attachment));
 
-        ComplaintAttachment result = attachmentService.downloadAttachment("org1", "c1", "a1", false);
+        ComplaintAttachmentDownloadResponseBean result = attachmentService.downloadAttachment("org1", "c1", "a1",
+                false);
 
         assertEquals("a1", result.getAttachmentId());
-        assertEquals(3, result.getFileData().length);
+        assertEquals(3, Base64.getDecoder().decode(result.getContent()).length);
     }
 
     @Test
@@ -290,7 +311,8 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1}, true, 100L);
         when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.of(attachment));
 
-        ComplaintAttachment result = attachmentService.downloadAttachment("org1", "c1", "a1", true);
+        ComplaintAttachmentDownloadResponseBean result = attachmentService.downloadAttachment("org1", "c1", "a1",
+                true);
 
         assertEquals("a1", result.getAttachmentId());
     }
@@ -313,8 +335,8 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any())).thenReturn(true);
 
-        List<ComplaintAttachment> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1", "user1",
-                "User One", List.of(pdfFile("a.pdf", 10)));
+        List<ComplaintAttachmentResponseBean> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1",
+                "user1", "User One", List.of(pdfFile("a.pdf", 10)));
 
         assertEquals(1, result.size());
         assertTrue(result.get(0).isPublic());

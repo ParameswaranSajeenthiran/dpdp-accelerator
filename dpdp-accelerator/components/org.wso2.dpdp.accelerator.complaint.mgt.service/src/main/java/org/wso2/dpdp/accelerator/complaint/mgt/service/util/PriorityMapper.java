@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPriority;
+import org.wso2.dpdp.common.config.ConfigProvider;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,8 +35,9 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPri
  * ComplaintCategory to a default priority, and the set of its keys is also the set of valid
  * ComplaintCategory values (see ComplaintServiceImpl#isValidCategory). The mapping below is the
  * built-in default; it is replaced wholesale by the [categoryPriority] table in deployment.toml
- * when present, via configure() - see AppBootstrap#loadDeploymentConfig in the endpoint webapp
- * module, which is invoked once at servlet context startup by AppContextListener.
+ * when present, read once via {@link ConfigProvider#getTable(String)} at class-init time - no
+ * servlet-container bootstrap step is involved, matching ConfigProvider's own lazy,
+ * self-initializing style.
  *
  * <p>Deliberately a single JVM-wide mapping, not scoped per tenant: like ComplaintCategory itself,
  * "what priority does this category imply" is treated as an accelerator-wide classification
@@ -46,6 +48,10 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPri
 public class PriorityMapper {
 
     private static volatile Map<String, String> categoryToPriority = buildDefaultMapping();
+
+    static {
+        configure(ConfigProvider.getTable("categoryPriority"));
+    }
 
     private PriorityMapper() {
     }

@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
@@ -27,7 +28,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
@@ -45,7 +45,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean addComplaint(Complaint complaint) {
-        try (Connection conn = DBUtil.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return addComplaint(conn, complaint);
         } catch (SQLException e) {
             LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
@@ -88,53 +88,43 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public Optional<Complaint> getComplaintById(String complaintId, String orgId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.GET_COMPLAINT_BY_ID);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_COMPLAINT_BY_ID)) {
             ps.setString(1, complaintId);
             ps.setString(2, orgId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapResultSetToComplaint(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToComplaint(rs));
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error getting complaint by ID: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error getting complaint by ID: " + complaintId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return Optional.empty();
     }
 
     @Override
     public int countByReferenceIdPrefix(String orgId, String referenceIdLikePattern) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_FOR_YEAR_PREFIX);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_FOR_YEAR_PREFIX)) {
             ps.setString(1, orgId);
             ps.setString(2, referenceIdLikePattern);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error counting complaints by reference prefix for org: " + orgId, e);
             throw new ComplaintDAOException("Error counting complaints by reference prefix for org: " + orgId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return 0;
     }
 
     @Override
     public boolean updateStatus(String complaintId, String orgId, String newStatus, long updatedTime) {
-        try (Connection conn = DBUtil.getConnection()) {
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
             return updateStatus(conn, complaintId, orgId, newStatus, updatedTime);
         } catch (SQLException e) {
             LOG.error("Error updating status for complaint: " + LogSanitizer.sanitize(complaintId), e);
@@ -161,9 +151,6 @@ public class ComplaintDAOImpl implements ComplaintDAO {
     public List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
             int offset, String sort, int[] totalOut) {
         List<Complaint> complaints = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
 
         StringBuilder sql = new StringBuilder(QueryConstants.LIST_COMPLAINTS_BASE);
         StringBuilder countSql = new StringBuilder(QueryConstants.COUNT_COMPLAINTS_BASE);
@@ -210,46 +197,41 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         }
         sql.append("ORDER BY ").append(orderBy).append(" LIMIT ? OFFSET ?");
 
-        try {
-            conn = DBUtil.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
 
             // sql and countSql share the same WHERE clause/params built above: COUNT(*) first for the
             // total (written back via the totalOut out-param), then the LIMIT/OFFSET query for
             // the actual page. Both must run against the same filters so the reported total
             // matches what's actually being paged through.
-            PreparedStatement countPs = null;
-            ResultSet countRs = null;
-            try {
-                countPs = conn.prepareStatement(countSql.toString());
+            try (PreparedStatement countPs = conn.prepareStatement(countSql.toString())) {
                 for (int i = 0; i < params.size(); i++) {
                     countPs.setObject(i + 1, params.get(i));
                 }
-                countRs = countPs.executeQuery();
-                if (countRs.next() && totalOut != null && totalOut.length > 0) {
-                    totalOut[0] = countRs.getInt(1);
+                try (ResultSet countRs = countPs.executeQuery()) {
+                    if (countRs.next() && totalOut != null && totalOut.length > 0) {
+                        totalOut[0] = countRs.getInt(1);
+                    }
                 }
-            } finally {
-                DBUtil.closeAll(null, countPs, countRs);
             }
 
-            ps = conn.prepareStatement(sql.toString());
-            int idx = 1;
-            for (Object param : params) {
-                ps.setObject(idx++, param);
-            }
-            // Order must match the "LIMIT ? OFFSET ?" placeholders appended to sql above.
-            ps.setInt(idx++, limit);
-            ps.setInt(idx, offset);
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int idx = 1;
+                for (Object param : params) {
+                    ps.setObject(idx++, param);
+                }
+                // Order must match the "LIMIT ? OFFSET ?" placeholders appended to sql above.
+                ps.setInt(idx++, limit);
+                ps.setInt(idx, offset);
 
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                complaints.add(mapResultSetToComplaint(rs));
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        complaints.add(mapResultSetToComplaint(rs));
+                    }
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error listing complaints for org: " + orgId, e);
             throw new ComplaintDAOException("Error listing complaints for org: " + orgId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return complaints;
     }
@@ -260,43 +242,39 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         int awaitingInternalReviewCount = 0;
         int resolvedCount = 0;
 
-        Connection conn = null;
-        PreparedStatement statusPs = null;
-        ResultSet statusRs = null;
-        PreparedStatement breachedPs = null;
-        ResultSet breachedRs = null;
-        try {
-            conn = DBUtil.getConnection();
+        try (Connection conn = JDBCPersistenceManager.getConnection()) {
 
-            statusPs = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_BY_STATUS);
-            statusPs.setString(1, orgId);
-            statusRs = statusPs.executeQuery();
-            while (statusRs.next()) {
-                String status = statusRs.getString(1);
-                int count = statusRs.getInt(2);
-                if (ComplaintStatus.OPEN.name().equals(status) || ComplaintStatus.IN_PROGRESS.name().equals(status)) {
-                    openCount += count;
-                } else if (ComplaintStatus.AWAITING_INTERNAL_REVIEW.name().equals(status)) {
-                    awaitingInternalReviewCount += count;
-                } else if (ComplaintStatus.RESOLVED.name().equals(status)) {
-                    resolvedCount += count;
+            try (PreparedStatement statusPs = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_BY_STATUS)) {
+                statusPs.setString(1, orgId);
+                try (ResultSet statusRs = statusPs.executeQuery()) {
+                    while (statusRs.next()) {
+                        String status = statusRs.getString(1);
+                        int count = statusRs.getInt(2);
+                        if (ComplaintStatus.OPEN.name().equals(status)
+                                || ComplaintStatus.IN_PROGRESS.name().equals(status)) {
+                            openCount += count;
+                        } else if (ComplaintStatus.AWAITING_INTERNAL_REVIEW.name().equals(status)) {
+                            awaitingInternalReviewCount += count;
+                        } else if (ComplaintStatus.RESOLVED.name().equals(status)) {
+                            resolvedCount += count;
+                        }
+                        // WAITING_ON_CLIENT has no dedicated tile - not counted in any bucket here.
+                    }
                 }
-                // WAITING_ON_CLIENT has no dedicated tile - not counted in any bucket here.
             }
 
-            breachedPs = conn.prepareStatement(QueryConstants.COUNT_SLA_BREACHED_COMPLAINTS);
-            breachedPs.setString(1, orgId);
-            breachedPs.setLong(2, now);
-            breachedRs = breachedPs.executeQuery();
-            int slaBreachedCount = breachedRs.next() ? breachedRs.getInt(1) : 0;
-
-            return new ComplaintQueueStats(openCount, awaitingInternalReviewCount, resolvedCount, slaBreachedCount);
+            try (PreparedStatement breachedPs = conn.prepareStatement(QueryConstants.COUNT_SLA_BREACHED_COMPLAINTS)) {
+                breachedPs.setString(1, orgId);
+                breachedPs.setLong(2, now);
+                try (ResultSet breachedRs = breachedPs.executeQuery()) {
+                    int slaBreachedCount = breachedRs.next() ? breachedRs.getInt(1) : 0;
+                    return new ComplaintQueueStats(openCount, awaitingInternalReviewCount, resolvedCount,
+                            slaBreachedCount);
+                }
+            }
         } catch (SQLException e) {
             LOG.error("Error computing queue stats for org: " + orgId, e);
             throw new ComplaintDAOException("Error computing queue stats for org: " + orgId, e);
-        } finally {
-            DBUtil.closeAll(null, breachedPs, breachedRs);
-            DBUtil.closeAll(conn, statusPs, statusRs);
         }
     }
 

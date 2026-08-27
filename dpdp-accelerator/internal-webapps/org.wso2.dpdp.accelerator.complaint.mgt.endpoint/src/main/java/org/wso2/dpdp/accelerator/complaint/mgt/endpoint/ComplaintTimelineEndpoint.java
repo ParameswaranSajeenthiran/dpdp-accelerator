@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.TimelineListResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.GET;

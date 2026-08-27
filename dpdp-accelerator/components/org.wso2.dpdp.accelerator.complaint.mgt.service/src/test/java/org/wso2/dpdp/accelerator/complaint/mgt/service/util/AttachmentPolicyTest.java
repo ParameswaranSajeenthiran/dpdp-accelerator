@@ -20,8 +20,16 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.wso2.dpdp.common.config.ConfigProvider;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,11 +37,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AttachmentPolicyTest {
 
-    private static final String PROP = "CO_MAX_ATTACHMENT_SIZE_BYTES";
-
     @AfterEach
-    void clearSystemProperty() {
-        System.clearProperty(PROP);
+    void resetConfigProvider() {
+        ConfigProvider.resetForTesting();
+        System.clearProperty("deployment.config.path");
+    }
+
+    private void useDeploymentToml(Path tempDir, String maxSizeBytes) throws IOException {
+        Path tomlFile = tempDir.resolve("deployment.toml");
+        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
+            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
+        }
+        System.setProperty("deployment.config.path", tomlFile.toString());
+        ConfigProvider.resetForTesting();
     }
 
     @ParameterizedTest
@@ -60,21 +76,19 @@ class AttachmentPolicyTest {
 
     @Test
     void defaultMaxSizeIsTenMegabytes() {
-        System.clearProperty(PROP);
-
         assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
     }
 
     @Test
-    void usesConfiguredMaxSizeWhenPropertySet() {
-        System.setProperty(PROP, "2048");
+    void usesConfiguredMaxSizeWhenDeploymentTomlSetsIt(@TempDir Path tempDir) throws IOException {
+        useDeploymentToml(tempDir, "2048");
 
         assertEquals(2048L, AttachmentPolicy.getMaxSizeBytes());
     }
 
     @Test
-    void fallsBackToDefaultWhenPropertyIsNotAValidNumber() {
-        System.setProperty(PROP, "not-a-number");
+    void fallsBackToDefaultWhenConfiguredValueIsNotAValidNumber(@TempDir Path tempDir) throws IOException {
+        useDeploymentToml(tempDir, "not-a-number");
 
         assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
     }

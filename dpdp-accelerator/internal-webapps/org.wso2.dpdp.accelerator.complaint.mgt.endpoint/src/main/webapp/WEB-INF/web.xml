@@ -23,10 +23,6 @@
 
     <display-name>WSO2 DPDP Complaint Server</display-name>
 
-    <listener>
-        <listener-class>org.wso2.dpdp.accelerator.complaint.mgt.endpoint.config.AppContextListener</listener-class>
-    </listener>
-
     <servlet>
         <servlet-name>ComplaintServerJerseyServlet</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>

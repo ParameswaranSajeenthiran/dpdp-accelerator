@@ -20,12 +20,12 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil;
 import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
@@ -43,11 +43,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
 
     @Override
     public boolean addAttachment(ComplaintAttachment attachment) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT_ATTACHMENT);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT_ATTACHMENT)) {
             ps.setString(1, attachment.getAttachmentId());
             ps.setString(2, attachment.getOrgId());
             ps.setString(3, attachment.getComplaintId());
@@ -67,42 +64,35 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
                     + LogSanitizer.sanitize(attachment.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding attachment for complaint: " + attachment.getComplaintId(),
                     e);
-        } finally {
-            DBUtil.closeAll(conn, ps, null);
         }
     }
 
     @Override
     public Optional<ComplaintAttachment> getAttachmentMetadataById(String attachmentId, String orgId,
             String complaintId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_METADATA_BY_ID);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_METADATA_BY_ID)) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                ComplaintAttachment a = new ComplaintAttachment();
-                a.setAttachmentId(rs.getString("ATTACHMENT_ID"));
-                a.setOrgId(rs.getString("ORG_ID"));
-                a.setComplaintId(rs.getString("COMPLAINT_ID"));
-                a.setComplaintEventId(rs.getString(DAOConstants.COLUMN_COMPLAINT_EVENT_ID));
-                a.setFileName(rs.getString("FILE_NAME"));
-                a.setContentType(rs.getString("FILE_CONTENT_TYPE"));
-                a.setSizeBytesOverride(rs.getLong("SIZE_BYTES")); // fileData left null - blob not loaded
-                a.setPublic(rs.getBoolean("IS_PUBLIC"));
-                a.setCreatedTime(rs.getLong("CREATED_TIME"));
-                return Optional.of(a);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ComplaintAttachment a = new ComplaintAttachment();
+                    a.setAttachmentId(rs.getString("ATTACHMENT_ID"));
+                    a.setOrgId(rs.getString("ORG_ID"));
+                    a.setComplaintId(rs.getString("COMPLAINT_ID"));
+                    a.setComplaintEventId(rs.getString(DAOConstants.COLUMN_COMPLAINT_EVENT_ID));
+                    a.setFileName(rs.getString("FILE_NAME"));
+                    a.setContentType(rs.getString("FILE_CONTENT_TYPE"));
+                    a.setSizeBytesOverride(rs.getLong("SIZE_BYTES")); // fileData left null - blob not loaded
+                    a.setPublic(rs.getBoolean("IS_PUBLIC"));
+                    a.setCreatedTime(rs.getLong("CREATED_TIME"));
+                    return Optional.of(a);
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error getting attachment metadata by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment metadata by ID: " + attachmentId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return Optional.empty();
     }
@@ -110,24 +100,19 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public Optional<ComplaintAttachment> getAttachmentWithDataById(String attachmentId, String orgId,
             String complaintId) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_WITH_DATA_BY_ID);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_WITH_DATA_BY_ID)) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return Optional.of(mapResultSetToAttachment(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToAttachment(rs));
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error getting attachment with data by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment with data by ID: " + attachmentId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return Optional.empty();
     }
@@ -135,33 +120,28 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
         List<ComplaintAttachment> attachments = new ArrayList<>();
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = DBUtil.getConnection();
-            ps = conn.prepareStatement(QueryConstants.LIST_ATTACHMENT_METADATA_BY_COMPLAINT);
+        try (Connection conn = JDBCPersistenceManager.getConnection();
+                PreparedStatement ps = conn.prepareStatement(QueryConstants.LIST_ATTACHMENT_METADATA_BY_COMPLAINT)) {
             ps.setString(1, orgId);
             ps.setString(2, complaintId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                ComplaintAttachment a = new ComplaintAttachment();
-                a.setAttachmentId(rs.getString("ATTACHMENT_ID"));
-                a.setOrgId(rs.getString("ORG_ID"));
-                a.setComplaintId(rs.getString("COMPLAINT_ID"));
-                a.setComplaintEventId(rs.getString(DAOConstants.COLUMN_COMPLAINT_EVENT_ID));
-                a.setFileName(rs.getString("FILE_NAME"));
-                a.setContentType(rs.getString("FILE_CONTENT_TYPE"));
-                a.setSizeBytesOverride(rs.getLong("SIZE_BYTES")); // size only, no real bytes loaded
-                a.setPublic(rs.getBoolean("IS_PUBLIC"));
-                a.setCreatedTime(rs.getLong("CREATED_TIME"));
-                attachments.add(a);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ComplaintAttachment a = new ComplaintAttachment();
+                    a.setAttachmentId(rs.getString("ATTACHMENT_ID"));
+                    a.setOrgId(rs.getString("ORG_ID"));
+                    a.setComplaintId(rs.getString("COMPLAINT_ID"));
+                    a.setComplaintEventId(rs.getString(DAOConstants.COLUMN_COMPLAINT_EVENT_ID));
+                    a.setFileName(rs.getString("FILE_NAME"));
+                    a.setContentType(rs.getString("FILE_CONTENT_TYPE"));
+                    a.setSizeBytesOverride(rs.getLong("SIZE_BYTES")); // size only, no real bytes loaded
+                    a.setPublic(rs.getBoolean("IS_PUBLIC"));
+                    a.setCreatedTime(rs.getLong("CREATED_TIME"));
+                    attachments.add(a);
+                }
             }
         } catch (SQLException e) {
             LOG.error("Error listing attachments for complaint: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error listing attachments for complaint: " + complaintId, e);
-        } finally {
-            DBUtil.closeAll(conn, ps, rs);
         }
         return attachments;
     }

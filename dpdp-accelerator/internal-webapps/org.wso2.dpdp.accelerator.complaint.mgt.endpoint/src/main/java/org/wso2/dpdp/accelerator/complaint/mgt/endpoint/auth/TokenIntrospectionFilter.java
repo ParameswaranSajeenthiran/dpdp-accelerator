@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.common.util.TenantContextUtils;
@@ -95,7 +94,8 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
         // The servlet spec guarantees the pre-forward URI survives in this standard request
         // attribute, so read from there first and only fall back to UriInfo's path for a request
         // that reached this webapp some other way (e.g. a direct, unqualified super-tenant call).
-        // Falls back further to DAOConstants.DEFAULT_ORG_ID when neither carries a /t/.../ segment.
+        // Neither carries a default: a path with no /t/.../ segment resolves to null, meaning the
+        // URL made no tenant claim at all - see the check below for what that implies.
         //
         // IMPORTANT: this value is client-supplied and UNAUTHENTICATED - the caller can put
         // anything here. It must never be assigned to the principal directly; it only tells us
@@ -105,7 +105,7 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
                 : (String) httpServletRequest.getAttribute(FORWARD_REQUEST_URI_ATTRIBUTE);
         String pathToInspect = forwardedRequestUri != null ? forwardedRequestUri
                 : requestContext.getUriInfo().getRequestUri().getPath();
-        String requestedOrgId = TenantContextUtils.extractOrgId(pathToInspect, DAOConstants.DEFAULT_ORG_ID);
+        String requestedOrgId = TenantContextUtils.extractOrgId(pathToInspect);
 
         AuthenticatedPrincipal principal;
         try {
@@ -119,13 +119,20 @@ public class TokenIntrospectionFilter implements ContainerRequestFilter {
             throw new ComplaintException(ComplaintErrorCode.UNAUTHENTICATED, "Bearer token is not active.");
         }
 
-        // The token's own org (derived server-side from the introspection response) must match
-        // the org the caller's URL claims to be acting against. A token that is perfectly valid
-        // for its own tenant must not be usable to read or write another tenant's complaints
-        // merely by changing the /t/{tenant-domain}/ segment of the URL. A null org here means
-        // the token's tenant could not be determined at all (e.g. introspection didn't return a
-        // username claim) - that is treated as unverifiable, not as a pass.
-        if (principal.getOrgId() == null || !principal.getOrgId().equals(requestedOrgId)) {
+        // The token's own org (derived server-side from the introspection response) must always
+        // be resolvable - a null org here means the token's tenant could not be determined at all
+        // (e.g. introspection didn't return an org_handle claim), which is unverifiable, not a pass.
+        if (principal.getOrgId() == null) {
+            throw new ComplaintException(ComplaintErrorCode.FORBIDDEN,
+                    "Bearer token does not belong to the requested tenant.");
+        }
+
+        // A null requestedOrgId means the URL made no tenant claim at all (no /t/.../ segment) -
+        // there is nothing to cross-check in that case, so the token's own org is trusted as-is.
+        // When the URL does claim a tenant, it must match the token's own org: a token that is
+        // perfectly valid for its own tenant must not be usable to read or write another tenant's
+        // complaints merely by changing the /t/{tenant-domain}/ segment of the URL.
+        if (requestedOrgId != null && !principal.getOrgId().equals(requestedOrgId)) {
             throw new ComplaintException(ComplaintErrorCode.FORBIDDEN,
                     "Bearer token does not belong to the requested tenant.");
         }

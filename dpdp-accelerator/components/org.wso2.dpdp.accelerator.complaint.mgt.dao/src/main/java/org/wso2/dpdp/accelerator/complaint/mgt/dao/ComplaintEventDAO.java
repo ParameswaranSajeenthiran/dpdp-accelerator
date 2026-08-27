@@ -33,7 +33,7 @@ public interface ComplaintEventDAO {
     /**
      * Same as {@link #addEvent(ComplaintEvent)}, run against a caller-owned connection so it can be
      * composed with other writes into one
-     * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.util.DBUtil#executeInTransaction} call.
+     * {@link org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager#executeInTransaction} call.
      */
     boolean addEvent(Connection conn, ComplaintEvent event) throws SQLException;
 

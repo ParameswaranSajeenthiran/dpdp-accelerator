@@ -28,64 +28,33 @@ class TenantContextUtilsTest {
     @Test
     void extractsTheTenantDomainFromATenantQualifiedPath() {
         assertEquals("example.com",
-                TenantContextUtils.extractOrgId("/t/example.com/api/dpdp/complaints/v1/complaints", "carbon.super"));
+                TenantContextUtils.extractOrgId("/t/example.com/api/dpdp/complaints/v1/complaints"));
     }
 
     @Test
     void extractsTheTenantDomainWhenTheTenantSegmentIsNotAtTheStartOfThePath() {
         assertEquals("example.com",
-                TenantContextUtils.extractOrgId("/api/dpdp/complaints/t/example.com/complaints", "carbon.super"));
+                TenantContextUtils.extractOrgId("/api/dpdp/complaints/t/example.com/complaints"));
     }
 
     @Test
-    void fallsBackToTheDefaultWhenThePathHasNoTenantSegment() {
-        assertEquals("carbon.super",
-                TenantContextUtils.extractOrgId("/api/dpdp/complaints/v1/complaints", "carbon.super"));
+    void returnsNullWhenThePathHasNoTenantSegment() {
+        assertNull(TenantContextUtils.extractOrgId("/api/dpdp/complaints/v1/complaints"));
     }
 
     @Test
-    void fallsBackToTheDefaultWhenThePathIsNull() {
-        assertEquals("carbon.super", TenantContextUtils.extractOrgId(null, "carbon.super"));
+    void returnsNullWhenThePathIsNull() {
+        assertNull(TenantContextUtils.extractOrgId(null));
     }
 
     @Test
     void decodesAPercentEncodedTenantDomain() {
         assertEquals("acme corp",
-                TenantContextUtils.extractOrgId("/t/acme%20corp/api/dpdp/complaints", "carbon.super"));
+                TenantContextUtils.extractOrgId("/t/acme%20corp/api/dpdp/complaints"));
     }
 
     @Test
     void doesNotMatchAtSegmentWhoseNameMerelyStartsWithT() {
-        assertEquals("carbon.super",
-                TenantContextUtils.extractOrgId("/tenants/example.com/complaints", "carbon.super"));
-    }
-
-    // ---- extractOrgIdFromUsername ----
-
-    @Test
-    void extractsTheTenantDomainFromATenantQualifiedUsername() {
-        assertEquals("example.com",
-                TenantContextUtils.extractOrgIdFromUsername("alice@example.com", "carbon.super"));
-    }
-
-    @Test
-    void usesTheLastAtSignWhenTheLocalPartIsItselfAnEmailAddress() {
-        assertEquals("example.com",
-                TenantContextUtils.extractOrgIdFromUsername("alice@corp.io@example.com", "carbon.super"));
-    }
-
-    @Test
-    void fallsBackToTheDefaultForAnUnqualifiedSuperTenantUsername() {
-        assertEquals("carbon.super", TenantContextUtils.extractOrgIdFromUsername("admin", "carbon.super"));
-    }
-
-    @Test
-    void fallsBackToTheDefaultWhenTheUsernameEndsWithAtSign() {
-        assertEquals("carbon.super", TenantContextUtils.extractOrgIdFromUsername("admin@", "carbon.super"));
-    }
-
-    @Test
-    void returnsNullWhenTheUsernameIsNullSinceTheTenantCannotBeDetermined() {
-        assertNull(TenantContextUtils.extractOrgIdFromUsername(null, "carbon.super"));
+        assertNull(TenantContextUtils.extractOrgId("/tenants/example.com/complaints"));
     }
 }

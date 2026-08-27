@@ -18,15 +18,14 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintAttachmentResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.ComplaintTimelineEntryResponseBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.PageMetadataBean;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.bean.TimelineListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintTimelineEntryResponseBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataBean;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseBean;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
@@ -89,8 +88,7 @@ public class ComplaintTimelineHandler {
                 .listAttachmentsForComplaint(orgId, complaintId)
                 .stream()
                 .filter(attachment -> attachment.getComplaintEventId() != null)
-                .collect(Collectors.groupingBy(ComplaintAttachment::getComplaintEventId,
-                        Collectors.mapping(ComplaintAttachmentResponseBean::from, Collectors.toList())));
+                .collect(Collectors.groupingBy(ComplaintAttachmentResponseBean::getComplaintEventId));
 
         List<ComplaintTimelineEntryResponseBean> beanList = new ArrayList<>();
         for (ComplaintEvent entry : entries) {
