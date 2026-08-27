@@ -186,17 +186,12 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.annotations.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
@@ -483,7 +478,6 @@
         <servlet.api.version>4.0.1</servlet.api.version>
         <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <javax.validation.api.version>2.0.1.Final</javax.validation.api.version>
-        <jackson.version>2.16.1</jackson.version>
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
         <slf4j.version>1.7.36</slf4j.version>
@@ -534,6 +528,9 @@
              compile against the same versions it will actually run against. -->
         <cxf.version>3.6.12</cxf.version>
         <jackson.databind.version>2.21.4</jackson.databind.version>
+        <!-- jackson-annotations trails the core/databind/jaxrs release train and is only ever
+             published at major.minor granularity (no patch digit), unlike its siblings above. -->
+        <jackson.annotations.version>2.21</jackson.annotations.version>
         <jackson.jaxrs.version>2.21.2</jackson.jaxrs.version>
         <swagger.annotations.version>1.6.14</swagger.annotations.version>
         <axiom.version>1.2.11-wso2v16</axiom.version>
