@@ -352,3 +352,33 @@ jobs:
         if: always()
         run: |
           "${IS_HOME}/bin/wso2server.sh" stop || true
+
+  # `e2e` itself cannot be the required status check: a job skipped by its own `if:`
+  # (which is what happens on every pull_request_target event until someone applies
+  # Action/trigger-e2e) reports a "skipped" conclusion, and GitHub's branch-protection
+  # rulesets treat "skipped" as satisfying a required check - so marking `e2e` required
+  # would let every PR merge without it ever having run. This job exists purely to be
+  # the thing a ruleset actually requires: it always runs on pull_request_target
+  # (`if: always()` so a skipped `e2e` doesn't skip this too) and fails unless `e2e`
+  # itself reports success, so it's red until the label is applied and E2E passes.
+  #
+  # This job must be selected as the required status check for `main` in Settings ->
+  # Rules -> Rulesets - that repo-admin step can't be done from this workflow file.
+  e2e-required:
+    name: E2E integration tests (required)
+    if: always() && github.event_name == 'pull_request_target'
+    needs: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check E2E actually ran and passed
+        run: |
+          if [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "::error::E2E has not passed on this commit (status: ${{ needs.e2e.result }})." \
+                 "Apply the 'Action/trigger-e2e' label to run it - a maintainer must do this" \
+                 "after reviewing the diff, since it runs with real WSO2 subscription credentials." \
+                 "The label is removed automatically on every new push, so it must be re-applied" \
+                 "after each commit."
+            exit 1
+          fi
+          echo "E2E passed."
