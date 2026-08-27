@@ -18,16 +18,98 @@
 
 package org.wso2.dpdp.accelerator.common.util;
 
+import org.mockito.Mockito;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.expectThrows;
 
+/**
+ * {@code dataSource} and {@code instance} are both process-wide static singletons on
+ * {@link JDBCPersistenceManager}, so every test resets both - a mock datasource is pre-set
+ * before each test (letting {@code getInstance()} construct successfully without a real JNDI
+ * context), and the one test that exercises the JNDI-failure path clears it again first.
+ */
 public class DatabaseUtilsTest {
+
+    private DataSource dataSource;
+
+    @BeforeMethod
+    public void setUpDefaultDataSource() throws Exception {
+        dataSource = mock(DataSource.class);
+        setStaticDataSource(dataSource);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        setStaticDataSource(null);
+        setStaticInstance(null);
+    }
+
+    @Test
+    public void getDBConnectionDisablesAutoCommitAndReturnsTheConnection() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+
+        Connection returned = DatabaseUtils.getDBConnection();
+
+        assertSame(returned, connection);
+        verify(connection).setAutoCommit(false);
+    }
+
+    @Test
+    public void getDBConnectionWrapsFailureWhenDatasourceIsUnavailable() throws Exception {
+
+        setStaticDataSource(null);
+        setStaticInstance(null);
+
+        expectThrows(DPDPCommonRuntimeException.class, DatabaseUtils::getDBConnection);
+    }
+
+    @Test
+    public void commitTransactionCommitsTheConnection() throws SQLException {
+
+        Connection connection = mock(Connection.class);
+        DatabaseUtils.commitTransaction(connection);
+        verify(connection).commit();
+    }
+
+    @Test
+    public void commitTransactionSwallowsSqlException() throws SQLException {
+
+        Connection connection = mock(Connection.class);
+        doThrow(new SQLException("boom")).when(connection).commit();
+        DatabaseUtils.commitTransaction(connection);
+    }
+
+    @Test
+    public void rollbackTransactionRollsBackTheConnection() throws SQLException {
+
+        Connection connection = mock(Connection.class);
+        DatabaseUtils.rollbackTransaction(connection);
+        verify(connection).rollback();
+    }
+
+    @Test
+    public void rollbackTransactionSwallowsSqlException() throws SQLException {
+
+        Connection connection = mock(Connection.class);
+        doThrow(new SQLException("boom")).when(connection).rollback();
+        DatabaseUtils.rollbackTransaction(connection);
+    }
 
     @Test
     public void closeConnectionClosesANonNullConnection() throws SQLException {
@@ -49,5 +131,17 @@ public class DatabaseUtilsTest {
         Connection connection = mock(Connection.class);
         doThrow(new SQLException("boom")).when(connection).close();
         DatabaseUtils.closeConnection(connection);
+    }
+
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 }

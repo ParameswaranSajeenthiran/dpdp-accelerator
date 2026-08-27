@@ -61,7 +61,7 @@ public final class DatabaseUtils {
         try {
             connection.close();
         } catch (SQLException e) {
-            LOG.error("Error while closing a DPDP consent history DB connection.", e);
+            LOG.error("Error while closing a DPDP DB connection.", e);
         }
     }
 }

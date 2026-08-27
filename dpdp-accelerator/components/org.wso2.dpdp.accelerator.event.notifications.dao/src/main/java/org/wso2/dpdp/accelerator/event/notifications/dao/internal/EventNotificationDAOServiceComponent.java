@@ -51,8 +51,6 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
 
     private static final Log LOG = LogFactory.getLog(EventNotificationDAOServiceComponent.class);
 
-    private volatile DPDPConfigurationService configurationService;
-
     @Activate
     protected void activate() {
 
@@ -60,7 +58,7 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
         dataHolder.setTopicDAO(new TopicDAOImpl());
         dataHolder.setSubscriptionDAO(new SubscriptionDAOImpl());
         dataHolder.setEventDAO(new EventDAOImpl());
-        dataHolder.setDeliveryDAO(new DeliveryDAOImpl(configurationService));
+        dataHolder.setDeliveryDAO(new DeliveryDAOImpl(dataHolder.getConfigurationService()));
         dataHolder.setDeliveryAckDAO(new DeliveryAckDAOImpl());
         LOG.debug("Event Notification DAO services are activated successfully.");
     }
@@ -80,13 +78,14 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
     )
     protected void setDPDPConfigurationService(DPDPConfigurationService configurationService) {
 
-        this.configurationService = configurationService;
+        EventNotificationDAODataHolder.getInstance().setConfigurationService(configurationService);
     }
 
     protected void unsetDPDPConfigurationService(DPDPConfigurationService configurationService) {
 
-        if (this.configurationService == configurationService) {
-            this.configurationService = null;
+        EventNotificationDAODataHolder dataHolder = EventNotificationDAODataHolder.getInstance();
+        if (dataHolder.getConfigurationService() == configurationService) {
+            dataHolder.setConfigurationService(null);
         }
     }
 

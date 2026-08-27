@@ -35,13 +35,6 @@ export const IS_SCOPES = {
   ELEMENT_VIEW: 'internal_consent_mgt_element_view',
   ELEMENT_CREATE: 'internal_consent_mgt_element_create',
   ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
-  // Requested so tokens carry them once the portal wires up the history API, but not yet
-  // consumed anywhere - this is expected until the accelerator's own /api/dpdp/consent-mgt/v1 wired into the
-  // frontend.
-  STATUS_HISTORY_VIEW_ANY: 'consent:status-history:view:any',
-  STATUS_HISTORY_VIEW_SELF: 'consent:status-history:view:self',
-  HISTORY_VIEW_ANY: 'consent:history:view:any',
-  HISTORY_VIEW_SELF: 'consent:history:view:self',
 } as const
 
 export const EVENT_SCOPES = {
@@ -51,6 +44,19 @@ export const EVENT_SCOPES = {
   EVENT_TOPICS_WRITE: 'notifications:topics:write',
   EVENTS_READ: 'notifications:events:read',
   EVENTS_WRITE: 'notifications:events:write',
+} as const
+
+/**
+ * Scopes for the accelerator's own {@code /api/dpdp/consent-mgt/v1} history API - the
+ * server registers these via DPDPApiResourceProvisioningUtil, not IS itself. Requested so
+ * tokens carry them once the portal wires up the history API, but not yet consumed anywhere -
+ * this is expected until that API is wired into the frontend.
+ */
+export const CONSENT_HISTORY_SCOPES = {
+  STATUS_HISTORY_VIEW_ANY: 'consent:status-history:view:any',
+  STATUS_HISTORY_VIEW_SELF: 'consent:status-history:view:self',
+  HISTORY_VIEW_ANY: 'consent:history:view:any',
+  HISTORY_VIEW_SELF: 'consent:history:view:self',
 } as const
 
 /** Any one of these scopes is enough to unlock the area it guards. */

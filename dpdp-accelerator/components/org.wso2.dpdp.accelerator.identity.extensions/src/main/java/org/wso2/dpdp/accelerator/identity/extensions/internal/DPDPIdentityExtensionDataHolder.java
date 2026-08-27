@@ -29,6 +29,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 
 /**
  * Singleton holder for the OSGi services this module's listener needs, populated by
@@ -49,6 +50,7 @@ public final class DPDPIdentityExtensionDataHolder {
     private PrivilegedConsentManager privilegedConsentManager;
     private ConsentHistoryService consentHistoryService;
     private ConsentExpiryService consentExpiryService;
+    private TopicService topicService;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -167,5 +169,15 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setConsentExpiryService(ConsentExpiryService consentExpiryService) {
 
         this.consentExpiryService = consentExpiryService;
+    }
+
+    public TopicService getTopicService() {
+
+        return topicService;
+    }
+
+    public void setTopicService(TopicService topicService) {
+
+        this.topicService = topicService;
     }
 }

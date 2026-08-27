@@ -23,28 +23,33 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DefaultTopic;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Reconciles the system-defined Event Notification topics for one tenant.
+ * Reconciles the system-defined Event Notification topics for one tenant. Every method here
+ * assumes it is already running inside the correct tenant's {@code PrivilegedCarbonContext}
+ * flow; that setup lives in the caller ({@link DPDPIdentityExtensionTenantMgtListener}), not
+ * here.
  */
-class DefaultTopicProvisioner {
+public final class EventNotificationTopicProvisioner {
 
-    private static final Log LOG = LogFactory.getLog(DefaultTopicProvisioner.class);
+    private static final Log LOG = LogFactory.getLog(EventNotificationTopicProvisioner.class);
 
-    private final TopicService topicService;
+    private EventNotificationTopicProvisioner() {
 
-    DefaultTopicProvisioner(TopicService topicService) {
-        if (topicService == null) {
-            throw new IllegalArgumentException("TopicService cannot be null.");
-        }
-        this.topicService = topicService;
     }
 
-    void provision(String orgId) throws StratosException {
-        String sanitizedOrgId = orgId == null ? null : orgId.replaceAll("[\r\n]", "");
+    /**
+     * Ensures every {@link DefaultTopic} exists for the given tenant, attempting all of them
+     * even if one fails, then reporting every failure together.
+     */
+    public static void provisionSystemTopics(String orgId) throws StratosException {
+
+        TopicService topicService = DPDPIdentityExtensionDataHolder.getInstance().getTopicService();
+        String sanitizedOrgId = sanitize(orgId);
         List<String> failedTopics = new ArrayList<>();
         Exception firstFailure = null;
 
@@ -67,5 +72,10 @@ class DefaultTopicProvisioner {
             throw new StratosException("Failed to provision DPDP system topics " + failedTopics
                     + " for tenant: " + sanitizedOrgId, firstFailure);
         }
+    }
+
+    private static String sanitize(String value) {
+
+        return value == null ? null : value.replaceAll("[\r\n]", "");
     }
 }

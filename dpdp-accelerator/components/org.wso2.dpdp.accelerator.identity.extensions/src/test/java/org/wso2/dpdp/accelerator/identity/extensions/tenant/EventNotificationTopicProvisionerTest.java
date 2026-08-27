@@ -25,31 +25,32 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DefaultTopic;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
-public class DefaultTopicProvisionerTest {
+public class EventNotificationTopicProvisionerTest {
 
     @Mock
     private TopicService topicService;
 
-    private DefaultTopicProvisioner provisioner;
-
     @BeforeMethod
     public void setUp() {
+
         MockitoAnnotations.openMocks(this);
-        provisioner = new DefaultTopicProvisioner(topicService);
+        DPDPIdentityExtensionDataHolder.getInstance().setTopicService(topicService);
     }
 
     @Test
-    public void testProvisionEnsuresEveryDefaultTopic() throws Exception {
-        provisioner.provision("tenant.example");
+    public void testProvisionSystemTopicsEnsuresEveryDefaultTopic() throws Exception {
+
+        EventNotificationTopicProvisioner.provisionSystemTopics("tenant.example");
 
         for (DefaultTopic defaultTopic : DefaultTopic.values()) {
             verify(topicService).ensureSystemTopic(
@@ -58,14 +59,15 @@ public class DefaultTopicProvisionerTest {
     }
 
     @Test
-    public void testProvisionAttemptsAllTopicsBeforeReportingFailure() throws Exception {
+    public void testProvisionSystemTopicsAttemptsAllTopicsBeforeReportingFailure() throws Exception {
+
         doThrow(new IllegalStateException("database unavailable"))
                 .when(topicService).ensureSystemTopic(
                         "tenant.example", DefaultTopic.CONSENT_UPDATE.getName(),
                         DefaultTopic.CONSENT_UPDATE.getDescription());
 
         try {
-            provisioner.provision("tenant.example");
+            EventNotificationTopicProvisioner.provisionSystemTopics("tenant.example");
             fail("Expected system topic provisioning to fail.");
         } catch (StratosException e) {
             assertTrue(e.getMessage().contains(DefaultTopic.CONSENT_UPDATE.getName()));
@@ -74,10 +76,5 @@ public class DefaultTopicProvisionerTest {
 
         verify(topicService, times(DefaultTopic.values().length))
                 .ensureSystemTopic(anyString(), anyString(), anyString());
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testConstructorRejectsMissingTopicService() {
-        new DefaultTopicProvisioner(null);
     }
 }

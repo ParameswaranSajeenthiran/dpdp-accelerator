@@ -89,7 +89,43 @@ public class DPDPConfigParserTest {
         DPDPConfigParser parser = DPDPConfigParser.getInstance();
         assertTrue(parser.isConsentHistoryEnabled());
         assertTrue(parser.isConsentHistorySnapshotEnabled());
-        assertEquals(parser.getConsentHistoryDataSourceName(), "jdbc/WSO2DPDP_DB");
+    }
+
+    @Test
+    public void fallsBackToConsentExpiryDefaultsWhenKeysAreAbsent() {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        assertTrue(parser.isConsentExpiryEnabled());
+        assertEquals(parser.getConsentExpiryCronValue(), "0 0 0 * * ?");
+        assertEquals(parser.getConsentExpiryBatchSize(), 100);
+    }
+
+    @Test
+    public void readsConfiguredEventNotificationValuesFromXml() {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        assertEquals(parser.getEventNotificationThreadPoolSize(), 8);
+        assertEquals(parser.getEventNotificationBaseBackoffSeconds(), 12L);
+        assertEquals(parser.getEventNotificationMaxRetries(), 7);
+        assertTrue(!parser.isEventNotificationHttpCallbackUrlAllowed());
+        assertEquals(parser.getEventNotificationDeliveryWorkerBatchSize(), 25);
+        assertEquals(parser.getEventNotificationDeliveryWorkerPollSeconds(), 9);
+        assertEquals(parser.getEventNotificationStuckInFlightThresholdSeconds(), 15);
+        assertEquals(parser.getEventNotificationMaxVerificationResponseBodyBytes(), 8192);
+        assertEquals(parser.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds(), 90);
+        assertEquals(parser.getEventNotificationBackgroundWorkerInitialDelaySeconds(), 11);
+        assertEquals(parser.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 31);
+        assertEquals(parser.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 21);
+        assertEquals(parser.getEventNotificationWorkerShutdownTimeoutSeconds(), 6);
+    }
+
+    @Test
+    public void configurationServiceDelegatesConsentExpiryToTheSameParser() {
+
+        DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
+        assertTrue(service.isConsentExpiryEnabled());
+        assertEquals(service.getConsentExpiryCronValue(), "0 0 0 * * ?");
+        assertEquals(service.getConsentExpiryBatchSize(), 100);
     }
 
     @Test

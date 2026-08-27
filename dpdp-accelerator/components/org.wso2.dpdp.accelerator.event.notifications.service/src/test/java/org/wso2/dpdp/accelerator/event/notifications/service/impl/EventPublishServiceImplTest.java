@@ -19,11 +19,11 @@
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import org.mockito.ArgumentCaptor;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
@@ -36,6 +36,8 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.sql.Connection;
 import java.util.Arrays;
@@ -74,23 +76,40 @@ public class EventPublishServiceImplTest {
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
     private EventPublishServiceImpl publishService;
-    private TransactionManager transactionManager;
     private Connection connection;
 
     @BeforeMethod
-    public void setUp() {
+    public void setUp() throws Exception {
         eventDAO = mock(EventDAO.class);
         topicDAO = mock(TopicDAO.class);
         fanOutService = mock(EventFanOutService.class);
         deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
         deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
-        transactionManager = mock(TransactionManager.class);
         connection = mock(Connection.class);
-        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
-                ((ConnectionCallback<?>) invocation.getArgument(0)).execute(connection));
+        DataSource dataSource = mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        setStaticInstance(null);
+        setStaticDataSource(dataSource);
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
-                transactionManager);
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        setStaticDataSource(null);
+        setStaticInstance(null);
+    }
+
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 
     @Test

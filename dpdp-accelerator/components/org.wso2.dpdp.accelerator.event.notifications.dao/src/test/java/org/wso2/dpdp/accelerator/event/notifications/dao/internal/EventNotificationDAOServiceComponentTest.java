@@ -42,6 +42,8 @@ public class EventNotificationDAOServiceComponentTest {
         EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
         component.setDPDPConfigurationService(configurationService);
 
+        assertSame(EventNotificationDAODataHolder.getInstance().getConfigurationService(), configurationService);
+
         component.activate();
 
         assertNotNull(component.getTopicDAO());
@@ -62,15 +64,32 @@ public class EventNotificationDAOServiceComponentTest {
         assertNull(component.getEventDAO());
         assertNull(component.getDeliveryDAO());
         assertNull(component.getDeliveryAckDAO());
+        assertNull(EventNotificationDAODataHolder.getInstance().getConfigurationService());
+
         component.unsetDPDPConfigurationService(configurationService);
     }
 
     @Test
-    public void dataHolderShouldExposeTheComponentManagedDAOs() {
+    public void unsetDPDPConfigurationServiceOnlyClearsWhenTheInstanceMatches() {
+
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
+        component.setDPDPConfigurationService(configurationService);
+
+        component.unsetDPDPConfigurationService(mock(DPDPConfigurationService.class));
+        assertSame(EventNotificationDAODataHolder.getInstance().getConfigurationService(), configurationService);
+
+        component.unsetDPDPConfigurationService(configurationService);
+        assertNull(EventNotificationDAODataHolder.getInstance().getConfigurationService());
+    }
+
+    @Test
+    public void dataHolderShouldExposeTheComponentManagedDAOsAndConfigurationService() {
 
         EventNotificationDAODataHolder dataHolder = EventNotificationDAODataHolder.getInstance();
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
         EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
-        component.setDPDPConfigurationService(mock(DPDPConfigurationService.class));
+        component.setDPDPConfigurationService(configurationService);
         component.activate();
 
         assertSame(dataHolder.getTopicDAO(), component.getTopicDAO());
@@ -78,5 +97,6 @@ public class EventNotificationDAOServiceComponentTest {
         assertSame(dataHolder.getEventDAO(), component.getEventDAO());
         assertSame(dataHolder.getDeliveryDAO(), component.getDeliveryDAO());
         assertSame(dataHolder.getDeliveryAckDAO(), component.getDeliveryAckDAO());
+        assertSame(dataHolder.getConfigurationService(), configurationService);
     }
 }

@@ -58,11 +58,11 @@ public interface DPDPConfigurationService {
 
     int getEventNotificationWorkerShutdownTimeoutSeconds();
 
+    boolean isEventNotificationSystemTopicsAutoCreateEnabled();
+
     boolean isConsentHistoryEnabled();
 
     boolean isConsentHistorySnapshotEnabled();
-
-    String getConsentHistoryDataSourceName();
 
     boolean isConsentExpiryEnabled();
 

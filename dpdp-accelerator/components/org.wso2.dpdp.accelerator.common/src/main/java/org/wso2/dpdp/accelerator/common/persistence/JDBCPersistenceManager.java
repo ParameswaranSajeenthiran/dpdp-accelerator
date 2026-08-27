@@ -1,13 +1,13 @@
-/*
+/**
  * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
- *
+ * <p>
  * WSO2 LLC. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -15,27 +15,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.wso2.dpdp.accelerator.common.persistence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
 
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-
 /**
- * Looks up the JNDI datasource named in {@code dpdp-accelerator.xml}'s {@code ConsentHistory}
- * config and hands out connections from it. Mirrors the Financial Services accelerator's own
- * {@code JDBCPersistenceManager} exactly - double-checked-locking singleton, lazy datasource
- * lookup, autocommit off on every connection handed out.
+ * Resolves the shared DPDP datasource and hands out JDBC connections to accelerator modules.
+ * Mirrors the Financial Services accelerator's own {@code JDBCPersistenceManager} - a lean
+ * singleton with manual commit/rollback, no generic transactional-callback wrapping.
  */
 public final class JDBCPersistenceManager {
 
@@ -69,18 +64,25 @@ public final class JDBCPersistenceManager {
             if (dataSource != null) {
                 return;
             }
-            String dataSourceName = DPDPConfigParser.getInstance().getConsentHistoryDataSourceName();
             try {
-                Context context = new InitialContext();
-                dataSource = (DataSource) context.lookup(dataSourceName);
-                LOG.debug("Looked up the DPDP consent history datasource: " + dataSourceName);
-            } catch (NamingException e) {
-                throw new DPDPCommonRuntimeException("Could not look up the DPDP consent history datasource: "
-                        + dataSourceName, e);
+                InitialContext context = new InitialContext();
+                try {
+                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
+                } catch (Exception e) {
+                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_DPDP_JNDI_ENV_NAME);
+                }
+                LOG.debug("Resolved the shared DPDP datasource: " + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
+            } catch (Exception e) {
+                throw new DPDPCommonRuntimeException("Unable to resolve the shared DPDP datasource ["
+                        + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME + "]", e);
             }
         }
     }
 
+    /**
+     * Returns a connection for the shared DPDP datasource, with autocommit disabled - the
+     * caller owns the full transaction lifecycle (commit/rollback/close).
+     */
     public Connection getDBConnection() {
 
         try {
@@ -88,25 +90,34 @@ public final class JDBCPersistenceManager {
             connection.setAutoCommit(false);
             return connection;
         } catch (SQLException e) {
-            throw new DPDPCommonRuntimeException("Error while obtaining a DPDP consent history DB connection.", e);
+            throw new DPDPCommonRuntimeException("Error while obtaining a DPDP DB connection.", e);
         }
+    }
+
+    public DataSource getDataSource() {
+
+        return dataSource;
     }
 
     public void commitTransaction(Connection connection) {
 
         try {
-            connection.commit();
+            if (connection != null) {
+                connection.commit();
+            }
         } catch (SQLException e) {
-            LOG.error("Error while committing the DPDP consent history transaction.", e);
+            LOG.error("An error occurred while committing a DPDP transaction.", e);
         }
     }
 
     public void rollbackTransaction(Connection connection) {
 
         try {
-            connection.rollback();
+            if (connection != null) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
-            LOG.error("Error while rolling back the DPDP consent history transaction.", e);
+            LOG.error("An error occurred while rolling back a DPDP transaction.", e);
         }
     }
 }

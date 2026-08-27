@@ -97,6 +97,13 @@
         {% else %}
         <WorkerShutdownTimeoutSeconds>5</WorkerShutdownTimeoutSeconds>
         {% endif %}
+        <SystemTopics>
+            {% if dpdp_accelerator.event_notifications.system_topics_auto_create_enabled is defined %}
+            <AutoCreateEnabled>{{dpdp_accelerator.event_notifications.system_topics_auto_create_enabled}}</AutoCreateEnabled>
+            {% else %}
+            <AutoCreateEnabled>true</AutoCreateEnabled>
+            {% endif %}
+        </SystemTopics>
     </EventNotifications>
     <ConsentHistory>
         {% if dpdp_accelerator.consent_history.enabled is defined %}
@@ -108,11 +115,6 @@
         <SnapshotEnabled>{{dpdp_accelerator.consent_history.snapshot_enabled}}</SnapshotEnabled>
         {% else %}
         <SnapshotEnabled>true</SnapshotEnabled>
-        {% endif %}
-        {% if dpdp_accelerator.consent_history.data_source_name is defined %}
-        <DataSourceName>{{dpdp_accelerator.consent_history.data_source_name}}</DataSourceName>
-        {% else %}
-        <DataSourceName>jdbc/WSO2DPDP_DB</DataSourceName>
         {% endif %}
     </ConsentHistory>
     <ConsentExpiry>

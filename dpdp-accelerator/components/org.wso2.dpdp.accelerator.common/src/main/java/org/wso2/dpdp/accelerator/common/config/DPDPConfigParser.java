@@ -131,6 +131,63 @@ public final class DPDPConfigParser {
         return Optional.ofNullable((String) configuration.get(key));
     }
 
+    private int getInt(String configKey, int defaultValue) {
+
+        return getConfigurationAsString(configKey).map(value -> parseInt(configKey, value)).orElse(defaultValue);
+    }
+
+    private int parseInt(String configKey, String value) {
+
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
+        }
+    }
+
+    private int getPositiveInt(String configKey, int defaultValue) {
+
+        int value = getInt(configKey, defaultValue);
+        if (value <= 0) {
+            throw new IllegalStateException("DPDP configuration must be positive: " + configKey);
+        }
+        return value;
+    }
+
+    private int getNonNegativeInt(String configKey, int defaultValue) {
+
+        int value = getInt(configKey, defaultValue);
+        if (value < 0) {
+            throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
+        }
+        return value;
+    }
+
+    private long getNonNegativeLong(String configKey, long defaultValue) {
+
+        long value = getConfigurationAsString(configKey).map(text -> {
+            try {
+                return Long.parseLong(text);
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
+            }
+        }).orElse(defaultValue);
+        if (value < 0) {
+            throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
+        }
+        return value;
+    }
+
+    private boolean getValidatedBoolean(String configKey, boolean defaultValue) {
+
+        return getConfigurationAsString(configKey).map(value -> {
+            if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+                throw new IllegalStateException("Invalid boolean DPDP configuration: " + configKey);
+            }
+            return Boolean.parseBoolean(value);
+        }).orElse(defaultValue);
+    }
+
     public boolean isConsentPortalProvisioningEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED)
@@ -155,16 +212,96 @@ public final class DPDPConfigParser {
                 .map(Boolean::parseBoolean).orElse(true);
     }
 
-    public String getConsentHistoryDataSourceName() {
-
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_DATA_SOURCE_NAME)
-                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME);
-    }
-
     public boolean isConsentExpiryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_ENABLED)
                 .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public boolean isEventNotificationSystemTopicsAutoCreateEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_SYSTEM_TOPICS_AUTO_CREATE_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public int getEventNotificationThreadPoolSize() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE);
+    }
+
+    public long getEventNotificationBaseBackoffSeconds() {
+
+        return getNonNegativeLong(DPDPCommonConstants.EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS);
+    }
+
+    public int getEventNotificationMaxRetries() {
+
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_RETRIES,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_RETRIES);
+    }
+
+    public boolean isEventNotificationHttpCallbackUrlAllowed() {
+
+        return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL);
+    }
+
+    public int getEventNotificationDeliveryWorkerBatchSize() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE);
+    }
+
+    public int getEventNotificationDeliveryWorkerPollSeconds() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS);
+    }
+
+    public int getEventNotificationStuckInFlightThresholdSeconds() {
+
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS);
+    }
+
+    public int getEventNotificationMaxVerificationResponseBodyBytes() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
+    }
+
+    public int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds() {
+
+        return getNonNegativeInt(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
+    }
+
+    public int getEventNotificationBackgroundWorkerInitialDelaySeconds() {
+
+        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS);
+    }
+
+    public int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds() {
+
+        return getPositiveInt(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS);
+    }
+
+    public int getEventNotificationPendingSubscriptionRecoveryBatchSize() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE);
+    }
+
+    public int getEventNotificationWorkerShutdownTimeoutSeconds() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
     }
 
     public String getConsentExpiryCronValue() {

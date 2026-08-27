@@ -42,7 +42,17 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public boolean addDeliveryAck(WebhookDeliveryAck ack) {
-        return DatabaseUtils.executeInTransaction(conn -> addDeliveryAck(conn, ack));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addDeliveryAck(conn, ack);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private boolean addDeliveryAck(Connection conn, WebhookDeliveryAck ack) {
@@ -65,25 +75,28 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
 
     @Override
     public Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(String deliveryId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
-            ps.setString(1, deliveryId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new WebhookDeliveryAck(
-                            rs.getString(EventNotificationDBColumns.ACK_ID),
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT),
-                            rs.getString(EventNotificationDBColumns.COMPLETION_STATUS),
-                            rs.getString(EventNotificationDBColumns.COMPLETION_EVIDENCE)
-                    ));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
+                ps.setString(1, deliveryId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(new WebhookDeliveryAck(
+                                rs.getString(EventNotificationDBColumns.ACK_ID),
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT),
+                                rs.getString(EventNotificationDBColumns.COMPLETION_STATUS),
+                                rs.getString(EventNotificationDBColumns.COMPLETION_EVIDENCE)
+                        ));
+                    }
                 }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_DELIVERY_ACK_BY_DELIVERY_ID, deliveryId), e);
             }
-            return Optional.empty();
-          } catch (SQLException e) {
-              throw new EventNotificationDataAccessException(
-                      String.format(EventNotificationCommonConstants.ERROR_GETTING_DELIVERY_ACK_BY_DELIVERY_ID, deliveryId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 }

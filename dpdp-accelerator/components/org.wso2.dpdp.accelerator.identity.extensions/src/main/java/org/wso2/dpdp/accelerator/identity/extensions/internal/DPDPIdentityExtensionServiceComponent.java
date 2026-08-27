@@ -44,6 +44,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobActivator;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
@@ -296,5 +297,23 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the Consent Expiry Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConsentExpiryService(null);
+    }
+
+    @Reference(
+            service = TopicService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetTopicService"
+    )
+    protected void setTopicService(TopicService topicService) {
+
+        LOG.debug("Setting the Topic Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setTopicService(topicService);
+    }
+
+    protected void unsetTopicService(TopicService topicService) {
+
+        LOG.debug("Unsetting the Topic Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setTopicService(null);
     }
 }

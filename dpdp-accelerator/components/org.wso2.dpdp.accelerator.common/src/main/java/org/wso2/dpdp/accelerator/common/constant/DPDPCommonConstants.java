@@ -53,11 +53,25 @@ public final class DPDPCommonConstants {
             "EventNotifications.PendingSubscriptionRecoveryBatchSize";
     public static final String EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS =
             "EventNotifications.WorkerShutdownTimeoutSeconds";
+    public static final String EVENT_NOTIFICATIONS_SYSTEM_TOPICS_AUTO_CREATE_ENABLED =
+            "EventNotifications.SystemTopics.AutoCreateEnabled";
+
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = 4;
+    public static final long DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = 5L;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_MAX_RETRIES = 5;
+    public static final boolean DEFAULT_EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL = true;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE = 50;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS = 5;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS = 10;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES = 4096;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS = 60;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS = 10;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS = 30;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE = 20;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS = 5;
 
     public static final String CONSENT_HISTORY_ENABLED = "ConsentHistory.Enabled";
     public static final String CONSENT_HISTORY_SNAPSHOT_ENABLED = "ConsentHistory.SnapshotEnabled";
-    public static final String CONSENT_HISTORY_DATA_SOURCE_NAME = "ConsentHistory.DataSourceName";
-    public static final String DEFAULT_CONSENT_HISTORY_DATA_SOURCE_NAME = "jdbc/WSO2DPDP_DB";
 
     public static final String CONSENT_EXPIRY_ENABLED = "ConsentExpiry.Enabled";
     public static final String CONSENT_EXPIRY_CRON_VALUE = "ConsentExpiry.CronValue";
