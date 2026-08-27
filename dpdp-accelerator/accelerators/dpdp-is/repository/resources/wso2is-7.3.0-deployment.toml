@@ -133,25 +133,6 @@ http_method = "all"
 [tenant_context.rewrite]
 custom_webapps = ["/consent-portal/", "/api/dpdp/complaints/"]
 
-# The complaint-mgt endpoint is a plain JAX-RS webapp, not part of Identity
-# Server's own API resource framework, so Carbon's session/valve-based
-# "secured" default does not know how to authenticate a request against it -
-# it would demand a Carbon session or Basic auth credentials the browser never
-# has. Each route below instead has Carbon's own valve enforce OAuth2 bearer
-# auth plus the exact complaints:* scope that route requires, per
-# complaint-server-API.yaml - /me/* routes require the :self scope, the plain
-# /complaints/* (officer/admin) routes require the :any scope. This is
-# defense-in-depth alongside - not a replacement for - the endpoint module's
-# own TokenIntrospectionFilter/ScopeAuthorizationFilter, which independently
-# validates the token and re-checks the same scopes in-process (see
-# ComplaintScopeRegistry). Ordered most-specific-context first, since a
-# request matches the first entry whose context and http_method both match.
-#
-# GET .../complaints/categories and GET .../me/complaints/categories aren't
-# listed separately: they fall through to the single-path-segment
-# {complaintId} pattern below, which happens to require the same scope
-# (read:self / read:any) either way.
-
 # ---- /me/complaints/* (Data Principal, :self scopes) ----
 [[resource.access_control]]
 context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments/[^/]+"
