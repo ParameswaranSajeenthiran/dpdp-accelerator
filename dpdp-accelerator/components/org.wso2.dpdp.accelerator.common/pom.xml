@@ -94,7 +94,6 @@
                         <exclude>**/*Constants.class</exclude>
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
-                        <!-- Requires a live JNDI InitialContext, not reproducible in a plain unit test. -->
                         <exclude>**/persistence/JDBCPersistenceManager.class</exclude>
                     </excludes>
                 </configuration>

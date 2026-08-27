@@ -19,16 +19,14 @@
 package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error;
 
 /**
- * Codes are {@code CH-<HTTP status><sequence>} - the status is readable straight off the code
- * without cross-referencing this class, and CH keeps it unambiguous which module raised it
- * alongside other accelerator modules' own error codes.
+ * Transport-layer error codes returned by the Consent History endpoint.
  */
 public final class ConsentHistoryErrorCodes {
 
-    public static final String INVALID_PARAMETER = "CH-4001";
-    public static final String FORBIDDEN_NOT_OWNER = "CH-4031";
-    public static final String NOT_FOUND = "CH-4041";
-    public static final String SERVER_ERROR = "CH-5001";
+    public static final String INVALID_PARAMETER = "CH-00001";
+    public static final String FORBIDDEN_NOT_OWNER = "CH-00002";
+    public static final String NOT_FOUND = "CH-00003";
+    public static final String SERVER_ERROR = "CH-00004";
 
     private ConsentHistoryErrorCodes() {
 

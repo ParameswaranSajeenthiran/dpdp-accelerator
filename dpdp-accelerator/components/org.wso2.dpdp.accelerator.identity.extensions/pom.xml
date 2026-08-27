@@ -154,8 +154,6 @@
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
                         <exclude>**/*TenantMgtListener.class</exclude>
-                        <!-- Requires a live PrivilegedCarbonContext and OSGi-injected consent-mgt
-                             services, not reproducible in a plain unit test. -->
                         <exclude>**/*ConsentHistoryListener.class</exclude>
                         <exclude>**/*ConsentExpiryReconciler.class</exclude>
                         <!-- Needs a live Quartz Scheduler and/or the carbon config directory. -->
