@@ -26,6 +26,11 @@ import ElementDetailsPage from './features/catalog/ElementDetailsPage'
 import ElementListPage from './features/catalog/ElementListPage'
 import PurposeDetailsPage from './features/catalog/PurposeDetailsPage'
 import PurposeListPage from './features/catalog/PurposeListPage'
+import SubscriptionsPage from './features/events/SubscriptionsPage'
+import SubscriptionDetailsPage from './features/events/SubscriptionDetailsPage'
+import TopicsPage from './features/events/TopicsPage'
+import EventsPage from './features/events/EventsPage'
+import EventDetailsPage from './features/events/EventDetailsPage'
 import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegistryPage'
 import ConsentDetailsPage from './features/my-consents/ConsentDetailsPage'
 import ConsentRegistryPage from './features/my-consents/ConsentRegistryPage'
@@ -230,6 +235,46 @@ function App(): React.JSX.Element {
             element={
               <AuthorizedRoute scope={REQUIRED_SCOPES.ELEMENTS_READ}>
                 <ElementDetailsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.EVENTS_READ}>
+                <EventsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/topics"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.EVENT_TOPICS_READ}>
+                <TopicsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/subscriptions"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ}>
+                <SubscriptionsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/subscriptions/:id"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ}>
+                <SubscriptionDetailsPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/events/:id"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.EVENTS_READ}>
+                <EventDetailsPage />
               </AuthorizedRoute>
             }
           />

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="dpdp-event-notifications-endpoint-test-suite">
+    <test name="dpdp-event-notifications-endpoint-tests">
+        <packages>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.endpoint.api"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.endpoint.handler"/>
+            <package name="org.wso2.dpdp.accelerator.event.notifications.endpoint.exception"/>
+        </packages>
+    </test>
+</suite>

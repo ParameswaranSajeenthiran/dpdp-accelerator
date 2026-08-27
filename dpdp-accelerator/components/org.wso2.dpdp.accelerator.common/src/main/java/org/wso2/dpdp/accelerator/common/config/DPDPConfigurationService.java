@@ -31,4 +31,30 @@ public interface DPDPConfigurationService {
     boolean isConsentPortalProvisioningEnabled();
 
     String getConsentPortalClientId();
+
+    int getEventNotificationThreadPoolSize();
+
+    long getEventNotificationBaseBackoffSeconds();
+
+    int getEventNotificationMaxRetries();
+
+    boolean isEventNotificationHttpCallbackUrlAllowed();
+
+    int getEventNotificationDeliveryWorkerBatchSize();
+
+    int getEventNotificationDeliveryWorkerPollSeconds();
+
+    int getEventNotificationStuckInFlightThresholdSeconds();
+
+    int getEventNotificationMaxVerificationResponseBodyBytes();
+
+    int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds();
+
+    int getEventNotificationBackgroundWorkerInitialDelaySeconds();
+
+    int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds();
+
+    int getEventNotificationPendingSubscriptionRecoveryBatchSize();
+
+    int getEventNotificationWorkerShutdownTimeoutSeconds();
 }
