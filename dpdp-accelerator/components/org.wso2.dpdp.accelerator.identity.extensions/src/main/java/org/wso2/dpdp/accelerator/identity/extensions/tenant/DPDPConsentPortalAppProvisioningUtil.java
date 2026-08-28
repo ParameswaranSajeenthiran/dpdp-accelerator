@@ -123,10 +123,6 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
-        // Opaque (UUID) access tokens - matching IS My Account/Console and the pattern
-        // ConsentHistorySelfApi's requireCallerOwnsConsent() follows. Every complaint endpoint
-        // resolves the caller from PrivilegedCarbonContext, which Carbon's own valve pipeline
-        // populates for every request - there is nothing to decode or introspect locally.
         dto.setTokenType("Default");
         dto.setTokenBindingType(COOKIE);
         dto.setTokenBindingValidationEnabled(true);
