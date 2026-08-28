@@ -21,7 +21,11 @@ import path from 'node:path'
 import { test as base, type Browser, type Page, type Request } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { LoginPage } from '../pages/LoginPage'
-import { authHeadersFromPersonaState, type PersonaAuthState } from '../utils/authStorage'
+import {
+  authHeadersFromPersonaState,
+  type PersonaAuthState,
+  type PersonaStorageState,
+} from '../utils/authStorage'
 import { consentPurposesApiUrl, env, type Persona, type PersonaName } from '../utils/env'
 
 /**
@@ -312,6 +316,32 @@ export async function getPersonaState(
 }
 
 /**
+ * Drops the servlet container's own `JSESSIONID` cookies from a captured session, keeping
+ * everything else (notably `commonAuthId`, IS's SSO session, which is what lets a reused context
+ * sign in silently).
+ *
+ * This is what makes the suite safe to run in parallel. The portal's sign-in handoff parks the
+ * authorization code in the webapp's HTTP SESSION - index.jsp forwards the code to /authenticate,
+ * home.jsp parks it, auth.jsp hands it over once and clears it so a reload cannot replay it (see
+ * the portal's web.xml). That is correct anti-replay behaviour for a real browser, which never
+ * shares one JSESSIONID across two windows mid-sign-in. But `storageState` captures
+ * `JSESSIONID path=/consent-portal`, so without this filter every context built here replayed the
+ * SAME server-side session: N concurrent contexts meant N concurrent callbacks writing and
+ * clearing one shared parked code, and whichever ones lost that race came back without a usable
+ * code and silently landed on the default route instead of the one the test asked for. Serially
+ * the flows never overlap, which is why it only ever showed up with more than one worker.
+ *
+ * Each context now gets its own HTTP session and does its own handoff, while still reusing the
+ * IS-side SSO session so no credentials are re-entered.
+ */
+function withoutServletSessionCookies(state: PersonaStorageState): PersonaStorageState {
+  return {
+    ...state,
+    cookies: state.cookies.filter((cookie) => cookie.name !== 'JSESSIONID'),
+  }
+}
+
+/**
  * Builds an already-authenticated page for a persona whose `PersonaAuthState` the caller already
  * has - split out of `loginAs` below for the one place outside these fixtures that calls
  * `getPersonaState` directly (the ownership-isolation test in
@@ -336,13 +366,33 @@ export async function pageForPersonaState(
   // to be passed explicitly or relative goto() calls break and the self-signed cert kills every
   // navigation.
   const context = await browser.newContext({
-    storageState: personaState.storageState,
+    storageState: withoutServletSessionCookies(personaState.storageState),
     baseURL: env.portalNavigationBaseUrl,
     ignoreHTTPSErrors: env.ignoreHttpsErrors,
   })
   const page = await context.newPage()
-  await page.goto('/', { waitUntil: 'networkidle' })
-  await ensureSignedIn(page, persona)
+
+  // ensureSignedIn is armed BEFORE navigating, not after. Reusing a cached storageState means IS
+  // satisfies the SPA's sign-in redirect silently, so the token arrives and the first Bearer
+  // request goes out while the goto below is still settling to networkidle. Starting the watch
+  // afterwards would miss it and then wait 30s for a request that has already been made.
+  // loginAndCaptureState is the opposite case and needs no such care: on the run's one real login
+  // the page parks on the login form, so nothing can be missed while it navigates.
+  const signedIn = ensureSignedIn(page, persona)
+  // Keeps a goto failure from surfacing as an unhandled rejection on this promise; the await
+  // below is still what reports it.
+  signedIn.catch(() => undefined)
+
+  // "./", never "/" - a leading slash REPLACES baseURL's path (see the long note in utils/env.ts),
+  // so goto('/') here landed on the Identity Server root, which redirects to the CONSOLE rather
+  // than to the portal. That masked itself serially, because the Console emits Bearer requests
+  // too: the wait was satisfied by the wrong application, and the real portal sign-in happened
+  // later on the test's own first goto(). For a persona with no Console access it was worse than
+  // wasteful - the Console bounced to /console/unauthorized without ever issuing a Bearer request,
+  // so the wait never settled and the test died on its timeout. That race gets much easier to lose
+  // under worker contention, which is what made parallel runs flaky.
+  await page.goto('./', { waitUntil: 'networkidle' })
+  await signedIn
   return page
 }
 

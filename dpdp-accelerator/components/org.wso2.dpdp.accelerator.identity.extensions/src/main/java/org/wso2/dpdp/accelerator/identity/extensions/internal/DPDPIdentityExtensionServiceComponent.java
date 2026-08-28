@@ -29,21 +29,24 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.core.ServerStartupObserver;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
-import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
-import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
- * Registers {@link DPDPIdentityExtensionTenantMgtListener} for future tenants, and provisions
- * the super tenant directly here since {@code onTenantCreate} never fires for it.
+ * Registers {@link DPDPIdentityExtensionTenantMgtListener} for future tenants, and a
+ * {@link DPDPServerStartupObserver} that provisions the super tenant once the whole server has
+ * finished starting - since {@code onTenantCreate} never fires for it, and provisioning it
+ * directly here in {@code @Activate} would race the consent-mgt v2 API-resource registration that
+ * a mandatory {@code @Reference} on {@link APIResourceManager} does not wait for. See
+ * {@link DPDPServerStartupObserver} for the full explanation.
  */
 @Component(
         name = "org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionServiceComponent",
@@ -53,8 +56,9 @@ public class DPDPIdentityExtensionServiceComponent {
 
     private static final Log LOG = LogFactory.getLog(DPDPIdentityExtensionServiceComponent.class);
 
-    // Tracked so deactivate() can unregister it and avoid a duplicate on reactivation.
+    // Tracked so deactivate() can unregister them and avoid duplicates on reactivation.
     private ServiceRegistration<TenantMgtListener> tenantMgtListenerRegistration;
+    private ServiceRegistration<ServerStartupObserver> serverStartupObserverRegistration;
 
     @Activate
     protected void activate(ComponentContext context) {
@@ -62,18 +66,10 @@ public class DPDPIdentityExtensionServiceComponent {
         BundleContext bundleContext = context.getBundleContext();
         tenantMgtListenerRegistration = bundleContext.registerService(TenantMgtListener.class,
                 new DPDPIdentityExtensionTenantMgtListener(), null);
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener registered.");
-
-        try {
-            TenantInfoBean superTenant = new TenantInfoBean();
-            superTenant.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
-            superTenant.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
-            superTenant.setAdmin(DPDPIdentityExtensionDataHolder.getInstance().getRealmService()
-                    .getBootstrapRealm().getRealmConfiguration().getAdminUserName());
-            DPDPIdentityExtensionTenantMgtListener.provisionTenant(superTenant);
-        } catch (Exception e) {
-            LOG.error("Error provisioning the DPDP Consent Portal for the super tenant.", e);
-        }
+        serverStartupObserverRegistration = bundleContext.registerService(ServerStartupObserver.class,
+                new DPDPServerStartupObserver(), null);
+        LOG.debug("DPDP Identity Extensions component activated; tenant management listener and "
+                + "server startup observer registered.");
     }
 
     @Deactivate
@@ -82,6 +78,10 @@ public class DPDPIdentityExtensionServiceComponent {
         if (tenantMgtListenerRegistration != null) {
             tenantMgtListenerRegistration.unregister();
             tenantMgtListenerRegistration = null;
+        }
+        if (serverStartupObserverRegistration != null) {
+            serverStartupObserverRegistration.unregister();
+            serverStartupObserverRegistration = null;
         }
         LOG.debug("DPDP Identity Extensions component deactivated.");
     }

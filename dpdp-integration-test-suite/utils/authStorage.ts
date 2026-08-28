@@ -19,7 +19,8 @@
 import type { BrowserContext } from '@playwright/test'
 
 // The DPDP Consent Portal application is registered with `bindingType: cookie` /
-// `validateTokenBinding: true` (see bin/create-portal-app.sh) - WSO2 IS ties every access token to
+// `validateTokenBinding: true` (see DPDPConsentPortalAppProvisioningUtil, which sets both when the
+// accelerator auto-provisions the application) - WSO2 IS ties every access token to
 // an opaque value in this HttpOnly cookie and rejects a token replayed without it (see
 // CookieBasedTokenBinder in org.wso2.carbon.identity.oauth). The access token itself is never
 // readable by page JS either way (the SPA keeps it inside its auth SDK's web worker, see

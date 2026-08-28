@@ -20,7 +20,7 @@ import { type Locator, type Page } from '@playwright/test'
 import { selectMuiOption } from '../utils/muiSelect'
 import { ConsentRegistryTable } from './ConsentRegistryTable'
 
-/** ConsentRegistryPage.tsx - a user's own "All Consents" list at /consents. */
+/** A user's own consent list at /consents, labelled "My Consents" in the sidebar. */
 export class MyConsentPage extends ConsentRegistryTable {
   readonly serviceSearch: Locator
   readonly clearFiltersButton: Locator

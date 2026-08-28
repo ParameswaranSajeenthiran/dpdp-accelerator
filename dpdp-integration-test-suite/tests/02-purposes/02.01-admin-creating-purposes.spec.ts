@@ -50,7 +50,7 @@ test.describe('Admin creating Purposes (UI)', () => {
     }
     await expect(consentAdminPage.getByText('No custom properties.')).toBeVisible()
     await expect(
-      consentAdminPage.getByText('No elements are configured for this purpose.'),
+      consentAdminPage.getByText('No elements are configured for this version.'),
     ).toBeVisible()
     await consentAdminPage.context().close()
   })
