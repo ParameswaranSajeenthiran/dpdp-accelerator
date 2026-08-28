@@ -69,10 +69,16 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         if (subscription == null) {
             return;
         }
-        DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             addSubscription(conn, subscription);
-            return null;
-        });
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -204,8 +210,12 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public Optional<Subscription> getSubscriptionById(String subscriptionId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> getSubscriptionById(conn,
-                subscriptionId, orgId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            return getSubscriptionById(conn, subscriptionId, orgId);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -250,8 +260,17 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean updateSubscriptionStatus(String subscriptionId, String orgId, String status) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> updateSubscriptionStatus(conn, subscriptionId, orgId, status));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updateSubscriptionStatus(conn, subscriptionId, orgId, status);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -274,8 +293,17 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         if (expectedStatus == null || expectedStatus.trim().isEmpty()) {
             return updateSubscriptionStatus(subscriptionId, orgId, newStatus);
         }
-        return DatabaseUtils.executeInTransaction(
-                conn -> updateSubscriptionStatus(conn, subscriptionId, orgId, expectedStatus, newStatus));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updateSubscriptionStatus(conn, subscriptionId, orgId, expectedStatus, newStatus);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -300,8 +328,17 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean deleteSubscriptionAtomic(String subscriptionId, String orgId, String expectedStatus) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> deleteSubscriptionAtomic(conn, subscriptionId, orgId, expectedStatus));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = deleteSubscriptionAtomic(conn, subscriptionId, orgId, expectedStatus);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -349,7 +386,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 .setSort(sort);
 
         int[] total = {0};
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
           try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             String sortColumn = builder.resolveSortColumn();
@@ -400,7 +438,9 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_SUBSCRIPTIONS, orgId), e);
           }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -450,52 +490,62 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public List<String> getPurposesBySubscriptionId(String subscriptionId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             List<String> purposes = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionPurposesQuery())) {
-            ps.setString(1, subscriptionId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
+                ps.setString(1, subscriptionId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
+                    }
                 }
-            }
                 return purposes;
             } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_SUBSCRIPTION_ID,
-                            subscriptionId),
-                    e);
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_SUBSCRIPTION_ID,
+                                subscriptionId),
+                        e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public long countActiveSubscriptionsForTopic(String orgId, String topicId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             try (PreparedStatement ps = conn
-                        .prepareStatement(getQueries(conn).getCountActiveSubscriptionsForTopicQuery())) {
-            ps.setString(1, orgId);
-            ps.setString(2, topicId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
+                    .prepareStatement(getQueries(conn).getCountActiveSubscriptionsForTopicQuery())) {
+                ps.setString(1, orgId);
+                ps.setString(2, topicId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getLong(1);
+                    }
                 }
-            }
                 return 0L;
             } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
-                            topicId),
-                    e);
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
+                                topicId),
+                        e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public Map<String, List<String>> getPurposesBySubscriptionIds(List<String> subscriptionIds) {
-        return DatabaseUtils.executeWithConnection(conn ->
-                getPurposesBySubscriptionIds(conn, subscriptionIds));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            return getPurposesBySubscriptionIds(conn, subscriptionIds);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     public Map<String, List<String>> getPurposesBySubscriptionIds(Connection conn, List<String> subscriptionIds) {
@@ -529,48 +579,54 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
     @Override
     public boolean hasPendingOrInFlightDeliveries(String subscriptionId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             try (PreparedStatement ps = conn
-                        .prepareStatement(getQueries(conn).getHasPendingOrInFlightDeliveriesForSubscriptionQuery())) {
-            ps.setString(1, subscriptionId);
-            ps.setString(2, orgId);
-            ps.setString(3, DeliveryStatus.PENDING.getValue());
-            ps.setString(4, DeliveryStatus.IN_FLIGHT.getValue());
-            ps.setString(5, subscriptionId);
-            ps.setString(6, orgId);
-            ps.setString(7, PollStatus.PENDING.getValue());
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
+                    .prepareStatement(getQueries(conn).getHasPendingOrInFlightDeliveriesForSubscriptionQuery())) {
+                ps.setString(1, subscriptionId);
+                ps.setString(2, orgId);
+                ps.setString(3, DeliveryStatus.PENDING.getValue());
+                ps.setString(4, DeliveryStatus.IN_FLIGHT.getValue());
+                ps.setString(5, subscriptionId);
+                ps.setString(6, orgId);
+                ps.setString(7, PollStatus.PENDING.getValue());
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
             } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_CHECKING_PENDING_DELIVERIES_FOR_SUBSCRIPTION,
-                            subscriptionId),
-                    e);
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_CHECKING_PENDING_DELIVERIES_FOR_SUBSCRIPTION,
+                                subscriptionId),
+                        e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public List<Subscription> getPendingSubscriptionsForRecovery(Timestamp updatedBefore, int limit) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             List<Subscription> list = new ArrayList<>();
             try (PreparedStatement ps = conn
-                        .prepareStatement(getQueries(conn).getGetPendingSubscriptionsForRecoveryQuery())) {
-            ps.setTimestamp(1, updatedBefore);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next() && list.size() < limit) {
-                    Subscription sub = mapSubscription(rs);
-                    sub.setPurposes(getPurposesBySubscriptionId(sub.getSubscriptionId(), conn));
-                    list.add(sub);
+                    .prepareStatement(getQueries(conn).getGetPendingSubscriptionsForRecoveryQuery())) {
+                ps.setTimestamp(1, updatedBefore);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next() && list.size() < limit) {
+                        Subscription sub = mapSubscription(rs);
+                        sub.setPurposes(getPurposesBySubscriptionId(sub.getSubscriptionId(), conn));
+                        list.add(sub);
+                    }
                 }
-            }
-            return list;
+                return list;
             } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_SUBSCRIPTIONS_FOR_RECOVERY, e);
+                throw new EventNotificationDataAccessException(
+                        EventNotificationCommonConstants.ERROR_GETTING_PENDING_SUBSCRIPTIONS_FOR_RECOVERY, e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private List<String> getPurposesBySubscriptionId(String subscriptionId, Connection conn) throws SQLException {

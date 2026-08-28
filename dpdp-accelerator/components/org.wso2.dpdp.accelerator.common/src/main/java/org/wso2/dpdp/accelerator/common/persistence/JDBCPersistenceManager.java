@@ -19,6 +19,7 @@ package org.wso2.dpdp.accelerator.common.persistence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
 
@@ -28,137 +29,99 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Resolves the shared DPDP datasource and provides JDBC connections to accelerator modules.
+ * Resolves the shared DPDP datasource and hands out JDBC connections to accelerator modules.
+ * Mirrors the Financial Services accelerator's own {@code JDBCPersistenceManager} - a lean
+ * singleton with manual commit/rollback, no generic transactional-callback wrapping.
  */
-public final class JDBCPersistenceManager implements TransactionManager {
+public final class JDBCPersistenceManager {
 
     private static final Log LOG = LogFactory.getLog(JDBCPersistenceManager.class);
+    private static volatile JDBCPersistenceManager instance;
     private static volatile DataSource dataSource;
-    private static final JDBCPersistenceManager INSTANCE = new JDBCPersistenceManager();
 
     private JDBCPersistenceManager() {
+
+        initDataSource();
     }
 
     public static JDBCPersistenceManager getInstance() {
 
-        return INSTANCE;
-    }
-
-    public static Connection getConnection() throws SQLException {
-
-        return getDataSource().getConnection();
-    }
-
-    /**
-     * Executes a non-transactional operation with a centrally managed connection.
-     * The callback must not close the supplied connection.
-     */
-    public <T> T executeWithConnection(ConnectionCallback<T> callback) {
-
-        if (callback == null) {
-            throw new IllegalArgumentException("Connection callback cannot be null.");
-        }
-        Connection connection = null;
-        try {
-            connection = getConnection();
-            return callback.execute(connection);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DPDPCommonRuntimeException("DPDP connection operation failed.", e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    LOG.debug("Unable to close the DPDP connection.", e);
+        if (instance == null) {
+            synchronized (JDBCPersistenceManager.class) {
+                if (instance == null) {
+                    instance = new JDBCPersistenceManager();
                 }
+            }
+        }
+        return instance;
+    }
+
+    private void initDataSource() {
+
+        if (dataSource != null) {
+            return;
+        }
+        synchronized (JDBCPersistenceManager.class) {
+            if (dataSource != null) {
+                return;
+            }
+            String dataSourceName = null;
+            try {
+                dataSourceName = DPDPConfigParser.getInstance().getJdbcDataSourceName();
+                InitialContext context = new InitialContext();
+                try {
+                    dataSource = (DataSource) context.lookup(dataSourceName);
+                } catch (Exception e) {
+                    dataSource = (DataSource) context.lookup(DPDPCommonConstants.JDBC_ENV_CONTEXT_PREFIX
+                            + dataSourceName);
+                }
+                LOG.debug("Resolved the shared DPDP datasource: " + dataSourceName);
+            } catch (Exception e) {
+                throw new DPDPCommonRuntimeException("Unable to resolve the shared DPDP datasource ["
+                        + dataSourceName + "]", e);
             }
         }
     }
 
     /**
-     * Executes an operation in a single transaction and owns the complete JDBC lifecycle.
-     * DAO methods invoked by the callback must use the supplied connection and must not
-     * commit, roll back, or close it.
-     *
-     * @param callback operation to execute
-     * @param <T> result type
-     * @return callback result
+     * Returns a connection for the shared DPDP datasource, with autocommit disabled - the
+     * caller owns the full transaction lifecycle (commit/rollback/close).
      */
-    @Override
-    public <T> T executeInTransaction(ConnectionCallback<T> callback) {
+    public Connection getDBConnection() {
 
-        if (callback == null) {
-            throw new IllegalArgumentException("Transaction callback cannot be null.");
-        }
-        Connection connection = null;
         try {
-            connection = getConnection();
-            boolean originalAutoCommit = connection.getAutoCommit();
+            Connection connection = dataSource.getConnection();
             connection.setAutoCommit(false);
-            try {
-                T result = callback.execute(connection);
+            return connection;
+        } catch (SQLException e) {
+            throw new DPDPCommonRuntimeException("Error while obtaining a DPDP DB connection.", e);
+        }
+    }
+
+    public DataSource getDataSource() {
+
+        return dataSource;
+    }
+
+    public void commitTransaction(Connection connection) {
+
+        try {
+            if (connection != null) {
                 connection.commit();
-                return result;
-            } catch (RuntimeException | Error e) {
-                rollback(connection, e);
-                throw e;
-            } catch (Exception e) {
-                rollback(connection, e);
-                throw new DPDPCommonRuntimeException("DPDP transaction operation failed.", e);
-            } finally {
-                try {
-                    connection.setAutoCommit(originalAutoCommit);
-                } catch (SQLException e) {
-                    LOG.debug("Unable to restore the JDBC auto-commit state.", e);
-                }
             }
         } catch (SQLException e) {
-            throw new DPDPCommonRuntimeException("Unable to execute the DPDP transaction.", e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    LOG.debug("Unable to close the DPDP transaction connection.", e);
-                }
-            }
+            LOG.error("An error occurred while committing a DPDP transaction.", e);
         }
     }
 
-    private static void rollback(Connection connection, Throwable original) {
+    public void rollbackTransaction(Connection connection) {
 
         try {
-            connection.rollback();
-        } catch (SQLException rollbackFailure) {
-            original.addSuppressed(rollbackFailure);
-        }
-    }
-
-    private static DataSource getDataSource() throws SQLException {
-
-        if (dataSource == null) {
-            synchronized (JDBCPersistenceManager.class) {
-                if (dataSource == null) {
-                    try {
-                        InitialContext context = new InitialContext();
-                        try {
-                            dataSource = (DataSource) context.lookup(
-                                    DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
-                        } catch (Exception e) {
-                            dataSource = (DataSource) context.lookup(
-                                    DPDPCommonConstants.JDBC_DPDP_JNDI_ENV_NAME);
-                        }
-                        LOG.debug("Resolved shared DPDP datasource: "
-                                + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME);
-                    } catch (Exception e) {
-                        throw new SQLException("Unable to resolve shared DPDP datasource ["
-                                + DPDPCommonConstants.JDBC_DPDP_DATASOURCE_NAME + "]", e);
-                    }
-                }
+            if (connection != null) {
+                connection.rollback();
             }
+        } catch (SQLException e) {
+            LOG.error("An error occurred while rolling back a DPDP transaction.", e);
         }
-        return dataSource;
     }
 }

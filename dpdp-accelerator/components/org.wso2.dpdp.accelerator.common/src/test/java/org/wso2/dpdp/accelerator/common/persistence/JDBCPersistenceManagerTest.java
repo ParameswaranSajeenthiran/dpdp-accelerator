@@ -8,198 +8,127 @@
 package org.wso2.dpdp.accelerator.common.persistence;
 
 import org.mockito.Mockito;
-import org.mockito.InOrder;
-import org.h2.jdbcx.JdbcDataSource;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-import static org.testng.Assert.expectThrows;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
+/**
+ * {@code dataSource} and {@code instance} are both process-wide static singletons on
+ * {@link JDBCPersistenceManager}, so every test resets both - a mock datasource is pre-set
+ * before each test (letting {@code getInstance()} construct successfully without a real JNDI
+ * context), and the one test that exercises the JNDI-failure path clears it again first.
+ */
 public class JDBCPersistenceManagerTest {
 
+    private DataSource dataSource;
+
+    @BeforeMethod
+    public void setUpDefaultDataSource() throws Exception {
+        dataSource = Mockito.mock(DataSource.class);
+        setStaticDataSource(dataSource);
+    }
+
     @AfterMethod
-    public void clearDataSource() throws Exception {
-        setDataSource(null);
+    public void tearDown() throws Exception {
+        setStaticDataSource(null);
+        setStaticInstance(null);
     }
 
     @Test
-    public void getConnectionFailsWhenDatasourceIsUnavailable() {
+    public void getInstanceReturnsTheSameSingleton() {
 
-        expectThrows(SQLException.class, JDBCPersistenceManager::getConnection);
+        assertSame(JDBCPersistenceManager.getInstance(), JDBCPersistenceManager.getInstance());
     }
 
     @Test
-    public void executeWithConnectionClosesAndReturnsCallbackValue() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
+    public void getDBConnectionDisablesAutoCommitAndReturnsTheConnection() throws Exception {
+
         Connection connection = Mockito.mock(Connection.class);
         Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        setDataSource(dataSource);
 
-        String value = JDBCPersistenceManager.getInstance().executeWithConnection(conn -> {
-            assertEquals(conn, connection);
-            return "ok";
-        });
+        Connection returned = JDBCPersistenceManager.getInstance().getDBConnection();
 
-        assertEquals(value, "ok");
-        Mockito.verify(connection).close();
-    }
-
-    @Test
-    public void executeInTransactionCommitsAndRestoresAutoCommit() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
-        Connection connection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        Mockito.when(connection.getAutoCommit()).thenReturn(true);
-        setDataSource(dataSource);
-
-        assertTrue(JDBCPersistenceManager.getInstance().executeInTransaction(conn -> true));
-
+        assertSame(returned, connection);
         Mockito.verify(connection).setAutoCommit(false);
+    }
+
+    @Test
+    public void getDBConnectionWrapsFailureWhenDatasourceIsUnavailable() throws Exception {
+
+        setStaticDataSource(null);
+        setStaticInstance(null);
+
+        expectThrows(DPDPCommonRuntimeException.class, JDBCPersistenceManager::getInstance);
+    }
+
+    @Test
+    public void getDataSourceReturnsTheResolvedDataSource() {
+
+        assertSame(JDBCPersistenceManager.getInstance().getDataSource(), dataSource);
+    }
+
+    @Test
+    public void commitTransactionCommitsANonNullConnection() throws SQLException {
+
+        Connection connection = Mockito.mock(Connection.class);
+        JDBCPersistenceManager.getInstance().commitTransaction(connection);
         Mockito.verify(connection).commit();
-        Mockito.verify(connection).setAutoCommit(true);
-        Mockito.verify(connection).close();
     }
 
     @Test
-    public void executeInTransactionRollsBackRuntimeFailure() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
+    public void commitTransactionToleratesNull() {
+
+        JDBCPersistenceManager.getInstance().commitTransaction(null);
+    }
+
+    @Test
+    public void commitTransactionSwallowsSqlException() throws SQLException {
+
         Connection connection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        Mockito.when(connection.getAutoCommit()).thenReturn(true);
-        setDataSource(dataSource);
+        Mockito.doThrow(new SQLException("boom")).when(connection).commit();
+        JDBCPersistenceManager.getInstance().commitTransaction(connection);
+    }
 
-        expectThrows(IllegalStateException.class, () ->
-                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                    throw new IllegalStateException("expected");
-                }));
+    @Test
+    public void rollbackTransactionRollsBackANonNullConnection() throws SQLException {
 
+        Connection connection = Mockito.mock(Connection.class);
+        JDBCPersistenceManager.getInstance().rollbackTransaction(connection);
         Mockito.verify(connection).rollback();
-        Mockito.verify(connection).setAutoCommit(true);
-        Mockito.verify(connection).close();
     }
 
     @Test
-    public void executeInTransactionRollsBackErrorBeforeRestoringAutoCommit() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
+    public void rollbackTransactionToleratesNull() {
+
+        JDBCPersistenceManager.getInstance().rollbackTransaction(null);
+    }
+
+    @Test
+    public void rollbackTransactionSwallowsSqlException() throws SQLException {
+
         Connection connection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        Mockito.when(connection.getAutoCommit()).thenReturn(true);
-        setDataSource(dataSource);
-        AssertionError expected = new AssertionError("expected");
-
-        AssertionError actual = expectThrows(AssertionError.class, () ->
-                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                    throw expected;
-                }));
-
-        assertSame(actual, expected);
-        InOrder lifecycle = Mockito.inOrder(connection);
-        lifecycle.verify(connection).setAutoCommit(false);
-        lifecycle.verify(connection).rollback();
-        lifecycle.verify(connection).setAutoCommit(true);
-        lifecycle.verify(connection).close();
-        Mockito.verify(connection, Mockito.never()).commit();
+        Mockito.doThrow(new SQLException("boom")).when(connection).rollback();
+        JDBCPersistenceManager.getInstance().rollbackTransaction(connection);
     }
 
-    @Test
-    public void executeInTransactionDoesNotPersistH2ChangesWhenErrorIsThrown() throws Exception {
-        JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:dpdp_error_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
-        setDataSource(dataSource);
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE TX_ERROR_TEST (ID INT PRIMARY KEY)");
-        }
-
-        expectThrows(AssertionError.class, () ->
-                JDBCPersistenceManager.getInstance().executeInTransaction(connection -> {
-                    try (PreparedStatement statement = connection.prepareStatement(
-                            "INSERT INTO TX_ERROR_TEST (ID) VALUES (?)")) {
-                        statement.setInt(1, 1);
-                        statement.executeUpdate();
-                    }
-                    throw new AssertionError("expected");
-                }));
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM TX_ERROR_TEST");
-             ResultSet resultSet = statement.executeQuery()) {
-            assertTrue(resultSet.next());
-            assertEquals(resultSet.getInt(1), 0);
-        }
-    }
-
-    @Test
-    public void checkedCallbackFailureIsWrappedAndConnectionIsClosed() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
-        Connection connection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        setDataSource(dataSource);
-
-        expectThrows(org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException.class, () ->
-                JDBCPersistenceManager.getInstance().executeWithConnection(conn -> {
-                    throw new SQLException("expected");
-                }));
-        Mockito.verify(connection).close();
-    }
-
-    @Test
-    public void transactionCheckedFailureRollsBackAndIsWrapped() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
-        Connection connection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(connection);
-        Mockito.when(connection.getAutoCommit()).thenReturn(true);
-        setDataSource(dataSource);
-
-        expectThrows(org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException.class, () ->
-                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                    throw new SQLException("expected");
-                }));
-        Mockito.verify(connection).rollback();
-        Mockito.verify(connection).setAutoCommit(true);
-        Mockito.verify(connection).close();
-    }
-
-    @Test
-    public void transactionRejectsNullCallback() {
-        expectThrows(IllegalArgumentException.class,
-                () -> JDBCPersistenceManager.getInstance().executeInTransaction(null));
-        expectThrows(IllegalArgumentException.class,
-                () -> JDBCPersistenceManager.getInstance().executeWithConnection(null));
-    }
-
-    @Test
-    public void databaseUtilsDelegatesConnectionAndTransactionOwnership() throws Exception {
-        DataSource dataSource = Mockito.mock(DataSource.class);
-        Connection firstConnection = Mockito.mock(Connection.class);
-        Connection secondConnection = Mockito.mock(Connection.class);
-        Mockito.when(dataSource.getConnection()).thenReturn(firstConnection, secondConnection);
-        Mockito.when(secondConnection.getAutoCommit()).thenReturn(true);
-        setDataSource(dataSource);
-
-        assertEquals(DatabaseUtils.executeWithConnection(connection -> "read"), "read");
-        assertTrue(DatabaseUtils.executeInTransaction(connection -> true));
-
-        Mockito.verify(firstConnection).close();
-        Mockito.verify(secondConnection).commit();
-        Mockito.verify(secondConnection).close();
-    }
-
-    private void setDataSource(DataSource dataSource) throws Exception {
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
         Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
         field.setAccessible(true);
         field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 }

@@ -27,6 +27,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
@@ -38,6 +40,9 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.impl.DeliveryDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.TopicDAOImpl;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * Creates the Event Notification DAOs and publishes them through a single OSGi provider service.
@@ -51,18 +56,41 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
 
     private static final Log LOG = LogFactory.getLog(EventNotificationDAOServiceComponent.class);
 
-    private volatile DPDPConfigurationService configurationService;
-
     @Activate
     protected void activate() {
 
         EventNotificationDAODataHolder dataHolder = EventNotificationDAODataHolder.getInstance();
+        verifyDatabaseConnection(dataHolder.getConfigurationService());
         dataHolder.setTopicDAO(new TopicDAOImpl());
         dataHolder.setSubscriptionDAO(new SubscriptionDAOImpl());
         dataHolder.setEventDAO(new EventDAOImpl());
-        dataHolder.setDeliveryDAO(new DeliveryDAOImpl(configurationService));
+        dataHolder.setDeliveryDAO(new DeliveryDAOImpl(dataHolder.getConfigurationService()));
         dataHolder.setDeliveryAckDAO(new DeliveryAckDAOImpl());
         LOG.debug("Event Notification DAO services are activated successfully.");
+    }
+
+    /**
+     * Fails bundle activation immediately when the shared DPDP datasource is not reachable,
+     * rather than surfacing that failure later on the first DAO call.
+     */
+    private void verifyDatabaseConnection(DPDPConfigurationService configurationService) {
+
+        verifyDatabaseConnection(DatabaseUtils.getDBConnection(), configurationService);
+    }
+
+    void verifyDatabaseConnection(Connection connection, DPDPConfigurationService configurationService) {
+
+        try {
+            int timeoutSeconds = configurationService.getJdbcConnectionVerificationTimeoutSeconds();
+            if (!connection.isValid(timeoutSeconds)) {
+                throw new DPDPCommonRuntimeException("The DPDP database connection is not active.");
+            }
+            LOG.debug("Verified the DPDP database connection is active.");
+        } catch (SQLException e) {
+            throw new DPDPCommonRuntimeException("Error while verifying the DPDP database connection.", e);
+        } finally {
+            DatabaseUtils.closeConnection(connection);
+        }
     }
 
     @Deactivate
@@ -80,13 +108,14 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
     )
     protected void setDPDPConfigurationService(DPDPConfigurationService configurationService) {
 
-        this.configurationService = configurationService;
+        EventNotificationDAODataHolder.getInstance().setConfigurationService(configurationService);
     }
 
     protected void unsetDPDPConfigurationService(DPDPConfigurationService configurationService) {
 
-        if (this.configurationService == configurationService) {
-            this.configurationService = null;
+        EventNotificationDAODataHolder dataHolder = EventNotificationDAODataHolder.getInstance();
+        if (dataHolder.getConfigurationService() == configurationService) {
+            dataHolder.setConfigurationService(null);
         }
     }
 

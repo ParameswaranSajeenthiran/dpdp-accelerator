@@ -82,23 +82,26 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public Optional<Event> getEventById(String eventId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
-            ps.setString(1, eventId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Event event = mapEvent(rs);
-                    event.setPurposes(getEventPurposes(conn, eventId));
-                    return Optional.of(event);
+                ps.setString(1, eventId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        Event event = mapEvent(rs);
+                        event.setPurposes(getEventPurposes(conn, eventId));
+                        return Optional.of(event);
+                    }
                 }
-            }
-            return Optional.empty();
+                return Optional.empty();
             } catch (SQLException e) {
                 throw new EventNotificationDataAccessException(
                         String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -130,7 +133,12 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public List<String> getEventPurposes(String eventId) {
-        return DatabaseUtils.executeWithConnection(conn -> getEventPurposes(conn, eventId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            return getEventPurposes(conn, eventId);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -152,17 +160,20 @@ public class EventDAOImpl implements EventDAO {
 
     @Override
     public boolean hasActiveEventsForTopic(String topicId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
-            ps.setString(1, topicId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
+                ps.setString(1, topicId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
             } catch (SQLException e) {
                 throw new EventNotificationDataAccessException(
                         String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
             }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -170,7 +181,8 @@ public class EventDAOImpl implements EventDAO {
             String subscriptionId, String purposes, String search, int limit, int offset) {
         List<Event> events = new ArrayList<>();
         int[] total = {0};
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
           try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             EventQueryBuilder builder = new EventQueryBuilder(orgId, queries)
@@ -225,7 +237,9 @@ public class EventDAOImpl implements EventDAO {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_EVENTS, orgId), e);
           }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private Event mapEvent(ResultSet rs) throws SQLException {

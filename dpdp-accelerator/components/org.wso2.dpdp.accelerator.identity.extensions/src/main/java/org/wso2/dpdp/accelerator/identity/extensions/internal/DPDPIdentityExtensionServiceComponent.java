@@ -30,14 +30,22 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.core.ServerStartupObserver;
+import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
+import org.wso2.carbon.consent.mgt.core.listener.ConsentManagementListener;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobActivator;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 
 /**
@@ -68,8 +76,11 @@ public class DPDPIdentityExtensionServiceComponent {
                 new DPDPIdentityExtensionTenantMgtListener(), null);
         serverStartupObserverRegistration = bundleContext.registerService(ServerStartupObserver.class,
                 new DPDPServerStartupObserver(), null);
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener and "
-                + "server startup observer registered.");
+        bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentHistoryListener(),
+                null);
+        new ConsentExpiryJobActivator().activate();
+        LOG.debug("DPDP Identity Extensions component activated; tenant management listener, server startup "
+                + "observer, and consent management listener registered.");
     }
 
     @Deactivate
@@ -179,6 +190,24 @@ public class DPDPIdentityExtensionServiceComponent {
     }
 
     @Reference(
+            service = OrganizationManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetOrganizationManager"
+    )
+    protected void setOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Setting the Organization Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setOrganizationManager(organizationManager);
+    }
+
+    protected void unsetOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Unsetting the Organization Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setOrganizationManager(null);
+    }
+
+    @Reference(
             name = "realm.service",
             service = RealmService.class,
             cardinality = ReferenceCardinality.MANDATORY,
@@ -213,5 +242,77 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @Reference(
+            service = PrivilegedConsentManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetPrivilegedConsentManager"
+    )
+    protected void setPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        LOG.debug("Setting the Privileged Consent Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setPrivilegedConsentManager(privilegedConsentManager);
+    }
+
+    protected void unsetPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        LOG.debug("Unsetting the Privileged Consent Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setPrivilegedConsentManager(null);
+    }
+
+    @Reference(
+            service = ConsentHistoryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConsentHistoryService"
+    )
+    protected void setConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        LOG.debug("Setting the Consent History Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentHistoryService(consentHistoryService);
+    }
+
+    protected void unsetConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        LOG.debug("Unsetting the Consent History Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentHistoryService(null);
+    }
+
+    @Reference(
+            service = ConsentExpiryService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConsentExpiryService"
+    )
+    protected void setConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        LOG.debug("Setting the Consent Expiry Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentExpiryService(consentExpiryService);
+    }
+
+    protected void unsetConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        LOG.debug("Unsetting the Consent Expiry Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setConsentExpiryService(null);
+    }
+
+    @Reference(
+            service = TopicService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetTopicService"
+    )
+    protected void setTopicService(TopicService topicService) {
+
+        LOG.debug("Setting the Topic Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setTopicService(topicService);
+    }
+
+    protected void unsetTopicService(TopicService topicService) {
+
+        LOG.debug("Unsetting the Topic Service.");
+        DPDPIdentityExtensionDataHolder.getInstance().setTopicService(null);
     }
 }
