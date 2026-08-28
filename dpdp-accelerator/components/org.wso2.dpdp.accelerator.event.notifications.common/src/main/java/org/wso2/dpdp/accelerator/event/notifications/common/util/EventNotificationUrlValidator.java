@@ -21,18 +21,34 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 /** Validates Event Notification webhook callback destinations against SSRF constraints. */
 public final class EventNotificationUrlValidator {
 
-    private static final Set<Integer> ALLOWED_PORTS = new HashSet<>(Arrays.asList(-1, 80, 443, 8443));
+    private static final Set<Integer> DEFAULT_ALLOWED_PORTS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(-1, 80, 443, 8443)));
 
     private EventNotificationUrlValidator() {
     }
 
     public static void validate(String urlString) throws IllegalArgumentException, UnknownHostException {
+
+        validate(urlString, DEFAULT_ALLOWED_PORTS, false);
+    }
+
+    /**
+     * @param allowedPorts destination ports permitted for the callback URL ({@code -1} means no
+     *                      port was specified in the URL).
+     * @param allowPrivateNetworkTargets when {@code false} (the strict default), also rejects
+     *                      hosts resolving to a site-local, link-local, or IPv6 unique-local
+     *                      address. Loopback, wildcard, and multicast addresses are always
+     *                      rejected regardless of this flag.
+     */
+    public static void validate(String urlString, Set<Integer> allowedPorts, boolean allowPrivateNetworkTargets)
+            throws IllegalArgumentException, UnknownHostException {
 
         if (urlString == null || urlString.trim().isEmpty()) {
             throw new IllegalArgumentException("URL string cannot be empty.");
@@ -46,9 +62,9 @@ public final class EventNotificationUrlValidator {
         if (uri.getRawFragment() != null) {
             throw new IllegalArgumentException("Callback URL fragments are not permitted.");
         }
-        if (!ALLOWED_PORTS.contains(uri.getPort())) {
+        if (!allowedPorts.contains(uri.getPort())) {
             throw new IllegalArgumentException("Destination port [" + uri.getPort()
-                    + "] is not in the allowed list (80, 443, 8443).");
+                    + "] is not in the allowed list " + allowedPorts + ".");
         }
 
         String host = uri.getHost();
@@ -63,9 +79,11 @@ public final class EventNotificationUrlValidator {
         for (InetAddress address : addresses) {
             byte[] bytes = address.getAddress();
             boolean ipv6UniqueLocal = bytes.length == 16 && (bytes[0] & 0xFE) == 0xFC;
-            if (address.isLoopbackAddress() || address.isSiteLocalAddress()
-                    || address.isLinkLocalAddress() || address.isAnyLocalAddress()
-                    || address.isMulticastAddress() || ipv6UniqueLocal) {
+            boolean alwaysRestricted = address.isLoopbackAddress() || address.isAnyLocalAddress()
+                    || address.isMulticastAddress();
+            boolean privateNetworkRestricted = !allowPrivateNetworkTargets
+                    && (address.isSiteLocalAddress() || address.isLinkLocalAddress() || ipv6UniqueLocal);
+            if (alwaysRestricted || privateNetworkRestricted) {
                 throw new IllegalArgumentException("Target IP [" + address.getHostAddress()
                         + "] is in a restricted range.");
             }

@@ -19,6 +19,20 @@
 
 <DPDPAccelerator xmlns="http://wso2.org/projects/carbon/dpdp-accelerator.xml"
                  xmlns:svns="http://org.wso2.securevault/configuration">
+    <JDBCPersistenceManager>
+        <DataSource>
+            {% if dpdp_accelerator.jdbc_persistence_manager.data_source_name is defined %}
+            <Name>{{dpdp_accelerator.jdbc_persistence_manager.data_source_name}}</Name>
+            {% else %}
+            <Name>jdbc/WSO2DPDP_DB</Name>
+            {% endif %}
+        </DataSource>
+        {% if dpdp_accelerator.jdbc_persistence_manager.connection_verification_timeout_seconds is defined %}
+        <ConnectionVerificationTimeout>{{dpdp_accelerator.jdbc_persistence_manager.connection_verification_timeout_seconds}}</ConnectionVerificationTimeout>
+        {% else %}
+        <ConnectionVerificationTimeout>1</ConnectionVerificationTimeout>
+        {% endif %}
+    </JDBCPersistenceManager>
     <ConsentPortal>
         {% if dpdp_accelerator.consent_portal.auto_provisioning_enabled is defined %}
         <AutoProvisioningEnabled>{{dpdp_accelerator.consent_portal.auto_provisioning_enabled}}</AutoProvisioningEnabled>
@@ -39,70 +53,116 @@
         {% endif %}
     </Complaints>
     <EventNotifications>
-        {% if dpdp_accelerator.event_notifications.thread_pool_size is defined %}
-        <ThreadPoolSize>{{dpdp_accelerator.event_notifications.thread_pool_size}}</ThreadPoolSize>
+        {% if dpdp_accelerator.event_notifications.webhook.thread_pool_size is defined %}
+        <ThreadPoolSize>{{dpdp_accelerator.event_notifications.webhook.thread_pool_size}}</ThreadPoolSize>
         {% else %}
         <ThreadPoolSize>4</ThreadPoolSize>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.base_backoff_seconds is defined %}
-        <BaseBackoffSeconds>{{dpdp_accelerator.event_notifications.base_backoff_seconds}}</BaseBackoffSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.base_backoff_seconds is defined %}
+        <BaseBackoffSeconds>{{dpdp_accelerator.event_notifications.webhook.base_backoff_seconds}}</BaseBackoffSeconds>
         {% else %}
         <BaseBackoffSeconds>5</BaseBackoffSeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.max_retries is defined %}
-        <MaxRetries>{{dpdp_accelerator.event_notifications.max_retries}}</MaxRetries>
+        {% if dpdp_accelerator.event_notifications.webhook.max_retries is defined %}
+        <MaxRetries>{{dpdp_accelerator.event_notifications.webhook.max_retries}}</MaxRetries>
         {% else %}
         <MaxRetries>5</MaxRetries>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.allow_http_callback_url is defined %}
-        <AllowHttpCallbackUrl>{{dpdp_accelerator.event_notifications.allow_http_callback_url}}</AllowHttpCallbackUrl>
+        {% if dpdp_accelerator.event_notifications.webhook.allow_http_callback_url is defined %}
+        <AllowHttpCallbackUrl>{{dpdp_accelerator.event_notifications.webhook.allow_http_callback_url}}</AllowHttpCallbackUrl>
         {% else %}
         <AllowHttpCallbackUrl>true</AllowHttpCallbackUrl>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.delivery_worker_batch_size is defined %}
-        <DeliveryWorkerBatchSize>{{dpdp_accelerator.event_notifications.delivery_worker_batch_size}}</DeliveryWorkerBatchSize>
+        {% if dpdp_accelerator.event_notifications.webhook.allowed_callback_ports is defined %}
+        <AllowedCallbackPorts>{{dpdp_accelerator.event_notifications.webhook.allowed_callback_ports}}</AllowedCallbackPorts>
+        {% else %}
+        <AllowedCallbackPorts>-1,80,443,8443</AllowedCallbackPorts>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.webhook.allow_private_network_callback_targets is defined %}
+        <AllowPrivateNetworkCallbackTargets>{{dpdp_accelerator.event_notifications.webhook.allow_private_network_callback_targets}}</AllowPrivateNetworkCallbackTargets>
+        {% else %}
+        <AllowPrivateNetworkCallbackTargets>false</AllowPrivateNetworkCallbackTargets>
+        {% endif %}
+        {% if dpdp_accelerator.event_notifications.webhook.delivery_worker_batch_size is defined %}
+        <DeliveryWorkerBatchSize>{{dpdp_accelerator.event_notifications.webhook.delivery_worker_batch_size}}</DeliveryWorkerBatchSize>
         {% else %}
         <DeliveryWorkerBatchSize>50</DeliveryWorkerBatchSize>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.delivery_worker_poll_seconds is defined %}
-        <DeliveryWorkerPollSeconds>{{dpdp_accelerator.event_notifications.delivery_worker_poll_seconds}}</DeliveryWorkerPollSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.delivery_worker_poll_seconds is defined %}
+        <DeliveryWorkerPollSeconds>{{dpdp_accelerator.event_notifications.webhook.delivery_worker_poll_seconds}}</DeliveryWorkerPollSeconds>
         {% else %}
         <DeliveryWorkerPollSeconds>5</DeliveryWorkerPollSeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.stuck_inflight_threshold_seconds is defined %}
-        <StuckInFlightThresholdSeconds>{{dpdp_accelerator.event_notifications.stuck_inflight_threshold_seconds}}</StuckInFlightThresholdSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.stuck_inflight_threshold_seconds is defined %}
+        <StuckInFlightThresholdSeconds>{{dpdp_accelerator.event_notifications.webhook.stuck_inflight_threshold_seconds}}</StuckInFlightThresholdSeconds>
         {% else %}
         <StuckInFlightThresholdSeconds>10</StuckInFlightThresholdSeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.max_verification_response_body_bytes is defined %}
-        <MaxVerificationResponseBodyBytes>{{dpdp_accelerator.event_notifications.max_verification_response_body_bytes}}</MaxVerificationResponseBodyBytes>
+        {% if dpdp_accelerator.event_notifications.webhook.max_verification_response_body_bytes is defined %}
+        <MaxVerificationResponseBodyBytes>{{dpdp_accelerator.event_notifications.webhook.max_verification_response_body_bytes}}</MaxVerificationResponseBodyBytes>
         {% else %}
         <MaxVerificationResponseBodyBytes>4096</MaxVerificationResponseBodyBytes>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_threshold_seconds is defined %}
-        <PendingSubscriptionRecoveryThresholdSeconds>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_threshold_seconds}}</PendingSubscriptionRecoveryThresholdSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_threshold_seconds is defined %}
+        <PendingSubscriptionRecoveryThresholdSeconds>{{dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_threshold_seconds}}</PendingSubscriptionRecoveryThresholdSeconds>
         {% else %}
         <PendingSubscriptionRecoveryThresholdSeconds>60</PendingSubscriptionRecoveryThresholdSeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds is defined %}
-        <BackgroundWorkerInitialDelaySeconds>{{dpdp_accelerator.event_notifications.background_worker_initial_delay_seconds}}</BackgroundWorkerInitialDelaySeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.background_worker_initial_delay_seconds is defined %}
+        <BackgroundWorkerInitialDelaySeconds>{{dpdp_accelerator.event_notifications.webhook.background_worker_initial_delay_seconds}}</BackgroundWorkerInitialDelaySeconds>
         {% else %}
         <BackgroundWorkerInitialDelaySeconds>10</BackgroundWorkerInitialDelaySeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds is defined %}
-        <PendingSubscriptionRecoveryIntervalSeconds>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_interval_seconds}}</PendingSubscriptionRecoveryIntervalSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_interval_seconds is defined %}
+        <PendingSubscriptionRecoveryIntervalSeconds>{{dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_interval_seconds}}</PendingSubscriptionRecoveryIntervalSeconds>
         {% else %}
         <PendingSubscriptionRecoveryIntervalSeconds>30</PendingSubscriptionRecoveryIntervalSeconds>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size is defined %}
-        <PendingSubscriptionRecoveryBatchSize>{{dpdp_accelerator.event_notifications.pending_subscription_recovery_batch_size}}</PendingSubscriptionRecoveryBatchSize>
+        {% if dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_batch_size is defined %}
+        <PendingSubscriptionRecoveryBatchSize>{{dpdp_accelerator.event_notifications.webhook.pending_subscription_recovery_batch_size}}</PendingSubscriptionRecoveryBatchSize>
         {% else %}
         <PendingSubscriptionRecoveryBatchSize>20</PendingSubscriptionRecoveryBatchSize>
         {% endif %}
-        {% if dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds is defined %}
-        <WorkerShutdownTimeoutSeconds>{{dpdp_accelerator.event_notifications.worker_shutdown_timeout_seconds}}</WorkerShutdownTimeoutSeconds>
+        {% if dpdp_accelerator.event_notifications.webhook.worker_shutdown_timeout_seconds is defined %}
+        <WorkerShutdownTimeoutSeconds>{{dpdp_accelerator.event_notifications.webhook.worker_shutdown_timeout_seconds}}</WorkerShutdownTimeoutSeconds>
         {% else %}
         <WorkerShutdownTimeoutSeconds>5</WorkerShutdownTimeoutSeconds>
         {% endif %}
+        <SystemTopics>
+            {% if dpdp_accelerator.event_notifications.system_topics_auto_create_enabled is defined %}
+            <AutoCreateEnabled>{{dpdp_accelerator.event_notifications.system_topics_auto_create_enabled}}</AutoCreateEnabled>
+            {% else %}
+            <AutoCreateEnabled>true</AutoCreateEnabled>
+            {% endif %}
+        </SystemTopics>
     </EventNotifications>
+    <ConsentHistory>
+        {% if dpdp_accelerator.consent_history.enabled is defined %}
+        <Enabled>{{dpdp_accelerator.consent_history.enabled}}</Enabled>
+        {% else %}
+        <Enabled>true</Enabled>
+        {% endif %}
+        {% if dpdp_accelerator.consent_history.snapshot_enabled is defined %}
+        <SnapshotEnabled>{{dpdp_accelerator.consent_history.snapshot_enabled}}</SnapshotEnabled>
+        {% else %}
+        <SnapshotEnabled>true</SnapshotEnabled>
+        {% endif %}
+    </ConsentHistory>
+    <ConsentExpiry>
+        {% if dpdp_accelerator.consent_expiry.enabled is defined %}
+        <Enabled>{{dpdp_accelerator.consent_expiry.enabled}}</Enabled>
+        {% else %}
+        <Enabled>true</Enabled>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.cron_value is defined %}
+        <CronValue>{{dpdp_accelerator.consent_expiry.cron_value}}</CronValue>
+        {% else %}
+        <CronValue>0 0 0 * * ?</CronValue>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.batch_size is defined %}
+        <BatchSize>{{dpdp_accelerator.consent_expiry.batch_size}}</BatchSize>
+        {% else %}
+        <BatchSize>100</BatchSize>
+        {% endif %}
+    </ConsentExpiry>
 </DPDPAccelerator>

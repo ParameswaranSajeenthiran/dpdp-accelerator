@@ -94,6 +94,22 @@
             <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.consent.mgt</groupId>
+            <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -138,6 +154,11 @@
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
                         <exclude>**/*TenantMgtListener.class</exclude>
+                        <exclude>**/*ConsentHistoryListener.class</exclude>
+                        <exclude>**/*ConsentExpiryReconciler.class</exclude>
+                        <!-- Needs a live Quartz Scheduler and/or the carbon config directory. -->
+                        <exclude>**/scheduler/*.class</exclude>
+                        <exclude>**/*StartupObserver.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -178,7 +199,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>${maven.bundle.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -194,13 +214,20 @@
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.common.enums;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.service;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.service.models;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;version="${project.version}",
+                            org.wso2.dpdp.accelerator.consent.extensions.dao.models;version="${project.version}",
 
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.component.annotations;version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.logging;version="${commons.logging.imp.pkg.version.range}",
+                            com.google.gson;version="${gson.imp.pkg.version.range}",
 
                             org.wso2.carbon.context.*;version="${carbon.kernel.version}",
+                            org.wso2.carbon.core;version="${carbon.kernel.version}",
                             org.wso2.carbon.utils.multitenancy;version="${carbon.kernel.version}",
                             org.wso2.carbon.user.core;version="${carbon.user.core.version}",
                             org.wso2.carbon.user.core.common;version="${carbon.user.core.version}",
@@ -221,10 +248,31 @@
                             org.wso2.carbon.identity.oauth;version="${carbon.identity.inbound.auth.oauth.version}",
                             org.wso2.carbon.identity.oauth.dto;version="${carbon.identity.inbound.auth.oauth.version}",
                             org.wso2.carbon.identity.core.util;version="${carbon.identity.core.version}",
+                            org.wso2.carbon.identity.organization.management.service;version="${carbon.identity.organization.mgt.service.version}",
                             org.wso2.carbon.identity.organization.management.service.util;version="${carbon.identity.organization.mgt.service.version}",
                             org.wso2.carbon.identity.organization.management.service.exception;version="${carbon.identity.organization.mgt.service.version}",
+                            org.wso2.carbon.consent.mgt.core;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core.listener;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core.model;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
+                            org.wso2.carbon.consent.mgt.core.exception;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
+                            !org.quartz.*,
                             *
                         </Import-Package>
+                        <!-- The quartz jar is placed on Carbon's shared classpath
+                             (repository/components/lib), not installed as its own OSGi bundle, so
+                             there is no exporting bundle for a static Import-Package to wire
+                             against - matches how the WSO2 Financial Services accelerator resolves
+                             the identical setup. The `!org.quartz.*,` exclusion above is required
+                             for that: the trailing bare `*` in Import-Package (this repo's normal
+                             convention, see components/README.md) makes bnd auto-generate a real,
+                             versioned Import-Package entry for org.quartz from the plain
+                             `import org.quartz.Job` in our own code, regardless of
+                             DynamicImport-Package - the two are additive, not override/fallback -
+                             and that generated entry can never resolve since nothing exports
+                             org.quartz as an OSGi package. FS avoids this the same way but from the
+                             other direction: their Import-Package has no trailing `*` at all, so
+                             bnd never auto-adds org.quartz for them either. -->
+                        <DynamicImport-Package>*</DynamicImport-Package>
                         <_dsannotations>*</_dsannotations>
                     </instructions>
                 </configuration>

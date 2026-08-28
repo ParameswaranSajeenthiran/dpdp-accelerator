@@ -22,8 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -70,7 +69,6 @@ public class EventPublishServiceImpl implements EventPublishService {
     private static final Log LOG = LogFactory.getLog(EventPublishServiceImpl.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final TransactionManager transactionManager;
 
     private EventDAO eventDAO;
 
@@ -83,35 +81,21 @@ public class EventPublishServiceImpl implements EventPublishService {
     private DeliveryAckDAO deliveryAckDAO;
 
     public EventPublishServiceImpl() {
-        this.transactionManager = JDBCPersistenceManager.getInstance();
     }
 
     public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService) {
-        this(eventDAO, topicDAO, eventFanOutService, JDBCPersistenceManager.getInstance());
-    }
-
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
-            TransactionManager transactionManager) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
-        this.transactionManager = transactionManager;
     }
 
     public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO) {
-        this(eventDAO, topicDAO, eventFanOutService, deliveryDAO, deliveryAckDAO,
-                JDBCPersistenceManager.getInstance());
-    }
-
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
-            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, TransactionManager transactionManager) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
-        this.transactionManager = transactionManager;
     }
 
     @Override
@@ -162,30 +146,33 @@ public class EventPublishServiceImpl implements EventPublishService {
         String eventId = UUID.randomUUID().toString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
+        Connection conn = DatabaseUtils.getDBConnection();
         try {
-            return transactionManager.executeInTransaction(conn -> {
-                Topic topic = resolveActiveTopic(conn, orgId, topicName);
-                Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
+            Topic topic = resolveActiveTopic(conn, orgId, topicName);
+            Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
-                if (!eventDAO.addEvent(conn, event)) {
-                    throw new EventNotificationException(
-                            EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                            EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                            String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
-                                    topic.getName()),
-                            400);
-                }
-                if (purposes != null && !purposes.isEmpty()) {
-                    eventDAO.addEventPurposes(conn, eventId, purposes);
-                }
-                eventFanOutService.fanOutEvent(conn, event, purposes);
+            if (!eventDAO.addEvent(conn, event)) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                        EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                        String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
+                                topic.getName()),
+                        400);
+            }
+            if (purposes != null && !purposes.isEmpty()) {
+                eventDAO.addEventPurposes(conn, eventId, purposes);
+            }
+            eventFanOutService.fanOutEvent(conn, event, purposes);
 
-                return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson, purposes, now,
-                        now);
-            });
+            EventDTO result = new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
+                    purposes, now, now);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
         } catch (EventNotificationException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             throw e;
         } catch (Exception e) {
+            DatabaseUtils.rollbackTransaction(conn);
             LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
                     + LogSanitizer.sanitize(e.getMessage()), e);
             throw new EventNotificationException(
@@ -193,6 +180,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
                     500);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 

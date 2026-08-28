@@ -52,8 +52,20 @@ sh bin/configure.sh <IS_HOME>
 
 Edit `repository/conf/configure.properties` first if your hostname, port,
 administrator credentials or database differ from the defaults. This step
-installs `deployment.toml` and applies the consent and complaint management
-schema migrations.
+installs `deployment.toml`, applies the Identity Server's own consent schema
+migration, and creates the `WSO2DPDP_DB` database with every DPDP feature's
+schema.
+
+> **Creating the DPDP database and tables.** With the embedded H2 database
+> (`DB_TYPE=h2`, the default), this step creates `WSO2DPDP_DB` and runs every
+> `h2.sql` it finds under
+> `accelerators/dpdp-is/carbon-home/dbscripts/dpdp-accelerator/` — one
+> subdirectory per DPDP feature (currently `consent-history/` and
+> `event-notification/`); a feature added later just needs its own
+> subdirectory, no script changes required. For any other `DB_TYPE`, create
+> the database yourself first, then execute each feature subdirectory's
+> matching `<db-type>.sql` against it in any order — the scripts are
+> idempotent (`CREATE TABLE IF NOT EXISTS`) and independent of each other.
 
 > **`deployment.toml` is replaced, not merged.** The accelerator ships a
 > complete file — `repository/resources/wso2is-7.3.0-deployment.toml`, the

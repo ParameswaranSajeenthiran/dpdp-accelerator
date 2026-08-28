@@ -19,7 +19,7 @@
 import type { CurrentUser } from '../../../types/auth'
 import { getBasicUser, isAuthEnabled, loadDeploymentConfig } from '../../../utils/authClient'
 import { tenantFromPath } from '../../../utils/basePath'
-import { IS_SCOPES, parseScopes } from '../../../utils/scopes'
+import { CONSENT_HISTORY_SCOPES, IS_SCOPES, parseScopes } from '../../../utils/scopes'
 
 const SUPER_TENANT = 'carbon.super'
 
@@ -44,7 +44,7 @@ export async function fetchCurrentUser(): Promise<CurrentUser> {
       userId: 'anonymous',
       organizationId: tenantFromPath() ?? SUPER_TENANT,
       hideSelfConsentsForAdmins: config.hideSelfConsentsForAdmins,
-      scopes: Object.values(IS_SCOPES),
+      scopes: [...Object.values(IS_SCOPES), ...Object.values(CONSENT_HISTORY_SCOPES)],
     }
   }
 

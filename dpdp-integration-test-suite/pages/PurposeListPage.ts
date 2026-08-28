@@ -32,7 +32,7 @@ export class PurposeListPage {
     this.table = page.getByRole('table', { name: 'Consent purposes' })
     this.heading = page.getByRole('heading', { name: 'Purposes' })
     this.addPurposeButton = page.getByRole('button', { name: 'Add Purpose' })
-    this.nameSearch = page.getByPlaceholder('Search by name')
+    this.nameSearch = page.getByPlaceholder('Search by purpose name')
     this.typeFilter = page.getByLabel('Type', { exact: true })
     this.searchButton = page.getByRole('button', { name: 'Search' })
     this.resetButton = page.getByRole('button', { name: 'Reset' })

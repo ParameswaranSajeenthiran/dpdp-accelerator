@@ -111,13 +111,70 @@ webapp, so there is nothing to configure for multi-tenancy beyond registering
 each tenant above. Consents, catalog data, roles and sessions are all
 partitioned per tenant by the server.
 
+## 6. Configuring periodical consent expiration
+
+The Identity Server already treats a consent as expired the moment its
+`expiryTime` passes — any API call that reads the consent reflects this
+automatically. This job only adds the missing **history record** for that
+transition; it never changes the consent itself.
+
+Configure it under `[dpdp_accelerator.consent_expiry]` in `deployment.toml`:
+
+```toml
+[dpdp_accelerator.consent_expiry]
+enabled = true
+cron_value = "0 0 0 * * ?"
+batch_size = 100
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | Turns the scheduled job on or off. |
+| `cron_value` | `"0 0 0 * * ?"` | Quartz cron expression for how often the job checks for newly-expired consents. The default runs once daily at midnight. |
+| `batch_size` | `100` | Maximum number of expired consents recorded per run, so a large backlog drains gradually instead of in one long transaction. |
+
+Edit these before running `configure.sh`, or directly in
+`<IS_HOME>/repository/conf/deployment.toml` afterwards, and restart the
+server for the change to take effect.
+
+### Clustering requirements
+
+By default, with no extra setup, the job runs correctly on a single server.
+**In a cluster, this default is not safe as-is**: without further
+configuration, every node runs its own independent, in-memory copy of the
+job, so it fires once *per node* instead of once for the whole cluster on
+each scheduled tick.
+
+To run this job correctly across a cluster:
+
+1. Copy the sample `repository/conf/samples/quartz.properties` shipped with
+   the accelerator to `<IS_HOME>/repository/conf/quartz.properties` on
+   **every** node in the cluster. Unlike a hand-written Quartz config, this
+   sample does not need to be edited per node — it uses
+   `org.quartz.scheduler.instanceId = AUTO`, so each node identifies itself
+   automatically.
+2. Create Quartz's own clustering tables (`QRTZ_*`) in the accelerator's
+   `WSO2DPDP_DB` database, once, using the DDL scripts published by the
+   Quartz project itself for version 2.3.x
+   (`https://github.com/quartz-scheduler/quartz/tree/quartz-2.3.x/quartz-core/src/main/resources/org/quartz/impl/jdbcjobstore`)
+   — pick the script matching your database (H2, MySQL, PostgreSQL, etc.).
+   These tables are not created by `configure.sh`; apply them the same way
+   you would apply any other third-party schema.
+3. Restart every node.
+
+With this in place, Quartz coordinates through the shared database so that
+exactly one node executes the job on each scheduled tick, no matter how many
+nodes are running. To confirm it's working, check the logs after a
+scheduled run — only one node should log the job firing, not all of them.
+
 # Configuring Event Notifications
 
 Event Notification Framework runtime settings are configured in the same
-`deployment.toml` file under `[dpdp_accelerator.event_notifications]`. The
-accelerator provisions these values into `dpdp-accelerator.xml`; the ENF
-configuration component then maps them to the typed ENF configuration parser
-before the delivery services activate.
+`deployment.toml` file under `[dpdp_accelerator.event_notifications]` and its
+`[dpdp_accelerator.event_notifications.webhook]` sub-table. The accelerator
+provisions these values into `dpdp-accelerator.xml`; the ENF configuration
+component then maps them to the typed ENF configuration parser before the
+delivery services activate.
 
 For the user workflow—creating topics and subscriptions, preparing a webhook,
 publishing events, and viewing delivery history—see
@@ -125,10 +182,15 @@ publishing events, and viewing delivery history—see
 
 ```toml
 [dpdp_accelerator.event_notifications]
+system_topics_auto_create_enabled = true
+
+[dpdp_accelerator.event_notifications.webhook]
 thread_pool_size = 4
 base_backoff_seconds = 5
 max_retries = 5
 allow_http_callback_url = true
+allowed_callback_ports = "-1,80,443,8443"
+allow_private_network_callback_targets = false
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10

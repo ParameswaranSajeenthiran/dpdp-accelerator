@@ -24,24 +24,11 @@ import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 
 import java.util.Map;
 import java.util.Collections;
+import java.util.Set;
 
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
 
     private static final Log LOG = LogFactory.getLog(DPDPConfigurationServiceImpl.class);
-    private static final int DEFAULT_STATUTORY_DUE_PERIOD_DAYS = 90;
-    private static final int DEFAULT_THREAD_POOL_SIZE = 4;
-    private static final long DEFAULT_BASE_BACKOFF_SECONDS = 5L;
-    private static final int DEFAULT_MAX_RETRIES = 5;
-    private static final boolean DEFAULT_ALLOW_HTTP_CALLBACK_URL = true;
-    private static final int DEFAULT_DELIVERY_WORKER_BATCH_SIZE = 50;
-    private static final int DEFAULT_DELIVERY_WORKER_POLL_SECONDS = 5;
-    private static final int DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS = 10;
-    private static final int DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES = 4096;
-    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS = 60;
-    private static final int DEFAULT_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS = 10;
-    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS = 30;
-    private static final int DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE = 20;
-    private static final int DEFAULT_WORKER_SHUTDOWN_TIMEOUT_SECONDS = 5;
     private final DPDPConfigParser configParser;
 
     public DPDPConfigurationServiceImpl() {
@@ -70,6 +57,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public int getJdbcConnectionVerificationTimeoutSeconds() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_JDBC_CONNECTION_VERIFICATION_TIMEOUT_SECONDS
+                : configParser.getJdbcConnectionVerificationTimeoutSeconds();
+    }
+
+    @Override
     public boolean isConsentPortalProvisioningEnabled() {
 
         return configParser == null || configParser.isConsentPortalProvisioningEnabled();
@@ -82,140 +76,149 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
-    public int getComplaintsStatutoryDuePeriodDays() {
-        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS,
-                DEFAULT_STATUTORY_DUE_PERIOD_DAYS);
-    }
-
-    @Override
     public int getEventNotificationThreadPoolSize() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE, DEFAULT_THREAD_POOL_SIZE);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE
+                : configParser.getEventNotificationThreadPoolSize();
     }
 
     @Override
     public long getEventNotificationBaseBackoffSeconds() {
-        return getNonNegativeLong(DPDPCommonConstants.EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS,
-                DEFAULT_BASE_BACKOFF_SECONDS);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS
+                : configParser.getEventNotificationBaseBackoffSeconds();
     }
 
     @Override
     public int getEventNotificationMaxRetries() {
-        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_RETRIES, DEFAULT_MAX_RETRIES);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_RETRIES
+                : configParser.getEventNotificationMaxRetries();
     }
 
     @Override
     public boolean isEventNotificationHttpCallbackUrlAllowed() {
-        return getBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_ALLOW_HTTP_CALLBACK_URL,
-                DEFAULT_ALLOW_HTTP_CALLBACK_URL);
+
+        return configParser == null || configParser.isEventNotificationHttpCallbackUrlAllowed();
+    }
+
+    @Override
+    public Set<Integer> getEventNotificationAllowedCallbackPorts() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS
+                : configParser.getEventNotificationAllowedCallbackPorts();
+    }
+
+    @Override
+    public boolean isEventNotificationPrivateNetworkCallbackTargetsAllowed() {
+
+        return configParser != null && configParser.isEventNotificationPrivateNetworkCallbackTargetsAllowed();
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerBatchSize() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE,
-                DEFAULT_DELIVERY_WORKER_BATCH_SIZE);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_BATCH_SIZE
+                : configParser.getEventNotificationDeliveryWorkerBatchSize();
     }
 
     @Override
     public int getEventNotificationDeliveryWorkerPollSeconds() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS,
-                DEFAULT_DELIVERY_WORKER_POLL_SECONDS);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_DELIVERY_WORKER_POLL_SECONDS
+                : configParser.getEventNotificationDeliveryWorkerPollSeconds();
     }
 
     @Override
     public int getEventNotificationStuckInFlightThresholdSeconds() {
-        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS,
-                DEFAULT_STUCK_INFLIGHT_THRESHOLD_SECONDS);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_STUCK_INFLIGHT_THRESHOLD_SECONDS
+                : configParser.getEventNotificationStuckInFlightThresholdSeconds();
     }
 
     @Override
     public int getEventNotificationMaxVerificationResponseBodyBytes() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES,
-                DEFAULT_MAX_VERIFICATION_RESPONSE_BODY_BYTES);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_VERIFICATION_RESPONSE_BODY_BYTES
+                : configParser.getEventNotificationMaxVerificationResponseBodyBytes();
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryThresholdSeconds() {
-        return getNonNegativeInt(
-                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS,
-                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_THRESHOLD_SECONDS
+                : configParser.getEventNotificationPendingSubscriptionRecoveryThresholdSeconds();
     }
 
     @Override
     public int getEventNotificationBackgroundWorkerInitialDelaySeconds() {
-        return getNonNegativeInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS,
-                DEFAULT_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_BACKGROUND_WORKER_INITIAL_DELAY_SECONDS
+                : configParser.getEventNotificationBackgroundWorkerInitialDelaySeconds();
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryIntervalSeconds() {
-        return getPositiveInt(
-                DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS,
-                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS
+                : configParser.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds();
     }
 
     @Override
     public int getEventNotificationPendingSubscriptionRecoveryBatchSize() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE,
-                DEFAULT_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE);
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE
+                : configParser.getEventNotificationPendingSubscriptionRecoveryBatchSize();
     }
 
     @Override
     public int getEventNotificationWorkerShutdownTimeoutSeconds() {
-        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS,
-                DEFAULT_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS
+                : configParser.getEventNotificationWorkerShutdownTimeoutSeconds();
     }
 
-    private int getPositiveInt(String configKey, int defaultValue) {
-        int value = getInt(configKey, defaultValue);
-        if (value <= 0) {
-            throw new IllegalStateException("DPDP configuration must be positive: " + configKey);
-        }
-        return value;
+    @Override
+    public boolean isEventNotificationSystemTopicsAutoCreateEnabled() {
+
+        return configParser == null || configParser.isEventNotificationSystemTopicsAutoCreateEnabled();
     }
 
-    private int getNonNegativeInt(String configKey, int defaultValue) {
-        int value = getInt(configKey, defaultValue);
-        if (value < 0) {
-            throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
-        }
-        return value;
+    @Override
+    public boolean isConsentHistoryEnabled() {
+
+        return configParser == null || configParser.isConsentHistoryEnabled();
     }
 
-    private long getNonNegativeLong(String configKey, long defaultValue) {
-        String value = getValue(configKey, String.valueOf(defaultValue));
-        try {
-            long parsed = Long.parseLong(value);
-            if (parsed < 0) {
-                throw new IllegalStateException("DPDP configuration cannot be negative: " + configKey);
-            }
-            return parsed;
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
-        }
+    @Override
+    public boolean isConsentHistorySnapshotEnabled() {
+
+        return configParser == null || configParser.isConsentHistorySnapshotEnabled();
     }
 
-    private int getInt(String configKey, int defaultValue) {
-        String value = getValue(configKey, String.valueOf(defaultValue));
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid numeric DPDP configuration: " + configKey, e);
-        }
+    @Override
+    public boolean isConsentExpiryEnabled() {
+
+        return configParser == null || configParser.isConsentExpiryEnabled();
     }
 
-    private boolean getBoolean(String configKey, boolean defaultValue) {
-        String value = getValue(configKey, String.valueOf(defaultValue));
-        if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
-            throw new IllegalStateException("Invalid boolean DPDP configuration: " + configKey);
-        }
-        return Boolean.parseBoolean(value);
+    @Override
+    public String getConsentExpiryCronValue() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_CRON_VALUE
+                : configParser.getConsentExpiryCronValue();
     }
 
-    private String getValue(String configKey, String defaultValue) {
-        Object configuredValue = getConfigurations().get(configKey);
-        if (configuredValue != null && !configuredValue.toString().trim().isEmpty()) {
-            return configuredValue.toString().trim();
-        }
-        return defaultValue;
+    @Override
+    public int getConsentExpiryBatchSize() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE
+                : configParser.getConsentExpiryBatchSize();
     }
 }

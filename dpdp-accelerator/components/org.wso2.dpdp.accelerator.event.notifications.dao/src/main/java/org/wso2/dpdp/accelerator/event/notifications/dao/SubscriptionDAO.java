@@ -70,8 +70,17 @@ public interface SubscriptionDAO {
     List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     default List<Subscription> getLiveSubscriptionsByOrgAndTopic(String orgId, String topicId) {
-        return DatabaseUtils.executeWithConnection(conn ->
-                getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<Subscription> result = getLiveSubscriptionsByOrgAndTopic(conn, orgId, topicId);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     /**

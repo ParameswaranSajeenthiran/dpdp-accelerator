@@ -16,8 +16,8 @@
 # under the License.
 #
 # Applies the offline configuration the accelerator needs: installs the shipped
-# deployment.toml, writes the portal configuration file and applies the consent,
-# complaint management, and shared DPDP (event notification) schema migrations.
+# deployment.toml, applies IS's own consent schema migration, and creates the
+# WSO2DPDP_DB database with every DPDP feature's schema.
 # Run this with the server STOPPED, then start it and follow docs/configuration-guide.md.
 
 set -e
@@ -61,7 +61,7 @@ if [ ! -f "${TOML_TEMPLATE}" ]; then
   exit 2
 fi
 
-echo "[1/4] Installing deployment.toml from $(basename "${TOML_TEMPLATE}")"
+echo "[1/3] Installing deployment.toml from $(basename "${TOML_TEMPLATE}")"
 cp "${TOML_TEMPLATE}" "${TOML_STAGING}"
 
 # Substituted on the staging copy so the shipped template keeps its placeholders.
@@ -88,21 +88,21 @@ echo "      deployment.toml was REPLACED, not merged - re-apply any local"
 echo "      customisation from the backup before starting the server."
 
 # ------------------------------------------------------------ consent DB migration
-if [ "${APPLY_CONSENT_DB_MIGRATION}" != "true" ]; then
-  echo "[2/4] Skipping the consent schema migration (APPLY_CONSENT_DB_MIGRATION is not true)."
+if [ "${APPLY_IS_CONSENT_MGT_V2_MIGRATION}" != "true" ]; then
+  echo "[2/3] Skipping the consent schema migration (APPLY_IS_CONSENT_MGT_V2_MIGRATION is not true)."
 else
   MIGRATION="${WSO2_IS_HOME}/dbscripts/migrations/consent/${DB_TYPE}-migration.txt"
   if [ ! -f "${MIGRATION}" ]; then
-    echo "[2/4] WARNING: no migration script at ${MIGRATION}; skipping."
+    echo "[2/3] WARNING: no migration script at ${MIGRATION}; skipping."
   elif [ "${DB_TYPE}" != "h2" ]; then
     # Only the bundled H2 database can be migrated without external credentials.
-    echo "[2/4] Apply ${MIGRATION} to your ${DB_TYPE} identity database before starting the server."
+    echo "[2/3] Apply ${MIGRATION} to your ${DB_TYPE} identity database before starting the server."
   else
     H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
     if [ -z "${H2_JAR}" ]; then
-      echo "[2/4] WARNING: could not locate the H2 engine jar; apply ${MIGRATION} manually."
+      echo "[2/3] WARNING: could not locate the H2 engine jar; apply ${MIGRATION} manually."
     else
-      echo "[2/4] Applying the consent schema migration to the embedded H2 database"
+      echo "[2/3] Applying the consent schema migration to the embedded H2 database"
       TMP_SQL="$(mktemp)"
       grep -v '^#' "${MIGRATION}" > "${TMP_SQL}"
       java -cp "${H2_JAR}" org.h2.tools.RunScript \
@@ -114,52 +114,38 @@ else
   fi
 fi
 
-# ---------------------------------------------------------- complaint DB schema
-if [ "${APPLY_COMPLAINT_DB_MIGRATION}" != "true" ]; then
-  echo "[3/4] Skipping the complaint schema (APPLY_COMPLAINT_DB_MIGRATION is not true)."
-else
-  COMPLAINT_SCHEMA="${ACCELERATOR_HOME}/carbon-home/dbscripts/dpdp-accelerator/complaint/${DB_TYPE}.sql"
-  if [ ! -f "${COMPLAINT_SCHEMA}" ]; then
-    echo "[3/4] WARNING: no complaint schema script at ${COMPLAINT_SCHEMA}; skipping."
-  elif [ "${DB_TYPE}" != "h2" ]; then
-    # Only the bundled H2 database can be migrated without external credentials.
-    echo "[3/4] Apply ${COMPLAINT_SCHEMA} to your ${DB_TYPE} complaint database before starting the server."
-  else
-    H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
-    if [ -z "${H2_JAR}" ]; then
-      echo "[3/4] WARNING: could not locate the H2 engine jar; apply ${COMPLAINT_SCHEMA} manually."
-    else
-      echo "[3/4] Applying the complaint schema to the embedded H2 database"
-      java -cp "${H2_JAR}" org.h2.tools.RunScript \
-        -url "jdbc:h2:${WSO2_IS_HOME}/repository/database/WSO2DPDP_DB" \
-        -user wso2carbon -password wso2carbon -script "${COMPLAINT_SCHEMA}"
-      echo "      Schema applied."
-    fi
-  fi
-fi
-
-# ---------------------------------------------------- event notification DB schema
-# Shares the WSO2DPDP_DB datasource/database with the complaint schema above - see
-# [datasource.WSO2DPDP_DB] in wso2is-7.3.0-deployment.toml.
+# ------------------------------------------------------------- DPDP DB schema creation
+# WSO2DPDP_DB is not part of the stock distribution, so unlike WSO2IDENTITY_DB above,
+# there is no existing file to migrate - H2 creates it fresh on first connection,
+# RunScript included. Every DPDP feature has its own subdirectory under
+# dbscripts/dpdp-accelerator/ (currently consent-history/ and event-notification/) - each
+# one's ${DB_TYPE}.sql is applied in turn, so a new feature directory needs no edit here.
 if [ "${APPLY_DPDP_DB_MIGRATION}" != "true" ]; then
-  echo "[4/4] Skipping the event notification schema (APPLY_DPDP_DB_MIGRATION is not true)."
+  echo "[3/3] Skipping the DPDP schema creation (APPLY_DPDP_DB_MIGRATION is not true)."
 else
-  EVENT_NOTIFICATION_SCHEMA="${ACCELERATOR_HOME}/carbon-home/dbscripts/dpdp-accelerator/event-notification/${DB_TYPE}.sql"
-  if [ ! -f "${EVENT_NOTIFICATION_SCHEMA}" ]; then
-    echo "[4/4] WARNING: no event notification schema script at ${EVENT_NOTIFICATION_SCHEMA}; skipping."
-  elif [ "${DB_TYPE}" != "h2" ]; then
+  DPDP_DBSCRIPTS_DIR="${ACCELERATOR_HOME}/carbon-home/dbscripts/dpdp-accelerator"
+  if [ "${DB_TYPE}" != "h2" ]; then
     # Only the bundled H2 database can be migrated without external credentials.
-    echo "[4/4] Apply ${EVENT_NOTIFICATION_SCHEMA} to your ${DB_TYPE} DPDP database before starting the server."
+    echo "[3/3] Apply each feature's ${DB_TYPE}.sql under ${DPDP_DBSCRIPTS_DIR}/<feature>/ to your ${DB_TYPE} database before starting the server."
   else
     H2_JAR=$(find "${WSO2_IS_HOME}/repository/components/plugins" -name "h2-engine_*.jar" | head -1)
     if [ -z "${H2_JAR}" ]; then
-      echo "[4/4] WARNING: could not locate the H2 engine jar; apply ${EVENT_NOTIFICATION_SCHEMA} manually."
+      echo "[3/3] WARNING: could not locate the H2 engine jar; apply each feature's ${DB_TYPE}.sql under ${DPDP_DBSCRIPTS_DIR}/<feature>/ manually."
     else
-      echo "[4/4] Applying the event notification schema to the embedded H2 database"
-      java -cp "${H2_JAR}" org.h2.tools.RunScript \
-        -url "jdbc:h2:${WSO2_IS_HOME}/repository/database/WSO2DPDP_DB" \
-        -user wso2carbon -password wso2carbon -script "${EVENT_NOTIFICATION_SCHEMA}"
-      echo "      Schema applied."
+      echo "[3/3] Creating the DPDP schema in the embedded H2 database"
+      for FEATURE_DIR in "${DPDP_DBSCRIPTS_DIR}"/*/; do
+        FEATURE_NAME="$(basename "${FEATURE_DIR}")"
+        FEATURE_SCRIPT="${FEATURE_DIR}${DB_TYPE}.sql"
+        if [ ! -f "${FEATURE_SCRIPT}" ]; then
+          echo "      WARNING: no ${DB_TYPE}.sql for feature '${FEATURE_NAME}'; skipping."
+          continue
+        fi
+        echo "      Applying ${FEATURE_NAME}/${DB_TYPE}.sql"
+        java -cp "${H2_JAR}" org.h2.tools.RunScript \
+          -url "jdbc:h2:${WSO2_IS_HOME}/repository/database/WSO2DPDP_DB" \
+          -user wso2carbon -password wso2carbon -script "${FEATURE_SCRIPT}"
+      done
+      echo "      Schema created."
     fi
   fi
 fi

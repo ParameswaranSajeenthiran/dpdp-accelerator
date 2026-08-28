@@ -20,6 +20,7 @@
     <test name="dpdp-identity-extensions-tests">
         <packages>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.tenant"/>
+            <package name="org.wso2.dpdp.accelerator.identity.extensions.consent"/>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.internal"/>
         </packages>
     </test>

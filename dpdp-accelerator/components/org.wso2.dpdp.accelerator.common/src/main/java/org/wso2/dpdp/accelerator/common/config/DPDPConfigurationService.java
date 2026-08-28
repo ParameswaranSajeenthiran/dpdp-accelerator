@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.common.config;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Exposes {@code dpdp-accelerator.xml} configuration as an OSGi service, so other bundles
@@ -27,6 +28,8 @@ import java.util.Map;
 public interface DPDPConfigurationService {
 
     Map<String, Object> getConfigurations();
+
+    int getJdbcConnectionVerificationTimeoutSeconds();
 
     boolean isConsentPortalProvisioningEnabled();
 
@@ -41,6 +44,10 @@ public interface DPDPConfigurationService {
     int getEventNotificationMaxRetries();
 
     boolean isEventNotificationHttpCallbackUrlAllowed();
+
+    Set<Integer> getEventNotificationAllowedCallbackPorts();
+
+    boolean isEventNotificationPrivateNetworkCallbackTargetsAllowed();
 
     int getEventNotificationDeliveryWorkerBatchSize();
 
@@ -59,4 +66,16 @@ public interface DPDPConfigurationService {
     int getEventNotificationPendingSubscriptionRecoveryBatchSize();
 
     int getEventNotificationWorkerShutdownTimeoutSeconds();
+
+    boolean isEventNotificationSystemTopicsAutoCreateEnabled();
+
+    boolean isConsentHistoryEnabled();
+
+    boolean isConsentHistorySnapshotEnabled();
+
+    boolean isConsentExpiryEnabled();
+
+    String getConsentExpiryCronValue();
+
+    int getConsentExpiryBatchSize();
 }

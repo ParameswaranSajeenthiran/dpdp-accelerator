@@ -27,7 +27,7 @@ import { type Locator, type Page } from '@playwright/test'
 export class AppSidebarPage {
   readonly nav: Locator
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
     // The "Primary navigation" aria-label lands on the outer <Sidebar> wrapper, which renders
     // as a `complementary` (<aside>) landmark - the inner <Sidebar.Nav> is an unnamed <nav> -
     // confirmed via an actual accessibility-tree snapshot, not guessed. "Dashboard" also appears

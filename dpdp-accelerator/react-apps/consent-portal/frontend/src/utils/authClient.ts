@@ -25,7 +25,7 @@ import {
 } from '@asgardeo/auth-spa'
 
 import { runtimeBasePath, serverBaseUrl } from './basePath'
-import { EVENT_SCOPES, IS_SCOPES } from './scopes'
+import { CONSENT_HISTORY_SCOPES, EVENT_SCOPES, IS_SCOPES } from './scopes'
 
 /**
  * OIDC authentication for the portal, the way the Identity Server's own SPAs
@@ -68,6 +68,7 @@ const DEFAULT_SCOPE: string[] = [
   'profile',
   ...Object.values(IS_SCOPES),
   ...Object.values(EVENT_SCOPES),
+  ...Object.values(CONSENT_HISTORY_SCOPES),
 ]
 
 let initPromise: Promise<void> | undefined

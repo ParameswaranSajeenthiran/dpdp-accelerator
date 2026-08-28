@@ -21,19 +21,26 @@ package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.organization.management.service.util.OrganizationManagementUtil;
 import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Registers the DPDP Consent Portal application in every newly created tenant, the same way
  * {@code org.wso2.identity.apps.common.listner.AppPortalTenantMgtListener} registers Console and
- * My Account. Runs in-process, so it never touches the management REST API layer.
+ * My Account, and reconciles the Event Notification system topics for that tenant via
+ * {@link EventNotificationTopicProvisioner}. The only {@link TenantMgtListener} this module
+ * registers - both concerns run from the one tenant-flow to avoid two independent listeners
+ * doing their own {@code PrivilegedCarbonContext} setup. Runs in-process, so it never touches
+ * the management REST API layer.
  */
 public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener {
 
@@ -59,7 +66,6 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
     public void onTenantUpdate(TenantInfoBean tenantInfoBean) {
 
         // Log and continue - a provisioning failure shouldn't block the tenant update itself.
-        // This is also the recovery path: re-run to fix whatever's missing.
         try {
             if (OrganizationManagementUtil.isOrganization(tenantInfoBean.getTenantId())) {
                 LOG.debug("Skipping DPDP Consent Portal provisioning for organization tenant: "
@@ -74,16 +80,24 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
     }
 
     /**
-     * Creates the portal app, its API authorization and its roles for one tenant, or repairs
-     * whatever's missing if the app already exists. Safe to re-run since every step is idempotent.
+     * Reconciles the Event Notification system topics, then creates the portal app, its API
+     * authorization and its roles for one tenant, or repairs whatever's missing if the app
+     * already exists. Safe to re-run since every step is idempotent. Topic reconciliation and
+     * portal provisioning are each independently toggleable and gated by their own config flag.
      */
     public static void provisionTenant(TenantInfoBean tenantInfoBean) throws Exception {
 
         String tenantDomain = sanitize(tenantInfoBean.getTenantDomain());
 
-        if (!DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
-                .isConsentPortalProvisioningEnabled()) {
-            LOG.debug("DPDP Consent Portal provisioning is disabled; skipping tenant: " + tenantDomain);
+        // Each independently toggleable - checked before starting the tenant flow so a tenant
+        // with both disabled never pays for PrivilegedCarbonContext setup at all.
+        DPDPConfigurationService configurationService = DPDPIdentityExtensionDataHolder.getInstance()
+                .getConfigurationService();
+        boolean provisionTopics = configurationService.isEventNotificationSystemTopicsAutoCreateEnabled();
+        boolean provisionPortal = configurationService.isConsentPortalProvisioningEnabled();
+        if (!provisionTopics && !provisionPortal) {
+            LOG.debug("Event Notification system topic provisioning and DPDP Consent Portal provisioning are "
+                    + "both disabled; skipping tenant: " + tenantDomain);
             return;
         }
 
@@ -94,6 +108,15 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             carbonContext.setTenantDomain(tenantDomain);
             carbonContext.setUsername(tenantInfoBean.getAdmin());
 
+            if (provisionTopics) {
+                EventNotificationTopicProvisioner.provisionSystemTopics(tenantDomain);
+            }
+
+            if (!provisionPortal) {
+                LOG.debug("DPDP Consent Portal provisioning is disabled; skipping tenant: " + tenantDomain);
+                return;
+            }
+
             String applicationId = DPDPConsentPortalAppProvisioningUtil.getApplicationId(tenantDomain);
             if (applicationId == null) {
                 applicationId = DPDPConsentPortalAppProvisioningUtil.provisionApplication(tenantInfoBean);
@@ -102,25 +125,28 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                         + "; reconciling its API authorization and roles.");
             }
 
-            List<String> authorizedConsentScopes = DPDPConsentPortalAppProvisioningUtil
+            DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
+            DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
+
+            List<String> consentMgtScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
-            List<String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
-                    .authorizeComplaintManagementAPI(applicationId, tenantDomain);
-
-            // Registers the event notification API resources themselves (if not already present)
-            // before authorizing this application for them - authorizing an application for a
-            // resource that doesn't exist yet would fail.
-            DPDPConsentPortalAppProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
-            List<String> authorizedEventScopes = DPDPConsentPortalAppProvisioningUtil
+            List<String> eventNotificationScopes = DPDPApiResourceProvisioningUtil
                     .authorizeEventNotificationAPIs(applicationId, tenantDomain);
+            List<String> authorizeConsentHistoryApi = DPDPApiResourceProvisioningUtil
+                    .authorizeConsentHistoryApi(applicationId, tenantDomain);
+            String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
+                    .authorizeComplaintManagementAPI(applicationId, tenantDomain);
+            List<String> adminScopes = new ArrayList<>(consentMgtScopes);
+            adminScopes.addAll(authorizedComplaintScopes);
+            adminScopes.addAll(eventNotificationScopes);
+            adminScopes.addAll(authorizeConsentHistoryApi);
+            List<String> userScopes = Arrays.asList(DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
+                    DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF);
 
-            // No dedicated complaint/event role - their scopes are folded into dpdp-consent-admin
-            // alongside the consent-mgt ones; dpdp-consent-user gets only the :self-suffixed
-            // complaint scopes (see DPDPConsentPortalRoleProvisioningUtil).
-            List<String> authorizedScopes = new ArrayList<>(authorizedConsentScopes);
-            authorizedScopes.addAll(authorizedComplaintScopes);
-            authorizedScopes.addAll(authorizedEventScopes);
-            DPDPConsentPortalRoleProvisioningUtil.createRoles(applicationId, tenantDomain, authorizedScopes);
+            List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(tenantDomain, adminScopes,
+                    userScopes);
+            DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(tenantDomain, tenantInfoBean.getAdmin(),
+                    roles);
 
             LOG.info("Provisioned the DPDP Consent Portal for tenant: " + tenantDomain);
         } finally {

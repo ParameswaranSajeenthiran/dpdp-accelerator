@@ -32,6 +32,7 @@
     <modules>
         <module>react-apps</module>
         <module>components/org.wso2.dpdp.accelerator.common</module>
+        <module>components/org.wso2.dpdp.accelerator.consent.extensions</module>
         <module>components/org.wso2.dpdp.accelerator.identity.extensions</module>
         <module>components/org.wso2.dpdp.common</module>
         <module>components/org.wso2.dpdp.accelerator.complaint.mgt.dao</module>
@@ -41,5 +42,6 @@
         <module>components/org.wso2.dpdp.accelerator.event.notifications.dao</module>
         <module>components/org.wso2.dpdp.accelerator.event.notifications.service</module>
         <module>internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint</module>
+        <module>internal-webapps/org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</module>
     </modules>
 </project>

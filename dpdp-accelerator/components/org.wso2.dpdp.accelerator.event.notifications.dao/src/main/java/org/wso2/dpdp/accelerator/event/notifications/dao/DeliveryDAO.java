@@ -35,8 +35,17 @@ public interface DeliveryDAO {
     boolean addWebhookDelivery(Connection conn, WebhookDelivery delivery);
 
     default boolean addWebhookDelivery(WebhookDelivery delivery) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> addWebhookDelivery(conn, delivery));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addWebhookDelivery(conn, delivery);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId);

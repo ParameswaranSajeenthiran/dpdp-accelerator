@@ -93,31 +93,33 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<WebhookDelivery> getWebhookDeliveryById(String deliveryId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryByIdAndOrgQuery())) {
-            ps.setString(1, deliveryId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new WebhookDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
-                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryByIdAndOrgQuery())) {
+                ps.setString(1, deliveryId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(new WebhookDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                                rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT)));
+                    }
                 }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY, deliveryId), e);
             }
-            return Optional.empty();
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY, deliveryId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -138,84 +140,97 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     private List<WebhookDeliveryDispatchContext> loadDispatchContexts(String sql, int limit) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    WebhookDelivery delivery = new WebhookDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
-                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
-                    list.add(new WebhookDeliveryDispatchContext(
-                            delivery,
-                            rs.getString(EventNotificationDBColumns.ORG_ID),
-                            rs.getString(EventNotificationDBColumns.CALLBACK_URL),
-                            rs.getString(EventNotificationDBColumns.SHARED_SECRET),
-                            rs.getString(EventNotificationDBColumns.PAYLOAD),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getString(EventNotificationDBColumns.TOPIC_ID),
-                            rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        WebhookDelivery delivery = new WebhookDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                                rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
+                        list.add(new WebhookDeliveryDispatchContext(
+                                delivery,
+                                rs.getString(EventNotificationDBColumns.ORG_ID),
+                                rs.getString(EventNotificationDBColumns.CALLBACK_URL),
+                                rs.getString(EventNotificationDBColumns.SHARED_SECRET),
+                                rs.getString(EventNotificationDBColumns.PAYLOAD),
+                                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                                rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                                rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
+                    }
                 }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
             }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private List<WebhookDeliveryDispatchContext> loadDispatchContextsWithCutoff(String sql, int limit, Timestamp cutoff) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setTimestamp(1, cutoff != null ? cutoff : new Timestamp(System.currentTimeMillis()));
-            ps.setInt(2, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    WebhookDelivery delivery = new WebhookDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
-                            rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
-                    list.add(new WebhookDeliveryDispatchContext(
-                            delivery,
-                            rs.getString(EventNotificationDBColumns.ORG_ID),
-                            rs.getString(EventNotificationDBColumns.CALLBACK_URL),
-                            rs.getString(EventNotificationDBColumns.SHARED_SECRET),
-                            rs.getString(EventNotificationDBColumns.PAYLOAD),
-                            rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getString(EventNotificationDBColumns.TOPIC_ID),
-                            rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<WebhookDeliveryDispatchContext> list = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setTimestamp(1, cutoff != null ? cutoff : new Timestamp(System.currentTimeMillis()));
+                ps.setInt(2, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        WebhookDelivery delivery = new WebhookDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getInt(EventNotificationDBColumns.ATTEMPT_COUNT),
+                                rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
+                        list.add(new WebhookDeliveryDispatchContext(
+                                delivery,
+                                rs.getString(EventNotificationDBColumns.ORG_ID),
+                                rs.getString(EventNotificationDBColumns.CALLBACK_URL),
+                                rs.getString(EventNotificationDBColumns.SHARED_SECRET),
+                                rs.getString(EventNotificationDBColumns.PAYLOAD),
+                                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
+                                rs.getString(EventNotificationDBColumns.TOPIC_ID),
+                                rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
+                    }
                 }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
             }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public boolean updateWebhookDeliveryStatus(WebhookDelivery delivery) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> updateWebhookDeliveryStatus(conn, delivery));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updateWebhookDeliveryStatus(conn, delivery);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     public boolean updateWebhookDeliveryStatus(Connection conn, WebhookDelivery delivery) {
@@ -236,41 +251,71 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean recordSuccessfulAttempt(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
-        return DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             boolean updated = updateWebhookDeliveryStatus(conn, delivery);
             if (updated) {
                 addWebhookDeliveryAudit(conn, audit);
             }
+            DatabaseUtils.commitTransaction(conn);
             return updated;
-        });
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public boolean recordRetryableFailure(WebhookDeliveryAudit audit, String deliveryId, int attemptCount, Timestamp nextRetryAt) {
-        return DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             boolean released = releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
             if (released) {
                 addWebhookDeliveryAudit(conn, audit);
             }
+            DatabaseUtils.commitTransaction(conn);
             return released;
-        });
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public boolean recordPermanentFailure(WebhookDeliveryAudit audit, WebhookDelivery delivery) {
-        return DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             boolean updated = updateWebhookDeliveryStatus(conn, delivery);
             if (updated) {
                 addWebhookDeliveryAudit(conn, audit);
             }
+            DatabaseUtils.commitTransaction(conn);
             return updated;
-        });
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public boolean addWebhookDeliveryAudit(WebhookDeliveryAudit audit) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> addWebhookDeliveryAudit(conn, audit));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addWebhookDeliveryAudit(conn, audit);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     public boolean addWebhookDeliveryAudit(Connection conn, WebhookDeliveryAudit audit) {
@@ -293,38 +338,49 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public List<WebhookDeliveryAudit> getWebhookDeliveryAudits(String deliveryId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<WebhookDeliveryAudit> list = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn
-                        .prepareStatement(getQueries(conn).getGetWebhookDeliveryAuditsByDeliveryIdQuery())) {
-            ps.setString(1, deliveryId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new WebhookDeliveryAudit(
-                            rs.getString(EventNotificationDBColumns.AUDIT_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.ORG_ID),
-                            rs.getString(EventNotificationDBColumns.RESPONSE_CODE),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.ATTEMPT_AT)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<WebhookDeliveryAudit> list = new ArrayList<>();
+            try (PreparedStatement ps = conn
+                    .prepareStatement(getQueries(conn).getGetWebhookDeliveryAuditsByDeliveryIdQuery())) {
+                ps.setString(1, deliveryId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        list.add(new WebhookDeliveryAudit(
+                                rs.getString(EventNotificationDBColumns.AUDIT_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.ORG_ID),
+                                rs.getString(EventNotificationDBColumns.RESPONSE_CODE),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.ATTEMPT_AT)));
+                    }
                 }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY_AUDITS, deliveryId),
+                        e);
             }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY_AUDITS, deliveryId),
-                    e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public boolean addPollDelivery(PollDelivery delivery) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> addPollDelivery(conn, delivery));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addPollDelivery(conn, delivery);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -347,56 +403,60 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public Optional<PollDelivery> getPollDeliveryById(String deliveryId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPollDeliveryByIdAndOrgQuery())) {
-            ps.setString(1, deliveryId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new PollDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPollDeliveryByIdAndOrgQuery())) {
+                ps.setString(1, deliveryId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(new PollDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
+                    }
                 }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_POLL_DELIVERY, deliveryId), e);
             }
-            return Optional.empty();
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_POLL_DELIVERY, deliveryId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          List<PollDelivery> candidates = new ArrayList<>();
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingPollDeliveriesQuery())) {
-            ps.setString(1, orgId);
-            ps.setString(2, groupId);
-            ps.setInt(3, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    candidates.add(new PollDelivery(
-                            rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                            rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                            rs.getString(EventNotificationDBColumns.EVENT_ID),
-                            rs.getString(EventNotificationDBColumns.STATUS),
-                            rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<PollDelivery> candidates = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingPollDeliveriesQuery())) {
+                ps.setString(1, orgId);
+                ps.setString(2, groupId);
+                ps.setInt(3, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        candidates.add(new PollDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
+                    }
                 }
+                return candidates;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES, groupId), e);
             }
-            return candidates;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES, groupId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -410,10 +470,16 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             return;
         }
 
-        DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             updatePollDeliveryStatuses(conn, orgId, groupId, ackEventIds, errEventIds);
-            return null;
-        });
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -480,8 +546,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimWebhookDelivery(String deliveryId) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> claimWebhookDelivery(conn, deliveryId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = claimWebhookDelivery(conn, deliveryId);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -497,8 +572,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimStuckWebhookDelivery(String deliveryId, Timestamp updatedBefore) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> claimStuckWebhookDelivery(conn, deliveryId, updatedBefore));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = claimStuckWebhookDelivery(conn, deliveryId, updatedBefore);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -515,8 +599,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean releaseWebhookDelivery(String deliveryId, int attemptCount, Timestamp nextRetryAt) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = releaseWebhookDelivery(conn, deliveryId, attemptCount, nextRetryAt);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -537,8 +630,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean claimPollDelivery(String deliveryId) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> claimPollDelivery(conn, deliveryId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = claimPollDelivery(conn, deliveryId);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -554,8 +656,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
 
     @Override
     public boolean updatePollDeliveryStatus(String deliveryId, String status) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> updatePollDeliveryStatus(conn, deliveryId, status));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updatePollDeliveryStatus(conn, deliveryId, status);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -576,8 +687,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         if (expectedStatus == null || expectedStatus.trim().isEmpty()) {
             return updatePollDeliveryStatus(deliveryId, newStatus);
         }
-        return DatabaseUtils.executeInTransaction(
-                conn -> updatePollDeliveryStatus(conn, deliveryId, expectedStatus, newStatus));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updatePollDeliveryStatus(conn, deliveryId, expectedStatus, newStatus);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -599,70 +719,75 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             int offset, int[] totalOut) {
         List<SubscriptionDeliverySummary> list = new ArrayList<>();
 
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try {
-            EventNotificationCommonDBQueries queries = getQueries(conn);
-            String baseSql = queries.getGetSubscriptionDeliveriesUnionBaseQuery();
-            String countSql = "SELECT COUNT(*) FROM (" + baseSql + ") AS u";
-            String pageSql = baseSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
-            try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
-                countPs.setString(1, subscriptionId);
-                countPs.setString(2, orgId);
-                countPs.setString(3, subscriptionId);
-                countPs.setString(4, orgId);
-                try (ResultSet rs = countPs.executeQuery()) {
-                    if (rs.next()) {
-                        totalOut[0] = rs.getInt(1);
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try {
+                EventNotificationCommonDBQueries queries = getQueries(conn);
+                String baseSql = queries.getGetSubscriptionDeliveriesUnionBaseQuery();
+                String countSql = "SELECT COUNT(*) FROM (" + baseSql + ") AS u";
+                String pageSql = baseSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
+                try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
+                    countPs.setString(1, subscriptionId);
+                    countPs.setString(2, orgId);
+                    countPs.setString(3, subscriptionId);
+                    countPs.setString(4, orgId);
+                    try (ResultSet rs = countPs.executeQuery()) {
+                        if (rs.next()) {
+                            totalOut[0] = rs.getInt(1);
+                        }
                     }
                 }
-            }
 
-            try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
-                ps.setString(1, subscriptionId);
-                ps.setString(2, orgId);
-                ps.setString(3, subscriptionId);
-                ps.setString(4, orgId);
-                ps.setInt(5, limit);
-                ps.setInt(6, offset);
+                try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
+                    ps.setString(1, subscriptionId);
+                    ps.setString(2, orgId);
+                    ps.setString(3, subscriptionId);
+                    ps.setString(4, orgId);
+                    ps.setInt(5, limit);
+                    ps.setInt(6, offset);
 
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(mapSummary(rs));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(mapSummary(rs));
+                        }
                     }
                 }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_LISTING_DELIVERIES_FOR_SUBSCRIPTION,
+                                subscriptionId),
+                        e);
             }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_LISTING_DELIVERIES_FOR_SUBSCRIPTION,
-                            subscriptionId),
-                    e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public Optional<SubscriptionDeliverySummary> getSubscriptionDeliveryById(String orgId, String subscriptionId, String deliveryId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionDeliveryByIdQuery())) {
-            ps.setString(1, subscriptionId);
-            ps.setString(2, deliveryId);
-            ps.setString(3, orgId);
-            ps.setString(4, subscriptionId);
-            ps.setString(5, deliveryId);
-            ps.setString(6, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapSummary(rs));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionDeliveryByIdQuery())) {
+                ps.setString(1, subscriptionId);
+                ps.setString(2, deliveryId);
+                ps.setString(3, orgId);
+                ps.setString(4, subscriptionId);
+                ps.setString(5, deliveryId);
+                ps.setString(6, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapSummary(rs));
+                    }
                 }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTION_DELIVERY, deliveryId), e);
             }
-            return Optional.empty();
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTION_DELIVERY, deliveryId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -724,97 +849,17 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             outerParams.add(term);
         }
 
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try {
-            EventNotificationCommonDBQueries queries = getQueries(conn);
-            StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
-            List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try {
+                EventNotificationCommonDBQueries queries = getQueries(conn);
+                StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
+                List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
 
-            String wrappedSql = "SELECT * FROM (" + unionSql + ") AS u" + outerWhere;
-            String countSql = "SELECT COUNT(*) FROM (" + wrappedSql + ") AS c";
-            String pageSql = wrappedSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
+                String wrappedSql = "SELECT * FROM (" + unionSql + ") AS u" + outerWhere;
+                String countSql = "SELECT COUNT(*) FROM (" + wrappedSql + ") AS c";
+                String pageSql = wrappedSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
 
-            try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
-                int paramIdx = 1;
-                for (Object p : unionParams) {
-                    countPs.setObject(paramIdx++, p);
-                }
-                for (Object p : outerParams) {
-                    countPs.setObject(paramIdx++, p);
-                }
-                try (ResultSet rs = countPs.executeQuery()) {
-                    if (rs.next()) {
-                        totalOut[0] = rs.getInt(1);
-                    }
-                }
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
-                int paramIdx = 1;
-                for (Object p : unionParams) {
-                    ps.setObject(paramIdx++, p);
-                }
-                for (Object p : outerParams) {
-                    ps.setObject(paramIdx++, p);
-                }
-                ps.setInt(paramIdx++, limit);
-                ps.setInt(paramIdx++, offset);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(mapSummary(rs));
-                    }
-                }
-            }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
-          }
-        });
-    }
-
-    @Override
-    public Optional<SubscriptionDeliverySummary> getOrgDeliveryById(String orgId, String deliveryId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (
-                PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetOrgDeliveryByIdQuery())) {
-            ps.setString(1, orgId);
-            ps.setString(2, orgId);
-            ps.setString(3, deliveryId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapSummary(rs));
-                }
-            }
-            return Optional.empty();
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_ORG_DELIVERY, deliveryId), e);
-          }
-        });
-    }
-
-    @Override
-    public List<SubscriptionDeliverySummary> listEventDeliveries(String orgId, String eventId, int limit, int offset, int[] totalOut) {
-        if (orgId == null || orgId.trim().isEmpty() || eventId == null || eventId.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<SubscriptionDeliverySummary> list = new ArrayList<>();
-        StringBuilder outerWhere = new StringBuilder(" WHERE EVENT_ID = ?");
-        List<Object> outerParams = new ArrayList<>(Collections.singletonList(eventId.trim()));
-
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try {
-            EventNotificationCommonDBQueries queries = getQueries(conn);
-            StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
-            List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
-
-            String wrappedSql = "SELECT * FROM (" + unionSql + ") AS u" + outerWhere;
-            String countSql = "SELECT COUNT(*) FROM (" + wrappedSql + ") AS c";
-            String pageSql = wrappedSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
-
-            if (totalOut != null && totalOut.length > 0) {
                 try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
                     int paramIdx = 1;
                     for (Object p : unionParams) {
@@ -829,31 +874,119 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                         }
                     }
                 }
-            }
 
-            try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
-                int paramIdx = 1;
-                for (Object p : unionParams) {
-                    ps.setObject(paramIdx++, p);
-                }
-                for (Object p : outerParams) {
-                    ps.setObject(paramIdx++, p);
-                }
-                ps.setInt(paramIdx++, limit);
-                ps.setInt(paramIdx++, offset);
+                try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
+                    int paramIdx = 1;
+                    for (Object p : unionParams) {
+                        ps.setObject(paramIdx++, p);
+                    }
+                    for (Object p : outerParams) {
+                        ps.setObject(paramIdx++, p);
+                    }
+                    ps.setInt(paramIdx++, limit);
+                    ps.setInt(paramIdx++, offset);
 
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        list.add(mapSummary(rs));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(mapSummary(rs));
+                        }
                     }
                 }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
             }
-            return list;
-          } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    @Override
+    public Optional<SubscriptionDeliverySummary> getOrgDeliveryById(String orgId, String deliveryId) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetOrgDeliveryByIdQuery())) {
+                ps.setString(1, orgId);
+                ps.setString(2, orgId);
+                ps.setString(3, deliveryId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapSummary(rs));
+                    }
+                }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_ORG_DELIVERY, deliveryId), e);
+            }
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    @Override
+    public List<SubscriptionDeliverySummary> listEventDeliveries(String orgId, String eventId, int limit, int offset, int[] totalOut) {
+        if (orgId == null || orgId.trim().isEmpty() || eventId == null || eventId.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SubscriptionDeliverySummary> list = new ArrayList<>();
+        StringBuilder outerWhere = new StringBuilder(" WHERE EVENT_ID = ?");
+        List<Object> outerParams = new ArrayList<>(Collections.singletonList(eventId.trim()));
+
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try {
+                EventNotificationCommonDBQueries queries = getQueries(conn);
+                StringBuilder unionSql = new StringBuilder(queries.getGetOrgDeliveriesUnionBaseQuery());
+                List<Object> unionParams = new ArrayList<>(Arrays.asList(orgId, orgId));
+
+                String wrappedSql = "SELECT * FROM (" + unionSql + ") AS u" + outerWhere;
+                String countSql = "SELECT COUNT(*) FROM (" + wrappedSql + ") AS c";
+                String pageSql = wrappedSql + queries.getPaginationClause("DELIVERY_CREATED_AT DESC");
+
+                if (totalOut != null && totalOut.length > 0) {
+                    try (PreparedStatement countPs = conn.prepareStatement(countSql)) {
+                        int paramIdx = 1;
+                        for (Object p : unionParams) {
+                            countPs.setObject(paramIdx++, p);
+                        }
+                        for (Object p : outerParams) {
+                            countPs.setObject(paramIdx++, p);
+                        }
+                        try (ResultSet rs = countPs.executeQuery()) {
+                            if (rs.next()) {
+                                totalOut[0] = rs.getInt(1);
+                            }
+                        }
+                    }
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(pageSql)) {
+                    int paramIdx = 1;
+                    for (Object p : unionParams) {
+                        ps.setObject(paramIdx++, p);
+                    }
+                    for (Object p : outerParams) {
+                        ps.setObject(paramIdx++, p);
+                    }
+                    ps.setInt(paramIdx++, limit);
+                    ps.setInt(paramIdx++, offset);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(mapSummary(rs));
+                        }
+                    }
+                }
+                return list;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
+            }
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private SubscriptionDeliverySummary mapSummary(ResultSet rs) throws SQLException {

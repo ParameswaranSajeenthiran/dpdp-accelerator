@@ -30,7 +30,17 @@ public interface EventDAO {
     boolean addEvent(Connection conn, Event event);
 
     default boolean addEvent(Event event) {
-        return DatabaseUtils.executeInTransaction(conn -> addEvent(conn, event));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addEvent(conn, event);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     Optional<Event> getEventById(String eventId, String orgId);
@@ -38,10 +48,16 @@ public interface EventDAO {
     void addEventPurposes(Connection conn, String eventId, List<String> purposes);
 
     default void addEventPurposes(String eventId, List<String> purposes) {
-        DatabaseUtils.executeInTransaction(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
             addEventPurposes(conn, eventId, purposes);
-            return null;
-        });
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     List<String> getEventPurposes(String eventId);

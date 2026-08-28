@@ -33,29 +33,39 @@
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>consent-portal</artifactId>
-            <version>${project.version}</version>
+            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</artifactId>
             <type>war</type>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.service</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
-            <version>${project.version}</version>
             <type>war</type>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.identity.extensions</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
+        </dependency>
+        <dependency>
+            <!-- Copied onto Carbon's shared classpath below (see the copy-quartz-jar execution's
+                 comment), not an OSGi dropin. -->
+            <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
@@ -88,7 +98,42 @@
                                 <fileset>
                                     <directory>carbon-home/repository/components/dropins</directory>
                                 </fileset>
+                                <fileset>
+                                    <directory>carbon-home/repository/components/lib</directory>
+                                    <includes>
+                                        <include>quartz-*.jar</include>
+                                    </includes>
+                                </fileset>
                             </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Quartz is placed on Carbon's shared classpath (repository/components/lib), not
+                 installed as an OSGi bundle - it loads its JobStore/ThreadPool/driver-delegate
+                 implementation classes by string name via reflection at scheduler-init time,
+                 which doesn't reliably resolve through strict per-bundle OSGi imports alone.
+                 Matches how the WSO2 Financial Services accelerator ships the same jar. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-quartz-jar</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
+                                    <artifactId>quartz</artifactId>
+                                    <version>${quartz.version}</version>
+                                    <destFileName>quartz-${quartz.version}.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.basedir}/carbon-home/repository/components/lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -119,6 +164,8 @@
                                 </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint/target/api#dpdp#consent-mgt#v1.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#consent-mgt#v1"/>
                                 <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/target/api#dpdp#event-notifications#v1.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#event-notifications#v1/"/>
                                 <copy todir="${project.basedir}/carbon-home/repository/components/dropins">
@@ -126,6 +173,8 @@
                                               includes="org.wso2.dpdp.accelerator.identity.extensions-*.jar"/>
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.common/target"
                                               includes="org.wso2.dpdp.accelerator.common-*.jar"/>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.consent.extensions/target"
+                                              includes="org.wso2.dpdp.accelerator.consent.extensions-*.jar"/>
                                 </copy>
                                 <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/target/api#dpdp#complaints#v1.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#complaints#v1/"/>
