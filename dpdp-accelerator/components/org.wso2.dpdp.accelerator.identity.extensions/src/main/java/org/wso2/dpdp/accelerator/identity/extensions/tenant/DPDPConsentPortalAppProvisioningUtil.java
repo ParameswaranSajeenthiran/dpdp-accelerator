@@ -230,17 +230,19 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
-        // Without this the app defaults to an opaque (UUID) access token, which
-        // TokenIntrospectionClient cannot decode at all - it only ever parses a JWT's payload
-        // segment. This must be JWT for the same reason accessTokenClaims below must be set.
-        dto.setTokenType("JWT");
+        // Opaque (UUID) access tokens - matching IS My Account/Console and the pattern
+        // ConsentHistorySelfApi's requireCallerOwnsConsent() follows. TokenIntrospectionClient
+        // resolves the caller by calling out to /oauth2/introspect rather than decoding a JWT
+        // payload locally.
+        dto.setTokenType("Default");
         dto.setTokenBindingType("cookie");
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);
-        // Without this, JWT access tokens carry only the opaque "sub" - no human-readable identity
-        // at all - since WSO2 IS doesn't embed local claims into access tokens by default. The
-        // complaint-mgt endpoint's TokenIntrospectionClient reads this claim directly off the
-        // decoded token to attribute complaints/comments/attachments to a display name.
+        // Without this, the /oauth2/introspect response carries no human-readable identity at all
+        // beyond the authenticated subject - WSO2 IS doesn't include local claims in the
+        // introspection response by default. The complaint-mgt endpoint's TokenIntrospectionClient
+        // reads this claim directly off the introspection response to attribute
+        // complaints/comments/attachments to a display name.
         dto.setAccessTokenClaims(new String[]{USERNAME_OIDC_CLAIM_URI});
 
         DPDPIdentityExtensionDataHolder.getInstance().getOAuthAdminService().registerOAuthApplicationData(dto);

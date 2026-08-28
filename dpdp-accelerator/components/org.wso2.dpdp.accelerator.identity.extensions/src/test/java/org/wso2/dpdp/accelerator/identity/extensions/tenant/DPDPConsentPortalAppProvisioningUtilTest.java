@@ -133,9 +133,9 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertEquals(dto.getOauthConsumerKey(), CLIENT_ID);
         assertEquals(dto.getCallbackUrl(), callbackUrl);
         assertTrue(dto.getPkceMandatory());
-        // Without this, the app defaults to an opaque (UUID) access token, which
-        // TokenIntrospectionClient cannot decode - it only ever parses a JWT's payload segment.
-        assertEquals(dto.getTokenType(), "JWT");
+        // Opaque access token - TokenIntrospectionClient resolves the caller via
+        // /oauth2/introspect rather than decoding a JWT payload locally.
+        assertEquals(dto.getTokenType(), "Default");
         assertEquals(dto.getTokenBindingType(), "cookie");
         assertTrue(dto.isTokenBindingValidationEnabled());
         assertTrue(dto.isTokenRevocationWithIDPSessionTerminationEnabled());

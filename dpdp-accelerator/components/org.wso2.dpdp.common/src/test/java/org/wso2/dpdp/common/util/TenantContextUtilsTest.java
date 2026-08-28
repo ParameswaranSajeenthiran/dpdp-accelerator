@@ -57,4 +57,33 @@ class TenantContextUtilsTest {
     void doesNotMatchAtSegmentWhoseNameMerelyStartsWithT() {
         assertNull(TenantContextUtils.extractOrgId("/tenants/example.com/complaints"));
     }
+
+    // ---- extractOrgIdFromUsername ----
+
+    @Test
+    void extractsTheTenantDomainFromATenantQualifiedUsername() {
+        assertEquals("example.com",
+                TenantContextUtils.extractOrgIdFromUsername("alice@example.com", "carbon.super"));
+    }
+
+    @Test
+    void usesTheLastAtSignWhenTheLocalPartIsItselfAnEmailAddress() {
+        assertEquals("example.com",
+                TenantContextUtils.extractOrgIdFromUsername("alice@corp.io@example.com", "carbon.super"));
+    }
+
+    @Test
+    void fallsBackToTheDefaultForAnUnqualifiedSuperTenantUsername() {
+        assertEquals("carbon.super", TenantContextUtils.extractOrgIdFromUsername("admin", "carbon.super"));
+    }
+
+    @Test
+    void fallsBackToTheDefaultWhenTheUsernameEndsWithAtSign() {
+        assertEquals("carbon.super", TenantContextUtils.extractOrgIdFromUsername("admin@", "carbon.super"));
+    }
+
+    @Test
+    void returnsNullWhenTheUsernameIsNullSinceTheTenantCannotBeDetermined() {
+        assertNull(TenantContextUtils.extractOrgIdFromUsername(null, "carbon.super"));
+    }
 }

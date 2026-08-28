@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 public final class TenantContextUtils {
 
     private static final Pattern TENANT_PATH_SEGMENT = Pattern.compile("/t/([^/]+)/");
+    private static final String TENANT_USERNAME_SEPARATOR = "@";
 
     private TenantContextUtils() {
     }
@@ -62,6 +63,29 @@ public final class TenantContextUtils {
         }
         String tenantDomain = decode(matcher.group(1)).trim();
         return tenantDomain.isEmpty() ? null : tenantDomain;
+    }
+
+    /**
+     * Extracts the tenant domain a WSO2-Carbon-style tenant-qualified username belongs to, e.g.
+     * {@code "alice@example.com"} resolves to {@code "example.com"}. A username with no
+     * {@code @tenant-domain} suffix (e.g. plain {@code "admin"}) belongs to the super tenant, so
+     * this returns {@code defaultOrgId} in that case.
+     *
+     * <p>Used to resolve the org id from an opaque OAuth2 token's {@code /oauth2/introspect}
+     * response, whose {@code username} field is the only identity claim available - unlike a JWT's
+     * {@code org_handle}, there is no unambiguous "absent means unverifiable" signal here, so a
+     * caller-supplied default is unavoidable for the unqualified-username case.
+     */
+    public static String extractOrgIdFromUsername(String username, String defaultOrgId) {
+        if (username == null) {
+            return null;
+        }
+        int separatorIndex = username.lastIndexOf(TENANT_USERNAME_SEPARATOR);
+        if (separatorIndex < 0 || separatorIndex == username.length() - 1) {
+            return defaultOrgId;
+        }
+        String tenantDomain = username.substring(separatorIndex + 1).trim();
+        return tenantDomain.isEmpty() ? defaultOrgId : tenantDomain;
     }
 
     private static String decode(String value) {
