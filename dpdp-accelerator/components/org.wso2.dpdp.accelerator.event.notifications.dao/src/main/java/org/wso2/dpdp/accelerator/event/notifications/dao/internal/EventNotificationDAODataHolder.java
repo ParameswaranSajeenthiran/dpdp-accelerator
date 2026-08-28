@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.internal;
 
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
@@ -25,7 +26,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 
 /**
- * Holds the DAO instances owned by the Event Notification DAO component.
+ * Holds the DAO instances and injected services owned by the Event Notification DAO component.
  */
 public final class EventNotificationDAODataHolder {
 
@@ -36,6 +37,7 @@ public final class EventNotificationDAODataHolder {
     private volatile EventDAO eventDAO;
     private volatile DeliveryDAO deliveryDAO;
     private volatile DeliveryAckDAO deliveryAckDAO;
+    private volatile DPDPConfigurationService configurationService;
 
     private EventNotificationDAODataHolder() {
     }
@@ -95,6 +97,16 @@ public final class EventNotificationDAODataHolder {
         this.deliveryAckDAO = deliveryAckDAO;
     }
 
+    public DPDPConfigurationService getConfigurationService() {
+
+        return configurationService;
+    }
+
+    public void setConfigurationService(DPDPConfigurationService configurationService) {
+
+        this.configurationService = configurationService;
+    }
+
     public void clear() {
 
         topicDAO = null;
@@ -102,5 +114,6 @@ public final class EventNotificationDAODataHolder {
         eventDAO = null;
         deliveryDAO = null;
         deliveryAckDAO = null;
+        configurationService = null;
     }
 }

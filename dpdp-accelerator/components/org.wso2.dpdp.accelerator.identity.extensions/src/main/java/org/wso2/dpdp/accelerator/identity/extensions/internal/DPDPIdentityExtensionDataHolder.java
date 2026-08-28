@@ -18,13 +18,18 @@
 
 package org.wso2.dpdp.accelerator.identity.extensions.internal;
 
+import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 
 /**
  * Singleton holder for the OSGi services this module's listener needs, populated by
@@ -39,8 +44,13 @@ public final class DPDPIdentityExtensionDataHolder {
     private AuthorizedAPIManagementService authorizedAPIManagementService;
     private APIResourceManager apiResourceManager;
     private RoleManagementService roleManagementService;
+    private OrganizationManager organizationManager;
     private RealmService realmService;
     private DPDPConfigurationService configurationService;
+    private PrivilegedConsentManager privilegedConsentManager;
+    private ConsentHistoryService consentHistoryService;
+    private ConsentExpiryService consentExpiryService;
+    private TopicService topicService;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -101,6 +111,16 @@ public final class DPDPIdentityExtensionDataHolder {
         this.roleManagementService = roleManagementService;
     }
 
+    public OrganizationManager getOrganizationManager() {
+
+        return organizationManager;
+    }
+
+    public void setOrganizationManager(OrganizationManager organizationManager) {
+
+        this.organizationManager = organizationManager;
+    }
+
     public RealmService getRealmService() {
 
         return realmService;
@@ -119,5 +139,45 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setConfigurationService(DPDPConfigurationService configurationService) {
 
         this.configurationService = configurationService;
+    }
+
+    public PrivilegedConsentManager getPrivilegedConsentManager() {
+
+        return privilegedConsentManager;
+    }
+
+    public void setPrivilegedConsentManager(PrivilegedConsentManager privilegedConsentManager) {
+
+        this.privilegedConsentManager = privilegedConsentManager;
+    }
+
+    public ConsentHistoryService getConsentHistoryService() {
+
+        return consentHistoryService;
+    }
+
+    public void setConsentHistoryService(ConsentHistoryService consentHistoryService) {
+
+        this.consentHistoryService = consentHistoryService;
+    }
+
+    public ConsentExpiryService getConsentExpiryService() {
+
+        return consentExpiryService;
+    }
+
+    public void setConsentExpiryService(ConsentExpiryService consentExpiryService) {
+
+        this.consentExpiryService = consentExpiryService;
+    }
+
+    public TopicService getTopicService() {
+
+        return topicService;
+    }
+
+    public void setTopicService(TopicService topicService) {
+
+        this.topicService = topicService;
     }
 }

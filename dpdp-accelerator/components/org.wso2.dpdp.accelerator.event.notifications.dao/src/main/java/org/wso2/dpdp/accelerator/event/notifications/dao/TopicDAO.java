@@ -38,8 +38,17 @@ public interface TopicDAO {
     Optional<Topic> getActiveTopicByOrgAndNameForUpdate(Connection conn, String orgId, String name);
 
     default Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        return DatabaseUtils.executeWithConnection(
-                conn -> getTopicByOrgAndName(conn, orgId, name));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            Optional<Topic> result = getTopicByOrgAndName(conn, orgId, name);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     boolean updateTopicStatus(String topicId, String orgId, TopicStatus status);

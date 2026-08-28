@@ -20,56 +20,108 @@ package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
 import org.wso2.carbon.identity.role.v2.mgt.core.model.Permission;
+import org.wso2.carbon.identity.role.v2.mgt.core.model.Role;
+import org.wso2.carbon.identity.role.v2.mgt.core.model.RoleBasicInfo;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Creates the {@code dpdp-consent-admin}/{@code dpdp-consent-user} roles for a tenant's
- * DPDP Consent Portal application. Split out from
- * {@link DPDPConsentPortalAppProvisioningUtil} since role creation is a distinct concern from
- * registering the application itself.
+ * Creates the DPDP Consent Portal admin and user roles at the organization level, making them
+ * manageable from the tenant's User Management > Roles screen.
  */
 public final class DPDPConsentPortalRoleProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalRoleProvisioningUtil.class);
     static final String ADMIN_ROLE = "dpdp-consent-admin";
     static final String USER_ROLE = "dpdp-consent-user";
-    private static final String ROLE_AUDIENCE = "application";
+    static final String ROLE_AUDIENCE = "organization";
 
     private DPDPConsentPortalRoleProvisioningUtil() {
 
     }
 
-    public static void createRoles(String applicationId, String tenantDomain, List<String> authorizedScopeNames)
-            throws Exception {
+    /**
+     * @return the admin and user roles (in that order) as {@link RoleV2} references
+     * {@code AssociatedRolesConfig}.
+     */
+    public static List<RoleV2> createRoles(String tenantDomain, List<String> adminScopeNames,
+            List<String> userScopeNames) throws Exception {
 
         RoleManagementService roleManagementService = DPDPIdentityExtensionDataHolder.getInstance()
                 .getRoleManagementService();
+        // The audience ID for "organization" audience must be the organization's own ID, not the
+        // application's - passing anything else throws INVALID_AUDIENCE.
+        String organizationId = DPDPIdentityExtensionDataHolder.getInstance().getOrganizationManager()
+                .resolveOrganizationId(tenantDomain);
 
-        List<Permission> adminPermissions = new ArrayList<>();
-        for (String scopeName : authorizedScopeNames) {
-            adminPermissions.add(new Permission(scopeName));
-        }
-        createRoleIfNotExists(roleManagementService, ADMIN_ROLE, adminPermissions, applicationId, tenantDomain);
-        createRoleIfNotExists(roleManagementService, USER_ROLE, Collections.emptyList(), applicationId, tenantDomain);
+        RoleV2 adminRole = createRoleIfNotExists(roleManagementService, ADMIN_ROLE, toPermissions(adminScopeNames),
+                organizationId, tenantDomain);
+        RoleV2 userRole = createRoleIfNotExists(roleManagementService, USER_ROLE, toPermissions(userScopeNames),
+                organizationId, tenantDomain);
+        return Arrays.asList(adminRole, userRole);
     }
 
-    private static void createRoleIfNotExists(RoleManagementService roleManagementService, String roleName,
-            List<Permission> permissions, String applicationId, String tenantDomain) throws Exception {
+    private static List<Permission> toPermissions(List<String> scopeNames) {
 
-        if (roleManagementService.isExistingRoleName(roleName, ROLE_AUDIENCE, applicationId, tenantDomain)) {
-            LOG.debug("Role '" + roleName + "' already exists for application: " + applicationId
-                    + "; leaving it as is.");
+        List<Permission> permissions = new ArrayList<>();
+        for (String scopeName : scopeNames) {
+            permissions.add(new Permission(scopeName));
+        }
+        return permissions;
+    }
+
+    /**
+     * Creates the role if it doesn't exist yet; if it does, reconciles its permission list to
+     * include every desired scope.
+    */
+    private static RoleV2 createRoleIfNotExists(RoleManagementService roleManagementService, String roleName,
+            List<Permission> desiredPermissions, String organizationId, String tenantDomain) throws Exception {
+
+        if (roleManagementService.isExistingRoleName(roleName, ROLE_AUDIENCE, organizationId, tenantDomain)) {
+            String roleId = roleManagementService.getRoleIdByName(roleName, ROLE_AUDIENCE, organizationId,
+                    tenantDomain);
+            reconcilePermissions(roleManagementService, roleId, roleName, desiredPermissions, tenantDomain);
+            return new RoleV2(roleId, roleName);
+        }
+        RoleBasicInfo roleBasicInfo = roleManagementService.addRole(roleName, Collections.emptyList(),
+                Collections.emptyList(), desiredPermissions, ROLE_AUDIENCE, organizationId, tenantDomain);
+        LOG.debug("Created role '" + roleName + "' with " + desiredPermissions.size() + " permission(s) for tenant: "
+                + tenantDomain);
+        return new RoleV2(roleBasicInfo.getId(), roleName);
+    }
+
+    private static void reconcilePermissions(RoleManagementService roleManagementService, String roleId,
+            String roleName, List<Permission> desiredPermissions, String tenantDomain) throws Exception {
+
+        Role role = roleManagementService.getRole(roleId, tenantDomain);
+        Set<String> existingPermissionNames = new HashSet<>();
+        for (Permission permission : role.getPermissions()) {
+            existingPermissionNames.add(permission.getName());
+        }
+
+        List<Permission> missingPermissions = new ArrayList<>();
+        for (Permission desiredPermission : desiredPermissions) {
+            if (!existingPermissionNames.contains(desiredPermission.getName())) {
+                missingPermissions.add(desiredPermission);
+            }
+        }
+
+        if (missingPermissions.isEmpty()) {
+            LOG.debug("Role '" + roleName + "' already has every desired permission for tenant: " + tenantDomain);
             return;
         }
-        roleManagementService.addRole(roleName, Collections.emptyList(), Collections.emptyList(), permissions,
-                ROLE_AUDIENCE, applicationId, tenantDomain);
-        LOG.debug("Created role '" + roleName + "' with " + permissions.size() + " permission(s) for application: "
-                + applicationId);
+        roleManagementService.updatePermissionListOfRole(roleId, missingPermissions, Collections.emptyList(),
+                tenantDomain);
+        LOG.debug("Added " + missingPermissions.size() + " missing permission(s) to role '" + roleName
+                + "' for tenant: " + tenantDomain);
     }
 }

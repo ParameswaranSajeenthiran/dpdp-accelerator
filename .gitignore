@@ -26,6 +26,10 @@ npm-debug.log*
 **/carbon-home/repository/components/dropins/*.jar
 *.jar
 
+# openapi-generator's own change-tracking cache - src/gen/java itself is committed,
+# this file isn't needed to regenerate it.
+**/.openapi-generator/
+
 # IDE
 .idea/
 *.iml

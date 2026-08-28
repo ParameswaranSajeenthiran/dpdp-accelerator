@@ -52,7 +52,17 @@ public class TopicDAOImpl implements TopicDAO {
     @Override
     public boolean addTopic(Topic topic) {
         Objects.requireNonNull(topic, EventNotificationCommonConstants.ERROR_TOPIC_NULL);
-        return DatabaseUtils.executeInTransaction(conn -> addTopic(conn, topic));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addTopic(conn, topic);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -100,27 +110,34 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public Optional<Topic> getTopicById(String topicId, String orgId) {
-        return DatabaseUtils.executeWithConnection(conn -> {
-          try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByIdQuery())) {
-            ps.setString(1, topicId);
-            ps.setString(2, orgId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapTopic(rs));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetTopicByIdQuery())) {
+                ps.setString(1, topicId);
+                ps.setString(2, orgId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapTopic(rs));
+                    }
                 }
+                return Optional.empty();
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ID, topicId), e);
             }
-            return Optional.empty();
-          } catch (SQLException e) {
-              throw new EventNotificationDataAccessException(
-                      String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ID, topicId), e);
-          }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
     public Optional<Topic> getTopicByOrgAndName(String orgId, String name) {
-        return DatabaseUtils.executeWithConnection(
-                conn -> getTopicByOrgAndName(conn, orgId, name));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            return getTopicByOrgAndName(conn, orgId, name);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -166,8 +183,17 @@ public class TopicDAOImpl implements TopicDAO {
     @Override
     public boolean updateTopicStatus(String topicId, String orgId, TopicStatus status) {
         Objects.requireNonNull(status, EventNotificationCommonConstants.ERROR_TOPIC_STATUS_NULL);
-        return DatabaseUtils.executeInTransaction(
-                conn -> updateTopicStatus(conn, topicId, orgId, status));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updateTopicStatus(conn, topicId, orgId, status);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -187,8 +213,17 @@ public class TopicDAOImpl implements TopicDAO {
 
     @Override
     public boolean deregisterTopicAtomic(String topicId, String orgId) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> deregisterTopicAtomic(conn, topicId, orgId));
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = deregisterTopicAtomic(conn, topicId, orgId);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -249,7 +284,8 @@ public class TopicDAOImpl implements TopicDAO {
                 .setSort(sort);
 
         int[] total = {0};
-        return DatabaseUtils.executeWithConnection(conn -> {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
           try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             QueryResult countResult = builder.buildCountQuery();
@@ -287,7 +323,9 @@ public class TopicDAOImpl implements TopicDAO {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
           }
-        });
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     private Topic mapTopic(ResultSet rs) throws SQLException {
