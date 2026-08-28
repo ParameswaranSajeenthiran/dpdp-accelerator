@@ -127,22 +127,30 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
 
             DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
+            DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(tenantDomain);
 
             List<String> consentMgtScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             List<String> eventNotificationScopes = DPDPApiResourceProvisioningUtil
                     .authorizeEventNotificationAPIs(applicationId, tenantDomain);
-            List<String> authorizeConsentHistoryApi = DPDPApiResourceProvisioningUtil
+            List<String> consentHistoryScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentHistoryApi(applicationId, tenantDomain);
-            List<String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
-                    .authorizeComplaintManagementAPI(applicationId, tenantDomain);
+            List<String> complaintScopes = DPDPApiResourceProvisioningUtil
+                    .authorizeComplaintManagementApi(applicationId, tenantDomain);
+
             List<String> adminScopes = new ArrayList<>(consentMgtScopes);
-            adminScopes.addAll(authorizedComplaintScopes);
+            adminScopes.addAll(consentHistoryScopes);
             adminScopes.addAll(eventNotificationScopes);
-            adminScopes.addAll(authorizeConsentHistoryApi);
+            adminScopes.addAll(complaintScopes);
             List<String> userScopes = Arrays.asList(DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
                     DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF);
-
+            for (String complaintScope : complaintScopes) {
+                if (complaintScope.endsWith(":self")) {
+                    userScopes.add(complaintScope);
+                } else {
+                    adminScopes.add(complaintScope);
+                }
+            }
             List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(tenantDomain, adminScopes,
                     userScopes);
             DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(tenantDomain, tenantInfoBean.getAdmin(),
