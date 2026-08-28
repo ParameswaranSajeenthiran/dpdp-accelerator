@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPriority;
-import org.wso2.dpdp.common.config.ConfigProvider;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,24 +33,21 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPri
  * ComplaintPriority is "server-derived, never client-supplied" per the API spec. This maps each
  * ComplaintCategory to a default priority, and the set of its keys is also the set of valid
  * ComplaintCategory values (see ComplaintServiceImpl#isValidCategory). The mapping below is the
- * built-in default; it is replaced wholesale by the [categoryPriority] table in deployment.toml
- * when present, read once via {@link ConfigProvider#getTable(String)} at class-init time - no
- * servlet-container bootstrap step is involved, matching ConfigProvider's own lazy,
- * self-initializing style.
+ * built-in default; {@link #configure(Map)} exists so it can be overridden wholesale, but nothing
+ * currently wires it to deployment.toml - there is no [categoryPriority]-style table support in
+ * the dpdp-accelerator.xml config chain yet (unlike the other Complaints.* settings, which are
+ * fixed, individually-named elements - see DPDPConfigParser). Wiring an admin-defined, arbitrarily
+ * keyed table through that chain is a separate design task, not something to bolt on here.
  *
  * <p>Deliberately a single JVM-wide mapping, not scoped per tenant: like ComplaintCategory itself,
- * "what priority does this category imply" is treated as an accelerator-wide classification
- * decision rather than a per-org policy, so every tenant sharing this deployment sees the same
- * [categoryPriority] override. Do not add an orgId parameter here without also deciding how
- * deployment.toml should express per-tenant overrides.
+ * "what priority does this category implies" is treated as an accelerator-wide classification
+ * decision rather than a per-org policy, so every tenant sharing this deployment would see the
+ * same override, if one is ever wired up. Do not add an orgId parameter here without also
+ * deciding how deployment.toml should express per-tenant overrides.
  */
 public class PriorityMapper {
 
     private static volatile Map<String, String> categoryToPriority = buildDefaultMapping();
-
-    static {
-        configure(ConfigProvider.getTable("categoryPriority"));
-    }
 
     private PriorityMapper() {
     }
@@ -102,8 +98,8 @@ public class PriorityMapper {
 
     /**
      * The current set of valid ComplaintCategory values, each with the priority a complaint in
-     * that category is assigned. Reflects the built-in defaults, or the [categoryPriority]
-     * override from deployment.toml if one is configured.
+     * that category is assigned. Reflects the built-in defaults, or whatever {@link #configure}
+     * was last called with.
      */
     public static Map<String, String> getCategoryPriorities() {
         return Collections.unmodifiableMap(categoryToPriority);

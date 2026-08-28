@@ -41,12 +41,6 @@
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- ConfigProvider, used by PriorityMapper/AttachmentPolicy to read deployment.toml settings -->
-        <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,13 +34,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.common.config.ConfigProvider;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -76,21 +69,10 @@ class ComplaintAttachmentServiceImplTest {
     @AfterEach
     void tearDown() {
         System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
     }
 
     private UploadedFile pdfFile(String name, int size) {
         return new UploadedFile(name, "application/pdf", new byte[size]);
-    }
-
-    private void useMaxAttachmentSizeBytes(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
     }
 
     // ---- uploadComplaintAttachments ----
@@ -148,12 +130,15 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize(@TempDir Path tempDir) throws IOException {
-        useMaxAttachmentSizeBytes(tempDir, "5");
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize() {
+        // AttachmentPolicy.getMaxSizeBytes() defaults to 10 MB outside a real Carbon environment
+        // (no dpdp-accelerator.xml on disk) - see AttachmentPolicyTest for coverage of the
+        // configured-value path itself.
+        int overTheDefaultLimit = 10 * 1024 * 1024 + 1;
 
         ComplaintException ex = assertThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
-                        List.of(pdfFile("big.pdf", 10)), true, "user1", "User One", "USER"));
+                        List.of(pdfFile("big.pdf", overTheDefaultLimit)), true, "user1", "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
     }

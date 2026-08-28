@@ -357,6 +357,8 @@ client_id = "DPDP_CONSENT_PORTAL"
 # StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
 [dpdp_accelerator.complaints]
 statutory_due_period_days = 90
+# Maximum size, in bytes, of a single complaint attachment upload (see AttachmentPolicy).
+attachment_max_size_bytes = 10485760
 
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]

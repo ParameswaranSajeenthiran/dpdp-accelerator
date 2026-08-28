@@ -37,6 +37,8 @@ public interface DPDPConfigurationService {
 
     int getComplaintsStatutoryDuePeriodDays();
 
+    long getComplaintsAttachmentMaxSizeBytes();
+
     int getEventNotificationThreadPoolSize();
 
     long getEventNotificationBaseBackoffSeconds();

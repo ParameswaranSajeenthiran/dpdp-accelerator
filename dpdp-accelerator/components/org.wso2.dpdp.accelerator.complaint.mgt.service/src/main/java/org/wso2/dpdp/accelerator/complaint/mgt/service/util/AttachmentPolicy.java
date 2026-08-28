@@ -18,15 +18,17 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.wso2.dpdp.common.config.ConfigProvider;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 
 import java.util.Set;
 
 /**
  * Matches the encoding.file.contentType list declared in the OpenAPI spec for both attachment
- * upload endpoints. Max size is configurable via deployment.toml's {@code attachment.maxSizeBytes}
- * key, read lazily via {@link ConfigProvider} (defaults to 10 MB) since the spec references "the
- * configured max" without stating a number.
+ * upload endpoints. Max size is configurable via deployment.toml's
+ * [dpdp_accelerator.complaints] attachment_max_size_bytes key, the same way
+ * StatutoryDuePeriodPolicy reads its own setting - see DPDPConfigurationService, templated into
+ * dpdp-accelerator.xml at server startup. Defaults to 10 MB if unset.
  */
 public class AttachmentPolicy {
 
@@ -36,26 +38,18 @@ public class AttachmentPolicy {
             "image/png",
             "image/jpeg");
 
-    private static final long DEFAULT_MAX_SIZE_BYTES = 10L * 1024 * 1024; // 10 MB (deafult fallback)
-
     // Bounds the number of files a single upload request may carry - without this, many
     // individually-under-the-cap files in one request still forces the handler to buffer an
     // unbounded amount of data in heap before this policy's per-file size check ever runs.
     private static final int DEFAULT_MAX_FILES_PER_UPLOAD = 5;
 
+    private static final DPDPConfigurationService CONFIGURATION_SERVICE = new DPDPConfigurationServiceImpl();
+
     private AttachmentPolicy() {
     }
 
     public static long getMaxSizeBytes() {
-        String configured = ConfigProvider.getString("attachment.maxSizeBytes", null);
-        if (configured != null) {
-            try {
-                return Long.parseLong(configured.trim());
-            } catch (NumberFormatException ignored) {
-                // fall through to default
-            }
-        }
-        return DEFAULT_MAX_SIZE_BYTES;
+        return CONFIGURATION_SERVICE.getComplaintsAttachmentMaxSizeBytes();
     }
 
     public static int getMaxFilesPerUpload() {

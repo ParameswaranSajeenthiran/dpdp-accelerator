@@ -46,12 +46,14 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ConfigProvider, used by config-loading elsewhere in this module -->
+        <!-- LogSanitizer, used by ComplaintExceptionMapper - provided scope for the same reason
+             as complaint.mgt.service above. -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
+            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
+            <scope>provided</scope>
         </dependency>
+
 
         <!-- PrivilegedCarbonContext, used by every endpoint class to resolve the caller's identity
              directly - Carbon's own valve pipeline populates this per-request, even for a

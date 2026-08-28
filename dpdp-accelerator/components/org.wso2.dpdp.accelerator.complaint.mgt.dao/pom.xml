@@ -31,11 +31,6 @@
     <name>WSO2 DPDP Accelerator - Complaint Management DAO</name>
 
     <dependencies>
-        <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <!-- JDBCPersistenceManager - the shared connection/transaction manager event-notifications
              uses, replacing this module's own former DBUtil. -->

@@ -18,39 +18,20 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.wso2.dpdp.common.config.ConfigProvider;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Outside a real Carbon environment (no dpdp-accelerator.xml on disk), DPDPConfigurationService
+ * always falls back to its own default - see DPDPConfigurationServiceImplTest for coverage of the
+ * configured-value/validation path itself, which lives entirely in that class now.
+ */
 class AttachmentPolicyTest {
-
-    @AfterEach
-    void resetConfigProvider() {
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
-    }
-
-    private void useDeploymentToml(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
-    }
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -75,21 +56,7 @@ class AttachmentPolicyTest {
     }
 
     @Test
-    void defaultMaxSizeIsTenMegabytes() {
-        assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
-    }
-
-    @Test
-    void usesConfiguredMaxSizeWhenDeploymentTomlSetsIt(@TempDir Path tempDir) throws IOException {
-        useDeploymentToml(tempDir, "2048");
-
-        assertEquals(2048L, AttachmentPolicy.getMaxSizeBytes());
-    }
-
-    @Test
-    void fallsBackToDefaultWhenConfiguredValueIsNotAValidNumber(@TempDir Path tempDir) throws IOException {
-        useDeploymentToml(tempDir, "not-a-number");
-
+    void defaultsToTenMegabytesWhenNoDpdpAcceleratorXmlIsAvailable() {
         assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
     }
 }
