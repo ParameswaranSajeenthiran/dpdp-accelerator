@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
@@ -37,6 +38,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -75,11 +77,17 @@ class ComplaintServiceImplTest {
         dataSource.setUser("sa");
         dataSource.setPassword("");
         setManagerDataSource(dataSource);
+
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; StatutoryDuePeriodPolicy
+        // reads it via ComplaintServiceDataHolder, so tests running outside a live Carbon
+        // environment must seed it themselves.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
     @AfterAll
     static void clearPersistenceManagerDataSource() throws Exception {
         setManagerDataSource(null);
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
     }
 
     private static void setManagerDataSource(Object dataSource) throws Exception {

@@ -18,9 +18,13 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,6 +36,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * configured-value/validation path itself, which lives entirely in that class now.
  */
 class AttachmentPolicyTest {
+
+    @BeforeAll
+    static void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so a test running outside a live Carbon environment
+        // must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterAll
+    static void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {

@@ -18,7 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,6 +32,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * configured-value/validation path itself, which lives entirely in that class now.
  */
 class StatutoryDuePeriodPolicyTest {
+
+    @BeforeAll
+    static void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; StatutoryDuePeriodPolicy
+        // reads it via ComplaintServiceDataHolder, so a test running outside a live Carbon
+        // environment must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterAll
+    static void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
 
     @Test
     void defaultsToNinetyDaysWhenNoDpdpAcceleratorXmlIsAvailable() {

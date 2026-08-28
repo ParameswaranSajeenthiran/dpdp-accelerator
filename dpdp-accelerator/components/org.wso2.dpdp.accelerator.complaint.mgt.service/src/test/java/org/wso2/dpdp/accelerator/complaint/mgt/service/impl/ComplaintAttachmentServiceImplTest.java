@@ -18,13 +18,16 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -34,6 +37,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.util.Base64;
 import java.util.List;
@@ -60,6 +64,19 @@ class ComplaintAttachmentServiceImplTest {
     private ComplaintService complaintService;
 
     private ComplaintAttachmentServiceImpl attachmentService;
+
+    @BeforeAll
+    static void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so tests running outside a live Carbon environment
+        // must seed it themselves.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterAll
+    static void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
 
     @BeforeEach
     void setUp() {

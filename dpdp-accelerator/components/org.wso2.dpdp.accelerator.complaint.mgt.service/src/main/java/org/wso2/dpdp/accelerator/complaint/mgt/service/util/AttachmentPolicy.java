@@ -18,8 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.util.Set;
 
@@ -27,8 +26,9 @@ import java.util.Set;
  * Matches the encoding.file.contentType list declared in the OpenAPI spec for both attachment
  * upload endpoints. Max size is configurable via deployment.toml's
  * [dpdp_accelerator.complaints] attachment_max_size_bytes key, the same way
- * StatutoryDuePeriodPolicy reads its own setting - see DPDPConfigurationService, templated into
- * dpdp-accelerator.xml at server startup. Defaults to 10 MB if unset.
+ * StatutoryDuePeriodPolicy reads its own setting - see the DPDPConfigurationService OSGi
+ * reference bound into {@link ComplaintServiceDataHolder} by {@code ComplaintServiceComponent},
+ * templated into dpdp-accelerator.xml at server startup. Defaults to 10 MB if unset.
  */
 public class AttachmentPolicy {
 
@@ -43,13 +43,12 @@ public class AttachmentPolicy {
     // unbounded amount of data in heap before this policy's per-file size check ever runs.
     private static final int DEFAULT_MAX_FILES_PER_UPLOAD = 5;
 
-    private static final DPDPConfigurationService CONFIGURATION_SERVICE = new DPDPConfigurationServiceImpl();
-
     private AttachmentPolicy() {
     }
 
     public static long getMaxSizeBytes() {
-        return CONFIGURATION_SERVICE.getComplaintsAttachmentMaxSizeBytes();
+        return ComplaintServiceDataHolder.getInstance().getConfigurationService()
+                .getComplaintsAttachmentMaxSizeBytes();
     }
 
     public static int getMaxFilesPerUpload() {

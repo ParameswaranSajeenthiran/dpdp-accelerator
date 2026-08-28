@@ -209,6 +209,7 @@
                             org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;version="${project.version}",
                             org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${project.version}",
                             org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
                             org.osgi.framework;version="[1.8,2)",
                             *
                         </Import-Package>

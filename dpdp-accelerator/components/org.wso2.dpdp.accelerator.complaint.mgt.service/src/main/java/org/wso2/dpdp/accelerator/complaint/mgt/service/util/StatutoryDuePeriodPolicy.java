@@ -18,24 +18,23 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 /**
  * Statutory due period for grievance redressal under the DPDP Act. Configurable via
  * deployment.toml's [dpdp_accelerator.complaints] statutory_due_period_days, the same way
- * event notification settings are read - see DPDPConfigurationService, templated into
+ * event notification settings are read - see the DPDPConfigurationService OSGi reference bound
+ * into {@link ComplaintServiceDataHolder} by {@code ComplaintServiceComponent}, templated into
  * dpdp-accelerator.xml at server startup. Defaults to 90 days if unset.
  */
 public class StatutoryDuePeriodPolicy {
-
-    private static final DPDPConfigurationService CONFIGURATION_SERVICE = new DPDPConfigurationServiceImpl();
 
     private StatutoryDuePeriodPolicy() {
     }
 
     public static long getDuePeriodMillis() {
-        int days = CONFIGURATION_SERVICE.getComplaintsStatutoryDuePeriodDays();
+        int days = ComplaintServiceDataHolder.getInstance().getConfigurationService()
+                .getComplaintsStatutoryDuePeriodDays();
         return days * 24L * 60 * 60 * 1000;
     }
 }
