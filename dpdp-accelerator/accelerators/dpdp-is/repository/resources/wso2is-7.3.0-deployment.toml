@@ -1,0 +1,288 @@
+[server]
+hostname = "IS_HOSTNAME"
+node_ip = "127.0.0.1"
+base_path = "https://$ref{server.hostname}:${carbon.management.port}"
+
+[super_admin]
+username = "IS_ADMIN_USERNAME"
+password = "IS_ADMIN_PASSWORD"
+create_admin_account = true
+
+[user_store]
+type = "database_unique_id"
+
+[database.identity_db]
+type = "h2"
+url = "jdbc:h2:./repository/database/WSO2IDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+
+[database.shared_db]
+type = "h2"
+url = "jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+
+[datasource.AgentIdentity]
+id = "AgentIdentity"
+url = "jdbc:h2:./repository/database/WSO2AGENTIDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+driver = "org.h2.Driver"
+
+[keystore.primary]
+file_name = "wso2carbon.p12"
+password = "wso2carbon"
+type="PKCS12"
+
+[truststore]
+file_name="client-truststore.p12"
+password="wso2carbon"
+type="PKCS12"
+
+[account_recovery.endpoint.auth]
+hash= "66cd9688a2ae068244ea01e70f0e230f5623b7fa4cdecb65070a09ec06452262"
+
+[identity.auth_framework.endpoint]
+app_password= "dashboard"
+
+# The KeyStore which is used for encrypting/decrypting internal data. By default the primary keystore is used as the internal keystore.
+
+#[keystore.internal]
+#file_name = "$ref{keystore.primary.file_name}"
+#type = "$ref{keystore.primary.type}"
+#password = "$ref{keystore.primary.password}"
+#alias = "$ref{keystore.primary.alias}"
+#key_password = "$ref{keystore.primary.key_password}"
+
+# The KeyStore which is used for tls communication. By default the primary keystore is used as the tls keystore.
+
+#[keystore.tls]
+#file_name = "$ref{keystore.primary.file_name}"
+#type = "$ref{keystore.primary.type}"
+#password = "$ref{keystore.primary.password}"
+#alias = "$ref{keystore.primary.alias}"
+#key_password = "$ref{keystore.primary.key_password}"
+
+#Google reCAPTCHA settings.
+
+#[recaptcha]
+#enabled = true
+#api_url = "https://www.google.com/recaptcha/api.js"
+#verify_url = "https://www.google.com/recaptcha/api/siteverify"
+#site_key = ""
+#secret_key = ""
+
+# SMTP email sender settings.
+#[output_adapter.email]
+#from_address= "abcd@gmail.com"
+#username= "abcd"
+#password= "xxxx"
+#hostname= "smtp.gmail.com"
+#port= 587
+
+# =============================================================================
+# WSO2 DPDP Accelerator
+#
+# Everything above this banner is the stock WSO2 Identity Server 7.3.0
+# deployment.toml, unchanged apart from the IS_HOSTNAME, IS_ADMIN_USERNAME and
+# IS_ADMIN_PASSWORD placeholders that configure.sh substitutes.
+# =============================================================================
+
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
+username = "wso2carbon"
+password = "wso2carbon"
+driver = "org.h2.Driver"
+
+# JDBCPersistenceManager resolves this JNDI datasource name for every accelerator DB read/write.
+# data_source_name must match [datasource.WSO2DPDP_DB].id above (prefixed with "jdbc/") - it's a
+# separate setting only because the datasource itself is defined outside dpdp_accelerator.* space.
+# connection_verification_timeout_seconds is how long the Event Notification DAO component waits,
+# at bundle startup, for a `SELECT`-equivalent validity check against this datasource before
+# failing activation - a config problem then surfaces immediately rather than on first DAO use.
+[dpdp_accelerator.jdbc_persistence_manager]
+data_source_name = "jdbc/WSO2DPDP_DB"
+connection_verification_timeout_seconds = 1
+
+# Enables the consent management v2 API used by the consent portal. This single
+# switch also re-renders repository/conf/identity/resource-access-control-v2.xml
+# with the v2 rules and registers the v2 API resources together with their
+# internal_consent_mgt_* scopes, so none of those files should be edited by hand.
+[consent_mgt]
+enable_v2_api = true
+
+# Lets the Console's flows view read consent purposes.
+[console.flows.scopes]
+read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_purpose_view"]
+
+# The consent portal is a single page application: the browser loads the shell
+# and its assets before anyone has signed in, and the sign-in redirect comes
+# back to the same context. The server's authentication valve must therefore
+# not gate these paths. Webapp contexts that are not listed here default to
+# secured, which would reject the shell and the redirects outright. The pattern
+# has no slash before the wildcard so the bare context path matches too.
+#
+# Nothing is exposed by this: the portal holds no data of its own, and every
+# Identity Server API it calls enforces the user's own OAuth token.
+#
+# Entries here are merged with the Identity Server's built-in rules rather than
+# replacing them.
+[[resource.access_control]]
+context = "(.*)/consent-portal(.*)"
+secure = "false"
+http_method = "all"
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:topics:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/topics(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:topics:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:subscriptions:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/subscriptions(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "POST,DELETE"
+scopes = ["notifications:subscriptions:write"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events/poll(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:poll"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/deliveries/([^/]+)/completion"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:event-deliveries:complete"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["notifications:events:read"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/event-notifications/v1/events(.*)"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "POST"
+scopes = ["notifications:events:write"]
+
+# The four consent-history read routes.
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/status-history"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["consent:status-history:view:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/consents/([^/]+)/history"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["consent:history:view:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/status-history"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["consent:status-history:view:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/consent-mgt/v1/me/consents/([^/]+)/history"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "GET"
+scopes = ["consent:history:view:self"]
+
+[tenant_context.rewrite]
+custom_webapps = [
+    "/consent-portal/",
+    "/api/dpdp/event-notifications/v1/",
+    "/api/dpdp/consent-mgt/v1/"
+]
+
+# Controls the DPDP Consent Portal application/role auto-provisioning that runs
+# on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
+# Set auto_provisioning_enabled = false to manage the application and roles by
+# hand instead - this does not disable the portal itself, only the automatic
+# creation of its application and roles.
+# client_id must match whatever the deployed portal's own configuration expects -
+# changing it here without updating that too will break sign-in.
+[dpdp_accelerator.consent_portal]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_PORTAL"
+
+# Event Notification Framework runtime settings.
+[dpdp_accelerator.event_notifications]
+# Automatically reconciles the DPDP system topics (consent.update, consent.revoke, etc.) for
+# every tenant on create/update. Set false to manage system topics manually instead.
+system_topics_auto_create_enabled = true
+
+# Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
+# subscription-verification behavior.
+[dpdp_accelerator.event_notifications.webhook]
+thread_pool_size = 4
+base_backoff_seconds = 5
+max_retries = 5
+allow_http_callback_url = true
+# Comma-separated destination ports permitted for webhook callback URLs (-1 means no port was
+# specified in the URL). Widen this only to admit a subscriber's genuine non-standard port.
+allowed_callback_ports = "-1,80,443,8443"
+# Set true only for controlled/on-prem deployments where a webhook receiver legitimately lives
+# on a private/internal network (RFC1918, link-local, IPv6 unique-local). Loopback, wildcard,
+# and multicast targets are always rejected regardless of this setting.
+allow_private_network_callback_targets = false
+delivery_worker_batch_size = 50
+delivery_worker_poll_seconds = 5
+stuck_inflight_threshold_seconds = 10
+max_verification_response_body_bytes = 4096
+pending_subscription_recovery_threshold_seconds = 60
+background_worker_initial_delay_seconds = 10
+pending_subscription_recovery_interval_seconds = 30
+pending_subscription_recovery_batch_size = 20
+worker_shutdown_timeout_seconds = 5
+
+# Controls the capture (identity.extensions) and read APIs (consent.mgt.extensions.endpoint)
+# for consent status-audit/history. Set enabled = false to turn off both capture
+# and the read APIs; snapshot_enabled = false keeps the lightweight status-audit
+# trail but stops storing full pre-mutation JSON snapshots. Both features share the
+# accelerator's central datasource - see [datasource.WSO2DPDP_DB] above.
+[dpdp_accelerator.consent_history]
+enabled = true
+snapshot_enabled = true
+
+# Periodically records an EXPIRE history row for consents whose expiry time has passed -
+# audit only, this never changes a consent's live status (the Identity Server already
+# reports EXPIRED on read once expiryTime passes; this only fills in the missing history
+# record for when that happened). cron_value is a standard Quartz cron expression; the
+# default runs once daily at midnight. In a clustered deployment, see the "Clustering
+# requirements" section of docs/configuration-guide.md before relying on this in production.
+[dpdp_accelerator.consent_expiry]
+enabled = true
+cron_value = "0 0 0 * * ?"
+batch_size = 100

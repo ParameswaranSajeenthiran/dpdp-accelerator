@@ -1,0 +1,29 @@
+{
+  "clientID": "DPDP_CONSENT_PORTAL",
+  "hideSelfConsentsForAdmins": true,
+  "scope": [
+    "openid",
+    "profile",
+    "internal_login",
+    "internal_consent_mgt_consent_view",
+    "internal_consent_mgt_consent_create",
+    "internal_consent_mgt_consent_update",
+    "internal_consent_mgt_purpose_view",
+    "internal_consent_mgt_purpose_create",
+    "internal_consent_mgt_purpose_update",
+    "internal_consent_mgt_purpose_delete",
+    "internal_consent_mgt_element_view",
+    "internal_consent_mgt_element_create",
+    "internal_consent_mgt_element_delete",
+    "notifications:subscriptions:read",
+    "notifications:subscriptions:write",
+    "notifications:topics:read",
+    "notifications:topics:write",
+    "notifications:events:read",
+    "notifications:events:write",
+    "consent:status-history:view:any",
+    "consent:status-history:view:self",
+    "consent:history:view:any",
+    "consent:history:view:self"
+  ]
+}

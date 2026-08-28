@@ -1,0 +1,264 @@
+openapi: 3.0.1
+info:
+  title: DPDP Consent History
+  description: >-
+    Read APIs for consent status-audit and full-snapshot history. Deployed at
+    /api/dpdp/consent-mgt/v1/ (or /t/{tenant-domain}/api/dpdp/consent-mgt/v1/ for a non-super
+    tenant).
+  version: v1
+servers:
+  - url: /api/dpdp/consent-mgt/v1
+tags:
+  - name: admin
+    description: >-
+      Requires the caller's OAuth2 token to carry the named scope - enforced by the Identity
+      Server's own OAuth2 valve via [[resource.access_control]] in deployment.toml, not by
+      anything in this webapp.
+  - name: self
+    description: >-
+      Requires the named consent:<resource>:view:self scope; ownership of the specific consent is
+      additionally checked in code by comparing the caller's username against the consent's PII
+      principal ID - the scope only gates whether the caller can reach the route at all, never
+      which row they're allowed to see.
+paths:
+  /consents/{consentId}/status-history:
+    get:
+      tags: [admin]
+      summary: Get the status-audit trail for a consent
+      description: Requires the consent:status-history:view:any scope.
+      operationId: getStatusHistoryAsAdmin
+      parameters:
+        - $ref: '#/components/parameters/consentId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/StatusHistoryResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /consents/{consentId}/history:
+    get:
+      tags: [admin]
+      summary: Get the full pre/post-mutation snapshot history for a consent
+      description: Requires the consent:history:view:any scope.
+      operationId: getHistoryAsAdmin
+      parameters:
+        - $ref: '#/components/parameters/consentId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/ConsentHistoryResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /me/consents/{consentId}/status-history:
+    get:
+      tags: [self]
+      summary: Get the status-audit trail for a consent the caller owns
+      description: Requires the consent:status-history:view:self scope.
+      operationId: getStatusHistoryAsSelf
+      parameters:
+        - $ref: '#/components/parameters/consentId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/StatusHistoryResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /me/consents/{consentId}/history:
+    get:
+      tags: [self]
+      summary: Get the full pre/post-mutation snapshot history for a consent the caller owns
+      description: Requires the consent:history:view:self scope.
+      operationId: getHistoryAsSelf
+      parameters:
+        - $ref: '#/components/parameters/consentId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/ConsentHistoryResponse'
+        '400':
+          $ref: '#/components/responses/InvalidParameter'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  parameters:
+    consentId:
+      name: consentId
+      in: path
+      required: true
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+        minimum: 0
+  responses:
+    StatusHistoryResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatusHistoryResponseDTO'
+    ConsentHistoryResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsentHistoryResponseDTO'
+    InvalidParameter:
+      description: 'limit or offset is out of range (error code CH-4001).'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDTO'
+    Forbidden:
+      description: 'The caller is authenticated but does not own this consent (error code CH-4031).'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDTO'
+    NotFound:
+      description: 'No history exists for this consent ID (error code CH-4041).'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDTO'
+    ServerError:
+      description: 'Unexpected failure (error code CH-5001).'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorDTO'
+  schemas:
+    ErrorDTO:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 'One of the CH-<HTTP status><sequence> codes above.'
+        message:
+          type: string
+          description: 'The HTTP status reason phrase, e.g. "Not Found".'
+        description:
+          type: string
+        traceId:
+          type: string
+          description: A random UUID logged alongside the underlying error, for correlation.
+    PaginationDTO:
+      type: object
+      properties:
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+    StatusAuditEntryDTO:
+      type: object
+      properties:
+        previousStatus:
+          type: string
+          description: 'Absent for the initial CREATE entry.'
+        currentStatus:
+          type: string
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        actionBy:
+          type: string
+        actionTime:
+          type: integer
+          format: int64
+          description: Epoch milliseconds.
+    StatusHistoryResponseDTO:
+      type: object
+      properties:
+        consentId:
+          type: string
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusAuditEntryDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationDTO'
+    ConsentHistoryEntryDTO:
+      type: object
+      properties:
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        actionBy:
+          type: string
+        actionTime:
+          type: integer
+          format: int64
+          description: Epoch milliseconds.
+        snapshot:
+          type: object
+          description: >-
+            Parsed from the stored JSON string back into a tree before being placed here, so
+            Jackson serializes it as a nested object in the response rather than an escaped string.
+    ConsentHistoryResponseDTO:
+      type: object
+      properties:
+        consentId:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentHistoryEntryDTO'
+        pagination:
+          $ref: '#/components/schemas/PaginationDTO'
+    ActionType:
+      type: string
+      description: >-
+        What triggered this entry. AUTHORIZE_APPROVE/AUTHORIZE_REJECT/AUTHORIZE_REVOKE reflect the
+        specific per-authorizer decision rather than a single generic AUTHORIZE, since one value
+        covering all three reads ambiguously. EXPIRE is written by the consent expiry job/lazy
+        reconciliation, with actionBy=SYSTEM rather than a real user.
+      enum:
+        - CREATE
+        - UPDATE
+        - REVOKE
+        - AUTHORIZE_APPROVE
+        - AUTHORIZE_REJECT
+        - AUTHORIZE_REVOKE
+        - DELETE
+        - EXPIRE

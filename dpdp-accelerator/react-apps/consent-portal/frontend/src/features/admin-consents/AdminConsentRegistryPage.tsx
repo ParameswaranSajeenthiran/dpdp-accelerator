@@ -1,0 +1,230 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import { Box, Button, Chip, Stack, Typography } from '@wso2/oxygen-ui'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import type { AdminConsentRegistryFilters } from '../../types/consent'
+import { REQUIRED_SCOPES } from '../../utils/scopes'
+import useAuthorization from '../auth/useAuthorization'
+import ConsentRegistryTable from '../my-consents/components/ConsentRegistryTable'
+import ConsentRevocationDialog from '../my-consents/components/ConsentRevocationDialog'
+import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from '../my-consents/constants'
+import AdminConsentFilters from './components/AdminConsentFilters'
+import {
+  useAdminConsentListQuery,
+  useAdminRevokeConsentMutation,
+} from './hooks/useAdminConsentQueries'
+import {
+  EMPTY_ADMIN_CONSENT_FILTERS,
+  getAdminConsentFilters,
+  normalizeAdminConsentFilters,
+} from './utils/adminConsentFilters'
+
+const DEFAULT_ROWS_PER_PAGE = 10
+
+interface AdminConsentCursor {
+  after?: string
+  before?: string
+}
+
+function getRowsPerPage(searchParams: URLSearchParams): number {
+  const value = Number(searchParams.get('rowsPerPage') ?? String(DEFAULT_ROWS_PER_PAGE))
+
+  return CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS.includes(
+    value as (typeof CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS)[number],
+  )
+    ? value
+    : DEFAULT_ROWS_PER_PAGE
+}
+
+function getCursor(searchParams: URLSearchParams): AdminConsentCursor {
+  return {
+    after: searchParams.get('after') ?? undefined,
+    before: searchParams.get('before') ?? undefined,
+  }
+}
+
+function toSearchParams(
+  rawFilters: AdminConsentRegistryFilters,
+  cursor: AdminConsentCursor,
+  rowsPerPage = DEFAULT_ROWS_PER_PAGE,
+): URLSearchParams {
+  const filters = normalizeAdminConsentFilters(rawFilters)
+  const params = new URLSearchParams()
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (key === 'state' ? value !== 'All' : Boolean(value)) params.set(key, value)
+  })
+  if (cursor.after) params.set('after', cursor.after)
+  if (cursor.before) params.set('before', cursor.before)
+  if (rowsPerPage !== DEFAULT_ROWS_PER_PAGE) params.set('rowsPerPage', String(rowsPerPage))
+
+  return params
+}
+
+export default function AdminConsentRegistryPage(): React.JSX.Element {
+  const { t } = useTranslation('common')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedRevocationConsentID, setSelectedRevocationConsentID] = useState<string>()
+  const filters = useMemo(() => getAdminConsentFilters(searchParams), [searchParams])
+  const rowsPerPage = useMemo(() => getRowsPerPage(searchParams), [searchParams])
+  const cursor = useMemo(() => getCursor(searchParams), [searchParams])
+  const consentListQuery = useAdminConsentListQuery(filters, rowsPerPage, cursor)
+  const revokeMutation = useAdminRevokeConsentMutation()
+  const { hasScope } = useAuthorization()
+  const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
+
+  const updateParams = (
+    nextFilters: AdminConsentRegistryFilters,
+    nextCursor: AdminConsentCursor = {},
+    nextRowsPerPage = rowsPerPage,
+  ): void => {
+    setSearchParams(toSearchParams(nextFilters, nextCursor, nextRowsPerPage), { replace: true })
+  }
+
+  interface ActiveFilterChip {
+    key: string
+    label: string
+    value: string
+  }
+
+  const activeFilters: ActiveFilterChip[] = [
+    filters.state !== 'All'
+      ? { key: 'state', label: t('consentRegistry.filters.state'), value: filters.state }
+      : undefined,
+    filters.consentId
+      ? {
+          key: 'consentId',
+          label: t('consentRegistry.details.consentId'),
+          value: filters.consentId,
+        }
+      : undefined,
+    filters.subjectId
+      ? {
+          key: 'subjectId',
+          label: t('consentRegistry.details.table.user'),
+          value: filters.subjectId,
+        }
+      : undefined,
+    filters.serviceId
+      ? { key: 'serviceId', label: t('adminConsents.filters.serviceId'), value: filters.serviceId }
+      : undefined,
+    filters.purposeId
+      ? { key: 'purposeId', label: t('catalog.fields.purpose'), value: filters.purposeId }
+      : undefined,
+    filters.propertyKey && filters.propertyValue
+      ? {
+          key: 'property',
+          label: t('adminConsents.filters.propertyFilterLabel'),
+          value: `${filters.propertyKey} = ${filters.propertyValue}`,
+        }
+      : undefined,
+  ].filter((chip): chip is ActiveFilterChip => Boolean(chip))
+
+  const removeFilter = (key: string): void => {
+    if (key === 'property') {
+      updateParams({ ...filters, propertyKey: '', propertyValue: '' })
+      return
+    }
+    updateParams({
+      ...filters,
+      [key]: key === 'state' ? 'All' : '',
+    } as AdminConsentRegistryFilters)
+  }
+
+  return (
+    <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
+      <Stack spacing={3}>
+        <Stack spacing={1}>
+          <HeaderBreadcrumbs />
+          <Typography variant="h4" fontWeight={700}>
+            {t('adminConsents.title')}
+          </Typography>
+        </Stack>
+
+        <AdminConsentFilters
+          key={searchParams.toString()}
+          filters={filters}
+          onFilterChange={(nextFilters) => updateParams(nextFilters)}
+          onClear={() => updateParams(EMPTY_ADMIN_CONSENT_FILTERS)}
+        />
+
+        {activeFilters.length > 0 ? (
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+            <Typography variant="caption" color="text.secondary">
+              {t('adminConsents.filters.active')}
+            </Typography>
+            {activeFilters.map((chip) => (
+              <Chip
+                key={chip.key}
+                size="small"
+                variant="outlined"
+                label={`${chip.label}: ${chip.value}`}
+                onDelete={() => removeFilter(chip.key)}
+              />
+            ))}
+            <Button size="small" onClick={() => updateParams(EMPTY_ADMIN_CONSENT_FILTERS)}>
+              {t('consentRegistry.filters.clear')}
+            </Button>
+          </Stack>
+        ) : null}
+
+        <ConsentRegistryTable
+          rows={consentListQuery.data?.rows ?? []}
+          isLoading={consentListQuery.isPending || consentListQuery.isPlaceholderData}
+          isError={consentListQuery.isError}
+          rowsPerPage={rowsPerPage}
+          hasPreviousPage={Boolean(consentListQuery.data?.previousCursor)}
+          hasNextPage={Boolean(consentListQuery.data?.nextCursor)}
+          onPreviousPage={() =>
+            updateParams(filters, { before: consentListQuery.data?.previousCursor })
+          }
+          onNextPage={() => updateParams(filters, { after: consentListQuery.data?.nextCursor })}
+          onRowsPerPageChange={(nextRowsPerPage) => updateParams(filters, {}, nextRowsPerPage)}
+          onRetry={() => consentListQuery.refetch()}
+          detailBasePath="/administration/consents"
+          showSubject
+          canRevoke={canWriteAny}
+          onRevoke={setSelectedRevocationConsentID}
+          isMutating={revokeMutation.isPending}
+        />
+
+        {selectedRevocationConsentID ? (
+          <ConsentRevocationDialog
+            open
+            consentId={selectedRevocationConsentID}
+            loading={revokeMutation.isPending}
+            error={revokeMutation.error?.message}
+            onClose={() => {
+              setSelectedRevocationConsentID(undefined)
+              revokeMutation.reset()
+            }}
+            onConfirm={() =>
+              revokeMutation.mutate(selectedRevocationConsentID, {
+                onSuccess: () => setSelectedRevocationConsentID(undefined),
+              })
+            }
+          />
+        ) : null}
+      </Stack>
+    </Box>
+  )
+}

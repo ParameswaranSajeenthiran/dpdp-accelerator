@@ -1,0 +1,22 @@
+{
+  "name": "dpdp-integration-test-suite",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:elements": "playwright test tests/01-elements",
+    "test:purposes": "playwright test tests/02-purposes",
+    "test:consents": "playwright test tests/03-consents",
+    "test:authorization": "playwright test tests/04-authorization",
+    "test:multi-tenancy": "playwright test tests/05-multi-tenancy",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.12.0",
+    "dotenv": "17.2.3",
+    "typescript": "5.9.3"
+  }
+}
