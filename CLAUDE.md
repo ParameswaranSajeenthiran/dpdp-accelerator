@@ -1,14 +1,84 @@
 # Working in this repo
 
-Conventions that have emerged across this codebase. Follow these when adding a feature, a
-module, or a config option — they're not written down anywhere else yet.
+## What this is
+
+An **accelerator for WSO2 Identity Server 7.3.0** — not a standalone application. The build
+produces a zip that is unpacked over an existing IS distribution: OSGi bundles into
+`repository/components/dropins`, a WAR into `repository/deployment/server/webapps`, and a
+complete `deployment.toml` that replaces the product's own. Nothing here runs on its own; almost
+everything needs a live IS to exercise.
+
+The rest of this file is conventions that have emerged across the codebase — follow them when
+adding a feature, a module, or a config option, since they're not written down anywhere else yet.
 
 ## Build
 
-See [`README.md`](README.md) for build prerequisites and commands. Always build from the repo
-root, not from `dpdp-accelerator/`.
+Requires JDK 11+ (JDK 21+ to run the server), Maven 3.6.3+, Node.js 20.19+/22.12+ with npm.
 
-## Architecture: what lives where
+```sh
+mvn clean install                    # from the REPOSITORY ROOT
+```
+
+Run from the repository root, **not** from `dpdp-accelerator/`. The root pom aggregates
+`dpdp-accelerator` *and* `dpdp-accelerator/accelerators` separately (the accelerators subtree
+parents to the root pom, matching the Financial Services accelerator layout), so building from
+`dpdp-accelerator/` silently skips the accelerator zip and only builds the portal. See
+[`README.md`](README.md) for more background on prerequisites.
+
+Output: `dpdp-accelerator/accelerators/dpdp-is/target/wso2-dpdp-is-accelerator-<version>.zip`
+
+### Tests
+
+| Scope | Command |
+| --- | --- |
+| Java (TestNG via surefire, suite defined in `src/test/resources/testng.xml`) | `mvn test` |
+| Single Java test class | `mvn test -pl dpdp-accelerator/components/org.wso2.dpdp.accelerator.identity.extensions -Dtest=DPDPConsentPortalAppProvisioningUtilTest` |
+| Frontend (Vitest) | `cd dpdp-accelerator/react-apps/consent-portal/frontend && npm test` |
+| Single frontend test | `npm test -- src/__tests__/SomeThing.test.tsx` |
+| Frontend lint / format | `npm run lint` / `npm run format:check` |
+| E2E (Playwright, needs a deployed IS) | `cd dpdp-integration-test-suite && ./run-e2e.sh [tests/03-consents]` |
+
+CI runs the Java/frontend build and the full E2E suite on every PR to `main` and `dev` via
+`.github/workflows/pr-checks.yml`, which deploys a fresh IS 7.3.0 from scratch. It needs no
+secrets. Role *membership* is the one thing the accelerator never provisions, so both CI and a
+fresh local install get their accounts from
+`dpdp-integration-test-suite/scripts/provision-test-users.sh` (idempotent).
+
+**Use npm, not pnpm.** `package-lock.json` is the committed lockfile and the Maven build invokes
+`npm install` / `npm run build`. The frontend `README.md` and `AGENTS.md` both say pnpm — they are
+stale on this point; don't follow them for package management even though they're otherwise the
+canonical frontend policy (see [Frontend conventions](#frontend-conventions) below).
+
+`npm run build` is not just Vite: it chains `tsc -b`, then `security:verify`, `i18n:verify`, and
+`generate:shell`. Any of those four can fail the Maven build.
+
+## Architecture
+
+### Deployment pipeline
+
+```
+frontend/ (Vite SPA)
+  └─ npm run build → frontend/dist (incl. generated index.jsp/home.jsp/auth.jsp)
+      └─ consent-portal.war  (war plugin, webResources = frontend/dist, webXml = ./web.xml)
+          └─ unzipped by accelerators/dpdp-is antrun `create-solution` into carbon-home/
+              └─ wso2-dpdp-is-accelerator-<version>.zip
+                  ├─ bin/merge.sh <IS_HOME>      copies carbon-home/* over the product
+                  └─ bin/configure.sh <IS_HOME>  installs deployment.toml, runs consent DB migration
+```
+
+`merge.sh` deliberately deletes every previously-deployed accelerator webapp (exploded directory
+and `.war`) and any `org.wso2.dpdp.accelerator.*` jar in dropins before copying fresh ones in — a
+stale file left over from an older accelerator version would otherwise sit alongside the new one
+indefinitely, since `cp -r` only adds/overwrites and never deletes. See
+[Build-artifact hygiene vs. stateful data](#build-artifact-hygiene-vs-stateful-data) for the
+general principle this follows.
+
+Adding a new internal webapp requires two edits, not one: a `<module>` in
+`dpdp-accelerator/pom.xml` (there is no aggregator pom under `internal-webapps/`) **and** an
+`<unzip>` in the `create-solution` antrun execution of `accelerators/dpdp-is/pom.xml`. See
+`components/README.md` and `internal-webapps/README.md`.
+
+### What lives where
 
 - **`components/org.wso2.dpdp.accelerator.common`** — shared, feature-agnostic plumbing: the
   `dpdp-accelerator.xml` config parser/service, the JDBC persistence manager
@@ -24,7 +94,8 @@ root, not from `dpdp-accelerator/`.
 - **`components/org.wso2.dpdp.accelerator.identity.extensions`** — the actual WSO2 IS extension
   *points*: `TenantMgtListener` hooks, OSGi service registrations, application/role
   provisioning. This is where you plug into IS's own lifecycle (tenant create/update, consent
-  status-change hooks, etc.), not where feature business logic lives.
+  status-change hooks, etc.), not where feature business logic lives. See
+  [Tenant auto-provisioning](#tenant-auto-provisioning) below.
 - **`components/org.wso2.dpdp.accelerator.consent.extensions`** — the DAO/service layer for
   consent-related extensions. Currently holds consent status-audit/history capture and read
   (`ConsentHistoryDAO`, `ConsentHistoryService`); named generically so a future, unrelated
@@ -33,8 +104,9 @@ root, not from `dpdp-accelerator/`.
   layer exposing `consent.extensions`' data over HTTP (JAX-RS/CXF WAR). Business logic stays in
   the `consent.extensions` service layer; this module only orchestrates request/response
   shaping, auth-adjacent checks it owns (e.g. ownership), and DTO mapping.
-- **`react-apps/consent-portal`** — the end-user-facing SPA (see "Consent portal frontend"
-  below). Talks to IS's own APIs directly; does not go through the `internal-webapps` endpoint.
+- **`react-apps/consent-portal`** — the end-user-facing SPA (see
+  [Consent portal frontend](#consent-portal-frontend-react-appsconsent-portal) below). Talks to
+  IS's own APIs directly; does not go through the `internal-webapps` endpoint.
 - **`accelerators/dpdp-is/`** — packages every module above into `carbon-home/`, assembles the
   distributable zip, and ships `bin/merge.sh` + `bin/configure.sh` for installing over an
   `IS_HOME`.
@@ -42,6 +114,48 @@ root, not from `dpdp-accelerator/`.
 Registering a new module: add it to `dpdp-accelerator/pom.xml`'s `<modules>`, and copy its built
 artifact into the distribution via the antrun `create-solution` execution in
 `accelerators/dpdp-is/pom.xml`. See `components/README.md` and `internal-webapps/README.md`.
+
+### `deployment.toml` is replaced, not merged
+
+`accelerators/dpdp-is/repository/resources/wso2is-7.3.0-deployment.toml` is the **complete** stock
+IS 7.3.0 file, byte-for-byte, with three placeholders (`IS_HOSTNAME`, `IS_ADMIN_USERNAME`,
+`IS_ADMIN_PASSWORD`) that `configure.sh` substitutes, plus the accelerator's settings appended
+under a banner. Keep the banner boundary honest: anything above it must stay identical to stock so
+the diff against a fresh pack remains reviewable. `configure.sh` backs the operator's file up to
+`deployment.toml.bak-<timestamp>`.
+
+Supporting a new IS version means adding a template beside this one and pointing
+`PRODUCT_CONF_PATH` (in `repository/conf/configure.properties`) at it.
+
+`[consent_mgt] enable_v2_api = true` is the load-bearing switch: it re-renders
+`repository/conf/identity/resource-access-control-v2.xml` and registers the v2 API resources with
+their `internal_consent_mgt_*` scopes. Do not hand-edit those generated files.
+
+### Tenant auto-provisioning
+
+`DPDPIdentityExtensionTenantMgtListener` creates the `DPDP_CONSENT_PORTAL` application and the
+`dpdp-consent-user` / `dpdp-consent-admin` roles on tenant create/update, mirroring how IS
+provisions Console and My Account. Controlled by `[dpdp_accelerator.consent_portal]` in
+`deployment.toml`; `client_id` there must match what the deployed portal expects or sign-in breaks.
+Role *membership* is never provisioned — it is assigned by hand in the Console. See
+[Provisioning/listener idempotency](#provisioninglistener-idempotency) for the update-path rule
+this and every other tenant lifecycle hook follows.
+
+`org.wso2.dpdp.accelerator.common` holds the `deployment.toml` config parser
+(`DPDPConfigParser`) exposed as an OSGi service; `identity.extensions` consumes it.
+
+### Integration test suite
+
+Runs against a **real, persistent, shared** IS — nothing is mocked, and the environment never
+resets. Consequences that shape every test: assert by unique marker or server-issued ID, never by
+empty lists or row counts. Personas log in **once per run**, cached across workers in
+`fixtures/auth.fixtures.ts`. Tests delete Elements/Purposes they create but not Consents — the
+product has no delete-by-id for them, so they accumulate.
+
+**Before writing or changing a test there, read `dpdp-integration-test-suite/AGENTS.md`.** It
+carries the rules that aren't guessable: the crossed directory/test-ID numbering, sourcing locators
+from the frontend's i18n rather than from memory, the leading-slash `goto()` trap, the two
+load-bearing lines in `pageForPersonaState`, and the measured flake profile.
 
 ## Naming standards
 
@@ -85,7 +199,8 @@ touching this chain, in order:
    with a Jinja `{% if %}`/`{% else %}` default matching step 1's default.
 5. Add the corresponding TOML key under a `[dpdp_accelerator.<feature>]` table in
    `accelerators/dpdp-is/repository/resources/wso2is-7.3.0-deployment.toml`, documented with a
-   comment explaining what it controls.
+   comment explaining what it controls. This file is otherwise a byte-for-byte copy of stock IS
+   config appended under a banner — see [`deployment.toml` is replaced, not merged](#deploymenttoml-is-replaced-not-merged).
 6. If the value can be a secret, do nothing extra — any element already supports
    `svns:secretAlias="..."` and `DPDPConfigParser` resolves it transparently via Secure Vault.
 
@@ -119,6 +234,8 @@ touching this chain, in order:
   call gets reclassified to a different level without updating its guard, and the mismatch is
   easy to miss by eye — grep for `isXEnabled()` and check the line right after it whenever you
   touch log levels.
+- Never log tokens, emails, or other PII — this applies to the frontend too, not just the Java
+  bundles.
 
 ## Consent portal frontend (`react-apps/consent-portal`)
 
@@ -133,16 +250,49 @@ touching this chain, in order:
     - The accelerator's own `/api/dpdp/consent-mgt/v1` (status-audit/history reads) is **not
       currently wired into the frontend** — it exists as a backend-only API. Wiring it in is
       outstanding work, not something already done.
-- Auth is OIDC (auth-code + PKCE) via `@asgardeo/auth-spa` against the Identity Server itself —
-  there's no separate backend-for-frontend token exchange. The auth code is parked server-side
-  in the HTTP session (via the JSP shell) rather than ever touching page-visible script.
+- **Auth is a public OIDC client (auth-code + PKCE) against the Identity Server itself — there is
+  no backend-for-frontend of our own.** An earlier design had one with split-cookie tokens; it was
+  removed. Tokens live in the `@asgardeo/auth-spa` web worker, never in page script — every API
+  call routes through `httpRequest` in `src/utils/authClient.ts` so the worker attaches the token.
+- The authorization code itself never reaches page script either: it's parked server-side in the
+  HTTP session via the JSP shell. Three generated JSPs handle the handoff (`web.xml` documents the
+  chain): `index.jsp` forwards an incoming code to `/authenticate`, `home.jsp` parks it in the HTTP
+  session, `auth.jsp` hands it over once and clears it so a reload can't replay it.
 - No build-time base URL: `VITE_API_BASE_URL` is empty on purpose — every request is same-origin
-  and tenant-qualified, with the base path derived from `window.location` at runtime (so the
-  same build works unqualified at `/consent-portal` and tenant-qualified at
-  `/t/<tenant>/consent-portal`). Don't hardcode a host or tenant path into new frontend code.
+  and tenant-qualified, with the base path derived from `window.location` at runtime via
+  `src/utils/basePath.ts` (so the same build works unqualified at `/consent-portal` and
+  tenant-qualified at `/t/<tenant>/consent-portal`). Use those helpers rather than constructing
+  URLs yourself — `tenantFromPath` deliberately constrains the tenant charset because it gets
+  spliced into request URLs. Don't hardcode a host or tenant path into new frontend code.
 - `deployment.config.json`, fetched at runtime (not compiled into the bundle), supplies the
   OAuth `clientID` and scope list — this is how the same build adapts to whatever
-  `[dpdp_accelerator.consent_portal] client_id` is set to per install.
+  `[dpdp_accelerator.consent_portal] client_id` is set to per install. `authClient.ts` keeps a
+  hardcoded fallback copy of those same defaults — **change both or they drift.**
+- `web.xml` maps the SPA shell to `/*`, so every static path the build emits at the webapp root
+  needs its own explicit `default` servlet mapping, or it silently gets served the shell's HTML
+  instead of the real asset. `/i18n/*` is mapped for exactly this reason — follow the same pattern
+  for any new top-level static path.
+- i18n covers English plus the 22 languages of the Eighth Schedule. Translations are fetched at
+  runtime from `public/i18n/<lang>/`, **not bundled**. New keys go in `public/i18n/en/common.json`
+  and must be mirrored into every other language (an English placeholder value is fine there —
+  translation is a separate pass); `npm run i18n:verify` and `src/__tests__/I18nKeys.test.ts`
+  enforce completeness and will fail the build otherwise. `catalog.json` is exempt: it holds
+  wording for admin-created Purposes/Elements and is allowed to be incomplete.
+
+## Frontend conventions
+
+`dpdp-accelerator/react-apps/consent-portal/frontend/AGENTS.md` is the canonical coding-style
+policy (with `.ai/oxygen-ui/AGENTS.md` for component specifics) — **except its package-manager
+guidance, which is stale; see [Use npm, not pnpm](#build) above.** The rules that bite most often:
+
+- Import UI from `@wso2/oxygen-ui` only, never `@mui/material`. Style with `sx` + theme tokens, no
+  hardcoded colors/spacing.
+- No `any`; explicit return types; interfaces for object shapes. Do not disable ESLint rules.
+- Keep code under `src/{components,features,hooks,types,utils,__tests__}`. Components
+  `PascalCase.tsx` with a default export, logic `camelCase.ts`, folders `kebab-case`.
+- API access belongs in modules/hooks (`src/utils/apiClient.ts` + TanStack Query), not in
+  presentational components.
+- No hardcoded user-facing copy — externalize to i18n keys and use `useTranslation('common')`.
 
 ## Adding a new REST API endpoint
 
@@ -206,6 +356,8 @@ instructions block follows one shape — copy it rather than reinventing:
 
 ## Testing and coverage
 
+See [Tests](#tests) above for the literal commands. Conventions beyond that:
+
 - TestNG (not JUnit) + Mockito. Test classes are registered by package in a per-module
   `src/test/resources/testng.xml` (`<packages><package name="...impl"/></packages>`) — a new
   test package must be added there or it silently never runs.
@@ -260,7 +412,8 @@ leaves a duplicate registration behind. Declarative `@Component(service = ...)` 
 
 Tenant lifecycle listeners fire on both create and update. Treat the update path as the recovery
 path: check whether something already exists before creating it, never assume a clean slate.
-Every provisioning step should be safe to call repeatedly.
+Every provisioning step should be safe to call repeatedly. See
+[Tenant auto-provisioning](#tenant-auto-provisioning) for the concrete listener this applies to.
 
 ## Build-artifact hygiene vs. stateful data
 
@@ -269,8 +422,8 @@ The real deployment workflow is "rebuild the accelerator, merge it over an alrea
 
 - Stale build outputs (dropins jars, exploded webapps) must never linger across a rebuild.
   `maven-clean-plugin` wipes the webapp/dropins overlay at the `initialize` phase before
-  repackaging; `merge.sh` removes stale dropins jars from the *live* `IS_HOME` before copying
-  fresh ones in.
+  repackaging; `merge.sh` removes every stale accelerator webapp and dropins jar from the *live*
+  `IS_HOME` before copying fresh ones in — see [Deployment pipeline](#deployment-pipeline).
 - Stateful data (database files) must **never** get the same blind-overwrite treatment — that
   would silently delete real data on every merge. Schema setup stays script-driven and
   idempotent (`CREATE TABLE IF NOT EXISTS`), not a file that gets replaced wholesale.
@@ -323,8 +476,14 @@ using the product's own named-table form (`[datasource.Name]`, matching
 
 This accelerator follows the WSO2 Financial Services / Open Banking accelerator's patterns
 wherever one exists (dropins cleanup, Secure Vault support, datasource config shape, OpenAPI
-codegen setup, internal-webapp wiring). If a design question comes up, check how that project
-solved it before inventing something new.
+codegen setup, internal-webapp wiring, root-pom aggregation layout). If a design question comes
+up, check how that project solved it before inventing something new.
+
+## Reference docs
+
+`docs/setup-guide.md` (install + start the server), `docs/configuration-guide.md` (portal
+application, roles), `docs/localization-guide.md` (fixing wording and localizing Purposes/Elements
+on a live deployment without a rebuild).
 
 ## Working with an AI agent on this repo
 
