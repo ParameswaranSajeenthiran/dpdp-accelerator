@@ -30,25 +30,25 @@ import java.util.Map;
  */
 public class EventCreateDTO {
 
-    private String topicName;
+    private String topic;
     private List<String> purposes;
     private Map<String, Object> payload;
 
     public EventCreateDTO() {
     }
 
-    public EventCreateDTO(String topicName, List<String> purposes, Map<String, Object> payload) {
-        this.topicName = topicName;
+    public EventCreateDTO(String topic, List<String> purposes, Map<String, Object> payload) {
+        this.topic = topic;
         this.purposes = purposes;
         this.payload = payload;
     }
 
-    public String getTopicName() {
-        return topicName;
+    public String getTopic() {
+        return topic;
     }
 
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
     public List<String> getPurposes() {

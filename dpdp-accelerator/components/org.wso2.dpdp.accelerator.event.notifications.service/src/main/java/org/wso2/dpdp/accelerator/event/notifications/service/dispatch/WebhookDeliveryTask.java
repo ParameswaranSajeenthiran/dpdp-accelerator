@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
  * <p>For each invocation the task:</p>
  * <ol>
  *   <li>POSTs the payload to the subscriber's callback URL with an HMAC-SHA256 signature in
- *       the {@code Event-Signature} header.</li>
+ *       the {@code event-signature} header.</li>
  *   <li>Writes exactly one {@code WEBHOOK_DELIVERY_AUDIT} row regardless of outcome.</li>
  *   <li>On a 2xx success, marks the delivery {@code delivered} with the current timestamp.</li>
  *   <li>On a non-2xx response or an exception, increments {@code ATTEMPT_COUNT}, computes the
@@ -68,7 +68,7 @@ public class WebhookDeliveryTask implements Runnable {
 
     // Constants kept here (not in EventNotificationCommonConstants) so they stay scoped to
     // outbound HTTP delivery and don't leak into the common module.
-    private static final String EVENT_SIGNATURE_HEADER = "Event-Signature";
+    private static final String EVENT_SIGNATURE_HEADER = "event-signature";
     private static final String DELIVERY_ID_HEADER = "Delivery-Id";
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_JSON = "application/json";
@@ -85,35 +85,47 @@ public class WebhookDeliveryTask implements Runnable {
 
     private final WebhookDelivery delivery;
     private final String orgId;
+    private final String groupId;
     private final String payload;
     private final String callbackUrl;
     private final String sharedSecret;
-    private final String topicId;
-    private final String topicName;
+    private final String topic;
     private final DeliveryDAO deliveryDAO;
     private final HttpClient httpClient;
     private final DPDPConfigurationService configurationService;
+    private final EventPayloadSigner payloadSigner;
 
-    public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String payload, String callbackUrl,
-            String sharedSecret, String topicId, String topicName, DeliveryDAO deliveryDAO,
+    public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String groupId, String payload, String callbackUrl,
+            String sharedSecret, String topic, DeliveryDAO deliveryDAO,
             HttpClient httpClient) {
-        this(delivery, orgId, payload, callbackUrl, sharedSecret, topicId, topicName, deliveryDAO,
-                httpClient, new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false));
+        this(delivery, orgId, groupId, payload, callbackUrl, sharedSecret, topic, deliveryDAO,
+                httpClient, new org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl(false),
+                new IdentityServerPayloadSigner());
     }
 
-    public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String payload, String callbackUrl,
-            String sharedSecret, String topicId, String topicName, DeliveryDAO deliveryDAO,
+    public WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String groupId, String payload,
+            String callbackUrl,
+            String sharedSecret, String topic, DeliveryDAO deliveryDAO,
             HttpClient httpClient, DPDPConfigurationService configurationService) {
+        this(delivery, orgId, groupId, payload, callbackUrl, sharedSecret, topic, deliveryDAO,
+                httpClient, configurationService, new IdentityServerPayloadSigner());
+    }
+
+    WebhookDeliveryTask(WebhookDelivery delivery, String orgId, String groupId, String payload, String callbackUrl,
+            String sharedSecret, String topic, DeliveryDAO deliveryDAO,
+            HttpClient httpClient, DPDPConfigurationService configurationService,
+            EventPayloadSigner payloadSigner) {
         this.delivery = delivery;
         this.orgId = orgId;
+        this.groupId = groupId;
         this.payload = payload;
         this.callbackUrl = callbackUrl;
         this.sharedSecret = sharedSecret;
-        this.topicId = topicId;
-        this.topicName = topicName;
+        this.topic = topic;
         this.deliveryDAO = deliveryDAO;
         this.httpClient = httpClient;
         this.configurationService = configurationService;
+        this.payloadSigner = payloadSigner;
     }
 
     @Override
@@ -147,29 +159,44 @@ public class WebhookDeliveryTask implements Runnable {
     }
 
     /**
-     * Builds the envelope, signs it, and returns the HTTP status code as a string.
+     * Builds the event payload, signs it, and returns the HTTP status code as a string.
      * Interrupts and IO errors propagate to the caller.
      *
-     * <p>The body is a JSON envelope that wraps the original event payload under
-     * {@code payload}, with the accelerator-managed routing fields
-     * ({@code deliveryId}, {@code eventId}, {@code subscriptionId}, {@code orgId},
-     * {@code topicId}, {@code topicName}) as siblings. The HMAC-SHA256 in
-     * {@code Event-Signature} is computed over the serialized envelope — not the raw
-     * payload — so receivers must verify against the entire request body. Receivers can
-     * also dedupe on the {@code Delivery-Id} header without recomputing the HMAC.</p>
+     * <p>When certificate signing is enabled, the body contains only {@code signedPayload}.
+     * The compact JWS embeds the complete event envelope and its HMAC-SHA256 hash, avoiding
+     * a second unsigned copy of the event data. The {@code event-signature} header remains
+     * an HMAC over the exact HTTP body for subscription-level authentication.</p>
      */
     private String dispatch() throws Exception {
         if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
             throw new MissingSharedSecretException();
         }
-        String envelope = buildEnvelope();
+        String body = buildEnvelope();
+        if (configurationService.isEventNotificationPayloadSigningEnabled()) {
+            com.fasterxml.jackson.databind.JsonNode eventPayload = ENVELOPE_MAPPER.readTree(body);
+            String serializedPayload = ENVELOPE_MAPPER.writeValueAsString(eventPayload);
+            String payloadHash = HmacSigner.sign(sharedSecret, serializedPayload);
+            EventPayloadSigningContext signingContext = new EventPayloadSigningContext(
+                    orgId,
+                    orgId,
+                    groupId,
+                    configurationService.getEventNotificationPayloadSigningAudience(),
+                    delivery.getDeliveryId(),
+                    delivery.getEventId(),
+                    System.currentTimeMillis() / 1000L,
+                    payloadHash,
+                    eventPayload);
+            Map<String, Object> signedBody = new LinkedHashMap<>();
+            signedBody.put("signedPayload", payloadSigner.sign(signingContext));
+            body = ENVELOPE_MAPPER.writeValueAsString(signedBody);
+        }
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(callbackUrl))
                 .timeout(HTTP_TIMEOUT)
                 .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
                 .header(DELIVERY_ID_HEADER, delivery.getDeliveryId())
-                .POST(HttpRequest.BodyPublishers.ofString(envelope));
-        String signature = HmacSigner.sign(sharedSecret, envelope);
+                .POST(HttpRequest.BodyPublishers.ofString(body));
+        String signature = HmacSigner.sign(sharedSecret, body);
         builder.header(EVENT_SIGNATURE_HEADER, "sha256=" + signature);
         HttpResponse<Void> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.discarding());
         return String.valueOf(response.statusCode());
@@ -183,8 +210,8 @@ public class WebhookDeliveryTask implements Runnable {
      *
      * <p>LinkedHashMap preserves field order so the serialized envelope is stable across
      * runs (helpful for snapshot tests and for receivers diffing the body byte-for-byte).
-     * If the raw payload is null or not parseable JSON, the {@code payload} field falls
-     * causes the delivery to be marked permanently failed.</p>
+     * If the raw payload is null or not parseable JSON, the delivery is marked permanently
+     * failed.</p>
      */
     private String buildEnvelope() throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
@@ -192,8 +219,8 @@ public class WebhookDeliveryTask implements Runnable {
         envelope.put("eventId", delivery.getEventId());
         envelope.put("subscriptionId", delivery.getSubscriptionId());
         envelope.put("orgId", orgId);
-        envelope.put("topicId", topicId);
-        envelope.put("topicName", topicName);
+        envelope.put("groupId", groupId);
+        envelope.put("topic", topic);
 
         Object payloadNode;
         if (payload == null) {
@@ -263,7 +290,7 @@ public class WebhookDeliveryTask implements Runnable {
             boolean recorded = deliveryDAO.recordSuccessfulAttempt(audit, updated);
             if (recorded) {
                 LOG.info("Webhook delivered [delivery=" + LogSanitizer.sanitize(delivery.getDeliveryId()) + ", event="
-                        + LogSanitizer.sanitize(delivery.getEventId()) + ", topic=" + LogSanitizer.sanitize(topicName) + ", attempt="
+                        + LogSanitizer.sanitize(delivery.getEventId()) + ", topic=" + LogSanitizer.sanitize(topic) + ", attempt="
                         + updated.getAttemptCount() + ", status=" + httpStatus + "].");
             } else {
                 LOG.debug("recordSuccessfulAttempt returned false for delivery ["

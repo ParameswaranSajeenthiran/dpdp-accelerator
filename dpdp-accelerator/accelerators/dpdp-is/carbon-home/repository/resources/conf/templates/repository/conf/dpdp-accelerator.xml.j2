@@ -128,6 +128,18 @@
             <AutoCreateEnabled>true</AutoCreateEnabled>
             {% endif %}
         </SystemTopics>
+        <PayloadSigning>
+            {% if dpdp_accelerator.event_notifications.payload_signing.enabled is defined %}
+            <Enabled>{{dpdp_accelerator.event_notifications.payload_signing.enabled}}</Enabled>
+            {% else %}
+            <Enabled>true</Enabled>
+            {% endif %}
+            {% if dpdp_accelerator.event_notifications.payload_signing.audience is defined %}
+            <Audience>{{dpdp_accelerator.event_notifications.payload_signing.audience}}</Audience>
+            {% else %}
+            <Audience>dpdp-event-notifications</Audience>
+            {% endif %}
+        </PayloadSigning>
     </EventNotifications>
     <ConsentHistory>
         {% if dpdp_accelerator.consent_history.enabled is defined %}

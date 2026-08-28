@@ -79,6 +79,8 @@ public class DPDPConfigParserTest {
                 + "<PendingSubscriptionRecoveryIntervalSeconds>31</PendingSubscriptionRecoveryIntervalSeconds>"
                 + "<PendingSubscriptionRecoveryBatchSize>21</PendingSubscriptionRecoveryBatchSize>"
                 + "<WorkerShutdownTimeoutSeconds>6</WorkerShutdownTimeoutSeconds>"
+                + "<PayloadSigning><Enabled>false</Enabled>"
+                + "<Audience>custom-event-audience</Audience></PayloadSigning>"
                 + "</EventNotifications>"
                 + "</DPDPAccelerator>").getBytes());
         CarbonTestEnvironment.configure(configDir);
@@ -140,6 +142,8 @@ public class DPDPConfigParserTest {
         assertEquals(parser.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 31);
         assertEquals(parser.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 21);
         assertEquals(parser.getEventNotificationWorkerShutdownTimeoutSeconds(), 6);
+        assertTrue(!parser.isEventNotificationPayloadSigningEnabled());
+        assertEquals(parser.getEventNotificationPayloadSigningAudience(), "custom-event-audience");
     }
 
     @Test
@@ -173,6 +177,8 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 31);
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 21);
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 6);
+        assertTrue(!service.isEventNotificationPayloadSigningEnabled());
+        assertEquals(service.getEventNotificationPayloadSigningAudience(), "custom-event-audience");
     }
 
     @Test
@@ -197,6 +203,8 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 30);
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 20);
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 5);
+        assertTrue(service.isEventNotificationPayloadSigningEnabled());
+        assertEquals(service.getEventNotificationPayloadSigningAudience(), "dpdp-event-notifications");
     }
 
     @Test
@@ -224,6 +232,8 @@ public class DPDPConfigParserTest {
         values.put("EventNotifications.PendingSubscriptionRecoveryIntervalSeconds", "30");
         values.put("EventNotifications.PendingSubscriptionRecoveryBatchSize", "20");
         values.put("EventNotifications.WorkerShutdownTimeoutSeconds", "5");
+        values.put("EventNotifications.PayloadSigning.Enabled", "false");
+        values.put("EventNotifications.PayloadSigning.Audience", "configured-audience");
         try {
             assertEquals(service.getEventNotificationThreadPoolSize(), 8);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 12L);
@@ -240,6 +250,8 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 30);
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 20);
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 5);
+        assertTrue(!service.isEventNotificationPayloadSigningEnabled());
+        assertEquals(service.getEventNotificationPayloadSigningAudience(), "configured-audience");
 
         values.put("EventNotifications.ThreadPoolSize", "0");
         expectThrows(IllegalStateException.class, service::getEventNotificationThreadPoolSize);
@@ -252,6 +264,8 @@ public class DPDPConfigParserTest {
             values.put("EventNotifications.AllowPrivateNetworkCallbackTargets", "bad");
             expectThrows(IllegalStateException.class,
                     service::isEventNotificationPrivateNetworkCallbackTargetsAllowed);
+            values.put("EventNotifications.PayloadSigning.Enabled", "bad");
+            expectThrows(IllegalStateException.class, service::isEventNotificationPayloadSigningEnabled);
             values.put("EventNotifications.PendingSubscriptionRecoveryIntervalSeconds", "0");
             expectThrows(IllegalStateException.class,
                     service::getEventNotificationPendingSubscriptionRecoveryIntervalSeconds);

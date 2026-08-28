@@ -69,6 +69,10 @@ public final class DPDPCommonConstants {
             "EventNotifications.WorkerShutdownTimeoutSeconds";
     public static final String EVENT_NOTIFICATIONS_SYSTEM_TOPICS_AUTO_CREATE_ENABLED =
             "EventNotifications.SystemTopics.AutoCreateEnabled";
+    public static final String EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED =
+            "EventNotifications.PayloadSigning.Enabled";
+    public static final String EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE =
+            "EventNotifications.PayloadSigning.Audience";
 
     public static final int DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = 4;
     public static final long DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = 5L;
@@ -86,6 +90,9 @@ public final class DPDPCommonConstants {
     public static final int DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_INTERVAL_SECONDS = 30;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_PENDING_SUBSCRIPTION_RECOVERY_BATCH_SIZE = 20;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS = 5;
+    public static final boolean DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED = true;
+    public static final String DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE =
+            "dpdp-event-notifications";
 
     public static final String CONSENT_HISTORY_ENABLED = "ConsentHistory.Enabled";
     public static final String CONSENT_HISTORY_SNAPSHOT_ENABLED = "ConsentHistory.SnapshotEnabled";

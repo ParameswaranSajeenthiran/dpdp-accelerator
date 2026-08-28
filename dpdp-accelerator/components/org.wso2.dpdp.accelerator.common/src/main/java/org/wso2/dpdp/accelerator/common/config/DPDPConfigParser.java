@@ -255,6 +255,19 @@ public final class DPDPConfigParser {
                 .map(Boolean::parseBoolean).orElse(true);
     }
 
+    public boolean isEventNotificationPayloadSigningEnabled() {
+
+        return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED);
+    }
+
+    public String getEventNotificationPayloadSigningAudience() {
+
+        return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE)
+                .filter(value -> !value.trim().isEmpty())
+                .orElse(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE);
+    }
+
     public int getEventNotificationThreadPoolSize() {
 
         return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE,
