@@ -36,6 +36,9 @@ import javax.crypto.spec.SecretKeySpec;
 public final class HmacSigner {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final String COMPLETION_SIGNATURE_VERSION = "v1";
+    private static final String COMPLETION_SIGNATURE_OPERATION = "completion";
+    private static final String SIGNATURE_INPUT_SEPARATOR = "\n";
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
     private HmacSigner() {
@@ -88,6 +91,49 @@ public final class HmacSigner {
         }
         return MessageDigest.isEqual(expected.getBytes(StandardCharsets.US_ASCII),
                 suppliedDigest.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    /**
+     * Signs a delivery-completion request while binding the signature to its delivery identifier.
+     *
+     * <p>The signed input is {@code v1\ncompletion\n<deliveryId>\n<exact-request-body>}.
+     * Binding the path identifier prevents a valid completion request from being replayed against
+     * another delivery belonging to the same subscription.</p>
+     *
+     * @param secret      shared secret stored on the subscription
+     * @param deliveryId  normalized delivery identifier from the request path
+     * @param requestBody exact request body received by the endpoint
+     * @return lowercase hexadecimal HMAC, or {@code null} when an input is missing
+     */
+    public static String signCompletion(String secret, String deliveryId, String requestBody) {
+
+        String signingInput = buildCompletionSigningInput(deliveryId, requestBody);
+        return signingInput == null ? null : sign(secret, signingInput);
+    }
+
+    /**
+     * Verifies a delivery-bound completion signature in constant time.
+     *
+     * @param secret      shared secret stored on the subscription
+     * @param deliveryId  normalized delivery identifier from the request path
+     * @param requestBody exact request body received by the endpoint
+     * @param signature   {@code sha256=<lowercase-hex-hmac>} header value
+     * @return {@code true} only when the signature matches all supplied context
+     */
+    public static boolean verifyCompletion(String secret, String deliveryId, String requestBody, String signature) {
+
+        String signingInput = buildCompletionSigningInput(deliveryId, requestBody);
+        return signingInput != null && verify(secret, signingInput, signature);
+    }
+
+    private static String buildCompletionSigningInput(String deliveryId, String requestBody) {
+
+        if (deliveryId == null || deliveryId.trim().isEmpty() || requestBody == null) {
+            return null;
+        }
+        return COMPLETION_SIGNATURE_VERSION + SIGNATURE_INPUT_SEPARATOR
+                + COMPLETION_SIGNATURE_OPERATION + SIGNATURE_INPUT_SEPARATOR
+                + deliveryId + SIGNATURE_INPUT_SEPARATOR + requestBody;
     }
 
     private static String toHex(byte[] bytes) {

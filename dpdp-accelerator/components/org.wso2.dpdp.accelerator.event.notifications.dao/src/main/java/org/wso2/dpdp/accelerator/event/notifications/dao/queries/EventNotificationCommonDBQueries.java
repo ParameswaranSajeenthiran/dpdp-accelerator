@@ -346,15 +346,6 @@ public class EventNotificationCommonDBQueries {
                 "WHERE p.DELIVERY_ID = ? AND s.ORG_ID = ?";
     }
 
-    public String getGetPendingPollDeliveriesQuery() {
-        return "SELECT p.DELIVERY_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.ERROR_CODE, p.ERROR_DETAIL, p.CREATED_AT, p.COMPLETED_AT " +
-                "FROM POLL_DELIVERY p JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ? AND s.GROUP_ID = ? AND s.DELIVERY_MODE = " + SQL_POLL_MODE
-                + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE + " AND p.STATUS = " + SQL_POLL_PENDING + " "
-                +
-                "ORDER BY p.CREATED_AT ASC LIMIT ?";
-    }
-
     public String getGetPendingPollDeliveriesBySubscriptionQuery() {
         return "SELECT p.DELIVERY_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.ERROR_CODE, p.ERROR_DETAIL, " +
                 "p.CREATED_AT, p.COMPLETED_AT FROM POLL_DELIVERY p " +
@@ -384,24 +375,6 @@ public class EventNotificationCommonDBQueries {
      */
     public String getUpdatePollDeliveryStatusQuery() {
         return "UPDATE POLL_DELIVERY SET STATUS = ?, COMPLETED_AT = ? WHERE DELIVERY_ID = ?";
-    }
-
-    public String getUpdatePollDeliveryStatusByEventAndGroupQuery() {
-        return "UPDATE POLL_DELIVERY SET STATUS = ?, COMPLETED_AT = CURRENT_TIMESTAMP " +
-                "WHERE EVENT_ID = ? AND STATUS = " + SQL_POLL_PENDING + " AND SUBSCRIPTION_ID IN (" +
-                "SELECT SUBSCRIPTION_ID FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ?)";
-    }
-
-    /**
-     * Updates one poll delivery by its delivery identifier while enforcing tenant, group, mode,
-     * and pending-state ownership checks.
-     */
-    public String getUpdatePollDeliveryStatusByDeliveryAndGroupQuery() {
-        return "UPDATE POLL_DELIVERY SET STATUS = ?, ERROR_CODE = ?, ERROR_DETAIL = ?, " +
-                "COMPLETED_AT = CURRENT_TIMESTAMP " +
-                "WHERE DELIVERY_ID = ? AND STATUS = " + SQL_POLL_PENDING + " AND SUBSCRIPTION_ID IN (" +
-                "SELECT SUBSCRIPTION_ID FROM SUBSCRIPTION WHERE ORG_ID = ? AND GROUP_ID = ? " +
-                "AND DELIVERY_MODE = " + SQL_POLL_MODE + ")";
     }
 
     public String getUpdatePollDeliveryStatusByDeliveryAndSubscriptionQuery() {

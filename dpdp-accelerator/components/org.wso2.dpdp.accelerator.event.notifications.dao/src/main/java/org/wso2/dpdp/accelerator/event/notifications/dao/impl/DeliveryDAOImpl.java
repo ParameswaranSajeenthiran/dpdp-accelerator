@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
@@ -437,38 +436,6 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     @Override
-    public List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            List<PollDelivery> candidates = new ArrayList<>();
-            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetPendingPollDeliveriesQuery())) {
-                ps.setString(1, orgId);
-                ps.setString(2, groupId);
-                ps.setInt(3, limit);
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        candidates.add(new PollDelivery(
-                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
-                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                                rs.getString(EventNotificationDBColumns.EVENT_ID),
-                                rs.getString(EventNotificationDBColumns.STATUS),
-                                rs.getString(EventNotificationDBColumns.ERROR_CODE),
-                                rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
-                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                                rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
-                    }
-                }
-                return candidates;
-            } catch (SQLException e) {
-                throw new EventNotificationDataAccessException(
-                        String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES, groupId), e);
-            }
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
-    }
-
-    @Override
     public List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, String subscriptionId,
             int limit) {
         if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()
@@ -510,136 +477,23 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     }
 
     @Override
-    public void updatePollDeliveryStatuses(String orgId, String groupId, List<String> ackEventIds,
-            List<String> errEventIds) {
-        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Organization ID and Group ID cannot be empty when updating poll delivery statuses.");
-        }
-        if ((ackEventIds == null || ackEventIds.isEmpty()) && (errEventIds == null || errEventIds.isEmpty())) {
-            return;
-        }
-
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            updatePollDeliveryStatuses(conn, orgId, groupId, ackEventIds, errEventIds);
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
-    }
-
-    @Override
-    public void updatePollDeliveryStatuses(Connection conn, String orgId, String groupId,
-            List<String> ackEventIds, List<String> errEventIds) {
-        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Organization ID and Group ID cannot be empty when updating poll delivery statuses.");
-        }
-        Set<String> normalizedAckEventIds = normalizeEventIds(ackEventIds);
-        Set<String> normalizedErrEventIds = normalizeEventIds(errEventIds);
-        if (normalizedAckEventIds.isEmpty() && normalizedErrEventIds.isEmpty()) {
-            return;
-        }
-        if (!Collections.disjoint(normalizedAckEventIds, normalizedErrEventIds)) {
-            throw new IllegalArgumentException(
-                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
-        }
-        try {
-            EventNotificationCommonDBQueries queries = getQueries(conn);
-
-            try (PreparedStatement updatePs = conn
-                    .prepareStatement(queries.getUpdatePollDeliveryStatusByEventAndGroupQuery())) {
-                if (!normalizedAckEventIds.isEmpty()) {
-                    for (String eventId : normalizedAckEventIds) {
-                        updatePs.setString(1, PollStatus.ACKNOWLEDGED.getValue());
-                        updatePs.setString(2, eventId);
-                        updatePs.setString(3, orgId.trim());
-                        updatePs.setString(4, groupId.trim());
-                        updatePs.addBatch();
-                    }
-                    updatePs.executeBatch();
-                }
-
-                if (!normalizedErrEventIds.isEmpty()) {
-                    for (String eventId : normalizedErrEventIds) {
-                        updatePs.setString(1, PollStatus.ERR.getValue());
-                        updatePs.setString(2, eventId);
-                        updatePs.setString(3, orgId.trim());
-                        updatePs.setString(4, groupId.trim());
-                        updatePs.addBatch();
-                    }
-                    updatePs.executeBatch();
-                }
-            }
-        } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
-        }
-    }
-
-    @Override
-    public void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId,
-            List<String> ackDeliveryIds, Map<String, String> errorDetails) {
-        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Organization ID and Group ID cannot be empty when updating poll delivery statuses.");
-        }
-        Set<String> normalizedAckIds = normalizeEventIds(ackDeliveryIds);
-        Map<String, String> normalizedErrors = normalizeErrorDetails(errorDetails);
-        Set<String> normalizedErrIds = normalizedErrors.keySet();
-        if (normalizedAckIds.isEmpty() && normalizedErrIds.isEmpty()) {
-            return;
-        }
-        if (!Collections.disjoint(normalizedAckIds, normalizedErrIds)) {
-            throw new IllegalArgumentException(
-                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
-        }
-
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            try (PreparedStatement updatePs = conn.prepareStatement(
-                    getQueries(conn).getUpdatePollDeliveryStatusByDeliveryAndGroupQuery())) {
-                updatePollDeliveryBatch(updatePs, normalizedAckIds, PollStatus.ACKNOWLEDGED.getValue(),
-                        Collections.emptyMap(), orgId, groupId);
-                updatePollDeliveryBatch(updatePs, normalizedErrIds, PollStatus.ERR.getValue(), normalizedErrors,
-                        orgId, groupId);
-            }
-            DatabaseUtils.commitTransaction(conn);
-        } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw new EventNotificationDataAccessException(
-                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES, groupId), e);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
-    }
-
-    private static void updatePollDeliveryBatch(PreparedStatement updatePs, Set<String> deliveryIds,
-            String status, Map<String, String> errorDetails, String orgId, String groupId) throws SQLException {
-        for (String deliveryId : deliveryIds) {
-            updatePs.setString(1, status);
-            updatePs.setString(2, null);
-            updatePs.setString(3, errorDetails.get(deliveryId));
-            updatePs.setString(4, deliveryId);
-            updatePs.setString(5, orgId.trim());
-            updatePs.setString(6, groupId.trim());
-            updatePs.addBatch();
-        }
-        if (!deliveryIds.isEmpty()) {
-            updatePs.executeBatch();
-        }
-    }
-
-    @Override
     public void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId, String subscriptionId,
             List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            updatePollDeliveryStatusesByDeliveryIds(conn, orgId, groupId, subscriptionId, ackDeliveryIds, errors);
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    @Override
+    public void updatePollDeliveryStatusesByDeliveryIds(Connection conn, String orgId, String groupId,
+            String subscriptionId, List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors) {
         if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()
                 || subscriptionId == null || subscriptionId.trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -650,13 +504,12 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         Set<String> errorIds = normalizeEventIds(new ArrayList<>(safeErrors.keySet()));
         if (!Collections.disjoint(ackIds, errorIds)) {
             throw new IllegalArgumentException(
-                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
+                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_DELIVERY_IDS);
         }
         if (ackIds.isEmpty() && errorIds.isEmpty()) {
             return;
         }
 
-        Connection conn = DatabaseUtils.getDBConnection();
         try {
             try (PreparedStatement updatePs = conn.prepareStatement(
                     getQueries(conn).getUpdatePollDeliveryStatusByDeliveryAndSubscriptionQuery())) {
@@ -665,17 +518,10 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 addSubscriptionScopedPollUpdates(updatePs, errorIds, PollStatus.ERR.getValue(), safeErrors,
                         subscriptionId, orgId, groupId);
             }
-            DatabaseUtils.commitTransaction(conn);
         } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES,
                             subscriptionId), e);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
         }
     }
 
@@ -697,20 +543,6 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.executeBatch();
             ps.clearBatch();
         }
-    }
-
-    private static Map<String, String> normalizeErrorDetails(Map<String, String> errorDetails) {
-
-        Map<String, String> normalized = new LinkedHashMap<>();
-        if (errorDetails == null) {
-            return normalized;
-        }
-        for (Map.Entry<String, String> entry : errorDetails.entrySet()) {
-            if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
-                normalized.put(entry.getKey().trim(), entry.getValue());
-            }
-        }
-        return normalized;
     }
 
     private static Set<String> normalizeEventIds(List<String> eventIds) {

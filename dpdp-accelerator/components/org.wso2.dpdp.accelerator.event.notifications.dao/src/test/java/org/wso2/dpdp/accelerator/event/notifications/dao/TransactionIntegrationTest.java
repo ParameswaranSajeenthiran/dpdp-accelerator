@@ -21,6 +21,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.TopicDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
@@ -452,8 +453,8 @@ public class TransactionIntegrationTest {
             ExecutorService executor = Executors.newFixedThreadPool(2);
             try {
                 Future<Void> acknowledgement = executor.submit(() -> {
-                    deliveryDAO.updatePollDeliveryStatuses(first, "org-1", "group-1",
-                            Collections.singletonList("event-1"), Collections.emptyList());
+                    deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(first, "org-1", "group-1", "sub-1",
+                            Collections.singletonList("delivery-1"), Collections.emptyMap());
                     acknowledgementUpdated.countDown();
                     releaseAcknowledgement.await();
                     first.commit();
@@ -462,8 +463,9 @@ public class TransactionIntegrationTest {
                 Future<Void> error = executor.submit(() -> {
                     acknowledgementUpdated.await();
                     errorStarted.countDown();
-                    deliveryDAO.updatePollDeliveryStatuses(second, "org-1", "group-1",
-                            Collections.emptyList(), Collections.singletonList("event-1"));
+                    deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(second, "org-1", "group-1", "sub-1",
+                            Collections.emptyList(), Collections.singletonMap("delivery-1",
+                                    new PollDeliveryError("processing_failed", "Unable to process event")));
                     second.commit();
                     return null;
                 });

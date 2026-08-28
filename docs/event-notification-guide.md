@@ -90,6 +90,12 @@ event. Only pending deliveries belonging to the request's tenant, group, and
 requested subscription are updated. A delivery ID must not appear in both
 `ack` and `setErrs`.
 
+The first poll may have an empty request body. When request HMAC validation is
+enabled, calculate the signature over the exact bytes sent: an empty request is
+the zero-length byte sequence, not `{}`. The service verifies those bytes first
+and only then applies the same defaults as an empty JSON object. Whitespace-only
+bodies follow the same rule and must be signed with their exact whitespace.
+
 Example:
 
 ```sh
@@ -124,9 +130,40 @@ same event envelope as webhook delivery. Clients should retain the key and use
 it in a later poll request's `ack` or `setErrs` field. Webhook consumers can submit a signed completion report
 to `POST /deliveries/{deliveryId}/completion` with the
 `notifications:event-deliveries:complete` scope. The request body is signed
-exactly as sent using the subscription shared secret and the
-`event-signature: sha256=<hex>` header. The body contains `completionStatus`,
+using the subscription shared secret and the
+`event-signature: sha256=<hex>` header. The signature input binds the completion
+to its path delivery identifier:
+
+```text
+v1\ncompletion\n<deliveryId>\n<exact-request-body>
+```
+
+Clients must preserve the body bytes exactly after calculating the signature;
+changing whitespace or field order invalidates it. A signature generated for
+one delivery cannot be reused for another delivery. Body-only completion
+signatures are not accepted. The body contains `completionStatus`,
 `completionEvidence`, and an optional `completedAt` epoch-millisecond value.
+Completion is accepted only after the webhook delivery reaches `delivered`.
+`completionEvidence` must be an absolute HTTPS URL without credentials or a
+fragment and must not exceed 512 characters. A second completion for the same
+delivery returns `EN-4090` with HTTP `409 Conflict`.
+
+For example, a client can calculate and submit the contextual signature with:
+
+```bash
+DELIVERY_ID="<delivery-id>"
+COMPLETION_SHARED_SECRET="<subscription-shared-secret>"
+COMPLETION_BODY='{"completionStatus":"completed","completionEvidence":"https://processor.example/evidence/receipt.pdf"}'
+COMPLETION_SIGNATURE=$(printf 'v1\ncompletion\n%s\n%s' "${DELIVERY_ID}" "${COMPLETION_BODY}" \
+  | openssl dgst -sha256 -hmac "${COMPLETION_SHARED_SECRET}" | awk '{print $2}')
+
+curl -k -X POST "${API_BASE}/deliveries/${DELIVERY_ID}/completion" \
+  -H "Authorization: Bearer ${RECEIVER_ACCESS_TOKEN}" \
+  -H "group-id: ${GROUP_ID}" \
+  -H "event-signature: sha256=${COMPLETION_SIGNATURE}" \
+  -H "Content-Type: application/json" \
+  -d "${COMPLETION_BODY}"
+```
 
 Polling defaults and request HMAC enforcement are configured in
 `deployment.toml`:

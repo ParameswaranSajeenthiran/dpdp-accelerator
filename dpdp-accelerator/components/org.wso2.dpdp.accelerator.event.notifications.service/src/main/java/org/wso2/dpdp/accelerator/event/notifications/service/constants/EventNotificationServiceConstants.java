@@ -107,6 +107,12 @@ public class EventNotificationServiceConstants {
             "An error code and description are required for every delivery in setErrs.";
     public static final String COMPLETION_STATUS_REQUIRED_ERROR_MSG = "completionStatus is required.";
     public static final String COMPLETION_EVIDENCE_REQUIRED_ERROR_MSG = "completionEvidence is required.";
+    public static final String COMPLETION_EVIDENCE_INVALID_ERROR_MSG =
+            "completionEvidence must be a valid HTTPS URL no longer than 512 characters.";
+    public static final String DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG =
+            "Completion can only be submitted for a delivered webhook delivery.";
+    public static final String DELIVERY_COMPLETION_ALREADY_EXISTS_ERROR_MSG =
+            "A completion report already exists for this delivery.";
     public static final String INVALID_SIGNATURE_ERROR_MSG = "The event-signature is invalid.";
     public static final int MAX_POLL_ERROR_CODE_LENGTH = 64;
     public static final int MAX_POLL_ERROR_DETAIL_LENGTH = 1024;

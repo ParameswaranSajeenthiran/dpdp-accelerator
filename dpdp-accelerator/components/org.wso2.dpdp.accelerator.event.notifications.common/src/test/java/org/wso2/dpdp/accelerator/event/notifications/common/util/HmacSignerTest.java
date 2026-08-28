@@ -36,4 +36,26 @@ public class HmacSignerTest {
         assertFalse(HmacSigner.verify("secret", "changed", signature));
         assertFalse(HmacSigner.verify("secret", "payload", "invalid"));
     }
+
+    @Test
+    public void testSignsCompletionWithDeliveryContext() {
+        String body = "{\"completionStatus\":\"completed\"}";
+        String expected = HmacSigner.sign("secret", "v1\ncompletion\ndelivery-1\n" + body);
+
+        assertEquals(HmacSigner.signCompletion("secret", "delivery-1", body), expected);
+    }
+
+    @Test
+    public void testVerifiesCompletionOnlyForBoundDeliveryAndBody() {
+        String body = "{\"completionStatus\":\"completed\"}";
+        String digest = HmacSigner.signCompletion("secret", "delivery-1", body);
+        String signature = "sha256=" + digest.toUpperCase();
+
+        assertTrue(HmacSigner.verifyCompletion("secret", "delivery-1", body, signature));
+        assertFalse(HmacSigner.verifyCompletion("secret", "delivery-2", body, signature));
+        assertFalse(HmacSigner.verifyCompletion("secret", "delivery-1", body + " ", signature));
+        assertFalse(HmacSigner.verifyCompletion("secret", null, body, signature));
+        assertFalse(HmacSigner.verifyCompletion("secret", " ", body, signature));
+        assertFalse(HmacSigner.verifyCompletion("secret", "delivery-1", null, signature));
+    }
 }

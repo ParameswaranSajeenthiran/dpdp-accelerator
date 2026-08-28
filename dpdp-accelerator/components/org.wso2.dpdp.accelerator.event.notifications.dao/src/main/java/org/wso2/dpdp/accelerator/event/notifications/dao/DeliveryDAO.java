@@ -85,24 +85,14 @@ public interface DeliveryDAO {
 
     Optional<PollDelivery> getPollDeliveryById(String deliveryId, String orgId);
 
-    List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit);
-
     List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, String subscriptionId, int limit);
 
-    void updatePollDeliveryStatuses(String orgId, String groupId, List<String> ackEventIds, List<String> errEventIds);
-
-    void updatePollDeliveryStatuses(Connection connection, String orgId, String groupId,
-            List<String> ackEventIds, List<String> errEventIds);
-
-    /**
-     * Applies OB-style polling acknowledgements and errors to delivery identifiers. Only
-     * pending poll deliveries owned by the supplied tenant and group are updated.
-     */
-    void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId,
-            List<String> ackDeliveryIds, Map<String, String> errorDetails);
-
+    /** Applies polling outcomes only to pending deliveries owned by the supplied subscription. */
     void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId, String subscriptionId,
             List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors);
+
+    void updatePollDeliveryStatusesByDeliveryIds(Connection connection, String orgId, String groupId,
+            String subscriptionId, List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors);
 
     boolean claimWebhookDelivery(String deliveryId);
 

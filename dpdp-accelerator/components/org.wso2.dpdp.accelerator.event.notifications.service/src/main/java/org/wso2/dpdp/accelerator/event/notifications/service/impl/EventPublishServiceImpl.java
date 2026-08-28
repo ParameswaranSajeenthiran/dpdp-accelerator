@@ -21,10 +21,13 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
@@ -159,7 +162,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                     "The polling subscription does not have a shared secret.", 409);
         }
 
-        String rawBody = requestBody == null || requestBody.trim().isEmpty() ? "{}" : requestBody;
+        String rawBody = requestBody == null ? "" : requestBody;
         if (configurationService.isEventNotificationPollingRequestHmacValidationEnabled()
                 && !HmacSigner.verify(sharedSecret, rawBody, eventSignature)) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
@@ -169,7 +172,8 @@ public class EventPublishServiceImpl implements EventPublishService {
 
         EventPollingRequestDTO request;
         try {
-            request = objectMapper.readValue(rawBody, EventPollingRequestDTO.class);
+            String bodyToParse = rawBody.trim().isEmpty() ? "{}" : rawBody;
+            request = objectMapper.readValue(bodyToParse, EventPollingRequestDTO.class);
         } catch (JsonProcessingException e) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -253,7 +257,13 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
                     EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
         }
-        if (!HmacSigner.verify(subscription.get().getSharedSecret(), requestBody, eventSignature)) {
+        if (!DeliveryStatus.DELIVERED.getValue().equalsIgnoreCase(delivery.get().getStatus())) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                    EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                    EventNotificationServiceConstants.DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG, 409);
+        }
+        if (!HmacSigner.verifyCompletion(subscription.get().getSharedSecret(), safeDeliveryId,
+                requestBody, eventSignature)) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
                     EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
                     EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
@@ -268,10 +278,17 @@ public class EventPublishServiceImpl implements EventPublishService {
         validateCompletion(completion);
         Timestamp completedAt = completion.getCompletedAt() == null
                 ? new Timestamp(System.currentTimeMillis()) : new Timestamp(completion.getCompletedAt());
-        deliveryAckDAO.addDeliveryAck(new org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck(
-                UUID.randomUUID().toString(), safeDeliveryId, completedAt,
-                completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
-                completion.getCompletionEvidence().trim()));
+        try {
+            deliveryAckDAO.addDeliveryAck(
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck(
+                            UUID.randomUUID().toString(), safeDeliveryId, completedAt,
+                            completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
+                            completion.getCompletionEvidence().trim()));
+        } catch (EventNotificationDuplicateResourceException e) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                    EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
+                    EventNotificationServiceConstants.DELIVERY_COMPLETION_ALREADY_EXISTS_ERROR_MSG, 409);
+        }
     }
 
     private static String requireValue(String value, String message) {
@@ -297,6 +314,12 @@ public class EventPublishServiceImpl implements EventPublishService {
         if (completion.getCompletionEvidence() == null || completion.getCompletionEvidence().trim().isEmpty()) {
             throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.COMPLETION_EVIDENCE_REQUIRED_ERROR_MSG);
+        }
+        try {
+            EventNotificationUrlValidator.validateEvidenceUrl(completion.getCompletionEvidence());
+        } catch (IllegalArgumentException e) {
+            throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    EventNotificationServiceConstants.COMPLETION_EVIDENCE_INVALID_ERROR_MSG);
         }
         if (completion.getCompletedAt() != null && completion.getCompletedAt() < 0) {
             throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,

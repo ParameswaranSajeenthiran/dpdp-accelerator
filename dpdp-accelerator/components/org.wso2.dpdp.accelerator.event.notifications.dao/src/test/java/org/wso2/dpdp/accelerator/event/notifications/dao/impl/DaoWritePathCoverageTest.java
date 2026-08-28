@@ -76,41 +76,14 @@ public class DaoWritePathCoverageTest {
         assertTrue(dao.updateWebhookDeliveryStatus(connection, webhook));
         assertTrue(dao.addWebhookDeliveryAudit(connection, audit));
         assertTrue(dao.addPollDelivery(connection, poll));
-        dao.updatePollDeliveryStatuses(connection, "org-1", "group-1", Collections.singletonList("e-1"),
-                Collections.singletonList("e-2"));
+        dao.updatePollDeliveryStatusesByDeliveryIds(connection, "org-1", "group-1", "s-1",
+                Collections.singletonList("p-1"), Collections.emptyMap());
         assertTrue(dao.claimWebhookDelivery(connection, "d-1"));
         assertTrue(dao.claimStuckWebhookDelivery(connection, "d-1", now));
         assertTrue(dao.releaseWebhookDelivery(connection, "d-1", 1, now));
         assertTrue(dao.claimPollDelivery(connection, "p-1"));
         assertTrue(dao.updatePollDeliveryStatus(connection, "p-1", "completed"));
         assertTrue(dao.updatePollDeliveryStatus(connection, "p-1", "completed", "acknowledged"));
-    }
-
-    @Test
-    public void pollCompletionNormalizesIdsAndRejectsOverlappingOutcomes() throws Exception {
-        DeliveryDAOImpl dao = new DeliveryDAOImpl();
-
-        dao.updatePollDeliveryStatuses(connection, " org-1 ", " group-1 ",
-                Arrays.asList(" event-1 ", "event-1", null, " "), Collections.emptyList());
-
-        verify(statement, times(1)).addBatch();
-        verify(statement, times(1)).executeBatch();
-        expectThrows(IllegalArgumentException.class,
-                () -> dao.updatePollDeliveryStatuses(connection, "org-1", "group-1",
-                        Arrays.asList("event-1", "event-2"), Arrays.asList("event-3", " event-1 ")));
-    }
-
-    @Test
-    public void pollStatusUpdatesUseDeliveryIdsAndPendingOwnershipGuard() throws Exception {
-        DeliveryDAOImpl dao = new DeliveryDAOImpl();
-
-        dao.updatePollDeliveryStatusesByDeliveryIds(" org-1 ", " group-1 ",
-                Arrays.asList(" delivery-1 ", "delivery-1"),
-                Collections.singletonMap("delivery-2", "consumer failure"));
-
-        verify(statement, times(2)).addBatch();
-        verify(statement, times(2)).executeBatch();
-        verify(connection, times(1)).prepareStatement(contains("DELIVERY_ID = ?"));
     }
 
     @Test
@@ -244,9 +217,11 @@ public class DaoWritePathCoverageTest {
         assertTrue(deliveries.claimWebhookDelivery(connection, " "));
         assertTrue(deliveries.claimStuckWebhookDelivery(connection, null, now));
         org.testng.Assert.assertFalse(deliveries.releaseWebhookDelivery(connection, "", 0, now));
-        deliveries.updatePollDeliveryStatuses("org", "group", Collections.emptyList(), Collections.emptyList());
+        deliveries.updatePollDeliveryStatusesByDeliveryIds("org", "group", "subscription",
+                Collections.emptyList(), Collections.emptyMap());
         expectThrows(IllegalArgumentException.class,
-                () -> deliveries.updatePollDeliveryStatuses("", "group", null, null));
+                () -> deliveries.updatePollDeliveryStatusesByDeliveryIds("", "group", "subscription",
+                        null, null));
     }
 
     private void setManagerDataSource(Object value) throws Exception {

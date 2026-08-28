@@ -23,6 +23,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -240,6 +241,43 @@ public class EventPublishServiceImplTest {
     }
 
     @Test
+    public void pollEventsAuthenticatesAnEmptyFirstPollBeforeApplyingDefaults() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+        when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
+        when(deliveryDAO.getPendingPollDeliveries("org1", "group-1", "subscription-1", 1))
+                .thenReturn(Collections.emptyList());
+
+        EventPollingResponseDTO response = publishService.pollEvents("org1", "group-1", "subscription-1", "",
+                "sha256=" + HmacSigner.sign("shared-secret", ""));
+
+        assertTrue(response.getSets().isEmpty());
+        verify(deliveryDAO).updatePollDeliveryStatusesByDeliveryIds("org1", "group-1", "subscription-1",
+                Collections.emptyList(), Collections.emptyMap());
+    }
+
+    @Test
+    public void pollEventsDoesNotTreatAnEmptyBodyAsAJsonObjectForHmacVerification() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+        when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
+
+        try {
+            publishService.pollEvents("org1", "group-1", "subscription-1", "",
+                    "sha256=" + HmacSigner.sign("shared-secret", "{}"));
+            fail("Expected a signature for {} not to authenticate an empty request body");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+        }
+        verify(deliveryDAO, never()).updatePollDeliveryStatusesByDeliveryIds(
+                anyString(), anyString(), anyString(), anyList(), anyMap());
+    }
+
+    @Test
     public void pollEventsRejectsOrganizationThatDiffersFromTenantContext() {
         Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
                 "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
@@ -284,7 +322,7 @@ public class EventPublishServiceImplTest {
         when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
         when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
         String body = "{\"completionStatus\":\"completed\",\"completionEvidence\":\"https://processor/evidence\"}";
-        String signature = "sha256=" + HmacSigner.sign("shared-secret", body);
+        String signature = "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body);
 
         publishService.completeDelivery("org1", "group-a", "delivery-1", body, signature);
 
@@ -302,6 +340,117 @@ public class EventPublishServiceImplTest {
         when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
 
         publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
+    }
+
+    @Test
+    public void completeDeliveryRejectsDeliveryThatHasNotBeenDelivered() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "in_flight",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=ignored");
+            fail("Expected an undelivered webhook delivery to reject completion");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 409);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDeliveryMapsDuplicateCompletionToConflict() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        doThrow(new EventNotificationDuplicateResourceException("duplicate"))
+                .when(deliveryAckDAO).addDeliveryAck(any());
+        String body = "{\"completionStatus\":\"completed\"," +
+                "\"completionEvidence\":\"https://processor.example/evidence\"}";
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", body,
+                    "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
+            fail("Expected duplicate completion to produce a conflict");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 409);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS);
+        }
+    }
+
+    @Test
+    public void completeDeliveryRejectsInvalidEvidenceUrl() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{\"completionStatus\":\"completed\"," +
+                "\"completionEvidence\":\"http://processor.example/evidence\"}";
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", body,
+                    "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
+            fail("Expected non-HTTPS completion evidence to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 400);
+            assertEquals(e.getDescription(), EventNotificationServiceConstants.COMPLETION_EVIDENCE_INVALID_ERROR_MSG);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDelivery_rejectsSignatureReplayedForAnotherDelivery() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-2", "subscription-1", "event-2", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-2", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{\"completionStatus\":\"completed\",\"completionEvidence\":\"evidence\"}";
+        String deliveryOneSignature = "sha256="
+                + HmacSigner.signCompletion("shared-secret", "delivery-1", body);
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-2", body, deliveryOneSignature);
+            fail("Expected a completion signature bound to another delivery to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDelivery_rejectsLegacyBodyOnlySignature() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{\"completionStatus\":\"completed\",\"completionEvidence\":\"evidence\"}";
+        String legacySignature = "sha256=" + HmacSigner.sign("shared-secret", body);
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", body, legacySignature);
+            fail("Expected the legacy body-only completion signature to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
     }
 
     @Test
