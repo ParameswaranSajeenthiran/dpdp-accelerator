@@ -1202,6 +1202,8 @@
   "account": {
     "deleteMenuItem": "Delete my account",
     "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
     "deleteDialog": {
       "accountLabel": "Account",
       "title": "Delete your account?",

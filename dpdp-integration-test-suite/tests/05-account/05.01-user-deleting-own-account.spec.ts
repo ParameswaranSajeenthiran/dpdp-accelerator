@@ -67,13 +67,21 @@ test.describe('Self-service account deletion (UI)', () => {
     // Expected to be a no-op on the happy path - the account is already gone. This is here for
     // the failure paths, so a broken run doesn't leave accounts behind.
     if (throwaway) {
-      await deleteThrowawayUser(admin, throwaway.id)
+      await deleteThrowawayUser(admin, throwaway.id, throwaway.username)
     }
     session = undefined
     throwaway = undefined
   })
 
-  test('05.01.01 - A user deletes their own account and lands on the confirmation page', async () => {
+  /**
+   * Covers both server configurations, because which one applies is the
+   * deployment's choice and the portal only finds out from the status code:
+   * 204 means the account is gone, 202 means an approval workflow recorded a
+   * request and the account is still there. Each outcome has to say the right
+   * thing - claiming deletion on a 202 would sign the user out of an account
+   * they still have.
+   */
+  test('05.01.01 - A user deletes their own account, or raises a request when approval is required', async () => {
     const { page } = session!
     const menu = new UserProfileMenuPage(page)
 
@@ -86,13 +94,22 @@ test.describe('Self-service account deletion (UI)', () => {
         response.url().includes('/scim2/Me') && response.request().method() === 'DELETE',
     )
     await menu.confirmDeleteButton().click()
-    expect((await deleteResponse).status()).toBe(204)
+    const status = (await deleteResponse).status()
+    expect([202, 204]).toContain(status)
 
-    await expect(page.getByText('Your account has been deleted')).toBeVisible()
-    expect(page.url()).toContain('/account-deleted')
+    if (status === 204) {
+      await expect(page.getByText('Your account has been deleted')).toBeVisible()
+      expect(page.url()).toContain('/account-deleted')
+      // The redirect is the portal's own claim; this is the user store's answer.
+      expect(await userExists(admin, throwaway!.id)).toBe(false)
+      return
+    }
 
-    // The redirect is the portal's own claim; this is the user store's answer.
-    expect(await userExists(admin, throwaway!.id)).toBe(false)
+    await expect(page.getByText(/submitted for approval/i)).toBeVisible()
+    await expect(page.getByText('Your account has been deleted')).toHaveCount(0)
+    expect(page.url()).not.toContain('/account-deleted')
+    // Still a real account until somebody approves the request.
+    expect(await userExists(admin, throwaway!.id)).toBe(true)
   })
 
   test('05.01.02 - Cancelling leaves the account untouched', async () => {
@@ -123,7 +140,7 @@ test.describe('Self-service account deletion (UI)', () => {
       expect([401, 403]).toContain(status)
       expect(await userExists(admin, victim.id)).toBe(true)
     } finally {
-      await deleteThrowawayUser(admin, victim.id)
+      await deleteThrowawayUser(admin, victim.id, victim.username)
     }
   })
 })

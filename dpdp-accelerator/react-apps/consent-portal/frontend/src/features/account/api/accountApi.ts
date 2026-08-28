@@ -16,13 +16,24 @@
  * under the License.
  */
 
-import { apiRequestNoContent } from '../../../utils/apiClient'
+import { apiRequestForStatus } from '../../../utils/apiClient'
 
 /**
- * Deletes the signed-in user's own account. The endpoint answers 204 with no
- * body; it is guarded by the account:self:delete scope, which only the
- * dpdp-consent-user role grants.
+ * What actually happened to the account. Deleting it is not always immediate:
+ * when an approval workflow is associated with the Delete User operation the
+ * Identity Server records a request and answers 202, leaving the account
+ * usable until an administrator approves it.
  */
-export async function deleteMyAccount(): Promise<void> {
-  await apiRequestNoContent('/scim2/Me', { method: 'DELETE' })
+export type AccountDeletionOutcome = 'deleted' | 'pendingApproval'
+
+/** The 202 the Identity Server returns when a workflow intercepts the delete. */
+const ACCEPTED = 202
+
+/**
+ * Deletes the signed-in user's own account, or raises a request to. Guarded by
+ * the account:self:delete scope, which only the dpdp-consent-user role grants.
+ */
+export async function deleteMyAccount(): Promise<AccountDeletionOutcome> {
+  const status = await apiRequestForStatus('/scim2/Me', { method: 'DELETE' })
+  return status === ACCEPTED ? 'pendingApproval' : 'deleted'
 }

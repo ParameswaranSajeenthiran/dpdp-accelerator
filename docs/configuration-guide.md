@@ -129,7 +129,9 @@ partitioned per tenant by the server.
 A user holding `dpdp-consent-user` sees **Delete my account** in the portal's
 profile menu, beside Sign out. Confirming it calls `DELETE /scim2/Me`, clears
 the browser session and lands the user on a public confirmation page. The
-deletion is immediate and irreversible.
+deletion is immediate and irreversible — unless an approval workflow is
+configured for the operation, in which case it becomes a request; see
+[With an approval workflow on Delete User](#with-an-approval-workflow-on-delete-user).
 
 Users without that role do not see the option, and the portal is perfectly
 usable without it — so assigning it is a deliberate step, not something
@@ -162,6 +164,34 @@ does not carry `account:self:delete`, so the server answers their
 `DELETE /scim2/Me` with a 403 whether it arrives from the portal, curl, or
 anywhere else. The portal hiding the menu item for them is a convenience on
 top of that, not the control itself.
+
+### With an approval workflow on Delete User
+
+If an approval workflow is associated with the **Delete User** operation, the
+account is not deleted when the user confirms. The Identity Server records a
+request and answers `202` with *"User deletion has sent for the approval"*,
+and the account stays fully usable — the user can keep working and can sign in
+again — until an approver acts.
+
+The portal tells the two outcomes apart by the status code and says which one
+happened, because it has no way of knowing in advance whether a workflow is
+configured:
+
+| Response | What the portal does |
+|---|---|
+| `204` | Clears the session and shows the account-deleted page. |
+| `202` | Keeps the user signed in and reports that the request is awaiting approval. |
+| `400` | Reports that a deletion request is already awaiting approval — the server refuses a second one while the first is pending. |
+
+Approvers act on the request in **My Account** (`/myaccount`) under its
+approvals section — accept or reject it there. The Console's **Workflow
+Requests** page is a monitoring view: it lists requests and can abort one, but
+it does not offer an approve action.
+
+The portal cannot show a user that their own request is pending: the
+workflow-request APIs are administrative, and there is no self-service
+endpoint for "my pending requests". A user who tries again simply gets the
+`400` message above.
 
 ### What this does and does not cover
 

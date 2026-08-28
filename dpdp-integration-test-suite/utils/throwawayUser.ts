@@ -130,13 +130,70 @@ async function assignRole(admin: Persona, userId: string, roleName: string): Pro
   }
 }
 
-/** Best-effort cleanup: the account is expected to be gone already when the test passed. */
-export async function deleteThrowawayUser(admin: Persona, userId: string): Promise<void> {
-  await fetch(scim2UsersUrl(`/${userId}`), {
+/**
+ * Best-effort cleanup: the account is often gone already when the test passed.
+ *
+ * Where an approval workflow is associated with Delete User the delete only
+ * records a request (202) and the account survives, so this approves the
+ * resulting task too - otherwise every run would leave a throwaway account and
+ * a pending approval behind on the server.
+ */
+export async function deleteThrowawayUser(
+  admin: Persona,
+  userId: string,
+  username?: string,
+): Promise<void> {
+  const response = await fetch(scim2UsersUrl(`/${userId}`), {
     method: 'DELETE',
     headers: adminHeaders(admin),
     signal: AbortSignal.timeout(20_000),
   }).catch(() => undefined)
+
+  // 204 means it is already gone. Anything else under a workflow leaves the
+  // account alive behind a pending task: 202 when this delete raised it, 400
+  // when the test itself already did ("pending workflow already defined").
+  if (response?.status === 204 || !username) {
+    return
+  }
+  await approvePendingDeletion(admin, username)
+}
+
+/** Approves the pending Delete User task for one username, if the admin has it. */
+async function approvePendingDeletion(admin: Persona, username: string): Promise<void> {
+  try {
+    const listed = await fetch(`${env.identityServerBaseUrl}/api/users/v2/me/approval-tasks`, {
+      headers: adminHeaders(admin),
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (!listed.ok) {
+      return
+    }
+    const tasks = (await listed.json()) as { id: string; approvalStatus: string }[]
+    for (const task of tasks.filter((t) => t.approvalStatus === 'READY')) {
+      const detailResponse = await fetch(
+        `${env.identityServerBaseUrl}/api/users/v2/me/approval-tasks/${task.id}`,
+        { headers: adminHeaders(admin), signal: AbortSignal.timeout(20_000) },
+      )
+      if (!detailResponse.ok) {
+        continue
+      }
+      const detail = (await detailResponse.json()) as { properties?: { key: string; value: string }[] }
+      const taskUser = detail.properties?.find((p) => p.key === 'Username')?.value
+      if (taskUser !== username) {
+        continue
+      }
+      await fetch(`${env.identityServerBaseUrl}/api/users/v2/me/approval-tasks/${task.id}/state`, {
+        method: 'PUT',
+        headers: adminHeaders(admin),
+        body: JSON.stringify({ action: 'APPROVE' }),
+        signal: AbortSignal.timeout(20_000),
+      })
+      return
+    }
+  } catch {
+    // Cleanup is best effort - a leftover account must not fail the test that
+    // already made its assertions.
+  }
 }
 
 /**

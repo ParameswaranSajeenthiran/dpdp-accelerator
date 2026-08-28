@@ -19,22 +19,34 @@
 import { type UseMutationResult, useMutation, useQueryClient } from '@tanstack/react-query'
 import { clearLocalSession } from '../../../utils/authClient'
 import { runtimeBasePath } from '../../../utils/basePath'
-import { deleteMyAccount } from '../api/accountApi'
+import { deleteMyAccount, type AccountDeletionOutcome } from '../api/accountApi'
 
 /**
- * Deletes the account, then tears the client session down in an order that
- * keeps any request from firing with the dead user's token: the query cache
- * is cleared first (a background refetch after the 204 would 401 and bounce
- * to a sign-in for a user that no longer exists), the worker-held session is
- * dropped, and the browser hard-navigates so the whole SPA - router state,
- * providers, everything - is gone rather than unmounted.
+ * Deletes the account - or asks for it to be deleted.
+ *
+ * Only a completed deletion tears the session down. When an approval workflow
+ * intercepts, the account is still there and still works, so signing the user
+ * out and showing them a goodbye page would be a lie; the caller reports that
+ * the request is awaiting approval and leaves them where they are.
+ *
+ * On a real deletion the order matters: the query cache is cleared first (a
+ * background refetch afterwards would 401 and bounce to a sign-in for a user
+ * who no longer exists), the worker-held session is dropped, and the browser
+ * hard-navigates so the whole SPA is gone rather than unmounted.
  */
-export default function useDeleteAccountMutation(): UseMutationResult<void, Error, void> {
+export default function useDeleteAccountMutation(): UseMutationResult<
+  AccountDeletionOutcome,
+  Error,
+  void
+> {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: () => deleteMyAccount(),
-    onSuccess: async (): Promise<void> => {
+    onSuccess: async (outcome): Promise<void> => {
+      if (outcome !== 'deleted') {
+        return
+      }
       queryClient.clear()
       await clearLocalSession()
       window.location.replace(`${window.location.origin}${runtimeBasePath()}/account-deleted`)

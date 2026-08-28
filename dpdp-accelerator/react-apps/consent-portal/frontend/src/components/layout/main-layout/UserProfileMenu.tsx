@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import DeleteAccountDialog from '../../../features/account/components/DeleteAccountDialog'
 import useDeleteAccountMutation from '../../../features/account/hooks/useDeleteAccountMutation'
 import useAuthorization from '../../../features/auth/useAuthorization'
+import { APIError } from '../../../utils/apiClient'
 import { getUserProfile, logout } from '../../../utils/authClient'
 import { REQUIRED_SCOPES } from '../../../utils/scopes'
 
@@ -53,6 +54,7 @@ function UserProfileMenu(): React.JSX.Element {
   const [logoutFailed, setLogoutFailed] = useState(false)
   const [logoutPending, setLogoutPending] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletionPending, setDeletionPending] = useState(false)
   const [claims, setClaims] = useState<UserClaims>({})
   const deleteAccount = useDeleteAccountMutation()
 
@@ -100,6 +102,36 @@ function UserProfileMenu(): React.JSX.Element {
     }
   }
 
+  const handleDeleteConfirm = (): void => {
+    if (deleteAccount.isPending) {
+      return
+    }
+    deleteAccount.mutate(undefined, {
+      onSuccess: (outcome) => {
+        // A completed deletion navigates away; only the approval case returns
+        // to a page that is still there to update.
+        if (outcome === 'pendingApproval') {
+          setDeleteDialogOpen(false)
+          setDeletionPending(true)
+        }
+      },
+    })
+  }
+
+  /**
+   * A 400 here is the Identity Server refusing a second request while one is
+   * still awaiting approval - the only invalid state this call can be in.
+   */
+  const deleteErrorMessage = ((): string | undefined => {
+    if (!deleteAccount.isError) {
+      return undefined
+    }
+    const { error } = deleteAccount
+    return error instanceof APIError && error.status === 400
+      ? t('account.deleteAlreadyRequested')
+      : t('account.deleteError')
+  })()
+
   return (
     <>
       <UserMenu>
@@ -120,15 +152,20 @@ function UserProfileMenu(): React.JSX.Element {
           open={deleteDialogOpen}
           accountLabel={email}
           loading={deleteAccount.isPending}
-          error={deleteAccount.isError ? t('account.deleteError') : undefined}
+          error={deleteErrorMessage}
           onClose={handleDeleteDialogClose}
-          onConfirm={() => {
-            if (!deleteAccount.isPending) {
-              deleteAccount.mutate()
-            }
-          }}
+          onConfirm={handleDeleteConfirm}
         />
       ) : null}
+      <Snackbar
+        open={deletionPending}
+        onClose={() => setDeletionPending(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" variant="filled">
+          {t('account.deletePendingApproval')}
+        </Alert>
+      </Snackbar>
       <Snackbar
         open={logoutFailed}
         onClose={() => setLogoutFailed(false)}
