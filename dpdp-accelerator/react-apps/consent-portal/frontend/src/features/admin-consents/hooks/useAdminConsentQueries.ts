@@ -29,12 +29,11 @@ import type {
   AdminConsentRegistryFilters,
   ConsentDetail,
   ConsentRecord,
-  ConsentSummary,
 } from '../../../types/consent'
-import { isConsentState } from '../../../types/consent'
 import { getNextCursor, getPreviousCursor } from '../../../utils/cursorPagination'
-import { normalizeConsentState } from '../../my-consents/utils/statusChip'
-import { toConsentRow } from '../../my-consents/hooks/useConsentQueries'
+import { toConsentRow, toConsentRowFromSummary } from '../../../utils/consentRows'
+import { buildTimestampFilter, combineFilters } from '../../../utils/filterGrammar'
+import { endOfDayMillis, parseDateOnly, startOfDayMillis } from '../../../utils/dateTime'
 import {
   buildConsentPropertyFilter,
   fetchAdminConsentByID,
@@ -48,37 +47,30 @@ export interface AdminConsentListResult {
   previousCursor?: string
 }
 
-function toAdminConsentRow(consent: ConsentSummary): ConsentRecord {
-  const normalizedState = normalizeConsentState(consent.state)
-
-  if (!isConsentState(normalizedState)) {
-    throw new Error(`Unsupported consent state received from API: ${consent.state}`)
-  }
-
-  return {
-    id: consent.id,
-    subjectId: consent.subjectId,
-    serviceId: consent.serviceId,
-    state: normalizedState,
-    timestamp: consent.timestamp,
-    purposes: consent.purposes?.map((purpose) => purpose.name),
-  }
-}
-
 function toListParams(
   filters: AdminConsentRegistryFilters,
   rowsPerPage: number,
   cursor: { after?: string; before?: string },
 ): AdminConsentListQueryParams {
+  const afterDate = parseDateOnly(filters.createdAfter)
+  const beforeDate = parseDateOnly(filters.createdBefore)
+
   return {
     limit: rowsPerPage,
     after: cursor.after,
     before: cursor.before,
-    subjectId: filters.subjectId || undefined,
+    userId: filters.userId || undefined,
+    relation: filters.relation,
     serviceId: filters.serviceId || undefined,
     state: filters.state === 'All' ? undefined : filters.state,
     purposeId: filters.purposeId || undefined,
-    filter: buildConsentPropertyFilter(filters.propertyKey, filters.propertyValue),
+    filter: combineFilters(
+      buildConsentPropertyFilter(filters.propertyKey, filters.propertyValue),
+      buildTimestampFilter(
+        afterDate ? startOfDayMillis(afterDate) : undefined,
+        beforeDate ? endOfDayMillis(beforeDate) : undefined,
+      ),
+    ),
   }
 }
 
@@ -101,7 +93,7 @@ export function useAdminConsentListQuery(
       const response = await fetchAdminConsents(params)
 
       return {
-        rows: response.Consents.map(toAdminConsentRow),
+        rows: response.Consents.map(toConsentRowFromSummary),
         nextCursor: getNextCursor(response.links),
         previousCursor: getPreviousCursor(response.links),
       }

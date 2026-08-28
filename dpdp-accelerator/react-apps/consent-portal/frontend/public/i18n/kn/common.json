@@ -93,7 +93,14 @@
       "serviceId": "ಸೇವೆ",
       "removeConsentIdForState": "ರಾಜ್ಯ ಫಿಲ್ಟರ್ ಅನ್ನು ಬಳಸಲು ಸಮ್ಮತಿ ID ಫಿಲ್ಟರ್ ಅನ್ನು ತೆಗೆದುಹಾಕಿ.",
       "propertyFilterLabel": "ಸಮ್ಮತಿ ಆಸ್ತಿ",
-      "removeConsentIdForSubject": "ಬಳಕೆದಾರರ ಐಡಿ ಫಿಲ್ಟರ್ ಅನ್ನು ಬಳಸಲು ಸಮ್ಮತಿ ಐಡಿ ಫಿಲ್ಟರ್ ಅನ್ನು ತೆಗೆದುಹಾಕಿ."
+      "removeConsentIdForSubject": "ಬಳಕೆದಾರರ ಐಡಿ ಫಿಲ್ಟರ್ ಅನ್ನು ಬಳಸಲು ಸಮ್ಮತಿ ಐಡಿ ಫಿಲ್ಟರ್ ಅನ್ನು ತೆಗೆದುಹಾಕಿ.",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ",
       "clearAriaLabel": "ಎಲ್ಲಾ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ",
       "serviceSearchPlaceholder": "ಸೇವೆಯಿಂದ ಹುಡುಕಿ",
-      "state": "ರಾಜ್ಯ"
+      "state": "ರಾಜ್ಯ",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "ಸಮ್ಮತಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",

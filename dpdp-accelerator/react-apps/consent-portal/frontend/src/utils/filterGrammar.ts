@@ -25,3 +25,23 @@
 export function escapeFilterValue(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
+
+/** Joins non-empty filter clauses with the grammar's `and` operator. */
+export function combineFilters(...clauses: (string | undefined)[]): string | undefined {
+  const nonEmpty = clauses.filter((clause): clause is string => Boolean(clause))
+  return nonEmpty.length > 0 ? nonEmpty.join(' and ') : undefined
+}
+
+/**
+ * Builds a `timestamp ge/le <epoch-ms>` clause (or both, joined with `and`)
+ * for the consent creation time. Either bound may be omitted.
+ */
+export function buildTimestampFilter(
+  afterEpochMillis?: number,
+  beforeEpochMillis?: number,
+): string | undefined {
+  return combineFilters(
+    afterEpochMillis !== undefined ? `timestamp ge ${String(afterEpochMillis)}` : undefined,
+    beforeEpochMillis !== undefined ? `timestamp le ${String(beforeEpochMillis)}` : undefined,
+  )
+}

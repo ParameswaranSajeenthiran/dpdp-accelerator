@@ -37,18 +37,14 @@ function consentPath(consentID: string, suffix = ''): string {
   return `${SELF_CONSENTS}/${encodeURIComponent(consentID)}${suffix}`
 }
 
-function summaryAsDetail(summary: ConsentSummary): ConsentDetail {
-  return { ...summary, purposes: [] }
-}
-
 /**
  * Lists the signed in user's consents.
  *
- * The Identity Server returns a cursor based array of
- * {@code {id, serviceId, state, timestamp}} with no grand total and no offset
- * support, while the table wants an offset page of full records. Over-fetch by
- * one page, slice locally, then expand each row on the page with a detail
- * lookup.
+ * The Identity Server returns a cursor based array with no grand total and no
+ * offset support, while the table wants an offset page. Over-fetch by one
+ * page and slice locally. `attributes=purposes,authorizations` asks the list
+ * endpoint to inline what the table needs directly, so no per-row detail
+ * lookup is required here.
  */
 export async function fetchMyConsents(
   params: ConsentListQueryParams,
@@ -62,28 +58,21 @@ export async function fetchMyConsents(
       limit: Math.min(offset + limit + 1, MAX_FETCH),
       serviceId: params.serviceId ? params.serviceId : undefined,
       state: params.state,
+      relation: params.relation,
+      filter: params.filter,
+      attributes: 'purposes,authorizations',
     },
   })
 
   const page = summaries.slice(offset, offset + limit)
-  const data = await Promise.all(
-    page.map(async (summary) => {
-      try {
-        return await fetchMyConsentByID(summary.id)
-      } catch {
-        // One failed lookup must not blank the whole page.
-        return summaryAsDetail(summary)
-      }
-    }),
-  )
 
   return {
-    data,
+    data: page,
     metadata: {
       // Cursor based upstream: this counts what has been seen, not the total.
       total: summaries.length,
       offset,
-      count: data.length,
+      count: page.length,
       limit,
     },
   }

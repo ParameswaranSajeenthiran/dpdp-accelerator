@@ -50,27 +50,41 @@ describe('administrative consent filters', () => {
       normalizeAdminConsentFilters({
         state: 'ACTIVE',
         consentId: '  consent-1 ',
-        subjectId: ' admin ',
+        userId: ' admin ',
+        relation: 'AUTHORIZER',
         serviceId: ' dpdp-portal ',
         purposeId: ' purpose-1 ',
         propertyKey: ' dataCategory ',
         propertyValue: ' personal ',
+        createdAfter: ' 2026-01-01 ',
+        createdBefore: ' 2026-01-31 ',
       }),
     ).toEqual({
       state: 'ACTIVE',
       consentId: 'consent-1',
-      subjectId: 'admin',
+      userId: 'admin',
+      relation: 'AUTHORIZER',
       serviceId: 'dpdp-portal',
       purposeId: 'purpose-1',
       propertyKey: 'dataCategory',
       propertyValue: 'personal',
+      createdAfter: '2026-01-01',
+      createdBefore: '2026-01-31',
     })
   })
 
   it('reads native consent states from the URL and ignores unknown ones', () => {
     expect(getAdminConsentFilters(new URLSearchParams('state=PENDING')).state).toBe('PENDING')
     expect(getAdminConsentFilters(new URLSearchParams('state=CREATED')).state).toBe('All')
-    expect(getAdminConsentFilters(new URLSearchParams('subjectId=admin')).subjectId).toBe('admin')
+    expect(getAdminConsentFilters(new URLSearchParams('userId=admin')).userId).toBe('admin')
+  })
+
+  it('falls back to ANY for a missing or unknown relation', () => {
+    expect(getAdminConsentFilters(new URLSearchParams('')).relation).toBe('ANY')
+    expect(getAdminConsentFilters(new URLSearchParams('relation=BOGUS')).relation).toBe('ANY')
+    expect(getAdminConsentFilters(new URLSearchParams('relation=AUTHORIZER')).relation).toBe(
+      'AUTHORIZER',
+    )
   })
 
   it('searches by User directly from the main row', () => {
@@ -79,24 +93,51 @@ describe('administrative consent filters', () => {
 
     expect(screen.getByPlaceholderText('Search by consent ID')).toBeInTheDocument()
 
-    const subjectId = screen.getByRole('textbox', { name: 'User' })
-    expect(subjectId).toBeEnabled()
+    const userId = screen.getByRole('textbox', { name: 'User' })
+    expect(userId).toBeEnabled()
 
-    fireEvent.change(subjectId, { target: { value: ' admin ' } })
-    fireEvent.keyDown(subjectId, { key: 'Enter' })
+    fireEvent.change(userId, { target: { value: ' admin ' } })
+    fireEvent.keyDown(userId, { key: 'Enter' })
 
     expect(onFilterChange).toHaveBeenCalledWith({
       state: 'All',
       consentId: '',
-      subjectId: 'admin',
+      userId: 'admin',
+      relation: 'ANY',
       serviceId: '',
       purposeId: '',
       propertyKey: '',
       propertyValue: '',
+      createdAfter: '',
+      createdBefore: '',
     })
   })
 
-  it('offers service, purpose and a consent-property filter in advanced filters', () => {
+  it('disables the relation select until a User is set, then applies it immediately', () => {
+    const onFilterChange = vi.fn()
+    renderFilters(EMPTY_ADMIN_CONSENT_FILTERS, onFilterChange)
+
+    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    cleanup()
+
+    renderFilters({ ...EMPTY_ADMIN_CONSENT_FILTERS, userId: 'admin' }, onFilterChange)
+    const relationSelect = screen.getByRole('combobox', { name: 'Relation' })
+    expect(relationSelect).not.toHaveAttribute('aria-disabled', 'true')
+
+    fireEvent.mouseDown(relationSelect)
+    fireEvent.click(screen.getByRole('option', { name: 'Authorizer' }))
+
+    expect(onFilterChange).toHaveBeenCalledWith({
+      ...EMPTY_ADMIN_CONSENT_FILTERS,
+      userId: 'admin',
+      relation: 'AUTHORIZER',
+    })
+  })
+
+  it('offers service, purpose, a consent-property filter and a created-date range in advanced filters', () => {
     const onFilterChange = vi.fn()
     renderFilters(EMPTY_ADMIN_CONSENT_FILTERS, onFilterChange)
 
@@ -123,11 +164,14 @@ describe('administrative consent filters', () => {
     expect(onFilterChange).toHaveBeenCalledWith({
       state: 'All',
       consentId: '',
-      subjectId: '',
+      userId: '',
+      relation: 'ANY',
       serviceId: 'dpdp-portal',
       purposeId: 'purpose-1',
       propertyKey: 'dataCategory',
       propertyValue: 'personal',
+      createdAfter: '',
+      createdBefore: '',
     })
   })
 
@@ -149,10 +193,10 @@ describe('administrative consent filters', () => {
     renderFilters({ ...EMPTY_ADMIN_CONSENT_FILTERS, consentId: 'consent-123' })
 
     const advancedFiltersButton = screen.getByRole('button', { name: 'Advanced filters' })
-    const subjectId = screen.getByRole('textbox', { name: 'User' })
+    const userId = screen.getByRole('textbox', { name: 'User' })
     const stateSelect = screen.getByRole('combobox', { name: 'State' })
     expect(advancedFiltersButton).toBeDisabled()
-    expect(subjectId).toBeDisabled()
+    expect(userId).toBeDisabled()
     expect(stateSelect).toHaveAttribute('aria-disabled', 'true')
 
     fireEvent.mouseOver(advancedFiltersButton.parentElement as HTMLElement)
@@ -160,7 +204,7 @@ describe('administrative consent filters', () => {
       await screen.findByText('Remove the Consent ID filter to use advanced filters.'),
     ).toBeInTheDocument()
 
-    fireEvent.mouseOver(subjectId.closest('[aria-label]') as HTMLElement)
+    fireEvent.mouseOver(userId.closest('[aria-label]') as HTMLElement)
     expect(
       await screen.findByText('Remove the Consent ID filter to use the User ID filter.'),
     ).toBeInTheDocument()

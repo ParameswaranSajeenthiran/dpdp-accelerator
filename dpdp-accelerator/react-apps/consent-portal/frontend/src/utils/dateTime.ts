@@ -81,6 +81,36 @@ export function formatEpochTimestamp(
   )
 }
 
+/**
+ * Parses a `YYYY-MM-DD` date-only string (as produced by a date picker) into
+ * a local `Date`. Deliberately does not use `new Date(value)`, which parses
+ * a bare date as UTC midnight and can read back as the previous day in a
+ * negative UTC-offset timezone.
+ */
+export function parseDateOnly(value: string): Date | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) {
+    return undefined
+  }
+
+  const [, year, month, day] = match
+  return new Date(Number(year), Number(month) - 1, Number(day))
+}
+
+/** Midnight at the start of the given date's local day, as epoch milliseconds. */
+export function startOfDayMillis(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+}
+
+/** The last millisecond of the given date's local day, as epoch milliseconds. */
+export function endOfDayMillis(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999).getTime()
+}
+
 export function formatIsoDateTime(
   dateTimeText: string | null | undefined,
   options?: Intl.DateTimeFormatOptions,

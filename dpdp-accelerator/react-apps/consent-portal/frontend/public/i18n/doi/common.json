@@ -93,7 +93,14 @@
       "serviceId": "सेवा",
       "removeConsentIdForState": "स्टेट फिल्टर दा इस्तेमाल करने आस्तै सहमति आईडी फिल्टर हटाइयै रक्खो।",
       "propertyFilterLabel": "सहमति संपत्ति",
-      "removeConsentIdForSubject": "यूजर आईडी फिल्टर दा इस्तेमाल करने आस्तै सहमति आईडी फिल्टर हटाई देओ।"
+      "removeConsentIdForSubject": "यूजर आईडी फिल्टर दा इस्तेमाल करने आस्तै सहमति आईडी फिल्टर हटाई देओ।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "सब साफ करो",
       "clearAriaLabel": "सारे फिल्टर साफ करो",
       "serviceSearchPlaceholder": "सेवा राहें तुप्पो",
-      "state": "राज्य"
+      "state": "राज्य",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "सहमतियां लोड होआ करदियां न...",

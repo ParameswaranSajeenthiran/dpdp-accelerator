@@ -93,7 +93,14 @@
       "serviceId": "ସେବା",
       "removeConsentIdForState": "ରାଜ୍ୟ ଫିଲ୍ଟର୍ ବ୍ୟବହାର କରିବାକୁ ସମ୍ମତି ID ଫିଲ୍ଟର୍ ଅପସାରଣ କରନ୍ତୁ |",
       "propertyFilterLabel": "ସମ୍ମତି ସମ୍ପତ୍ତି",
-      "removeConsentIdForSubject": "ଉପଭୋକ୍ତା ID ଫିଲ୍ଟର୍ ବ୍ୟବହାର କରିବା ପାଇଁ ସମ୍ମତି ID ଫିଲ୍ଟର୍ ହଟାନ୍ତୁ।"
+      "removeConsentIdForSubject": "ଉପଭୋକ୍ତା ID ଫିଲ୍ଟର୍ ବ୍ୟବହାର କରିବା ପାଇଁ ସମ୍ମତି ID ଫିଲ୍ଟର୍ ହଟାନ୍ତୁ।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "ସବୁ ସଫା କରନ୍ତୁ",
       "clearAriaLabel": "ସମସ୍ତ ଫିଲ୍ଟର୍ ସଫା କରନ୍ତୁ",
       "serviceSearchPlaceholder": "ସେବା ଅନୁସାରେ ଖୋଜନ୍ତୁ |",
-      "state": "ରାଜ୍ୟ"
+      "state": "ରାଜ୍ୟ",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "ସମ୍ମତିଗୁଡ଼ିକ ଲୋଡ୍ ହେଉଛି...",

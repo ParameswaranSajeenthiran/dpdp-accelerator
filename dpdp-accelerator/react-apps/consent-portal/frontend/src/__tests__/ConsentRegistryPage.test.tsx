@@ -227,6 +227,8 @@ describe('ConsentRegistryPage', () => {
     expect(listParams()).toEqual({
       state: 'PENDING',
       serviceId: 'dpdp-portal',
+      relation: 'ANY',
+      filter: undefined,
       limit: 25,
       offset: 50,
     })

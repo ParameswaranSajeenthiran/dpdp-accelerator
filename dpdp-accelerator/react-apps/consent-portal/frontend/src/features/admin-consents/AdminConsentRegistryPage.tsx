@@ -71,7 +71,9 @@ function toSearchParams(
   const params = new URLSearchParams()
 
   Object.entries(filters).forEach(([key, value]) => {
-    if (key === 'state' ? value !== 'All' : Boolean(value)) params.set(key, value)
+    if (key === 'state' && value === 'All') return
+    if (key === 'relation' && value === 'ANY') return
+    if (value) params.set(key, value)
   })
   if (cursor.after) params.set('after', cursor.after)
   if (cursor.before) params.set('before', cursor.before)
@@ -117,11 +119,18 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
           value: filters.consentId,
         }
       : undefined,
-    filters.subjectId
+    filters.userId
       ? {
-          key: 'subjectId',
+          key: 'userId',
           label: t('consentRegistry.details.table.user'),
-          value: filters.subjectId,
+          value: filters.userId,
+        }
+      : undefined,
+    filters.userId && filters.relation !== 'ANY'
+      ? {
+          key: 'relation',
+          label: t('adminConsents.filters.relation'),
+          value: t(`adminConsents.filters.relationOptions.${filters.relation.toLowerCase()}`),
         }
       : undefined,
     filters.serviceId
@@ -137,11 +146,30 @@ export default function AdminConsentRegistryPage(): React.JSX.Element {
           value: `${filters.propertyKey} = ${filters.propertyValue}`,
         }
       : undefined,
+    filters.createdAfter || filters.createdBefore
+      ? {
+          key: 'createdRange',
+          label: t('consentRegistry.filters.advanced'),
+          value: `${filters.createdAfter || '…'} – ${filters.createdBefore || '…'}`,
+        }
+      : undefined,
   ].filter((chip): chip is ActiveFilterChip => Boolean(chip))
 
   const removeFilter = (key: string): void => {
     if (key === 'property') {
       updateParams({ ...filters, propertyKey: '', propertyValue: '' })
+      return
+    }
+    if (key === 'createdRange') {
+      updateParams({ ...filters, createdAfter: '', createdBefore: '' })
+      return
+    }
+    if (key === 'userId') {
+      updateParams({ ...filters, userId: '', relation: 'ANY' })
+      return
+    }
+    if (key === 'relation') {
+      updateParams({ ...filters, relation: 'ANY' })
       return
     }
     updateParams({

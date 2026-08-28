@@ -17,8 +17,10 @@
  */
 
 import {
+  AdapterDateFns,
   Box,
   Button,
+  DatePickers,
   FormControl,
   InputLabel,
   MenuItem,
@@ -34,12 +36,23 @@ import { ListFilter } from '@wso2/oxygen-ui-icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AdminConsentRegistryFilters } from '../../../types/consent'
-import { CONSENT_STATES } from '../../../types/consent'
+import { CONSENT_RELATIONS, CONSENT_STATES } from '../../../types/consent'
+import { parseDateOnly } from '../../../utils/dateTime'
 import { getConsentStateLabelKey } from '../../my-consents/utils/statusChip'
 import {
   EMPTY_ADMIN_CONSENT_FILTERS,
   normalizeAdminConsentFilters,
 } from '../utils/adminConsentFilters'
+
+function toDateOnly(date: Date | null): string {
+  if (!date || Number.isNaN(date.getTime())) {
+    return ''
+  }
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${String(year)}-${month}-${day}`
+}
 
 interface AdminConsentFiltersProps {
   filters: AdminConsentRegistryFilters
@@ -62,6 +75,7 @@ export default function AdminConsentFilters({
     filters.serviceId,
     filters.purposeId,
     filters.propertyKey && filters.propertyValue ? 'set' : '',
+    filters.createdAfter || filters.createdBefore ? 'set' : '',
   ].filter(Boolean).length
 
   const applyFilters = (next: AdminConsentRegistryFilters): void => {
@@ -149,14 +163,47 @@ export default function AdminConsentFilters({
               size="small"
               fullWidth
               label={t('consentRegistry.details.table.user')}
-              value={draft.subjectId}
+              value={draft.userId}
               disabled={Boolean(filters.consentId)}
               sx={{ '& .MuiInputBase-root': { height: MAIN_FILTER_HEIGHT } }}
-              onChange={(event) => setDraft({ ...draft, subjectId: event.target.value })}
+              onChange={(event) => setDraft({ ...draft, userId: event.target.value })}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') applyFilters(draft)
               }}
             />
+          </Box>
+        </Tooltip>
+
+        <Tooltip title={!draft.userId ? t('adminConsents.filters.relationHelperText') : ''}>
+          <Box component="span" sx={{ width: { xs: '100%', sm: 170 }, flexShrink: 0 }}>
+            <FormControl
+              size="small"
+              fullWidth
+              disabled={!draft.userId || Boolean(filters.consentId)}
+            >
+              <InputLabel id="admin-consent-relation-label">
+                {t('adminConsents.filters.relation')}
+              </InputLabel>
+              <Select
+                labelId="admin-consent-relation-label"
+                value={draft.relation}
+                label={t('adminConsents.filters.relation')}
+                sx={{ height: MAIN_FILTER_HEIGHT }}
+                onChange={(event) =>
+                  applyFilters({
+                    ...filters,
+                    ...draft,
+                    relation: event.target.value as AdminConsentRegistryFilters['relation'],
+                  })
+                }
+              >
+                {CONSENT_RELATIONS.map((relation) => (
+                  <MenuItem key={relation} value={relation}>
+                    {t(`adminConsents.filters.relationOptions.${relation.toLowerCase()}`)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Tooltip>
 
@@ -253,6 +300,35 @@ export default function AdminConsentFilters({
               />
             </Stack>
           </Stack>
+
+          <DatePickers.LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <DatePickers.DatePicker
+                label={t('consentRegistry.filters.startDate')}
+                value={parseDateOnly(draft.createdAfter) ?? null}
+                onChange={(date) => setDraft({ ...draft, createdAfter: toDateOnly(date) })}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    inputProps: { 'aria-label': t('consentRegistry.filters.startDateAriaLabel') },
+                  },
+                }}
+              />
+              <DatePickers.DatePicker
+                label={t('consentRegistry.filters.endDate')}
+                value={parseDateOnly(draft.createdBefore) ?? null}
+                onChange={(date) => setDraft({ ...draft, createdBefore: toDateOnly(date) })}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    inputProps: { 'aria-label': t('consentRegistry.filters.endDateAriaLabel') },
+                  },
+                }}
+              />
+            </Stack>
+          </DatePickers.LocalizationProvider>
 
           <Stack
             direction="row"

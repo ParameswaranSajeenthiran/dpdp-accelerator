@@ -2,6 +2,7 @@
 hostname = "IS_HOSTNAME"
 node_ip = "127.0.0.1"
 base_path = "https://$ref{server.hostname}:${carbon.management.port}"
+offset = 3
 
 [super_admin]
 username = "IS_ADMIN_USERNAME"
@@ -384,7 +385,7 @@ allowed_callback_ports = "-1,80,443,8443"
 # Set true only for controlled/on-prem deployments where a webhook receiver legitimately lives
 # on a private/internal network (RFC1918, link-local, IPv6 unique-local). Loopback, wildcard,
 # and multicast targets are always rejected regardless of this setting.
-allow_private_network_callback_targets = false
+allow_private_network_callback_targets = true
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10
@@ -412,5 +413,5 @@ snapshot_enabled = true
 # requirements" section of docs/configuration-guide.md before relying on this in production.
 [dpdp_accelerator.consent_expiry]
 enabled = true
-cron_value = "0 0 0 * * ?"
+cron_value = "0 0/2 * ? * * *"
 batch_size = 100

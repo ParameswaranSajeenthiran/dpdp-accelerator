@@ -47,11 +47,8 @@ import {
   useRejectConsentMutation,
   useRevokeConsentMutation,
 } from './hooks/useConsentQueries'
-import {
-  isConsentApprovableState,
-  isConsentRejectableState,
-  isConsentRevokableState,
-} from './utils/statusChip'
+import { isApprovableByCurrentUser, isRejectableByCurrentUser } from './utils/consentAuthorization'
+import { isConsentRevokableState } from './utils/statusChip'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import {
   useAdminConsentDetailQuery,
@@ -103,7 +100,7 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   const [approvalDialogOpen, setApprovalDialogOpen] = useState<boolean>(false)
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState<boolean>(false)
   const [revocationDialogOpen, setRevocationDialogOpen] = useState<boolean>(false)
-  const { hasScope } = useAuthorization()
+  const { currentUser, hasScope } = useAuthorization()
   const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
   const consentDetailQuery = variant === 'admin' ? adminConsentDetailQuery : selfConsentDetailQuery
@@ -131,9 +128,15 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
 
   const detail = consentDetailQuery.data
   const canApprove =
-    variant === 'self' && detail ? canWriteSelf && isConsentApprovableState(detail.state) : false
+    variant === 'self' && detail
+      ? canWriteSelf &&
+        isApprovableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
+      : false
   const canReject =
-    variant === 'self' && detail ? canWriteSelf && isConsentRejectableState(detail.state) : false
+    variant === 'self' && detail
+      ? canWriteSelf &&
+        isRejectableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
+      : false
   const canRevoke = detail
     ? (variant === 'admin' ? canWriteAny : canWriteSelf) && isConsentRevokableState(detail.state)
     : false

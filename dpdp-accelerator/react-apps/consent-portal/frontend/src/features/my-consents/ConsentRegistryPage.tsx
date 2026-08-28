@@ -28,9 +28,10 @@ import ConsentRevocationDialog from './components/ConsentRevocationDialog'
 import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from './constants'
 import type {
   ConsentRegistryFilters as ConsentRegistryFiltersModel,
+  ConsentRelation,
   ConsentState,
 } from '../../types/consent'
-import { isConsentState } from '../../types/consent'
+import { CONSENT_RELATIONS, isConsentState } from '../../types/consent'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import {
@@ -42,6 +43,13 @@ import {
 const DEFAULT_FILTERS: ConsentRegistryFiltersModel = {
   state: 'All',
   serviceId: '',
+  relation: 'ANY',
+  createdAfter: '',
+  createdBefore: '',
+}
+
+function isConsentRelation(value: string): value is ConsentRelation {
+  return (CONSENT_RELATIONS as readonly string[]).includes(value)
 }
 
 const DEFAULT_PAGE = 0
@@ -49,10 +57,14 @@ const DEFAULT_ROWS_PER_PAGE = 10
 
 function getFiltersFromSearchParams(searchParams: URLSearchParams): ConsentRegistryFiltersModel {
   const stateParam = searchParams.get('state') ?? ''
+  const relationParam = searchParams.get('relation') ?? ''
 
   return {
     state: isConsentState(stateParam) ? (stateParam as ConsentState) : DEFAULT_FILTERS.state,
     serviceId: searchParams.get('serviceId') ?? DEFAULT_FILTERS.serviceId,
+    relation: isConsentRelation(relationParam) ? relationParam : DEFAULT_FILTERS.relation,
+    createdAfter: searchParams.get('createdAfter') ?? DEFAULT_FILTERS.createdAfter,
+    createdBefore: searchParams.get('createdBefore') ?? DEFAULT_FILTERS.createdBefore,
   }
 }
 
@@ -87,6 +99,18 @@ function toSearchParams(
     params.set('serviceId', filters.serviceId.trim())
   }
 
+  if (filters.relation !== DEFAULT_FILTERS.relation) {
+    params.set('relation', filters.relation)
+  }
+
+  if (filters.createdAfter) {
+    params.set('createdAfter', filters.createdAfter)
+  }
+
+  if (filters.createdBefore) {
+    params.set('createdBefore', filters.createdBefore)
+  }
+
   if (page !== DEFAULT_PAGE) {
     params.set('page', String(page + 1))
   }
@@ -109,7 +133,7 @@ function ConsentRegistryPage(): React.JSX.Element {
   const consentListQuery = useConsentListQuery(filters, page, rowsPerPage)
   const approveMutation = useApproveConsentMutation()
   const revokeMutation = useRevokeConsentMutation()
-  const { hasScope } = useAuthorization()
+  const { currentUser, hasScope } = useAuthorization()
   const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const isTableLoading = consentListQuery.isPending || consentListQuery.isPlaceholderData
 
@@ -151,6 +175,8 @@ function ConsentRegistryPage(): React.JSX.Element {
             updateParams(filters, DEFAULT_PAGE, nextRowsPerPage)
           }
           onRetry={() => consentListQuery.refetch()}
+          showSubject={filters.relation !== 'SUBJECT'}
+          currentUserId={currentUser.userId}
           canApprove={canWriteSelf}
           canRevoke={canWriteSelf}
           onApprove={setApprovalConsentID}
