@@ -76,6 +76,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public int getComplaintsStatutoryDuePeriodDays() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS
+                : configParser.getComplaintsStatutoryDuePeriodDays();
+    }
+
+    @Override
     public int getEventNotificationThreadPoolSize() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE

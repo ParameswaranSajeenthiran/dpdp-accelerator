@@ -123,6 +123,11 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
+        // Opaque (UUID) access tokens - matching IS My Account/Console and the pattern
+        // ConsentHistorySelfApi's requireCallerOwnsConsent() follows. TokenIntrospectionClient
+        // resolves the caller by calling out to /oauth2/introspect rather than decoding a JWT
+        // payload locally.
+        dto.setTokenType("Default");
         dto.setTokenBindingType(COOKIE);
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);

@@ -114,14 +114,14 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertEquals(dto.getOauthConsumerKey(), CLIENT_ID);
         assertEquals(dto.getCallbackUrl(), callbackUrl);
         assertTrue(dto.getPkceMandatory());
-        // Opaque access token - TokenIntrospectionClient resolves the caller via
-        // /oauth2/introspect rather than decoding a JWT payload locally.
+        // Opaque access token - TokenIntrospectionClient resolves the caller from Carbon's own
+        // PrivilegedCarbonContext rather than decoding or introspecting the token itself, so
+        // there's no need for a JWT-embedded "username" Access Token Attribute anymore either.
         assertEquals(dto.getTokenType(), "Default");
         assertEquals(dto.getTokenBindingType(), "cookie");
         assertTrue(dto.isTokenBindingValidationEnabled());
         assertTrue(dto.isTokenRevocationWithIDPSessionTerminationEnabled());
         assertTrue(dto.getAllowedOrigins().isEmpty());
-        assertEquals(dto.getAccessTokenClaims(), new String[]{"username"});
     }
 
     @Test

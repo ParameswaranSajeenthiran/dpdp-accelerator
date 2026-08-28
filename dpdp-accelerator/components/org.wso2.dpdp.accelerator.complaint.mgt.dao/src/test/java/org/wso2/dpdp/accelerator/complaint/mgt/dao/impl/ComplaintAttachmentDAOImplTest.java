@@ -22,7 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
@@ -68,8 +68,12 @@ class ComplaintAttachmentDAOImplTest {
 
     @BeforeEach
     void clearTable() throws SQLException {
-        try (Connection conn = JDBCPersistenceManager.getConnection(); Statement stmt = conn.createStatement()) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM COMPLAINT_ATTACHMENT");
+            DatabaseUtils.commitTransaction(conn);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 

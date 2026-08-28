@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
@@ -45,11 +45,20 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean addComplaint(Complaint complaint) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return addComplaint(conn, complaint);
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addComplaint(conn, complaint);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
         } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 
@@ -88,8 +97,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public Optional<Complaint> getComplaintById(String complaintId, String orgId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_COMPLAINT_BY_ID)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_COMPLAINT_BY_ID)) {
             ps.setString(1, complaintId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -100,14 +109,16 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         } catch (SQLException e) {
             LOG.error("Error getting complaint by ID: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error getting complaint by ID: " + complaintId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return Optional.empty();
     }
 
     @Override
     public int countByReferenceIdPrefix(String orgId, String referenceIdLikePattern) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_FOR_YEAR_PREFIX)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_FOR_YEAR_PREFIX)) {
             ps.setString(1, orgId);
             ps.setString(2, referenceIdLikePattern);
             try (ResultSet rs = ps.executeQuery()) {
@@ -118,16 +129,24 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         } catch (SQLException e) {
             LOG.error("Error counting complaints by reference prefix for org: " + orgId, e);
             throw new ComplaintDAOException("Error counting complaints by reference prefix for org: " + orgId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return 0;
     }
 
     @Override
     public boolean updateStatus(String complaintId, String orgId, String newStatus, long updatedTime) {
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
-            return updateStatus(conn, complaintId, orgId, newStatus, updatedTime);
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = updateStatus(conn, complaintId, orgId, newStatus, updatedTime);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
         } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             LOG.error("Error updating status for complaint: " + LogSanitizer.sanitize(complaintId), e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return false;
     }
@@ -197,7 +216,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         }
         sql.append("ORDER BY ").append(orderBy).append(" LIMIT ? OFFSET ?");
 
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
 
             // sql and countSql share the same WHERE clause/params built above: COUNT(*) first for the
             // total (written back via the totalOut out-param), then the LIMIT/OFFSET query for
@@ -232,6 +252,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         } catch (SQLException e) {
             LOG.error("Error listing complaints for org: " + orgId, e);
             throw new ComplaintDAOException("Error listing complaints for org: " + orgId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return complaints;
     }
@@ -242,7 +264,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         int awaitingInternalReviewCount = 0;
         int resolvedCount = 0;
 
-        try (Connection conn = JDBCPersistenceManager.getConnection()) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
 
             try (PreparedStatement statusPs = conn.prepareStatement(QueryConstants.COUNT_COMPLAINTS_BY_STATUS)) {
                 statusPs.setString(1, orgId);
@@ -275,6 +298,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         } catch (SQLException e) {
             LOG.error("Error computing queue stats for org: " + orgId, e);
             throw new ComplaintDAOException("Error computing queue stats for org: " + orgId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 

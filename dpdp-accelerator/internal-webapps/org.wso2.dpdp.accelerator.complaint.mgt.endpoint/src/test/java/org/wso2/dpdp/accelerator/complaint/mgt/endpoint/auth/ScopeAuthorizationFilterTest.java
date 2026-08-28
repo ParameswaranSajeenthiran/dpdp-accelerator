@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -36,9 +35,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ScopeAuthorizationFilterTest {
@@ -111,55 +108,33 @@ class ScopeAuthorizationFilterTest {
     }
 
     // ---- filter ----
+    //
+    // No-op since the switch to opaque access tokens - Carbon's own valve pipeline already
+    // enforces each operation's required scope, per route, before this webapp ever sees the
+    // request (see the class javadoc). filter() never throws regardless of resource method,
+    // principal, or scope state.
 
     @Test
     void filterDoesNothingWhenTheResourceMethodHasNoRequireScopeAnnotation() throws NoSuchMethodException {
-        when(resourceInfo.getResourceMethod()).thenReturn(ungatedMethod());
+        lenient().when(resourceInfo.getResourceMethod()).thenReturn(ungatedMethod());
 
         assertDoesNotThrow(() -> filter.filter(requestContext));
     }
 
     @Test
-    void filterThrowsUnauthenticatedWhenNoPrincipalWasResolved() throws NoSuchMethodException {
-        when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
-        when(requestContext.getMethod()).thenReturn("GET");
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY)).thenReturn(null);
-
-        ComplaintException ex = assertThrows(ComplaintException.class, () -> filter.filter(requestContext));
-
-        assertEquals("CO-4010", ex.getCode());
-    }
-
-    @Test
-    void filterThrowsForbiddenWhenThePrincipalIsMissingTheRequiredScope() throws NoSuchMethodException {
-        when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
-        when(requestContext.getMethod()).thenReturn("GET");
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(principalWithScopes("complaints:write:any"));
-
-        ComplaintException ex = assertThrows(ComplaintException.class, () -> filter.filter(requestContext));
-
-        assertEquals("CO-4030", ex.getCode());
-    }
-
-    @Test
-    void filterPassesWhenThePrincipalHasTheRequiredScope() throws NoSuchMethodException {
-        when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
-        when(requestContext.getMethod()).thenReturn("GET");
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(principalWithScopes(ComplaintScopeRegistry.READ_ANY));
+    void filterDoesNothingEvenWhenNoPrincipalWasResolved() throws NoSuchMethodException {
+        lenient().when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
+        lenient().when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY)).thenReturn(null);
 
         assertDoesNotThrow(() -> filter.filter(requestContext));
     }
 
     @Test
-    void filterFailsClosedWhenTheOperationHasNoEntryInTheScopeRegistry() throws NoSuchMethodException {
-        when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
-        // "DELETE /complaints/{complaintId}" is not a real, registered operation.
-        when(requestContext.getMethod()).thenReturn("DELETE");
+    void filterDoesNothingEvenWhenThePrincipalHasNoScopes() throws NoSuchMethodException {
+        lenient().when(resourceInfo.getResourceMethod()).thenReturn(gatedMethod());
+        lenient().when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
+                .thenReturn(principalWithScopes());
 
-        ComplaintException ex = assertThrows(ComplaintException.class, () -> filter.filter(requestContext));
-
-        assertEquals("CO-5000", ex.getCode());
+        assertDoesNotThrow(() -> filter.filter(requestContext));
     }
 }

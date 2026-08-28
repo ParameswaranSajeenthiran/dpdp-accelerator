@@ -37,11 +37,21 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- ConfigProvider, used by auth/TokenIntrospectionClient.java to read deployment.toml settings -->
+        <!-- ConfigProvider, used by config-loading elsewhere in this module -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.common</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <!-- PrivilegedCarbonContext, used by auth/TokenIntrospectionClient.java to resolve the
+             caller's identity - Carbon's own valve pipeline populates this per-request, even for
+             a plain-WAR webapp like this one (confirmed empirically). Provided at runtime by
+             Carbon's shared classloader (this webapp's Environments includes Carbon - see
+             webapp-classloading.xml), never bundled into the WAR. -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.utils</artifactId>
         </dependency>
 
         <dependency>

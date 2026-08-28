@@ -18,9 +18,6 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-
 import javax.annotation.Priority;
 import javax.ws.rs.Path;
 import javax.ws.rs.Priorities;
@@ -32,18 +29,17 @@ import javax.ws.rs.ext.Provider;
 import java.lang.reflect.Method;
 
 /**
- * Runs after {@link TokenIntrospectionFilter} on every request. Reads the {@link RequireScope}
- * annotation off the matched resource method, looks up the scope it requires for this specific
- * operation in {@link ComplaintScopeRegistry}, and enforces it against the scopes
- * {@link TokenIntrospectionFilter} resolved for the caller's token - a plain global filter reading
- * per-method metadata via {@code ResourceInfo}, deliberately not JAX-RS name-binding, to keep a
- * single filter class instead of one filter per scope value.
- *
- * <p>A resource method with no {@link RequireScope} annotation is not gated by this filter at
- * all - every method on every endpoint in this module carries one, so in practice nothing here is
- * ever left open by omission. A method that does carry the annotation but whose operation key has
- * no entry in {@link ComplaintScopeRegistry} (a deployment.toml override typo'd the key, say) fails
- * closed with an internal error rather than silently letting the request through.
+ * No-op since the switch to opaque access tokens: scope enforcement for every operation in this
+ * module is already done, per route, by Carbon's own valve pipeline (the
+ * {@code [[resource.access_control]]} entries for {@code /api/dpdp/complaints} in
+ * {@code wso2is-7.3.0-deployment.toml}, each carrying its own {@code scopes = [...]}) before this
+ * webapp ever sees the request. {@link TokenIntrospectionClient} resolves identity from Carbon's
+ * {@code PrivilegedCarbonContext} rather than introspecting the token itself, so there is no
+ * scope list left on {@link AuthenticatedPrincipal} to re-check here - re-verifying what Carbon's
+ * valve already verified would be redundant, not additional safety. Kept registered (rather than
+ * removed outright) so {@link RequireScope}/{@link ComplaintScopeRegistry} - which still document
+ * each operation's required scope for readers of the code and for the deployment.toml-driven
+ * override table - don't need to be ripped out alongside this.
  */
 @Provider
 @Priority(Priorities.AUTHORIZATION)
@@ -59,34 +55,7 @@ public class ScopeAuthorizationFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        Method resourceMethod = resourceInfo.getResourceMethod();
-        RequireScope requireScope = resourceMethod != null
-                ? resourceMethod.getAnnotation(RequireScope.class)
-                : null;
-        if (requireScope == null) {
-            return;
-        }
-
-        String operationKey = operationKey(requestContext.getMethod(), resourceInfo.getResourceClass(),
-                resourceMethod);
-        String requiredScope = ComplaintScopeRegistry.requiredScopeFor(operationKey);
-        if (requiredScope == null) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    "No scope configured for operation '" + operationKey + "'.");
-        }
-
-        Object principalObj = requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY);
-        if (!(principalObj instanceof AuthenticatedPrincipal)) {
-            // TokenIntrospectionFilter runs first and always either sets this or throws - reaching
-            // here without it means the two filters are misregistered/out of priority order.
-            throw new ComplaintException(ComplaintErrorCode.UNAUTHENTICATED, "No authenticated principal resolved.");
-        }
-
-        AuthenticatedPrincipal principal = (AuthenticatedPrincipal) principalObj;
-        if (!principal.hasScope(requiredScope)) {
-            throw new ComplaintException(ComplaintErrorCode.FORBIDDEN,
-                    "Bearer token is missing required scope '" + requiredScope + "'.");
-        }
+        // Intentionally a no-op - see class javadoc.
     }
 
     /**

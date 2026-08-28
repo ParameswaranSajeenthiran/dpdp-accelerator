@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
@@ -43,8 +43,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
 
     @Override
     public boolean addAttachment(ComplaintAttachment attachment) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT_ATTACHMENT)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.ADD_COMPLAINT_ATTACHMENT)) {
             ps.setString(1, attachment.getAttachmentId());
             ps.setString(2, attachment.getOrgId());
             ps.setString(3, attachment.getComplaintId());
@@ -58,20 +58,25 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
             ps.setBytes(7, attachment.getFileData());
             ps.setBoolean(8, attachment.isPublic());
             ps.setLong(9, attachment.getCreatedTime());
-            return ps.executeUpdate() > 0;
+            boolean result = ps.executeUpdate() > 0;
+            DatabaseUtils.commitTransaction(conn);
+            return result;
         } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             LOG.error("Error adding attachment for complaint: "
                     + LogSanitizer.sanitize(attachment.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding attachment for complaint: " + attachment.getComplaintId(),
                     e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 
     @Override
     public Optional<ComplaintAttachment> getAttachmentMetadataById(String attachmentId, String orgId,
             String complaintId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_METADATA_BY_ID)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_METADATA_BY_ID)) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
@@ -93,6 +98,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
         } catch (SQLException e) {
             LOG.error("Error getting attachment metadata by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment metadata by ID: " + attachmentId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return Optional.empty();
     }
@@ -100,8 +107,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public Optional<ComplaintAttachment> getAttachmentWithDataById(String attachmentId, String orgId,
             String complaintId) {
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_WITH_DATA_BY_ID)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.GET_ATTACHMENT_WITH_DATA_BY_ID)) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
@@ -113,6 +120,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
         } catch (SQLException e) {
             LOG.error("Error getting attachment with data by ID: " + LogSanitizer.sanitize(attachmentId), e);
             throw new ComplaintDAOException("Error getting attachment with data by ID: " + attachmentId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return Optional.empty();
     }
@@ -120,8 +129,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
         List<ComplaintAttachment> attachments = new ArrayList<>();
-        try (Connection conn = JDBCPersistenceManager.getConnection();
-                PreparedStatement ps = conn.prepareStatement(QueryConstants.LIST_ATTACHMENT_METADATA_BY_COMPLAINT)) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (PreparedStatement ps = conn.prepareStatement(QueryConstants.LIST_ATTACHMENT_METADATA_BY_COMPLAINT)) {
             ps.setString(1, orgId);
             ps.setString(2, complaintId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -142,6 +151,8 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
         } catch (SQLException e) {
             LOG.error("Error listing attachments for complaint: " + LogSanitizer.sanitize(complaintId), e);
             throw new ComplaintDAOException("Error listing attachments for complaint: " + complaintId, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
         return attachments;
     }

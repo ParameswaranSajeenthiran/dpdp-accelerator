@@ -134,7 +134,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                     .authorizeEventNotificationAPIs(applicationId, tenantDomain);
             List<String> authorizeConsentHistoryApi = DPDPApiResourceProvisioningUtil
                     .authorizeConsentHistoryApi(applicationId, tenantDomain);
-            String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
+            List<String> authorizedComplaintScopes = DPDPComplaintMgtAppProvisioningUtil
                     .authorizeComplaintManagementAPI(applicationId, tenantDomain);
             List<String> adminScopes = new ArrayList<>(consentMgtScopes);
             adminScopes.addAll(authorizedComplaintScopes);

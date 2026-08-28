@@ -231,6 +231,12 @@ public final class DPDPConfigParser {
                 .orElse("DPDP_CONSENT_PORTAL");
     }
 
+    public int getComplaintsStatutoryDuePeriodDays() {
+
+        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS);
+    }
+
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)

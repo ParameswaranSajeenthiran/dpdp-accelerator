@@ -18,8 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
@@ -41,6 +40,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatutoryDuePeriodPolicy;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -148,29 +149,33 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * Inserts the complaint and its officer-intake audit event together - see
-     * JDBCPersistenceManager#executeInTransaction - so a complaint can never be created with no
-     * record of which officer lodged it, or vice versa.
+     * Inserts the complaint and its officer-intake audit event together - so a complaint can
+     * never be created with no record of which officer lodged it, or vice versa.
      */
     private void persistWithIntakeEvent(Complaint complaint, String actorUserId, String actorRole, long now) {
+        Connection conn = DatabaseUtils.getDBConnection();
         try {
-            JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                if (!complaintDAO.addComplaint(conn, complaint)) {
-                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                            ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
-                }
-                ComplaintEvent event = new ComplaintEvent(UUID.randomUUID().toString(), complaint.getOrgId(),
-                        complaint.getComplaintId(), actorUserId, null, actorRole, true,
-                        ComplaintServiceConstants.OFFICER_INTAKE_EVENT_MESSAGE, null, OPEN.name(), now);
-                if (!complaintEventDAO.addEvent(conn, event)) {
-                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                            ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
-                }
-                return null;
-            });
-        } catch (DPDPCommonRuntimeException e) {
+            if (!complaintDAO.addComplaint(conn, complaint)) {
+                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                        ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
+            }
+            ComplaintEvent event = new ComplaintEvent(UUID.randomUUID().toString(), complaint.getOrgId(),
+                    complaint.getComplaintId(), actorUserId, null, actorRole, true,
+                    ComplaintServiceConstants.OFFICER_INTAKE_EVENT_MESSAGE, null, OPEN.name(), now);
+            if (!complaintEventDAO.addEvent(conn, event)) {
+                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                        ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
+            }
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 
