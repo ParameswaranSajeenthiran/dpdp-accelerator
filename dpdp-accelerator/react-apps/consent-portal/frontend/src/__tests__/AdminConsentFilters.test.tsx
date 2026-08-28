@@ -113,26 +113,21 @@ describe('administrative consent filters', () => {
     })
   })
 
-  it('disables the relation select until a User is set, then applies it immediately', () => {
+  it('keeps the relation select usable even before a User is set', () => {
     const onFilterChange = vi.fn()
     renderFilters(EMPTY_ADMIN_CONSENT_FILTERS, onFilterChange)
 
-    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    )
-    cleanup()
-
-    renderFilters({ ...EMPTY_ADMIN_CONSENT_FILTERS, userId: 'admin' }, onFilterChange)
     const relationSelect = screen.getByRole('combobox', { name: 'Relation' })
     expect(relationSelect).not.toHaveAttribute('aria-disabled', 'true')
 
     fireEvent.mouseDown(relationSelect)
     fireEvent.click(screen.getByRole('option', { name: 'Authorizer' }))
 
+    // Applied immediately, same as the other single-select filters - the API
+    // layer itself drops `relation` whenever `userId` is empty, so selecting
+    // one ahead of the User field is harmless.
     expect(onFilterChange).toHaveBeenCalledWith({
       ...EMPTY_ADMIN_CONSENT_FILTERS,
-      userId: 'admin',
       relation: 'AUTHORIZER',
     })
   })
@@ -195,9 +190,11 @@ describe('administrative consent filters', () => {
     const advancedFiltersButton = screen.getByRole('button', { name: 'Advanced filters' })
     const userId = screen.getByRole('textbox', { name: 'User' })
     const stateSelect = screen.getByRole('combobox', { name: 'State' })
+    const relationSelect = screen.getByRole('combobox', { name: 'Relation' })
     expect(advancedFiltersButton).toBeDisabled()
     expect(userId).toBeDisabled()
     expect(stateSelect).toHaveAttribute('aria-disabled', 'true')
+    expect(relationSelect).toHaveAttribute('aria-disabled', 'true')
 
     fireEvent.mouseOver(advancedFiltersButton.parentElement as HTMLElement)
     expect(

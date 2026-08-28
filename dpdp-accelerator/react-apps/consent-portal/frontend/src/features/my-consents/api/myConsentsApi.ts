@@ -23,6 +23,7 @@ import type {
   ConsentSummary,
 } from '../../../types/consent'
 import { APIError, apiRequest, apiRequestOptionalContent } from '../../../utils/apiClient'
+import { isApprovableByCurrentUser, isRejectableByCurrentUser } from '../utils/consentAuthorization'
 
 /** The Identity Server's self-service consent API. */
 const SELF_CONSENTS = '/api/users/v1/me/consents'
@@ -86,17 +87,32 @@ export async function fetchMyConsentByID(consentID: string): Promise<ConsentDeta
  * Approves or rejects a consent as a whole - the Identity Server has no per
  * element authorization.
  *
- * The server accepts authorize on a consent in any state, which would move an
- * already revoked or expired consent back to active. A withdrawal has to stay
- * final, so only a pending consent is authorizable.
+ * A caller can reconsider their own prior decision (approve after rejecting,
+ * or vice versa) as long as it's still theirs to decide. The server accepts
+ * authorize on a consent in any state, which would otherwise let an already
+ * revoked or expired consent be pulled back to active - a withdrawal has to
+ * stay final, so those two states block both actions regardless of who asks.
+ * `currentUserId` defaults to empty for callers with no signed-in identity to
+ * check against, which falls back to gating on the consent's own aggregate
+ * state - the same behavior this function had before per-authorizer decisions
+ * existed.
  */
-async function authorizeMyConsent(consentID: string, state: 'APPROVED' | 'REJECTED') {
+async function authorizeMyConsent(
+  consentID: string,
+  state: 'APPROVED' | 'REJECTED',
+  currentUserId = '',
+): Promise<unknown> {
   const consent = await fetchMyConsentByID(consentID)
-  if (consent.state !== 'PENDING') {
+  const canAct =
+    state === 'APPROVED'
+      ? isApprovableByCurrentUser(consent.state, consent.authorizations, currentUserId)
+      : isRejectableByCurrentUser(consent.state, consent.authorizations, currentUserId)
+
+  if (!canAct) {
     throw new APIError(
       409,
       'INVALID_CONSENT_STATE',
-      `Only a pending consent can be approved or rejected; this consent is ${consent.state}.`,
+      `This consent cannot be ${state === 'APPROVED' ? 'approved' : 'rejected'} right now; it is ${consent.state}.`,
     )
   }
 
@@ -108,12 +124,12 @@ async function authorizeMyConsent(consentID: string, state: 'APPROVED' | 'REJECT
   return { status: 'OK' }
 }
 
-export async function approveMyConsent(consentID: string): Promise<unknown> {
-  return authorizeMyConsent(consentID, 'APPROVED')
+export async function approveMyConsent(consentID: string, currentUserId = ''): Promise<unknown> {
+  return authorizeMyConsent(consentID, 'APPROVED', currentUserId)
 }
 
-export async function rejectMyConsent(consentID: string): Promise<unknown> {
-  return authorizeMyConsent(consentID, 'REJECTED')
+export async function rejectMyConsent(consentID: string, currentUserId = ''): Promise<unknown> {
+  return authorizeMyConsent(consentID, 'REJECTED', currentUserId)
 }
 
 export async function revokeMyConsent(consentID: string): Promise<unknown> {

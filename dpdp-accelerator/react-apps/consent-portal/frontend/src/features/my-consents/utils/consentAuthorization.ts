@@ -17,7 +17,7 @@
  */
 
 import type { ConsentAuthorization, ConsentState } from '../../../types/consent'
-import { isConsentApprovableState, isConsentRejectableState } from './statusChip'
+import { normalizeConsentState } from './statusChip'
 
 /**
  * `authorizations` never carries an entry for the consent's own subject -
@@ -31,6 +31,21 @@ function myAuthorization(
   currentUserId: string,
 ): ConsentAuthorization | undefined {
   return authorizations?.find((authorization) => authorization.userId === currentUserId)
+}
+
+/**
+ * Whether the signed-in user has any personal stake in this consent - as its
+ * subject, or as one of its listed authorizers. Meant for surfaces that can
+ * show an arbitrary consent (the admin registry) rather than an endpoint
+ * already scoped to the caller (self-service `/me/consents`), where every
+ * result is inherently the caller's concern and this check would be redundant.
+ */
+export function isCurrentUserInvolved(
+  subjectId: string,
+  authorizations: ConsentAuthorization[] | undefined,
+  currentUserId: string,
+): boolean {
+  return subjectId === currentUserId || Boolean(myAuthorization(authorizations, currentUserId))
 }
 
 /**
@@ -48,21 +63,34 @@ export function effectiveActionState(
   authorizations: ConsentAuthorization[] | undefined,
   currentUserId: string,
 ): string {
-  return myAuthorization(authorizations, currentUserId)?.state ?? consentState
+  return normalizeConsentState(
+    myAuthorization(authorizations, currentUserId)?.state ?? consentState,
+  )
 }
 
+/**
+ * A caller can (re)approve as long as they haven't already approved - a
+ * previous rejection is reconsiderable, same as a still-pending decision.
+ * `REVOKED` and `EXPIRED` stay final and block both actions: `revokeMyConsent`
+ * already documents that a withdrawal has to stay final, and the same rule
+ * applies here so a finalised decision can't be reopened through the other
+ * action either.
+ */
 export function isApprovableByCurrentUser(
   consentState: ConsentState | string,
   authorizations: ConsentAuthorization[] | undefined,
   currentUserId: string,
 ): boolean {
-  return isConsentApprovableState(effectiveActionState(consentState, authorizations, currentUserId))
+  const effective = effectiveActionState(consentState, authorizations, currentUserId)
+  return effective === 'PENDING' || effective === 'REJECTED'
 }
 
+/** Mirrors `isApprovableByCurrentUser` for the reject action. */
 export function isRejectableByCurrentUser(
   consentState: ConsentState | string,
   authorizations: ConsentAuthorization[] | undefined,
   currentUserId: string,
 ): boolean {
-  return isConsentRejectableState(effectiveActionState(consentState, authorizations, currentUserId))
+  const effective = effectiveActionState(consentState, authorizations, currentUserId)
+  return effective === 'PENDING' || effective === 'APPROVED' || effective === 'ACTIVE'
 }

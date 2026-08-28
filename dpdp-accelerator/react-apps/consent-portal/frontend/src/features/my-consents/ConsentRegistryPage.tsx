@@ -58,11 +58,16 @@ const DEFAULT_ROWS_PER_PAGE = 10
 function getFiltersFromSearchParams(searchParams: URLSearchParams): ConsentRegistryFiltersModel {
   const stateParam = searchParams.get('state') ?? ''
   const relationParam = searchParams.get('relation') ?? ''
+  const state = isConsentState(stateParam) ? (stateParam as ConsentState) : DEFAULT_FILTERS.state
+  const urlRelation = isConsentRelation(relationParam) ? relationParam : DEFAULT_FILTERS.relation
+  // The Pending queue is every relation at once - relation narrowing (and
+  // switching away from Pending) happens by leaving this view, not inside it.
+  const relation = state === 'PENDING' ? 'ANY' : urlRelation
 
   return {
-    state: isConsentState(stateParam) ? (stateParam as ConsentState) : DEFAULT_FILTERS.state,
+    state,
     serviceId: searchParams.get('serviceId') ?? DEFAULT_FILTERS.serviceId,
-    relation: isConsentRelation(relationParam) ? relationParam : DEFAULT_FILTERS.relation,
+    relation,
     createdAfter: searchParams.get('createdAfter') ?? DEFAULT_FILTERS.createdAfter,
     createdBefore: searchParams.get('createdBefore') ?? DEFAULT_FILTERS.createdBefore,
   }
@@ -131,9 +136,9 @@ function ConsentRegistryPage(): React.JSX.Element {
   const page = useMemo(() => getPageFromSearchParams(searchParams), [searchParams])
   const rowsPerPage = useMemo(() => getRowsPerPageFromSearchParams(searchParams), [searchParams])
   const consentListQuery = useConsentListQuery(filters, page, rowsPerPage)
-  const approveMutation = useApproveConsentMutation()
-  const revokeMutation = useRevokeConsentMutation()
   const { currentUser, hasScope } = useAuthorization()
+  const approveMutation = useApproveConsentMutation(currentUser.userId)
+  const revokeMutation = useRevokeConsentMutation()
   const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const isTableLoading = consentListQuery.isPending || consentListQuery.isPlaceholderData
 

@@ -174,13 +174,13 @@ export default function AdminConsentFilters({
           </Box>
         </Tooltip>
 
-        <Tooltip title={!draft.userId ? t('adminConsents.filters.relationHelperText') : ''}>
+        <Tooltip
+          title={
+            !draft.userId && !filters.consentId ? t('adminConsents.filters.relationHelperText') : ''
+          }
+        >
           <Box component="span" sx={{ width: { xs: '100%', sm: 170 }, flexShrink: 0 }}>
-            <FormControl
-              size="small"
-              fullWidth
-              disabled={!draft.userId || Boolean(filters.consentId)}
-            >
+            <FormControl size="small" fullWidth disabled={Boolean(filters.consentId)}>
               <InputLabel id="admin-consent-relation-label">
                 {t('adminConsents.filters.relation')}
               </InputLabel>

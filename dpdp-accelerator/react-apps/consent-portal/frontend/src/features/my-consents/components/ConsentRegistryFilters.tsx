@@ -94,6 +94,7 @@ function ConsentRegistryFilters({
 
         <FormControl
           size="small"
+          disabled={filters.state === 'PENDING'}
           sx={{ width: { xs: '100%', sm: 220 }, height: MAIN_FILTER_HEIGHT, flexShrink: 0 }}
         >
           <InputLabel id="consent-state-label">{t('consentRegistry.filters.state')}</InputLabel>
@@ -122,6 +123,7 @@ function ConsentRegistryFilters({
 
         <FormControl
           size="small"
+          disabled={filters.state === 'PENDING'}
           sx={{ width: { xs: '100%', sm: 200 }, height: MAIN_FILTER_HEIGHT, flexShrink: 0 }}
         >
           <InputLabel id="consent-relation-label">

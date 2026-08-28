@@ -113,12 +113,16 @@ function useConsentLifecycleMutation(
   })
 }
 
-export function useApproveConsentMutation(): UseMutationResult<unknown, Error, string> {
-  return useConsentLifecycleMutation(approveMyConsent)
+export function useApproveConsentMutation(
+  currentUserId: string,
+): UseMutationResult<unknown, Error, string> {
+  return useConsentLifecycleMutation((consentID) => approveMyConsent(consentID, currentUserId))
 }
 
-export function useRejectConsentMutation(): UseMutationResult<unknown, Error, string> {
-  return useConsentLifecycleMutation(rejectMyConsent)
+export function useRejectConsentMutation(
+  currentUserId: string,
+): UseMutationResult<unknown, Error, string> {
+  return useConsentLifecycleMutation((consentID) => rejectMyConsent(consentID, currentUserId))
 }
 
 export function useRevokeConsentMutation(): UseMutationResult<unknown, Error, string> {

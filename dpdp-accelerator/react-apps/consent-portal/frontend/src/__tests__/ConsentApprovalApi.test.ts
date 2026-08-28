@@ -154,18 +154,70 @@ describe('self-service consent API', () => {
     expect(JSON.parse(String(authorize.data))).toEqual({ state: 'REJECTED' })
   })
 
-  it('refuses to authorize a consent that is no longer pending', async () => {
-    transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', 'REVOKED') })
+  it.each(['REVOKED', 'EXPIRED'])(
+    'refuses to approve a %s consent - a withdrawal or lapse stays final',
+    async (state) => {
+      transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', state) })
 
-    // A withdrawal has to stay final: the server itself would allow this.
-    const failure = approveMyConsent('db1f6e7a')
-    await expect(failure).rejects.toBeInstanceOf(APIError)
+      // The server itself would allow this; the client keeps it final regardless.
+      const failure = approveMyConsent('db1f6e7a')
+      await expect(failure).rejects.toBeInstanceOf(APIError)
+      await expect(failure).rejects.toMatchObject({
+        code: 'INVALID_CONSENT_STATE',
+        status: 409,
+        message: `This consent cannot be approved right now; it is ${state}.`,
+      })
+      expect(sentRequests().every((request) => request.method === 'GET')).toBe(true)
+    },
+  )
+
+  it('refuses to reject an already-rejected consent', async () => {
+    transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', 'REJECTED') })
+
+    const failure = rejectMyConsent('db1f6e7a')
     await expect(failure).rejects.toMatchObject({
       code: 'INVALID_CONSENT_STATE',
       status: 409,
-      message: 'Only a pending consent can be approved or rejected; this consent is REVOKED.',
+      message: 'This consent cannot be rejected right now; it is REJECTED.',
     })
     expect(sentRequests().every((request) => request.method === 'GET')).toBe(true)
+  })
+
+  it('allows approving a previously rejected consent - a rejection is reconsiderable', async () => {
+    transport.httpRequest
+      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'REJECTED') })
+      .mockResolvedValueOnce({ status: 204, data: undefined })
+
+    await expect(approveMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
+
+    const [, authorize] = sentRequests()
+    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'APPROVED' })
+  })
+
+  it("allows rejecting an active consent - withdraws just the caller's own approval", async () => {
+    transport.httpRequest
+      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'ACTIVE') })
+      .mockResolvedValueOnce({ status: 204, data: undefined })
+
+    await expect(rejectMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
+
+    const [, authorize] = sentRequests()
+    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'REJECTED' })
+  })
+
+  it("gates on the given authorizer's own decision, not the aggregate state", async () => {
+    transport.httpRequest.mockResolvedValue({
+      status: 200,
+      data: {
+        ...detail('c-1', 'PENDING'),
+        authorizations: [{ userId: 'bob', state: 'APPROVED', updatedTime: 1 }],
+      },
+    })
+
+    // The consent is still PENDING overall (waiting on other authorizers),
+    // but bob already approved, so bob cannot approve again.
+    const failure = approveMyConsent('c-1', 'bob')
+    await expect(failure).rejects.toMatchObject({ code: 'INVALID_CONSENT_STATE' })
   })
 
   it('revokes consent with POST and no request body', async () => {
