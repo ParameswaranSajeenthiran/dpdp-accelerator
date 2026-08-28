@@ -18,11 +18,9 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.common.config.ConfigProvider;
 
 import java.io.IOException;
@@ -31,13 +29,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 class AttachmentPolicyTest {
 
-    @AfterEach
+    @AfterMethod
     void resetConfigProvider() {
         ConfigProvider.resetForTesting();
         System.clearProperty("deployment.config.path");
@@ -52,13 +50,17 @@ class AttachmentPolicyTest {
         ConfigProvider.resetForTesting();
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "application/pdf",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "image/png",
-            "image/jpeg"
-    })
+    @DataProvider(name = "documentedContentTypes")
+    Object[][] documentedContentTypes() {
+        return new Object[][] {
+                { "application/pdf" },
+                { "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+                { "image/png" },
+                { "image/jpeg" }
+        };
+    }
+
+    @Test(dataProvider = "documentedContentTypes")
     void allowsEachDocumentedContentType(String contentType) {
         assertTrue(AttachmentPolicy.isAllowedContentType(contentType));
     }
@@ -80,14 +82,16 @@ class AttachmentPolicyTest {
     }
 
     @Test
-    void usesConfiguredMaxSizeWhenDeploymentTomlSetsIt(@TempDir Path tempDir) throws IOException {
+    void usesConfiguredMaxSizeWhenDeploymentTomlSetsIt() throws IOException {
+        Path tempDir = Files.createTempDirectory("attachment-policy-test");
         useDeploymentToml(tempDir, "2048");
 
         assertEquals(2048L, AttachmentPolicy.getMaxSizeBytes());
     }
 
     @Test
-    void fallsBackToDefaultWhenConfiguredValueIsNotAValidNumber(@TempDir Path tempDir) throws IOException {
+    void fallsBackToDefaultWhenConfiguredValueIsNotAValidNumber() throws IOException {
+        Path tempDir = Files.createTempDirectory("attachment-policy-test");
         useDeploymentToml(tempDir, "not-a-number");
 
         assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());

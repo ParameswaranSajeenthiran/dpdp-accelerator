@@ -19,14 +19,13 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
@@ -44,9 +43,9 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -58,7 +57,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintServiceImplTest {
 
     @Mock
@@ -68,7 +66,7 @@ class ComplaintServiceImplTest {
 
     private ComplaintServiceImpl complaintService;
 
-    @BeforeAll
+    @BeforeClass
     static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:complaint_service_test;DB_CLOSE_DELAY=-1");
@@ -77,7 +75,7 @@ class ComplaintServiceImplTest {
         setManagerDataSource(dataSource);
     }
 
-    @AfterAll
+    @AfterClass
     static void clearPersistenceManagerDataSource() throws Exception {
         setManagerDataSource(null);
     }
@@ -88,14 +86,15 @@ class ComplaintServiceImplTest {
         field.set(null, dataSource);
     }
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
     }
 
     @Test
     void createComplaintThrowsWhenOrgIdIsMissing() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint(" ", "user1", "User One", "DATA_BREACH", "desc"));
 
         assertEquals("CO-4001", ex.getCode());
@@ -104,7 +103,7 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintThrowsWhenUserIdIsMissing() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", " ", "User One", "DATA_BREACH", "desc"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -113,7 +112,7 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintThrowsWhenSubjectCategoryIsMissing() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", null, "desc"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -121,7 +120,7 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintThrowsWhenSubjectCategoryIsUnknown() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "NOT_A_REAL_CATEGORY", "desc"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -130,7 +129,7 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintThrowsWhenDescriptionIsMissing() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", " "));
 
         assertEquals("CO-4002", ex.getCode());
@@ -140,7 +139,7 @@ class ComplaintServiceImplTest {
     void createComplaintThrowsWhenDescriptionExceedsMaxLength() {
         String tooLong = "a".repeat(5001);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", tooLong));
 
         assertEquals("CO-4002", ex.getCode());
@@ -172,7 +171,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.countByReferenceIdPrefix(anyString(), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc"));
 
         assertEquals("CO-5000", ex.getCode());
@@ -199,7 +198,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.addComplaint(any(Complaint.class)))
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")));
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc"));
 
         assertEquals("CO-5000", ex.getCode());
@@ -227,7 +226,7 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintThrowsWhenIntakeActorRoleIsInvalid() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc", "officer1",
                         "USER"));
 
@@ -246,9 +245,9 @@ class ComplaintServiceImplTest {
 
     @Test
     void requireComplaintThrows404WhenIdOrOrgIsBlank() {
-        ComplaintException ex1 = assertThrows(ComplaintException.class,
+        ComplaintException ex1 = expectThrows(ComplaintException.class,
                 () -> complaintService.requireComplaint("org1", " "));
-        ComplaintException ex2 = assertThrows(ComplaintException.class,
+        ComplaintException ex2 = expectThrows(ComplaintException.class,
                 () -> complaintService.requireComplaint(" ", "c1"));
 
         assertEquals("CO-4040", ex1.getCode());
@@ -261,7 +260,7 @@ class ComplaintServiceImplTest {
     void requireComplaintThrows404WhenDaoReturnsEmpty() {
         when(complaintDAO.getComplaintById("c1", "org1")).thenReturn(Optional.empty());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.requireComplaint("org1", "c1"));
 
         assertEquals("CO-4040", ex.getCode());
@@ -326,7 +325,7 @@ class ComplaintServiceImplTest {
     void listComplaintsThrowsWhenStatusFilterIsNotARecognizedEnumValue() {
         int[] totalOut = new int[1];
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.listComplaints("org1", "OPEN_TYPO", null, null, 10, 0, null, totalOut));
 
         assertEquals("CO-4002", ex.getCode());
@@ -337,7 +336,7 @@ class ComplaintServiceImplTest {
     void listComplaintsThrowsWhenPriorityFilterIsNotARecognizedEnumValue() {
         int[] totalOut = new int[1];
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.listComplaints("org1", null, "URGENT", null, 10, 0, null, totalOut));
 
         assertEquals("CO-4002", ex.getCode());

@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>org.wso2.dpdp.common</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>WSO2 DPDP Accelerator - Common</name>
     <description>
@@ -61,5 +61,32 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Export-Package>
+                            org.wso2.dpdp.common.util;version="${project.version}",
+                            org.wso2.dpdp.common.config;version="${project.version}"
+                        </Export-Package>
+                        <!-- tomlj has no OSGi bundle presence anywhere in the IS runtime (unlike
+                             axiom/carbon-utils, which the platform already ships), so it and its
+                             transitive runtime deps are embedded directly rather than imported. -->
+                        <Embed-Dependency>tomlj,antlr4-runtime,checker-qual;scope=compile|runtime;inline=true</Embed-Dependency>
+                        <Import-Package>
+                            org.apache.commons.logging;version="${commons.logging.imp.pkg.version.range}",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

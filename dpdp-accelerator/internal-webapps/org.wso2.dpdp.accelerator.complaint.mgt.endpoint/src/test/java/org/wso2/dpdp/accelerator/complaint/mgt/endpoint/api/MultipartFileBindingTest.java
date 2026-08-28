@@ -27,9 +27,9 @@ import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 import org.apache.cxf.jaxrs.provider.MultipartProvider;
 import org.apache.cxf.endpoint.Server;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.testng.Assert.assertEquals;
 
 /**
  * ComplaintAttachmentEndpoint#uploadComplaintAttachment and
@@ -86,7 +86,7 @@ class MultipartFileBindingTest {
 
     private Server server;
 
-    @BeforeEach
+    @BeforeMethod
     void startServer() {
         JAXRSServerFactoryBean factory = new JAXRSServerFactoryBean();
         factory.setAddress(ADDRESS);
@@ -97,7 +97,7 @@ class MultipartFileBindingTest {
         server = factory.create();
     }
 
-    @AfterEach
+    @AfterMethod
     void stopServer() {
         server.destroy();
     }

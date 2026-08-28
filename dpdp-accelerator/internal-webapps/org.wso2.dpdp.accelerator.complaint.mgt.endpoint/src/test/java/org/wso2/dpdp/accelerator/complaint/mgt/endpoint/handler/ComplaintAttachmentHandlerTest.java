@@ -20,14 +20,12 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
@@ -50,10 +48,10 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -61,7 +59,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintAttachmentHandlerTest {
 
     private static final String ORG_ID = DAOConstants.DEFAULT_ORG_ID;
@@ -77,12 +74,13 @@ class ComplaintAttachmentHandlerTest {
 
     private ComplaintAttachmentHandler handler;
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         handler = new ComplaintAttachmentHandler(complaintService, complaintAttachmentService);
     }
 
-    @AfterEach
+    @AfterMethod
     void tearDown() {
         System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
         ConfigProvider.resetForTesting();
@@ -177,7 +175,7 @@ class ComplaintAttachmentHandlerTest {
             parts.add(mock(Attachment.class));
         }
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", parts, true, "officer1", "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -191,8 +189,9 @@ class ComplaintAttachmentHandlerTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSizeWithoutBufferingItWhole(@TempDir Path tempDir)
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSizeWithoutBufferingItWhole()
             throws IOException {
+        Path tempDir = Files.createTempDirectory("complaint-attachment-handler-test");
         useMaxAttachmentSizeBytes(tempDir, "5");
         byte[] oversized = "this is way more than five bytes".getBytes();
         when(filePart.getDataHandler()).thenReturn(dataHandler);
@@ -200,7 +199,7 @@ class ComplaintAttachmentHandlerTest {
         when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
         when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"big.pdf\""));
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                         "Officer One"));
 

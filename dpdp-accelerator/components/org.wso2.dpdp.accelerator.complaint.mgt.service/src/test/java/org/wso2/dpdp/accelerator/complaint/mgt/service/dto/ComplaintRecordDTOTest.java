@@ -18,13 +18,13 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.dto;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 class ComplaintRecordDTOTest {
 

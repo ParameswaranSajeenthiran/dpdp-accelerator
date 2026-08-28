@@ -18,14 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 
 class ComplaintExceptionMapperTest {
 
@@ -69,6 +70,6 @@ class ComplaintExceptionMapperTest {
         ErrorEnvelope secondEnvelope = (ErrorEnvelope) second.getEntity();
         assertNotNull(firstEnvelope.getTraceId());
         assertNotNull(secondEnvelope.getTraceId());
-        org.junit.jupiter.api.Assertions.assertNotEquals(firstEnvelope.getTraceId(), secondEnvelope.getTraceId());
+        assertNotEquals(firstEnvelope.getTraceId(), secondEnvelope.getTraceId());
     }
 }

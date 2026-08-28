@@ -18,11 +18,10 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
@@ -32,15 +31,14 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageReque
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.expectThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintCommentHandlerTest {
 
     private static final String ORG_ID = DAOConstants.DEFAULT_ORG_ID;
@@ -52,8 +50,9 @@ class ComplaintCommentHandlerTest {
 
     private ComplaintCommentHandler handler;
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         handler = new ComplaintCommentHandler(complaintService, complaintEventService);
     }
 
@@ -79,7 +78,7 @@ class ComplaintCommentHandlerTest {
     void addCommentThrowsWhenRequestIsNull() {
         // isPublic is a required field per the spec - a null request (or a request missing
         // isPublic) must be rejected, not silently treated as isPublic=false (an internal note).
-        assertThrows(ComplaintException.class,
+        expectThrows(ComplaintException.class,
                 () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", null));
 
         verifyNoInteractions(complaintEventService);
@@ -90,7 +89,7 @@ class ComplaintCommentHandlerTest {
         ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
         request.setMessage("hello");
 
-        assertThrows(ComplaintException.class,
+        expectThrows(ComplaintException.class,
                 () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request));
 
         verifyNoInteractions(complaintEventService);

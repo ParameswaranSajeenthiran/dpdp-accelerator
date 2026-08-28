@@ -18,10 +18,10 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -33,12 +33,11 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 
 class ComplaintAttachmentDAOImplTest {
 
@@ -56,17 +55,17 @@ class ComplaintAttachmentDAOImplTest {
 
     private final ComplaintAttachmentDAOImpl dao = new ComplaintAttachmentDAOImpl();
 
-    @BeforeAll
+    @BeforeClass
     static void setUpDatabase() throws SQLException {
         H2TestDbSupport.setUpDatabase("complaint_attachment_dao_test", CREATE_TABLE);
     }
 
-    @AfterAll
+    @AfterClass
     static void tearDownDatabase() {
         H2TestDbSupport.tearDownDatabase();
     }
 
-    @BeforeEach
+    @BeforeMethod
     void clearTable() throws SQLException {
         Connection conn = DatabaseUtils.getDBConnection();
         try (Statement stmt = conn.createStatement()) {
@@ -92,7 +91,7 @@ class ComplaintAttachmentDAOImplTest {
         assertTrue(fetched.isPresent());
         assertNull(fetched.get().getComplaintEventId());
         assertFalse(fetched.get().isPublic());
-        assertArrayEquals(new byte[]{1, 2, 3}, fetched.get().getFileData());
+        assertEquals(new byte[]{1, 2, 3}, fetched.get().getFileData());
     }
 
     @Test
@@ -121,7 +120,7 @@ class ComplaintAttachmentDAOImplTest {
     void addAttachmentThrowsOnDuplicateAttachmentIdInsteadOfReturningFalse() {
         dao.addAttachment(sampleAttachment("a1", "org1", "c1", new byte[]{1}, true, 100L));
 
-        assertThrows(ComplaintDAOException.class,
+        expectThrows(ComplaintDAOException.class,
                 () -> dao.addAttachment(sampleAttachment("a1", "org1", "c1", new byte[]{2}, true, 200L)));
     }
 

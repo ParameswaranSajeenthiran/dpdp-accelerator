@@ -19,13 +19,12 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
@@ -36,11 +35,10 @@ import java.io.IOException;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertSame;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintAttachmentEndpointTest {
 
     private static final String ORG_ID = DAOConstants.DEFAULT_ORG_ID;
@@ -52,20 +50,21 @@ class ComplaintAttachmentEndpointTest {
 
     private ComplaintAttachmentEndpoint endpoint;
 
-    @BeforeAll
+    @BeforeClass
     static void configureCarbonEnvironment() throws IOException {
         CarbonContextTestSupport.configureMinimalCarbonEnvironment();
     }
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         endpoint = new ComplaintAttachmentEndpoint(attachmentHandler);
         PrivilegedCarbonContext.startTenantFlow();
         PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("officer1");
         PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(ORG_ID);
     }
 
-    @AfterEach
+    @AfterMethod
     void tearDown() {
         PrivilegedCarbonContext.endTenantFlow();
     }

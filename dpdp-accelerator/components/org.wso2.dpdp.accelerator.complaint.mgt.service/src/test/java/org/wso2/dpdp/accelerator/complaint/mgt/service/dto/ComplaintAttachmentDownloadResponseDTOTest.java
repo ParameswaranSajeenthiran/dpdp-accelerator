@@ -18,12 +18,12 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.dto;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 
 import java.util.Base64;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 class ComplaintAttachmentDownloadResponseDTOTest {
 

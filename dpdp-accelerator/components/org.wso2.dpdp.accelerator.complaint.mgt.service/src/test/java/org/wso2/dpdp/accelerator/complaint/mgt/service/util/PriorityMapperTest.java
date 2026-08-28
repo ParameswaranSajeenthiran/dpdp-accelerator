@@ -18,16 +18,16 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 
 class PriorityMapperTest {
 
@@ -48,7 +48,7 @@ class PriorityMapperTest {
         return defaults;
     }
 
-    @AfterEach
+    @AfterMethod
     void restoreDefaultMapping() {
         // PriorityMapper.configure() replaces its static mapping wholesale with no reset hook,
         // so tests that reconfigure it must restore the defaults to avoid leaking state into
@@ -91,7 +91,7 @@ class PriorityMapperTest {
 
     @Test
     void getCategoryPrioritiesReturnsAnUnmodifiableView() {
-        assertThrows(UnsupportedOperationException.class,
+        expectThrows(UnsupportedOperationException.class,
                 () -> PriorityMapper.getCategoryPriorities().put("X", "LOW"));
     }
 
