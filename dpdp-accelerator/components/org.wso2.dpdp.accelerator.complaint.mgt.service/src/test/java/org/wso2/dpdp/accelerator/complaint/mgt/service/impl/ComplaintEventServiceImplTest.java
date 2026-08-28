@@ -194,6 +194,8 @@ class ComplaintEventServiceImplTest {
         ComplaintCommentCreateResponseDTO event =
                 eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
+        assertEquals(atLimit, event.getComment());
+        verify(notificationClient).notifyCommentAdded(complaint, event);
         assertEquals(atLimit, event.getMessage());
         assertEquals(atLimit, event.getMessage());
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
@@ -280,6 +282,10 @@ class ComplaintEventServiceImplTest {
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(notificationClient).notifyCommentAdded(eq(complaint), notifiedEventCaptor.capture());
         assertEquals(event.getId(), notifiedEventCaptor.getValue().getComplaintEventId());
+        // The complaint was fetched with its pre-transition status ("OPEN") - the notification
+        // must not carry that stale value now that the transition has actually landed.
+        assertEquals("IN_PROGRESS", complaint.getStatus());
+        verify(notificationClient).notifyCommentAdded(complaint, event);
     }
 
     @Test

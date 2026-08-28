@@ -168,6 +168,18 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             // to the citizen in the timeline - notifying them about it would leak its existence.
             notificationClient.notifyCommentAdded(complaint, event);
         }
+        return event;
+        if (hasToStatus) {
+            // complaint was fetched before the DB status update above; without this, the
+            // notification would carry the complaint's pre-transition status.
+            complaint.setStatus(toStatus);
+            complaint.setUpdatedTime(now);
+        }
+        if (isPublic) {
+            // An internal note (isPublic=false, officer-only per the check above) is never shown
+            // to the citizen in the timeline - notifying them about it would leak its existence.
+            notificationClient.notifyCommentAdded(complaint, event);
+        }
         return ComplaintCommentCreateResponseDTO.from(event);
     }
 

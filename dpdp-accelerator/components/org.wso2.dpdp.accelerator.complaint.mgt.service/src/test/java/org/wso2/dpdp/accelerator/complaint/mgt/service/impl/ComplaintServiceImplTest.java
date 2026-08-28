@@ -96,6 +96,7 @@ class ComplaintServiceImplTest {
         complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO, notificationClient);
     }
 
+
     @Test
     void createComplaintThrowsWhenOrgIdIsMissing() {
         ComplaintException ex = assertThrows(ComplaintException.class,
