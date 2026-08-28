@@ -51,6 +51,11 @@
         {% else %}
         <StatutoryDuePeriodDays>90</StatutoryDuePeriodDays>
         {% endif %}
+        {% if dpdp_accelerator.complaints.attachment_max_size_bytes is defined %}
+        <AttachmentMaxSizeBytes>{{dpdp_accelerator.complaints.attachment_max_size_bytes}}</AttachmentMaxSizeBytes>
+        {% else %}
+        <AttachmentMaxSizeBytes>10485760</AttachmentMaxSizeBytes>
+        {% endif %}
     </Complaints>
     <EventNotifications>
         {% if dpdp_accelerator.event_notifications.webhook.thread_pool_size is defined %}

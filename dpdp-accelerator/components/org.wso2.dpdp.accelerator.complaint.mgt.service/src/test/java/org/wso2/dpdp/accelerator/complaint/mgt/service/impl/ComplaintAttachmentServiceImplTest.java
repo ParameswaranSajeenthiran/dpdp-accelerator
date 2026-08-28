@@ -18,12 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -33,13 +36,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.common.config.ConfigProvider;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +63,19 @@ class ComplaintAttachmentServiceImplTest {
 
     private ComplaintAttachmentServiceImpl attachmentService;
 
+    @BeforeClass
+    void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so a test running outside a live Carbon environment
+        // must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterClass
+    void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
+
     @BeforeMethod
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -74,21 +85,10 @@ class ComplaintAttachmentServiceImplTest {
     @AfterMethod
     void tearDown() {
         System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
     }
 
     private UploadedFile pdfFile(String name, int size) {
         return new UploadedFile(name, "application/pdf", new byte[size]);
-    }
-
-    private void useMaxAttachmentSizeBytes(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
     }
 
     // ---- uploadComplaintAttachments ----
@@ -146,13 +146,15 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize() throws IOException {
-        Path tempDir = Files.createTempDirectory("complaint-attachment-service-test");
-        useMaxAttachmentSizeBytes(tempDir, "5");
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize() {
+        // AttachmentPolicy.getMaxSizeBytes() defaults to 10 MB outside a real Carbon environment
+        // (no dpdp-accelerator.xml on disk) - see AttachmentPolicyTest for coverage of the
+        // configured-value path itself.
+        int overTheDefaultLimit = 10 * 1024 * 1024 + 1;
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
-                        List.of(pdfFile("big.pdf", 10)), true, "user1", "User One", "USER"));
+                        List.of(pdfFile("big.pdf", overTheDefaultLimit)), true, "user1", "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
     }

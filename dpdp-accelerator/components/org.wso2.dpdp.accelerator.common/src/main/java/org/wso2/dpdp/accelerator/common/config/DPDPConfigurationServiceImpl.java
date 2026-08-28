@@ -83,6 +83,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public long getComplaintsAttachmentMaxSizeBytes() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES
+                : configParser.getComplaintsAttachmentMaxSizeBytes();
+    }
+
+    @Override
     public int getEventNotificationThreadPoolSize() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE

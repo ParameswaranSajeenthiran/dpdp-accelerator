@@ -237,6 +237,12 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS);
     }
 
+    public long getComplaintsAttachmentMaxSizeBytes() {
+
+        return getNonNegativeLong(DPDPCommonConstants.COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES);
+    }
+
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)

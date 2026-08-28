@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
@@ -28,7 +29,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryConstants;
-import org.wso2.dpdp.common.util.LogSanitizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

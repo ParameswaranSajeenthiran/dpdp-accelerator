@@ -28,6 +28,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAOProvider;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
@@ -110,6 +111,24 @@ public class ComplaintServiceComponent {
         if (dataHolder.getDaoProvider() == daoProvider) {
             dataHolder.setDaoProvider(null);
         }
+    }
+
+    @Reference(
+            service = DPDPConfigurationService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetConfigurationService"
+    )
+    protected void setConfigurationService(DPDPConfigurationService configurationService) {
+
+        LOG.debug("Setting the DPDP Configuration Service.");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(configurationService);
+    }
+
+    protected void unsetConfigurationService(DPDPConfigurationService configurationService) {
+
+        LOG.debug("Unsetting the DPDP Configuration Service.");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
     }
 
     private static void unregister(ServiceRegistration<?> registration) {

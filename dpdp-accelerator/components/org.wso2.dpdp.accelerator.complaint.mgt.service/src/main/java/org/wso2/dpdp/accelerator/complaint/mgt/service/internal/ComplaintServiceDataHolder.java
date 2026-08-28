@@ -18,10 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.internal;
 
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAOProvider;
 
 /**
- * Holds the external OSGi service this bundle depends on, mirroring
+ * Holds the external OSGi services this bundle depends on, mirroring
  * {@code EventNotificationDataHolder} in the event-notifications module.
  */
 public final class ComplaintServiceDataHolder {
@@ -29,6 +30,7 @@ public final class ComplaintServiceDataHolder {
     private static final ComplaintServiceDataHolder INSTANCE = new ComplaintServiceDataHolder();
 
     private volatile ComplaintDAOProvider daoProvider;
+    private volatile DPDPConfigurationService configurationService;
 
     private ComplaintServiceDataHolder() {
     }
@@ -43,5 +45,13 @@ public final class ComplaintServiceDataHolder {
 
     public void setDaoProvider(ComplaintDAOProvider daoProvider) {
         this.daoProvider = daoProvider;
+    }
+
+    public DPDPConfigurationService getConfigurationService() {
+        return configurationService;
+    }
+
+    public void setConfigurationService(DPDPConfigurationService configurationService) {
+        this.configurationService = configurationService;
     }
 }
