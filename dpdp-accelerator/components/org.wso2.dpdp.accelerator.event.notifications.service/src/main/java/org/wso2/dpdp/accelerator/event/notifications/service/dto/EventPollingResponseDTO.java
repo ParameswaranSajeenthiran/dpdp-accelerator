@@ -18,28 +18,40 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /** Response body for short polling. */
 public class EventPollingResponseDTO {
 
-    private List<EventPollingEventDTO> events = new ArrayList<>();
+    private boolean moreAvailable;
+    private Map<String, String> sets = new LinkedHashMap<>();
 
     public EventPollingResponseDTO() {
     }
 
-    public EventPollingResponseDTO(List<EventPollingEventDTO> events) {
-        this.events = events;
+    public EventPollingResponseDTO(boolean moreAvailable, Map<String, String> sets) {
+        this.moreAvailable = moreAvailable;
+        this.sets = sets;
     }
 
-    public List<EventPollingEventDTO> getEvents() {
+    public boolean isMoreAvailable() {
 
-        return events;
+        return moreAvailable;
     }
 
-    public void setEvents(List<EventPollingEventDTO> events) {
+    public void setMoreAvailable(boolean moreAvailable) {
 
-        this.events = events;
+        this.moreAvailable = moreAvailable;
+    }
+
+    public Map<String, String> getSets() {
+
+        return sets;
+    }
+
+    public void setSets(Map<String, String> sets) {
+
+        this.sets = sets;
     }
 }

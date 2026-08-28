@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
@@ -32,20 +33,23 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingEventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.PollSetErrorDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryCompletionRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
@@ -91,6 +95,8 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     private DeliveryAckDAO deliveryAckDAO;
     private SubscriptionDAO subscriptionDAO;
+    private DPDPConfigurationService configurationService;
+    private SignedEventPayloadFactory signedEventPayloadFactory;
 
     public EventPublishServiceImpl() {
     }
@@ -108,57 +114,119 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO) {
+        this(eventDAO, topicDAO, eventFanOutService, deliveryDAO, deliveryAckDAO, subscriptionDAO, null, null);
+    }
+
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
+            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO,
+            DPDPConfigurationService configurationService, SignedEventPayloadFactory signedEventPayloadFactory) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
         this.eventFanOutService = eventFanOutService;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
         this.subscriptionDAO = subscriptionDAO;
+        this.configurationService = configurationService;
+        this.signedEventPayloadFactory = signedEventPayloadFactory;
     }
 
     @Override
-    public EventPollingResponseDTO pollEvents(String orgId, String groupId, EventPollingRequestDTO request) {
-        if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
-        }
-        if (groupId == null || groupId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG, 400);
+    public EventPollingResponseDTO pollEvents(String orgId, String groupId, String subscriptionId,
+            String requestBody, String eventSignature) {
+        String safeOrgId = requireValue(orgId, EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG);
+        String safeGroupId = requireValue(groupId, EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG);
+        String safeSubscriptionId = requireValue(subscriptionId,
+                EventNotificationServiceConstants.SUBSCRIPTION_ID_MISSING_ERROR_MSG);
+        if (configurationService == null || signedEventPayloadFactory == null || subscriptionDAO == null) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                    EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
+                    "Polling services are not initialized.", 500);
         }
 
-        EventPollingRequestDTO effectiveRequest = request == null ? new EventPollingRequestDTO() : request;
-        List<String> ackIds = effectiveRequest.getAck() == null ? Collections.emptyList() : effectiveRequest.getAck();
-        Map<String, String> errors = effectiveRequest.getErrors() == null
-                ? Collections.emptyMap() : effectiveRequest.getErrors();
-        Set<String> normalizedAckIds = normalizeDeliveryIds(ackIds);
-        Map<String, String> normalizedErrors = normalizeErrorDetails(errors);
-        Set<String> normalizedErrorIds = normalizedErrors.keySet();
-        if (!Collections.disjoint(normalizedAckIds, normalizedErrorIds)) {
+        Subscription subscription = subscriptionDAO.getSubscriptionById(safeSubscriptionId, safeOrgId)
+                .filter(value -> safeOrgId.equalsIgnoreCase(value.getOrgId()))
+                .filter(value -> safeGroupId.equalsIgnoreCase(value.getGroupId()))
+                .filter(value -> DeliveryMode.POLL.getValue().equalsIgnoreCase(value.getDeliveryMode()))
+                .filter(value -> "active".equalsIgnoreCase(value.getStatus()))
+                .orElseThrow(() -> new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
+                        EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
+                        EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404));
+        String sharedSecret = subscription.getSharedSecret();
+        if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                    EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                    "The polling subscription does not have a shared secret.", 409);
+        }
+
+        String rawBody = requestBody == null || requestBody.trim().isEmpty() ? "{}" : requestBody;
+        if (configurationService.isEventNotificationPollingRequestHmacValidationEnabled()
+                && !HmacSigner.verify(sharedSecret, rawBody, eventSignature)) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
+                    EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
+                    EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
+        }
+
+        EventPollingRequestDTO request;
+        try {
+            request = objectMapper.readValue(rawBody, EventPollingRequestDTO.class);
+        } catch (JsonProcessingException e) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "Polling request body is malformed.", 400);
+        }
+        if (request.getOrgId() != null && !safeOrgId.equalsIgnoreCase(request.getOrgId().trim())) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "The request organization does not match the tenant context.", 400);
+        }
+
+        Set<String> ackIds = normalizeDeliveryIds(
+                request.getAck() == null ? Collections.emptyList() : request.getAck());
+        Map<String, PollDeliveryError> errors = normalizePollErrors(request.getSetErrs());
+        if (!Collections.disjoint(ackIds, errors.keySet())) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.POLL_ACK_ERROR_OVERLAP_ERROR_MSG, 400);
         }
-        deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(orgId.trim(), groupId.trim(),
-                new ArrayList<>(normalizedAckIds), normalizedErrors);
-
-        // returnImmediately is accepted for OB request compatibility. DPDP currently implements short polling,
-        // so false does not block the request or introduce long-polling behavior.
-        int maxEvents = EventNotificationParameterUtils.normalizeLimit(effectiveRequest.getMaxEvents());
-        List<EventPollingEventDTO> events = new ArrayList<>();
-        for (PollDelivery delivery : deliveryDAO.getPendingPollDeliveries(orgId.trim(), groupId.trim(), maxEvents)) {
-            Optional<Event> eventOpt = eventDAO.getEventById(delivery.getEventId(), orgId.trim());
-            if (eventOpt.isEmpty()) {
-                continue;
-            }
-            Event event = eventOpt.get();
-            events.add(new EventPollingEventDTO(delivery.getDeliveryId(), delivery.getEventId(),
-                    delivery.getSubscriptionId(), event.getTopic(), event.getPayload(), event.getPurposes(),
-                    event.getCreatedAt()));
+        boolean returnImmediately = request.getReturnImmediately() == null
+                ? configurationService.isEventNotificationPollingDefaultReturnImmediately()
+                : request.getReturnImmediately();
+        if (!returnImmediately) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "Long polling is not supported; returnImmediately must be true.", 400);
         }
-        return new EventPollingResponseDTO(events);
+        int maxEvents = resolvePollingMaxEvents(request.getMaxEvents());
+
+        deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(safeOrgId, safeGroupId, safeSubscriptionId,
+                new ArrayList<>(ackIds), errors);
+        int fetchLimit = maxEvents == 0 ? 1 : maxEvents + 1;
+        List<PollDelivery> pending = deliveryDAO.getPendingPollDeliveries(
+                safeOrgId, safeGroupId, safeSubscriptionId, fetchLimit);
+        boolean moreAvailable = pending.size() > maxEvents;
+        Map<String, String> sets = new LinkedHashMap<>();
+        for (int index = 0; index < Math.min(maxEvents, pending.size()); index++) {
+            PollDelivery delivery = pending.get(index);
+            Event event = eventDAO.getEventById(delivery.getEventId(), safeOrgId)
+                    .orElseThrow(() -> new EventNotificationException(
+                            EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
+                            EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
+                            EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, 500));
+            try {
+                sets.put(delivery.getDeliveryId(), signedEventPayloadFactory.sign(
+                        safeOrgId, safeGroupId, safeSubscriptionId, delivery.getDeliveryId(),
+                        delivery.getEventId(), event.getTopic(), event.getPayload(), sharedSecret,
+                        configurationService.getEventNotificationPayloadSigningAudience()));
+            } catch (Exception e) {
+                LOG.error("Failed to sign polling delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                        + "].", e);
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                        EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
+                        "Failed to sign polling event payload.", 500);
+            }
+        }
+        return new EventPollingResponseDTO(moreAvailable, sets);
     }
 
     @Override
@@ -252,25 +320,43 @@ public class EventPublishServiceImpl implements EventPublishService {
         return normalized;
     }
 
-    private static Map<String, String> normalizeErrorDetails(Map<String, String> errors) {
+    private Map<String, PollDeliveryError> normalizePollErrors(Map<String, PollSetErrorDTO> errors) {
 
         if (errors == null || errors.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<String, String> normalized = new LinkedHashMap<>();
-        for (Map.Entry<String, String> entry : errors.entrySet()) {
+        Map<String, PollDeliveryError> normalized = new LinkedHashMap<>();
+        for (Map.Entry<String, PollSetErrorDTO> entry : errors.entrySet()) {
             if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
-                String errorDetail = entry.getValue();
-                if (errorDetail == null || errorDetail.trim().isEmpty()
-                        || errorDetail.length() > EventNotificationServiceConstants.MAX_POLL_ERROR_DETAIL_LENGTH) {
+                PollSetErrorDTO error = entry.getValue();
+                String code = error == null ? null : error.getErr();
+                String description = error == null ? null : error.getDescription();
+                if (code == null || code.trim().isEmpty() || code.trim().length()
+                        > EventNotificationServiceConstants.MAX_POLL_ERROR_CODE_LENGTH
+                        || description == null || description.trim().isEmpty()
+                        || description.trim().length()
+                        > EventNotificationServiceConstants.MAX_POLL_ERROR_DETAIL_LENGTH) {
                     throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                             EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                             EventNotificationServiceConstants.POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG, 400);
                 }
-                normalized.put(entry.getKey().trim(), errorDetail);
+                normalized.put(entry.getKey().trim(),
+                        new PollDeliveryError(code.trim(), description.trim()));
             }
         }
         return normalized;
+    }
+
+    private int resolvePollingMaxEvents(Integer requestedMaxEvents) {
+        int configuredLimit = configurationService.getEventNotificationPollingMaxEventsLimit();
+        int effectiveMaxEvents = requestedMaxEvents == null
+                ? configurationService.getEventNotificationPollingDefaultMaxEvents() : requestedMaxEvents;
+        if (effectiveMaxEvents < 0 || effectiveMaxEvents > configuredLimit) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "maxEvents must be between 0 and " + configuredLimit + ".", 400);
+        }
+        return effectiveMaxEvents;
     }
 
     @Override

@@ -78,44 +78,73 @@ For the super tenant, set `API_BASE` without the `/t/<tenant>` segment.
 
 ## 2. Poll event deliveries
 
-Polling uses short, stateless request-response semantics. A poll request may
-acknowledge previously received deliveries, report errors for previously
-received deliveries, and request pending deliveries in the same call. The
-`returnImmediately` flag is accepted for client compatibility; DPDP does not
-perform long polling, so `false` does not block the request.
+Polling uses short, stateless request-response semantics and is scoped to one
+subscription. A poll request may acknowledge previously received deliveries,
+report structured errors, and request pending deliveries in the same call.
+DPDP does not perform long polling, so `returnImmediately=false` is rejected.
 
-The acknowledgement and error maps are keyed by `deliveryId`, not `eventId`.
+The acknowledgement and `setErrs` maps are keyed by `deliveryId`, not `eventId`.
 Each delivery belongs to one subscription, so this prevents an acknowledgement
 for one subscription from updating another subscription's delivery of the same
-event. Only pending deliveries belonging to the request's organization, group,
-and poll subscriptions are updated. A delivery ID must not appear in both
-`ack` and `errors`.
+event. Only pending deliveries belonging to the request's tenant, group, and
+requested subscription are updated. A delivery ID must not appear in both
+`ack` and `setErrs`.
 
 Example:
 
 ```sh
+POLL_SUBSCRIPTION_ID="<poll-subscription-id>"
+POLL_SHARED_SECRET="<poll-subscription-shared-secret>"
+POLL_BODY='{
+  "orgId": "example.com",
+  "maxEvents": 20,
+  "returnImmediately": true,
+  "ack": ["delivery-that-succeeded"],
+  "setErrs": {
+    "delivery-that-failed": {
+      "err": "authentication_failed",
+      "description": "Unable to authenticate the signed event"
+    }
+  }
+}'
+POLL_SIGNATURE="sha256=$(printf %s "${POLL_BODY}" | openssl dgst -sha256 -hmac "${POLL_SHARED_SECRET}" -hex | awk '{print $2}')"
+
 curl -k -X POST "${API_BASE}/events/poll" \
   -H "Authorization: Bearer ${RECEIVER_ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -H "group-id: processor-1" \
-  -d '{
-    "maxEvents": 20,
-    "returnImmediately": true,
-    "ack": ["delivery-that-succeeded"],
-    "errors": {
-      "delivery-that-failed": "Unable to process the event"
-    }
-  }'
+  -H "subscription-id: ${POLL_SUBSCRIPTION_ID}" \
+  -H "event-signature: ${POLL_SIGNATURE}" \
+  -d "${POLL_BODY}"
 ```
 
-The response contains the pending event data together with its `deliveryId`.
-Clients should retain that identifier and use it in a later poll request's
-`ack` or `errors` field. Webhook consumers can submit a signed completion report
+The response contains `sets`, keyed by `deliveryId`, and `moreAvailable`. Each
+SET value is a compact RS256 JWS built with the tenant signing key using the
+same event envelope as webhook delivery. Clients should retain the key and use
+it in a later poll request's `ack` or `setErrs` field. Webhook consumers can submit a signed completion report
 to `POST /deliveries/{deliveryId}/completion` with the
 `notifications:event-deliveries:complete` scope. The request body is signed
 exactly as sent using the subscription shared secret and the
 `event-signature: sha256=<hex>` header. The body contains `completionStatus`,
 `completionEvidence`, and an optional `completedAt` epoch-millisecond value.
+
+Polling defaults and request HMAC enforcement are configured in
+`deployment.toml`:
+
+```toml
+[dpdp_accelerator.event_notifications.polling]
+default_return_immediately = true
+default_max_events = 20
+max_events_limit = 100
+request_hmac_validation_enabled = false
+```
+
+When HMAC validation is enabled, `event-signature` is mandatory and is verified
+over the exact request body using the selected poll subscription's shared
+secret. Poll subscriptions always require a shared secret because the same
+secret is used to hash the outgoing event envelope before tenant-key signing.
+An omitted `maxEvents` uses the configured default; `maxEvents=0` is an
+acknowledge-only request. Values above `max_events_limit` are rejected.
 
 ## 3. Understand the notification flow
 

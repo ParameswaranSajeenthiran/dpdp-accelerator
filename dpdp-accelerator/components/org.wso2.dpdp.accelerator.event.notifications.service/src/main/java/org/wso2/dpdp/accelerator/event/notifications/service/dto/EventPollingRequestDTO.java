@@ -25,9 +25,20 @@ import java.util.Map;
 public class EventPollingRequestDTO {
 
     private List<String> ack;
-    private Map<String, String> errors;
-    private int maxEvents;
-    private Boolean returnImmediately = true;
+    private String orgId;
+    private Map<String, PollSetErrorDTO> setErrs;
+    private Integer maxEvents;
+    private Boolean returnImmediately;
+
+    public String getOrgId() {
+
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+
+        this.orgId = orgId;
+    }
 
     public List<String> getAck() {
 
@@ -39,22 +50,22 @@ public class EventPollingRequestDTO {
         this.ack = ack;
     }
 
-    public Map<String, String> getErrors() {
+    public Map<String, PollSetErrorDTO> getSetErrs() {
 
-        return errors;
+        return setErrs;
     }
 
-    public void setErrors(Map<String, String> errors) {
+    public void setSetErrs(Map<String, PollSetErrorDTO> setErrs) {
 
-        this.errors = errors;
+        this.setErrs = setErrs;
     }
 
-    public int getMaxEvents() {
+    public Integer getMaxEvents() {
 
         return maxEvents;
     }
 
-    public void setMaxEvents(int maxEvents) {
+    public void setMaxEvents(Integer maxEvents) {
 
         this.maxEvents = maxEvents;
     }

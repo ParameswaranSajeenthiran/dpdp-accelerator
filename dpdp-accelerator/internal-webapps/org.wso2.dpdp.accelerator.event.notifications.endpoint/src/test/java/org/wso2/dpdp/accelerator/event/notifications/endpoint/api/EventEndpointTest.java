@@ -22,17 +22,20 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,17 +100,26 @@ public class EventEndpointTest {
 
     @Test
     public void pollEvents_returns200WithPollingResponse() {
-        EventPollingRequestDTO request = new EventPollingRequestDTO();
-        request.setMaxEvents(10);
-        request.setReturnImmediately(true);
-        EventPollingResponseDTO pollingResponse = new EventPollingResponseDTO(Collections.emptyList());
-        when(eventHandler.pollEvents(eq("org1"), eq("g1"), eq(request))).thenReturn(pollingResponse);
+        String request = "{\"maxEvents\":10,\"returnImmediately\":true}";
+        EventPollingResponseDTO pollingResponse = new EventPollingResponseDTO(false, Collections.emptyMap());
+        when(eventHandler.pollEvents("org1", "g1", "subscription-1", request, "sha256=test"))
+                .thenReturn(pollingResponse);
 
-        Response response = eventEndpoint.pollEvents("g1", request);
+        Response response = eventEndpoint.pollEvents("subscription-1", "g1", "sha256=test", request);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getEntity(), pollingResponse);
-        verify(eventHandler, times(1)).pollEvents("org1", "g1", request);
+        verify(eventHandler, times(1)).pollEvents("org1", "g1", "subscription-1", request, "sha256=test");
+    }
+
+    @Test
+    public void pollEventsUsesSubscriptionHeaderInsteadOfAPathParameter() throws Exception {
+        Method method = EventEndpoint.class.getMethod("pollEvents",
+                String.class, String.class, String.class, String.class);
+
+        assertEquals(method.getAnnotation(Path.class).value(), "/poll");
+        HeaderParam subscriptionHeader = (HeaderParam) method.getParameterAnnotations()[0][0];
+        assertEquals(subscriptionHeader.value(), EventNotificationEndpointConstants.SUBSCRIPTION_ID_HEADER);
     }
 
     @Test

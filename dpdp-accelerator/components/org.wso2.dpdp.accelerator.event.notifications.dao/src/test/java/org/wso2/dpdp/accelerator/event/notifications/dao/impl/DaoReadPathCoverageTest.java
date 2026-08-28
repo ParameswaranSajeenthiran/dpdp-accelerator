@@ -74,6 +74,7 @@ public class DaoReadPathCoverageTest {
         deliveries.getPendingWebhookDispatchContexts(10);
         deliveries.getStuckInFlightWebhookDispatchContexts(10, null);
         deliveries.getPendingPollDeliveries("org", "group", 10);
+        deliveries.getPendingPollDeliveries("org", "group", "subscription", 10);
         deliveries.getWebhookDeliveryAudits("delivery", "org");
         deliveries.getPollDeliveryById("delivery", "org");
         deliveries.getOrgDeliveryById("org", "delivery");
@@ -113,6 +114,8 @@ public class DaoReadPathCoverageTest {
         expectThrows(RuntimeException.class, () -> deliveries.getWebhookDeliveryById("delivery", "org"));
         expectThrows(RuntimeException.class, () -> deliveries.getPendingWebhookDispatchContexts(10));
         expectThrows(RuntimeException.class, () -> deliveries.getPendingPollDeliveries("org", "group", 10));
+        expectThrows(RuntimeException.class,
+                () -> deliveries.getPendingPollDeliveries("org", "group", "subscription", 10));
         expectThrows(RuntimeException.class, () -> deliveries.getWebhookDeliveryAudits("delivery", "org"));
         expectThrows(RuntimeException.class, () -> deliveries.getPollDeliveryById("delivery", "org"));
         expectThrows(RuntimeException.class, () -> deliveries.getOrgDeliveryById("org", "delivery"));

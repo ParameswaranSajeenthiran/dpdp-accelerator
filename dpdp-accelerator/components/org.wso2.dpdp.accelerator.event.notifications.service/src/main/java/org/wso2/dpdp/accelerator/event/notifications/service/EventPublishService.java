@@ -42,7 +42,8 @@ public interface EventPublishService {
     /**
      * Processes OB-style polling acknowledgements/errors and returns pending poll deliveries.
      */
-    EventPollingResponseDTO pollEvents(String orgId, String groupId, EventPollingRequestDTO request);
+    EventPollingResponseDTO pollEvents(String orgId, String groupId, String subscriptionId,
+            String requestBody, String eventSignature);
 
     /** Stores a signed completion report for a webhook delivery. */
     void completeDelivery(String orgId, String groupId, String deliveryId,

@@ -6,6 +6,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
@@ -21,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
@@ -108,6 +111,21 @@ public class DaoWritePathCoverageTest {
         verify(statement, times(2)).addBatch();
         verify(statement, times(2)).executeBatch();
         verify(connection, times(1)).prepareStatement(contains("DELIVERY_ID = ?"));
+    }
+
+    @Test
+    public void pollStatusUpdatesAreScopedToTheSelectedSubscriptionAndPersistStructuredErrors() throws Exception {
+        DeliveryDAOImpl dao = new DeliveryDAOImpl();
+        Map<String, PollDeliveryError> errors = new LinkedHashMap<>();
+        errors.put("delivery-2", new PollDeliveryError("processing_failed", "Unable to process event"));
+
+        dao.updatePollDeliveryStatusesByDeliveryIds(" org-1 ", " group-1 ", " subscription-1 ",
+                Collections.singletonList(" delivery-1 "), errors);
+
+        verify(statement, times(2)).addBatch();
+        verify(statement, times(2)).executeBatch();
+        verify(statement, times(2)).clearBatch();
+        verify(connection).prepareStatement(contains("SUBSCRIPTION_ID = ?"));
     }
 
     @Test

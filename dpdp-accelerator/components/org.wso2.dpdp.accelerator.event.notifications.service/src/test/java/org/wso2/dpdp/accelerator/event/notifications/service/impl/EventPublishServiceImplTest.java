@@ -39,6 +39,8 @@ import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -57,6 +59,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -83,6 +86,8 @@ public class EventPublishServiceImplTest {
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
     private SubscriptionDAO subscriptionDAO;
+    private DPDPConfigurationService configurationService;
+    private SignedEventPayloadFactory signedEventPayloadFactory;
     private EventPublishServiceImpl publishService;
     private Connection connection;
 
@@ -94,14 +99,21 @@ public class EventPublishServiceImplTest {
         deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
         deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
         subscriptionDAO = mock(SubscriptionDAO.class);
+        configurationService = mock(DPDPConfigurationService.class);
+        signedEventPayloadFactory = mock(SignedEventPayloadFactory.class);
         connection = mock(Connection.class);
         DataSource dataSource = mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(connection);
         setStaticInstance(null);
         setStaticDataSource(dataSource);
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
+        when(configurationService.isEventNotificationPollingDefaultReturnImmediately()).thenReturn(true);
+        when(configurationService.getEventNotificationPollingDefaultMaxEvents()).thenReturn(20);
+        when(configurationService.getEventNotificationPollingMaxEventsLimit()).thenReturn(100);
+        when(configurationService.getEventNotificationPayloadSigningAudience())
+                .thenReturn("dpdp-event-notifications");
         publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
-                subscriptionDAO);
+                subscriptionDAO, configurationService, signedEventPayloadFactory);
     }
 
     @AfterMethod
@@ -154,30 +166,112 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsUpdatesAckAndErrorDeliveriesAndReturnsEventPayloads() {
-        EventPollingRequestDTO request = new EventPollingRequestDTO();
-        request.setMaxEvents(10);
-        request.setAck(Collections.singletonList("ack-delivery"));
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error-delivery", "consumer failure");
-        request.setErrors(errors);
-
         Event event = new Event("event-1", "org1", "group-1", "topic-1", "{\"value\":1}",
                 new Timestamp(System.currentTimeMillis()));
         event.setTopic("accounts");
         event.setPurposes(Collections.singletonList("payments"));
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
         when(eventDAO.getEventById("event-1", "org1")).thenReturn(Optional.of(event));
-        when(deliveryDAO.getPendingPollDeliveries("org1", "group-1", 10)).thenReturn(Collections.singletonList(
+        when(deliveryDAO.getPendingPollDeliveries("org1", "group-1", "subscription-1", 11))
+                .thenReturn(Collections.singletonList(
                 new PollDelivery("pending-delivery", "subscription-1", "event-1", "pending",
                         event.getCreatedAt(), null)));
+        try {
+            when(signedEventPayloadFactory.sign(anyString(), anyString(), anyString(), anyString(), anyString(),
+                    anyString(), anyString(), anyString(), anyString())).thenReturn("header.claims.signature");
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
 
-        EventPollingResponseDTO response = publishService.pollEvents("org1", "group-1", request);
+        String body = "{\"ack\":[\"ack-delivery\"],\"setErrs\":{" +
+                "\"error-delivery\":{\"err\":\"authentication_failed\"," +
+                "\"description\":\"consumer failure\"}},\"maxEvents\":10," +
+                "\"returnImmediately\":true}";
+        when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
+        EventPollingResponseDTO response = publishService.pollEvents(
+                "org1", "group-1", "subscription-1", body,
+                "sha256=" + HmacSigner.sign("shared-secret", body));
 
         verify(deliveryDAO).updatePollDeliveryStatusesByDeliveryIds(eq("org1"), eq("group-1"),
-                eq(Collections.singletonList("ack-delivery")), eq(errors));
-        assertEquals(response.getEvents().size(), 1);
-        assertEquals(response.getEvents().get(0).getDeliveryId(), "pending-delivery");
-        assertEquals(response.getEvents().get(0).getPayload(), "{\"value\":1}");
-        assertEquals(response.getEvents().get(0).getPurposes(), Collections.singletonList("payments"));
+                eq("subscription-1"), eq(Collections.singletonList("ack-delivery")), anyMap());
+        assertEquals(response.getSets().size(), 1);
+        assertEquals(response.getSets().get("pending-delivery"), "header.claims.signature");
+        assertTrue(!response.isMoreAvailable());
+    }
+
+    @Test
+    public void pollEventsWithZeroMaxEventsOnlyAcknowledgesAndReportsAvailability() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+        when(deliveryDAO.getPendingPollDeliveries("org1", "group-1", "subscription-1", 1))
+                .thenReturn(Collections.singletonList(new PollDelivery(
+                        "pending-delivery", "subscription-1", "event-1", "pending", null, null)));
+
+        EventPollingResponseDTO response = publishService.pollEvents("org1", "group-1", "subscription-1",
+                "{\"ack\":[\"ack-delivery\"],\"maxEvents\":0,\"returnImmediately\":true}", null);
+
+        assertTrue(response.isMoreAvailable());
+        assertTrue(response.getSets().isEmpty());
+        verify(eventDAO, never()).getEventById(anyString(), anyString());
+    }
+
+    @Test
+    public void pollEventsRejectsInvalidRequestHmacBeforeUpdatingDeliveries() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+        when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
+
+        try {
+            publishService.pollEvents("org1", "group-1", "subscription-1",
+                    "{\"ack\":[\"delivery-1\"]}", "sha256=invalid");
+            fail("Expected invalid HMAC to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+        }
+        verify(deliveryDAO, never()).updatePollDeliveryStatusesByDeliveryIds(
+                anyString(), anyString(), anyString(), anyList(), anyMap());
+    }
+
+    @Test
+    public void pollEventsRejectsOrganizationThatDiffersFromTenantContext() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+
+        try {
+            publishService.pollEvents("org1", "group-1", "subscription-1",
+                    "{\"orgId\":\"another-tenant\"}", null);
+            fail("Expected tenant mismatch to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 400);
+        }
+        verify(deliveryDAO, never()).getPendingPollDeliveries(
+                anyString(), anyString(), anyString(), anyInt());
+    }
+
+    @Test
+    public void pollEventsRejectsSubscriptionFromAnotherGroup() {
+        Subscription subscription = new Subscription("subscription-1", "org1", "another-group", "topic-1",
+                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1"))
+                .thenReturn(Optional.of(subscription));
+
+        try {
+            publishService.pollEvents("org1", "group-1", "subscription-1", "{}", null);
+            fail("Expected group mismatch to be rejected");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 404);
+        }
+        verify(deliveryDAO, never()).getPendingPollDeliveries(
+                anyString(), anyString(), anyString(), anyInt());
     }
 
     @Test

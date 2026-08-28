@@ -26,6 +26,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotifica
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
@@ -392,9 +393,10 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(2, delivery.getSubscriptionId());
             ps.setString(3, delivery.getEventId());
             ps.setString(4, delivery.getStatus());
-            ps.setString(5, delivery.getErrorDetail());
-            ps.setTimestamp(6, delivery.getCreatedAt());
-            ps.setTimestamp(7, delivery.getCompletedAt());
+            ps.setString(5, delivery.getErrorCode());
+            ps.setString(6, delivery.getErrorDetail());
+            ps.setTimestamp(7, delivery.getCreatedAt());
+            ps.setTimestamp(8, delivery.getCompletedAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
@@ -418,6 +420,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                                 rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                                 rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getString(EventNotificationDBColumns.ERROR_CODE),
                                 rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
                                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                                 rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
@@ -449,6 +452,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                                 rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                                 rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getString(EventNotificationDBColumns.ERROR_CODE),
                                 rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
                                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                                 rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
@@ -458,6 +462,47 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             } catch (SQLException e) {
                 throw new EventNotificationDataAccessException(
                         String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES, groupId), e);
+            }
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    @Override
+    public List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, String subscriptionId,
+            int limit) {
+        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()
+                || subscriptionId == null || subscriptionId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Organization ID, Group ID, and Subscription ID are required for polling.");
+        }
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<PollDelivery> candidates = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    getQueries(conn).getGetPendingPollDeliveriesBySubscriptionQuery())) {
+                ps.setString(1, orgId.trim());
+                ps.setString(2, groupId.trim());
+                ps.setString(3, subscriptionId.trim());
+                ps.setInt(4, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        candidates.add(new PollDelivery(
+                                rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
+                                rs.getString(EventNotificationDBColumns.EVENT_ID),
+                                rs.getString(EventNotificationDBColumns.STATUS),
+                                rs.getString(EventNotificationDBColumns.ERROR_CODE),
+                                rs.getString(EventNotificationDBColumns.ERROR_DETAIL),
+                                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
+                                rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT)));
+                    }
+                }
+                return candidates;
+            } catch (SQLException e) {
+                throw new EventNotificationDataAccessException(
+                        String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES,
+                                subscriptionId), e);
             }
         } finally {
             DatabaseUtils.closeConnection(conn);
@@ -580,14 +625,77 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             String status, Map<String, String> errorDetails, String orgId, String groupId) throws SQLException {
         for (String deliveryId : deliveryIds) {
             updatePs.setString(1, status);
-            updatePs.setString(2, errorDetails.get(deliveryId));
-            updatePs.setString(3, deliveryId);
-            updatePs.setString(4, orgId.trim());
-            updatePs.setString(5, groupId.trim());
+            updatePs.setString(2, null);
+            updatePs.setString(3, errorDetails.get(deliveryId));
+            updatePs.setString(4, deliveryId);
+            updatePs.setString(5, orgId.trim());
+            updatePs.setString(6, groupId.trim());
             updatePs.addBatch();
         }
         if (!deliveryIds.isEmpty()) {
             updatePs.executeBatch();
+        }
+    }
+
+    @Override
+    public void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId, String subscriptionId,
+            List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors) {
+        if (orgId == null || orgId.trim().isEmpty() || groupId == null || groupId.trim().isEmpty()
+                || subscriptionId == null || subscriptionId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Organization ID, Group ID, and Subscription ID are required for polling updates.");
+        }
+        Set<String> ackIds = normalizeEventIds(ackDeliveryIds);
+        Map<String, PollDeliveryError> safeErrors = errors == null ? Collections.emptyMap() : errors;
+        Set<String> errorIds = normalizeEventIds(new ArrayList<>(safeErrors.keySet()));
+        if (!Collections.disjoint(ackIds, errorIds)) {
+            throw new IllegalArgumentException(
+                    EventNotificationCommonConstants.ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS);
+        }
+        if (ackIds.isEmpty() && errorIds.isEmpty()) {
+            return;
+        }
+
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            try (PreparedStatement updatePs = conn.prepareStatement(
+                    getQueries(conn).getUpdatePollDeliveryStatusByDeliveryAndSubscriptionQuery())) {
+                addSubscriptionScopedPollUpdates(updatePs, ackIds, PollStatus.ACKNOWLEDGED.getValue(),
+                        Collections.emptyMap(), subscriptionId, orgId, groupId);
+                addSubscriptionScopedPollUpdates(updatePs, errorIds, PollStatus.ERR.getValue(), safeErrors,
+                        subscriptionId, orgId, groupId);
+            }
+            DatabaseUtils.commitTransaction(conn);
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES,
+                            subscriptionId), e);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    private static void addSubscriptionScopedPollUpdates(PreparedStatement ps, Set<String> deliveryIds,
+            String status, Map<String, PollDeliveryError> errors, String subscriptionId, String orgId,
+            String groupId) throws SQLException {
+        for (String deliveryId : deliveryIds) {
+            PollDeliveryError error = errors.get(deliveryId);
+            ps.setString(1, status);
+            ps.setString(2, error == null ? null : error.getCode());
+            ps.setString(3, error == null ? null : error.getDescription());
+            ps.setString(4, deliveryId);
+            ps.setString(5, subscriptionId.trim());
+            ps.setString(6, orgId.trim());
+            ps.setString(7, groupId.trim());
+            ps.addBatch();
+        }
+        if (!deliveryIds.isEmpty()) {
+            ps.executeBatch();
+            ps.clearBatch();
         }
     }
 

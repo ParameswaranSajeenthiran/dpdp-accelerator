@@ -226,7 +226,8 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     "UPDATED_AT TIMESTAMP NOT NULL, DELIVERED_AT TIMESTAMP)");
             statement.execute("CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, " +
                     "SUBSCRIPTION_ID VARCHAR(64) NOT NULL, EVENT_ID VARCHAR(64) NOT NULL, STATUS VARCHAR(32) NOT NULL, " +
-                    "CREATED_AT TIMESTAMP NOT NULL, COMPLETED_AT TIMESTAMP)");
+                    "ERROR_CODE VARCHAR(64), ERROR_DETAIL VARCHAR(1024), CREATED_AT TIMESTAMP NOT NULL, " +
+                    "COMPLETED_AT TIMESTAMP)");
         }
     }
 

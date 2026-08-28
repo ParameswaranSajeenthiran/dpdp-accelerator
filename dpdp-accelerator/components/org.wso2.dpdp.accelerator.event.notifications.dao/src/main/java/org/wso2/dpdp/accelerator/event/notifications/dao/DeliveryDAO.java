@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
@@ -86,6 +87,8 @@ public interface DeliveryDAO {
 
     List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit);
 
+    List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, String subscriptionId, int limit);
+
     void updatePollDeliveryStatuses(String orgId, String groupId, List<String> ackEventIds, List<String> errEventIds);
 
     void updatePollDeliveryStatuses(Connection connection, String orgId, String groupId,
@@ -97,6 +100,9 @@ public interface DeliveryDAO {
      */
     void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId,
             List<String> ackDeliveryIds, Map<String, String> errorDetails);
+
+    void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId, String subscriptionId,
+            List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors);
 
     boolean claimWebhookDelivery(String deliveryId);
 

@@ -83,7 +83,7 @@ public class EventNotificationServiceConstants {
     public static final String EVENT_PAYLOAD_REQUIRED_ERROR_MSG = "Event payload is required.";
     public static final String CALLBACK_URL_REQUIRED_ERROR_MSG = "callbackUrl is required when delivery mode is WEBHOOK.";
     public static final String SHARED_SECRET_REQUIRED_ERROR_MSG =
-            "sharedSecret is required when delivery mode is WEBHOOK.";
+            "sharedSecret is required for webhook and poll delivery modes.";
     public static final String DUPLICATE_SUBSCRIPTION_ERROR_MSG = "A subscription with the same parameters already exists.";
     public static final String MIXED_DELIVERY_MODE_SUBSCRIPTION_ERROR_MSG =
             "A subscriber cannot use both webhook and poll delivery modes for the same topic.";
@@ -101,10 +101,13 @@ public class EventNotificationServiceConstants {
     public static final String TOPIC_NOT_ACTIVE_ERROR_MSG = "Topic '%s' is not active and cannot accept new subscriptions.";
     public static final String FILTER_PURPOSES_REQUIRED_FOR_SPECIFIC_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is SPECIFIC.";
     public static final String FILTER_PURPOSES_REQUIRED_FOR_EXCEPT_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is EXCEPT.";
-    public static final String POLL_ACK_ERROR_OVERLAP_ERROR_MSG = "A delivery cannot be present in both ack and errors.";
-    public static final String POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG = "An error detail is required for every delivery in errors.";
+    public static final String POLL_ACK_ERROR_OVERLAP_ERROR_MSG =
+            "A delivery cannot be present in both ack and setErrs.";
+    public static final String POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG =
+            "An error code and description are required for every delivery in setErrs.";
     public static final String COMPLETION_STATUS_REQUIRED_ERROR_MSG = "completionStatus is required.";
     public static final String COMPLETION_EVIDENCE_REQUIRED_ERROR_MSG = "completionEvidence is required.";
     public static final String INVALID_SIGNATURE_ERROR_MSG = "The event-signature is invalid.";
+    public static final int MAX_POLL_ERROR_CODE_LENGTH = 64;
     public static final int MAX_POLL_ERROR_DETAIL_LENGTH = 1024;
 }

@@ -22,7 +22,6 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
@@ -61,9 +60,10 @@ public class EventHandler {
         return eventPublishService.publishEvent(orgId, groupId, topicName, purposes, payload);
     }
 
-    public EventPollingResponseDTO pollEvents(String orgId, String groupId, EventPollingRequestDTO request) {
+    public EventPollingResponseDTO pollEvents(String orgId, String groupId, String subscriptionId,
+            String requestBody, String signature) {
 
-        return eventPublishService.pollEvents(orgId, groupId, request);
+        return eventPublishService.pollEvents(orgId, groupId, subscriptionId, requestBody, signature);
     }
 
     public void completeDelivery(String orgId, String groupId, String deliveryId,

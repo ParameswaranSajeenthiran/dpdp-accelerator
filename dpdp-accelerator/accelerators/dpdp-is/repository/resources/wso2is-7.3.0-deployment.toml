@@ -247,6 +247,12 @@ system_topics_auto_create_enabled = true
 enabled = true
 audience = "dpdp-event-notifications"
 
+[dpdp_accelerator.event_notifications.polling]
+default_return_immediately = true
+default_max_events = 20
+max_events_limit = 100
+request_hmac_validation_enabled = false
+
 # Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
 # subscription-verification behavior.
 [dpdp_accelerator.event_notifications.webhook]
