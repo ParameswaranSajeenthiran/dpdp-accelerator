@@ -235,6 +235,14 @@
                 <version>${cxf.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- org.apache.cxf.jaxrs.ext.multipart.{Attachment,Multipart,ContentDisposition} - used by
+                 complaint.mgt.endpoint's attachment upload/download resources. -->
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-extension-providers</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.utils</artifactId>

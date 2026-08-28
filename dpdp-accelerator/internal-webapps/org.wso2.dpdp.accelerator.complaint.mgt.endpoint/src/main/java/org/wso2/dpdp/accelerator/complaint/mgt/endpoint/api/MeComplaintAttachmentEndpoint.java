@@ -18,8 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
@@ -58,7 +58,7 @@ public class MeComplaintAttachmentEndpoint {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
-            @FormDataParam("file") List<FormDataBodyPart> fileParts) {
+            @Multipart("file") List<Attachment> fileParts) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadOwnComplaintAttachments(

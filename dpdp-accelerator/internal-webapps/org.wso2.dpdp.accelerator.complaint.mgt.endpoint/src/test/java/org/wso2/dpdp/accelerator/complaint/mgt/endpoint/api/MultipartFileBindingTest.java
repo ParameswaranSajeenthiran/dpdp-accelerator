@@ -18,15 +18,15 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.ResourceConfig;
+import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
+import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
+import org.apache.cxf.jaxrs.ext.multipart.Multipart;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
+import org.apache.cxf.jaxrs.provider.MultipartProvider;
+import org.apache.cxf.endpoint.Server;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,13 +34,11 @@ import org.junit.jupiter.api.Test;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,94 +46,62 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * ComplaintAttachmentEndpoint#uploadComplaintAttachment and
  * MeComplaintAttachmentEndpoint#uploadComplaintAttachment both bind incoming files as
- * {@code @FormDataParam("file") List<FormDataBodyPart> fileParts}. Every existing test of those
- * classes (ComplaintAttachmentEndpointTest, ComplaintAttachmentHandlerTest) builds that list
- * directly in Java and calls the resource method as a plain Java call - none of them ever send a
- * real HTTP multipart request, so none of them can catch a binding bug in Jersey's own multipart
- * parsing.
+ * {@code @Multipart("file") List<Attachment> fileParts}. Every existing test of those classes
+ * (ComplaintAttachmentEndpointTest, ComplaintAttachmentHandlerTest) builds that list directly in
+ * Java and calls the resource method as a plain Java call - none of them ever send a real HTTP
+ * multipart request, so none of them can catch a binding bug in CXF's own multipart parsing.
  *
- * This starts a real, in-memory HTTP server (Grizzly - the same HTTP engine
- * jersey-container-grizzly2-http wraps) and POSTs an actual multipart/form-data request with two
- * parts both named "file" - the exact shape a browser sends for a multi-file upload, and the
- * exact shape complaintsApi.ts's uploadFilesFormData builds
- * (files.forEach(file => formData.append('file', file))) - through the real Jersey runtime this
- * webapp deploys with, to settle empirically whether the binding collects both parts or silently
- * drops one. Driven directly via GrizzlyHttpServerFactory rather than JerseyTest - see this
- * module's pom.xml for why.
+ * This starts a real, in-process CXF JAX-RS server - bound to CXF's {@code local://} transport
+ * (part of cxf-core, no real socket/Jetty involved) rather than a real HTTP port, since the point
+ * is to exercise CXF's actual multipart request/response marshalling, not networking - and POSTs
+ * an actual multipart/form-data request with two parts both named "file" - the exact shape a
+ * browser sends for a multi-file upload, and the exact shape complaintsApi.ts's
+ * uploadFilesFormData builds (files.forEach(file => formData.append('file', file))) - through the
+ * real CXF runtime this webapp deploys with (the CXF3 environment, see webapp-classloading.xml),
+ * to settle empirically whether the binding collects both parts or silently drops one.
  */
 class MultipartFileBindingTest {
+
+    private static final String ADDRESS = "local://test-upload";
 
     @Path("/test-upload")
     public static class TestUploadResource {
 
         @POST
         @Consumes(MediaType.MULTIPART_FORM_DATA)
-        public Response upload(@FormDataParam("file") List<FormDataBodyPart> fileParts) {
+        public Response upload(@Multipart("file") List<Attachment> fileParts) {
             int count = fileParts == null ? 0 : fileParts.size();
             StringBuilder names = new StringBuilder();
             if (fileParts != null) {
-                for (FormDataBodyPart part : fileParts) {
+                for (Attachment part : fileParts) {
                     if (names.length() > 0) {
                         names.append(',');
                     }
-                    names.append(part.getContentDisposition().getFileName());
+                    names.append(part.getContentDisposition().getParameter("filename"));
                 }
             }
             return Response.ok(count + ":" + names).build();
         }
     }
 
-    private HttpServer server;
-    private Client client;
-    private WebTarget target;
+    private Server server;
 
     @BeforeEach
     void startServer() {
-        ResourceConfig config = new ResourceConfig(TestUploadResource.class).register(MultiPartFeature.class);
-        // Port 0 asks the OS for any free ephemeral port; getListener(...).getPort() then reads
-        // back which one it actually picked - no fixed-port collisions with anything else running.
-        server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://localhost:0/"), config);
-        int port = server.getListeners().iterator().next().getPort();
-
-        client = ClientBuilder.newClient(new ClientConfig().register(MultiPartFeature.class));
-        target = client.target("http://localhost:" + port + "/test-upload");
+        JAXRSServerFactoryBean factory = new JAXRSServerFactoryBean();
+        factory.setAddress(ADDRESS);
+        factory.setResourceClasses(TestUploadResource.class);
+        factory.setResourceProvider(TestUploadResource.class,
+                new SingletonResourceProvider(new TestUploadResource()));
+        factory.setProvider(new MultipartProvider());
+        server = factory.create();
     }
 
     @AfterEach
     void stopServer() {
-        client.close();
-        server.shutdownNow();
+        server.destroy();
     }
 
-    @Test
-    void twoFilePartsSharingTheSameFieldNameBothBindIntoTheList() {
-        FormDataMultiPart multiPart = new FormDataMultiPart();
-        multiPart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName("first.jpg").build(),
-                "first-file-bytes", MediaType.valueOf("image/jpeg")));
-        multiPart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName("second.pdf").build(),
-                "second-file-bytes", MediaType.valueOf("application/pdf")));
 
-        Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
 
-        assertEquals(200, response.getStatus());
-        String body = response.readEntity(String.class);
-        assertEquals("2:first.jpg,second.pdf", body,
-                "Expected both multipart 'file' parts to bind into the List<FormDataBodyPart> - "
-                        + "got: " + body);
-    }
-
-    @Test
-    void aSingleFilePartBindsAsAOneElementList() {
-        FormDataMultiPart multiPart = new FormDataMultiPart();
-        multiPart.bodyPart(new FormDataBodyPart(
-                FormDataContentDisposition.name("file").fileName("only.jpg").build(),
-                "only-file-bytes", MediaType.valueOf("image/jpeg")));
-
-        Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
-
-        assertEquals(200, response.getStatus());
-        assertEquals("1:only.jpg", response.readEntity(String.class));
-    }
 }

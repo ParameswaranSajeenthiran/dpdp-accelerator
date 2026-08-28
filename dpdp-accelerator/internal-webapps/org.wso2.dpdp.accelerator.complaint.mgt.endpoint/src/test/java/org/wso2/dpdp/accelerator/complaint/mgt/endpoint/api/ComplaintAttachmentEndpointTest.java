@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +48,7 @@ class ComplaintAttachmentEndpointTest {
     @Mock
     private ComplaintAttachmentHandler attachmentHandler;
     @Mock
-    private FormDataBodyPart filePart;
+    private Attachment filePart;
 
     private ComplaintAttachmentEndpoint endpoint;
 

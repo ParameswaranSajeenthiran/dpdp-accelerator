@@ -68,74 +68,44 @@
             <artifactId>commons-logging</artifactId>
         </dependency>
 
+        <!-- Everything below is supplied at runtime by <IS_HOME>/lib/runtimes/cxf3/, the "CXF3"
+             webapp-classloading environment declared in META-INF/webapp-classloading.xml - these
+             are compile-time-only, pinned to that directory's exact shipped versions (the pinning
+             itself lives in the root pom's dependencyManagement). Same pattern as
+             consent.mgt.extensions.endpoint's pom. -->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
-
-        <!-- Jersey Servlet Container -->
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
-        </dependency>
-        <!--
-             The root pom's dependencyManagement pins jersey-common to `test` scope (for
-             event-notifications' own test-only usage), which otherwise drags this transitive
-             dependency of jersey-container-servlet-core down to `test` scope here too, excluding
-             it from WEB-INF/lib and causing NoClassDefFoundError: ExtendedLogger on deploy.
-             Overridden back to compile scope for this module explicitly.
-        -->
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <scope>compile</scope>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-        </dependency>
-        <!--
-             jackson-module-jaxb-annotations is excluded: this webapp's Environments now includes
-             Carbon (needed for PrivilegedCarbonContext), which brings in Carbon's own OSGi-provided
-             Jackson. Bundling this module's own copy
-             too caused a real, live LinkageError (loader constraint violation) between the two
-             Jackson AnnotationIntrospector hierarchies on deploy. Not needed here anyway - this
-             module's DTOs are plain POJOs, never JAXB-annotated.
-        -->
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
             <exclusions>
+                <!-- Also shadows javax.ws.rs-api 2.1.1's javax.ws.rs.core.Response with its own
+                     copy of the same package. -->
                 <exclusion>
-                    <groupId>com.fasterxml.jackson.module</groupId>
-                    <artifactId>jackson-module-jaxb-annotations</artifactId>
+                    <groupId>jakarta.ws.rs</groupId>
+                    <artifactId>jakarta.ws.rs-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Test-only: MultipartFileBindingTest runs a real standalone (non-Carbon) Grizzly
-             Jersey server, whose default Jackson JSON provider setup requires this class even
-             though it's excluded from the deployed WAR above. -->
+        <!-- org.apache.cxf.jaxrs.ext.multipart.{Attachment,Multipart,ContentDisposition} - used by
+             ComplaintAttachmentEndpoint/MeComplaintAttachmentEndpoint's file upload parameters. -->
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-jaxb-annotations</artifactId>
-            <version>2.15.2</version>
-            <scope>test</scope>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-extension-providers</artifactId>
         </dependency>
-        <!-- Multipart form support (file uploads) -->
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
-
-        <!--
-             Not used directly by this app's code, but jersey-server's WebTargetValueParamProvider
-             (part of its @Uri-injection support) does an eager static class-load of this package's
-             ClientConfig during ServletContainer init, regardless of whether @Uri injection is
-             actually used - omitting it from the WAR causes a NoClassDefFoundError on deploy.
-        -->
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
 
         <!-- Servlet API - provided by the container at runtime -->
@@ -172,20 +142,20 @@
         </dependency>
 
         <!--
-             In-memory HTTP server + client for a real, non-mocked test of Jersey's own multipart
-             binding (does @FormDataParam("file") List<FormDataBodyPart> actually collect every
-             part sharing that field name, or only the first/last?) - the existing endpoint tests
-             all construct FormDataBodyPart lists directly in Java and never exercise the real
-             HTTP/multipart parsing layer at all, so that binding behavior has no coverage without
-             this. Driven directly via GrizzlyHttpServerFactory rather than JerseyTest - JerseyTest's
-             own dynamic-port setUp() reliably threw BindException on this machine (it appears to
-             probe for a free port with one throwaway container, then start a second real one on
-             that same port before the first has released it). Test-scope only; not part of the
-             deployed WAR.
+             Test-only: MultipartFileBindingTest starts a real, in-process CXF JAX-RS server and
+             drives it with CXF's own client, to test CXF's actual multipart binding behavior
+             (does @Multipart("file") List<Attachment> actually collect every part sharing that
+             field name, or only the first/last?) end-to-end rather than relying on assumptions -
+             none of the other endpoint/handler tests ever exercise the real HTTP/multipart parsing
+             layer, so that binding behavior has no coverage without this. Not part of the deployed
+             WAR - cxf-rt-frontend-jaxrs above is compile-time-only (provided by the CXF3 runtime
+             environment at deploy time), but the test JVM needs an actual client implementation on
+             its classpath to drive requests against the in-process server.
         -->
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-client</artifactId>
+            <version>${cxf.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -18,7 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
@@ -71,7 +71,7 @@ public class ComplaintAttachmentHandler {
     // ---- Officer/admin ----
 
     public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
-            List<FormDataBodyPart> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
+            List<Attachment> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
         return complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId, files,
                 isPublic == null || isPublic, actorUserId, actorUserName,
@@ -86,7 +86,7 @@ public class ComplaintAttachmentHandler {
     // ---- Data Principal ----
 
     public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
-            String ownerUserId, String ownerUserName, List<FormDataBodyPart> fileParts) {
+            String ownerUserId, String ownerUserName, List<Attachment> fileParts) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
         return complaintAttachmentService.uploadOwnComplaintAttachments(orgId, complaintId, ownerUserId,
                 ownerUserName, files);
@@ -99,7 +99,7 @@ public class ComplaintAttachmentHandler {
 
     // ---- shared ----
 
-    private List<UploadedFile> toUploadedFiles(List<FormDataBodyPart> fileParts) {
+    private List<UploadedFile> toUploadedFiles(List<Attachment> fileParts) {
         List<UploadedFile> files = new ArrayList<>();
         if (fileParts == null) {
             return files;
@@ -114,14 +114,14 @@ public class ComplaintAttachmentHandler {
                     String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, fileParts.size()));
         }
 
-        for (FormDataBodyPart part : fileParts) {
-            String contentType = part.getMediaType() != null
-                    ? part.getMediaType().toString()
+        for (Attachment part : fileParts) {
+            String contentType = part.getContentType() != null
+                    ? part.getContentType().toString()
                     : MediaType.APPLICATION_OCTET_STREAM;
             String fileName = part.getContentDisposition() != null
-                    ? part.getContentDisposition().getFileName()
+                    ? part.getContentDisposition().getParameter("filename")
                     : null;
-            try (InputStream in = part.getValueAs(InputStream.class)) {
+            try (InputStream in = part.getDataHandler().getInputStream()) {
                 byte[] data = readAllBytes(in, fileName);
                 files.add(new UploadedFile(fileName, contentType, data));
             } catch (IOException e) {

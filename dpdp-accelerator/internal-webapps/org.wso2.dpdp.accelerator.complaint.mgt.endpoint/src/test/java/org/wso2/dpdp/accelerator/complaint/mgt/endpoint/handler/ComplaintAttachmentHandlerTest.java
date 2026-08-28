@@ -18,8 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.glassfish.jersey.media.multipart.ContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +38,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.common.config.ConfigProvider;
 
+import javax.activation.DataHandler;
 import javax.ws.rs.core.MediaType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -70,9 +71,9 @@ class ComplaintAttachmentHandlerTest {
     @Mock
     private ComplaintAttachmentService complaintAttachmentService;
     @Mock
-    private FormDataBodyPart filePart;
+    private Attachment filePart;
     @Mock
-    private ContentDisposition contentDisposition;
+    private DataHandler dataHandler;
 
     private ComplaintAttachmentHandler handler;
 
@@ -113,12 +114,12 @@ class ComplaintAttachmentHandlerTest {
     // ---- officer/admin ----
 
     @Test
-    void uploadComplaintAttachmentsReadsFilePartsAndDelegatesToServiceWithGivenIsPublic() {
+    void uploadComplaintAttachmentsReadsFilePartsAndDelegatesToServiceWithGivenIsPublic() throws IOException {
         byte[] data = "file-content".getBytes();
-        when(filePart.getValueAs(java.io.InputStream.class)).thenReturn(new ByteArrayInputStream(data));
-        when(filePart.getMediaType()).thenReturn(MediaType.valueOf("application/pdf"));
-        when(filePart.getContentDisposition()).thenReturn(contentDisposition);
-        when(contentDisposition.getFileName()).thenReturn("a.pdf");
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream(data));
+        when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
+        when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"a.pdf\""));
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER")))
                 .thenReturn(List.of(attachmentBean("att1", false)));
@@ -150,10 +151,10 @@ class ComplaintAttachmentHandlerTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsDefaultsContentTypeToOctetStreamWhenMediaTypeMissing() {
-        when(filePart.getValueAs(java.io.InputStream.class))
-                .thenReturn(new ByteArrayInputStream("x".getBytes()));
-        when(filePart.getMediaType()).thenReturn(null);
+    void uploadComplaintAttachmentsDefaultsContentTypeToOctetStreamWhenMediaTypeMissing() throws IOException {
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream("x".getBytes()));
+        when(filePart.getContentType()).thenReturn(null);
         when(filePart.getContentDisposition()).thenReturn(null);
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"))).thenReturn(List.of());
@@ -171,9 +172,9 @@ class ComplaintAttachmentHandlerTest {
     @Test
     void uploadComplaintAttachmentsThrowsWhenTooManyFilePartsProvidedWithoutReadingAny() {
         System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
-        List<FormDataBodyPart> parts = new ArrayList<>();
+        List<Attachment> parts = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            parts.add(mock(FormDataBodyPart.class));
+            parts.add(mock(Attachment.class));
         }
 
         ComplaintException ex = assertThrows(ComplaintException.class,
@@ -183,7 +184,7 @@ class ComplaintAttachmentHandlerTest {
         // The count must be checked before any part is read - otherwise the exact memory-exhaustion
         // vector this cap exists to close (many parts, each read into heap before being rejected)
         // would still occur.
-        for (FormDataBodyPart part : parts) {
+        for (Attachment part : parts) {
             verifyNoInteractions(part);
         }
         verifyNoInteractions(complaintAttachmentService);
@@ -194,10 +195,10 @@ class ComplaintAttachmentHandlerTest {
             throws IOException {
         useMaxAttachmentSizeBytes(tempDir, "5");
         byte[] oversized = "this is way more than five bytes".getBytes();
-        when(filePart.getValueAs(java.io.InputStream.class)).thenReturn(new ByteArrayInputStream(oversized));
-        when(filePart.getMediaType()).thenReturn(MediaType.valueOf("application/pdf"));
-        when(filePart.getContentDisposition()).thenReturn(contentDisposition);
-        when(contentDisposition.getFileName()).thenReturn("big.pdf");
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream(oversized));
+        when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
+        when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"big.pdf\""));
 
         ComplaintException ex = assertThrows(ComplaintException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
