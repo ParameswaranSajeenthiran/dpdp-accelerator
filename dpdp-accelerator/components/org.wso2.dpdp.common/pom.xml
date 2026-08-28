@@ -31,8 +31,7 @@
     <name>WSO2 DPDP Accelerator - Common</name>
     <description>
         Shared utilities with no accelerator-specific business logic, depended on by DAO/service/endpoint
-        modules across accelerators (e.g. ConfigProvider for reading deployment.toml, TenantContextUtils for
-        resolving the acting org/tenant from a request path).
+        modules across accelerators (e.g. ConfigProvider for reading deployment.toml).
     </description>
 
     <dependencies>

@@ -33,7 +33,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageReq
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -132,8 +131,4 @@ class ComplaintCommentHandlerTest {
         verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
-    @Test
-    void noArgsConstructorWiresRealServices() {
-        assertNotNull(new ComplaintCommentHandler());
-    }
 }

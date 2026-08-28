@@ -114,7 +114,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertEquals(dto.getOauthConsumerKey(), CLIENT_ID);
         assertEquals(dto.getCallbackUrl(), callbackUrl);
         assertTrue(dto.getPkceMandatory());
-        // Opaque access token - TokenIntrospectionClient resolves the caller from Carbon's own
+        // Opaque access token - every complaint endpoint resolves the caller from Carbon's own
         // PrivilegedCarbonContext rather than decoding or introspecting the token itself, so
         // there's no need for a JWT-embedded "username" Access Token Attribute anymore either.
         assertEquals(dto.getTokenType(), "Default");

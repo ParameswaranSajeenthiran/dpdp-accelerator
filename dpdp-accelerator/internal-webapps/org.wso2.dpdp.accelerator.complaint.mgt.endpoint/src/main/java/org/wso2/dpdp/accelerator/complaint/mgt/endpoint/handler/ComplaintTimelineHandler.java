@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
@@ -26,9 +27,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintTimelineEntryResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,9 +50,17 @@ public class ComplaintTimelineHandler {
     private final ComplaintAttachmentService complaintAttachmentService;
 
     public ComplaintTimelineHandler() {
-        this.complaintService = new ComplaintServiceImpl();
-        this.complaintEventService = new ComplaintEventServiceImpl();
-        this.complaintAttachmentService = new ComplaintAttachmentServiceImpl(complaintService);
+        this.complaintService = getOSGiService(ComplaintService.class);
+        this.complaintEventService = getOSGiService(ComplaintEventService.class);
+        this.complaintAttachmentService = getOSGiService(ComplaintAttachmentService.class);
+    }
+
+    private static <T> T getOSGiService(Class<T> serviceClass) {
+        T service = (T) PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(serviceClass, null);
+        if (service == null) {
+            throw new IllegalStateException(serviceClass.getName() + " OSGi service not available");
+        }
+        return service;
     }
 
     public ComplaintTimelineHandler(ComplaintService complaintService, ComplaintEventService complaintEventService,

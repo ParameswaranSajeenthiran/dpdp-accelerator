@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
@@ -26,8 +27,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageReq
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 
 /**
  * Shared business logic behind both /me/complaints/{id}/comments (Data Principal, always
@@ -41,8 +40,16 @@ public class ComplaintCommentHandler {
     private final ComplaintEventService complaintEventService;
 
     public ComplaintCommentHandler() {
-        this.complaintService = new ComplaintServiceImpl();
-        this.complaintEventService = new ComplaintEventServiceImpl();
+        this.complaintService = getOSGiService(ComplaintService.class);
+        this.complaintEventService = getOSGiService(ComplaintEventService.class);
+    }
+
+    private static <T> T getOSGiService(Class<T> serviceClass) {
+        T service = (T) PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(serviceClass, null);
+        if (service == null) {
+            throw new IllegalStateException(serviceClass.getName() + " OSGi service not available");
+        }
+        return service;
     }
 
     public ComplaintCommentHandler(ComplaintService complaintService, ComplaintEventService complaintEventService) {

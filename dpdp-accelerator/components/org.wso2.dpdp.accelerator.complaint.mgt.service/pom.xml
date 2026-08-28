@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>WSO2 DPDP Accelerator - Complaint Management Service</name>
 
@@ -50,6 +50,11 @@
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!--
              DPDPConfigParser (org.wso2.dpdp.accelerator.common, used by StatutoryDuePeriodPolicy
@@ -186,6 +191,35 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <_dsannotations>*</_dsannotations>
+                        <Private-Package>
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.internal,
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.impl
+                        </Private-Package>
+                        <Export-Package>
+                            !org.wso2.dpdp.accelerator.complaint.mgt.service.internal,
+                            !org.wso2.dpdp.accelerator.complaint.mgt.service.impl,
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.*;version="${project.version}"
+                        </Export-Package>
+                        <Import-Package>
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${project.version}",
+                            org.osgi.framework;version="[1.8,2)",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

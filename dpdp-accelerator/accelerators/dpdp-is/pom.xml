@@ -46,6 +46,11 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
             <type>war</type>
         </dependency>
@@ -159,6 +164,12 @@
                                         <include name="*.jar"/>
                                     </fileset>
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.complaint.mgt.dao/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.complaint.mgt.service/target">
                                         <include name="*.jar"/>
                                     </fileset>
                                 </copy>

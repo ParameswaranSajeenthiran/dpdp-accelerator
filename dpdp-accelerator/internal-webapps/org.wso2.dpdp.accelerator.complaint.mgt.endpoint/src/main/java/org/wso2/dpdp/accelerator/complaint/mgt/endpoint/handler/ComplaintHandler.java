@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
@@ -35,9 +36,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdate
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
 
 import java.util.ArrayList;
@@ -59,9 +57,17 @@ public class ComplaintHandler {
     private final ComplaintAttachmentService complaintAttachmentService;
 
     public ComplaintHandler() {
-        this.complaintService = new ComplaintServiceImpl();
-        this.complaintEventService = new ComplaintEventServiceImpl();
-        this.complaintAttachmentService = new ComplaintAttachmentServiceImpl(complaintService);
+        this.complaintService = getOSGiService(ComplaintService.class);
+        this.complaintEventService = getOSGiService(ComplaintEventService.class);
+        this.complaintAttachmentService = getOSGiService(ComplaintAttachmentService.class);
+    }
+
+    private static <T> T getOSGiService(Class<T> serviceClass) {
+        T service = (T) PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(serviceClass, null);
+        if (service == null) {
+            throw new IllegalStateException(serviceClass.getName() + " OSGi service not available");
+        }
+        return service;
     }
 
     public ComplaintHandler(ComplaintService complaintService, ComplaintEventService complaintEventService,

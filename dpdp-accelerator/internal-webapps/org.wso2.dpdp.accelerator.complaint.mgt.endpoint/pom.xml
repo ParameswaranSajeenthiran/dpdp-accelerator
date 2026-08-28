@@ -31,10 +31,19 @@
     <name>WSO2 DPDP Accelerator - Complaint Management Endpoint</name>
 
     <dependencies>
+        <!--
+             Now an OSGi bundle deployed separately into dropins (resolved at runtime via
+             getOSGiService(...) in each handler's no-arg constructor), not bundled into this
+             WAR - provided scope so Maven doesn't also package a second, distinct copy of these
+             classes into WEB-INF/lib (which would break the OSGi service casts with a
+             ClassCastException across two different classloaders' copies of the same class).
+             Same reasoning as event-notifications.service's provided scope in that endpoint's pom.
+        -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- ConfigProvider, used by config-loading elsewhere in this module -->
@@ -44,9 +53,9 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- PrivilegedCarbonContext, used by auth/TokenIntrospectionClient.java to resolve the
-             caller's identity - Carbon's own valve pipeline populates this per-request, even for
-             a plain-WAR webapp like this one (confirmed empirically). Provided at runtime by
+        <!-- PrivilegedCarbonContext, used by every endpoint class to resolve the caller's identity
+             directly - Carbon's own valve pipeline populates this per-request, even for a
+             plain-WAR webapp like this one (confirmed empirically). Provided at runtime by
              Carbon's shared classloader (this webapp's Environments includes Carbon - see
              webapp-classloading.xml), never bundled into the WAR. -->
         <dependency>
@@ -85,15 +94,33 @@
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
         </dependency>
+        <!--
+             jackson-module-jaxb-annotations is excluded: this webapp's Environments now includes
+             Carbon (needed for PrivilegedCarbonContext), which brings in Carbon's own OSGi-provided
+             Jackson. Bundling this module's own copy
+             too caused a real, live LinkageError (loader constraint violation) between the two
+             Jackson AnnotationIntrospector hierarchies on deploy. Not needed here anyway - this
+             module's DTOs are plain POJOs, never JAXB-annotated.
+        -->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>jackson-module-jaxb-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <!-- Test-only: MultipartFileBindingTest runs a real standalone (non-Carbon) Grizzly
+             Jersey server, whose default Jackson JSON provider setup requires this class even
+             though it's excluded from the deployed WAR above. -->
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
+            <version>2.15.2</version>
+            <scope>test</scope>
         </dependency>
-
         <!-- Multipart form support (file uploads) -->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
@@ -116,16 +143,6 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- Database drivers -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
         </dependency>
 
         <dependency>

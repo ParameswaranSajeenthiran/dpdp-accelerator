@@ -36,7 +36,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseD
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -150,8 +149,4 @@ class ComplaintTimelineHandlerTest {
         verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
-    @Test
-    void noArgsConstructorWiresRealServiceImplementations() {
-        assertNotNull(new ComplaintTimelineHandler());
-    }
 }

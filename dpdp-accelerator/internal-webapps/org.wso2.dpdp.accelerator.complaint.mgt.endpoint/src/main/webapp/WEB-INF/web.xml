@@ -29,16 +29,14 @@
         <init-param>
             <param-name>jersey.config.server.provider.classnames</param-name>
             <param-value>
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.ComplaintEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.ComplaintTimelineEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.ComplaintCommentEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.ComplaintAttachmentEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.MeComplaintEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.MeComplaintTimelineEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.MeComplaintCommentEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.MeComplaintAttachmentEndpoint,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter,
-                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.ScopeAuthorizationFilter,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.ComplaintEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.ComplaintTimelineEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.ComplaintCommentEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.ComplaintAttachmentEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.MeComplaintEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.MeComplaintTimelineEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.MeComplaintCommentEndpoint,
+                org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api.MeComplaintAttachmentEndpoint,
                 org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception.ComplaintExceptionMapper,
                 org.glassfish.jersey.media.multipart.MultiPartFeature,
                 org.glassfish.jersey.jackson.JacksonFeature
@@ -51,15 +49,5 @@
         <servlet-name>ComplaintServerJerseyServlet</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-
-    <!--
-        Backed by a Tomcat-managed connection pool declared in META-INF/context.xml. See DBUtil
-        in the DAO module for the JNDI lookup.
-    -->
-    <resource-ref>
-        <res-ref-name>jdbc/WSO2DPDP_DB</res-ref-name>
-        <res-type>javax.sql.DataSource</res-type>
-        <res-auth>Container</res-auth>
-    </resource-ref>
 
 </web-app>

@@ -964,9 +964,8 @@ components:
   responses:
     Unauthorized:
       description: >
-        Missing, malformed, or inactive bearer token (CO-4010) - see
-        TokenIntrospectionFilter, the sole authentication gate for every
-        operation below.
+        Missing, malformed, or inactive bearer token (CO-4010) - enforced by
+        Carbon's own valve pipeline before this webapp ever sees the request.
       content:
         application/json:
           schema:
@@ -974,8 +973,9 @@ components:
     Forbidden:
       description: >
         Bearer token does not belong to the requested tenant, or lacks the
-        required scope for this operation (CO-4030) - see
-        TokenIntrospectionFilter/ScopeAuthorizationFilter.
+        required scope for this operation (CO-4030) - enforced per-route by
+        Carbon's own valve pipeline (see the resource.access_control entries
+        in wso2is-7.3.0-deployment.toml).
       content:
         application/json:
           schema:

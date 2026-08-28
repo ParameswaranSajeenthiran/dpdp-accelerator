@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
@@ -28,8 +29,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentServiceImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.AttachmentPolicy;
 
 import javax.ws.rs.core.MediaType;
@@ -51,8 +50,16 @@ public class ComplaintAttachmentHandler {
     private final ComplaintAttachmentService complaintAttachmentService;
 
     public ComplaintAttachmentHandler() {
-        this.complaintService = new ComplaintServiceImpl();
-        this.complaintAttachmentService = new ComplaintAttachmentServiceImpl(complaintService);
+        this.complaintService = getOSGiService(ComplaintService.class);
+        this.complaintAttachmentService = getOSGiService(ComplaintAttachmentService.class);
+    }
+
+    private static <T> T getOSGiService(Class<T> serviceClass) {
+        T service = (T) PrivilegedCarbonContext.getThreadLocalCarbonContext().getOSGiService(serviceClass, null);
+        if (service == null) {
+            throw new IllegalStateException(serviceClass.getName() + " OSGi service not available");
+        }
+        return service;
     }
 
     public ComplaintAttachmentHandler(ComplaintService complaintService,

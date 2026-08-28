@@ -46,7 +46,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpda
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -266,8 +265,4 @@ class ComplaintHandlerTest {
         verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
-    @Test
-    void noArgsConstructorWiresRealServiceImplementations() {
-        assertNotNull(new ComplaintHandler());
-    }
 }
