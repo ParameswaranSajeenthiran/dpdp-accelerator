@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="dpdp-complaint-mgt-endpoint-test-suite">
+    <test name="dpdp-complaint-mgt-endpoint-tests">
+        <packages>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api"/>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception"/>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler"/>
+        </packages>
+    </test>
+</suite>
