@@ -18,22 +18,50 @@
 
 package org.wso2.dpdp.accelerator.common.util;
 
-import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
-/** Thin facade for centrally managed DPDP database operations. */
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/**
+ * Thin static facade over {@link JDBCPersistenceManager}, mirroring the Financial Services
+ * accelerator's own {@code DatabaseUtils}, so DAO/service code depends on this rather than the
+ * persistence manager directly.
+ */
 public final class DatabaseUtils {
 
+    private static final Log LOG = LogFactory.getLog(DatabaseUtils.class);
+
     private DatabaseUtils() {
+
     }
 
-    public static <T> T executeWithConnection(ConnectionCallback<T> callback) {
+    public static Connection getDBConnection() {
 
-        return JDBCPersistenceManager.getInstance().executeWithConnection(callback);
+        return JDBCPersistenceManager.getInstance().getDBConnection();
     }
 
-    public static <T> T executeInTransaction(ConnectionCallback<T> callback) {
+    public static void commitTransaction(Connection connection) {
 
-        return JDBCPersistenceManager.getInstance().executeInTransaction(callback);
+        JDBCPersistenceManager.getInstance().commitTransaction(connection);
+    }
+
+    public static void rollbackTransaction(Connection connection) {
+
+        JDBCPersistenceManager.getInstance().rollbackTransaction(connection);
+    }
+
+    public static void closeConnection(Connection connection) {
+
+        if (connection == null) {
+            return;
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOG.error("Error while closing a DPDP DB connection.", e);
+        }
     }
 }

@@ -172,6 +172,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.exception;version="${project.version}",
                             org.wso2.dpdp.accelerator.common.persistence;version="${project.version}",
                             org.wso2.dpdp.accelerator.common.util;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.common.*;version="${project.version}",

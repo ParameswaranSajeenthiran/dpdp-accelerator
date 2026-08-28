@@ -10,8 +10,8 @@
     "test:purposes": "playwright test tests/02-purposes",
     "test:consents": "playwright test tests/03-consents",
     "test:authorization": "playwright test tests/04-authorization",
-    "test:account": "playwright test tests/05-account",
-    "test:demo-data": "playwright test tests/99-demo-data",
+    "test:multi-tenancy": "playwright test tests/05-multi-tenancy",
+    "test:account": "playwright test tests/06-account",
     "report": "playwright show-report"
   },
   "devDependencies": {

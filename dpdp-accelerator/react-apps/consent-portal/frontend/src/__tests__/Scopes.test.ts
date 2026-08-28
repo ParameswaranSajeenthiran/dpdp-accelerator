@@ -19,13 +19,21 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { ACCOUNT_SCOPES, EVENT_SCOPES, IS_SCOPES, REQUIRED_SCOPES, parseScopes } from '../utils/scopes'
+import {
+  ACCOUNT_SCOPES,
+  CONSENT_HISTORY_SCOPES,
+  EVENT_SCOPES,
+  IS_SCOPES,
+  REQUIRED_SCOPES,
+  parseScopes,
+} from '../utils/scopes'
 
 describe('scope requirements', () => {
   it('only ever asks for real Identity Server and portal scopes', () => {
     const known = new Set<string>([
       ...Object.values(IS_SCOPES),
       ...Object.values(EVENT_SCOPES),
+      ...Object.values(CONSENT_HISTORY_SCOPES),
       ...Object.values(ACCOUNT_SCOPES),
     ])
     Object.values(REQUIRED_SCOPES)
@@ -35,9 +43,17 @@ describe('scope requirements', () => {
       })
   })
 
-  it('never invents a portal specific scope vocabulary', () => {
+  it('never invents an Identity Server scope with nothing on the server to back it', () => {
     Object.values(IS_SCOPES).forEach((scope) => {
       expect(scope.startsWith('internal_')).toBe(true)
+    })
+  })
+
+  it('never invents a consent-history scope with nothing on the server to back it', () => {
+    // The accelerator itself registers these server-side via
+    // DPDPApiResourceProvisioningUtil - never a frontend-only fiction.
+    Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
+      expect(scope.startsWith('consent:')).toBe(true)
     })
   })
 
@@ -68,6 +84,9 @@ describe('scope requirements', () => {
       expect(requested).toContain(scope)
     })
     Object.values(EVENT_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
       expect(requested).toContain(scope)
     })
     Object.values(ACCOUNT_SCOPES).forEach((scope) => {

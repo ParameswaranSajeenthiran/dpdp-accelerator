@@ -2,11 +2,12 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -20,6 +21,8 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAu
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.sql.Connection;
 import java.io.ByteArrayInputStream;
@@ -53,7 +56,6 @@ public class SubscriptionServiceReadAndDeleteTest {
     @Mock private DeliveryDAO deliveryDAO;
     @Mock private DeliveryAckDAO deliveryAckDAO;
     @Mock private DPDPConfigurationService configurationService;
-    @Mock private TransactionManager transactionManager;
     @Mock private Connection connection;
 
     private SubscriptionServiceImpl service;
@@ -118,24 +120,45 @@ public class SubscriptionServiceReadAndDeleteTest {
     }
 
     @BeforeMethod
-    public void setUp() {
+    public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         when(configurationService.getEventNotificationThreadPoolSize()).thenReturn(1);
         when(configurationService.getEventNotificationBaseBackoffSeconds()).thenReturn(1L);
         when(configurationService.getEventNotificationMaxRetries()).thenReturn(1);
         when(configurationService.isEventNotificationHttpCallbackUrlAllowed()).thenReturn(true);
+        when(configurationService.getEventNotificationAllowedCallbackPorts())
+                .thenReturn(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS);
+        when(configurationService.isEventNotificationPrivateNetworkCallbackTargetsAllowed()).thenReturn(false);
         when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
-        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation -> {
-            ConnectionCallback<?> callback = invocation.getArgument(0);
-            return callback.execute(connection);
-        });
+        DataSource dataSource = org.mockito.Mockito.mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        setStaticInstance(null);
+        setStaticDataSource(dataSource);
         when(subscriptionDAO.lockSubscriptionForVerification(eq(connection), anyString(), anyString(), anyString()))
                 .thenAnswer(invocation -> Optional.of(webhookSubscription(invocation.getArgument(1),
                         invocation.getArgument(3))));
         when(subscriptionDAO.updateSubscriptionStatus(eq(connection), anyString(), anyString(), anyString(),
                 anyString())).thenReturn(true);
         service = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
-                configurationService, transactionManager);
+                configurationService);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        setStaticDataSource(null);
+        setStaticInstance(null);
+    }
+
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 
     @Test

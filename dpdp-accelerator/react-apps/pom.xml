@@ -31,9 +31,4 @@
     <modules>
         <module>consent-portal</module>
     </modules>
-
-    <properties>
-        <spotbugs.skip>true</spotbugs.skip>
-    </properties>
-    
 </project>

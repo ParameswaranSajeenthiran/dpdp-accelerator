@@ -75,7 +75,7 @@ export async function createThrowawayUser(
   if (response.status !== 201) {
     throw new Error(
       `Could not create the throwaway user "${username}" via SCIM2 (status ${String(response.status)}): ` +
-        `${await response.text()}. TEST_IS_ADMIN_USERNAME needs the SCIM2 user-management scopes.`,
+        `${await response.text()}. IS_ADMIN_USERNAME needs the SCIM2 user-management scopes.`,
     )
   }
 

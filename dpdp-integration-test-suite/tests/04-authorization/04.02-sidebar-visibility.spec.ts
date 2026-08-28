@@ -19,14 +19,6 @@
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AppSidebarPage } from '../../pages/AppSidebarPage'
 
-/**
- * AppSidebar.tsx filters each category's items by the current persona's scopes and only renders
- * a category's <Sidebar.Category> block at all when at least one of its items survives that
- * filter - so an unauthorized category's heading text disappears from the DOM entirely, not
- * just its items. The Dashboard category renders with no heading of its own (just the item), so
- * it isn't asserted on directly here - the Consent/Definitions/Administration category headings
- * (translated as "Consent", "Definitions", "Administration") are what distinguish personas.
- */
 test.describe('Sidebar navigation visibility (UI)', () => {
   test("01.02.01 - A user's sidebar shows only the Dashboard and Consent sections", async ({
     browser,
@@ -37,15 +29,14 @@ test.describe('Sidebar navigation visibility (UI)', () => {
 
     await expect(sidebar.label('Dashboard')).toBeVisible()
     await expect(sidebar.label('Consent')).toBeVisible()
-    await expect(sidebar.label('All Consents')).toBeVisible()
-    await expect(sidebar.label('Pending Consents')).toBeVisible()
+    await expect(sidebar.label('My Consents')).toBeVisible()
+    await expect(sidebar.label('My Pending Consents')).toBeVisible()
 
-    // Neither category heading exists at all - not merely hidden - since this persona holds
-    // none of PURPOSES_READ, ELEMENTS_READ, or CONSENTS_READ_ANY.
     await expect(sidebar.label('Definitions')).toHaveCount(0)
     await expect(sidebar.label('Purposes')).toHaveCount(0)
     await expect(sidebar.label('Elements')).toHaveCount(0)
     await expect(sidebar.label('Administration')).toHaveCount(0)
+    await expect(sidebar.label('All Consents')).toHaveCount(0)
     await userPage.context().close()
   })
 
@@ -57,13 +48,15 @@ test.describe('Sidebar navigation visibility (UI)', () => {
     const sidebar = new AppSidebarPage(consentAdminPage)
 
     await expect(sidebar.label('Dashboard')).toBeVisible()
-    await expect(sidebar.label('Consent')).toBeVisible()
-    await expect(sidebar.label('All Consents')).toBeVisible()
-    await expect(sidebar.label('Pending Consents')).toBeVisible()
     await expect(sidebar.label('Definitions')).toBeVisible()
     await expect(sidebar.label('Purposes')).toBeVisible()
     await expect(sidebar.label('Elements')).toBeVisible()
     await expect(sidebar.label('Administration')).toBeVisible()
+    await expect(sidebar.label('All Consents')).toBeVisible()
+
+    await expect(sidebar.label('My Consents')).toHaveCount(0)
+    await expect(sidebar.label('My Pending Consents')).toHaveCount(0)
+    await expect(sidebar.label('Consent')).toHaveCount(0)
     await consentAdminPage.context().close()
   })
 })
