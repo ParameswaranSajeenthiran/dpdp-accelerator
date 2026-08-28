@@ -21,8 +21,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintAttachmentDAOImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
@@ -44,12 +42,6 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     private final ComplaintAttachmentDAO attachmentDAO;
     private final ComplaintEventDAO complaintEventDAO;
     private final ComplaintService complaintService;
-
-    public ComplaintAttachmentServiceImpl(ComplaintService complaintService) {
-        this.attachmentDAO = new ComplaintAttachmentDAOImpl();
-        this.complaintEventDAO = new ComplaintEventDAOImpl();
-        this.complaintService = complaintService;
-    }
 
     public ComplaintAttachmentServiceImpl(ComplaintAttachmentDAO attachmentDAO, ComplaintEventDAO complaintEventDAO,
             ComplaintService complaintService) {

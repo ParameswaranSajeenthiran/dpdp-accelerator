@@ -25,8 +25,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPriority;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintDAOImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
@@ -57,14 +55,6 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintDAO complaintDAO;
     private final ComplaintEventDAO complaintEventDAO;
-
-    public ComplaintServiceImpl() {
-        this(new ComplaintDAOImpl(), new ComplaintEventDAOImpl());
-    }
-
-    public ComplaintServiceImpl(ComplaintDAO complaintDAO) {
-        this(complaintDAO, new ComplaintEventDAOImpl());
-    }
 
     public ComplaintServiceImpl(ComplaintDAO complaintDAO, ComplaintEventDAO complaintEventDAO) {
         this.complaintDAO = complaintDAO;
