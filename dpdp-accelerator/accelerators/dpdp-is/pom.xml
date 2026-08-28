@@ -172,9 +172,6 @@
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.complaint.mgt.service/target">
                                         <include name="*.jar"/>
                                     </fileset>
-                                    <fileset dir="../../components/org.wso2.dpdp.common/target">
-                                        <include name="*.jar"/>
-                                    </fileset>
                                 </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>

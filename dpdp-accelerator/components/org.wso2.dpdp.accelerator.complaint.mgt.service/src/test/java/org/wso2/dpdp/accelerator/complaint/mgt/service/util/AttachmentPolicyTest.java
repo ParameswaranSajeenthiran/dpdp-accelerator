@@ -18,82 +18,65 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.common.config.ConfigProvider;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-class AttachmentPolicyTest {
+/**
+ * Outside a real Carbon environment (no dpdp-accelerator.xml on disk), DPDPConfigurationService
+ * always falls back to its own default - see DPDPConfigParserTest for coverage of the
+ * configured-value/validation path itself, which lives entirely in that class now.
+ */
+public class AttachmentPolicyTest {
 
-    @AfterMethod
-    void resetConfigProvider() {
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
+    @BeforeClass
+    public void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so a test running outside a live Carbon environment
+        // must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
-    private void useDeploymentToml(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
+    @AfterClass
+    public void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
     }
 
     @DataProvider(name = "documentedContentTypes")
-    Object[][] documentedContentTypes() {
-        return new Object[][] {
-                { "application/pdf" },
-                { "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
-                { "image/png" },
-                { "image/jpeg" }
+    public Object[][] documentedContentTypes() {
+        return new Object[][]{
+                {"application/pdf"},
+                {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+                {"image/png"},
+                {"image/jpeg"}
         };
     }
 
     @Test(dataProvider = "documentedContentTypes")
-    void allowsEachDocumentedContentType(String contentType) {
+    public void allowsEachDocumentedContentType(String contentType) {
         assertTrue(AttachmentPolicy.isAllowedContentType(contentType));
     }
 
     @Test
-    void rejectsUnknownOrNullContentType() {
+    public void rejectsUnknownOrNullContentType() {
         assertFalse(AttachmentPolicy.isAllowedContentType("application/zip"));
         assertFalse(AttachmentPolicy.isAllowedContentType(null));
     }
 
     @Test
-    void isAllowedContentTypeTrimsWhitespace() {
+    public void isAllowedContentTypeTrimsWhitespace() {
         assertTrue(AttachmentPolicy.isAllowedContentType("  image/png  "));
     }
 
     @Test
-    void defaultMaxSizeIsTenMegabytes() {
-        assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
-    }
-
-    @Test
-    void usesConfiguredMaxSizeWhenDeploymentTomlSetsIt() throws IOException {
-        Path tempDir = Files.createTempDirectory("attachment-policy-test");
-        useDeploymentToml(tempDir, "2048");
-
-        assertEquals(2048L, AttachmentPolicy.getMaxSizeBytes());
-    }
-
-    @Test
-    void fallsBackToDefaultWhenConfiguredValueIsNotAValidNumber() throws IOException {
-        Path tempDir = Files.createTempDirectory("attachment-policy-test");
-        useDeploymentToml(tempDir, "not-a-number");
-
-        assertEquals(10L * 1024 * 1024, AttachmentPolicy.getMaxSizeBytes());
+    public void defaultsToTenMegabytesWhenNoDpdpAcceleratorXmlIsAvailable() {
+        assertEquals(AttachmentPolicy.getMaxSizeBytes(), 10L * 1024 * 1024);
     }
 }
