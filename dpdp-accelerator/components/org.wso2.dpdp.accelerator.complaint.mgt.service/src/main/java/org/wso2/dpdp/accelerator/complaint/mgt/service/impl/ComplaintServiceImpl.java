@@ -147,9 +147,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
                     }
                 }
-                return ComplaintCreateResponseDTO.from(complaint);
                 notificationClient.notifyComplaintCreated(complaint);
-                return complaint;
+                return ComplaintCreateResponseDTO.from(complaint);
             } catch (DuplicateReferenceIdException e) {
                 lastCollision = e;
             }

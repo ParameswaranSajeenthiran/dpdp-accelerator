@@ -229,7 +229,9 @@ class ComplaintServiceImplTest {
         assertEquals("OPEN", captor.getValue().getToStatus());
         assertEquals(complaint.getId(), captor.getValue().getComplaintId());
         assertEquals(complaint.getId(), captor.getValue().getComplaintId());
-        verify(notificationClient).notifyComplaintCreated(complaint);
+        ArgumentCaptor<Complaint> notifiedComplaintCaptor = ArgumentCaptor.forClass(Complaint.class);
+        verify(notificationClient).notifyComplaintCreated(notifiedComplaintCaptor.capture());
+        assertEquals(complaint.getId(), notifiedComplaintCaptor.getValue().getComplaintId());
     }
 
     @Test

@@ -157,8 +157,6 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             }
         }
 
-        notificationClient.notifyCommentAdded(complaint, event);
-        return ComplaintCommentCreateResponseDTO.from(event);
         if (hasToStatus) {
             // complaint was fetched before the DB status update above; without this, the
             // notification would carry the complaint's pre-transition status.
@@ -170,7 +168,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             // to the citizen in the timeline - notifying them about it would leak its existence.
             notificationClient.notifyCommentAdded(complaint, event);
         }
-        return event;
+        return ComplaintCommentCreateResponseDTO.from(event);
     }
 
     @Override

@@ -109,6 +109,14 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event</artifactId>
+            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.utils below - this
+                 module transitively pulls the vanilla org.ops4j.pax.logging:pax-logging-api. -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ops4j.pax.logging</groupId>
+                    <artifactId>pax-logging-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--
             EmailNotificationClient resolves every complaint recipient itself - the creator's own
@@ -125,6 +133,13 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core</artifactId>
+            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.identity.event above. -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ops4j.pax.logging</groupId>
+                    <artifactId>pax-logging-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -133,6 +148,18 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.application.mgt</artifactId>
+            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.identity.event above,
+                 pulled in via a different transitive path - both pax-logging artifacts here. -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ops4j.pax.logging</groupId>
+                    <artifactId>pax-logging-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.ops4j.pax.logging</groupId>
+                    <artifactId>pax-logging-log4j2</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -189,11 +216,6 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-        </plugins>
-    </build>
-
-    <build>
-        <plugins>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
