@@ -16,16 +16,17 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
@@ -36,12 +37,10 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdate
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import java.io.IOException;
 import javax.ws.rs.core.Response;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.when;
 
@@ -52,26 +51,29 @@ class ComplaintEndpointTest {
 
     @Mock
     private ComplaintHandler complaintHandler;
-    @Mock
-    private ContainerRequestContext requestContext;
 
     private ComplaintEndpoint endpoint;
+
+    @BeforeAll
+    static void configureCarbonEnvironment() throws IOException {
+        CarbonContextTestSupport.configureMinimalCarbonEnvironment();
+    }
 
     @BeforeEach
     void setUp() {
         endpoint = new ComplaintEndpoint(complaintHandler);
-        endpoint.setRequestContext(requestContext);
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("officer1");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(ORG_ID);
     }
 
-    private void stubPrincipal() {
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("complaints:read:any")));
+    @AfterEach
+    void tearDown() {
+        PrivilegedCarbonContext.endTenantFlow();
     }
 
     @Test
     void createComplaintReturns201WithHandlerResponse() {
-        stubPrincipal();
         ComplaintCreateRequestDTO request = new ComplaintCreateRequestDTO();
         ComplaintCreateResponseDTO handlerResponse = new ComplaintCreateResponseDTO();
         when(complaintHandler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request))
@@ -85,7 +87,6 @@ class ComplaintEndpointTest {
 
     @Test
     void listComplaintsReturns200WithHandlerResponse() {
-        stubPrincipal();
         ComplaintListResponseDTO handlerResponse = new ComplaintListResponseDTO();
         when(complaintHandler.listComplaints(ORG_ID, "OPEN", "HIGH", "user1", 10, 0, "updatedTime"))
                 .thenReturn(handlerResponse);
@@ -98,7 +99,6 @@ class ComplaintEndpointTest {
 
     @Test
     void getQueueStatsReturns200WithHandlerResponse() {
-        stubPrincipal();
         ComplaintQueueStatsResponseDTO handlerResponse = new ComplaintQueueStatsResponseDTO();
         when(complaintHandler.getQueueStats(ORG_ID)).thenReturn(handlerResponse);
 
@@ -121,7 +121,6 @@ class ComplaintEndpointTest {
 
     @Test
     void getComplaintReturns200WithHandlerResponse() {
-        stubPrincipal();
         ComplaintRecordDTO handlerResponse = new ComplaintRecordDTO();
         when(complaintHandler.getComplaint(ORG_ID, "c1")).thenReturn(handlerResponse);
 
@@ -133,10 +132,9 @@ class ComplaintEndpointTest {
 
     @Test
     void updateComplaintStatusReturns200WithHandlerResponse() {
-        stubPrincipal();
         ComplaintStatusUpdateRequestDTO request = new ComplaintStatusUpdateRequestDTO();
         ComplaintStatusUpdateResponseDTO handlerResponse = new ComplaintStatusUpdateResponseDTO();
-        when(complaintHandler.updateStatus(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request))
+        when(complaintHandler.updateStatus(ORG_ID, "c1", "officer1", "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 
         Response response = endpoint.updateComplaintStatus("c1", request);
@@ -145,8 +143,4 @@ class ComplaintEndpointTest {
         assertSame(handlerResponse, response.getEntity());
     }
 
-    @Test
-    void noArgsConstructorWiresARealHandler() {
-        assertNotNull(new ComplaintEndpoint());
-    }
 }

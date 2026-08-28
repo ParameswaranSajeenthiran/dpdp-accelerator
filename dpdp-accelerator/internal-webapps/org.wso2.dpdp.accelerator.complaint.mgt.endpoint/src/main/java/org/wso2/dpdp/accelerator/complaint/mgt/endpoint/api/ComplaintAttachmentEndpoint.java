@@ -16,13 +16,11 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
@@ -33,60 +31,53 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
 /**
- * Data Principal attachment endpoints - see complaint-server-API.yaml "Me - Attachments". Only
- * permitted on a complaint owned by the authenticated caller; uploads are always isPublic=true and
- * downloads are denied (403 CO-4030) for an isPublic=false attachment.
+ * Officer/admin attachment endpoints - see complaint-server-API.yaml "Complaint Management -
+ * Attachments". The acting officer's identity is resolved from {@link PrivilegedCarbonContext},
+ * the same as {@link ComplaintCommentEndpoint} - every real HTTP caller here holds an any-scope
+ * token, i.e. is a COMPLAINT_OFFICER.
  */
-@Path("/me/complaints/{complaintId}/attachments")
+@Path("/complaints/{complaintId}/attachments")
 @Produces(MediaType.APPLICATION_JSON)
-public class MeComplaintAttachmentEndpoint {
+public class ComplaintAttachmentEndpoint {
 
     private final ComplaintAttachmentHandler attachmentHandler;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
-    /** Test seam - Jersey normally field-injects this via @Context. */
-    void setRequestContext(ContainerRequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
-
-    public MeComplaintAttachmentEndpoint() {
+    public ComplaintAttachmentEndpoint() {
         this.attachmentHandler = new ComplaintAttachmentHandler();
     }
 
-    public MeComplaintAttachmentEndpoint(ComplaintAttachmentHandler attachmentHandler) {
+    public ComplaintAttachmentEndpoint(ComplaintAttachmentHandler attachmentHandler) {
         this.attachmentHandler = attachmentHandler;
     }
 
+    /** Officers may mark evidence isPublic=false to keep it hidden from the Data Principal; defaults to true. */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @RequireScope
     public Response uploadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
-            @FormDataParam("file") List<FormDataBodyPart> fileParts) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadOwnComplaintAttachments(
-                principal.getOrgId(), complaintId, principal.getUserId(), principal.getUserName(), fileParts);
+            @FormDataParam("file") List<FormDataBodyPart> fileParts,
+            @FormDataParam("isPublic") Boolean isPublic) {
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadComplaintAttachments(
+                callerOrgId, complaintId, fileParts, isPublic, callerUsername, callerUsername);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
+    /** Officers see every attachment regardless of isPublic. */
     @GET
     @Path("/{attachmentId}")
-    @RequireScope
     public Response downloadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
             @PathParam("attachmentId") String attachmentId) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintAttachmentDownloadResponseDTO response = attachmentHandler.downloadOwnAttachment(
-                principal.getOrgId(), complaintId, principal.getUserId(), attachmentId);
+        String orgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        ComplaintAttachmentDownloadResponseDTO response =
+                attachmentHandler.downloadAttachment(orgId, complaintId, attachmentId);
         return Response.ok(response).build();
     }
 }

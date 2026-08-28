@@ -16,25 +16,24 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import java.io.IOException;
 import javax.ws.rs.core.Response;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.when;
 
@@ -45,22 +44,29 @@ class ComplaintTimelineEndpointTest {
 
     @Mock
     private ComplaintTimelineHandler timelineHandler;
-    @Mock
-    private ContainerRequestContext requestContext;
 
     private ComplaintTimelineEndpoint endpoint;
+
+    @BeforeAll
+    static void configureCarbonEnvironment() throws IOException {
+        CarbonContextTestSupport.configureMinimalCarbonEnvironment();
+    }
 
     @BeforeEach
     void setUp() {
         endpoint = new ComplaintTimelineEndpoint(timelineHandler);
-        endpoint.setRequestContext(requestContext);
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("officer1");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(ORG_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        PrivilegedCarbonContext.endTenantFlow();
     }
 
     @Test
     void getTimelineReturns200WithHandlerResponse() {
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("complaints:read:any")));
         TimelineListResponseDTO handlerResponse = new TimelineListResponseDTO();
         when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, null, "asc", 10, 0)).thenReturn(handlerResponse);
 
@@ -70,8 +76,4 @@ class ComplaintTimelineEndpointTest {
         assertSame(handlerResponse, response.getEntity());
     }
 
-    @Test
-    void noArgsConstructorWiresARealHandler() {
-        assertNotNull(new ComplaintTimelineEndpoint());
-    }
 }

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.client.ClientConfig;

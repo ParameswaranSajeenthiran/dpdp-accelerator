@@ -16,11 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
@@ -30,8 +28,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -43,14 +39,6 @@ public class MeComplaintCommentEndpoint {
 
     private final ComplaintCommentHandler commentHandler;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
-    /** Test seam - Jersey normally field-injects this via @Context. */
-    void setRequestContext(ContainerRequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
-
     public MeComplaintCommentEndpoint() {
         this.commentHandler = new ComplaintCommentHandler();
     }
@@ -60,13 +48,13 @@ public class MeComplaintCommentEndpoint {
     }
 
     @POST
-    @RequireScope
     public Response addComplaintMessage(
             @PathParam("complaintId") String complaintId,
             MeComplaintMessageRequestDTO request) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintCommentCreateResponseDTO response = commentHandler.addOwnComment(principal.getOrgId(), complaintId,
-                principal.getUserId(), principal.getUserName(), request);
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        ComplaintCommentCreateResponseDTO response = commentHandler.addOwnComment(callerOrgId, complaintId,
+                callerUsername, callerUsername, request);
         return Response.ok(response).build();
     }
 }

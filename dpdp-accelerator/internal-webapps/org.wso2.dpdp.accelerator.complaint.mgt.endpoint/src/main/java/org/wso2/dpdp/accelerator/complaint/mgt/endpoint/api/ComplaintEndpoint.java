@@ -16,11 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
@@ -38,15 +36,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
  * Complaint Management (officer/admin) namespace - see complaint-server-API.yaml. Every operation
- * requires complaints:{read,write}:any; the acting officer/system's identity comes from the
- * validated bearer token (TokenIntrospectionFilter), never a client-supplied header.
+ * requires complaints:{read,write}:any, enforced per-route by Carbon's own valve pipeline before
+ * this webapp ever sees the request; the acting officer/system's identity comes from
+ * {@link PrivilegedCarbonContext}, which that same valve pipeline populates for every request.
  */
 @Path("/complaints")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -54,14 +51,6 @@ import javax.ws.rs.core.Response;
 public class ComplaintEndpoint {
 
     private final ComplaintHandler complaintHandler;
-
-    @Context
-    private ContainerRequestContext requestContext;
-
-    /** Test seam - Jersey normally field-injects this via @Context. */
-    void setRequestContext(ContainerRequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
 
     public ComplaintEndpoint() {
         this.complaintHandler = new ComplaintHandler();
@@ -74,20 +63,18 @@ public class ComplaintEndpoint {
     private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
 
     private String currentOrgId() {
-        return TokenIntrospectionFilter.currentPrincipal(requestContext).getOrgId();
+        return PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
     }
 
     @POST
-    @RequireScope
     public Response createComplaint(ComplaintCreateRequestDTO request) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintCreateResponseDTO response = complaintHandler.createComplaint(principal.getOrgId(),
-                principal.getUserId(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        ComplaintCreateResponseDTO response = complaintHandler.createComplaint(currentOrgId(),
+                callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
     @GET
-    @RequireScope
     public Response listComplaints(
             @QueryParam("status") String status,
             @QueryParam("priority") String priority,
@@ -102,7 +89,6 @@ public class ComplaintEndpoint {
 
     @GET
     @Path("/stats")
-    @RequireScope
     public Response getQueueStats() {
         ComplaintQueueStatsResponseDTO response = complaintHandler.getQueueStats(currentOrgId());
         return Response.ok(response).build();
@@ -110,7 +96,6 @@ public class ComplaintEndpoint {
 
     @GET
     @Path("/categories")
-    @RequireScope
     public Response getCategories() {
         CategoryListResponseDTO response = complaintHandler.getCategories();
         return Response.ok(response).build();
@@ -118,7 +103,6 @@ public class ComplaintEndpoint {
 
     @GET
     @Path("/{complaintId}")
-    @RequireScope
     public Response getComplaint(@PathParam("complaintId") String complaintId) {
         ComplaintRecordDTO response = complaintHandler.getComplaint(currentOrgId(), complaintId);
         return Response.ok(response).build();
@@ -126,13 +110,12 @@ public class ComplaintEndpoint {
 
     @POST
     @Path("/{complaintId}/status")
-    @RequireScope
     public Response updateComplaintStatus(
             @PathParam("complaintId") String complaintId,
             ComplaintStatusUpdateRequestDTO request) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintStatusUpdateResponseDTO response = complaintHandler.updateStatus(principal.getOrgId(), complaintId,
-                principal.getUserId(), principal.getUserName(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        ComplaintStatusUpdateResponseDTO response = complaintHandler.updateStatus(currentOrgId(), complaintId,
+                callerUsername, callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.ok(response).build();
     }
 }

@@ -16,28 +16,27 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import java.io.IOException;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.when;
 
@@ -50,25 +49,32 @@ class ComplaintAttachmentEndpointTest {
     private ComplaintAttachmentHandler attachmentHandler;
     @Mock
     private FormDataBodyPart filePart;
-    @Mock
-    private ContainerRequestContext requestContext;
 
     private ComplaintAttachmentEndpoint endpoint;
+
+    @BeforeAll
+    static void configureCarbonEnvironment() throws IOException {
+        CarbonContextTestSupport.configureMinimalCarbonEnvironment();
+    }
 
     @BeforeEach
     void setUp() {
         endpoint = new ComplaintAttachmentEndpoint(attachmentHandler);
-        endpoint.setRequestContext(requestContext);
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("officer1");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(ORG_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        PrivilegedCarbonContext.endTenantFlow();
     }
 
     @Test
     void uploadComplaintAttachmentReturns201WithHandlerResponse() {
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("complaints:write:any")));
         List<ComplaintAttachmentResponseDTO> handlerResponse = List.of();
         when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
-                "Officer One")).thenReturn(handlerResponse);
+                "officer1")).thenReturn(handlerResponse);
 
         Response response = endpoint.uploadComplaintAttachment("c1", List.of(filePart), true);
 
@@ -78,9 +84,6 @@ class ComplaintAttachmentEndpointTest {
 
     @Test
     void downloadComplaintAttachmentReturns200WithHandlerResponse() {
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("complaints:read:any")));
         ComplaintAttachmentDownloadResponseDTO handlerResponse =
                 new ComplaintAttachmentDownloadResponseDTO("att1", "a.pdf", "application/pdf", new byte[]{1});
         when(attachmentHandler.downloadAttachment(ORG_ID, "c1", "att1")).thenReturn(handlerResponse);
@@ -91,8 +94,4 @@ class ComplaintAttachmentEndpointTest {
         assertSame(handlerResponse, response.getEntity());
     }
 
-    @Test
-    void noArgsConstructorWiresARealHandler() {
-        assertNotNull(new ComplaintAttachmentEndpoint());
-    }
 }

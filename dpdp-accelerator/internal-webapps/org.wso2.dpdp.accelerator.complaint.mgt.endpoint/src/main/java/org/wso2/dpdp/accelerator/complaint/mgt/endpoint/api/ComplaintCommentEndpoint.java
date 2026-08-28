@@ -16,11 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
@@ -30,16 +28,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
  * Officer/admin comment endpoint - see complaint-server-API.yaml "Complaint Management -
- * Comments". The acting officer/system's identity and role are resolved from the bearer token -
- * every real HTTP caller here holds an any-scope token, i.e. is a COMPLAINT_OFFICER; SYSTEM actors
- * (e.g. an automated SLA monitor) call the service layer directly, not through this HTTP endpoint.
+ * Comments". The acting officer/system's identity is resolved from {@link PrivilegedCarbonContext}
+ * - every real HTTP caller here holds an any-scope token, i.e. is a COMPLAINT_OFFICER; SYSTEM
+ * actors (e.g. an automated SLA monitor) call the service layer directly, not through this HTTP
+ * endpoint.
  */
 @Path("/complaints/{complaintId}/comments")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,14 +47,6 @@ public class ComplaintCommentEndpoint {
 
     private final ComplaintCommentHandler commentHandler;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
-    /** Test seam - Jersey normally field-injects this via @Context. */
-    void setRequestContext(ContainerRequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
-
     public ComplaintCommentEndpoint() {
         this.commentHandler = new ComplaintCommentHandler();
     }
@@ -67,13 +56,13 @@ public class ComplaintCommentEndpoint {
     }
 
     @POST
-    @RequireScope
     public Response addComplaintMessage(
             @PathParam("complaintId") String complaintId,
             ComplaintMessageRequestDTO request) {
-        AuthenticatedPrincipal principal = TokenIntrospectionFilter.currentPrincipal(requestContext);
-        ComplaintCommentCreateResponseDTO response = commentHandler.addComment(principal.getOrgId(), complaintId,
-                principal.getUserId(), principal.getUserName(), ACTOR_ROLE_COMPLAINT_OFFICER, request);
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        ComplaintCommentCreateResponseDTO response = commentHandler.addComment(callerOrgId, complaintId,
+                callerUsername, callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.ok(response).build();
     }
 }

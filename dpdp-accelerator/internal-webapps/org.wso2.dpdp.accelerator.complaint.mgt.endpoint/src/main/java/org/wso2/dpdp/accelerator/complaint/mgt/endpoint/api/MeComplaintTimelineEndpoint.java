@@ -16,10 +16,9 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.RequireScope;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
@@ -28,39 +27,28 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * Officer/admin timeline endpoint - see complaint-server-API.yaml "Complaint Management -
- * Timeline". Every entry is returned regardless of isPublic.
+ * Data Principal timeline endpoint - see complaint-server-API.yaml "Me - Timeline". Only the
+ * isPublic=true entries are returned - internal officer notes never appear here.
  */
-@Path("/complaints/{complaintId}/timeline")
+@Path("/me/complaints/{complaintId}/timeline")
 @Produces(MediaType.APPLICATION_JSON)
-public class ComplaintTimelineEndpoint {
+public class MeComplaintTimelineEndpoint {
 
     private final ComplaintTimelineHandler timelineHandler;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
-    /** Test seam - Jersey normally field-injects this via @Context. */
-    void setRequestContext(ContainerRequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
-
-    public ComplaintTimelineEndpoint() {
+    public MeComplaintTimelineEndpoint() {
         this.timelineHandler = new ComplaintTimelineHandler();
     }
 
-    public ComplaintTimelineEndpoint(ComplaintTimelineHandler timelineHandler) {
+    public MeComplaintTimelineEndpoint(ComplaintTimelineHandler timelineHandler) {
         this.timelineHandler = timelineHandler;
     }
 
     @GET
-    @RequireScope
     public Response getTimeline(
             @PathParam("complaintId") String complaintId,
             @QueryParam("fromTime") Long fromTime,
@@ -68,9 +56,10 @@ public class ComplaintTimelineEndpoint {
             @QueryParam("order") String order,
             @QueryParam("limit") Integer limit,
             @QueryParam("offset") Integer offset) {
-        String orgId = TokenIntrospectionFilter.currentPrincipal(requestContext).getOrgId();
-        TimelineListResponseDTO response =
-                timelineHandler.getTimeline(orgId, complaintId, fromTime, toTime, order, limit, offset);
+        String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
+        String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
+        TimelineListResponseDTO response = timelineHandler.getOwnTimeline(callerOrgId, complaintId,
+                callerUsername, fromTime, toTime, order, limit, offset);
         return Response.ok(response).build();
     }
 }

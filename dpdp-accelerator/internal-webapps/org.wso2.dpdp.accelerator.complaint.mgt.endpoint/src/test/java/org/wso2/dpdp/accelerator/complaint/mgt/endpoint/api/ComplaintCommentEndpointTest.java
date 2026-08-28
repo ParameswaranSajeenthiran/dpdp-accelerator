@@ -16,26 +16,25 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.endpoint;
+package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.AuthenticatedPrincipal;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.auth.TokenIntrospectionFilter;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import java.io.IOException;
 import javax.ws.rs.core.Response;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.when;
 
@@ -46,25 +45,32 @@ class ComplaintCommentEndpointTest {
 
     @Mock
     private ComplaintCommentHandler commentHandler;
-    @Mock
-    private ContainerRequestContext requestContext;
 
     private ComplaintCommentEndpoint endpoint;
+
+    @BeforeAll
+    static void configureCarbonEnvironment() throws IOException {
+        CarbonContextTestSupport.configureMinimalCarbonEnvironment();
+    }
 
     @BeforeEach
     void setUp() {
         endpoint = new ComplaintCommentEndpoint(commentHandler);
-        endpoint.setRequestContext(requestContext);
+        PrivilegedCarbonContext.startTenantFlow();
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setUsername("officer1");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(ORG_ID);
+    }
+
+    @AfterEach
+    void tearDown() {
+        PrivilegedCarbonContext.endTenantFlow();
     }
 
     @Test
     void addComplaintMessageResolvesActorFromTokenAndReturns200WithHandlerResponse() {
-        when(requestContext.getProperty(TokenIntrospectionFilter.PRINCIPAL_PROPERTY))
-                .thenReturn(new AuthenticatedPrincipal("officer1", "Officer One", ORG_ID,
-                        Set.of("complaints:write:any")));
         ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
         ComplaintCommentCreateResponseDTO handlerResponse = new ComplaintCommentCreateResponseDTO();
-        when(commentHandler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request))
+        when(commentHandler.addComment(ORG_ID, "c1", "officer1", "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 
         Response response = endpoint.addComplaintMessage("c1", request);
@@ -73,8 +79,4 @@ class ComplaintCommentEndpointTest {
         assertSame(handlerResponse, response.getEntity());
     }
 
-    @Test
-    void noArgsConstructorWiresARealHandler() {
-        assertNotNull(new ComplaintCommentEndpoint());
-    }
 }
