@@ -18,10 +18,10 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
@@ -35,10 +35,10 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 
 class ComplaintDAOImplTest {
 
@@ -63,17 +63,17 @@ class ComplaintDAOImplTest {
 
     private final ComplaintDAOImpl dao = new ComplaintDAOImpl();
 
-    @BeforeAll
+    @BeforeClass
     static void setUpDatabase() throws SQLException {
         H2TestDbSupport.setUpDatabase("complaint_dao_test", CREATE_TABLE);
     }
 
-    @AfterAll
+    @AfterClass
     static void tearDownDatabase() {
         H2TestDbSupport.tearDownDatabase();
     }
 
-    @BeforeEach
+    @BeforeMethod
     void clearTable() throws SQLException {
         Connection conn = DatabaseUtils.getDBConnection();
         try (Statement stmt = conn.createStatement()) {
@@ -107,7 +107,7 @@ class ComplaintDAOImplTest {
     void addComplaintThrowsOnDuplicateComplaintIdInsteadOfReturningFalse() {
         dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
 
-        assertThrows(ComplaintDAOException.class,
+        expectThrows(ComplaintDAOException.class,
                 () -> dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 200L, 200L)));
     }
 
@@ -118,7 +118,7 @@ class ComplaintDAOImplTest {
         Complaint collidingReferenceId = new Complaint("c2", "org1", "user2", "user2-name", "CMP-2026-c1",
                 "DATA_BREACH", "HIGH", "OPEN", "desc c2", 200L, 200L, 1200L);
 
-        assertThrows(DuplicateReferenceIdException.class, () -> dao.addComplaint(collidingReferenceId));
+        expectThrows(DuplicateReferenceIdException.class, () -> dao.addComplaint(collidingReferenceId));
     }
 
     @Test

@@ -19,14 +19,13 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
@@ -42,9 +41,9 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,7 +53,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintEventServiceImplTest {
 
     @Mock
@@ -66,7 +64,7 @@ class ComplaintEventServiceImplTest {
 
     private ComplaintEventServiceImpl eventService;
 
-    @BeforeAll
+    @BeforeClass
     static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
         // addComment (with a toStatus) and updateStatus now run their paired DAO writes through
         // JDBCPersistenceManager#executeInTransaction, which opens a real Connection -
@@ -81,7 +79,7 @@ class ComplaintEventServiceImplTest {
         setManagerDataSource(dataSource);
     }
 
-    @AfterAll
+    @AfterClass
     static void clearPersistenceManagerDataSource() throws Exception {
         setManagerDataSource(null);
     }
@@ -92,8 +90,9 @@ class ComplaintEventServiceImplTest {
         field.set(null, dataSource);
     }
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         eventService = new ComplaintEventServiceImpl(complaintEventDAO, complaintDAO, complaintService);
     }
 
@@ -109,7 +108,7 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenThrow(
                 new ComplaintException("CO-4040", "Complaint not found", "desc", 404));
 
-        assertThrows(ComplaintException.class,
+        expectThrows(ComplaintException.class,
                 () -> eventService.getTimeline("org1", "c1", null, null, null, "asc", 10, 0, new int[1]));
 
         verifyNoInteractions(complaintEventDAO);
@@ -163,7 +162,7 @@ class ComplaintEventServiceImplTest {
     void addCommentThrowsWhenMessageIsBlank() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", " ", true, null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -174,7 +173,7 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         String tooLong = "a".repeat(5001);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", tooLong, true, null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -196,7 +195,7 @@ class ComplaintEventServiceImplTest {
     void addCommentThrowsWhenActorUserIdIsBlank() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", " ", "User One", "USER", "hello", true, null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -206,7 +205,7 @@ class ComplaintEventServiceImplTest {
     void addCommentThrowsWhenActorRoleIsInvalid() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "SYSTEM", "hello", true, null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -216,7 +215,7 @@ class ComplaintEventServiceImplTest {
     void addCommentThrowsForbiddenWhenUserTriesToSetIsPublicFalse() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", "hello", false, null));
 
         assertEquals("CO-4030", ex.getCode());
@@ -239,7 +238,7 @@ class ComplaintEventServiceImplTest {
     void addCommentThrowsOnInvalidStatusTransition() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", "note",
                         true, "RESOLVED"));
 
@@ -270,7 +269,7 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.updateStatus(any(Connection.class), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", "note",
                         true, "IN_PROGRESS"));
 
@@ -282,7 +281,7 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", "hello", true, null));
 
         assertEquals("CO-5000", ex.getCode());
@@ -295,7 +294,7 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         when(complaintEventDAO.getEventById("e1", "org1", "c1")).thenReturn(Optional.empty());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.getTimelineEntry("org1", "c1", "e1"));
 
         assertEquals("CO-4040", ex.getCode());
@@ -320,7 +319,7 @@ class ComplaintEventServiceImplTest {
     void updateStatusThrowsWhenActorUserIdIsBlank() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", " ", "User One", "USER", "IN_PROGRESS", null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -330,7 +329,7 @@ class ComplaintEventServiceImplTest {
     void updateStatusThrowsWhenActorRoleIsInvalid() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "user1", "User One", "SYSTEM", "IN_PROGRESS", null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -340,7 +339,7 @@ class ComplaintEventServiceImplTest {
     void updateStatusThrowsWhenToStatusIsBlank() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "user1", "User One", "USER", " ", null));
 
         assertEquals("CO-4002", ex.getCode());
@@ -352,7 +351,7 @@ class ComplaintEventServiceImplTest {
                 "CRITICAL", "IN_PROGRESS", "desc", 1L, 2L, 3L);
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(inProgress);
 
-        ComplaintException ex = assertThrows(ComplaintException.class, () -> eventService.updateStatus("org1", "c1",
+        ComplaintException ex = expectThrows(ComplaintException.class, () -> eventService.updateStatus("org1", "c1",
                 "officer1", "Officer One", "COMPLAINT_OFFICER", "RESOLVED", " "));
 
         assertEquals("CO-4002", ex.getCode());
@@ -363,7 +362,7 @@ class ComplaintEventServiceImplTest {
     void updateStatusThrowsOnInvalidTransition() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                         "RESOLVED", "note"));
 
@@ -393,7 +392,7 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.updateStatus(any(Connection.class), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                         "IN_PROGRESS", null));
 

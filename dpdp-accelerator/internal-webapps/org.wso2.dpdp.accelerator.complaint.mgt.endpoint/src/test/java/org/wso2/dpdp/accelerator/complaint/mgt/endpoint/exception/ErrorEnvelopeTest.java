@@ -18,10 +18,10 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 class ErrorEnvelopeTest {
 
