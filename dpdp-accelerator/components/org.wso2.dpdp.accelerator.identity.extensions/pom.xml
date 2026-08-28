@@ -158,6 +158,7 @@
                         <exclude>**/*ConsentExpiryReconciler.class</exclude>
                         <!-- Needs a live Quartz Scheduler and/or the carbon config directory. -->
                         <exclude>**/scheduler/*.class</exclude>
+                        <exclude>**/*StartupObserver.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -226,6 +227,7 @@
                             com.google.gson;version="${gson.imp.pkg.version.range}",
 
                             org.wso2.carbon.context.*;version="${carbon.kernel.version}",
+                            org.wso2.carbon.core;version="${carbon.kernel.version}",
                             org.wso2.carbon.utils.multitenancy;version="${carbon.kernel.version}",
                             org.wso2.carbon.user.core;version="${carbon.user.core.version}",
                             org.wso2.carbon.user.core.service;version="${carbon.user.core.version}",

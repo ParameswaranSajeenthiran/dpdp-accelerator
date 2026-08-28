@@ -31,7 +31,7 @@ export class ElementListPage {
     this.table = page.getByRole('table', { name: 'Consent elements' })
     this.heading = page.getByRole('heading', { name: 'Elements' })
     this.addElementButton = page.getByRole('button', { name: 'Add Element' })
-    this.nameSearch = page.getByPlaceholder('Search by name')
+    this.nameSearch = page.getByPlaceholder('Search by element name')
     this.searchButton = page.getByRole('button', { name: 'Search' })
     this.resetButton = page.getByRole('button', { name: 'Reset' })
   }

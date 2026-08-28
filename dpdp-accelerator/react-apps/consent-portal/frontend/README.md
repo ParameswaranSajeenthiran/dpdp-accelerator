@@ -16,9 +16,10 @@
  * under the License.
  -->
 
-# OpenFGC Portal Frontend
+# DPDP Consent Portal Frontend
 
-The OpenFGC Portal Frontend is designed to create a comprehensive Consent Management Portal User Interface, leveraging the [OpenFGC Consent Management API](https://github.com/wso2/openfgc).
+The DPDP Consent Portal Frontend is the Consent Management Portal User Interface for the WSO2 DPDP
+Accelerator, talking directly to the Identity Server's consent-mgt REST APIs.
 
 React 19 + TypeScript + Vite app using WSO2 Oxygen UI.
 
@@ -28,80 +29,75 @@ React 19 + TypeScript + Vite app using WSO2 Oxygen UI.
 
 ## Quickstart
 
-From `portal/frontend`:
+From `dpdp-accelerator/react-apps/consent-portal/frontend`:
 
-1. Copy `.env.example` to `.env` and configure `VITE_API_BASE_URL` for the Portal Backend.
-2. Ensure pnpm 10.6.5 is available. If pnpm was installed through another method, skip this command; otherwise enable it through Corepack:
+1. Copy `.env.example` to `.env`. `VITE_API_BASE_URL` is optional — leave it empty when deployed
+   inside IS (the default; see Environment below).
+2. Install dependencies:
 
    ```shell
-   corepack enable
+   npm install
    ```
 
-3. Install dependencies:
+3. Start the development server:
 
    ```shell
-   pnpm install
-   ```
-
-4. Start the development server:
-
-   ```shell
-   pnpm dev
+   npm run dev
    ```
 
 Open the local URL printed by Vite, typically `http://localhost:5173`.
 
 ## Package Manager
 
-This project uses [pnpm](https://pnpm.io/), with the version pinned in `package.json`.
-
-Enable pnpm through Corepack:
-
-```bash
-corepack enable
-```
-
-Note: If your machine cannot install Corepack shims, prefix pnpm commands with `corepack`, for example `corepack pnpm install`.
-
-Alternatively, follow the other [recommended pnpm installation options](https://pnpm.io/installation).
+This project uses npm. `package-lock.json` is the committed lockfile; the Maven build invokes
+`npm install` / `npm run build` directly (`react-apps/consent-portal/pom.xml`).
 
 ## Environment
 
 Create a local `.env` file from `.env.example` before running or building the portal.
 
-| Variable                               | Description                                                                                                               | Example                   |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `VITE_API_BASE_URL`                    | Required base URL for the OpenFGC Portal backend API. Vite embeds this value at build time.                               | `http://localhost:8080`   |
-| `VITE_AUTH_ENABLED`                    | Enables frontend authentication gating; set to `true` for protected deployments.                                          | `true`                    |
-| `VITE_AUTH_ACCESS_TOKEN_PART1_COOKIE`  | Cookie name for the readable access-token part.                                                                           | `portal-at-p1`            |
-| `VITE_AUTH_REFRESH_TOKEN_PART1_COOKIE` | Cookie name for the readable refresh-token part.                                                                          | `portal-rt-p1`            |
-| `VITE_AUTH_ID_TOKEN_PART1_COOKIE`      | Cookie name for ID-token part 1.                                                                                          | `portal-id-p1`            |
-| `VITE_AUTH_ID_TOKEN_PART2_COOKIE`      | Cookie name for ID-token part 2.                                                                                          | `portal-id-p2`            |
-| `VITE_AUTH_LOGOUT_ALLOWED_ORIGINS`     | Exact comma-separated origins accepted for logout navigation. Include the IdP origin when using its end-session endpoint. | `https://idp.example.com` |
+| Variable          | Description                                                                                                                | Example |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `VITE_API_BASE_URL` | Optional. Vite embeds this at build time. Leave empty for the normal deployment: inside IS, the portal's APIs are same-origin and tenant-qualified, resolved at runtime by `src/utils/basePath.ts`. Only set this pointing a dev server at a remote IS. | `` (empty) |
+| `VITE_AUTH_ENABLED` | Enables frontend authentication gating; set to `true` for protected deployments. | `true` |
 
-The authenticated user and organization IDs are resolved from `GET /me`; they are not frontend build-time configuration.
+There is no backend of the portal's own and no `GET /me` endpoint — the portal is a public OIDC
+client (`@asgardeo/auth-spa`) talking directly to the Identity Server's REST APIs. Tokens live in
+the auth SDK's web worker, never in page script; see root `CLAUDE.md`'s "Portal auth: no backend of
+our own" section for the full picture.
 
 ## Production security headers
 
-`pnpm build` emits `dist/_headers`; configure the production static host to apply
-it and build with the deployment's `VITE_API_BASE_URL`.
+The build's CSP ships as a `<meta http-equiv="Content-Security-Policy">` element baked into
+`index.html` at build time, not as a `dist/_headers` file — the portal is served by the Identity
+Server's Tomcat, not a static host that reads `_headers` conventions (see
+`scripts/verify-production-security.mjs` and `src/security/contentSecurityPolicy.ts`).
+`npm run build` verifies this automatically via the chained `security:verify` step.
 
 ## Scripts
 
 ```bash
-pnpm start
-pnpm dev
-pnpm lint
-pnpm lint:fix
-pnpm format
-pnpm format:check
-pnpm test
-pnpm test:watch
-pnpm test:coverage
-pnpm build
-pnpm security:verify
-pnpm preview
+npm start
+npm run dev
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+npm test
+npm run test:watch
+npm run test:coverage
+npm run build
+npm run security:audit
+npm run security:verify
+npm run i18n:verify
+npm run generate:shell
+npm run preview
 ```
+
+`npm run build` is a chain — `tsc -b` → `vite build` → `security:verify` → `i18n:verify` →
+`generate:shell` — and a failure in any of the last three steps looks nothing like a Vite error.
+This chain is also what the Maven build invokes, so any of these four can fail `mvn clean install`
+from the repository root.
 
 ## Testing
 
@@ -109,8 +105,8 @@ Tests are written with [Vitest](https://vitest.dev/) and [React Testing Library]
 
 - **Test files**: Located in `src/__tests__/` with `.test.ts`/`.test.tsx` extensions
 - **Setup**: Global setup in `vitest.setup.ts` imports jest-dom matchers
-- **Run tests**: `pnpm test` or `pnpm test:watch` for watch mode
-- **Coverage**: `pnpm test:coverage` generates HTML coverage report in `coverage/`
+- **Run tests**: `npm test` or `npm run test:watch` for watch mode
+- **Coverage**: `npm run test:coverage` generates HTML coverage report in `coverage/`
 
 ## Project Structure
 
@@ -151,10 +147,11 @@ repository root.
 
 ## CI
 
-GitHub Actions CI runs pnpm-based install, lint, and build checks on every push and pull request on portal/frontend directory.
+`.github/workflows/pr-checks.yml` builds the whole accelerator (including this frontend, via
+`mvn clean install` from the repository root) on every pull request to `main` and `dev`.
 
 ## AI Instructions
 
 This repository uses AGENTS.md files to keep AI-generated changes aligned with project and organization standards.
 
-- Frontend standards: `portal/frontend/AGENTS.md`
+- Frontend standards: `dpdp-accelerator/react-apps/consent-portal/frontend/AGENTS.md`
