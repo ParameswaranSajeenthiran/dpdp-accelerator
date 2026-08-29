@@ -790,6 +790,7 @@
     "activity": {
       "title": "ਗਤੀਵਿਧੀ",
       "send": "ਭੇਜੋ",
+      "addNote": "Add note",
       "sendOnly": "ਸਿਰਫ਼ ਭੇਜੋ",
       "sendOptions": "ਹੋਰ ਭੇਜਣ ਦੇ ਵਿਕਲਪ",
       "sendAndChangeStatusTo": "ਭੇਜੋ ਅਤੇ ਸਥਿਤੀ ਬਦਲੋ",

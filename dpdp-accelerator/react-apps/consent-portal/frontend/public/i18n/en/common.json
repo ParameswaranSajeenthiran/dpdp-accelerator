@@ -790,6 +790,7 @@
     "activity": {
       "title": "Activity",
       "send": "Send",
+      "addNote": "Add note",
       "sendOnly": "Send only",
       "sendOptions": "More send options",
       "sendAndChangeStatusTo": "Send and change status to",

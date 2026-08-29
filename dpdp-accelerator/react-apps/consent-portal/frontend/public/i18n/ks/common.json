@@ -790,6 +790,7 @@
     "activity": {
       "title": "سَرگرمی",
       "send": "سوزِیو",
+      "addNote": "Add note",
       "sendOnly": "صِرف سوزِیو",
       "sendOptions": "مَزِید سوزنِچ آپشَن",
       "sendAndChangeStatusTo": "سوزِیو تہٕ سٹیٹَس بَدلِیو اَتھ مَنٛز",

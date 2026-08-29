@@ -790,6 +790,7 @@
     "activity": {
       "title": "செயல்பாடு",
       "send": "அனுப்பு",
+      "addNote": "Add note",
       "sendOnly": "மட்டும் அனுப்பு",
       "sendOptions": "கூடுதல் அனுப்பும் விருப்பங்கள்",
       "sendAndChangeStatusTo": "அனுப்பி நிலையை மாற்றவும்:",

@@ -790,6 +790,7 @@
     "activity": {
       "title": "ಚಟುವಟಿಕೆ",
       "send": "ಕಳುಹಿಸಿ",
+      "addNote": "Add note",
       "sendOnly": "ಕಳುಹಿಸಲು ಮಾತ್ರ",
       "sendOptions": "ಹೆಚ್ಚಿನ ಕಳುಹಿಸುವ ಆಯ್ಕೆಗಳು",
       "sendAndChangeStatusTo": "ಕಳುಹಿಸಿ ಮತ್ತು ಸ್ಥಿತಿಯನ್ನು ಇದಕ್ಕೆ ಬದಲಾಯಿಸಿ",

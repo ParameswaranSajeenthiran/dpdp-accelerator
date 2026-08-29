@@ -790,6 +790,7 @@
     "activity": {
       "title": "हाबाफारि",
       "send": "दैथायहर",
+      "addNote": "Add note",
       "sendOnly": "दैथायहरल'",
       "sendOptions": "बांसिन दैथायहरनाय सायख'नाय",
       "sendAndChangeStatusTo": "दैथायहर आरो थासारिखौ सोलाय",

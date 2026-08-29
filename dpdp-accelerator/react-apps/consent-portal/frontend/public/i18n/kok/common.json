@@ -790,6 +790,7 @@
     "activity": {
       "title": "कारवाय",
       "send": "धाडा",
+      "addNote": "Add note",
       "sendOnly": "फकत धाडा",
       "sendOptions": "आनीक धाडपाचे पर्याय",
       "sendAndChangeStatusTo": "धाडा आणि स्थिती अशी बदला",

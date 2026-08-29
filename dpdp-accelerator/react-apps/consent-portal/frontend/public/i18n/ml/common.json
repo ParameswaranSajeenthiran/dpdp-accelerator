@@ -790,6 +790,7 @@
     "activity": {
       "title": "പ്രവർത്തനം",
       "send": "അയയ്ക്കുക",
+      "addNote": "Add note",
       "sendOnly": "അയയ്ക്കാൻ മാത്രം",
       "sendOptions": "കൂടുതൽ അയയ്ക്കൽ ഓപ്ഷനുകൾ",
       "sendAndChangeStatusTo": "അയച്ച് സ്റ്റാറ്റസ് ഇതിലേക്ക് മാറ്റുക",

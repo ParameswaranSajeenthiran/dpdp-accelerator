@@ -790,6 +790,7 @@
     "activity": {
       "title": "কাৰ্যকলাপ",
       "send": "প্ৰেৰণ কৰক",
+      "addNote": "Add note",
       "sendOnly": "কেৱল প্ৰেৰণ কৰক",
       "sendOptions": "অধিক প্ৰেৰণৰ বিকল্প",
       "sendAndChangeStatusTo": "প্ৰেৰণ কৰক আৰু স্থিতি সলনি কৰক",

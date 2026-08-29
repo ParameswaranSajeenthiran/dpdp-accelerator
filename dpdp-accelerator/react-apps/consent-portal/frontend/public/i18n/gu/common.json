@@ -790,6 +790,7 @@
     "activity": {
       "title": "પ્રવૃત્તિ",
       "send": "મોકલો",
+      "addNote": "Add note",
       "sendOnly": "માત્ર મોકલો",
       "sendOptions": "વધુ મોકલવાના વિકલ્પો",
       "sendAndChangeStatusTo": "મોકલો અને સ્થિતિ આમાં બદલો",

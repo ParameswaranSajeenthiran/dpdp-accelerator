@@ -790,6 +790,7 @@
     "activity": {
       "title": "ক্রিয়াকলাপ",
       "send": "পাঠান",
+      "addNote": "Add note",
       "sendOnly": "শুধুমাত্র পাঠান",
       "sendOptions": "আরও পাঠানোর বিকল্প",
       "sendAndChangeStatusTo": "পাঠান এবং স্ট্যাটাস পরিবর্তন করুন",

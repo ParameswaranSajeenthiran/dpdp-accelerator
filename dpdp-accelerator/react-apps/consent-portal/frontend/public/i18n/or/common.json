@@ -790,6 +790,7 @@
     "activity": {
       "title": "କାର୍ଯ୍ୟକଳାପ",
       "send": "ପଠାନ୍ତୁ",
+      "addNote": "Add note",
       "sendOnly": "କେବଳ ପଠାନ୍ତୁ",
       "sendOptions": "ଅଧିକ ପଠାଇବା ବିକଳ୍ପଗୁଡ଼ିକ",
       "sendAndChangeStatusTo": "ପଠାନ୍ତୁ ଏବଂ ସ୍ଥିତିକୁ ପରିବର୍ତ୍ତନ କରନ୍ତୁ",

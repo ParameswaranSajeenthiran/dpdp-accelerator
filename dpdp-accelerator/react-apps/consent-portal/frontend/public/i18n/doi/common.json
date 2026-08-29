@@ -790,6 +790,7 @@
     "activity": {
       "title": "गतिविधि",
       "send": "भेजो",
+      "addNote": "Add note",
       "sendOnly": "सिर्फ भेजो",
       "sendOptions": "होर भेजन दे विकल्प",
       "sendAndChangeStatusTo": "भेजो ते स्टेटस बदलो",

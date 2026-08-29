@@ -790,6 +790,7 @@
     "activity": {
       "title": "سرگرمی",
       "send": "بھیجیں",
+      "addNote": "Add note",
       "sendOnly": "صرف بھیجیں",
       "sendOptions": "بھیجنے کے مزید اختیارات",
       "sendAndChangeStatusTo": "بھیجیں اور اسٹیٹس تبدیل کریں:",

@@ -790,6 +790,7 @@
     "activity": {
       "title": "क्रियाकलाप",
       "send": "पाठवा",
+      "addNote": "Add note",
       "sendOnly": "केवळ पाठवा",
       "sendOptions": "अधिक पाठविण्याचे पर्याय",
       "sendAndChangeStatusTo": "पाठवा आणि स्थिती यात बदला",

@@ -790,6 +790,7 @@
     "activity": {
       "title": "కార్యకలాపం",
       "send": "పంపు",
+      "addNote": "Add note",
       "sendOnly": "పంపించు మాత్రమే",
       "sendOptions": "మరిన్ని పంపే ఎంపికలు",
       "sendAndChangeStatusTo": "పంపండి మరియు స్థితిని దీనికి మార్చండి",

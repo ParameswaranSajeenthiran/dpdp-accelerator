@@ -151,3 +151,76 @@ describe('ComplaintReplyComposer single attachment limit', () => {
     expect(attachButton).toBeEnabled()
   })
 })
+
+/**
+ * An internal note never changes the complaint's status - it's a private annotation between
+ * officers, not an action on the complaint - so the composer must swap "Send" for "Add note"
+ * and hide the status-change split-button entirely while composing one.
+ */
+describe('ComplaintReplyComposer internal note mode', () => {
+  it('shows "Add note" and hides the status split-button once switched to Internal note', () => {
+    renderWithProviders(
+      <ComplaintReplyComposer
+        canPostInternalNote
+        statusOptions={['IN_PROGRESS', 'RESOLVED']}
+        getStatusLabel={(status) => status}
+        onSend={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'More send options' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Internal note' }))
+
+    expect(screen.getByRole('button', { name: 'Add note' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'More send options' })).not.toBeInTheDocument()
+  })
+
+  it('restores "Send" and the status split-button when switching back to Reply', () => {
+    renderWithProviders(
+      <ComplaintReplyComposer
+        canPostInternalNote
+        statusOptions={['IN_PROGRESS', 'RESOLVED']}
+        getStatusLabel={(status) => status}
+        onSend={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Internal note' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reply' }))
+
+    expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'More send options' })).toBeInTheDocument()
+  })
+
+  it('sends the note without a status even if a status was picked before switching to Internal note', () => {
+    const onSend = vi.fn()
+    renderWithProviders(
+      <ComplaintReplyComposer
+        canPostInternalNote
+        statusOptions={['IN_PROGRESS', 'RESOLVED']}
+        getStatusLabel={(status) => status}
+        onSend={onSend}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'More send options' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'IN_PROGRESS' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Internal note' }))
+
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'internal only' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add note' }))
+
+    expect(onSend).toHaveBeenCalledTimes(1)
+    const [, , visibility, nextStatus] = onSend.mock.calls[0] as [
+      string,
+      File[],
+      string,
+      string | undefined,
+    ]
+    expect(visibility).toBe('internal')
+    expect(nextStatus).toBeUndefined()
+  })
+})

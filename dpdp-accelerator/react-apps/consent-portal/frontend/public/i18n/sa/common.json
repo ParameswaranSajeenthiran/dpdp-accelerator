@@ -790,6 +790,7 @@
     "activity": {
       "title": "गतिविधिः",
       "send": "प्रेषयन्तु",
+      "addNote": "Add note",
       "sendOnly": "केवलं प्रेषयन्तु",
       "sendOptions": "अधिक-प्रेषण-विकल्पाः",
       "sendAndChangeStatusTo": "प्रेषयन्तु स्थितिं च अत्र परिवर्तयन्तु",

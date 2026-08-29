@@ -83,14 +83,15 @@ function ComplaintReplyComposer({
   let sendIcon = <Send size={16} />
   let sendLabel = t('complaints.activity.send')
   let sendColor: 'primary' | 'warning' = 'primary'
-  if (pendingStatus) {
+  if (isInternalDraft) {
+    sendIcon = <Lock size={16} />
+    sendLabel = t('complaints.activity.addNote')
+    sendColor = 'warning'
+  } else if (pendingStatus) {
     sendIcon = <Flag size={16} />
     sendLabel = t('complaints.activity.sendAndUpdateStatus', {
       status: getStatusLabel(pendingStatus),
     })
-    sendColor = 'warning'
-  } else if (isInternalDraft) {
-    sendIcon = <Lock size={16} />
     sendColor = 'warning'
   }
 
@@ -104,6 +105,11 @@ function ComplaintReplyComposer({
           onChange={(_, nextValue: ComplaintTimelineVisibility | null) => {
             if (nextValue) {
               setComposerVisibility(nextValue)
+              if (nextValue === 'internal') {
+                // Internal notes never change status - drop any status picked while composing
+                // a public reply so it can't leak into the note once sent.
+                setPendingStatus('')
+              }
             }
           }}
         >
@@ -231,7 +237,7 @@ function ComplaintReplyComposer({
             >
               {sendLabel}
             </Button>
-            {statusOptions.length > 0 ? (
+            {statusOptions.length > 0 && !isInternalDraft ? (
               <Button
                 size="small"
                 sx={{ px: 0.5 }}
