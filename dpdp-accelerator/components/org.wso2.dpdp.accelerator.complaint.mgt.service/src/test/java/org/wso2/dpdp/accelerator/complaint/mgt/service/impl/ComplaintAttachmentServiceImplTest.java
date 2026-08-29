@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
+import org.h2.jdbcx.JdbcDataSource;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -39,6 +41,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Base64;
 import java.util.List;
@@ -74,9 +77,33 @@ class ComplaintAttachmentServiceImplTest {
         ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
+    @BeforeClass
+    static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
+        // uploadComplaintAttachments now opens its own Connection via DatabaseUtils to make the
+        // event/attachment writes atomic (see ComplaintAttachmentServiceImpl) - the DAOs
+        // themselves are mocked here, so no schema is needed, but JDBCPersistenceManager still
+        // needs a real DataSource to hand out a Connection at all.
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:complaint_attachment_service_test;DB_CLOSE_DELAY=-1");
+        dataSource.setUser("sa");
+        dataSource.setPassword("");
+        setManagerDataSource(dataSource);
+    }
+
     @AfterClass
     void clearConfigurationService() {
         ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @AfterClass
+    static void clearPersistenceManagerDataSource() throws Exception {
+        setManagerDataSource(null);
+    }
+
+    private static void setManagerDataSource(Object dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
     }
 
     @BeforeMethod
@@ -97,7 +124,7 @@ class ComplaintAttachmentServiceImplTest {
     // ---- uploadComplaintAttachments ----
 
     @Test
-    void uploadComplaintAttachmentsRequiresComplaintToExist() {
+    void uploadComplaintAttachmentsRequiresComplaintToExist() throws Exception {
         when(complaintService.requireComplaint("org1", "c1")).thenThrow(
                 new ComplaintException("CO-4040", "Complaint not found", "desc", 404));
 
@@ -165,7 +192,7 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenActorUserIdBlank() {
+    void uploadComplaintAttachmentsThrowsWhenActorUserIdBlank() throws Exception {
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "  ", "User One", "USER"));
@@ -175,7 +202,7 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenActorRoleInvalid() {
+    void uploadComplaintAttachmentsThrowsWhenActorRoleInvalid() throws Exception {
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "user1", "User One", "SYSTEM"));
@@ -326,7 +353,7 @@ class ComplaintAttachmentServiceImplTest {
     // ---- own* ownership defense-in-depth ----
 
     @Test
-    void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() {
+    void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() throws Exception {
         when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
                 .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
 
