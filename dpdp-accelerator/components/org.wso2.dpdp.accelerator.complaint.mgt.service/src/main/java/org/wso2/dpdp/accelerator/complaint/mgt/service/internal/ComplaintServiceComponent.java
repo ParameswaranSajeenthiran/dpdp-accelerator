@@ -53,7 +53,6 @@ public class ComplaintServiceComponent {
 
     private static final Log LOG = LogFactory.getLog(ComplaintServiceComponent.class);
 
-    private volatile ComplaintDAOProvider daoProvider;
 
     private ServiceRegistration<ComplaintService> complaintServiceRegistration;
     private ServiceRegistration<ComplaintEventService> complaintEventServiceRegistration;
@@ -61,7 +60,7 @@ public class ComplaintServiceComponent {
 
     @Activate
     protected void activate(ComponentContext context) {
-
+        ComplaintDAOProvider daoProvider = ComplaintServiceDataHolder.getInstance().getDaoProvider();
         ComplaintService complaintService = new ComplaintServiceImpl(
                 daoProvider.getComplaintDAO(), daoProvider.getComplaintEventDAO());
         ComplaintEventService complaintEventService = new ComplaintEventServiceImpl(
@@ -98,15 +97,11 @@ public class ComplaintServiceComponent {
     )
     protected void setComplaintDAOProvider(ComplaintDAOProvider daoProvider) {
 
-        this.daoProvider = daoProvider;
         ComplaintServiceDataHolder.getInstance().setDaoProvider(daoProvider);
     }
 
     protected void unsetComplaintDAOProvider(ComplaintDAOProvider daoProvider) {
 
-        if (this.daoProvider == daoProvider) {
-            this.daoProvider = null;
-        }
         ComplaintServiceDataHolder dataHolder = ComplaintServiceDataHolder.getInstance();
         if (dataHolder.getDaoProvider() == daoProvider) {
             dataHolder.setDaoProvider(null);
