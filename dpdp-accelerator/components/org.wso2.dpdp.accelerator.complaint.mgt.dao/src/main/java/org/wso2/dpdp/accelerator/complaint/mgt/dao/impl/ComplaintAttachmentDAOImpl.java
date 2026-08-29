@@ -49,6 +49,26 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public boolean addAttachment(ComplaintAttachment attachment) {
         Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            boolean result = addAttachment(conn, attachment);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            LOG.error("Error adding attachment for complaint: "
+                    + LogSanitizer.sanitize(attachment.getComplaintId()), e);
+            throw new ComplaintDAOException("Error adding attachment for complaint: " + attachment.getComplaintId(),
+                    e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
+    }
+
+    @Override
+    public boolean addAttachment(Connection conn, ComplaintAttachment attachment) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintAttachmentQuery())) {
             ps.setString(1, attachment.getAttachmentId());
             ps.setString(2, attachment.getOrgId());
@@ -63,17 +83,12 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
             ps.setBytes(7, attachment.getFileData());
             ps.setBoolean(8, attachment.isPublic());
             ps.setLong(9, attachment.getCreatedTime());
-            boolean result = ps.executeUpdate() > 0;
-            DatabaseUtils.commitTransaction(conn);
-            return result;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
             LOG.error("Error adding attachment for complaint: "
                     + LogSanitizer.sanitize(attachment.getComplaintId()), e);
             throw new ComplaintDAOException("Error adding attachment for complaint: " + attachment.getComplaintId(),
                     e);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
         }
     }
 

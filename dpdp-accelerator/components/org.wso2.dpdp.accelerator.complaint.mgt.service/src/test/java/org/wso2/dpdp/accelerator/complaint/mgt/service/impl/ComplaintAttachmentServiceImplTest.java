@@ -39,6 +39,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
+import java.sql.Connection;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +104,7 @@ class ComplaintAttachmentServiceImplTest {
         expectThrows(ComplaintException.class, () -> attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10)), true, "user1", "User One", "USER"));
 
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
@@ -170,7 +171,7 @@ class ComplaintAttachmentServiceImplTest {
                         "  ", "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
-        verify(complaintEventDAO, never()).addEvent(any());
+        verify(complaintEventDAO, never()).addEvent(any(Connection.class), any());
     }
 
     @Test
@@ -180,13 +181,13 @@ class ComplaintAttachmentServiceImplTest {
                         "user1", "User One", "SYSTEM"));
 
         assertEquals("CO-4002", ex.getCode());
-        verify(complaintEventDAO, never()).addEvent(any());
+        verify(complaintEventDAO, never()).addEvent(any(Connection.class), any());
     }
 
     @Test
-    void uploadComplaintAttachmentsStoresEachFileWithGivenIsPublic() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
+    void uploadComplaintAttachmentsStoresEachFileWithGivenIsPublic() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), false, "officer1", "Officer One",
@@ -200,15 +201,15 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsRecordsOneUploadEventAndLinksEveryAttachmentToIt() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
+    void uploadComplaintAttachmentsRecordsOneUploadEventAndLinksEveryAttachmentToIt() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), true, "user1", "User One", "USER");
 
         ArgumentCaptor<ComplaintEvent> eventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
-        verify(complaintEventDAO).addEvent(eventCaptor.capture());
+        verify(complaintEventDAO).addEvent(any(Connection.class), eventCaptor.capture());
         ComplaintEvent event = eventCaptor.getValue();
 
         assertNotNull(event.getComplaintEventId());
@@ -223,21 +224,21 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsInternalErrorWhenEventStoreFails() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(false);
+    void uploadComplaintAttachmentsThrowsInternalErrorWhenEventStoreFails() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(false);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "user1", "User One", "USER"));
 
         assertEquals("CO-5000", ex.getCode());
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsInternalErrorWhenPersistFails() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(false);
+    void uploadComplaintAttachmentsThrowsInternalErrorWhenPersistFails() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(false);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)),
@@ -332,13 +333,13 @@ class ComplaintAttachmentServiceImplTest {
         expectThrows(ComplaintException.class, () -> attachmentService.uploadOwnComplaintAttachments("org1", "c1",
                 "user1", "User One", List.of(pdfFile("a.pdf", 10))));
 
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
-    void uploadOwnComplaintAttachmentsVerifiesOwnershipThenUploadsAsPublicUserRole() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any())).thenReturn(true);
+    void uploadOwnComplaintAttachmentsVerifiesOwnershipThenUploadsAsPublicUserRole() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any())).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1",
                 "user1", "User One", List.of(pdfFile("a.pdf", 10)));
@@ -347,7 +348,7 @@ class ComplaintAttachmentServiceImplTest {
         assertTrue(result.get(0).isPublic());
         verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
-        verify(complaintEventDAO).addEvent(captor.capture());
+        verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("USER", captor.getValue().getActorRole());
     }
 
