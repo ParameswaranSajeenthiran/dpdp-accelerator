@@ -29,15 +29,17 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import org.wso2.carbon.core.ServerStartupObserver;
+import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.consent.mgt.core.listener.ConsentManagementListener;
+import org.wso2.carbon.core.ServerStartupObserver;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
@@ -79,8 +81,19 @@ public class DPDPIdentityExtensionServiceComponent {
         bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentHistoryListener(),
                 null);
         new ConsentExpiryJobActivator().activate();
-        LOG.debug("DPDP Identity Extensions component activated; tenant management listener, server startup "
-                + "observer, and consent management listener registered.");
+        LOG.debug("DPDP Identity Extensions component activated; tenant management, consent management "
+                + "listeners and server startup observer registered.");
+
+        try {
+            TenantInfoBean superTenant = new TenantInfoBean();
+            superTenant.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
+            superTenant.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+            superTenant.setAdmin(DPDPIdentityExtensionDataHolder.getInstance().getRealmService()
+                    .getBootstrapRealm().getRealmConfiguration().getAdminUserName());
+            DPDPIdentityExtensionTenantMgtListener.provisionTenant(superTenant);
+        } catch (Exception e) {
+            LOG.error("Error provisioning the DPDP Consent Portal for the super tenant.", e);
+        }
     }
 
     @Deactivate

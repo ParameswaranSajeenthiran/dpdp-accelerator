@@ -758,7 +758,8 @@
       "overdueSingular": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
       "overduePlural": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
       "daysLeftSingular": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
-      "daysLeftPlural": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ"
+      "daysLeftPlural": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
+      "dueLabel": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ"
     },
     "timeline": {
       "complaintReceived": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱧᱟᱢ ᱮᱱᱟ",
@@ -773,13 +774,16 @@
       "empty": "ᱟᱹᱣᱨᱤ ᱜᱮ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱢ ᱮᱢ ᱟᱠᱟᱫᱼᱟ।",
       "emptyFiltered": "ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱯᱷᱤᱞᱴᱚᱨ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ।",
       "filters": {
+        "sectionAriaLabel": "ᱤᱧᱟᱜ ᱞᱟᱹᱞᱤᱥᱠᱚ ᱯᱷᱤᱞᱴᱚᱨ",
         "status": "ᱥᱴᱮᱴᱚᱥ",
-        "all": "ᱡᱚᱛᱚ"
+        "all": "ᱡᱚᱛᱚ",
+        "clear": "ᱯᱷᱤᱞᱴᱚᱨ ᱯᱷᱟᱹᱰᱞᱟᱹᱜ",
+        "clearAriaLabel": "ᱡᱷᱚᱛᱚ ᱯᱷᱤᱞᱴᱚᱨ ᱯᱷᱟᱹᱰᱞᱟᱹᱜ"
       },
       "table": {
         "tableAriaLabel": "ᱤᱧᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱴᱮᱵᱩᱞ",
         "headers": {
-          "referenceId": "Reference ID",
+          "referenceId": "ᱨᱮᱯᱷᱟᱨᱮᱱᱥ ᱟᱭᱰᱤ",
           "category": "ᱠᱮᱴᱮᱜᱚᱨᱤ",
           "status": "ᱥᱴᱮᱴᱚᱥ",
           "submitted": "ᱮᱢ ᱟᱠᱟᱱᱟ",
@@ -791,13 +795,13 @@
       "back": "ᱤᱧᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱛᱮ ᱨᱩᱣᱟᱹᱲ",
       "notFound": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
       "description": "ᱵᱤᱵᱚᱨᱚᱱ",
-      "submittedOn": "{{date}} ᱨᱮ ᱮᱢ ᱟᱠᱟᱱᱟ",
       "awaitingInfo": {
         "note": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱚᱯᱷᱤᱥᱚᱨ ᱟᱢ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱟᱨᱦᱚᱸ ᱵᱤᱵᱚᱨᱚᱱ ᱮ ᱛᱟᱹᱝᱜᱤ ᱭᱮᱫᱼᱟ। ᱞᱟᱛᱟᱨ ᱨᱮ ᱨᱳᱲ ᱨᱩᱣᱟᱹᱲ ᱢᱮ।"
       },
       "resolved": {
         "note": "ᱱᱚᱣᱟ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱥᱚᱞᱦᱮ ᱮᱱᱟ।"
-      }
+      },
+      "submittedOnLabel": "ᱱᱚᱣᱟ ᱫᱚᱫᱷᱟ ᱫᱚ ᱱᱚᱣᱟ ᱢᱟᱹᱦᱤᱛ ᱨᱮ ᱡᱚᱢᱟ ᱟᱠᱟᱱᱟ"
     },
     "submit": {
       "title": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱮᱢ ᱢᱮ",
@@ -854,7 +858,10 @@
       "empty": "ᱱᱚᱣᱟ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱨᱮ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱚᱴᱮᱪᱢᱮᱱᱴ ᱵᱟᱝ ᱡᱚᱲᱟᱣ ᱟᱠᱟᱱᱟ।",
       "initialSubmission": "ᱮᱛᱚᱦᱚᱵ ᱮᱢ",
       "internalNote": "ᱵᱷᱤᱛᱨᱤ",
-      "overflowMore": "+{{count}} ᱟᱨᱦᱚᱸ"
+      "overflowMore": "+{{count}} ᱟᱨᱦᱚᱸ",
+      "uploadedCount": "{{count}} ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱡᱚᱲᱟᱣ ᱮᱱᱟ",
+      "uploadedCount_one": "ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱢᱤᱫᱴᱟᱹᱜ ᱡᱚᱲᱟᱣ ᱮᱱᱟ",
+      "uploadedCount_other": "{{count}} ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱡᱚᱲᱟᱣ ᱮᱱᱟ"
     },
     "management": {
       "queue": {
@@ -879,7 +886,7 @@
         "table": {
           "tableAriaLabel": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱴᱮᱵᱩᱞ",
           "headers": {
-            "referenceId": "Reference ID",
+            "referenceId": "ᱨᱮᱯᱷᱟᱨᱮᱱᱥ ᱟᱭᱰᱤ",
             "dataPrincipal": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ (Data Principal)",
             "category": "ᱠᱮᱴᱮᱜᱚᱨᱤ",
             "priority": "ᱯᱨᱟᱭᱳᱨᱤᱴᱤ",
@@ -892,7 +899,16 @@
       "case": {
         "back": "Queue ᱛᱮ ᱨᱩᱣᱟᱹᱲ",
         "notFound": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
-        "dataPrincipal": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ"
+        "dataPrincipal": "ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ",
+        "resolvedLocked": "ᱱᱚᱣᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱫᱚ ᱥᱚᱞᱦᱮ ᱟᱠᱟᱱᱟ ᱟᱨ ᱱᱤᱛᱚᱜ ᱫᱚ ᱞᱚᱠ ᱟᱠᱟᱱᱟ ᱾ ᱟᱢ ᱱᱚᱣᱟ ᱫᱚ ᱥᱚᱡᱷᱮ ᱵᱟᱢ ᱡᱷᱤᱡ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ — ᱱᱚᱣᱟ ᱫᱚ ᱩᱱᱨᱮᱜᱮ ᱡᱷᱤᱡ ᱨᱩᱣᱟᱹᱲ ᱜᱟᱱᱚᱜᱼᱟ ᱡᱩᱫᱤ ᱠᱞᱟᱭᱮᱱᱴ ᱢᱤᱫᱴᱟᱝ ᱱᱟᱣᱟ ᱠᱷᱚᱵᱚᱨ ᱮ ᱵᱷᱮᱡᱟᱭᱟ ᱾",
+        "resolveDialog": {
+          "title": "ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱚᱞᱦᱮ",
+          "message": "ᱟᱢ ᱪᱮᱫ ᱱᱚᱣᱟ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱫᱚ ᱥᱚᱞᱦᱮ ᱟᱠᱟᱱ ᱢᱮᱱᱛᱮ ᱪᱤᱱᱦᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱮᱢ ᱴᱷᱟᱹᱣᱠᱟᱹ ᱟᱠᱟᱫᱟ?",
+          "note": "ᱥᱚᱞᱦᱮ ᱛᱟᱭᱚᱢ, ᱟᱢ ᱫᱚ ᱟᱨᱦᱚᱸ ᱵᱟᱢ ᱛᱮᱞᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱥᱮ ᱥᱴᱮᱴᱟᱥ ᱵᱟᱢ ᱵᱚᱫᱚᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ, ᱡᱩᱫᱤ ᱵᱟᱝ ᱠᱞᱟᱭᱮᱱᱴ ᱢᱤᱫᱴᱟᱝ ᱱᱟᱣᱟ ᱢᱮᱥᱮᱡᱽ ᱮ ᱵᱷᱮᱡᱟᱭᱟ ᱾",
+          "confirm": "ᱮᱴᱠᱮᱴᱚᱬᱮ ᱥᱚᱞᱦᱮ",
+          "processing": "ᱥᱚᱞᱦᱮ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
+          "resolveFailed": "ᱢᱤᱫᱴᱟᱝ ᱮᱴᱠᱮᱴᱚᱬᱮ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱟᱨ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱥᱚᱞᱦᱮ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ ᱾ ᱫᱚᱭᱟ ᱠᱟᱛᱮ ᱟᱨᱦᱚᱱ ᱪᱮᱥᱴᱟ ᱢᱮ ᱾"
+        }
       }
     }
   },

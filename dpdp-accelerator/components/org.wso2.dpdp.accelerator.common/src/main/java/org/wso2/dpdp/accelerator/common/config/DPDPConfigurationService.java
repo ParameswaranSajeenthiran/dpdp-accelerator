@@ -35,6 +35,12 @@ public interface DPDPConfigurationService {
 
     String getConsentPortalClientId();
 
+    int getComplaintsStatutoryDuePeriodDays();
+
+    long getComplaintsAttachmentMaxSizeBytes();
+
+    int getComplaintsAttachmentMaxFilesPerUpload();
+
     int getEventNotificationThreadPoolSize();
 
     long getEventNotificationBaseBackoffSeconds();

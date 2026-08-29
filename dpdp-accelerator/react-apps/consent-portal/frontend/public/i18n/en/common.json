@@ -758,7 +758,8 @@
       "overdueSingular": "{{count}} day overdue",
       "overduePlural": "{{count}} days overdue",
       "daysLeftSingular": "{{count}} day left",
-      "daysLeftPlural": "{{count}} days left"
+      "daysLeftPlural": "{{count}} days left",
+      "dueLabel": "Due"
     },
     "timeline": {
       "complaintReceived": "Complaint received",
@@ -773,8 +774,11 @@
       "empty": "You haven't submitted any complaints yet.",
       "emptyFiltered": "No complaints match the selected filter.",
       "filters": {
+        "sectionAriaLabel": "My complaints filters",
         "status": "Status",
-        "all": "All"
+        "all": "All",
+        "clear": "Clear filters",
+        "clearAriaLabel": "Clear all filters"
       },
       "table": {
         "tableAriaLabel": "My complaints table",
@@ -791,13 +795,13 @@
       "back": "Back to my complaints",
       "notFound": "Complaint not found",
       "description": "Description",
-      "submittedOn": "Submitted on {{date}}",
       "awaitingInfo": {
         "note": "The complaint officer is waiting on more information from you. Please reply below."
       },
       "resolved": {
-        "note": "This complaint has been resolved."
-      }
+        "note": "This complaint has been resolved. If you're not satisfied with the outcome, send a message below to reopen it for review."
+      },
+      "submittedOnLabel": "Submitted on"
     },
     "submit": {
       "title": "Submit a complaint",
@@ -812,7 +816,7 @@
         "descriptionPlaceholder": "Describe your complaint in detail",
         "descriptionHelp": "Include as much detail as possible to help us resolve this quickly.",
         "attachments": "Attachments (optional)",
-        "attachmentsHelp": "PDF, DOCX, PNG, or JPG up to {{maxSize}} each.",
+        "attachmentsHelp": "You can attach 1 file (PDF, DOCX, PNG, or JPG) up to {{maxSize}}.",
         "uploadButton": "Upload files"
       },
       "validation": {
@@ -844,7 +848,7 @@
       "composerPlaceholderPublic": "Write a reply to the user...",
       "composerPlaceholderInternal": "Write an internal note (not visible to the user)...",
       "attach": "Attach",
-      "attachmentsHelp": "PDF, DOCX, PNG, or JPG up to {{maxSize}} per file.",
+      "attachmentsHelp": "You can attach 1 file (PDF, DOCX, PNG, or JPG) up to {{maxSize}}.",
       "attachmentTooLarge": "{{fileNames}} exceeds the {{maxSize}} attachment size limit.",
       "removeAttachment": "Remove attachment"
     },
@@ -854,7 +858,10 @@
       "empty": "No attachments have been added to this complaint.",
       "initialSubmission": "Initial submission",
       "internalNote": "Internal",
-      "overflowMore": "+{{count}} more"
+      "overflowMore": "+{{count}} more",
+      "uploadedCount": "Attached {{count}} new files",
+      "uploadedCount_one": "Attached a new file",
+      "uploadedCount_other": "Attached {{count}} new files"
     },
     "management": {
       "queue": {
@@ -892,7 +899,16 @@
       "case": {
         "back": "Back to queue",
         "notFound": "Complaint not found",
-        "dataPrincipal": "User"
+        "dataPrincipal": "User",
+        "resolvedLocked": "This complaint has been resolved and is now locked. You cannot reopen it directly — it can only be reopened if the client sends a new message.",
+        "resolveDialog": {
+          "title": "Resolve Complaint",
+          "message": "Are you sure you want to mark this complaint as resolved?",
+          "note": "Once resolved, you won't be able to reply or change its status again unless the client sends a new message.",
+          "confirm": "Resolve Complaint",
+          "processing": "Resolving...",
+          "resolveFailed": "Something went wrong and the complaint could not be resolved. Please try again."
+        }
       }
     }
   },

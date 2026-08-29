@@ -34,9 +34,15 @@ export const IS_SCOPES = {
   PURPOSE_DELETE: 'internal_consent_mgt_purpose_delete',
   ELEMENT_VIEW: 'internal_consent_mgt_element_view',
   ELEMENT_CREATE: 'internal_consent_mgt_element_create',
-  ELEMENT_DELETE: 'internal_consent_mgt_element_delete',
+  ELEMENT_DELETE: 'internal_consent_mgt_element_delete'
 } as const
 
+export const COMPLAINT_SCOPES = {
+  COMPLAINTS_READ_SELF: 'complaints:read:self',
+  COMPLAINTS_WRITE_SELF: 'complaints:write:self',
+  COMPLAINTS_READ_ANY: 'complaints:read:any',
+  COMPLAINTS_WRITE_ANY: 'complaints:write:any',
+} as const
 export const EVENT_SCOPES = {
   EVENT_SUBSCRIPTIONS_READ: 'notifications:subscriptions:read',
   EVENT_SUBSCRIPTIONS_WRITE: 'notifications:subscriptions:write',
@@ -81,15 +87,10 @@ export const REQUIRED_SCOPES = {
   EVENT_TOPICS_WRITE: [EVENT_SCOPES.EVENT_TOPICS_WRITE],
   EVENTS_READ: [EVENT_SCOPES.EVENTS_READ],
   EVENTS_WRITE: [EVENT_SCOPES.EVENTS_WRITE],
-  /**
-   * Kept separate from the snapshot scopes below: a caller can be allowed to see the status
-   * timeline (previous/current status, actor, time) without also being allowed to see a
-   * consent's full historical PII snapshot.
-   */
-  CONSENT_STATUS_HISTORY_READ_SELF: [CONSENT_HISTORY_SCOPES.STATUS_HISTORY_VIEW_SELF],
-  CONSENT_STATUS_HISTORY_READ_ANY: [CONSENT_HISTORY_SCOPES.STATUS_HISTORY_VIEW_ANY],
-  CONSENT_FULL_HISTORY_READ_SELF: [CONSENT_HISTORY_SCOPES.HISTORY_VIEW_SELF],
-  CONSENT_FULL_HISTORY_READ_ANY: [CONSENT_HISTORY_SCOPES.HISTORY_VIEW_ANY],
+  COMPLAINTS_READ_SELF: [COMPLAINT_SCOPES.COMPLAINTS_READ_SELF],
+  COMPLAINTS_WRITE_SELF: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_SELF],
+  COMPLAINTS_READ_ANY: [COMPLAINT_SCOPES.COMPLAINTS_READ_ANY],
+  COMPLAINTS_WRITE_ANY: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_ANY],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */

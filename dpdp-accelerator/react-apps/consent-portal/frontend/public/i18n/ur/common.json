@@ -758,7 +758,8 @@
       "overdueSingular": "{{count}} دن کی تاخیر",
       "overduePlural": "{{count}} دنوں کی تاخیر",
       "daysLeftSingular": "{{count}} دن باقی ہے",
-      "daysLeftPlural": "{{count}} دن باقی ہیں"
+      "daysLeftPlural": "{{count}} دن باقی ہیں",
+      "dueLabel": "آخری تاریخ"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",
@@ -773,8 +774,11 @@
       "empty": "آپ نے ابھی تک کوئی شکایت درج نہیں کی ہے۔",
       "emptyFiltered": "منتخب کردہ فلٹر سے کوئی شکایت میچ نہیں کرتی۔",
       "filters": {
+        "sectionAriaLabel": "میری شکایات کے فلٹر",
         "status": "اسٹیٹس",
-        "all": "تمام"
+        "all": "تمام",
+        "clear": "فلٹر صاف کریں",
+        "clearAriaLabel": "تمام فلٹر صاف کریں"
       },
       "table": {
         "tableAriaLabel": "میری شکایتوں کا ٹیبل",
@@ -791,13 +795,13 @@
       "back": "میری شکایتوں پر واپس جائیں",
       "notFound": "شکایت نہیں ملی",
       "description": "تفصیل",
-      "submittedOn": "{{date}} کو درج کی گئی",
       "awaitingInfo": {
         "note": "شکایت افسر آپ سے مزید معلومات کا منتظر ہے۔ براہ کرم نیچے جواب دیں۔"
       },
       "resolved": {
         "note": "یہ شکایت حل کر دی گئی ہے۔"
-      }
+      },
+      "submittedOnLabel": "جمع کرایا گیا"
     },
     "submit": {
       "title": "شکایت درج کریں",
@@ -854,7 +858,10 @@
       "empty": "اس شکایت میں کوئی منسلک فائل شامل نہیں کی گئی ہے۔",
       "initialSubmission": "ابتدائی شکایت",
       "internalNote": "اندرونی",
-      "overflowMore": "+{{count}} مزید"
+      "overflowMore": "+{{count}} مزید",
+      "uploadedCount": "{{count}} نئی فائلیں منسلک کی گئیں",
+      "uploadedCount_one": "ایک نئی فائل منسلک کی گئی",
+      "uploadedCount_other": "{{count}} نئی فائلیں منسلک کی گئیں"
     },
     "management": {
       "queue": {
@@ -892,7 +899,16 @@
       "case": {
         "back": "قطار میں واپس جائیں",
         "notFound": "شکایت نہیں ملی",
-        "dataPrincipal": "صارف (Data Principal)"
+        "dataPrincipal": "صارف (Data Principal)",
+        "resolvedLocked": "یہ شکایت حل کر دی گئی ہے اور اب اسے لاک کر دیا گیا ہے۔ آپ اسے براہِ راست دوبارہ نہیں کھول سکتے — اسے صرف اسی صورت میں دوبارہ کھولا جا سکتا ہے اگر کلائنٹ کوئی نیا پیغام بھیجے۔",
+        "resolveDialog": {
+          "title": "شکایت کا ازالہ کریں",
+          "message": "کیا آپ اس شکایت کو حل شدہ کے طور پر نشان زد کرنا چاہتے ہیں؟",
+          "note": "ایک بار حل ہو جانے کے بعد، آپ دوبارہ جواب دینے یا اس کی حیثیت تبدیل کرنے کے قابل نہیں ہوں گے جب تک کہ کلائنٹ نیا پیغام نہ بھیجے۔",
+          "confirm": "شکایت کا ازالہ کریں",
+          "processing": "حل ہو رہا ہے...",
+          "resolveFailed": "کچھ غلط ہو گیا اور شکایت حل نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔"
+        }
       }
     }
   },

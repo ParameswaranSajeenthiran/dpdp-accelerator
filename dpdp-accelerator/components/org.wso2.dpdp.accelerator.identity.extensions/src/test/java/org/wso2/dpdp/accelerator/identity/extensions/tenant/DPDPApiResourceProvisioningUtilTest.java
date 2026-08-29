@@ -54,6 +54,8 @@ public class DPDPApiResourceProvisioningUtilTest {
     private static final String APPLICATION_ID = "app-1234";
     private static final String CONSENT_HISTORY_API_IDENTIFIER = "/api/dpdp/consent-mgt/v1";
     private static final String CONSENT_HISTORY_API_RESOURCE_ID = "res-consent-history";
+    private static final String COMPLAINT_API_IDENTIFIER = "/api/dpdp/complaints";
+    private static final String COMPLAINT_API_RESOURCE_ID = "res-complaints";
 
     @Mock
     private APIResourceManager apiResourceManager;
@@ -293,6 +295,89 @@ public class DPDPApiResourceProvisioningUtilTest {
                 TENANT_DOMAIN);
 
         assertEquals(scopeNames, Arrays.asList(DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_ANY));
+        verify(authorizedAPIManagementService, never()).addAuthorizedAPI(eq(APPLICATION_ID), any(AuthorizedAPI.class),
+                eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void registerComplaintManagementApiSkipsWhenAlreadyRegistered() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(COMPLAINT_API_IDENTIFIER, TENANT_DOMAIN))
+                .thenReturn(mock(APIResource.class));
+
+        DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(TENANT_DOMAIN);
+
+        verify(apiResourceManager, never()).addAPIResource(any(APIResource.class), eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void registerComplaintManagementApiCreatesItWithAllFourScopes() throws Exception {
+
+        when(apiResourceManager.getAPIResourceByIdentifier(COMPLAINT_API_IDENTIFIER, TENANT_DOMAIN))
+                .thenReturn(null);
+
+        DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(TENANT_DOMAIN);
+
+        ArgumentCaptor<APIResource> resourceCaptor = ArgumentCaptor.forClass(APIResource.class);
+        verify(apiResourceManager).addAPIResource(resourceCaptor.capture(), eq(TENANT_DOMAIN));
+        APIResource resource = resourceCaptor.getValue();
+        assertEquals(resource.getIdentifier(), COMPLAINT_API_IDENTIFIER);
+        assertEquals(resource.getType(), "BUSINESS");
+
+        List<String> scopeNames = new ArrayList<>();
+        for (Scope scope : resource.getScopes()) {
+            scopeNames.add(scope.getName());
+        }
+        assertEqualsNoOrder(scopeNames.toArray(), new String[]{
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_SELF,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_SELF,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_ANY,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_ANY
+        });
+    }
+
+    @Test
+    public void authorizeComplaintManagementApiAuthorizesAndReturnsScopeNamesWhenNotYetAuthorized() throws Exception {
+
+        Scope readSelf = mockScope(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_SELF);
+        Scope writeSelf = mockScope(DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_SELF);
+        Scope readAny = mockScope(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_ANY);
+        Scope writeAny = mockScope(DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_ANY);
+        APIResource apiResource = mockResource(COMPLAINT_API_RESOURCE_ID,
+                Arrays.asList(readSelf, writeSelf, readAny, writeAny));
+        when(apiResourceManager.getAPIResourceByIdentifier(COMPLAINT_API_IDENTIFIER, TENANT_DOMAIN))
+                .thenReturn(apiResource);
+        when(authorizedAPIManagementService.getAuthorizedAPI(APPLICATION_ID, COMPLAINT_API_RESOURCE_ID,
+                TENANT_DOMAIN)).thenReturn(null);
+
+        List<String> scopeNames = DPDPApiResourceProvisioningUtil.authorizeComplaintManagementApi(APPLICATION_ID,
+                TENANT_DOMAIN);
+
+        assertEquals(scopeNames, Arrays.asList(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_SELF,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_SELF,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_ANY,
+                DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_ANY));
+        verify(authorizedAPIManagementService).addAuthorizedAPI(eq(APPLICATION_ID), any(AuthorizedAPI.class),
+                eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void authorizeComplaintManagementApiSkipsWhenAlreadyAuthorized() throws Exception {
+
+        Scope readSelf = mockScope(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_SELF);
+        APIResource apiResource = mockResource(COMPLAINT_API_RESOURCE_ID, Arrays.asList(readSelf));
+        when(apiResourceManager.getAPIResourceByIdentifier(COMPLAINT_API_IDENTIFIER, TENANT_DOMAIN))
+                .thenReturn(apiResource);
+
+        AuthorizedAPI existingAuthorization = mock(AuthorizedAPI.class);
+        when(existingAuthorization.getScopes()).thenReturn(Arrays.asList(readSelf));
+        when(authorizedAPIManagementService.getAuthorizedAPI(APPLICATION_ID, COMPLAINT_API_RESOURCE_ID,
+                TENANT_DOMAIN)).thenReturn(existingAuthorization);
+
+        List<String> scopeNames = DPDPApiResourceProvisioningUtil.authorizeComplaintManagementApi(APPLICATION_ID,
+                TENANT_DOMAIN);
+
+        assertEquals(scopeNames, Arrays.asList(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_SELF));
         verify(authorizedAPIManagementService, never()).addAuthorizedAPI(eq(APPLICATION_ID), any(AuthorizedAPI.class),
                 eq(TENANT_DOMAIN));
     }

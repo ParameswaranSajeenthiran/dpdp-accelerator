@@ -51,7 +51,8 @@ export class APIError extends Error {
 export interface RequestOptions {
   method?: string
   headers?: Record<string, string>
-  body?: string
+  /** FormData for multipart uploads (e.g. complaint attachments) - never set a Content-Type header alongside it, the browser adds the correct multipart boundary itself. */
+  body?: string | FormData
   query?: Record<string, string | number | boolean | undefined>
 }
 

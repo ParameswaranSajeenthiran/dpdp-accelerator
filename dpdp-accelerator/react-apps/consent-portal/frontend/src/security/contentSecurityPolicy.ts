@@ -51,7 +51,9 @@ export function contentSecurityPolicy(options: ContentSecurityPolicyOptions): st
     // The auth SDK keeps tokens in a web worker it starts from a blob URL, so
     // the page never holds an access token.
     "worker-src 'self' blob:",
-    "img-src 'self' data:",
+    // Attachment thumbnails are previewed from blob URLs (URL.createObjectURL)
+    // before/without a round trip to the server.
+    "img-src 'self' data: blob:",
     // The build inlines its web fonts as data URIs rather than shipping them as
     // separate files, so 'self' alone blocks every one of them.
     "font-src 'self' data:",
