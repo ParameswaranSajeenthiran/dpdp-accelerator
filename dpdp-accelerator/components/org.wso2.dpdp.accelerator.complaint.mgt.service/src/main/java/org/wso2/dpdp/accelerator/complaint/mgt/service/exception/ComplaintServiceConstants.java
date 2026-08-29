@@ -54,8 +54,6 @@ public final class ComplaintServiceConstants {
 
     public static final String ACTOR_USER_ID_REQUIRED_ERROR =
             "Field 'actorUserId' is required and must not be blank.";
-    public static final String ACTOR_USER_ID_MISMATCH_ERROR =
-            "actorUserId '%s' does not match the actorUserId that created this comment.";
     public static final String ATTACHMENT_NOT_FOUND_ERROR =
             "No attachment exists with attachmentId '%s' for this organization.";
     public static final String INTERNAL_ATTACHMENT_ACCESS_DENIED_ERROR =
