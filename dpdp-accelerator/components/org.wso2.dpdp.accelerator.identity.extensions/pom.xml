@@ -258,20 +258,10 @@
                             !org.quartz.*,
                             *
                         </Import-Package>
-                        <!-- The quartz jar is placed on Carbon's shared classpath
-                             (repository/components/lib), not installed as its own OSGi bundle, so
-                             there is no exporting bundle for a static Import-Package to wire
-                             against - matches how the WSO2 Financial Services accelerator resolves
-                             the identical setup. The `!org.quartz.*,` exclusion above is required
-                             for that: the trailing bare `*` in Import-Package (this repo's normal
-                             convention, see components/README.md) makes bnd auto-generate a real,
-                             versioned Import-Package entry for org.quartz from the plain
-                             `import org.quartz.Job` in our own code, regardless of
-                             DynamicImport-Package - the two are additive, not override/fallback -
-                             and that generated entry can never resolve since nothing exports
-                             org.quartz as an OSGi package. FS avoids this the same way but from the
-                             other direction: their Import-Package has no trailing `*` at all, so
-                             bnd never auto-adds org.quartz for them either. -->
+                        <!-- Quartz sits on Carbon's shared classpath, not an OSGi bundle, so nothing
+                             exports org.quartz for a static Import-Package to resolve against.
+                             `!org.quartz.*` stops bnd auto-adding an unresolvable entry from our
+                             own `import org.quartz.Job`; DynamicImport-Package resolves it instead. -->
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <_dsannotations>*</_dsannotations>
                     </instructions>

@@ -118,7 +118,7 @@ fi
 # WSO2DPDP_DB is not part of the stock distribution, so unlike WSO2IDENTITY_DB above,
 # there is no existing file to migrate - H2 creates it fresh on first connection,
 # RunScript included. Every DPDP feature has its own subdirectory under
-# dbscripts/dpdp-accelerator/ (currently consent-history/ and event-notification/) - each
+# dbscripts/dpdp-accelerator/ (currently consent-history/, event-notification/, and complaint/) - each
 # one's ${DB_TYPE}.sql is applied in turn, so a new feature directory needs no edit here.
 if [ "${APPLY_DPDP_DB_MIGRATION}" != "true" ]; then
   echo "[3/3] Skipping the DPDP schema creation (APPLY_DPDP_DB_MIGRATION is not true)."
