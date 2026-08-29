@@ -141,7 +141,6 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             List<String> adminScopes = new ArrayList<>(consentMgtScopes);
             adminScopes.addAll(consentHistoryScopes);
             adminScopes.addAll(eventNotificationScopes);
-            adminScopes.addAll(complaintScopes);
             List<String> userScopes = new ArrayList<>(Arrays.asList(
                     DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
                     DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF));
