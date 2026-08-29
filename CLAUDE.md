@@ -401,6 +401,15 @@ only `<groupId>`/`<artifactId>` — never repeat a `<version>`. Add `<scope>` in
 when it needs to differ from what's managed (e.g. a dependency is `compile` scope in one
 consumer and `provided` in another); otherwise scope is managed too.
 
+When adding a new internal `org.wso2.dpdp.accelerator.*` module, add it to the root pom's
+`dependencyManagement` in the same change. A missing entry forces every consumer to inline
+`<version>${project.version}</version>` itself — easy to miss in review, and it's exactly how the
+complaint modules drifted from this rule.
+
+A property accidentally declared twice in the root pom's `<properties>` block fails silently —
+Maven takes the later value with no warning or error. After editing that block, verify with
+`mvn -o help:evaluate -Dexpression=<name> -q -DforceStdout` rather than trusting the file by eye.
+
 ## OSGi service lifecycle
 
 A manual `bundleContext.registerService(...)` call is not automatically unregistered when the
