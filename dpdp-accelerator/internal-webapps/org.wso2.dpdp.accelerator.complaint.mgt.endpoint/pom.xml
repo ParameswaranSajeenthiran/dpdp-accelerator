@@ -31,14 +31,6 @@
     <name>WSO2 DPDP Accelerator - Complaint Management Endpoint</name>
 
     <dependencies>
-        <!--
-             Now an OSGi bundle deployed separately into dropins (resolved at runtime via
-             getOSGiService(...) in each handler's no-arg constructor), not bundled into this
-             WAR - provided scope so Maven doesn't also package a second, distinct copy of these
-             classes into WEB-INF/lib (which would break the OSGi service casts with a
-             ClassCastException across two different classloaders' copies of the same class).
-             Same reasoning as event-notifications.service's provided scope in that endpoint's pom.
-        -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>

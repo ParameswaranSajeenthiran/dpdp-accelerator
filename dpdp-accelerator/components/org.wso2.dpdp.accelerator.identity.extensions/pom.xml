@@ -144,6 +144,11 @@
                     </suiteXmlFiles>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                        <!-- Mockito's inline mock maker (needed to mock final methods on Carbon
+                             classes like AbstractUserStoreManager) bundles a Byte Buddy version
+                             that predates official JDK 21 support - this is Byte Buddy's own
+                             documented opt-in to run anyway. -->
+                        <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                     </systemPropertyVariables>
                     <reuseForks>true</reuseForks>
                 </configuration>

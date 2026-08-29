@@ -100,7 +100,6 @@ class ComplaintServiceImplTest {
     @BeforeMethod
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
         complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO, notificationClient);
     }
 

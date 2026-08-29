@@ -427,6 +427,12 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.governance</artifactId>
+                <version>${carbon.identity.governance.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <!-- Shipped by this accelerator itself (accelerators/dpdp-is/carbon-home/repository/components/lib),
                      not provided by the Identity Server - compile scope, not provided. -->
                 <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
