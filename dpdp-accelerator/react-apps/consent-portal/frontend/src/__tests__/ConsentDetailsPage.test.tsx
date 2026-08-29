@@ -39,6 +39,29 @@ const consentsApi = vi.hoisted(() => ({
 
 vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
+const EMPTY_STATUS_HISTORY = {
+  consentId: '',
+  statusHistory: [],
+  pagination: { limit: 5, offset: 0, totalCount: 0 },
+}
+const EMPTY_FULL_HISTORY = {
+  consentId: '',
+  history: [],
+  pagination: { limit: 5, offset: 0, totalCount: 0 },
+}
+
+const consentHistoryApi = vi.hoisted(() => ({
+  fetchMyConsentStatusHistory: vi.fn(),
+  fetchMyConsentFullHistory: vi.fn(),
+}))
+const adminConsentHistoryApi = vi.hoisted(() => ({
+  fetchAdminConsentStatusHistory: vi.fn(),
+  fetchAdminConsentFullHistory: vi.fn(),
+}))
+
+vi.mock('../features/my-consents/api/consentHistoryApi', () => consentHistoryApi)
+vi.mock('../features/admin-consents/api/consentHistoryApi', () => adminConsentHistoryApi)
+
 const CONSENT_ID = '06168ee0-f82a-4b0f-87ea-2a37600ec3f2'
 
 function buildConsent(state: string, overrides: Partial<ConsentDetail> = {}): ConsentDetail {
@@ -99,6 +122,10 @@ function renderConsentDetailsPage(
   overrides: Partial<ConsentDetail> = {},
 ): void {
   consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent(state, overrides))
+  consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+  consentHistoryApi.fetchMyConsentFullHistory.mockResolvedValue(EMPTY_FULL_HISTORY)
+  adminConsentHistoryApi.fetchAdminConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+  adminConsentHistoryApi.fetchAdminConsentFullHistory.mockResolvedValue(EMPTY_FULL_HISTORY)
   renderPage(scopes)
 }
 
@@ -199,6 +226,10 @@ describe('ConsentDetailsPage content', () => {
 
   it('surfaces the API message when approving a consent that is not PENDING', async () => {
     consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent('PENDING'))
+    consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+    consentHistoryApi.fetchMyConsentFullHistory.mockResolvedValue(EMPTY_FULL_HISTORY)
+    adminConsentHistoryApi.fetchAdminConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+    adminConsentHistoryApi.fetchAdminConsentFullHistory.mockResolvedValue(EMPTY_FULL_HISTORY)
     consentsApi.approveMyConsent.mockRejectedValue(
       new APIError(409, 'INVALID_CONSENT_STATE', 'Consent is not in PENDING state.'),
     )

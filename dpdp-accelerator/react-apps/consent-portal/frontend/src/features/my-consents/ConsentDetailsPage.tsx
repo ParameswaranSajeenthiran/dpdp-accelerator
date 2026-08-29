@@ -37,6 +37,7 @@ import ConsentApprovalDialog from './components/ConsentApprovalDialog'
 import ConsentRejectionDialog from './components/ConsentRejectionDialog'
 import ConsentRevocationDialog from './components/ConsentRevocationDialog'
 import ConsentAuthorizationsSection from './components/details/ConsentAuthorizationsSection'
+import ConsentHistorySection from './components/details/ConsentHistorySection'
 import ConsentMetadataCard from './components/details/ConsentMetadataCard'
 import ConsentPropertiesSection from './components/details/ConsentPropertiesSection'
 import ConsentPurposesSection from './components/details/ConsentPurposesSection'
@@ -72,7 +73,7 @@ function ConsentDetailsLoading(): React.JSX.Element {
         <Skeleton variant="text" width={220} height={48} />
       </Stack>
 
-      {['metadata', 'properties', 'purposes', 'authorizations'].map((section) => (
+      {['metadata', 'properties', 'purposes', 'authorizations', 'history'].map((section) => (
         <Card key={`details-${section}-skeleton`} sx={{ boxShadow: 1 }}>
           <CardHeader title={<Skeleton variant="text" width={220} />} sx={{ pb: 1 }} />
           <Divider />
@@ -218,6 +219,7 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
       <ConsentPropertiesSection properties={detail.properties} />
       <ConsentPurposesSection purposes={detail.purposes} />
       <ConsentAuthorizationsSection authorizations={detail.authorizations ?? []} />
+      <ConsentHistorySection consentId={id} variant={variant} />
 
       <ConsentApprovalDialog
         open={approvalDialogOpen}

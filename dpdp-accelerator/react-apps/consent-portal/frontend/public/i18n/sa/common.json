@@ -129,7 +129,8 @@
       "section": {
         "purposes": "सहमति-उद्देश्यानि",
         "authorizations": "प्राधिकृतयः",
-        "lifecycle": "सहमति-जीवनचक्रम्"
+        "lifecycle": "सहमति-जीवनचक्रम्",
+        "history": "Consent History"
       },
       "table": {
         "element": "तत्त्वम्",
@@ -274,6 +275,51 @@
         "actions": "कार्याणि",
         "service": "सेवा",
         "state": "राज्यम्"
+      }
+    },
+    "history": {
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "empty": "No history is recorded for this consent.",
+      "loadMore": "Load more",
+      "showingCount": "Showing {{shown}} of {{total}} entries",
+      "systemActor": "System",
+      "noStatusChange": "no status change",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "none": "None",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "consentGranted": "Consent granted",
+        "consentWithdrawn": "Consent withdrawn",
+        "fields": "Details",
+        "field": {
+          "state": "Status",
+          "piiPrincipalId": "Principal",
+          "language": "Language",
+          "expiryTime": "Valid until"
+        },
+        "consented": "Consented"
+      },
+      "table": {
+        "timestamp": "Timestamp",
+        "action": "Action",
+        "actor": "Actor",
+        "statusChange": "Status Change"
       }
     }
   },
