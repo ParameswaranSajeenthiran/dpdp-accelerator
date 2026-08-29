@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.model;
 
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
+
 public class ComplaintEvent {
 
     private String complaintEventId;
@@ -59,9 +61,9 @@ public class ComplaintEvent {
      */
     public String deriveEntryType() {
         if (toStatus != null) {
-            return "STATUS_CHANGE";
+            return DAOConstants.ENTRY_TYPE_STATUS_CHANGE;
         }
-        return isPublic ? "COMMENT" : "INTERNAL_NOTE";
+        return isPublic ? DAOConstants.ENTRY_TYPE_COMMENT : DAOConstants.ENTRY_TYPE_INTERNAL_NOTE;
     }
 
     public String getComplaintEventId() {
