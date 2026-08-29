@@ -33,7 +33,7 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintSta
 
 /**
  * Valid ComplaintStatus transitions.
- *   OPEN                        -> IN_PROGRESS, WAITING_ON_CLIENT, AWAITING_INTERNAL_REVIEW
+ *   OPEN                        -> IN_PROGRESS, WAITING_ON_CLIENT
  *   IN_PROGRESS                 -> WAITING_ON_CLIENT, RESOLVED
  *   WAITING_ON_CLIENT           -> AWAITING_INTERNAL_REVIEW
  *   AWAITING_INTERNAL_REVIEW    -> IN_PROGRESS, WAITING_ON_CLIENT, RESOLVED
@@ -41,6 +41,9 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintSta
  *
  * A complaint can only be RESOLVED after having gone through IN_PROGRESS or AWAITING_INTERNAL_REVIEW,
  * so OPEN -> RESOLVED directly is rejected (this matches the 409 example in the API spec).
+ *
+ * An officer must mark a complaint IN_PROGRESS before it can go to internal review - OPEN ->
+ * AWAITING_INTERNAL_REVIEW directly is rejected so every reviewed complaint has been triaged first.
  *
  * Once a complaint is WAITING_ON_CLIENT, the complainant's reply routes it to internal
  * review rather than back into IN_PROGRESS directly - AWAITING_INTERNAL_REVIEW is the only way out.
@@ -55,7 +58,7 @@ public class StatusTransitionValidator {
             new EnumMap<>(ComplaintStatus.class);
 
     static {
-        ALLOWED_TRANSITIONS.put(OPEN, EnumSet.of(IN_PROGRESS, WAITING_ON_CLIENT, AWAITING_INTERNAL_REVIEW));
+        ALLOWED_TRANSITIONS.put(OPEN, EnumSet.of(IN_PROGRESS, WAITING_ON_CLIENT));
         ALLOWED_TRANSITIONS.put(IN_PROGRESS, EnumSet.of(WAITING_ON_CLIENT, RESOLVED));
         ALLOWED_TRANSITIONS.put(WAITING_ON_CLIENT, EnumSet.of(AWAITING_INTERNAL_REVIEW));
         ALLOWED_TRANSITIONS.put(AWAITING_INTERNAL_REVIEW, EnumSet.of(IN_PROGRESS, WAITING_ON_CLIENT, RESOLVED));

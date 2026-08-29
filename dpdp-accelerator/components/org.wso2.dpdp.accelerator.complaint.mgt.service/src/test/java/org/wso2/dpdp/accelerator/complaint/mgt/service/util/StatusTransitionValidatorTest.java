@@ -31,7 +31,6 @@ class StatusTransitionValidatorTest {
         return new Object[][] {
                 { "OPEN", "IN_PROGRESS" },
                 { "OPEN", "WAITING_ON_CLIENT" },
-                { "OPEN", "AWAITING_INTERNAL_REVIEW" },
                 { "IN_PROGRESS", "WAITING_ON_CLIENT" },
                 { "IN_PROGRESS", "RESOLVED" },
                 { "WAITING_ON_CLIENT", "AWAITING_INTERNAL_REVIEW" },
@@ -51,6 +50,7 @@ class StatusTransitionValidatorTest {
     Object[][] invalidTransitions() {
         return new Object[][] {
                 { "OPEN", "RESOLVED" },
+                { "OPEN", "AWAITING_INTERNAL_REVIEW" },
                 { "OPEN", "OPEN" },
                 { "RESOLVED", "OPEN" },
                 { "RESOLVED", "IN_PROGRESS" },
