@@ -223,7 +223,7 @@ scopes = ["consent:history:view:self"]
 custom_webapps = [
     "/consent-portal/",
     "/api/dpdp/consent-mgt/v1/",
-    "/api/dpdp/complaints/",
+    "/api/dpdp/complaints/v1/",
     "/api/dpdp/event-notifications/v1/"
 ]
 # ---- /me/complaints/* (Data Principal, :self scopes) ----
