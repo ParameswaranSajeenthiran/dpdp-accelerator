@@ -813,6 +813,7 @@
       "initialSubmission": "شروعاتي جمع ڪيل",
       "internalNote": "اندروني",
       "overflowMore": "+{{count}} وڌيڪ",
+      "uploadedCount": "{{count}} نوان فائلون جوڙيل آھن",
       "uploadedCount_one": "ھڪ نئون فائل جوڙيل آھي",
       "uploadedCount_other": "{{count}} نوان فائلون جوڙيل آھن"
     },

@@ -813,6 +813,7 @@
       "initialSubmission": "ପ୍ରାରମ୍ଭିକ ଦାଖଲ",
       "internalNote": "ଆଭ୍ୟନ୍ତରୀଣ",
       "overflowMore": "+{{count}} ଅଧିକ",
+      "uploadedCount": "{{count}} ଟି ନୂଆ ଫାଇଲ୍ ସଂଲଗ୍ନ କରାଗଲା",
       "uploadedCount_one": "ଗୋଟିଏ ନୂଆ ଫାଇଲ୍ ସଂଲଗ୍ନ କରାଗଲା",
       "uploadedCount_other": "{{count}} ଟି ନୂଆ ଫାଇଲ୍ ସଂଲଗ୍ନ କରାଗଲା"
     },

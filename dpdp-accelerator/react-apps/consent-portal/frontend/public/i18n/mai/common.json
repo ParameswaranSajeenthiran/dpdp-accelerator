@@ -813,6 +813,7 @@
       "initialSubmission": "प्रारंभिक सबमिशन",
       "internalNote": "आंतरिक",
       "overflowMore": "+{{count}} और",
+      "uploadedCount": "{{count}} नवी फाइल जोड़ल गेल",
       "uploadedCount_one": "एकटा नवी फाइल जोड़ल गेल",
       "uploadedCount_other": "{{count}} नवी फाइल जोड़ल गेल"
     },

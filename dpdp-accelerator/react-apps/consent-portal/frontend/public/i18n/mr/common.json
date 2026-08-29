@@ -813,6 +813,7 @@
       "initialSubmission": "सुरुवातीचे सादरीकरण",
       "internalNote": "अंतर्गत",
       "overflowMore": "+{{count}} अधिक",
+      "uploadedCount": "{{count}} नवीन फाइली जोडल्या",
       "uploadedCount_one": "नवीन फाइल जोडली",
       "uploadedCount_other": "{{count}} नवीन फाइली जोडल्या"
     },

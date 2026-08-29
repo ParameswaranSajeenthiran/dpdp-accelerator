@@ -813,6 +813,7 @@
       "initialSubmission": "ಆರಂಭಿಕ ಸಲ್ಲಿಕೆ",
       "internalNote": "ಆಂತರಿಕ",
       "overflowMore": "ಇನ್ನೂ +{{count}}",
+      "uploadedCount": "{{count}} ಹೊಸ ಫೈಲ್‌ಗಳನ್ನು ಲಗತ್ತಿಸಲಾಗಿದೆ",
       "uploadedCount_one": "ಹೊಸ ಫೈಲ್ ಲಗತ್ತಿಸಲಾಗಿದೆ",
       "uploadedCount_other": "{{count}} ಹೊಸ ಫೈಲ್‌ಗಳನ್ನು ಲಗತ್ತಿಸಲಾಗಿದೆ"
     },

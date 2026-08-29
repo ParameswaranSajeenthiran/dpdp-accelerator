@@ -813,6 +813,7 @@
       "initialSubmission": "सुरुवातीची नोंद",
       "internalNote": "अंतर्गत",
       "overflowMore": "+{{count}} आनीक",
+      "uploadedCount": "{{count}} नव्यो फायली जोडल्यो",
       "uploadedCount_one": "एक नवी फायल जोडली",
       "uploadedCount_other": "{{count}} नव्यो फायली जोडल्यो"
     },

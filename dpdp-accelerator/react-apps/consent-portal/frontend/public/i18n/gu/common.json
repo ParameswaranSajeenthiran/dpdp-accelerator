@@ -813,6 +813,7 @@
       "initialSubmission": "પ્રારંભિક સબમિશન",
       "internalNote": "આંતરિક",
       "overflowMore": "+{{count}} વધુ",
+      "uploadedCount": "{{count}} નવી ફાઇલ જોડાયેલ છે",
       "uploadedCount_one": "નવી ફાઇલ જોડાયેલ છે",
       "uploadedCount_other": "{{count}} નવી ફાઇલ જોડાયેલ છે"
     },

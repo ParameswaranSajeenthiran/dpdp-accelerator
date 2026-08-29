@@ -813,6 +813,7 @@
       "initialSubmission": "অহানবা পিশিনবা",
       "internalNote": "মনুংগী",
       "overflowMore": "+{{count}} হেনগৎলি",
+      "uploadedCount": "{{count}} অনা ফাইল পুথোকপা",
       "uploadedCount_one": "অনা ফাইল অমা পুথোকপা",
       "uploadedCount_other": "{{count}} অনা ফাইল পুথোকপা"
     },

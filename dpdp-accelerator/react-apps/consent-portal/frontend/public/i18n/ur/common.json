@@ -813,6 +813,7 @@
       "initialSubmission": "ابتدائی شکایت",
       "internalNote": "اندرونی",
       "overflowMore": "+{{count}} مزید",
+      "uploadedCount": "{{count}} نئی فائلیں منسلک کی گئیں",
       "uploadedCount_one": "ایک نئی فائل منسلک کی گئی",
       "uploadedCount_other": "{{count}} نئی فائلیں منسلک کی گئیں"
     },

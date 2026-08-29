@@ -813,6 +813,7 @@
       "initialSubmission": "ᱮᱛᱚᱦᱚᱵ ᱮᱢ",
       "internalNote": "ᱵᱷᱤᱛᱨᱤ",
       "overflowMore": "+{{count}} ᱟᱨᱦᱚᱸ",
+      "uploadedCount": "{{count}} ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱡᱚᱲᱟᱣ ᱮᱱᱟ",
       "uploadedCount_one": "ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱢᱤᱫᱴᱟᱹᱜ ᱡᱚᱲᱟᱣ ᱮᱱᱟ",
       "uploadedCount_other": "{{count}} ᱱᱟᱶᱟ ᱨᱮᱫᱽ ᱡᱚᱲᱟᱣ ᱮᱱᱟ"
     },

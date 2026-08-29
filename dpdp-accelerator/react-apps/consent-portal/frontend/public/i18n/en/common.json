@@ -813,6 +813,7 @@
       "initialSubmission": "Initial submission",
       "internalNote": "Internal",
       "overflowMore": "+{{count}} more",
+      "uploadedCount": "Attached {{count}} new files",
       "uploadedCount_one": "Attached a new file",
       "uploadedCount_other": "Attached {{count}} new files"
     },
