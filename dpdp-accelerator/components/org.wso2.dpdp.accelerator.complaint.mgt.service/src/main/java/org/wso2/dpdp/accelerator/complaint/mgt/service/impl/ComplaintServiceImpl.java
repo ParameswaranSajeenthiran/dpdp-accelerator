@@ -90,7 +90,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.DESCRIPTION_REQUIRED_ERROR);
         }
-        if (description.length() > 5000) {
+        if (description.length() > ComplaintServiceConstants.MAX_DESCRIPTION_LENGTH) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.DESCRIPTION_TOO_LONG_ERROR);
         }

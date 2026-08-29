@@ -36,7 +36,9 @@ public final class ComplaintServiceConstants {
             "Field 'subjectCategory' must be one of the defined ComplaintCategory enum values; received '%s'.";
     public static final String DESCRIPTION_REQUIRED_ERROR =
             "Field 'description' is required and must not be blank.";
-    public static final String DESCRIPTION_TOO_LONG_ERROR = "Field 'description' must not exceed 5000 characters.";
+    public static final int MAX_DESCRIPTION_LENGTH = 5000;
+    public static final String DESCRIPTION_TOO_LONG_ERROR =
+            "Field 'description' must not exceed " + MAX_DESCRIPTION_LENGTH + " characters.";
     public static final String CREATE_COMPLAINT_FAILED_ERROR = "Failed to create complaint.";
     public static final String CREATE_COMPLAINT_ACTOR_ROLE_INVALID_ERROR =
             "Field 'actorRole' must be one of COMPLAINT_OFFICER, SYSTEM.";
