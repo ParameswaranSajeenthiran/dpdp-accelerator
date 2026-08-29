@@ -74,12 +74,13 @@ app_password= "dashboard"
 #secret_key = ""
 
 # SMTP email sender settings.
-#[output_adapter.email]
-#from_address= "abcd@gmail.com"
-#username= "abcd@gmail.com"
-#password= "appp-password"
-#hostname= "smtp.gmail.com"
-#port= 587
+[output_adapter.email]
+from_address= "sajeenthiranp.21@cse.mrt.ac.lk"
+username= "sajeenthiranp.21@cse.mrt.ac.lk"
+password= "dpvf uasj iusz bdts"
+hostname= "smtp.gmail.com"
+port= 587
+
 # =============================================================================
 # WSO2 DPDP Accelerator
 #

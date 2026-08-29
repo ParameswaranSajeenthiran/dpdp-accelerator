@@ -1,0 +1,635 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
+
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
+import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.identity.role.v2.mgt.core.model.UserBasicInfo;
+import org.wso2.carbon.user.api.UserRealm;
+import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
+import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * {@link NotificationClient} implementation routing through WSO2 IS's native email notification
+ * mechanism. Every recipient - the complaint officers ({@code dpdp-consent-admin} role members),
+ * the complaint's own creator, or both, depending on the event - is resolved right here, and a
+ * standard {@code TRIGGER_NOTIFICATION} event is fired directly per recipient so IS's own
+ * already-registered internal notification handler does the real templated-email + SMTP dispatch.
+ * There is no custom event and no {@code identity.extensions} round trip for any of this: this
+ * plain, non-OSGi module reaches every OSGi service it needs (role membership, application lookup,
+ * user store, event dispatch) the same way, via
+ * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)}, which resolves OSGi
+ * services through a static holder ({@code org.wso2.carbon.context.internal.OSGiDataHolder})
+ * populated wherever the {@code org.wso2.carbon.context} classes are loaded from Carbon's shared
+ * classloader rather than bundled per-webapp - which is exactly why every carbon-identity artifact
+ * this class touches is declared {@code provided} in this module's pom rather than bundled into the
+ * WAR. This is the same lookup mechanism used throughout Carbon-hosted custom webapps to reach an
+ * OSGi service without being an OSGi bundle themselves.
+ */
+public class EmailNotificationClient implements NotificationClient {
+
+    private static final Logger LOGGER = Logger.getLogger(EmailNotificationClient.class.getName());
+
+    private static final String NOTIFICATION_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
+    private static final String NOTIFICATION_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
+    private static final String NOTIFICATION_TYPE_COMPLAINT_ACKNOWLEDGED = "ComplaintAcknowledged";
+
+    // Property keys IS's own already-registered internal notification handler expects on a
+    // standard TRIGGER_NOTIFICATION event. Conventional string keys, not typed API - mirror
+    // org.wso2.carbon.identity.recovery.IdentityRecoveryConstants.TEMPLATE_TYPE/.SEND_TO exactly,
+    // hardcoded here rather than adding a dependency on that artifact just for two string literals.
+    private static final String TRIGGER_PROP_SEND_TO = "send-to";
+    private static final String TRIGGER_PROP_TEMPLATE_TYPE = "TEMPLATE_TYPE";
+    private static final String PROP_REFERENCE_ID = "reference-id";
+    private static final String PROP_MESSAGE_EXCERPT = "message-excerpt";
+
+    // Placeholder keys the shared complaint-email-body.html template references (registered per
+    // tenant by identity.extensions' EmailTemplateProvisioningUtil - template content is unaffected
+    // by which module triggers the send).
+    private static final String PLACEHOLDER_DATA_PRINCIPAL_NAME = "data-principal-name";
+    private static final String PLACEHOLDER_ACTOR_NAME = "actor-name";
+    private static final String PLACEHOLDER_CATEGORY_LABEL = "category-label";
+    private static final String PLACEHOLDER_PRIORITY_LABEL = "priority-label";
+    private static final String PLACEHOLDER_STATUS_LABEL = "status-label";
+    private static final String PLACEHOLDER_SLA_LABEL = "sla-label";
+    private static final String PLACEHOLDER_ACTION_URL = "action-url";
+    private static final String PLACEHOLDER_RECIPIENT_ROLE_LABEL = "recipient-role-label";
+    private static final String PLACEHOLDER_HEADLINE_HTML = "headline-html";
+    private static final String PLACEHOLDER_FOOTER_TEXT = "footer-text";
+    private static final String PLACEHOLDER_ACTION_BADGE_HTML = "action-badge-html";
+    private static final String PLACEHOLDER_LOGO_URL = "logo-url";
+
+    private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
+    private static final String GIVEN_NAME_CLAIM = "http://wso2.org/claims/givenname";
+    private static final String LAST_NAME_CLAIM = "http://wso2.org/claims/lastname";
+
+    // Mirrors ComplaintActorRole.COMPLAINT_OFFICER.name() from the complaint.mgt.dao module - not
+    // depended on directly here, since the actor role already crosses into ComplaintEvent as a
+    // plain string.
+    private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
+    // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME /
+    // DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE - duplicated rather than depended on, same
+    // as every other constant in this class.
+    private static final String APPLICATION_NAME = "DPDP Consent Portal";
+    private static final String ADMIN_ROLE = "dpdp-consent-admin";
+    private static final String ROLE_AUDIENCE = "organization";
+
+    // Mirrors the portal frontend's own status labels exactly (complaintDisplay.ts's
+    // STATUS_LABEL_KEYS + public/i18n/en/common.json's complaints.status.* strings) rather than a
+    // narrative computed here, so the same complaint shows the same status word in both places.
+    private static final Map<String, String> STATUS_LABELS = buildStatusLabels();
+    private static final String ROLE_LABEL_GRIEVANCE_OFFICER = "Grievance Officer";
+    private static final String ROLE_LABEL_DATA_PRINCIPAL = "Data Principal";
+    // The portal has two separate routes for the same complaint (App.tsx): "/complaints/:id" is
+    // the citizen's own self-service view (COMPLAINTS_READ_SELF scope, backed by the /me/
+    // complaints/{id} API), "/complaint-management/:id" is the officer's view (COMPLAINTS_READ_ANY
+    // scope, backed by /complaints/{id}). Linking an officer to the citizen route 404s - so which
+    // path to use depends on who this email is actually going to.
+    private static final String CREATOR_DEEP_LINK_PATH = "/consent-portal/complaints/";
+    private static final String OFFICER_DEEP_LINK_PATH = "/consent-portal/complaint-management/";
+    // Same PNG the portal itself serves next to its "Consent Portal" brand title.
+    private static final String LOGO_PATH = "/consent-portal/wso2-logo.png";
+    private static final String STATUS_WAITING_ON_CLIENT = "WAITING_ON_CLIENT";
+    private static final String STATUS_RESOLVED = "RESOLVED";
+    // A freshly created complaint is always OPEN (see ComplaintServiceImpl#createComplaint).
+    private static final String STATUS_LABEL_OPEN = "Open";
+    // Same neutral "Update" styling buildActionBadge would compute for a non-actionable recipient -
+    // a receipt isn't "action needed", regardless of status.
+    private static final String ACKNOWLEDGEMENT_BADGE_HTML =
+            "<span style=\"display:inline-block;background-color:#f3f4f6;color:#4b5563;font-size:11px;"
+                    + "font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:4px 10px;"
+                    + "border-radius:999px;\">Update</span>";
+
+    private static final int MAX_EXCERPT_LENGTH = 300;
+
+    private final Supplier<IdentityEventService> eventServiceSupplier;
+    private final Supplier<RealmService> realmServiceSupplier;
+    private final Supplier<ApplicationManagementService> applicationManagementServiceSupplier;
+    private final Supplier<RoleManagementService> roleManagementServiceSupplier;
+    private final Supplier<OrganizationManager> organizationManagerSupplier;
+
+    public EmailNotificationClient() {
+        this(() -> (IdentityEventService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(IdentityEventService.class, null),
+                () -> (RealmService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(RealmService.class, null),
+                () -> (ApplicationManagementService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(ApplicationManagementService.class, null),
+                () -> (RoleManagementService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(RoleManagementService.class, null),
+                () -> (OrganizationManager) PrivilegedCarbonContext.getThreadLocalCarbonContext()
+                        .getOSGiService(OrganizationManager.class, null));
+    }
+
+    /** Overload for tests injecting 4 suppliers. */
+    EmailNotificationClient(Supplier<IdentityEventService> eventServiceSupplier,
+            Supplier<RealmService> realmServiceSupplier,
+            Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
+            Supplier<RoleManagementService> roleManagementServiceSupplier) {
+        this(eventServiceSupplier, realmServiceSupplier, applicationManagementServiceSupplier,
+                roleManagementServiceSupplier, () -> null);
+    }
+
+    /** Test seam - lets a test inject mock suppliers instead of a real OSGi lookup. */
+    EmailNotificationClient(Supplier<IdentityEventService> eventServiceSupplier,
+            Supplier<RealmService> realmServiceSupplier,
+            Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
+            Supplier<RoleManagementService> roleManagementServiceSupplier,
+            Supplier<OrganizationManager> organizationManagerSupplier) {
+        this.eventServiceSupplier = eventServiceSupplier;
+        this.realmServiceSupplier = realmServiceSupplier;
+        this.applicationManagementServiceSupplier = applicationManagementServiceSupplier;
+        this.roleManagementServiceSupplier = roleManagementServiceSupplier;
+        this.organizationManagerSupplier = organizationManagerSupplier;
+    }
+
+    @Override
+    public void notifyComplaintCreated(Complaint complaint) {
+        try {
+            List<Recipient> officers = resolveOfficers(complaint.getOrgId());
+            if (officers.isEmpty()) {
+                LOGGER.warning("No complaint officers resolved for tenant '" + complaint.getOrgId()
+                        + "'; nothing to notify.");
+            } else {
+                Map<String, Object> placeholders = buildTemplatePlaceholders(complaint, null, false,
+                        NOTIFICATION_TYPE_COMPLAINT_CREATED);
+                for (Recipient officer : officers) {
+                    triggerNotification(officer, complaint.getOrgId(), NOTIFICATION_TYPE_COMPLAINT_CREATED,
+                            placeholders);
+                }
+            }
+        } catch (Throwable t) {
+            // Deliberately never rethrown - see interface javadoc. The complaint write this is
+            // called after has already committed; a notification failure must not surface as one.
+            LOGGER.log(Level.WARNING, "Error notifying complaint officers", t);
+        }
+        sendAcknowledgement(complaint);
+    }
+
+    @Override
+    public void notifyCommentAdded(Complaint complaint, ComplaintEvent event) {
+        try {
+            boolean notifyingCreator = ACTOR_ROLE_COMPLAINT_OFFICER.equals(event.getActorRole());
+            List<Recipient> recipients = notifyingCreator
+                    ? resolveCreatorRecipient(complaint).map(Collections::singletonList)
+                            .orElseGet(Collections::emptyList)
+                    : resolveOfficers(complaint.getOrgId());
+            if (recipients.isEmpty()) {
+                LOGGER.warning("No recipients resolved for a comment-added complaint notification in tenant '"
+                        + complaint.getOrgId() + "'; nothing to send.");
+                return;
+            }
+            Map<String, Object> placeholders = buildTemplatePlaceholders(complaint, event, notifyingCreator,
+                    NOTIFICATION_TYPE_COMMENT_ADDED);
+            for (Recipient recipient : recipients) {
+                triggerNotification(recipient, complaint.getOrgId(), NOTIFICATION_TYPE_COMMENT_ADDED, placeholders);
+            }
+        } catch (Throwable t) {
+            // Deliberately never rethrown - see interface javadoc.
+            LOGGER.log(Level.WARNING, "Error sending complaint comment notification", t);
+        }
+    }
+
+    /**
+     * Sends the "we've received your complaint" receipt to its one, already-known recipient - the
+     * complaint's own creator.
+     */
+    private void sendAcknowledgement(Complaint complaint) {
+        try {
+            AbstractUserStoreManager userStoreManager = resolveUserStoreManager(complaint.getOrgId());
+            if (userStoreManager == null) {
+                LOGGER.warning("Could not resolve a user store manager for tenant '" + complaint.getOrgId()
+                        + "'; complaint acknowledgement not sent.");
+                return;
+            }
+            Optional<String> username = resolveUsername(userStoreManager, complaint.getUserId(),
+                    complaint.getUserName());
+            if (!username.isPresent()) {
+                LOGGER.warning("Could not resolve a username for complaint creator (userId: "
+                        + complaint.getUserId() + "); complaint acknowledgement not sent.");
+                return;
+            }
+            Optional<String> email = resolveEmail(userStoreManager, username.get());
+            if (!email.isPresent()) {
+                LOGGER.warning("No email claim resolvable for user '" + username.get()
+                        + "'; complaint acknowledgement not sent.");
+                return;
+            }
+            String displayName = resolveDisplayName(userStoreManager, username.get());
+
+            IdentityEventService eventService = eventServiceSupplier.get();
+            if (eventService == null) {
+                LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
+                        + "complaint acknowledgement not sent.");
+                return;
+            }
+
+            Map<String, Object> properties = new HashMap<>();
+            properties.put(TRIGGER_PROP_SEND_TO, email.get());
+            properties.put(IdentityEventConstants.EventProperty.USER_NAME, username.get());
+            properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, complaint.getOrgId());
+            properties.put(TRIGGER_PROP_TEMPLATE_TYPE, NOTIFICATION_TYPE_COMPLAINT_ACKNOWLEDGED);
+            properties.put(PROP_REFERENCE_ID, complaint.getReferenceId());
+            properties.put(PROP_MESSAGE_EXCERPT, excerpt(complaint.getDescription()));
+            properties.put(PLACEHOLDER_DATA_PRINCIPAL_NAME, displayName);
+            properties.put(PLACEHOLDER_ACTOR_NAME, displayName);
+            properties.put(PLACEHOLDER_CATEGORY_LABEL, humanize(complaint.getCategory()));
+            properties.put(PLACEHOLDER_PRIORITY_LABEL, humanize(complaint.getPriority()));
+            properties.put(PLACEHOLDER_STATUS_LABEL, STATUS_LABEL_OPEN);
+            properties.put(PLACEHOLDER_SLA_LABEL, slaLabel(complaint.getStatutoryDueTime()));
+            properties.put(PLACEHOLDER_ACTION_URL,
+                    IdentityUtil.getServerURL(CREATOR_DEEP_LINK_PATH + complaint.getComplaintId(), true, false));
+            properties.put(PLACEHOLDER_LOGO_URL, IdentityUtil.getServerURL(LOGO_PATH, true, false));
+            properties.put(PLACEHOLDER_HEADLINE_HTML,
+                    "Your complaint <strong>" + htmlEscape(complaint.getReferenceId()) + "</strong> has been "
+                            + "received.");
+            properties.put(PLACEHOLDER_FOOTER_TEXT,
+                    "You're receiving this because you filed this complaint. We'll email you when there's "
+                            + "an update.");
+            properties.put(PLACEHOLDER_ACTION_BADGE_HTML, ACKNOWLEDGEMENT_BADGE_HTML);
+
+            eventService.handleEvent(new Event(IdentityEventConstants.Event.TRIGGER_NOTIFICATION, properties));
+        } catch (Throwable t) {
+            // Deliberately never rethrown - see interface javadoc.
+            LOGGER.log(Level.WARNING, "Error sending complaint acknowledgement", t);
+        }
+    }
+
+    /**
+     * Resolves every member of {@code dpdp-consent-admin} for the given tenant that has a
+     * resolvable email address. Members without one are skipped (logged), not fatal to the batch.
+     */
+    private List<Recipient> resolveOfficers(String tenantDomain) {
+        List<Recipient> recipients = new ArrayList<>();
+        try {
+            RoleManagementService roleManagementService = roleManagementServiceSupplier.get();
+            OrganizationManager organizationManager = organizationManagerSupplier.get();
+            AbstractUserStoreManager userStoreManager = resolveUserStoreManager(tenantDomain);
+            if (roleManagementService == null || userStoreManager == null) {
+                LOGGER.warning("Required OSGi services are not resolvable; cannot resolve complaint officers to "
+                        + "notify for tenant: " + tenantDomain);
+                return recipients;
+            }
+
+            String organizationId = null;
+            if (organizationManager != null) {
+                organizationId = organizationManager.resolveOrganizationId(tenantDomain);
+            }
+            if (organizationId == null) {
+                // Fallback to application lookup if organization ID cannot be resolved
+                ApplicationManagementService applicationManagementService = applicationManagementServiceSupplier.get();
+                if (applicationManagementService != null) {
+                    ServiceProvider serviceProvider = applicationManagementService
+                            .getApplicationExcludingFileBasedSPs(APPLICATION_NAME, tenantDomain);
+                    if (serviceProvider != null) {
+                        organizationId = serviceProvider.getApplicationResourceId();
+                    }
+                }
+            }
+            if (organizationId == null) {
+                LOGGER.warning("Could not resolve organization or application ID for tenant '" + tenantDomain
+                        + "'; cannot resolve complaint officers to notify.");
+                return recipients;
+            }
+
+            String audience = organizationManager != null ? ROLE_AUDIENCE : "application";
+            if (!roleManagementService.isExistingRoleName(ADMIN_ROLE, audience, organizationId, tenantDomain)) {
+                LOGGER.warning("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + tenantDomain
+                        + "'; cannot resolve complaint officers to notify.");
+                return recipients;
+            }
+            String roleId = roleManagementService.getRoleIdByName(ADMIN_ROLE, audience, organizationId,
+                    tenantDomain);
+            List<UserBasicInfo> members = roleManagementService.getUserListOfRole(roleId, tenantDomain);
+            for (UserBasicInfo member : members) {
+                resolveEmail(userStoreManager, member.getName())
+                        .ifPresent(email -> recipients.add(new Recipient(member.getName(), email)));
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error resolving complaint officers to notify for tenant: " + tenantDomain, e);
+        }
+        return recipients;
+    }
+
+    /** Resolves a complaint's original creator - used to notify them when an officer comments. */
+    private Optional<Recipient> resolveCreatorRecipient(Complaint complaint) {
+        AbstractUserStoreManager userStoreManager = resolveUserStoreManager(complaint.getOrgId());
+        if (userStoreManager == null) {
+            return Optional.empty();
+        }
+        Optional<String> username = resolveUsername(userStoreManager, complaint.getUserId(),
+                complaint.getUserName());
+        if (!username.isPresent()) {
+            LOGGER.warning("Could not resolve a username for complaint creator (userId: " + complaint.getUserId()
+                    + "); cannot notify them.");
+            return Optional.empty();
+        }
+        return resolveEmail(userStoreManager, username.get()).map(email -> new Recipient(username.get(), email));
+    }
+
+    private AbstractUserStoreManager resolveUserStoreManager(String tenantDomain) {
+        RealmService realmService = realmServiceSupplier.get();
+        if (realmService == null) {
+            LOGGER.warning("RealmService is not resolvable via PrivilegedCarbonContext for tenant: "
+                    + tenantDomain);
+            return null;
+        }
+        try {
+            int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
+            UserRealm userRealm = realmService.getTenantUserRealm(tenantId);
+            if (userRealm == null) {
+                return null;
+            }
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            return userStoreManager instanceof AbstractUserStoreManager
+                    ? (AbstractUserStoreManager) userStoreManager : null;
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error resolving user store manager for tenant: " + tenantDomain, e);
+            return null;
+        }
+    }
+
+    /**
+     * Resolves a username given either a username or a user id - preferring the username when
+     * present (a citizen self-service complaint can have a {@code null} username; see
+     * {@code Complaint#getUserName()}, only populated when the portal app's OIDC client is
+     * configured with a username access-token attribute), falling back to resolving it from the
+     * stored user id otherwise.
+     */
+    private static Optional<String> resolveUsername(AbstractUserStoreManager userStoreManager, String userId,
+            String userName) {
+        if (userName != null && !userName.trim().isEmpty()) {
+            return Optional.of(userName.trim());
+        }
+        if (userId == null || userId.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            String resolved = userStoreManager.getUserNameFromUserID(userId.trim());
+            return (resolved == null || resolved.trim().isEmpty()) ? Optional.empty() : Optional.of(resolved.trim());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error resolving username for user id '" + userId + "'", e);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<String> resolveEmail(AbstractUserStoreManager userStoreManager, String username) {
+        try {
+            String email = userStoreManager.getUserClaimValue(username, EMAIL_CLAIM, null);
+            if (email == null || email.trim().isEmpty()) {
+                LOGGER.warning("No email claim resolvable for user '" + username + "'");
+                return Optional.empty();
+            }
+            return Optional.of(email.trim());
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error resolving email claim for user '" + username + "'", e);
+            return Optional.empty();
+        }
+    }
+
+    private static String resolveDisplayName(AbstractUserStoreManager userStoreManager, String username) {
+        try {
+            String givenName = userStoreManager.getUserClaimValue(username, GIVEN_NAME_CLAIM, null);
+            String lastName = userStoreManager.getUserClaimValue(username, LAST_NAME_CLAIM, null);
+            String displayName = ((givenName == null ? "" : givenName.trim()) + " "
+                    + (lastName == null ? "" : lastName.trim())).trim();
+            return displayName.isEmpty() ? username : displayName;
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error resolving display name for user '" + username
+                    + "'; falling back to the username.", e);
+            return username;
+        }
+    }
+
+    /**
+     * Computes every display-ready placeholder the HTML template references - the same values for
+     * every recipient of a given event, since they describe the complaint/comment itself rather
+     * than who's reading it. {@code event} is {@code null} for a brand-new complaint (the actor is
+     * always the creator, there is no comment).
+     */
+    private Map<String, Object> buildTemplatePlaceholders(Complaint complaint, ComplaintEvent event,
+            boolean notifyingCreator, String notificationType) {
+
+        AbstractUserStoreManager userStoreManager = resolveUserStoreManager(complaint.getOrgId());
+
+        String dataPrincipalName = userStoreManager == null ? ROLE_LABEL_DATA_PRINCIPAL
+                : resolveUsername(userStoreManager, complaint.getUserId(), complaint.getUserName())
+                        .map(username -> resolveDisplayName(userStoreManager, username))
+                        .orElse(ROLE_LABEL_DATA_PRINCIPAL);
+
+        boolean isCommentAdded = NOTIFICATION_TYPE_COMMENT_ADDED.equals(notificationType);
+        String actorName;
+        if (!isCommentAdded) {
+            // A new complaint was filed - the citizen who filed it is both the actor and the
+            // data principal.
+            actorName = dataPrincipalName;
+        } else if (notifyingCreator) {
+            actorName = userStoreManager == null ? ROLE_LABEL_GRIEVANCE_OFFICER
+                    : resolveUsername(userStoreManager, event.getActorUserId(), event.getActorUserName())
+                            .map(username -> resolveDisplayName(userStoreManager, username))
+                            .orElse(ROLE_LABEL_GRIEVANCE_OFFICER);
+        } else {
+            actorName = dataPrincipalName;
+        }
+
+        String status = complaint.getStatus();
+        String statusLabel = STATUS_LABELS.getOrDefault(status, humanize(status));
+
+        String deepLinkPath = notifyingCreator ? CREATOR_DEEP_LINK_PATH : OFFICER_DEEP_LINK_PATH;
+        String actionUrl = IdentityUtil.getServerURL(deepLinkPath + complaint.getComplaintId(), true, false);
+
+        String referenceId = complaint.getReferenceId();
+        String verb = isCommentAdded ? "replied to complaint" : "filed a new complaint";
+        String headlineHtml = "<strong>" + htmlEscape(actorName) + "</strong> " + verb + " <strong>"
+                + htmlEscape(referenceId) + "</strong>.";
+        String footerText = notifyingCreator
+                ? "You're receiving this because you filed this complaint."
+                : "You're receiving this because you're the assigned Grievance Officer - this is an "
+                        + "automated notification, please don't reply directly to it.";
+        String actionBadgeHtml = buildActionBadge(status, notifyingCreator);
+        String messageExcerpt = isCommentAdded ? excerpt(event.getComment()) : excerpt(complaint.getDescription());
+
+        Map<String, Object> placeholders = new HashMap<>();
+        placeholders.put(PROP_REFERENCE_ID, referenceId);
+        placeholders.put(PROP_MESSAGE_EXCERPT, messageExcerpt);
+        placeholders.put(PLACEHOLDER_DATA_PRINCIPAL_NAME, dataPrincipalName);
+        placeholders.put(PLACEHOLDER_ACTOR_NAME, actorName);
+        placeholders.put(PLACEHOLDER_CATEGORY_LABEL, humanize(complaint.getCategory()));
+        placeholders.put(PLACEHOLDER_PRIORITY_LABEL, humanize(complaint.getPriority()));
+        placeholders.put(PLACEHOLDER_STATUS_LABEL, statusLabel);
+        placeholders.put(PLACEHOLDER_SLA_LABEL, slaLabel(complaint.getStatutoryDueTime()));
+        placeholders.put(PLACEHOLDER_ACTION_URL, actionUrl);
+        placeholders.put(PLACEHOLDER_RECIPIENT_ROLE_LABEL,
+                notifyingCreator ? ROLE_LABEL_DATA_PRINCIPAL : ROLE_LABEL_GRIEVANCE_OFFICER);
+        placeholders.put(PLACEHOLDER_HEADLINE_HTML, headlineHtml);
+        placeholders.put(PLACEHOLDER_FOOTER_TEXT, footerText);
+        placeholders.put(PLACEHOLDER_ACTION_BADGE_HTML, actionBadgeHtml);
+        placeholders.put(PLACEHOLDER_LOGO_URL, IdentityUtil.getServerURL(LOGO_PATH, true, false));
+        return placeholders;
+    }
+
+    /**
+     * Whether this specific recipient needs to act right now depends on the complaint's *new*
+     * status, not a fixed label: WAITING_ON_CLIENT means the citizen needs to act, every other
+     * open status means the officer does, and RESOLVED means neither does.
+     */
+    private static String buildActionBadge(String status, boolean notifyingCreator) {
+        if (STATUS_RESOLVED.equals(status)) {
+            return buildBadge("Resolved", "#dcfce7", "#166534");
+        }
+        boolean isCitizensTurn = STATUS_WAITING_ON_CLIENT.equals(status);
+        boolean isThisRecipientsTurn = notifyingCreator == isCitizensTurn;
+        return isThisRecipientsTurn ? buildBadge("Action Needed", "#fee2e2", "#b91c1c")
+                : buildBadge("Update", "#f3f4f6", "#4b5563");
+    }
+
+    private static String buildBadge(String text, String background, String color) {
+        return "<span style=\"display:inline-block;background-color:" + background + ";color:" + color
+                + ";font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;"
+                + "padding:4px 10px;border-radius:999px;\">" + text + "</span>";
+    }
+
+    private static String htmlEscape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    private static Map<String, String> buildStatusLabels() {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("OPEN", "Open");
+        labels.put("IN_PROGRESS", "In Progress");
+        labels.put("WAITING_ON_CLIENT", "Waiting on Client");
+        labels.put("AWAITING_INTERNAL_REVIEW", "Waiting on Internal Review");
+        labels.put("RESOLVED", "Resolved");
+        return labels;
+    }
+
+    /** {@code "UNAUTHORIZED_DATA_SHARING"} / {@code "CRITICAL"} -> {@code "Unauthorized Data Sharing"} / {@code "Critical"}. */
+    private static String humanize(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "";
+        }
+        StringBuilder result = new StringBuilder();
+        for (String word : value.trim().split("_")) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (result.length() > 0) {
+                result.append(' ');
+            }
+            result.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1).toLowerCase(Locale.ENGLISH));
+        }
+        return result.toString();
+    }
+
+    private static String slaLabel(long statutoryDueTimeMillis) {
+        long remainingMillis = statutoryDueTimeMillis - System.currentTimeMillis();
+        long remainingDays = (long) Math.ceil(remainingMillis / (double) TimeUnit.DAYS.toMillis(1));
+        if (remainingDays > 1) {
+            return remainingDays + " days left";
+        } else if (remainingDays == 1) {
+            return "1 day left";
+        } else if (remainingDays == 0) {
+            return "Due today";
+        }
+        long overdueDays = Math.abs(remainingDays);
+        return "Overdue by " + overdueDays + (overdueDays == 1 ? " day" : " days");
+    }
+
+    private static String excerpt(String message) {
+        if (message == null) {
+            return "";
+        }
+        return message.length() <= MAX_EXCERPT_LENGTH ? message : message.substring(0, MAX_EXCERPT_LENGTH) + "...";
+    }
+
+    /**
+     * Fires a standard {@code TRIGGER_NOTIFICATION} event for one recipient - the compulsory
+     * attributes IS's own notification handler expects are {@code send-to}, {@code user-name} and
+     * a template type.
+     */
+    private void triggerNotification(Recipient recipient, String tenantDomain, String notificationType,
+            Map<String, Object> placeholders) {
+        IdentityEventService eventService = eventServiceSupplier.get();
+        if (eventService == null) {
+            LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
+                    + "complaint notification not sent.");
+            return;
+        }
+        Map<String, Object> triggerProperties = new HashMap<>(placeholders);
+        triggerProperties.put(TRIGGER_PROP_SEND_TO, recipient.getEmail());
+        triggerProperties.put(IdentityEventConstants.EventProperty.USER_NAME, recipient.getUsername());
+        triggerProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+        triggerProperties.put(TRIGGER_PROP_TEMPLATE_TYPE, notificationType);
+        try {
+            eventService.handleEvent(new Event(IdentityEventConstants.Event.TRIGGER_NOTIFICATION,
+                    triggerProperties));
+        } catch (Throwable t) {
+            // Deliberately never rethrown - see interface javadoc.
+            LOGGER.log(Level.WARNING, "Error triggering '" + notificationType + "' notification email to '"
+                    + recipient.getEmail() + "' in tenant: " + tenantDomain, t);
+        }
+    }
+
+    /** A resolved notification recipient - a username paired with the email address to send to. */
+    private static final class Recipient {
+
+        private final String username;
+        private final String email;
+
+        Recipient(String username, String email) {
+            this.username = username;
+            this.email = email;
+        }
+
+        String getUsername() {
+            return username;
+        }
+
+        String getEmail() {
+            return email;
+        }
+    }
+}
