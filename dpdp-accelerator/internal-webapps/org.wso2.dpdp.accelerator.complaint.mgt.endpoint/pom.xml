@@ -42,7 +42,6 @@
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -53,7 +52,6 @@
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
             <scope>provided</scope>
         </dependency>
-
 
         <!-- PrivilegedCarbonContext, used by every endpoint class to resolve the caller's identity
              directly - Carbon's own valve pipeline populates this per-request, even for a
@@ -142,7 +140,6 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-rs-client</artifactId>
-            <version>${cxf.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

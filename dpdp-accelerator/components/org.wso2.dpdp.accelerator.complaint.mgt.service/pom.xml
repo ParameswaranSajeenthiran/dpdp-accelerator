@@ -34,12 +34,10 @@
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.dao</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
