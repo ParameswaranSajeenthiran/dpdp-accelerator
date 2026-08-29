@@ -347,8 +347,7 @@ scopes = ["complaints:read:any"]
 # hand instead - this does not disable the portal itself, only the automatic
 # creation of its application and roles.
 # client_id must match whatever the deployed portal's own configuration expects -
-# changing it here without updating that too will break sign-in. Also read directly by the
-# complaint-mgt endpoint's TokenIntrospectionClient as the only client_id whose tokens it accepts.
+# changing it here without updating that too will break sign-in.
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
