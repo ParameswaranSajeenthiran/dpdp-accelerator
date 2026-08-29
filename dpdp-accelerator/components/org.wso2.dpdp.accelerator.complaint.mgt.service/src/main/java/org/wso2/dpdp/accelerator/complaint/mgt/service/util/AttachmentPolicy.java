@@ -38,11 +38,6 @@ public class AttachmentPolicy {
             "image/png",
             "image/jpeg");
 
-    // Bounds the number of files a single upload request may carry - without this, many
-    // individually-under-the-cap files in one request still forces the handler to buffer an
-    // unbounded amount of data in heap before this policy's per-file size check ever runs.
-    private static final int DEFAULT_MAX_FILES_PER_UPLOAD = 5;
-
     private AttachmentPolicy() {
     }
 
@@ -52,15 +47,8 @@ public class AttachmentPolicy {
     }
 
     public static int getMaxFilesPerUpload() {
-        String configured = System.getProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
-        if (configured != null) {
-            try {
-                return Integer.parseInt(configured.trim());
-            } catch (NumberFormatException ignored) {
-                // fall through to default
-            }
-        }
-        return DEFAULT_MAX_FILES_PER_UPLOAD;
+        return ComplaintServiceDataHolder.getInstance().getConfigurationService()
+                .getComplaintsAttachmentMaxFilesPerUpload();
     }
 
     public static boolean isAllowedContentType(String contentType) {

@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
@@ -48,6 +49,7 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -84,7 +86,7 @@ class ComplaintAttachmentServiceImplTest {
 
     @AfterMethod
     void tearDown() {
-        System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
     private UploadedFile pdfFile(String name, int size) {
@@ -135,7 +137,9 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenTooManyFilesInOneRequest() {
-        System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        when(configurationService.getComplaintsAttachmentMaxFilesPerUpload()).thenReturn(2);
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(configurationService);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",

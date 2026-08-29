@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -95,7 +96,7 @@ class ComplaintAttachmentHandlerTest {
 
     @AfterMethod
     void tearDown() {
-        System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
     private ComplaintAttachment attachment(String id, boolean isPublic) {
@@ -171,7 +172,9 @@ class ComplaintAttachmentHandlerTest {
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenTooManyFilePartsProvidedWithoutReadingAny() {
-        System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        when(configurationService.getComplaintsAttachmentMaxFilesPerUpload()).thenReturn(2);
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(configurationService);
         List<Attachment> parts = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             parts.add(mock(Attachment.class));

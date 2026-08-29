@@ -39,6 +39,8 @@ public interface DPDPConfigurationService {
 
     long getComplaintsAttachmentMaxSizeBytes();
 
+    int getComplaintsAttachmentMaxFilesPerUpload();
+
     int getEventNotificationThreadPoolSize();
 
     long getEventNotificationBaseBackoffSeconds();

@@ -243,6 +243,12 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES);
     }
 
+    public int getComplaintsAttachmentMaxFilesPerUpload() {
+
+        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD);
+    }
+
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)

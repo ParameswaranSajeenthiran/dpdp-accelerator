@@ -90,6 +90,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public int getComplaintsAttachmentMaxFilesPerUpload() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD
+                : configParser.getComplaintsAttachmentMaxFilesPerUpload();
+    }
+
+    @Override
     public int getEventNotificationThreadPoolSize() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE

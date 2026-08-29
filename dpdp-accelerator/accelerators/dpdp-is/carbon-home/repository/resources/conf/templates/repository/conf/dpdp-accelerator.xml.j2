@@ -56,6 +56,11 @@
         {% else %}
         <AttachmentMaxSizeBytes>10485760</AttachmentMaxSizeBytes>
         {% endif %}
+        {% if dpdp_accelerator.complaints.attachment_max_files_per_upload is defined %}
+        <AttachmentMaxFilesPerUpload>{{dpdp_accelerator.complaints.attachment_max_files_per_upload}}</AttachmentMaxFilesPerUpload>
+        {% else %}
+        <AttachmentMaxFilesPerUpload>5</AttachmentMaxFilesPerUpload>
+        {% endif %}
     </Complaints>
     <EventNotifications>
         {% if dpdp_accelerator.event_notifications.webhook.thread_pool_size is defined %}

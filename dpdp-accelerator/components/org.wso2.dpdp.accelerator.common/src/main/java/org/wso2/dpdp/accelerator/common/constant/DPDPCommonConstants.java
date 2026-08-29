@@ -46,6 +46,9 @@ public final class DPDPCommonConstants {
     public static final String COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES = "Complaints.AttachmentMaxSizeBytes";
     public static final long DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES = 10L * 1024 * 1024;
 
+    public static final String COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = "Complaints.AttachmentMaxFilesPerUpload";
+    public static final int DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = 5;
+
     public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
     public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";
     public static final String EVENT_NOTIFICATIONS_MAX_RETRIES = "EventNotifications.MaxRetries";
