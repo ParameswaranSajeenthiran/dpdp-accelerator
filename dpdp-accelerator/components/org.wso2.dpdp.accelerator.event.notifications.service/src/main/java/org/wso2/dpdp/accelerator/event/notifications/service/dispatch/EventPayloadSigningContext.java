@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 final class EventPayloadSigningContext {
 
     private final String tenantDomain;
-    private final String issuer;
     private final String subject;
     private final String audience;
     private final String deliveryId;
@@ -33,11 +32,10 @@ final class EventPayloadSigningContext {
     private final String payloadHash;
     private final JsonNode payload;
 
-    EventPayloadSigningContext(String tenantDomain, String issuer, String subject, String audience,
+    EventPayloadSigningContext(String tenantDomain, String subject, String audience,
             String deliveryId, String eventId, long issuedAt, String payloadHash, JsonNode payload) {
 
         this.tenantDomain = tenantDomain;
-        this.issuer = issuer;
         this.subject = subject;
         this.audience = audience;
         this.deliveryId = deliveryId;
@@ -49,10 +47,6 @@ final class EventPayloadSigningContext {
 
     String getTenantDomain() {
         return tenantDomain;
-    }
-
-    String getIssuer() {
-        return issuer;
     }
 
     String getSubject() {

@@ -34,6 +34,7 @@ import java.util.Map;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /** Tests the tenant boundary and compact RS256 contract of the event payload signer. */
 public class IdentityServerPayloadSignerTest {
@@ -58,7 +59,10 @@ public class IdentityServerPayloadSignerTest {
                 tenantAKeyPair.getPrivate(), "tenant-a-kid", "tenant-a-thumbprint"));
         keys.put(TENANT_B, new TenantSigningKey(
                 tenantBKeyPair.getPrivate(), "tenant-b-kid", "tenant-b-thumbprint"));
-        signer = new IdentityServerPayloadSigner(keys::get);
+        Map<String, String> issuers = new HashMap<>();
+        issuers.put(TENANT_A, "https://is.example/t/tenant-a.example/oauth2/token");
+        issuers.put(TENANT_B, "https://is.example/t/tenant-b.example/oauth2/token");
+        signer = new IdentityServerPayloadSigner(keys::get, issuers::get);
     }
 
     @Test
@@ -78,7 +82,7 @@ public class IdentityServerPayloadSignerTest {
         assertEquals(header.get("x5t#S256").asText(), "tenant-a-thumbprint");
 
         JsonNode claims = decodeJson(parts[1]);
-        assertEquals(claims.get("iss").asText(), TENANT_A);
+        assertEquals(claims.get("iss").asText(), "https://is.example/t/tenant-a.example/oauth2/token");
         assertEquals(claims.get("sub").asText(), "group-1");
         assertEquals(claims.get("aud").asText(), "dpdp-event-notifications");
         assertEquals(claims.get("jti").asText(), "delivery-1");
@@ -101,14 +105,42 @@ public class IdentityServerPayloadSignerTest {
 
         assertEquals(decodeJson(tenantAJws.split("\\.")[0]).get("kid").asText(), "tenant-a-kid");
         assertEquals(decodeJson(tenantBJws.split("\\.")[0]).get("kid").asText(), "tenant-b-kid");
+        assertEquals(decodeJson(tenantAJws.split("\\.")[1]).get("iss").asText(),
+                "https://is.example/t/tenant-a.example/oauth2/token");
+        assertEquals(decodeJson(tenantBJws.split("\\.")[1]).get("iss").asText(),
+                "https://is.example/t/tenant-b.example/oauth2/token");
         assertTrue(verify(tenantBJws, tenantBKeyPair));
         assertFalse(verify(tenantBJws, tenantAKeyPair));
+    }
+
+    @Test
+    public void testPropagatesSigningKeyResolutionFailure() throws Exception {
+        IdentityServerPayloadSigner failingSigner = new IdentityServerPayloadSigner(
+                tenantDomain -> {
+                    throw new IllegalStateException("key unavailable");
+                }, tenantDomain -> "https://is.example/oauth2/token");
+
+        expectThrows(IllegalStateException.class, () -> failingSigner.sign(context(
+                TENANT_A, "group-a", "delivery-a", "event-a", "hash-a", MAPPER.readTree("{}"))));
+    }
+
+    @Test
+    public void testPropagatesIssuerResolutionFailure() throws Exception {
+        IdentityServerPayloadSigner failingSigner = new IdentityServerPayloadSigner(
+                tenantDomain -> new TenantSigningKey(
+                        tenantAKeyPair.getPrivate(), "tenant-a-kid", "tenant-a-thumbprint"),
+                tenantDomain -> {
+                    throw new IllegalStateException("issuer unavailable");
+                });
+
+        expectThrows(IllegalStateException.class, () -> failingSigner.sign(context(
+                TENANT_A, "group-a", "delivery-a", "event-a", "hash-a", MAPPER.readTree("{}"))));
     }
 
     private static EventPayloadSigningContext context(String tenant, String subject, String deliveryId,
             String eventId, String payloadHash, JsonNode payload) {
 
-        return new EventPayloadSigningContext(tenant, tenant, subject, "dpdp-event-notifications",
+        return new EventPayloadSigningContext(tenant, subject, "dpdp-event-notifications",
                 deliveryId, eventId, 1_787_651_970L, payloadHash, payload);
     }
 

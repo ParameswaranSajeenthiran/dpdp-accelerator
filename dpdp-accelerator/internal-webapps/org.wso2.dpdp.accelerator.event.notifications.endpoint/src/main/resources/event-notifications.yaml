@@ -1533,14 +1533,17 @@ components:
     JwsClaims:
       type: object
       description: >-
-        Decoded current JWS claims. In this code version iss is the tenant
-        domain. The protected header also contains alg=RS256, typ=JWT, kid,
-        and x5t#S256.
+        Decoded JWS claims. The iss value is the issuer configured by Identity
+        Server for the tenant. The protected header also contains alg=RS256,
+        typ=JWT, kid, and x5t#S256. The kid is resolved through the configured
+        Identity Server KeyIDProvider and must match an entry from the trusted
+        tenant JWKS endpoint.
       required: [iss, sub, aud, iat, jti, txn, payloadHash, payload]
       properties:
         iss:
           type: string
-          example: example.com
+          format: uri
+          example: https://is.example.com:9443/t/example.com/oauth2/token
         sub:
           type: string
           example: processor-1

@@ -33,19 +33,22 @@ final class IdentityServerPayloadSigner implements EventPayloadSigner {
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final TenantSigningKeyResolver signingKeyResolver;
+    private final TenantIssuerResolver issuerResolver;
 
     IdentityServerPayloadSigner() {
-        this(new IdentityServerTenantSigningKeyResolver());
+        this(new IdentityServerTenantSigningKeyResolver(), new IdentityServerTenantIssuerResolver());
     }
 
-    IdentityServerPayloadSigner(TenantSigningKeyResolver signingKeyResolver) {
+    IdentityServerPayloadSigner(TenantSigningKeyResolver signingKeyResolver, TenantIssuerResolver issuerResolver) {
         this.signingKeyResolver = signingKeyResolver;
+        this.issuerResolver = issuerResolver;
     }
 
     @Override
     public String sign(EventPayloadSigningContext context) throws Exception {
 
         TenantSigningKey signingKey = signingKeyResolver.resolve(context.getTenantDomain());
+        String issuer = issuerResolver.resolve(context.getTenantDomain());
 
         Map<String, Object> header = new LinkedHashMap<>();
         header.put("alg", "RS256");
@@ -54,7 +57,7 @@ final class IdentityServerPayloadSigner implements EventPayloadSigner {
         header.put("x5t#S256", signingKey.getCertificateThumbprint());
 
         Map<String, Object> claims = new LinkedHashMap<>();
-        claims.put("iss", context.getIssuer());
+        claims.put("iss", issuer);
         claims.put("sub", context.getSubject());
         claims.put("aud", context.getAudience());
         claims.put("iat", context.getIssuedAt());

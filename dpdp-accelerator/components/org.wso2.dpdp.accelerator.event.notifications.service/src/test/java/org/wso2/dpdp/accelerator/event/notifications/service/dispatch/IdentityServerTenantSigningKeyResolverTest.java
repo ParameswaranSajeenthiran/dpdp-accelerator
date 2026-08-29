@@ -29,6 +29,7 @@ import java.security.cert.Certificate;
 import java.util.Base64;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -41,6 +42,7 @@ public class IdentityServerTenantSigningKeyResolverTest {
     @Test
     public void testResolvesOAuthTenantKeyAndCertificateThumbprint() throws Exception {
         IdentityKeyStoreResolver identityResolver = mock(IdentityKeyStoreResolver.class);
+        TenantKeyIdResolver keyIdResolver = mock(TenantKeyIdResolver.class);
         Certificate certificate = mock(Certificate.class);
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
@@ -52,22 +54,19 @@ public class IdentityServerTenantSigningKeyResolverTest {
         when(identityResolver.getCertificate("tenant.example", InboundProtocol.OAUTH))
                 .thenReturn(certificate);
         when(certificate.getEncoded()).thenReturn(encodedCertificate);
+        when(keyIdResolver.resolve(certificate, "tenant.example")).thenReturn("configured-provider-kid");
 
-        TenantSigningKey signingKey =
-                new IdentityServerTenantSigningKeyResolver(identityResolver).resolve(" tenant.example ");
+        TenantSigningKey signingKey = new IdentityServerTenantSigningKeyResolver(identityResolver, keyIdResolver)
+                .resolve(" tenant.example ");
 
         assertSame(signingKey.getPrivateKey(), keyPair.getPrivate());
         byte[] certificateDigest = MessageDigest.getInstance("SHA-256").digest(encodedCertificate);
-        StringBuilder hex = new StringBuilder(certificateDigest.length * 2);
-        for (byte current : certificateDigest) {
-            hex.append(String.format("%02x", current));
-        }
-        assertEquals(signingKey.getKeyId(), Base64.getUrlEncoder().withoutPadding()
-                .encodeToString(hex.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)) + "_RS256");
+        assertEquals(signingKey.getKeyId(), "configured-provider-kid");
         assertEquals(signingKey.getCertificateThumbprint(),
                 Base64.getUrlEncoder().withoutPadding().encodeToString(certificateDigest));
         verify(identityResolver).getPrivateKey("tenant.example", InboundProtocol.OAUTH);
         verify(identityResolver).getCertificate("tenant.example", InboundProtocol.OAUTH);
+        verify(keyIdResolver).resolve(certificate, "tenant.example");
     }
 
     @Test
@@ -77,5 +76,61 @@ public class IdentityServerTenantSigningKeyResolverTest {
                 new IdentityServerTenantSigningKeyResolver(identityResolver);
 
         expectThrows(IllegalArgumentException.class, () -> resolver.resolve(" "));
+    }
+
+    @Test
+    public void testRejectsNonPrivateSigningKey() throws Exception {
+        IdentityKeyStoreResolver identityResolver = mock(IdentityKeyStoreResolver.class);
+        TenantKeyIdResolver keyIdResolver = mock(TenantKeyIdResolver.class);
+        when(identityResolver.getPrivateKey("tenant.example", InboundProtocol.OAUTH))
+                .thenReturn(mock(java.security.Key.class));
+
+        IdentityServerTenantSigningKeyResolver resolver =
+                new IdentityServerTenantSigningKeyResolver(identityResolver, keyIdResolver);
+
+        expectThrows(IllegalStateException.class, () -> resolver.resolve("tenant.example"));
+        verify(identityResolver, never()).getCertificate("tenant.example", InboundProtocol.OAUTH);
+    }
+
+    @Test
+    public void testRejectsMissingCertificate() throws Exception {
+        IdentityKeyStoreResolver identityResolver = mock(IdentityKeyStoreResolver.class);
+        TenantKeyIdResolver keyIdResolver = mock(TenantKeyIdResolver.class);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        when(identityResolver.getPrivateKey("tenant.example", InboundProtocol.OAUTH))
+                .thenReturn(generator.generateKeyPair().getPrivate());
+        when(identityResolver.getCertificate("tenant.example", InboundProtocol.OAUTH)).thenReturn(null);
+
+        IdentityServerTenantSigningKeyResolver resolver =
+                new IdentityServerTenantSigningKeyResolver(identityResolver, keyIdResolver);
+
+        expectThrows(IllegalStateException.class, () -> resolver.resolve("tenant.example"));
+        verify(keyIdResolver, never()).resolve(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    public void testRejectsBlankOrNullProviderKeyId() throws Exception {
+        assertInvalidProviderKeyId(" ");
+        assertInvalidProviderKeyId(null);
+    }
+
+    private static void assertInvalidProviderKeyId(String keyId) throws Exception {
+        IdentityKeyStoreResolver identityResolver = mock(IdentityKeyStoreResolver.class);
+        TenantKeyIdResolver keyIdResolver = mock(TenantKeyIdResolver.class);
+        Certificate certificate = mock(Certificate.class);
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        when(identityResolver.getPrivateKey("tenant.example", InboundProtocol.OAUTH))
+                .thenReturn(generator.generateKeyPair().getPrivate());
+        when(identityResolver.getCertificate("tenant.example", InboundProtocol.OAUTH)).thenReturn(certificate);
+        when(certificate.getEncoded()).thenReturn(new byte[]{1, 2, 3});
+        when(keyIdResolver.resolve(certificate, "tenant.example")).thenReturn(keyId);
+
+        IdentityServerTenantSigningKeyResolver resolver =
+                new IdentityServerTenantSigningKeyResolver(identityResolver, keyIdResolver);
+
+        expectThrows(IllegalStateException.class, () -> resolver.resolve("tenant.example"));
     }
 }

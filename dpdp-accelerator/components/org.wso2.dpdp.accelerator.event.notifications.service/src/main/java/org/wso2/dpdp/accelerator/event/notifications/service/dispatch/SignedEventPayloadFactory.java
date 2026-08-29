@@ -42,7 +42,7 @@ public class SignedEventPayloadFactory {
         JsonNode eventPayload = MAPPER.readTree(envelope);
         String payloadHash = HmacSigner.sign(sharedSecret, envelope);
         EventPayloadSigningContext context = new EventPayloadSigningContext(
-                orgId, orgId, groupId, audience, deliveryId, eventId,
+                orgId, groupId, audience, deliveryId, eventId,
                 System.currentTimeMillis() / 1000L, payloadHash, eventPayload);
         return payloadSigner.sign(context);
     }

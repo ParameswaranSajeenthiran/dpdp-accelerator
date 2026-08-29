@@ -42,7 +42,6 @@ public class SignedEventPayloadFactoryTest {
         verify(signer).sign(captor.capture());
         EventPayloadSigningContext context = captor.getValue();
         assertEquals(context.getTenantDomain(), "tenant.example");
-        assertEquals(context.getIssuer(), "tenant.example");
         assertEquals(context.getSubject(), "group-1");
         assertEquals(context.getAudience(), "poll-audience");
         assertEquals(context.getDeliveryId(), "delivery-1");
