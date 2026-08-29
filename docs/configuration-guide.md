@@ -30,9 +30,21 @@ with no operator step and no REST call involved:
 
 It also authorizes the three consent management APIs (RBAC) and creates two
 roles: `dpdp-consent-admin`, holding every consent management scope, and
-`dpdp-consent-user`, which carries none. Provisioning checks each of these —
-application, and each role — individually and only creates what's missing, so
-it's always safe to re-run (see [Recovering a broken tenant](#3-recovering-a-broken-tenant)
+`dpdp-consent-user`, which carries none — the consent-mgt scopes are Identity
+Server's own `internal_consent_mgt_*` permissions, already granted to every
+user by IS's default role configuration, so `dpdp-consent-user` only needs to
+exist, not carry anything.
+
+The complaint management API has no such built-in default: it registers its
+own API resource (`/api/dpdp/complaints`, the four `complaints:*`
+scopes) and folds all four straight into the existing `dpdp-consent-admin`
+role, rather than a dedicated complaint role — `dpdp-consent-admin` ends up
+holding every consent management scope *and* every complaint management
+scope. `dpdp-consent-user` is unaffected either way.
+
+Provisioning checks each of these — application, API authorization, and each
+role — individually and only creates what's missing, so it's always safe to
+re-run (see [Recovering a broken tenant](#3-recovering-a-broken-tenant)
 below).
 
 ## 2. Change or turn off the auto-provisioning
@@ -73,14 +85,16 @@ application and any missing role.
 
 ## 4. Assign portal roles
 
-Every user of the portal needs one of these two roles, assigned in the
-Console under **User Management → Users → *user* → Roles**. Roles belong to
-one tenant, so do this in each tenant.
+Every user of the portal needs roles assigned in the Console under
+**User Management → Users → *user* → Roles**. Roles belong to one tenant, so
+do this in each tenant.
 
 | Role | Assign to | Grants |
 |---|---|---|
 | `dpdp-consent-user` | Regular users | Managing their own consents. |
-| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog. |
+| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog, plus every complaint management scope (`complaints:read/write:self`, `complaints:read/write:any`) — viewing and managing every complaint in the org, including internal notes and status transitions. |
+
+There is currently no role granting ordinary users `complaints:read/write:self` — only `dpdp-consent-admin` carries complaint scopes at all.
 
 ## 5. Open the portal
 

@@ -46,6 +46,9 @@ import static org.testng.Assert.expectThrows;
 public class DPDPConfigParserTest {
 
     private static final String CUSTOM_CLIENT_ID = "CUSTOM_TEST_CLIENT_ID";
+    private static final int CUSTOM_STATUTORY_DUE_PERIOD_DAYS = 45;
+    private static final long CUSTOM_ATTACHMENT_MAX_SIZE_BYTES = 2048L;
+    private static final int CUSTOM_ATTACHMENT_MAX_FILES_PER_UPLOAD = 3;
     private static final String CUSTOM_DATASOURCE_NAME = "jdbc/CustomDPDPDataSource";
     private static final Set<Integer> CUSTOM_ALLOWED_CALLBACK_PORTS =
             new HashSet<>(Arrays.asList(80, 9443));
@@ -63,6 +66,12 @@ public class DPDPConfigParserTest {
                 + "<ConsentPortal>"
                 + "<ClientId>" + CUSTOM_CLIENT_ID + "</ClientId>"
                 + "</ConsentPortal>"
+                + "<Complaints>"
+                + "<StatutoryDuePeriodDays>" + CUSTOM_STATUTORY_DUE_PERIOD_DAYS + "</StatutoryDuePeriodDays>"
+                + "<AttachmentMaxSizeBytes>" + CUSTOM_ATTACHMENT_MAX_SIZE_BYTES + "</AttachmentMaxSizeBytes>"
+                + "<AttachmentMaxFilesPerUpload>" + CUSTOM_ATTACHMENT_MAX_FILES_PER_UPLOAD
+                + "</AttachmentMaxFilesPerUpload>"
+                + "</Complaints>"
                 + "<EventNotifications>"
                 + "<ThreadPoolSize>8</ThreadPoolSize>"
                 + "<BaseBackoffSeconds>12</BaseBackoffSeconds>"
@@ -88,6 +97,27 @@ public class DPDPConfigParserTest {
     public void readsConfiguredValueFromXml() {
 
         assertEquals(DPDPConfigParser.getInstance().getConsentPortalClientId(), CUSTOM_CLIENT_ID);
+    }
+
+    @Test
+    public void readsConfiguredComplaintsStatutoryDuePeriodDaysFromXml() {
+
+        assertEquals(DPDPConfigParser.getInstance().getComplaintsStatutoryDuePeriodDays(),
+                CUSTOM_STATUTORY_DUE_PERIOD_DAYS);
+    }
+
+    @Test
+    public void readsConfiguredComplaintsAttachmentMaxSizeBytesFromXml() {
+
+        assertEquals(DPDPConfigParser.getInstance().getComplaintsAttachmentMaxSizeBytes(),
+                CUSTOM_ATTACHMENT_MAX_SIZE_BYTES);
+    }
+
+    @Test
+    public void readsConfiguredComplaintsAttachmentMaxFilesPerUploadFromXml() {
+
+        assertEquals(DPDPConfigParser.getInstance().getComplaintsAttachmentMaxFilesPerUpload(),
+                CUSTOM_ATTACHMENT_MAX_FILES_PER_UPLOAD);
     }
 
     @Test
@@ -156,6 +186,9 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertEquals(service.getConsentPortalClientId(), CUSTOM_CLIENT_ID);
+        assertEquals(service.getComplaintsStatutoryDuePeriodDays(), CUSTOM_STATUTORY_DUE_PERIOD_DAYS);
+        assertEquals(service.getComplaintsAttachmentMaxSizeBytes(), CUSTOM_ATTACHMENT_MAX_SIZE_BYTES);
+        assertEquals(service.getComplaintsAttachmentMaxFilesPerUpload(), CUSTOM_ATTACHMENT_MAX_FILES_PER_UPLOAD);
         assertEquals(service.getJdbcConnectionVerificationTimeoutSeconds(), 3);
         assertTrue(service.isConsentPortalProvisioningEnabled());
         assertEquals(service.getEventNotificationThreadPoolSize(), 8);
@@ -180,6 +213,11 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl(false);
         assertEquals(service.getConfigurations().size(), 0);
+        assertEquals(service.getComplaintsStatutoryDuePeriodDays(), 90);
+        assertEquals(service.getComplaintsAttachmentMaxSizeBytes(),
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES);
+        assertEquals(service.getComplaintsAttachmentMaxFilesPerUpload(),
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD);
         assertEquals(service.getJdbcConnectionVerificationTimeoutSeconds(), 1);
         assertEquals(service.getEventNotificationThreadPoolSize(), 4);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 5L);
@@ -209,6 +247,9 @@ public class DPDPConfigParserTest {
         Map<String, Object> values = (Map<String, Object>) configurationField.get(parser);
         Map<String, Object> backup = new HashMap<>(values);
         values.clear();
+        values.put("Complaints.StatutoryDuePeriodDays", "45");
+        values.put("Complaints.AttachmentMaxSizeBytes", "2048");
+        values.put("Complaints.AttachmentMaxFilesPerUpload", "3");
         values.put("EventNotifications.ThreadPoolSize", "8");
         values.put("EventNotifications.BaseBackoffSeconds", "12");
         values.put("EventNotifications.MaxRetries", "3");
@@ -225,6 +266,9 @@ public class DPDPConfigParserTest {
         values.put("EventNotifications.PendingSubscriptionRecoveryBatchSize", "20");
         values.put("EventNotifications.WorkerShutdownTimeoutSeconds", "5");
         try {
+            assertEquals(service.getComplaintsStatutoryDuePeriodDays(), CUSTOM_STATUTORY_DUE_PERIOD_DAYS);
+            assertEquals(service.getComplaintsAttachmentMaxSizeBytes(), 2048L);
+            assertEquals(service.getComplaintsAttachmentMaxFilesPerUpload(), 3);
             assertEquals(service.getEventNotificationThreadPoolSize(), 8);
         assertEquals(service.getEventNotificationBaseBackoffSeconds(), 12L);
         assertEquals(service.getEventNotificationMaxRetries(), 3);
@@ -240,6 +284,18 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryIntervalSeconds(), 30);
         assertEquals(service.getEventNotificationPendingSubscriptionRecoveryBatchSize(), 20);
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 5);
+
+        values.put("Complaints.StatutoryDuePeriodDays", "0");
+        expectThrows(IllegalStateException.class, service::getComplaintsStatutoryDuePeriodDays);
+        values.put("Complaints.StatutoryDuePeriodDays", String.valueOf(CUSTOM_STATUTORY_DUE_PERIOD_DAYS));
+
+        values.put("Complaints.AttachmentMaxSizeBytes", "-1");
+        expectThrows(IllegalStateException.class, service::getComplaintsAttachmentMaxSizeBytes);
+        values.put("Complaints.AttachmentMaxSizeBytes", "2048");
+
+        values.put("Complaints.AttachmentMaxFilesPerUpload", "0");
+        expectThrows(IllegalStateException.class, service::getComplaintsAttachmentMaxFilesPerUpload);
+        values.put("Complaints.AttachmentMaxFilesPerUpload", "3");
 
         values.put("EventNotifications.ThreadPoolSize", "0");
         expectThrows(IllegalStateException.class, service::getEventNotificationThreadPoolSize);

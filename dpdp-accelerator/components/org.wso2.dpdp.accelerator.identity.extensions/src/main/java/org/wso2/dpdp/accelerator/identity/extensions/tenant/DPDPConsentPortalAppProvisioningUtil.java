@@ -123,6 +123,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
+        dto.setTokenType("Default");
         dto.setTokenBindingType(COOKIE);
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);
