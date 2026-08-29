@@ -178,7 +178,6 @@ public class WebhookDeliveryTask implements Runnable {
             String payloadHash = HmacSigner.sign(sharedSecret, serializedPayload);
             EventPayloadSigningContext signingContext = new EventPayloadSigningContext(
                     orgId,
-                    orgId,
                     groupId,
                     configurationService.getEventNotificationPayloadSigningAudience(),
                     delivery.getDeliveryId(),

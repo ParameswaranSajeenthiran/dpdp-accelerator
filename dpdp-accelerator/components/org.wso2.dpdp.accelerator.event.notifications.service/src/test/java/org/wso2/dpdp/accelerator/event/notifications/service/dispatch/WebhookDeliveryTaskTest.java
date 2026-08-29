@@ -39,8 +39,8 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -384,7 +384,6 @@ public class WebhookDeliveryTaskTest {
         verify(payloadSigner).sign(contextCaptor.capture());
         EventPayloadSigningContext context = contextCaptor.getValue();
         assertEquals(context.getTenantDomain(), ORG_ID);
-        assertEquals(context.getIssuer(), ORG_ID);
         assertEquals(context.getSubject(), GROUP_ID);
         assertEquals(context.getAudience(), "dpdp-event-notifications");
         assertEquals(context.getDeliveryId(), DELIVERY_ID);
@@ -400,6 +399,22 @@ public class WebhookDeliveryTaskTest {
 
         String expectedBodySignature = "sha256=" + HmacSigner.sign(SHARED_SECRET, bodyOf(request));
         assertEquals(request.headers().firstValue("Event-Signature").orElse(null), expectedBodySignature);
+    }
+
+    @Test
+    public void testPayloadSigningFailurePreventsHttpRequestAndSchedulesRetry() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        when(configurationService.isEventNotificationPayloadSigningEnabled()).thenReturn(true);
+        when(configurationService.getEventNotificationPayloadSigningAudience())
+                .thenReturn("dpdp-event-notifications");
+        when(payloadSigner.sign(any(EventPayloadSigningContext.class)))
+                .thenThrow(new IllegalStateException("issuer unavailable"));
+        when(deliveryDAO.recordRetryableFailure(any(), anyString(), anyInt(), any())).thenReturn(true);
+
+        task(delivery, "{\"hello\":\"world\"}").run();
+
+        verify(httpClient, never()).send(any(), any());
+        verify(deliveryDAO).recordRetryableFailure(any(), eq(DELIVERY_ID), eq(1), any());
     }
 
     @Test

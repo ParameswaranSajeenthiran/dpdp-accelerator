@@ -21,7 +21,6 @@ package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 import org.wso2.carbon.identity.core.IdentityKeyStoreResolver;
 import org.wso2.carbon.identity.core.util.IdentityKeyStoreResolverConstants.InboundProtocol;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
@@ -32,13 +31,20 @@ import java.util.Base64;
 final class IdentityServerTenantSigningKeyResolver implements TenantSigningKeyResolver {
 
     private final IdentityKeyStoreResolver keyStoreResolver;
+    private final TenantKeyIdResolver keyIdResolver;
 
     IdentityServerTenantSigningKeyResolver() {
-        this(null);
+        this(null, new IdentityServerTenantKeyIdResolver());
     }
 
     IdentityServerTenantSigningKeyResolver(IdentityKeyStoreResolver keyStoreResolver) {
+        this(keyStoreResolver, new IdentityServerTenantKeyIdResolver());
+    }
+
+    IdentityServerTenantSigningKeyResolver(IdentityKeyStoreResolver keyStoreResolver,
+            TenantKeyIdResolver keyIdResolver) {
         this.keyStoreResolver = keyStoreResolver;
+        this.keyIdResolver = keyIdResolver;
     }
 
     @Override
@@ -62,19 +68,10 @@ final class IdentityServerTenantSigningKeyResolver implements TenantSigningKeyRe
 
         byte[] thumbprint = MessageDigest.getInstance("SHA-256").digest(certificate.getEncoded());
         String certificateThumbprint = Base64.getUrlEncoder().withoutPadding().encodeToString(thumbprint);
-        // Identity Server's default OAuth KeyIDProvider uses the URL-safe Base64 encoding
-        // of the lowercase SHA-256 certificate digest followed by the JWS algorithm.
-        String keyId = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString(toLowerHex(thumbprint).getBytes(StandardCharsets.UTF_8)) + "_RS256";
-        return new TenantSigningKey((PrivateKey) key, keyId, certificateThumbprint);
-    }
-
-    private static String toLowerHex(byte[] value) {
-        StringBuilder hex = new StringBuilder(value.length * 2);
-        for (byte current : value) {
-            hex.append(Character.forDigit((current >>> 4) & 0x0F, 16));
-            hex.append(Character.forDigit(current & 0x0F, 16));
+        String keyId = keyIdResolver.resolve(certificate, normalizedTenantDomain);
+        if (keyId == null || keyId.trim().isEmpty()) {
+            throw new IllegalStateException("Identity Server tenant signing key ID is unavailable.");
         }
-        return hex.toString();
+        return new TenantSigningKey((PrivateKey) key, keyId, certificateThumbprint);
     }
 }
