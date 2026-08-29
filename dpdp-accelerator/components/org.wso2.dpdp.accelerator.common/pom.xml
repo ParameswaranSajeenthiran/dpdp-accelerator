@@ -94,6 +94,7 @@
                         <exclude>**/*Constants.class</exclude>
                         <exclude>**/*Component.class</exclude>
                         <exclude>**/*DataHolder.class</exclude>
+                        <exclude>**/persistence/JDBCPersistenceManager.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -134,7 +135,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>${maven.bundle.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>

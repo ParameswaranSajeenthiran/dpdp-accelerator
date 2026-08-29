@@ -31,17 +31,36 @@
     <name>WSO2 DPDP Accelerator - Complaint Management Endpoint</name>
 
     <dependencies>
+        <!--
+             Now an OSGi bundle deployed separately into dropins (resolved at runtime via
+             getOSGiService(...) in each handler's no-arg constructor), not bundled into this
+             WAR - provided scope so Maven doesn't also package a second, distinct copy of these
+             classes into WEB-INF/lib (which would break the OSGi service casts with a
+             ClassCastException across two different classloaders' copies of the same class).
+             Same reasoning as event-notifications.service's provided scope in that endpoint's pom.
+        -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
-            <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- ConfigProvider, used by auth/TokenIntrospectionClient.java to read deployment.toml settings -->
+        <!-- LogSanitizer, used by ComplaintExceptionMapper - provided scope for the same reason
+             as complaint.mgt.service above. -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
+            <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- PrivilegedCarbonContext, used by every endpoint class to resolve the caller's identity
+             directly - Carbon's own valve pipeline populates this per-request, even for a
+             plain-WAR webapp like this one (confirmed empirically). Provided at runtime by
+             Carbon's shared classloader (this webapp's Environments includes Carbon - see
+             webapp-classloading.xml), never bundled into the WAR. -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.utils</artifactId>
         </dependency>
 
         <!--
@@ -88,56 +107,44 @@
             <artifactId>commons-logging</artifactId>
         </dependency>
 
+        <!-- Everything below is supplied at runtime by <IS_HOME>/lib/runtimes/cxf3/, the "CXF3"
+             webapp-classloading environment declared in META-INF/webapp-classloading.xml - these
+             are compile-time-only, pinned to that directory's exact shipped versions (the pinning
+             itself lives in the root pom's dependencyManagement). Same pattern as
+             consent.mgt.extensions.endpoint's pom. -->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
-
-        <!-- Jersey Servlet Container -->
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
-        </dependency>
-        <!--
-             The root pom's dependencyManagement pins jersey-common to `test` scope (for
-             event-notifications' own test-only usage), which otherwise drags this transitive
-             dependency of jersey-container-servlet-core down to `test` scope here too, excluding
-             it from WEB-INF/lib and causing NoClassDefFoundError: ExtendedLogger on deploy.
-             Overridden back to compile scope for this module explicitly.
-        -->
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <scope>compile</scope>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+            <exclusions>
+                <!-- Also shadows javax.ws.rs-api 2.1.1's javax.ws.rs.core.Response with its own
+                     copy of the same package. -->
+                <exclusion>
+                    <groupId>jakarta.ws.rs</groupId>
+                    <artifactId>jakarta.ws.rs-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- org.apache.cxf.jaxrs.ext.multipart.{Attachment,Multipart,ContentDisposition} - used by
+             ComplaintAttachmentEndpoint/MeComplaintAttachmentEndpoint's file upload parameters. -->
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-extension-providers</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>
-
-        <!-- Multipart form support (file uploads) -->
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
-        </dependency>
-
-        <!--
-             Not used directly by this app's code, but jersey-server's WebTargetValueParamProvider
-             (part of its @Uri-injection support) does an eager static class-load of this package's
-             ClientConfig during ServletContainer init, regardless of whether @Uri injection is
-             actually used - omitting it from the WAR causes a NoClassDefFoundError on deploy.
-        -->
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
 
         <!-- Servlet API - provided by the container at runtime -->
@@ -147,29 +154,9 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Database drivers -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -177,33 +164,38 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <!--
-             In-memory HTTP server + client for a real, non-mocked test of Jersey's own multipart
-             binding (does @FormDataParam("file") List<FormDataBodyPart> actually collect every
-             part sharing that field name, or only the first/last?) - the existing endpoint tests
-             all construct FormDataBodyPart lists directly in Java and never exercise the real
-             HTTP/multipart parsing layer at all, so that binding behavior has no coverage without
-             this. Driven directly via GrizzlyHttpServerFactory rather than JerseyTest - JerseyTest's
-             own dynamic-port setUp() reliably threw BindException on this machine (it appears to
-             probe for a free port with one throwaway container, then start a second real one on
-             that same port before the first has released it). Test-scope only; not part of the
-             deployed WAR.
+             Test-only: MultipartFileBindingTest starts a real, in-process CXF JAX-RS server and
+             drives it with CXF's own client, to test CXF's actual multipart binding behavior
+             (does @Multipart("file") List<Attachment> actually collect every part sharing that
+             field name, or only the first/last?) end-to-end rather than relying on assumptions -
+             none of the other endpoint/handler tests ever exercise the real HTTP/multipart parsing
+             layer, so that binding behavior has no coverage without this. Not part of the deployed
+             WAR - cxf-rt-frontend-jaxrs above is compile-time-only (provided by the CXF3 runtime
+             environment at deploy time), but the test JVM needs an actual client implementation on
+             its classpath to drive requests against the in-process server.
         -->
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-client</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <finalName>api#dpdp#complaints#v1</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

@@ -18,14 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintDAOImpl;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.impl.ComplaintEventDAOImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
@@ -39,6 +36,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotific
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,18 +50,6 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     private final ComplaintDAO complaintDAO;
     private final ComplaintService complaintService;
     private final NotificationClient notificationClient;
-
-    public ComplaintEventServiceImpl() {
-        this.complaintEventDAO = new ComplaintEventDAOImpl();
-        this.complaintDAO = new ComplaintDAOImpl();
-        this.complaintService = new ComplaintServiceImpl(this.complaintDAO);
-        this.notificationClient = new EmailNotificationClient();
-    }
-
-    public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
-            ComplaintService complaintService) {
-        this(complaintEventDAO, complaintDAO, complaintService, new EmailNotificationClient());
-    }
 
     public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
             ComplaintService complaintService, NotificationClient notificationClient) {
@@ -129,25 +116,29 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                 actorUserName, actorRole, isPublic, message.trim(), fromStatus, hasToStatus ? toStatus : null, now);
 
         if (hasToStatus) {
-            // The comment and the status change it carries must land together - see
-            // JDBCPersistenceManager#executeInTransaction - otherwise a failure between the two
-            // writes could leave a status-changing comment recorded against a complaint whose
-            // status never actually moved, or vice versa.
+            // The comment and the status change it carries must land together - otherwise a
+            // failure between the two writes could leave a status-changing comment recorded
+            // against a complaint whose status never actually moved, or vice versa.
+            Connection conn = DatabaseUtils.getDBConnection();
             try {
-                JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                    if (!complaintEventDAO.addEvent(conn, event)) {
-                        throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                                ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
-                    }
-                    if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
-                        throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                                ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
-                    }
-                    return null;
-                });
-            } catch (DPDPCommonRuntimeException e) {
+                if (!complaintEventDAO.addEvent(conn, event)) {
+                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                            ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+                }
+                if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
+                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                            ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
+                }
+                DatabaseUtils.commitTransaction(conn);
+            } catch (RuntimeException e) {
+                DatabaseUtils.rollbackTransaction(conn);
+                throw e;
+            } catch (SQLException e) {
+                DatabaseUtils.rollbackTransaction(conn);
                 throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR, e);
+            } finally {
+                DatabaseUtils.closeConnection(conn);
             }
         } else {
             boolean added = complaintEventDAO.addEvent(event);
@@ -233,25 +224,29 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId, actorUserName,
                 actorRole, true, note, fromStatus, toStatus, now);
 
-        // Status update and its audit event must land together - see
-        // JDBCPersistenceManager#executeInTransaction. Both writes are checked and made to fail
-        // the whole transaction (not just skip a write) so a partial failure can never leave the
-        // status changed with no record of why, or vice versa.
+        // Status update and its audit event must land together. Both writes are checked and made
+        // to fail the whole transaction (not just skip a write) so a partial failure can never
+        // leave the status changed with no record of why, or vice versa.
+        Connection conn = DatabaseUtils.getDBConnection();
         try {
-            JDBCPersistenceManager.getInstance().executeInTransaction(conn -> {
-                if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
-                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                            ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
-                }
-                if (!complaintEventDAO.addEvent(conn, event)) {
-                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                            ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
-                }
-                return null;
-            });
-        } catch (DPDPCommonRuntimeException e) {
+            if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
+                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                        ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
+            }
+            if (!complaintEventDAO.addEvent(conn, event)) {
+                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                        ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+            }
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR, e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
 
         complaint.setStatus(toStatus);

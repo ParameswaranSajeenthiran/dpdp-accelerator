@@ -813,6 +813,7 @@
       "initialSubmission": "ਆਰੰਭਿਕ ਜਮ੍ਹਾਂ ਕਰਵਾਈ ਗਈ",
       "internalNote": "ਅੰਦਰੂਨੀ",
       "overflowMore": "+{{count}} ਹੋਰ",
+      "uploadedCount": "{{count}} ਨਵੀਆਂ ਫਾਇਲਾਂ ਜੋੜੀਆਂ ਗਈਆਂ",
       "uploadedCount_one": "ਇੱਕ ਨਵੀਂ ਫਾਇਲ ਜੋੜੀ ਗਈ",
       "uploadedCount_other": "{{count}} ਨਵੀਆਂ ਫਾਇਲਾਂ ਜੋੜੀਆਂ ਗਈਆਂ"
     },

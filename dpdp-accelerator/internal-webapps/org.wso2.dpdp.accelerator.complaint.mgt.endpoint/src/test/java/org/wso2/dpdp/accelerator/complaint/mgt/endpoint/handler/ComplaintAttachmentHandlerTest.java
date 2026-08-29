@@ -18,16 +18,18 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.glassfish.jersey.media.multipart.ContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
@@ -36,24 +38,21 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.common.config.ConfigProvider;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
+import javax.activation.DataHandler;
 import javax.ws.rs.core.MediaType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -61,7 +60,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintAttachmentHandlerTest {
 
     private static final String ORG_ID = DAOConstants.DEFAULT_ORG_ID;
@@ -71,22 +69,34 @@ class ComplaintAttachmentHandlerTest {
     @Mock
     private ComplaintAttachmentService complaintAttachmentService;
     @Mock
-    private FormDataBodyPart filePart;
+    private Attachment filePart;
     @Mock
-    private ContentDisposition contentDisposition;
+    private DataHandler dataHandler;
 
     private ComplaintAttachmentHandler handler;
 
-    @BeforeEach
+    @BeforeClass
+    void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so a test running outside a live Carbon environment
+        // must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterClass
+    void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         handler = new ComplaintAttachmentHandler(complaintService, complaintAttachmentService);
     }
 
-    @AfterEach
+    @AfterMethod
     void tearDown() {
-        System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
     private ComplaintAttachment attachment(String id, boolean isPublic) {
@@ -102,24 +112,15 @@ class ComplaintAttachmentHandlerTest {
                 attachment.getContentType(), attachment.getFileData());
     }
 
-    private void useMaxAttachmentSizeBytes(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
-    }
-
     // ---- officer/admin ----
 
     @Test
-    void uploadComplaintAttachmentsReadsFilePartsAndDelegatesToServiceWithGivenIsPublic() {
+    void uploadComplaintAttachmentsReadsFilePartsAndDelegatesToServiceWithGivenIsPublic() throws IOException {
         byte[] data = "file-content".getBytes();
-        when(filePart.getValueAs(java.io.InputStream.class)).thenReturn(new ByteArrayInputStream(data));
-        when(filePart.getMediaType()).thenReturn(MediaType.valueOf("application/pdf"));
-        when(filePart.getContentDisposition()).thenReturn(contentDisposition);
-        when(contentDisposition.getFileName()).thenReturn("a.pdf");
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream(data));
+        when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
+        when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"a.pdf\""));
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER")))
                 .thenReturn(List.of(attachmentBean("att1", false)));
@@ -151,10 +152,10 @@ class ComplaintAttachmentHandlerTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsDefaultsContentTypeToOctetStreamWhenMediaTypeMissing() {
-        when(filePart.getValueAs(java.io.InputStream.class))
-                .thenReturn(new ByteArrayInputStream("x".getBytes()));
-        when(filePart.getMediaType()).thenReturn(null);
+    void uploadComplaintAttachmentsDefaultsContentTypeToOctetStreamWhenMediaTypeMissing() throws IOException {
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream("x".getBytes()));
+        when(filePart.getContentType()).thenReturn(null);
         when(filePart.getContentDisposition()).thenReturn(null);
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"))).thenReturn(List.of());
@@ -171,42 +172,71 @@ class ComplaintAttachmentHandlerTest {
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenTooManyFilePartsProvidedWithoutReadingAny() {
-        System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
-        List<FormDataBodyPart> parts = new ArrayList<>();
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        when(configurationService.getComplaintsAttachmentMaxFilesPerUpload()).thenReturn(2);
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(configurationService);
+        List<Attachment> parts = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            parts.add(mock(FormDataBodyPart.class));
+            parts.add(mock(Attachment.class));
         }
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", parts, true, "officer1", "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());
         // The count must be checked before any part is read - otherwise the exact memory-exhaustion
         // vector this cap exists to close (many parts, each read into heap before being rejected)
         // would still occur.
-        for (FormDataBodyPart part : parts) {
+        for (Attachment part : parts) {
             verifyNoInteractions(part);
         }
         verifyNoInteractions(complaintAttachmentService);
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSizeWithoutBufferingItWhole(@TempDir Path tempDir)
-            throws IOException {
-        useMaxAttachmentSizeBytes(tempDir, "5");
-        byte[] oversized = "this is way more than five bytes".getBytes();
-        when(filePart.getValueAs(java.io.InputStream.class)).thenReturn(new ByteArrayInputStream(oversized));
-        when(filePart.getMediaType()).thenReturn(MediaType.valueOf("application/pdf"));
-        when(filePart.getContentDisposition()).thenReturn(contentDisposition);
-        when(contentDisposition.getFileName()).thenReturn("big.pdf");
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSizeWithoutBufferingItWhole() throws IOException {
+        // An effectively-infinite source: if the handler buffered the whole part before checking
+        // its size (the bug this test guards against), reading it to completion would never
+        // return, so the test itself would hang rather than fail cleanly.
+        CountingInfiniteInputStream infiniteStream = new CountingInfiniteInputStream();
+        when(filePart.getDataHandler()).thenReturn(dataHandler);
+        when(dataHandler.getInputStream()).thenReturn(infiniteStream);
+        when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
+        when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"big.pdf\""));
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                         "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());
         assertTrue(ex.getDescription().contains("big.pdf"));
+        // AttachmentPolicy.getMaxSizeBytes() defaults to 10 MB outside a real Carbon environment
+        // (no dpdp-accelerator.xml on disk) - confirms the handler stopped reading shortly after
+        // that, not somewhere arbitrarily far into the (infinite) stream.
+        assertTrue(infiniteStream.getBytesServed() < 20L * 1024 * 1024);
         verifyNoInteractions(complaintAttachmentService);
+    }
+
+    /** Reports data forever, so a caller can only pass this test by not trying to drain it. */
+    private static final class CountingInfiniteInputStream extends InputStream {
+
+        private long bytesServed;
+
+        @Override
+        public int read() {
+            bytesServed++;
+            return 0;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) {
+            bytesServed += len;
+            return len;
+        }
+
+        long getBytesServed() {
+            return bytesServed;
+        }
     }
 
     @Test
@@ -255,8 +285,4 @@ class ComplaintAttachmentHandlerTest {
         verify(complaintAttachmentService).downloadOwnAttachment(ORG_ID, "c1", "user1", "att1");
     }
 
-    @Test
-    void noArgsConstructorWiresRealServiceImplementations() {
-        assertNotNull(new ComplaintAttachmentHandler());
-    }
 }

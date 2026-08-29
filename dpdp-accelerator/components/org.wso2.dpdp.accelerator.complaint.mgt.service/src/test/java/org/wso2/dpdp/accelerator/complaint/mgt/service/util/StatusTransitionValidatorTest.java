@@ -18,57 +18,69 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 class StatusTransitionValidatorTest {
 
-    @ParameterizedTest
-    @CsvSource({
-            "OPEN, IN_PROGRESS",
-            "OPEN, WAITING_ON_CLIENT",
-            "OPEN, AWAITING_INTERNAL_REVIEW",
-            "IN_PROGRESS, WAITING_ON_CLIENT",
-            "IN_PROGRESS, RESOLVED",
-            "WAITING_ON_CLIENT, AWAITING_INTERNAL_REVIEW",
-            "AWAITING_INTERNAL_REVIEW, IN_PROGRESS",
-            "AWAITING_INTERNAL_REVIEW, WAITING_ON_CLIENT",
-            "AWAITING_INTERNAL_REVIEW, RESOLVED",
-            "RESOLVED, AWAITING_INTERNAL_REVIEW"
-    })
+    @DataProvider(name = "validTransitions")
+    Object[][] validTransitions() {
+        return new Object[][] {
+                { "OPEN", "IN_PROGRESS" },
+                { "OPEN", "WAITING_ON_CLIENT" },
+                { "IN_PROGRESS", "WAITING_ON_CLIENT" },
+                { "IN_PROGRESS", "RESOLVED" },
+                { "WAITING_ON_CLIENT", "AWAITING_INTERNAL_REVIEW" },
+                { "AWAITING_INTERNAL_REVIEW", "IN_PROGRESS" },
+                { "AWAITING_INTERNAL_REVIEW", "WAITING_ON_CLIENT" },
+                { "AWAITING_INTERNAL_REVIEW", "RESOLVED" },
+                { "RESOLVED", "AWAITING_INTERNAL_REVIEW" }
+        };
+    }
+
+    @Test(dataProvider = "validTransitions")
     void allowsDocumentedValidTransitions(String from, String to) {
         assertTrue(StatusTransitionValidator.isValidTransition(from, to));
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "OPEN, RESOLVED",
-            "OPEN, OPEN",
-            "RESOLVED, OPEN",
-            "RESOLVED, IN_PROGRESS",
-            "RESOLVED, WAITING_ON_CLIENT",
-            "RESOLVED, RESOLVED",
-            "IN_PROGRESS, AWAITING_INTERNAL_REVIEW",
-            "WAITING_ON_CLIENT, IN_PROGRESS",
-            "WAITING_ON_CLIENT, RESOLVED"
-    })
+    @DataProvider(name = "invalidTransitions")
+    Object[][] invalidTransitions() {
+        return new Object[][] {
+                { "OPEN", "RESOLVED" },
+                { "OPEN", "AWAITING_INTERNAL_REVIEW" },
+                { "OPEN", "OPEN" },
+                { "RESOLVED", "OPEN" },
+                { "RESOLVED", "IN_PROGRESS" },
+                { "RESOLVED", "WAITING_ON_CLIENT" },
+                { "RESOLVED", "RESOLVED" },
+                { "IN_PROGRESS", "AWAITING_INTERNAL_REVIEW" },
+                { "WAITING_ON_CLIENT", "IN_PROGRESS" },
+                { "WAITING_ON_CLIENT", "RESOLVED" }
+        };
+    }
+
+    @Test(dataProvider = "invalidTransitions")
     void rejectsInvalidTransitions(String from, String to) {
         assertFalse(StatusTransitionValidator.isValidTransition(from, to));
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "GARBAGE, OPEN",
-            "OPEN, GARBAGE"
-    })
+    @DataProvider(name = "unknownStatusTransitions")
+    Object[][] unknownStatusTransitions() {
+        return new Object[][] {
+                { "GARBAGE", "OPEN" },
+                { "OPEN", "GARBAGE" }
+        };
+    }
+
+    @Test(dataProvider = "unknownStatusTransitions")
     void rejectsTransitionsInvolvingUnknownStatuses(String from, String to) {
         assertFalse(StatusTransitionValidator.isValidTransition(from, to));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void rejectsNullFromOrToStatus() {
         assertFalse(StatusTransitionValidator.isValidTransition(null, "OPEN"));
         assertFalse(StatusTransitionValidator.isValidTransition("OPEN", null));

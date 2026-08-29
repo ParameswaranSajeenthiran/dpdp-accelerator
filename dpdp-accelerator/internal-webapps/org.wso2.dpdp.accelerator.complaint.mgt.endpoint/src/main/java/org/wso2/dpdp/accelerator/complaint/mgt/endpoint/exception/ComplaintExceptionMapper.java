@@ -20,9 +20,9 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.common.util.LogSanitizer;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

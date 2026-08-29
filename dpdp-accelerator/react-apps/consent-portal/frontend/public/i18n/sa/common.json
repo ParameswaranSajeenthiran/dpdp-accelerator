@@ -813,6 +813,7 @@
       "initialSubmission": "प्रारम्भिक-समर्पणम्",
       "internalNote": "आन्तरिकम्",
       "overflowMore": "+{{count}} अधिकम्",
+      "uploadedCount": "{{count}} नव्यः सञ्चिकाः योजिताः",
       "uploadedCount_one": "नवा सञ्चिका योजिता",
       "uploadedCount_other": "{{count}} नव्यः सञ्चिकाः योजिताः"
     },

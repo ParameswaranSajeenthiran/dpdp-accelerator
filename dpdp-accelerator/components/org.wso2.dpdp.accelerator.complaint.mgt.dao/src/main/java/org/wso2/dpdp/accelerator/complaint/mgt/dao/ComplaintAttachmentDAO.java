@@ -20,6 +20,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +29,13 @@ public interface ComplaintAttachmentDAO {
 
     /** Persists a new attachment row. Returns true if a row was inserted. */
     boolean addAttachment(ComplaintAttachment attachment);
+
+    /**
+     * Same as {@link #addAttachment(ComplaintAttachment)}, run against a caller-owned connection so
+     * it can be composed with other writes into one
+     * {@link org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager#executeInTransaction} call.
+     */
+    boolean addAttachment(Connection conn, ComplaintAttachment attachment) throws SQLException;
 
     /**
      * Metadata only (no FILE_DATA) - used for list responses.

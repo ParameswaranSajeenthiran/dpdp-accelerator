@@ -813,6 +813,7 @@
       "initialSubmission": "गुबै गथायनाय",
       "internalNote": "सिंनि",
       "overflowMore": "+{{count}} बांसिन",
+      "uploadedCount": "{{count}} आना नया फाइल नांजाबहोबाय",
       "uploadedCount_one": "गोनां नया फाइल नांजाबहोबाय",
       "uploadedCount_other": "{{count}} आना नया फाइल नांजाबहोबाय"
     },

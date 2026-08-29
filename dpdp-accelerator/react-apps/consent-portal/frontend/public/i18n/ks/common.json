@@ -813,6 +813,7 @@
       "initialSubmission": "اِبتِدائی درَج کُرمُت",
       "internalNote": "اَندرُونی",
       "overflowMore": "+{{count}} بێیہِ",
+      "uploadedCount": "{{count}} نْوئ فایِلہ جوڈیتھ",
       "uploadedCount_one": "اکھ نْوئ فایِل جوڈیتھ",
       "uploadedCount_other": "{{count}} نْوئ فایِلہ جوڈیتھ"
     },

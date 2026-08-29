@@ -20,21 +20,16 @@ package org.wso2.dpdp.accelerator.identity.extensions.tenant;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
-import org.wso2.carbon.identity.api.resource.mgt.constant.APIResourceManagementConstants;
 import org.wso2.carbon.identity.application.common.IdentityApplicationManagementException;
-import org.wso2.carbon.identity.application.common.model.APIResource;
-import org.wso2.carbon.identity.application.common.model.AuthorizedAPI;
+import org.wso2.carbon.identity.application.common.model.AssociatedRolesConfig;
 import org.wso2.carbon.identity.application.common.model.Claim;
 import org.wso2.carbon.identity.application.common.model.ClaimConfig;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.InboundAuthenticationConfig;
 import org.wso2.carbon.identity.application.common.model.InboundAuthenticationRequestConfig;
 import org.wso2.carbon.identity.application.common.model.LocalAndOutboundAuthenticationConfig;
-import org.wso2.carbon.identity.application.common.model.Scope;
+import org.wso2.carbon.identity.application.common.model.RoleV2;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
-import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
-import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.oauth.IdentityOAuthAdminException;
 import org.wso2.carbon.identity.oauth.OAuthUtil;
@@ -43,13 +38,12 @@ import org.wso2.carbon.stratos.common.beans.TenantInfoBean;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Registers the DPDP Consent Portal OAuth2 application and authorizes it for the consent-mgt
- * and Event Notification APIs. Role creation is a separate concern - see
+ * Registers the DPDP Consent Portal OAuth2 application. API-resource registration/authorization
+ * is a separate concern - see {@link DPDPApiResourceProvisioningUtil} - as is role creation - see
  * {@link DPDPConsentPortalRoleProvisioningUtil}. Every method here assumes it is already
  * running inside the correct tenant's {@code PrivilegedCarbonContext} flow; that setup lives in
  * the caller ({@link DPDPIdentityExtensionTenantMgtListener}), not here, so this class stays
@@ -59,36 +53,12 @@ public final class DPDPConsentPortalAppProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalAppProvisioningUtil.class);
     static final String APPLICATION_NAME = "DPDP Consent Portal";
-    // OAuthAdminServiceImpl#validateAccessTokenClaims checks setAccessTokenClaims() entries
-    // against the OIDC dialect's claim mappings (getOIDCToLocalClaimMappings), not the local
-    // dialect - so this must be the OIDC claim URI "username", which maps to the local claim
-    // http://wso2.org/claims/local below, not that local claim URI itself.
-    private static final String USERNAME_OIDC_CLAIM_URI = "username";
-    // The service provider's ClaimConfig below is local-dialect (setLocalClaimDialect(true)), so
-    // its Claim needs the full local claim URI, not the OIDC claim URI above - the two are
-    // different namespaces for the same underlying attribute.
-    private static final String USERNAME_LOCAL_CLAIM_URI = "http://wso2.org/claims/username";
-    private static final String AUTHORIZED_API_POLICY = "RBAC";
+    private static final String USERNAME_CLAIM_URI = "http://wso2.org/claims/username";
     private static final String[] GRANT_TYPES = {"authorization_code", "refresh_token"};
-    private static final String[] CONSENT_MGT_API_IDENTIFIERS = {
-            "/api/identity/consent-mgt/v2.0/consents",
-            "/api/identity/consent-mgt/v2.0/purposes",
-            "/api/identity/consent-mgt/v2.0/elements"
-    };
-    private static final String[] EVENT_NOTIFICATION_API_IDENTIFIERS = {
-            "/api/dpdp/event-notifications/v1/topics",
-            "/api/dpdp/event-notifications/v1/subscriptions",
-            "/api/dpdp/event-notifications/v1/events",
-            "/api/dpdp/event-notifications/v1/events/poll",
-            "/api/dpdp/event-notifications/v1/deliveries"
-    };
-    private static final String[][] EVENT_NOTIFICATION_API_SCOPES = {
-            {"notifications:topics:read", "notifications:topics:write"},
-            {"notifications:subscriptions:read", "notifications:subscriptions:write"},
-            {"notifications:events:read", "notifications:events:write"},
-            {"notifications:events:poll"},
-            {"notifications:event-deliveries:complete"}
-    };
+    private static final String ASSOCIATED_ROLES_ALLOWED_AUDIENCE = "ORGANIZATION";
+    public static final String COOKIE = "cookie";
+    public static final String OAUTH_2 = "oauth2";
+    public static final String STANDARD_APP = "standardAPP";
 
     private DPDPConsentPortalAppProvisioningUtil() {
 
@@ -117,102 +87,25 @@ public final class DPDPConsentPortalAppProvisioningUtil {
     }
 
     /**
-     * Authorizes whichever of the three consent-mgt APIs aren't already authorized, and returns
-     * all their scope names. Checks first because re-authorizing an already-authorized API throws.
+     * Configures the application to consume organization-audience roles by setting its Role Audience
+     * to Organization and assigning the specified roles.
      */
-    public static List<String> authorizeConsentManagementAPIs(String applicationId, String tenantDomain)
-            throws Exception {
+    public static void associateOrganizationRoles(String tenantDomain, String username, List<RoleV2> roles)
+            throws IdentityApplicationManagementException {
 
-        return authorizeAPIs(applicationId, tenantDomain, CONSENT_MGT_API_IDENTIFIERS);
-    }
+        ServiceProvider serviceProvider = DPDPIdentityExtensionDataHolder.getInstance()
+                .getApplicationManagementService().getApplicationExcludingFileBasedSPs(APPLICATION_NAME,
+                        tenantDomain);
 
-    /**
-     * Authorizes the Event Notification API resources for the tenant's portal application.
-     * The operation is idempotent and preserves any existing authorization.
-     */
-    public static List<String> authorizeEventNotificationAPIs(String applicationId, String tenantDomain)
-            throws Exception {
+        AssociatedRolesConfig associatedRolesConfig = new AssociatedRolesConfig();
+        associatedRolesConfig.setAllowedAudience(ASSOCIATED_ROLES_ALLOWED_AUDIENCE);
+        associatedRolesConfig.setRoles(roles.toArray(new RoleV2[0]));
+        serviceProvider.setAssociatedRolesConfig(associatedRolesConfig);
 
-        return authorizeAPIs(applicationId, tenantDomain, EVENT_NOTIFICATION_API_IDENTIFIERS);
-    }
-
-    /**
-     * Registers the Event Notification API resources for a tenant when they are not already
-     * present. This is intentionally idempotent because tenant provisioning can be retried.
-     */
-    public static void registerEventNotificationAPIs(String tenantDomain) throws Exception {
-
-        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
-        registerAPIResources(apiResourceManager, tenantDomain, EVENT_NOTIFICATION_API_IDENTIFIERS,
-                EVENT_NOTIFICATION_API_SCOPES);
-
-    }
-
-    private static void registerAPIResources(APIResourceManager apiResourceManager, String tenantDomain,
-            String[] identifiers, String[][] scopesByIdentifier) throws Exception {
-
-        for (int i = 0; i < identifiers.length; i++) {
-            String identifier = identifiers[i];
-            if (apiResourceManager.getAPIResourceByIdentifier(identifier, tenantDomain) != null) {
-                continue;
-            }
-            List<Scope> scopes = new ArrayList<>();
-            for (String scopeName : scopesByIdentifier[i]) {
-                scopes.add(new Scope(null, scopeName, scopeName, "Event Notification API scope: " + scopeName));
-            }
-            APIResource resource = new APIResource.APIResourceBuilder()
-                    .name("DPDP Event Notification API " + resourceName(identifier))
-                    .identifier(identifier)
-                    .type(APIResourceManagementConstants.APIResourceTypes.TENANT)
-                    .description("DPDP Event Notification " + resourceName(identifier) + " API")
-                    .requiresAuthorization(true)
-                    .scopes(scopes)
-                    .build();
-            apiResourceManager.addAPIResource(resource, tenantDomain);
-        }
-    }
-
-    private static String resourceName(String identifier) {
-
-        String[] parts = identifier.split("/");
-        return parts[parts.length - 1];
-    }
-
-    private static List<String> authorizeAPIs(String applicationId, String tenantDomain, String[] identifiers)
-            throws Exception {
-
-        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
-        AuthorizedAPIManagementService authorizedAPIManagementService = DPDPIdentityExtensionDataHolder.getInstance()
-                .getAuthorizedAPIManagementService();
-
-        List<String> authorizedScopeNames = new ArrayList<>();
-        for (String identifier : identifiers) {
-            APIResource apiResource = apiResourceManager.getAPIResourceByIdentifier(identifier, tenantDomain);
-            if (apiResource == null) {
-                throw new IdentityApplicationManagementException("API resource not registered: " + identifier
-                        + ". Confirm [consent_mgt] enable_v2_api = true in this tenant's deployment.");
-            }
-
-            AuthorizedAPI existingAuthorization = authorizedAPIManagementService.getAuthorizedAPI(applicationId,
-                    apiResource.getId(), tenantDomain);
-            List<Scope> scopes;
-            if (existingAuthorization != null) {
-                scopes = existingAuthorization.getScopes();
-                LOG.debug("API '" + identifier + "' is already authorized for application: " + applicationId);
-            } else {
-                scopes = apiResource.getScopes();
-                AuthorizedAPI authorizedAPI = new AuthorizedAPI(applicationId, apiResource.getId(),
-                        AUTHORIZED_API_POLICY, scopes, apiResource.getType());
-                authorizedAPIManagementService.addAuthorizedAPI(applicationId, authorizedAPI, tenantDomain);
-                LOG.debug("Authorized API '" + identifier + "' (" + scopes.size() + " scope(s)) for application: "
-                        + applicationId);
-            }
-
-            for (Scope scope : scopes) {
-                authorizedScopeNames.add(scope.getName());
-            }
-        }
-        return authorizedScopeNames;
+        DPDPIdentityExtensionDataHolder.getInstance().getApplicationManagementService()
+                .updateApplication(serviceProvider, tenantDomain, username);
+        LOG.debug("Set the Role Audience to organization and associated " + roles.size()
+                + " role(s) for application: " + APPLICATION_NAME + ", tenant: " + tenantDomain);
     }
 
     static void registerOAuthApplication(String tenantDomain, String callbackUrl, String clientId)
@@ -230,18 +123,10 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);
         dto.setPkceMandatory(true);
-        // Without this the app defaults to an opaque (UUID) access token, which
-        // TokenIntrospectionClient cannot decode at all - it only ever parses a JWT's payload
-        // segment. This must be JWT for the same reason accessTokenClaims below must be set.
-        dto.setTokenType("JWT");
-        dto.setTokenBindingType("cookie");
+        dto.setTokenType("Default");
+        dto.setTokenBindingType(COOKIE);
         dto.setTokenBindingValidationEnabled(true);
         dto.setTokenRevocationWithIDPSessionTerminationEnabled(true);
-        // Without this, JWT access tokens carry only the opaque "sub" - no human-readable identity
-        // at all - since WSO2 IS doesn't embed local claims into access tokens by default. The
-        // complaint-mgt endpoint's TokenIntrospectionClient reads this claim directly off the
-        // decoded token to attribute complaints/comments/attachments to a display name.
-        dto.setAccessTokenClaims(new String[]{USERNAME_OIDC_CLAIM_URI});
 
         DPDPIdentityExtensionDataHolder.getInstance().getOAuthAdminService().registerOAuthApplicationData(dto);
     }
@@ -275,8 +160,8 @@ public final class DPDPConsentPortalAppProvisioningUtil {
 
         InboundAuthenticationRequestConfig requestConfig = new InboundAuthenticationRequestConfig();
         requestConfig.setInboundAuthKey(clientId);
-        requestConfig.setInboundAuthType("oauth2");
-        requestConfig.setInboundConfigType("standardAPP");
+        requestConfig.setInboundAuthType(OAUTH_2);
+        requestConfig.setInboundConfigType(STANDARD_APP);
         InboundAuthenticationConfig inboundAuthenticationConfig = new InboundAuthenticationConfig();
         inboundAuthenticationConfig.setInboundAuthenticationRequestConfigs(
                 new InboundAuthenticationRequestConfig[]{requestConfig});
@@ -289,7 +174,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         serviceProvider.setLocalAndOutBoundAuthenticationConfig(localAndOutboundAuthenticationConfig);
 
         Claim usernameClaim = new Claim();
-        usernameClaim.setClaimUri(USERNAME_LOCAL_CLAIM_URI);
+        usernameClaim.setClaimUri(USERNAME_CLAIM_URI);
         ClaimMapping usernameClaimMapping = new ClaimMapping();
         usernameClaimMapping.setRequested(true);
         usernameClaimMapping.setLocalClaim(usernameClaim);

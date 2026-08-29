@@ -29,7 +29,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventNotificationDAOProvider;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
@@ -77,8 +76,7 @@ public class EventNotificationServiceComponent {
                 new EventFanOutServiceImpl(daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO());
         EventPublishService eventPublishService = new EventPublishServiceImpl(
                 daoProvider.getEventDAO(), daoProvider.getTopicDAO(), eventFanOutService,
-                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO(),
-                JDBCPersistenceManager.getInstance());
+                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO());
         deliveryRecoveryService = new DeliveryRecoveryService(
                 daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO(),
                 subscriptionService, configurationService);

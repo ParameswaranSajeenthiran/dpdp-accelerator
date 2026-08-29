@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
@@ -29,13 +30,14 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
-import org.wso2.dpdp.accelerator.common.persistence.ConnectionCallback;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.sql.Connection;
+import javax.sql.DataSource;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -55,19 +57,37 @@ public class EventPublishTransactionAtomicityTest {
 
     @Mock
     private EventFanOutService eventFanOutService;
-    @Mock
-    private TransactionManager transactionManager;
     private Connection connection;
 
     private EventPublishServiceImpl publishService;
 
     @BeforeMethod
-    public void setUp() {
+    public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
         connection = org.mockito.Mockito.mock(Connection.class);
-        when(transactionManager.executeInTransaction(any())).thenAnswer(invocation ->
-                ((ConnectionCallback<?>) invocation.getArgument(0)).execute(connection));
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, eventFanOutService, transactionManager);
+        DataSource dataSource = org.mockito.Mockito.mock(DataSource.class);
+        when(dataSource.getConnection()).thenReturn(connection);
+        setStaticInstance(null);
+        setStaticDataSource(dataSource);
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, eventFanOutService);
+    }
+
+    @AfterMethod
+    public void tearDown() throws Exception {
+        setStaticDataSource(null);
+        setStaticInstance(null);
+    }
+
+    private static void setStaticDataSource(DataSource dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    private static void setStaticInstance(JDBCPersistenceManager instance) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(null, instance);
     }
 
     @Test

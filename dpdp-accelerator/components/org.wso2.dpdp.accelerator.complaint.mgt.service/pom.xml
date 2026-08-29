@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>WSO2 DPDP Accelerator - Complaint Management Service</name>
 
@@ -34,22 +34,19 @@
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.dao</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!-- ConfigProvider, used by PriorityMapper/AttachmentPolicy to read deployment.toml settings -->
-        <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!--
              DPDPConfigParser (org.wso2.dpdp.accelerator.common, used by StatutoryDuePeriodPolicy
@@ -167,28 +164,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -200,6 +182,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -265,6 +256,36 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <_dsannotations>*</_dsannotations>
+                        <Private-Package>
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.internal,
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.impl
+                        </Private-Package>
+                        <Export-Package>
+                            !org.wso2.dpdp.accelerator.complaint.mgt.service.internal,
+                            !org.wso2.dpdp.accelerator.complaint.mgt.service.impl,
+                            org.wso2.dpdp.accelerator.complaint.mgt.service.*;version="${project.version}"
+                        </Export-Package>
+                        <Import-Package>
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.osgi.framework;version="[1.8,2)",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

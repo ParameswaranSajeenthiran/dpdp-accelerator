@@ -813,6 +813,7 @@
       "initialSubmission": "प्रारम्भिक उजुरी",
       "internalNote": "आन्तरिक",
       "overflowMore": "+{{count}} थप",
+      "uploadedCount": "{{count}} वटा नयाँ फाइल संलग्न गरिए",
       "uploadedCount_one": "एउटा नयाँ फाइल संलग्न गरियो",
       "uploadedCount_other": "{{count}} वटा नयाँ फाइल संलग्न गरिए"
     },

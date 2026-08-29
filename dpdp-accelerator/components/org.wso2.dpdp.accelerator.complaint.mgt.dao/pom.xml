@@ -26,23 +26,17 @@
     </parent>
 
     <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.dao</artifactId>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>WSO2 DPDP Accelerator - Complaint Management DAO</name>
 
     <dependencies>
-        <dependency>
-            <groupId>org.wso2.dpdp.accelerator</groupId>
-            <artifactId>org.wso2.dpdp.common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <!-- JDBCPersistenceManager - the shared connection/transaction manager event-notifications
              uses, replacing this module's own former DBUtil. -->
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.common</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -51,18 +45,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -74,6 +64,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -119,6 +118,39 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <_dsannotations>*</_dsannotations>
+                        <Private-Package>
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.internal,
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.impl,
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.queries,
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.util
+                        </Private-Package>
+                        <Export-Package>
+                            !org.wso2.dpdp.accelerator.complaint.mgt.dao.internal,
+                            !org.wso2.dpdp.accelerator.complaint.mgt.dao.impl,
+                            !org.wso2.dpdp.accelerator.complaint.mgt.dao.queries,
+                            !org.wso2.dpdp.accelerator.complaint.mgt.dao.util,
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.*;version="${project.version}"
+                        </Export-Package>
+                        <Import-Package>
+                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.exception;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.persistence;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.util;version="${project.version}",
+                            org.osgi.framework;version="[1.8,2)",
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

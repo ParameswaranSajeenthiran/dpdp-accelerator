@@ -19,8 +19,7 @@
 package org.wso2.dpdp.accelerator.event.notifications.service.impl;
 
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
-import org.wso2.dpdp.accelerator.common.persistence.TransactionManager;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
@@ -57,6 +56,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.sql.Connection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -84,7 +84,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeliveryDAO deliveryDAO;
     private DeliveryAckDAO deliveryAckDAO;
     private DPDPConfigurationService configurationService;
-    private TransactionManager transactionManager = JDBCPersistenceManager.getInstance();
 
     private ScheduledExecutorService scheduler;
     private HttpClient httpClient;
@@ -101,19 +100,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
             DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
             DPDPConfigurationService configurationService) {
-        this(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO, configurationService,
-                JDBCPersistenceManager.getInstance());
-    }
-
-    public SubscriptionServiceImpl(SubscriptionDAO subscriptionDAO, TopicDAO topicDAO,
-            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
-            DPDPConfigurationService configurationService, TransactionManager transactionManager) {
         this.subscriptionDAO = subscriptionDAO;
         this.topicDAO = topicDAO;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
         this.configurationService = configurationService;
-        this.transactionManager = transactionManager;
     }
 
     public void start() {
@@ -358,25 +349,35 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      */
     private VerificationAttemptResult executeVerificationAttempt(String subscriptionId, String orgId,
             String expectedStatus, String callbackUrl, String topicName, boolean markStaleOnFailure) {
-        return transactionManager.executeInTransaction(connection -> {
+        Connection connection = DatabaseUtils.getDBConnection();
+        try {
+            VerificationAttemptResult result;
             Optional<Subscription> locked = subscriptionDAO.lockSubscriptionForVerification(connection,
                     subscriptionId, orgId, expectedStatus);
             if (locked.isEmpty()) {
-                return VerificationAttemptResult.notClaimed();
-            }
-            try {
-                verifyWebhookCallback(callbackUrl, topicName);
-            } catch (Exception e) {
-                if (markStaleOnFailure) {
-                    subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
-                            expectedStatus, SubscriptionStatus.STALE.getValue());
+                result = VerificationAttemptResult.notClaimed();
+            } else {
+                try {
+                    verifyWebhookCallback(callbackUrl, topicName);
+                    boolean updated = subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
+                            expectedStatus, SubscriptionStatus.ACTIVE.getValue());
+                    result = updated ? VerificationAttemptResult.success() : VerificationAttemptResult.notClaimed();
+                } catch (Exception e) {
+                    if (markStaleOnFailure) {
+                        subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
+                                expectedStatus, SubscriptionStatus.STALE.getValue());
+                    }
+                    result = VerificationAttemptResult.failure(e);
                 }
-                return VerificationAttemptResult.failure(e);
             }
-            boolean updated = subscriptionDAO.updateSubscriptionStatus(connection, subscriptionId, orgId,
-                    expectedStatus, SubscriptionStatus.ACTIVE.getValue());
-            return updated ? VerificationAttemptResult.success() : VerificationAttemptResult.notClaimed();
-        });
+            DatabaseUtils.commitTransaction(connection);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(connection);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(connection);
+        }
     }
 
     private static final class VerificationAttemptResult {
@@ -411,7 +412,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     EventNotificationServiceConstants.CALLBACK_URL_REQUIRED_ERROR_MSG, 422);
         }
         try {
-            EventNotificationUrlValidator.validate(callbackUrl);
+            EventNotificationUrlValidator.validate(callbackUrl,
+                    getConfiguration().getEventNotificationAllowedCallbackPorts(),
+                    getConfiguration().isEventNotificationPrivateNetworkCallbackTargetsAllowed());
             URI uri = URI.create(callbackUrl.trim());
             String scheme = uri.getScheme();
             if ("http".equalsIgnoreCase(scheme)

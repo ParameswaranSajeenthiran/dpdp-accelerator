@@ -813,6 +813,7 @@
       "initialSubmission": "पैह्ली जमात",
       "internalNote": "अंदरूनी",
       "overflowMore": "+{{count}} होर",
+      "uploadedCount": "{{count}} नवीं फाइलें जोड़ीयां गेइयां",
       "uploadedCount_one": "इक नवीं फाइल जोड़ी गेई",
       "uploadedCount_other": "{{count}} नवीं फाइलें जोड़ीयां गेइयां"
     },

@@ -18,7 +18,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchCurrentUser } from '../features/auth/api/currentUserApi'
-import { IS_SCOPES } from '../utils/scopes'
+import { CONSENT_HISTORY_SCOPES, IS_SCOPES } from '../utils/scopes'
 
 const authMocks = vi.hoisted(() => ({
   getBasicUser: vi.fn(),
@@ -113,7 +113,7 @@ describe('current-user API', () => {
       userId: 'anonymous',
       organizationId: 'carbon.super',
       hideSelfConsentsForAdmins: true,
-      scopes: Object.values(IS_SCOPES),
+      scopes: [...Object.values(IS_SCOPES), ...Object.values(CONSENT_HISTORY_SCOPES)],
     })
     expect(authMocks.getBasicUser).not.toHaveBeenCalled()
   })

@@ -24,6 +24,10 @@
     "notifications:topics:read",
     "notifications:topics:write",
     "notifications:events:read",
-    "notifications:events:write"
+    "notifications:events:write",
+    "consent:status-history:view:any",
+    "consent:status-history:view:self",
+    "consent:history:view:any",
+    "consent:history:view:self"
   ]
 }

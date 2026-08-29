@@ -19,13 +19,22 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { EVENT_SCOPES, IS_SCOPES, REQUIRED_SCOPES, parseScopes } from '../utils/scopes'
+import {
+  COMPLAINT_SCOPES,
+  CONSENT_HISTORY_SCOPES,
+  EVENT_SCOPES,
+  IS_SCOPES,
+  REQUIRED_SCOPES,
+  parseScopes,
+} from '../utils/scopes'
 
 describe('scope requirements', () => {
   it('only ever asks for real Identity Server and portal scopes', () => {
     const known = new Set<string>([
       ...Object.values(IS_SCOPES),
       ...Object.values(EVENT_SCOPES),
+      ...Object.values(CONSENT_HISTORY_SCOPES),
+      ...Object.values(COMPLAINT_SCOPES),
     ])
     Object.values(REQUIRED_SCOPES)
       .flat()
@@ -34,13 +43,23 @@ describe('scope requirements', () => {
       })
   })
 
-  it('never invents a scope vocabulary the server does not define', () => {
-    // internal_* scopes are Identity Server's own built-in RBAC scopes (consent/purpose/element).
-    // complaints:* scopes are real OAuth2 scopes on a registered API resource - the
-    // complaint-mgt endpoint's own resource, not an IS built-in - see complaint-server-API.yaml's
-    // securitySchemes.OAuth2. Either way, the portal never makes up scope names of its own.
+  it('never invents an Identity Server scope with nothing on the server to back it', () => {
     Object.values(IS_SCOPES).forEach((scope) => {
-      expect(scope.startsWith('internal_') || scope.startsWith('complaints:')).toBe(true)
+      expect(scope.startsWith('internal_')).toBe(true)
+    })
+  })
+
+  it('never invents a consent-history scope with nothing on the server to back it', () => {
+    // The accelerator itself registers these server-side via
+    // DPDPApiResourceProvisioningUtil - never a frontend-only fiction.
+    Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
+      expect(scope.startsWith('consent:')).toBe(true)
+    })
+  })
+
+  it('never invents a complaint scope with nothing on the server to back it', () => {
+    Object.values(COMPLAINT_SCOPES).forEach((scope) => {
+      expect(scope.startsWith('complaints:')).toBe(true)
     })
   })
 
@@ -71,6 +90,12 @@ describe('scope requirements', () => {
       expect(requested).toContain(scope)
     })
     Object.values(EVENT_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(COMPLAINT_SCOPES).forEach((scope) => {
       expect(requested).toContain(scope)
     })
   })

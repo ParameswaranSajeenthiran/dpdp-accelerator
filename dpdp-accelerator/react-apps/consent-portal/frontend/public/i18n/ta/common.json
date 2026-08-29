@@ -813,6 +813,7 @@
       "initialSubmission": "ஆரம்ப சமர்ப்பிப்பு",
       "internalNote": "உள் பகுதி",
       "overflowMore": "+மேலும் {{count}}",
+      "uploadedCount": "{{count}} புதிய கோப்புகள் இணைக்கப்பட்டன",
       "uploadedCount_one": "புதிய கோப்பு ஒன்று இணைக்கப்பட்டது",
       "uploadedCount_other": "{{count}} புதிய கோப்புகள் இணைக்கப்பட்டன"
     },

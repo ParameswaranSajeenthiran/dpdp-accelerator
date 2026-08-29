@@ -813,6 +813,7 @@
       "initialSubmission": "প্রাথমিক জমাদান",
       "internalNote": "অভ্যন্তরীণ",
       "overflowMore": "আরও +{{count}}টি",
+      "uploadedCount": "{{count}} টি নতুন ফাইল সংযুক্ত করা হয়েছে",
       "uploadedCount_one": "একটি নতুন ফাইল সংযুক্ত করা হয়েছে",
       "uploadedCount_other": "{{count}} টি নতুন ফাইল সংযুক্ত করা হয়েছে"
     },

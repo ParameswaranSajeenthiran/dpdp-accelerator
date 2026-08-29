@@ -17,29 +17,50 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 
 ## Prerequisites
 
-1. A running WSO2 Identity Server with the DPDP Accelerator, with the Consent Portal application
-   registered for your tenant (`bash bin/create-portal-app.sh`, see `docs/configuration-guide.md`).
+1. A running WSO2 Identity Server with the DPDP Accelerator deployed. The Consent Portal
+   application and the `dpdp-consent-user` / `dpdp-consent-admin` roles are provisioned
+   automatically at startup — there is nothing to register by hand. Confirm the server is up:
    ```sh
    curl -sk https://<host>:9443/oauth2/jwks
    curl -sk https://<host>:9443/consent-portal/
    ```
-2. A real IS user account for the **User** persona — no role needed; every signed-in user
-   manages their own consents.
-3. A real IS user account assigned the `dpdp-consent-admin` role for the **Consent Admin**
-   persona (see `docs/configuration-guide.md`, "Grant administration access") — drives the
-   admin UI and seeds Purposes/Elements/Consents via the API for `tests/01-elements`,
-   `tests/02-purposes`, and `tests/03-consents`.
-4. Node.js 18+.
+2. Three user accounts, with roles assigned. Role *membership* is the one thing the accelerator
+   never provisions, so `scripts/provision-test-users.sh` does it (see Setup below). If you would
+   rather use existing accounts, they must satisfy:
+   - **User** — no role needed; every signed-in user manages their own consents. Must *not* be an
+     administrator: `tests/04-authorization` asserts this account holds only `internal_login`.
+   - **Consent Admin** — assigned `dpdp-consent-admin` (see `docs/configuration-guide.md`,
+     "Grant administration access"). Drives the admin UI and seeds Purposes/Elements/Consents via
+     the API for `tests/01-elements`, `tests/02-purposes` and `tests/03-consents`.
+   - **Second User** — optional, a distinct plain account. Without it the ownership-isolation
+     tests skip themselves.
+
+   All three must live in the super tenant: the suite has no `/t/<tenant>` support.
+3. Node.js 20.19+ (or 22.12+), matching the rest of the repository.
 
 ## Setup
 
 ```sh
+# Create the three accounts and assign their roles. Idempotent - safe to re-run.
+TEST_PASSWORD='Str0ng!Pass' bash scripts/provision-test-users.sh
+
 cp .env.example .env
 # edit .env: fill in TEST_USER_USERNAME/PASSWORD, TEST_CONSENT_ADMIN_USERNAME/PASSWORD,
 # and PORTAL_BASE_URL/IS_BASE_URL if not localhost:9443
 npm install
 npx playwright install chromium
 ```
+
+The script prints the usernames it provisioned (`dpdp-ci-user`, `dpdp-ci-user-2`,
+`dpdp-ci-admin`); put those and `TEST_PASSWORD` into `.env`. It reads `IS_BASE_URL`,
+`IS_ADMIN_USERNAME` and `IS_ADMIN_PASSWORD` from the environment, defaulting to
+`https://localhost:9443` and `admin`/`admin`.
+
+## Continuous integration
+
+`.github/workflows/pr-checks.yml` runs this suite against a freshly deployed Identity Server on
+every pull request to `main` and `dev`, and can be dispatched manually from the Actions tab. It
+performs the same steps as the setup above, so a change that breaks local setup breaks CI too.
 
 ## Running the tests
 
@@ -95,7 +116,7 @@ responsible for.
 | --- | --- |
 | `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
 | `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
-| `03-consents/` | Consent records: User and admin registries (view/search/act), plus `03.07`, a `test.describe.serial` chain covering the full admin journey — create an Element, a Purpose, then a Consent — end to end |
+| `03-consents/` | Consent records: User and admin registries (view/search/act) |
 | `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes |
 
 ## Operating principles
@@ -113,9 +134,8 @@ persistent, shared environment rather than a disposable one:
 - **Tests clean up their own setup data — except Consents.** Elements/Purposes created as setup
   are deleted when the test finishes; Consents are left in place, since the product has no
   delete-by-id for them.
-- **Almost everything is independent.** Only `03.07` uses `test.describe.serial` for a fixed,
-  same-worker execution order — everything else can run in any order, on any worker, without
-  coordination.
+- **Every spec is independent.** Nothing in the suite uses `test.describe.serial` — every test can
+  run in any order, on any worker, without coordination.
 
 ## Known limitations
 

@@ -186,17 +186,12 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.databind.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
+                <version>${jackson.annotations.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
@@ -229,18 +224,6 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mapstruct</groupId>
-                <artifactId>mapstruct</artifactId>
-                <version>${mapstruct.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-core</artifactId>
                 <version>${cxf.version}</version>
@@ -252,95 +235,27 @@
                 <version>${cxf.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- org.apache.cxf.jaxrs.ext.multipart.{Attachment,Multipart,ContentDisposition} - used by
+                 complaint.mgt.endpoint's attachment upload/download resources. -->
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-extension-providers</artifactId>
+                <version>${cxf.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Test-only CXF client, used by complaint.mgt.endpoint's MultipartFileBindingTest to
+                 drive an in-process CXF server. -->
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-client</artifactId>
+                <version>${cxf.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.utils</artifactId>
                 <version>${carbon.kernel.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-junit-jupiter</artifactId>
-                <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>${junit.jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>${junit.jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-params</artifactId>
-                <version>${junit.jupiter.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.mysql</groupId>
-                <artifactId>mysql-connector-j</artifactId>
-                <version>${mysql.connector.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${javax.ws.rs.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers</groupId>
-                <artifactId>jersey-container-servlet-core</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.inject</groupId>
-                <artifactId>jersey-hk2</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-json-jackson</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-multipart</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-client</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers</groupId>
-                <artifactId>jersey-container-grizzly2-http</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.tomlj</groupId>
-                <artifactId>tomlj</artifactId>
-                <version>${tomlj.version}</version>
             </dependency>
 
             <!-- Shared across components/ modules - declared once here so a module's own
@@ -370,6 +285,74 @@
                 <artifactId>jersey-common</artifactId>
                 <version>${jersey.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.identity.extensions</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.dao</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.endpoint</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.dpdp.accelerator</groupId>
+                <artifactId>consent-portal</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
@@ -438,21 +421,48 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.consent.mgt</groupId>
+                <artifactId>org.wso2.carbon.consent.mgt.core</artifactId>
+                <version>${carbon.consent.mgt.core.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <!-- Shipped by this accelerator itself (accelerators/dpdp-is/carbon-home/repository/components/lib),
+                     not provided by the Identity Server - compile scope, not provided. -->
+                <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
+                <artifactId>quartz</artifactId>
+                <version>${quartz.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Annotates the generated DTOs (io.swagger.annotations.ApiModelProperty) - not part
+                 of <IS_HOME>/lib/runtimes/cxf3/, so unlike the dependencies above this one is
+                 bundled into the WAR rather than provided by the container. -->
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                <artifactId>jackson-jaxrs-json-provider</artifactId>
+                <version>${jackson.jaxrs.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.event</artifactId>
                 <version>${carbon.identity.event.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.wso2.carbon.identity.governance</groupId>
-                <artifactId>org.wso2.carbon.identity.governance</artifactId>
-                <version>${carbon.identity.governance.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.compendium</artifactId>
-                <version>${osgi.compendium.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -465,18 +475,6 @@
                 <groupId>org.wso2.securevault</groupId>
                 <artifactId>org.wso2.securevault</artifactId>
                 <version>${securevault.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>${commons.logging.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.service.component.annotations</artifactId>
-                <version>${osgi.service.component.annotations.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
@@ -511,36 +509,24 @@
                     <version>${maven.antrun.plugin.version}</version>
                 </plugin>
                 <plugin>
-                    <groupId>com.github.spotbugs</groupId>
-                    <artifactId>spotbugs-maven-plugin</artifactId>
-                    <version>${spotbugs.maven.plugin.version}</version>
-                    <configuration>
-                        <effort>Max</effort>
-                        <threshold>Low</threshold>
-                        <xmlOutput>true</xmlOutput>
-                        <spotbugsXmlOutputDirectory>${project.build.directory}/spotbugs</spotbugsXmlOutputDirectory>
-                        <plugins>
-                            <plugin>
-                                <groupId>com.h3xstream.findsecbugs</groupId>
-                                <artifactId>findsecbugs-plugin</artifactId>
-                                <version>${findsecbugs.plugin.version}</version>
-                            </plugin>
-                        </plugins>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>analyze-compile</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>${maven.clean.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven.dependency.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build.helper.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi.generator.plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -554,11 +540,6 @@
         <servlet.api.version>4.0.1</servlet.api.version>
         <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <javax.validation.api.version>2.0.1.Final</javax.validation.api.version>
-        <jackson.version>2.16.1</jackson.version>
-        <nimbus.jose.jwt.version>9.37.3</nimbus.jose.jwt.version>
-        <lombok.version>1.18.36</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
         <testng.version>7.8.0</testng.version>
         <mockito.version>4.11.0</mockito.version>
         <slf4j.version>1.7.36</slf4j.version>
@@ -567,17 +548,9 @@
         <mysql.connector.version>8.3.0</mysql.connector.version>
         <postgresql.driver.version>42.7.3</postgresql.driver.version>
         <sqlite.jdbc.version>3.45.3.0</sqlite.jdbc.version>
-        <cxf.version>3.5.5</cxf.version>
         <jersey.version>2.39</jersey.version>
-        <jacoco.version>0.8.15</jacoco.version>
         <jacoco.version>0.8.11</jacoco.version>
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
-        <h2.version>2.2.224</h2.version>
-        <mysql.connector.version>8.3.0</mysql.connector.version>
-        <jackson.version>2.17.0</jackson.version>
-        <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
-        <jersey.version>2.41</jersey.version>
-        <tomlj.version>1.1.1</tomlj.version>
 
         <carbon.kernel.version>4.12.34</carbon.kernel.version>
         <carbon.user.core.version>4.12.34</carbon.user.core.version>
@@ -592,16 +565,36 @@
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
         <carbon.identity.event.version>7.10.156</carbon.identity.event.version>
         <carbon.identity.governance.version>1.8.107</carbon.identity.governance.version>
+        <!-- 2.9.10 is the first published version with the listener/hook APIs we need. IS 7.3.0
+             actually ships an unpublished 2.9.0.3 hotfix (not on Nexus, so we can't compile
+             against it) - decompiled and confirmed API-identical to 2.9.10, so the Import-Package
+             range below is floored at 2.9.0.3, not 2.9.10, or bundle resolution fails on a real
+             IS 7.3.0 install. -->
+        <carbon.consent.mgt.core.version>2.9.10</carbon.consent.mgt.core.version>
+        <carbon.consent.mgt.core.imp.pkg.version.range>[2.9.0.3, 3.0.0)</carbon.consent.mgt.core.imp.pkg.version.range>
+        <!-- WSO2's OSGi-wrapped Quartz orbit jar - same coordinates the Financial Services
+             accelerator pins for its own periodical consent expiry job. -->
+        <quartz.version>2.3.2.wso2v1</quartz.version>
+        <gson.version>2.9.0</gson.version>
+        <gson.imp.pkg.version.range>[2.8.0, 3.0.0)</gson.imp.pkg.version.range>
+
+        <!-- Match the exact jars in <IS_HOME>/lib/runtimes/cxf3/ - that directory backs the
+             "CXF3" webapp-classloading environment our endpoint webapp declares, so it must
+             compile against the same versions it will actually run against. -->
+        <cxf.version>3.6.12</cxf.version>
+        <jackson.databind.version>2.21.4</jackson.databind.version>
+        <!-- jackson-annotations trails the core/databind/jaxrs release train and is only ever
+             published at major.minor granularity (no patch digit), unlike its siblings above. -->
+        <jackson.annotations.version>2.21</jackson.annotations.version>
+        <jackson.jaxrs.version>2.21.2</jackson.jaxrs.version>
+        <swagger.annotations.version>1.6.14</swagger.annotations.version>
         <axiom.version>1.2.11-wso2v16</axiom.version>
         <securevault.version>1.2.0</securevault.version>
         <commons.logging.version>1.2</commons.logging.version>
         <osgi.service.component.annotations.version>1.4.0</osgi.service.component.annotations.version>
         <osgi.version>7.0.0</osgi.version>
-        <osgi.compendium.version>4.2.0</osgi.compendium.version>
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
-        <osgi.service.http.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.http.imp.pkg.version.range>
-        <javax.servlet.imp.pkg.version.range>[2.6.0, 5.0.0)</javax.servlet.imp.pkg.version.range>
         <commons.logging.imp.pkg.version.range>[1.2.0, 2.0.0)</commons.logging.imp.pkg.version.range>
         <maven.bundle.plugin.version>5.1.9</maven.bundle.plugin.version>
         <maven.war.plugin.version>3.3.2</maven.war.plugin.version>
@@ -609,8 +602,14 @@
         <maven.assembly.plugin.version>3.6.0</maven.assembly.plugin.version>
         <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
-        <spotbugs.maven.plugin.version>4.8.2.0</spotbugs.maven.plugin.version>
-        <findsecbugs.plugin.version>1.12.0</findsecbugs.plugin.version>
+        <maven.dependency.plugin.version>3.6.1</maven.dependency.plugin.version>
+        <build.helper.maven.plugin.version>3.5.0</build.helper.maven.plugin.version>
+        <openapi.generator.plugin.version>6.6.0</openapi.generator.plugin.version>
+
+        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate the consent-history
+             DTOs from consent-history.yaml, then set back to true and commit the result. Off by
+             default so a normal build doesn't regenerate on every run. -->
+        <dpdp.dto.codegen.skip>true</dpdp.dto.codegen.skip>
 
         <npm.executable>npm</npm.executable>
     </properties>

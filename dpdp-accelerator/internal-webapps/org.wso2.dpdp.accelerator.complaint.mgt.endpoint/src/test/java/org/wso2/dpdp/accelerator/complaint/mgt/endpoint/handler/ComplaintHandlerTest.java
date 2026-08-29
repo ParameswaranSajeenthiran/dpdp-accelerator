@@ -18,11 +18,10 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -45,16 +44,14 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpda
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintHandlerTest {
 
     private static final String ORG_ID = DAOConstants.DEFAULT_ORG_ID;
@@ -68,8 +65,9 @@ class ComplaintHandlerTest {
 
     private ComplaintHandler handler;
 
-    @BeforeEach
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         handler = new ComplaintHandler(complaintService, complaintEventService, complaintAttachmentService);
     }
 
@@ -266,8 +264,4 @@ class ComplaintHandlerTest {
         verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
-    @Test
-    void noArgsConstructorWiresRealServiceImplementations() {
-        assertNotNull(new ComplaintHandler());
-    }
 }

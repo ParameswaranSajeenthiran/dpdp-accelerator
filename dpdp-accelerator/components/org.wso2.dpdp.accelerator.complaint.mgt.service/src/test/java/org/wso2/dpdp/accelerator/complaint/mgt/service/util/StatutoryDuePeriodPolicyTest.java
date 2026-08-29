@@ -18,19 +18,36 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.testng.Assert.assertEquals;
 
 /**
  * Outside a real Carbon environment (no dpdp-accelerator.xml on disk), DPDPConfigurationService
- * always falls back to its own default - see DPDPConfigurationServiceImplTest for coverage of the
+ * always falls back to its own default - see DPDPConfigParserTest for coverage of the
  * configured-value/validation path itself, which lives entirely in that class now.
  */
-class StatutoryDuePeriodPolicyTest {
+public class StatutoryDuePeriodPolicyTest {
+
+    @BeforeClass
+    public void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; StatutoryDuePeriodPolicy
+        // reads it via ComplaintServiceDataHolder, so a test running outside a live Carbon
+        // environment must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @AfterClass
+    public void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
 
     @Test
-    void defaultsToNinetyDaysWhenNoDpdpAcceleratorXmlIsAvailable() {
-        assertEquals(90L * 24 * 60 * 60 * 1000, StatutoryDuePeriodPolicy.getDuePeriodMillis());
+    public void defaultsToNinetyDaysWhenNoDpdpAcceleratorXmlIsAvailable() {
+        assertEquals(StatutoryDuePeriodPolicy.getDuePeriodMillis(), 90L * 24 * 60 * 60 * 1000);
     }
 }

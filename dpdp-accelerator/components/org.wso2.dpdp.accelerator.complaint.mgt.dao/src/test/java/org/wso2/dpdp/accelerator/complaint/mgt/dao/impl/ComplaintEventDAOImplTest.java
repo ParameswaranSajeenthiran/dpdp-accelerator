@@ -18,11 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.impl;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
@@ -33,10 +33,10 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 
 class ComplaintEventDAOImplTest {
 
@@ -56,20 +56,24 @@ class ComplaintEventDAOImplTest {
 
     private final ComplaintEventDAOImpl dao = new ComplaintEventDAOImpl();
 
-    @BeforeAll
+    @BeforeClass
     static void setUpDatabase() throws SQLException {
         H2TestDbSupport.setUpDatabase("complaint_event_dao_test", CREATE_TABLE);
     }
 
-    @AfterAll
+    @AfterClass
     static void tearDownDatabase() {
         H2TestDbSupport.tearDownDatabase();
     }
 
-    @BeforeEach
+    @BeforeMethod
     void clearTable() throws SQLException {
-        try (Connection conn = JDBCPersistenceManager.getConnection(); Statement stmt = conn.createStatement()) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM COMPLAINT_EVENT");
+            DatabaseUtils.commitTransaction(conn);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
         }
     }
 
@@ -94,7 +98,7 @@ class ComplaintEventDAOImplTest {
     void addEventThrowsOnDuplicateEventIdInsteadOfReturningFalse() {
         dao.addEvent(sampleEvent("e1", "org1", "c1", true, null, null, 100L));
 
-        assertThrows(ComplaintDAOException.class,
+        expectThrows(ComplaintDAOException.class,
                 () -> dao.addEvent(sampleEvent("e1", "org1", "c1", true, null, null, 200L)));
     }
 

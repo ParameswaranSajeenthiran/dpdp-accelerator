@@ -18,14 +18,18 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
+import org.h2.jdbcx.JdbcDataSource;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
@@ -35,28 +39,25 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.common.config.ConfigProvider;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.expectThrows;
+import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class ComplaintAttachmentServiceImplTest {
 
     @Mock
@@ -68,47 +69,74 @@ class ComplaintAttachmentServiceImplTest {
 
     private ComplaintAttachmentServiceImpl attachmentService;
 
-    @BeforeEach
+    @BeforeClass
+    void seedConfigurationService() {
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; AttachmentPolicy reads
+        // it via ComplaintServiceDataHolder, so a test running outside a live Carbon environment
+        // must seed it itself.
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
+    }
+
+    @BeforeClass
+    static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
+        // uploadComplaintAttachments now opens its own Connection via DatabaseUtils to make the
+        // event/attachment writes atomic (see ComplaintAttachmentServiceImpl) - the DAOs
+        // themselves are mocked here, so no schema is needed, but JDBCPersistenceManager still
+        // needs a real DataSource to hand out a Connection at all.
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:complaint_attachment_service_test;DB_CLOSE_DELAY=-1");
+        dataSource.setUser("sa");
+        dataSource.setPassword("");
+        setManagerDataSource(dataSource);
+    }
+
+    @AfterClass
+    void clearConfigurationService() {
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    @AfterClass
+    static void clearPersistenceManagerDataSource() throws Exception {
+        setManagerDataSource(null);
+    }
+
+    private static void setManagerDataSource(Object dataSource) throws Exception {
+        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
+        field.setAccessible(true);
+        field.set(null, dataSource);
+    }
+
+    @BeforeMethod
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         attachmentService = new ComplaintAttachmentServiceImpl(attachmentDAO, complaintEventDAO, complaintService);
     }
 
-    @AfterEach
+    @AfterMethod
     void tearDown() {
-        System.clearProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD");
-        ConfigProvider.resetForTesting();
-        System.clearProperty("deployment.config.path");
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
     }
 
     private UploadedFile pdfFile(String name, int size) {
         return new UploadedFile(name, "application/pdf", new byte[size]);
     }
 
-    private void useMaxAttachmentSizeBytes(Path tempDir, String maxSizeBytes) throws IOException {
-        Path tomlFile = tempDir.resolve("deployment.toml");
-        try (Writer writer = Files.newBufferedWriter(tomlFile, StandardCharsets.UTF_8)) {
-            writer.write("[attachment]\nmaxSizeBytes = \"" + maxSizeBytes + "\"\n");
-        }
-        System.setProperty("deployment.config.path", tomlFile.toString());
-        ConfigProvider.resetForTesting();
-    }
-
     // ---- uploadComplaintAttachments ----
 
     @Test
-    void uploadComplaintAttachmentsRequiresComplaintToExist() {
+    void uploadComplaintAttachmentsRequiresComplaintToExist() throws Exception {
         when(complaintService.requireComplaint("org1", "c1")).thenThrow(
                 new ComplaintException("CO-4040", "Complaint not found", "desc", 404));
 
-        assertThrows(ComplaintException.class, () -> attachmentService.uploadComplaintAttachments("org1", "c1",
+        expectThrows(ComplaintException.class, () -> attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10)), true, "user1", "User One", "USER"));
 
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenFileListIsEmpty() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(), true, "user1",
                         "User One", "USER"));
 
@@ -117,7 +145,7 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenFileDataIsEmpty() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
                         List.of(pdfFile("empty.pdf", 0)), true, "user1", "User One", "USER"));
 
@@ -128,7 +156,7 @@ class ComplaintAttachmentServiceImplTest {
     void uploadComplaintAttachmentsThrowsWhenContentTypeNotAllowed() {
         UploadedFile file = new UploadedFile("a.exe", "application/octet-stream", new byte[]{1});
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(file), true, "user1",
                         "User One", "USER"));
 
@@ -137,9 +165,11 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void uploadComplaintAttachmentsThrowsWhenTooManyFilesInOneRequest() {
-        System.setProperty("CO_MAX_ATTACHMENT_FILES_PER_UPLOAD", "2");
+        DPDPConfigurationService configurationService = mock(DPDPConfigurationService.class);
+        when(configurationService.getComplaintsAttachmentMaxFilesPerUpload()).thenReturn(2);
+        ComplaintServiceDataHolder.getInstance().setConfigurationService(configurationService);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
                         List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 10), pdfFile("c.pdf", 10)), true, "user1",
                         "User One", "USER"));
@@ -148,40 +178,43 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize(@TempDir Path tempDir) throws IOException {
-        useMaxAttachmentSizeBytes(tempDir, "5");
+    void uploadComplaintAttachmentsThrowsWhenFileExceedsMaxSize() {
+        // AttachmentPolicy.getMaxSizeBytes() defaults to 10 MB outside a real Carbon environment
+        // (no dpdp-accelerator.xml on disk) - see AttachmentPolicyTest for coverage of the
+        // configured-value path itself.
+        int overTheDefaultLimit = 10 * 1024 * 1024 + 1;
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1",
-                        List.of(pdfFile("big.pdf", 10)), true, "user1", "User One", "USER"));
+                        List.of(pdfFile("big.pdf", overTheDefaultLimit)), true, "user1", "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenActorUserIdBlank() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+    void uploadComplaintAttachmentsThrowsWhenActorUserIdBlank() throws Exception {
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "  ", "User One", "USER"));
 
         assertEquals("CO-4002", ex.getCode());
-        verify(complaintEventDAO, never()).addEvent(any());
+        verify(complaintEventDAO, never()).addEvent(any(Connection.class), any());
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsWhenActorRoleInvalid() {
-        ComplaintException ex = assertThrows(ComplaintException.class,
+    void uploadComplaintAttachmentsThrowsWhenActorRoleInvalid() throws Exception {
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "user1", "User One", "SYSTEM"));
 
         assertEquals("CO-4002", ex.getCode());
-        verify(complaintEventDAO, never()).addEvent(any());
+        verify(complaintEventDAO, never()).addEvent(any(Connection.class), any());
     }
 
     @Test
-    void uploadComplaintAttachmentsStoresEachFileWithGivenIsPublic() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
+    void uploadComplaintAttachmentsStoresEachFileWithGivenIsPublic() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), false, "officer1", "Officer One",
@@ -195,15 +228,15 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsRecordsOneUploadEventAndLinksEveryAttachmentToIt() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(true);
+    void uploadComplaintAttachmentsRecordsOneUploadEventAndLinksEveryAttachmentToIt() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), true, "user1", "User One", "USER");
 
         ArgumentCaptor<ComplaintEvent> eventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
-        verify(complaintEventDAO).addEvent(eventCaptor.capture());
+        verify(complaintEventDAO).addEvent(any(Connection.class), eventCaptor.capture());
         ComplaintEvent event = eventCaptor.getValue();
 
         assertNotNull(event.getComplaintEventId());
@@ -218,23 +251,23 @@ class ComplaintAttachmentServiceImplTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsInternalErrorWhenEventStoreFails() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(false);
+    void uploadComplaintAttachmentsThrowsInternalErrorWhenEventStoreFails() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)), true,
                         "user1", "User One", "USER"));
 
         assertEquals("CO-5000", ex.getCode());
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
-    void uploadComplaintAttachmentsThrowsInternalErrorWhenPersistFails() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any(ComplaintAttachment.class))).thenReturn(false);
+    void uploadComplaintAttachmentsThrowsInternalErrorWhenPersistFails() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(false);
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.uploadComplaintAttachments("org1", "c1", List.of(pdfFile("a.pdf", 10)),
                         true, "user1", "User One", "USER"));
 
@@ -274,7 +307,7 @@ class ComplaintAttachmentServiceImplTest {
     void downloadAttachmentThrows404WhenNotFound() {
         when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.empty());
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.downloadAttachment("org1", "c1", "a1", true));
 
         assertEquals("CO-4040", ex.getCode());
@@ -299,7 +332,7 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1}, false, 100L);
         when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.of(attachment));
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.downloadAttachment("org1", "c1", "a1", true));
 
         assertEquals("CO-4030", ex.getCode());
@@ -320,20 +353,20 @@ class ComplaintAttachmentServiceImplTest {
     // ---- own* ownership defense-in-depth ----
 
     @Test
-    void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() {
+    void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() throws Exception {
         when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
                 .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
 
-        assertThrows(ComplaintException.class, () -> attachmentService.uploadOwnComplaintAttachments("org1", "c1",
+        expectThrows(ComplaintException.class, () -> attachmentService.uploadOwnComplaintAttachments("org1", "c1",
                 "user1", "User One", List.of(pdfFile("a.pdf", 10))));
 
-        verify(attachmentDAO, never()).addAttachment(any());
+        verify(attachmentDAO, never()).addAttachment(any(Connection.class), any());
     }
 
     @Test
-    void uploadOwnComplaintAttachmentsVerifiesOwnershipThenUploadsAsPublicUserRole() {
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
-        when(attachmentDAO.addAttachment(any())).thenReturn(true);
+    void uploadOwnComplaintAttachmentsVerifiesOwnershipThenUploadsAsPublicUserRole() throws Exception {
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
+        when(attachmentDAO.addAttachment(any(Connection.class), any())).thenReturn(true);
 
         List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1",
                 "user1", "User One", List.of(pdfFile("a.pdf", 10)));
@@ -342,7 +375,7 @@ class ComplaintAttachmentServiceImplTest {
         assertTrue(result.get(0).isPublic());
         verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
-        verify(complaintEventDAO).addEvent(captor.capture());
+        verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("USER", captor.getValue().getActorRole());
     }
 
@@ -351,7 +384,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
                 .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
 
-        assertThrows(ComplaintException.class,
+        expectThrows(ComplaintException.class,
                 () -> attachmentService.downloadOwnAttachment("org1", "c1", "user1", "a1"));
 
         verify(attachmentDAO, never()).getAttachmentWithDataById(any(), any(), any());
@@ -363,7 +396,7 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1}, false, 100L);
         when(attachmentDAO.getAttachmentWithDataById("a1", "org1", "c1")).thenReturn(Optional.of(attachment));
 
-        ComplaintException ex = assertThrows(ComplaintException.class,
+        ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> attachmentService.downloadOwnAttachment("org1", "c1", "user1", "a1"));
 
         assertEquals("CO-4030", ex.getCode());
