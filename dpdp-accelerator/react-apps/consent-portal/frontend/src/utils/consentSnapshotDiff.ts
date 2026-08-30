@@ -20,6 +20,12 @@ import type { ConsentSnapshot, ConsentSnapshotAuthorization } from '../types/con
 
 export type ConsentSnapshotChangeKind = 'added' | 'removed' | 'changed'
 
+export interface ConsentSnapshotStateChange {
+  before?: string
+  after: string
+  changed: boolean
+}
+
 export interface ConsentSnapshotFieldChange {
   field: 'expiryTime'
   before?: number
@@ -44,9 +50,21 @@ export interface ConsentSnapshotDiff {
   /** True for the very first entry a consent ever has - there is no earlier snapshot to diff. */
   isInitial: boolean
   hasChanges: boolean
+  state: ConsentSnapshotStateChange
   fields: ConsentSnapshotFieldChange[]
   properties: ConsentSnapshotPropertyChange[]
   authorizations: ConsentSnapshotAuthorizationChange[]
+}
+
+function diffState(
+  before: ConsentSnapshot | undefined,
+  after: ConsentSnapshot,
+): ConsentSnapshotStateChange {
+  return {
+    before: before?.state,
+    after: after.state,
+    changed: before !== undefined && before.state !== after.state,
+  }
 }
 
 function diffFields(
@@ -122,12 +140,13 @@ function diffAuthorizations(
 }
 
 /**
- * Diffs one history entry's snapshot against the chronologically previous one, restricted to
- * `expiryTime`, `properties` and `authorizations` - the only fields `ReceiptUpdateInput` (the
- * model backing the Identity Server's own consent update path) can actually change. Diffing
- * `state`/`piiPrincipalId`/`language`/`services` would only ever show noise: those fields never
- * change via update, and state transitions are already shown by the lifecycle table's own
- * per-entry status dot.
+ * Diffs one history entry's snapshot against the chronologically previous one. `state` is diffed
+ * because an update can genuinely change it (e.g. reviving an EXPIRED consent by extending its
+ * expiry) even though `ReceiptUpdateInput` has no `state` field of its own - this mirrors what
+ * `previousStatus`/`currentStatus` already track per-entry in the status-history table, just
+ * scoped to this one snapshot's before/after. `expiryTime`, `properties` and `authorizations` are
+ * the other fields `ReceiptUpdateInput` can actually change; `piiPrincipalId`/`language`/`services`
+ * never change via update, so diffing them would only ever add noise.
  *
  * `before` is undefined for the CREATE entry - there is nothing earlier to compare against, so
  * every property/authorization in `after` reports as "added" rather than the caller needing a
@@ -137,13 +156,16 @@ export function diffConsentSnapshots(
   before: ConsentSnapshot | undefined,
   after: ConsentSnapshot,
 ): ConsentSnapshotDiff {
+  const state = diffState(before, after)
   const fields = diffFields(before, after)
   const properties = diffProperties(before?.properties, after.properties)
   const authorizations = diffAuthorizations(before?.authorizations, after.authorizations)
 
   return {
     isInitial: before === undefined,
-    hasChanges: fields.length > 0 || properties.length > 0 || authorizations.length > 0,
+    hasChanges:
+      state.changed || fields.length > 0 || properties.length > 0 || authorizations.length > 0,
+    state,
     fields,
     properties,
     authorizations,
@@ -159,6 +181,12 @@ export function diffConsentSnapshots(
  * visible instead of disappearing.
  */
 export type AnnotatedChangeKind = 'unchanged' | 'added' | 'removed' | 'changed'
+
+export interface AnnotatedState {
+  value: string
+  before?: string
+  kind: AnnotatedChangeKind
+}
 
 export interface AnnotatedField {
   field: ConsentSnapshotFieldChange['field']
@@ -184,9 +212,18 @@ export interface AnnotatedAuthorization {
 }
 
 export interface AnnotatedSnapshot {
+  state: AnnotatedState
   fields: AnnotatedField[]
   properties: AnnotatedProperty[]
   authorizations: AnnotatedAuthorization[]
+}
+
+function annotateState(snapshot: ConsentSnapshot, diff: ConsentSnapshotDiff): AnnotatedState {
+  return {
+    value: snapshot.state,
+    before: diff.state.changed ? diff.state.before : undefined,
+    kind: diff.state.changed ? 'changed' : 'unchanged',
+  }
 }
 
 function annotateFields(snapshot: ConsentSnapshot, diff: ConsentSnapshotDiff): AnnotatedField[] {
@@ -248,6 +285,7 @@ export function annotateSnapshot(
   diff: ConsentSnapshotDiff,
 ): AnnotatedSnapshot {
   return {
+    state: annotateState(snapshot, diff),
     fields: annotateFields(snapshot, diff),
     properties: annotateProperties(snapshot, diff),
     authorizations: annotateAuthorizations(snapshot, diff),

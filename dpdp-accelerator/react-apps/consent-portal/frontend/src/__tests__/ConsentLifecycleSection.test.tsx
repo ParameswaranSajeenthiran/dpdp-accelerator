@@ -17,7 +17,7 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -202,7 +202,7 @@ describe('ConsentLifecycleSection', () => {
     })
   })
 
-  it('restricts the snapshot diff to expiryTime, properties and authorizations', async () => {
+  it('restricts the snapshot diff to state, expiryTime, properties and authorizations', async () => {
     consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue({
       consentId: CONSENT_ID,
       statusHistory: [entry()],
@@ -216,6 +216,7 @@ describe('ConsentLifecycleSection', () => {
           actionBy: 'jane@wso2.com',
           actionTime: 1785835726132,
           snapshot: {
+            state: 'ACTIVE',
             expiryTime: 1_800_000_000_000,
             properties: { region: 'EU' },
             authorizations: [
@@ -230,9 +231,11 @@ describe('ConsentLifecycleSection', () => {
     renderSection('self', SELF_SCOPE_WITH_SNAPSHOT)
 
     fireEvent.click(await screen.findByRole('button', { name: 'View Full Snapshot History' }))
-    fireEvent.click(await screen.findByRole('button', { name: /Consent created/ }))
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(await within(dialog).findByRole('button', { name: /Consent created/ }))
 
-    expect(await screen.findByText('EU')).toBeInTheDocument()
-    expect(screen.queryByText('customer-360-portal')).not.toBeInTheDocument()
+    expect(await within(dialog).findByText('EU')).toBeInTheDocument()
+    expect(await within(dialog).findByText('Active')).toBeInTheDocument()
+    expect(within(dialog).queryByText('customer-360-portal')).not.toBeInTheDocument()
   })
 })
