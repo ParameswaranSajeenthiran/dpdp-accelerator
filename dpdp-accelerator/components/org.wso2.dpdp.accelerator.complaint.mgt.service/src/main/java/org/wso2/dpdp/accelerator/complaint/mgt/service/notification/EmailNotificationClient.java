@@ -311,8 +311,10 @@ public class EmailNotificationClient implements NotificationClient {
             }
 
             String organizationId = null;
+            boolean resolvedAsOrganization = false;
             if (organizationManager != null) {
                 organizationId = organizationManager.resolveOrganizationId(tenantDomain);
+                resolvedAsOrganization = organizationId != null;
             }
             if (organizationId == null) {
                 // Fallback to application lookup if organization ID cannot be resolved
@@ -331,7 +333,12 @@ public class EmailNotificationClient implements NotificationClient {
                 return recipients;
             }
 
-            String audience = organizationManager != null ? ROLE_AUDIENCE : "application";
+            // The audience must match whichever ID source actually produced organizationId above -
+            // passing an application resource ID with audience="organization" (or vice versa)
+            // throws INVALID_AUDIENCE (see DPDPConsentPortalRoleProvisioningUtil's own comment on
+            // this same constraint), so this can never be derived from organizationManager's mere
+            // presence, only from which branch above actually resolved the ID.
+            String audience = resolvedAsOrganization ? ROLE_AUDIENCE : "application";
             if (!roleManagementService.isExistingRoleName(ADMIN_ROLE, audience, organizationId, tenantDomain)) {
                 LOGGER.warning("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + tenantDomain
                         + "'; cannot resolve complaint officers to notify.");

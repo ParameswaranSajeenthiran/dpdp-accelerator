@@ -129,6 +129,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(tenantDomain);
+            EmailTemplateProvisioningUtil.provisionTemplates(tenantDomain);
 
             List<String> consentMgtScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
