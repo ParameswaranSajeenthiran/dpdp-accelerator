@@ -31,23 +31,23 @@ public class WebhookDeliveryDispatchContext {
 
     private final WebhookDelivery delivery;
     private final String orgId;
+    private final String groupId;
     private final String callbackUrl;
     private final String sharedSecret;
     private final String payload;
     private final Timestamp claimedAt;
-    private final String topicId;
-    private final String topicName;
+    private final String topic;
 
-    public WebhookDeliveryDispatchContext(WebhookDelivery delivery, String orgId, String callbackUrl,
-            String sharedSecret, String payload, Timestamp claimedAt, String topicId, String topicName) {
+    public WebhookDeliveryDispatchContext(WebhookDelivery delivery, String orgId, String groupId, String callbackUrl,
+            String sharedSecret, String payload, Timestamp claimedAt, String topic) {
         this.delivery = delivery;
         this.orgId = orgId;
+        this.groupId = groupId;
         this.callbackUrl = callbackUrl;
         this.sharedSecret = sharedSecret;
         this.payload = payload;
         this.claimedAt = claimedAt;
-        this.topicId = topicId;
-        this.topicName = topicName;
+        this.topic = topic;
     }
 
     public WebhookDelivery getDelivery() {
@@ -56,6 +56,10 @@ public class WebhookDeliveryDispatchContext {
 
     public String getOrgId() {
         return orgId;
+    }
+
+    public String getGroupId() {
+        return groupId;
     }
 
     public String getCallbackUrl() {
@@ -74,11 +78,7 @@ public class WebhookDeliveryDispatchContext {
         return claimedAt;
     }
 
-    public String getTopicId() {
-        return topicId;
-    }
-
-    public String getTopicName() {
-        return topicName;
+    public String getTopic() {
+        return topic;
     }
 }

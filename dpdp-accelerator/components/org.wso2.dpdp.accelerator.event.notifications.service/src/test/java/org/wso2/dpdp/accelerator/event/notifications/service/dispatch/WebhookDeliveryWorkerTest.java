@@ -109,11 +109,11 @@ public class WebhookDeliveryWorkerTest {
     }
 
     private WebhookDeliveryDispatchContext context(String deliveryId, int attemptCount) {
-        return context(deliveryId, attemptCount, "topic-1", "accounts");
+        return context(deliveryId, attemptCount, "accounts");
     }
 
     private WebhookDeliveryDispatchContext context(String deliveryId, int attemptCount,
-            String topicId, String topicName) {
+            String topic) {
         WebhookDelivery delivery = new WebhookDelivery(
                 deliveryId,
                 "sub-1",
@@ -127,12 +127,12 @@ public class WebhookDeliveryWorkerTest {
         return new WebhookDeliveryDispatchContext(
                 delivery,
                 "org-1",
+                "group-1",
                 "https://callback.example.com/hook",
                 "secret",
                 "{\"hello\":\"world\"}",
                 delivery.getUpdatedAt(),
-                topicId,
-                topicName);
+                topic);
     }
 
     @Test
@@ -192,7 +192,7 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", null, "secret", "{}", new Timestamp(0), "topic-1", "accounts");
+                delivery, "org-1", "group-1", null, "secret", "{}", new Timestamp(0), "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));
@@ -258,10 +258,9 @@ public class WebhookDeliveryWorkerTest {
         WebhookDeliveryDispatchContext dispatchContext = context("update-failure", 0);
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(Collections.singletonList(new WebhookDeliveryDispatchContext(
-                        dispatchContext.getDelivery(), dispatchContext.getOrgId(),
+                        dispatchContext.getDelivery(), dispatchContext.getOrgId(), dispatchContext.getGroupId(),
                         null, dispatchContext.getSharedSecret(), dispatchContext.getPayload(),
-                        dispatchContext.getDelivery().getUpdatedAt(), dispatchContext.getTopicId(),
-                        dispatchContext.getTopicName())));
+                        dispatchContext.getDelivery().getUpdatedAt(), dispatchContext.getTopic())));
         when(deliveryDAO.claimWebhookDelivery(eq("update-failure"))).thenReturn(true);
         doThrow(new RuntimeException("status update failed"))
                 .when(deliveryDAO).updateWebhookDeliveryStatus(any());
@@ -279,8 +278,8 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", "https://callback.example.com/hook", "secret", null,
-                new Timestamp(0), "topic-1", "accounts");
+                delivery, "org-1", "group-1", "https://callback.example.com/hook", "secret", null,
+                new Timestamp(0), "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));
@@ -299,7 +298,7 @@ public class WebhookDeliveryWorkerTest {
         WebhookDelivery delivery = new WebhookDelivery(
                 "d1", "sub-1", "event-1", "pending", 0, null, new Timestamp(0), new Timestamp(0), null);
         WebhookDeliveryDispatchContext broken = new WebhookDeliveryDispatchContext(
-                delivery, "org-1", null, "secret", "{}", new Timestamp(0), "topic-1", "accounts");
+                delivery, "org-1", "group-1", null, "secret", "{}", new Timestamp(0), "accounts");
 
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(java.util.Collections.singletonList(broken));
@@ -320,8 +319,8 @@ public class WebhookDeliveryWorkerTest {
     public void testMissingSharedSecretMarksDeliveryUnrecoverableWithoutDispatch() {
         WebhookDeliveryDispatchContext valid = context("missing-secret", 0);
         WebhookDeliveryDispatchContext unsigned = new WebhookDeliveryDispatchContext(
-                valid.getDelivery(), valid.getOrgId(), valid.getCallbackUrl(), " ", valid.getPayload(),
-                valid.getDelivery().getUpdatedAt(), valid.getTopicId(), valid.getTopicName());
+                valid.getDelivery(), valid.getOrgId(), valid.getGroupId(), valid.getCallbackUrl(), " ", valid.getPayload(),
+                valid.getDelivery().getUpdatedAt(), valid.getTopic());
         when(deliveryDAO.getPendingWebhookDispatchContexts(anyInt()))
                 .thenReturn(Collections.singletonList(unsigned));
         when(deliveryDAO.claimWebhookDelivery("missing-secret")).thenReturn(true);

@@ -37,14 +37,14 @@ public class ServiceDTOTest {
         List<String> purposes = Collections.singletonList("analytics");
         Map<String, Object> payload = Collections.singletonMap("key", "value");
         EventCreateDTO dto = new EventCreateDTO();
-        dto.setTopicName("topic");
+        dto.setTopic("topic");
         dto.setPurposes(purposes);
         dto.setPayload(payload);
-        assertEquals(dto.getTopicName(), "topic");
+        assertEquals(dto.getTopic(), "topic");
         assertEquals(dto.getPurposes(), purposes);
         assertEquals(dto.getPayload(), payload);
         EventCreateDTO constructed = new EventCreateDTO("constructed", purposes, payload);
-        assertEquals(constructed.getTopicName(), "constructed");
+        assertEquals(constructed.getTopic(), "constructed");
     }
 
     @Test

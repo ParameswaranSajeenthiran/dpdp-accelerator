@@ -273,7 +273,7 @@ public class EventNotificationCommonDBQueries {
         return "SELECT EVENT_ID, PURPOSE_NAME FROM EVENT_PURPOSE WHERE EVENT_ID IN (%s)";
     }
 
-    // The dispatch context now pulls topic metadata (TOPIC_ID, TOPIC_NAME) so the
+    // The dispatch context pulls the public topic name so the
     // worker
     // can stamp every webhook payload with the topic that fired without an extra
     // DAO call.
@@ -284,7 +284,7 @@ public class EventNotificationCommonDBQueries {
     // already filters out via isDeliverable(...).
     private static final String DISPATCH_SELECT = "SELECT d.DELIVERY_ID, d.SUBSCRIPTION_ID, d.EVENT_ID, d.STATUS, " +
             "d.ATTEMPT_COUNT, d.NEXT_RETRY_AT, d.CREATED_AT, d.UPDATED_AT, d.DELIVERED_AT, " +
-            "s.ORG_ID, s.CALLBACK_URL, s.SHARED_SECRET, e.PAYLOAD, e.TOPIC_ID AS TOPIC_ID, " +
+            "s.ORG_ID, s.GROUP_ID, s.CALLBACK_URL, s.SHARED_SECRET, e.PAYLOAD, " +
             "t.NAME AS TOPIC_NAME ";
 
     public String getGetPendingWebhookDispatchContextsQuery() {

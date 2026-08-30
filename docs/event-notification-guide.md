@@ -224,30 +224,59 @@ these headers:
 | Header | Description |
 |---|---|
 | `Delivery-Id` | Stable delivery identifier. Use it to reject duplicate processing. |
-| `Event-Signature` | `sha256=<hex HMAC-SHA256>` computed using the subscription's shared secret. |
+| `event-signature` | `sha256=<hex HMAC-SHA256>` computed using the subscription's shared secret. |
 
-The body is an envelope around the publisher's payload:
+With payload signing enabled (the default), the body contains only the compact
+tenant-signed JWS:
 
 ```json
 {
-  "deliveryId": "<delivery-id>",
-  "eventId": "<event-id>",
-  "subscriptionId": "<subscription-id>",
-  "orgId": "example.com",
-  "topicId": "<topic-id>",
-  "topicName": "consent-status-changed",
+  "signedPayload": "<base64url-header>.<base64url-claims>.<base64url-signature>"
+}
+```
+
+The decoded JWS claims have the following shape:
+
+```json
+{
+  "iss": "https://is.example.com:9443/t/example.com/oauth2/token",
+  "sub": "example-group",
+  "aud": "dpdp-event-notifications",
+  "iat": 1787651970,
+  "jti": "<delivery-id>",
+  "txn": "<event-id>",
+  "payloadHash": "<HMAC-SHA256 of the embedded payload>",
   "payload": {
-    "consentId": "c7c6b814-ef76-4eb4-9494-8af1b98a9ed1",
-    "status": "REVOKED"
+    "deliveryId": "<delivery-id>",
+    "eventId": "<event-id>",
+    "subscriptionId": "<subscription-id>",
+    "orgId": "example.com",
+    "groupId": "example-group",
+    "topic": "consent-status-changed",
+    "payload": {
+      "consentId": "c7c6b814-ef76-4eb4-9494-8af1b98a9ed1",
+      "status": "REVOKED"
+    }
   }
 }
 ```
 
-Compute HMAC-SHA256 over the exact raw request-body bytes, using the shared
+First compute HMAC-SHA256 over the exact raw request-body bytes, using the shared
 secret as the key. Compare `sha256=<computed lowercase hex value>` with the
-`Event-Signature` header using a constant-time comparison. Do not reserialize
-the JSON before verification because whitespace and field order change the
-signature.
+`event-signature` header using a constant-time comparison. Do not reserialize
+the outer JSON before verification because whitespace and field order change
+the signature. Then verify the compact JWS with the certificate identified by
+its `kid`/`x5t#S256` protected headers. The `kid` must match an entry from the
+trusted JWKS endpoint for the tenant, and `iss` must exactly match the issuer
+configured by Identity Server for that tenant. Maintain this issuer-to-JWKS
+mapping in trusted receiver configuration; never fetch keys from an arbitrary
+location derived from an unverified JWS. The super tenant normally uses
+`/oauth2/token` and `/oauth2/jwks` without `/t/carbon.super`.
+
+Validate `iss`, `sub`, `aud`, `iat`, `jti`, and `txn`, and process the event
+from the signed `payload` claim. The event payload is intentionally not repeated
+outside the JWS. Receivers that previously accepted a bare tenant domain in
+`iss` must be updated to accept the configured Identity Server issuer.
 
 Return any `2xx` response only after accepting the delivery. Store the
 `Delivery-Id` so that receiving the same delivery again does not repeat the
@@ -323,7 +352,7 @@ curl --request POST "${API_BASE}/events" \
   --header "Content-Type: application/json" \
   --header "group-id: ${TENANT_DOMAIN}" \
   --data '{
-    "topicName": "consent-status-changed",
+    "topic": "consent-status-changed",
     "purposes": ["account-management"],
     "payload": {
       "consentId": "c7c6b814-ef76-4eb4-9494-8af1b98a9ed1",

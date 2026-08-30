@@ -53,7 +53,7 @@ public class EventHandler {
     }
 
     public EventDTO publishEvent(String orgId, String groupId, EventCreateDTO request) {
-        String topicName = request != null ? request.getTopicName() : null;
+        String topicName = request != null ? request.getTopic() : null;
         List<String> purposes = request != null ? request.getPurposes() : null;
         Map<String, Object> payload = request != null ? request.getPayload() : null;
         return eventPublishService.publishEvent(orgId, groupId, topicName, purposes, payload);

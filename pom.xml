@@ -415,6 +415,12 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.orbit.com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus.jose.jwt.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon.identity.organization.management.core</groupId>
                 <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
                 <version>${carbon.identity.organization.mgt.service.version}</version>
@@ -568,6 +574,7 @@
         <carbon.identity.role.mgt.core.version>7.10.156</carbon.identity.role.mgt.core.version>
         <carbon.identity.api.resource.mgt.version>7.10.156</carbon.identity.api.resource.mgt.version>
         <carbon.identity.inbound.auth.oauth.version>7.4.99</carbon.identity.inbound.auth.oauth.version>
+        <nimbus.jose.jwt.version>10.3.0.wso2v1</nimbus.jose.jwt.version>
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
         <carbon.identity.event.version>7.10.156</carbon.identity.event.version>
         <carbon.identity.governance.version>1.8.107</carbon.identity.governance.version>

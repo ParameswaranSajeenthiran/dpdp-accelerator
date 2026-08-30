@@ -212,6 +212,20 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public boolean isEventNotificationPayloadSigningEnabled() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED
+                : configParser.isEventNotificationPayloadSigningEnabled();
+    }
+
+    @Override
+    public String getEventNotificationPayloadSigningAudience() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE
+                : configParser.getEventNotificationPayloadSigningAudience();
+    }
+
+    @Override
     public boolean isConsentHistoryEnabled() {
 
         return configParser == null || configParser.isConsentHistoryEnabled();

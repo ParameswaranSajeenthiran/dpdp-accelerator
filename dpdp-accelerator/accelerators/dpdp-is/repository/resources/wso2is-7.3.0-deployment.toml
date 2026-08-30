@@ -367,6 +367,10 @@ attachment_max_files_per_upload = 5
 # every tenant on create/update. Set false to manage system topics manually instead.
 system_topics_auto_create_enabled = true
 
+[dpdp_accelerator.event_notifications.payload_signing]
+enabled = true
+audience = "dpdp-event-notifications"
+
 # Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
 # subscription-verification behavior.
 [dpdp_accelerator.event_notifications.webhook]

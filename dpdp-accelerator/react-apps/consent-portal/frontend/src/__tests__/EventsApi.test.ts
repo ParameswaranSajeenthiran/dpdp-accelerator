@@ -98,7 +98,7 @@ describe('eventsApi', () => {
     respondWith({ eventId: 'evt-1', topicId: 'topic-1' })
 
     const payload = {
-      topicName: 'consent.revoke',
+      topic: 'consent.revoke',
       groupId: 'group-1',
       purposes: ['MARKETING'],
       payload: { consentId: 'c1', status: 'REVOKED' },
