@@ -384,7 +384,7 @@ allowed_callback_ports = "-1,80,443,8443"
 # Set true only for controlled/on-prem deployments where a webhook receiver legitimately lives
 # on a private/internal network (RFC1918, link-local, IPv6 unique-local). Loopback, wildcard,
 # and multicast targets are always rejected regardless of this setting.
-allow_private_network_callback_targets = true
+allow_private_network_callback_targets = false
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
 stuck_inflight_threshold_seconds = 10
