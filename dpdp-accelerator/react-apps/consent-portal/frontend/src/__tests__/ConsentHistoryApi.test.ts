@@ -56,14 +56,14 @@ describe('consent history API', () => {
     respondWith({
       consentId: 'c1',
       statusHistory: [],
-      pagination: { limit: 5, offset: 0, totalCount: 0 },
+      pagination: { limit: 100, offset: 0, totalCount: 0 },
     })
 
-    await fetchMyConsentStatusHistory('c1', { limit: 5, offset: 0 })
+    await fetchMyConsentStatusHistory('c1', { limit: 100, offset: 0 })
 
     const url = new URL(sentRequest().url)
     expect(url.pathname).toBe(`${CONSENT_HISTORY_API}/me/consents/c1/status-history`)
-    expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '5', offset: '0' })
+    expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '100', offset: '0' })
     expect(sentRequest().method).toBe('GET')
   })
 
@@ -71,24 +71,24 @@ describe('consent history API', () => {
     respondWith({
       consentId: 'c1',
       history: [],
-      pagination: { limit: 5, offset: 0, totalCount: 0 },
+      pagination: { limit: 100, offset: 0, totalCount: 0 },
     })
 
-    await fetchMyConsentFullHistory('c1', { limit: 10, offset: 5 })
+    await fetchMyConsentFullHistory('c1', { limit: 100, offset: 0 })
 
     const url = new URL(sentRequest().url)
     expect(url.pathname).toBe(`${CONSENT_HISTORY_API}/me/consents/c1/history`)
-    expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '10', offset: '5' })
+    expect(Object.fromEntries(url.searchParams)).toEqual({ limit: '100', offset: '0' })
   })
 
   it('fetches the admin status-history endpoint under /consents, not /me/consents', async () => {
     respondWith({
       consentId: 'c1',
       statusHistory: [],
-      pagination: { limit: 5, offset: 0, totalCount: 0 },
+      pagination: { limit: 100, offset: 0, totalCount: 0 },
     })
 
-    await fetchAdminConsentStatusHistory('c1', { limit: 5, offset: 0 })
+    await fetchAdminConsentStatusHistory('c1', { limit: 100, offset: 0 })
 
     expect(new URL(sentRequest().url).pathname).toBe(
       `${CONSENT_HISTORY_API}/consents/c1/status-history`,
@@ -99,22 +99,22 @@ describe('consent history API', () => {
     respondWith({
       consentId: 'c1',
       history: [],
-      pagination: { limit: 5, offset: 0, totalCount: 0 },
+      pagination: { limit: 100, offset: 0, totalCount: 0 },
     })
 
-    await fetchAdminConsentFullHistory('c1', { limit: 5, offset: 0 })
+    await fetchAdminConsentFullHistory('c1', { limit: 100, offset: 0 })
 
     expect(new URL(sentRequest().url).pathname).toBe(`${CONSENT_HISTORY_API}/consents/c1/history`)
   })
 
-  it('URL-encodes the consent ID in both routes', async () => {
+  it('URL-encodes the consent ID', async () => {
     respondWith({
       consentId: 'c/1',
       statusHistory: [],
-      pagination: { limit: 5, offset: 0, totalCount: 0 },
+      pagination: { limit: 100, offset: 0, totalCount: 0 },
     })
 
-    await fetchMyConsentStatusHistory('c/1', { limit: 5, offset: 0 })
+    await fetchMyConsentStatusHistory('c/1', { limit: 100, offset: 0 })
 
     expect(new URL(sentRequest().url).pathname).toBe(
       `${CONSENT_HISTORY_API}/me/consents/c%2F1/status-history`,

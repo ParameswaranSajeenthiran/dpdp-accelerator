@@ -17,9 +17,6 @@
  */
 
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Chip,
   Divider,
@@ -32,14 +29,12 @@ import {
   TableRow,
   Typography,
 } from '@wso2/oxygen-ui'
-import { ChevronRight } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import type {
+  AnnotatedAuthorization,
   AnnotatedChangeKind,
-  AnnotatedElement,
   AnnotatedField,
   AnnotatedProperty,
-  AnnotatedPurpose,
   AnnotatedSnapshot,
 } from '../../../utils/consentSnapshotDiff'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
@@ -95,41 +90,11 @@ function FieldsSummary({ fields }: { fields: AnnotatedField[] }): React.JSX.Elem
           >
             {t(`consentRegistry.history.snapshot.field.${field.field}`)}
           </Typography>
-          {field.field === 'state' ? (
-            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.25 }}>
-              {field.kind === 'changed' && field.before !== undefined ? (
-                <>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color={getConsentStateChipColor(String(field.before))}
-                    label={t(
-                      `consentRegistry.status.${getConsentStateLabelKey(String(field.before))}`,
-                    )}
-                  />
-                  <Typography variant="body2" color="text.disabled">
-                    →
-                  </Typography>
-                </>
-              ) : null}
-              {field.value !== undefined ? (
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  color={getConsentStateChipColor(String(field.value))}
-                  label={t(
-                    `consentRegistry.status.${getConsentStateLabelKey(String(field.value))}`,
-                  )}
-                />
-              ) : null}
-            </Stack>
-          ) : (
-            <Typography variant="body2" fontWeight={500}>
-              {field.kind === 'changed'
-                ? `${field.before ?? '-'} → ${field.value ?? '-'}`
-                : field.value}
-            </Typography>
-          )}
+          <Typography variant="body2" fontWeight={500}>
+            {field.kind === 'changed'
+              ? `${formatEpochTimestamp(field.before)} → ${formatEpochTimestamp(field.value)}`
+              : formatEpochTimestamp(field.value)}
+          </Typography>
         </Box>
       ))}
     </Stack>
@@ -196,135 +161,10 @@ function PropertiesTable({ properties }: { properties: AnnotatedProperty[] }): R
   )
 }
 
-function elementConsentedLabel(
-  element: AnnotatedElement,
-  t: (key: string) => string,
-): React.ReactNode {
-  const yesNo = (value: boolean): string =>
-    value ? t('consentRegistry.details.values.yes') : t('consentRegistry.details.values.no')
-
-  if (element.kind === 'changed' && element.consentedBefore !== undefined) {
-    return `${yesNo(element.consentedBefore)} → ${yesNo(element.consented)}`
-  }
-  return yesNo(element.consented)
-}
-
-function PurposesList({ purposes }: { purposes: AnnotatedPurpose[] }): React.JSX.Element {
-  const { t } = useTranslation('common')
-
-  if (purposes.length === 0) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        {t('consentRegistry.details.noPurposes')}
-      </Typography>
-    )
-  }
-
-  return (
-    <Stack spacing={1}>
-      {purposes.map((purpose) => (
-        <Accordion
-          key={`${purpose.service}::${purpose.purpose}`}
-          disableGutters
-          elevation={0}
-          sx={{
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            overflow: 'hidden',
-            '&:before': { display: 'none' },
-          }}
-        >
-          <AccordionSummary
-            expandIcon={<ChevronRight />}
-            sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-          >
-            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography
-                variant="body2"
-                fontWeight={600}
-                sx={{
-                  color: purpose.kind === 'removed' ? 'text.secondary' : 'text.primary',
-                  textDecoration: purpose.kind === 'removed' ? 'line-through' : 'none',
-                }}
-              >
-                {purpose.purpose}
-              </Typography>
-              <Chip size="small" variant="outlined" label={purpose.service} />
-              <ChangeTag kind={purpose.kind} />
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 0 }}>
-            <TableContainer>
-              <Table size="small" sx={{ tableLayout: 'fixed' }}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700, width: '35%' }}>
-                      {t('consentRegistry.details.table.element')}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: '35%' }}>
-                      {t('catalog.fields.displayName')}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: '30%' }}>
-                      {t('consentRegistry.history.snapshot.consented')}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {purpose.elements.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={3}>
-                        <Typography variant="body2" color="text.secondary" align="center">
-                          {t('consentRegistry.details.noElements')}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                  {purpose.elements.map((element) => (
-                    <TableRow key={element.name} hover>
-                      <TableCell>
-                        <Box
-                          component="code"
-                          sx={{
-                            color: changeColor(element.kind),
-                            textDecoration: element.kind === 'removed' ? 'line-through' : 'none',
-                          }}
-                        >
-                          {element.name}
-                        </Box>
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: element.kind === 'removed' ? 'text.secondary' : 'text.primary',
-                          textDecoration: element.kind === 'removed' ? 'line-through' : 'none',
-                        }}
-                      >
-                        {element.displayName}
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Typography variant="body2">
-                            {elementConsentedLabel(element, t)}
-                          </Typography>
-                          <ChangeTag kind={element.kind} />
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-    </Stack>
-  )
-}
-
 function AuthorizationsTable({
   authorizations,
 }: {
-  authorizations: AnnotatedSnapshot['authorizations']
+  authorizations: AnnotatedAuthorization[]
 }): React.JSX.Element {
   const { t } = useTranslation('common')
 
@@ -427,6 +267,12 @@ function SnapshotSection({
   )
 }
 
+/**
+ * Deliberately shows only the fields the Identity Server's own consent update path
+ * (`ReceiptUpdateInput`) can actually change - expiry, properties, authorizations - not the full
+ * stored snapshot. `state`/`piiPrincipalId`/`language`/`services`/`purposes`/`elements` never
+ * change via update, so diffing them would only ever add noise to this view.
+ */
 function ConsentSnapshotView({ snapshot }: ConsentSnapshotViewProps): React.JSX.Element {
   const { t } = useTranslation('common')
 
@@ -437,12 +283,6 @@ function ConsentSnapshotView({ snapshot }: ConsentSnapshotViewProps): React.JSX.
       <SnapshotSection title={t('catalog.fields.properties')}>
         <Box sx={{ p: snapshot.properties.length === 0 ? 2 : 0 }}>
           <PropertiesTable properties={snapshot.properties} />
-        </Box>
-      </SnapshotSection>
-
-      <SnapshotSection title={t('consentRegistry.details.section.purposes')}>
-        <Box sx={{ p: snapshot.purposes.length === 0 ? 2 : 1.5 }}>
-          <PurposesList purposes={snapshot.purposes} />
         </Box>
       </SnapshotSection>
 

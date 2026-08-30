@@ -16,36 +16,28 @@
  * under the License.
  */
 
-import { Ban, Bot, CircleCheckBig, Clock3, Pencil, Plus, Trash2 } from '@wso2/oxygen-ui-icons-react'
-import type { ComponentType } from 'react'
 import { SYSTEM_ACTOR } from '../../../types/consentHistory'
-
-type ConsentHistoryChipColor = 'success' | 'warning' | 'error' | 'default'
 
 interface ConsentHistoryActionPresentation {
   labelKey: string
-  icon: ComponentType<{ size?: number }>
-  color: ConsentHistoryChipColor
 }
 
 const ACTION_PRESENTATION: Record<string, ConsentHistoryActionPresentation> = {
-  CREATE: { labelKey: 'created', icon: Plus, color: 'default' },
-  UPDATE: { labelKey: 'updated', icon: Pencil, color: 'default' },
-  AUTHORIZE_APPROVE: { labelKey: 'approved', icon: CircleCheckBig, color: 'success' },
-  AUTHORIZE_REJECT: { labelKey: 'rejected', icon: Ban, color: 'error' },
-  AUTHORIZE_REVOKE: { labelKey: 'authorizeRevoked', icon: Ban, color: 'error' },
-  REVOKE: { labelKey: 'revoked', icon: Ban, color: 'error' },
-  DELETE: { labelKey: 'deleted', icon: Trash2, color: 'error' },
-  EXPIRE: { labelKey: 'expired', icon: Clock3, color: 'default' },
+  CREATE: { labelKey: 'created' },
+  UPDATE: { labelKey: 'updated' },
+  AUTHORIZE_APPROVE: { labelKey: 'approved' },
+  AUTHORIZE_REJECT: { labelKey: 'rejected' },
+  AUTHORIZE_REVOKE: { labelKey: 'authorizeRevoked' },
+  REVOKE: { labelKey: 'revoked' },
+  DELETE: { labelKey: 'deleted' },
+  EXPIRE: { labelKey: 'expired' },
 }
 
 const DEFAULT_PRESENTATION: ConsentHistoryActionPresentation = {
   labelKey: 'unknown',
-  icon: Pencil,
-  color: 'default',
 }
 
-/** The i18n key under `consentRegistry.history.actions.<key>`, icon and chip color for an action. */
+/** The i18n key under `consentRegistry.history.actions.<key>` for an action type. */
 export function getConsentHistoryActionPresentation(
   actionType: string,
 ): ConsentHistoryActionPresentation {
@@ -60,5 +52,3 @@ export function isSystemActor(actionBy: string): boolean {
 export function actorInitial(actionBy: string): string {
   return isSystemActor(actionBy) ? '' : actionBy.charAt(0).toUpperCase()
 }
-
-export { Bot as SystemActorIcon }

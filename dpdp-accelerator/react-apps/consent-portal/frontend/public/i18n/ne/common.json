@@ -129,8 +129,7 @@
       "section": {
         "purposes": "सहमति उद्देश्यहरू",
         "authorizations": "प्राधिकरणहरू",
-        "lifecycle": "सहमति जीवनचक्र",
-        "history": "Consent History"
+        "lifecycle": "सहमति जीवनचक्र"
       },
       "table": {
         "element": "तत्व",
@@ -278,13 +277,7 @@
       }
     },
     "history": {
-      "viewFullSnapshot": "View Full Snapshot History",
-      "close": "Close",
-      "empty": "No history is recorded for this consent.",
-      "loadMore": "Load more",
-      "showingCount": "Showing {{shown}} of {{total}} entries",
       "systemActor": "System",
-      "noStatusChange": "no status change",
       "actions": {
         "created": "Consent created",
         "updated": "Consent updated",
@@ -296,31 +289,21 @@
         "expired": "Expired",
         "unknown": "Updated"
       },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
       "snapshot": {
         "noChanges": "No changes were recorded in this update.",
         "needsMoreHistory": "Load more history to see what changed in this update.",
         "initial": "Initial snapshot",
-        "none": "None",
         "added": "Added",
         "removed": "Removed",
         "changed": "Changed",
-        "consentGranted": "Consent granted",
-        "consentWithdrawn": "Consent withdrawn",
-        "fields": "Details",
         "field": {
-          "state": "Status",
-          "piiPrincipalId": "Principal",
-          "language": "Language",
           "expiryTime": "Valid until"
-        },
-        "consented": "Consented"
+        }
       },
-      "table": {
-        "timestamp": "Timestamp",
-        "action": "Action",
-        "actor": "Actor",
-        "statusChange": "Status Change"
-      }
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {

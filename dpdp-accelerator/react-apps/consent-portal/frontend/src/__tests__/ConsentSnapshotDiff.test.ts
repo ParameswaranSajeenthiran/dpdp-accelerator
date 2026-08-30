@@ -17,29 +17,13 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { annotateSnapshot, diffConsentSnapshots } from '../utils/consentSnapshotDiff'
 import type { ConsentSnapshot } from '../types/consentHistory'
+import { annotateSnapshot, diffConsentSnapshots } from '../utils/consentSnapshotDiff'
 
 function buildSnapshot(overrides: Partial<ConsentSnapshot> = {}): ConsentSnapshot {
   return {
-    state: 'ACTIVE',
-    piiPrincipalId: 'nadia.perera@wso2.com',
-    language: 'en',
+    expiryTime: 1_700_000_000_000,
     properties: { region: 'EU' },
-    services: [
-      {
-        service: 'customer-360-portal',
-        spDisplayName: 'Customer 360',
-        purposes: [
-          {
-            purpose: 'Service Delivery',
-            uuid: 'purpose-1',
-            primaryPurpose: true,
-            elements: [{ name: 'email', displayName: 'Email Address', consented: true }],
-          },
-        ],
-      },
-    ],
     authorizations: [
       { userId: 'admin.reviewer@wso2.com', type: 'ADMIN', status: 'APPROVED', updatedTime: 1 },
     ],
@@ -62,28 +46,17 @@ describe('diffConsentSnapshots', () => {
     expect(diff.isInitial).toBe(true)
     expect(diff.hasChanges).toBe(true)
     expect(diff.properties).toEqual([{ key: 'region', kind: 'added', after: 'EU' }])
-    expect(diff.purposes).toEqual([
-      { service: 'customer-360-portal', purpose: 'Service Delivery', kind: 'added' },
-    ])
-    expect(diff.elements).toEqual([
-      {
-        service: 'customer-360-portal',
-        purpose: 'Service Delivery',
-        elementName: 'email',
-        elementDisplayName: 'Email Address',
-        kind: 'added',
-        consentedAfter: true,
-      },
-    ])
   })
 
-  it('detects a scalar field change', () => {
+  it('detects an expiryTime change', () => {
     const diff = diffConsentSnapshots(
-      buildSnapshot({ state: 'PENDING' }),
-      buildSnapshot({ state: 'ACTIVE' }),
+      buildSnapshot({ expiryTime: 1_700_000_000_000 }),
+      buildSnapshot({ expiryTime: 1_800_000_000_000 }),
     )
 
-    expect(diff.fields).toEqual([{ field: 'state', before: 'PENDING', after: 'ACTIVE' }])
+    expect(diff.fields).toEqual([
+      { field: 'expiryTime', before: 1_700_000_000_000, after: 1_800_000_000_000 },
+    ])
   })
 
   it('detects properties added, removed and changed', () => {
@@ -97,140 +70,6 @@ describe('diffConsentSnapshots', () => {
         { key: 'region', kind: 'changed', before: 'EU', after: 'APAC' },
         { key: 'dataCategory', kind: 'removed', before: 'financial' },
         { key: 'collectionMethod', kind: 'added', after: 'web-form' },
-      ]),
-    )
-  })
-
-  it('detects a purpose added to a service, including its elements', () => {
-    const before = buildSnapshot()
-    const after = buildSnapshot({
-      services: [
-        {
-          service: 'customer-360-portal',
-          spDisplayName: 'Customer 360',
-          purposes: [
-            ...before.services![0].purposes,
-            {
-              purpose: 'Marketing',
-              uuid: 'purpose-2',
-              primaryPurpose: false,
-              elements: [{ name: 'phone', displayName: 'Phone Number', consented: true }],
-            },
-          ],
-        },
-      ],
-    })
-
-    const diff = diffConsentSnapshots(before, after)
-
-    expect(diff.purposes).toEqual([
-      { service: 'customer-360-portal', purpose: 'Marketing', kind: 'added' },
-    ])
-    expect(diff.elements).toEqual([
-      {
-        service: 'customer-360-portal',
-        purpose: 'Marketing',
-        elementName: 'phone',
-        elementDisplayName: 'Phone Number',
-        kind: 'added',
-        consentedAfter: true,
-      },
-    ])
-  })
-
-  it('detects a purpose removed from a service, including its elements', () => {
-    const before = buildSnapshot()
-    const after = buildSnapshot({
-      services: [{ service: 'customer-360-portal', spDisplayName: 'Customer 360', purposes: [] }],
-    })
-
-    const diff = diffConsentSnapshots(before, after)
-
-    expect(diff.purposes).toEqual([
-      { service: 'customer-360-portal', purpose: 'Service Delivery', kind: 'removed' },
-    ])
-    expect(diff.elements).toEqual([
-      {
-        service: 'customer-360-portal',
-        purpose: 'Service Delivery',
-        elementName: 'email',
-        elementDisplayName: 'Email Address',
-        kind: 'removed',
-        consentedBefore: true,
-      },
-    ])
-  })
-
-  it('detects an element added, removed and consent-toggled within the same purpose', () => {
-    const before = buildSnapshot({
-      services: [
-        {
-          service: 'customer-360-portal',
-          spDisplayName: 'Customer 360',
-          purposes: [
-            {
-              purpose: 'Service Delivery',
-              uuid: 'purpose-1',
-              primaryPurpose: true,
-              elements: [
-                { name: 'email', displayName: 'Email Address', consented: true },
-                { name: 'phone', displayName: 'Phone Number', consented: true },
-              ],
-            },
-          ],
-        },
-      ],
-    })
-    const after = buildSnapshot({
-      services: [
-        {
-          service: 'customer-360-portal',
-          spDisplayName: 'Customer 360',
-          purposes: [
-            {
-              purpose: 'Service Delivery',
-              uuid: 'purpose-1',
-              primaryPurpose: true,
-              elements: [
-                { name: 'email', displayName: 'Email Address', consented: false },
-                { name: 'address', displayName: 'Home Address', consented: true },
-              ],
-            },
-          ],
-        },
-      ],
-    })
-
-    const diff = diffConsentSnapshots(before, after)
-
-    expect(diff.purposes).toEqual([])
-    expect(diff.elements).toEqual(
-      expect.arrayContaining([
-        {
-          service: 'customer-360-portal',
-          purpose: 'Service Delivery',
-          elementName: 'email',
-          elementDisplayName: 'Email Address',
-          kind: 'changed',
-          consentedBefore: true,
-          consentedAfter: false,
-        },
-        {
-          service: 'customer-360-portal',
-          purpose: 'Service Delivery',
-          elementName: 'phone',
-          elementDisplayName: 'Phone Number',
-          kind: 'removed',
-          consentedBefore: true,
-        },
-        {
-          service: 'customer-360-portal',
-          purpose: 'Service Delivery',
-          elementName: 'address',
-          elementDisplayName: 'Home Address',
-          kind: 'added',
-          consentedAfter: true,
-        },
       ]),
     )
   })
@@ -284,22 +123,12 @@ describe('diffConsentSnapshots', () => {
 })
 
 describe('annotateSnapshot', () => {
-  it('tags every current property/purpose/element/authorization as unchanged when nothing changed', () => {
+  it('tags every current property/authorization as unchanged when nothing changed', () => {
     const snapshot = buildSnapshot()
     const diff = diffConsentSnapshots(snapshot, buildSnapshot())
     const annotated = annotateSnapshot(snapshot, diff)
 
     expect(annotated.properties).toEqual([{ key: 'region', value: 'EU', kind: 'unchanged' }])
-    expect(annotated.purposes).toEqual([
-      {
-        service: 'customer-360-portal',
-        purpose: 'Service Delivery',
-        kind: 'unchanged',
-        elements: [
-          { name: 'email', displayName: 'Email Address', consented: true, kind: 'unchanged' },
-        ],
-      },
-    ])
     expect(annotated.authorizations).toEqual([
       {
         userId: 'admin.reviewer@wso2.com',
@@ -317,35 +146,7 @@ describe('annotateSnapshot', () => {
     const annotated = annotateSnapshot(snapshot, diff)
 
     expect(annotated.properties).toEqual([{ key: 'region', value: 'EU', kind: 'added' }])
-    expect(annotated.purposes[0].kind).toBe('added')
-    expect(annotated.purposes[0].elements[0].kind).toBe('added')
     expect(annotated.authorizations[0].kind).toBe('added')
-  })
-
-  it('folds a removed purpose back in as a struck-through entry, with its elements', () => {
-    const before = buildSnapshot()
-    const after = buildSnapshot({
-      services: [{ service: 'customer-360-portal', spDisplayName: 'Customer 360', purposes: [] }],
-    })
-    const diff = diffConsentSnapshots(before, after)
-    const annotated = annotateSnapshot(after, diff)
-
-    expect(annotated.purposes).toEqual([
-      {
-        service: 'customer-360-portal',
-        purpose: 'Service Delivery',
-        kind: 'removed',
-        elements: [
-          {
-            name: 'email',
-            displayName: 'Email Address',
-            consented: true,
-            consentedBefore: true,
-            kind: 'removed',
-          },
-        ],
-      },
-    ])
   })
 
   it('folds a removed authorization back in with its last known state', () => {
@@ -389,18 +190,19 @@ describe('annotateSnapshot', () => {
     )
   })
 
-  it('marks a scalar field change and leaves the rest unchanged', () => {
-    const before = buildSnapshot({ state: 'PENDING' })
-    const after = buildSnapshot({ state: 'ACTIVE' })
+  it('marks an expiryTime change and leaves the rest unchanged', () => {
+    const before = buildSnapshot({ expiryTime: 1_700_000_000_000 })
+    const after = buildSnapshot({ expiryTime: 1_800_000_000_000 })
     const diff = diffConsentSnapshots(before, after)
     const annotated = annotateSnapshot(after, diff)
 
-    const stateField = annotated.fields.find((field) => field.field === 'state')
-    expect(stateField).toEqual({
-      field: 'state',
-      value: 'ACTIVE',
-      before: 'PENDING',
-      kind: 'changed',
-    })
+    expect(annotated.fields).toEqual([
+      {
+        field: 'expiryTime',
+        value: 1_800_000_000_000,
+        before: 1_700_000_000_000,
+        kind: 'changed',
+      },
+    ])
   })
 })

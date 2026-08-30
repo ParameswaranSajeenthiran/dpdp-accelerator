@@ -64,31 +64,26 @@ export interface ConsentStatusHistoryResponse {
   pagination: ConsentHistoryPagination
 }
 
+export interface ConsentHistoryPageParams {
+  limit: number
+  offset: number
+}
+
 /**
- * The consent snapshot stored per history entry: a trimmed, hand-written view of the consent
- * mgt core `Receipt`, produced by `DPDPConsentSnapshotBuilder` on the server. Deliberately not
- * the same shape as `ConsentDetail` - this is the raw receipt snapshot, not the portal's REST
- * API DTO.
+ * The lifecycle table shows every event for a consent at once rather than paginating - a
+ * consent's status-change history is small (a handful of entries in practice), so a single
+ * generous page avoids "Load more" UI for no real benefit.
  */
-export interface ConsentSnapshotElement {
-  name: string
-  displayName: string
-  consented: boolean
-}
+export const CONSENT_LIFECYCLE_FETCH_LIMIT = 100
 
-export interface ConsentSnapshotPurpose {
-  purpose: string
-  uuid: string
-  primaryPurpose: boolean
-  elements: ConsentSnapshotElement[]
-}
-
-export interface ConsentSnapshotService {
-  service: string
-  spDisplayName: string
-  purposes: ConsentSnapshotPurpose[]
-}
-
+/**
+ * The snapshot stored per history entry is a trimmed view of the consent mgt core `Receipt`
+ * (`DPDPConsentSnapshotBuilder` on the server) and carries far more than these three fields
+ * (state, piiPrincipalId, language, services/purposes/elements). Only `expiryTime`,
+ * `properties` and `authorizations` are typed here because those are the only fields
+ * `ReceiptUpdateInput` (the update model IS's own consent-mgt core accepts a PATCH against)
+ * can actually change - the full-snapshot view only ever needs to diff what update can affect.
+ */
 export interface ConsentSnapshotAuthorization {
   userId: string
   type: string
@@ -97,12 +92,8 @@ export interface ConsentSnapshotAuthorization {
 }
 
 export interface ConsentSnapshot {
-  state: string
-  piiPrincipalId: string
-  language?: string
   expiryTime?: number
   properties?: Record<string, string>
-  services?: ConsentSnapshotService[]
   authorizations?: ConsentSnapshotAuthorization[]
 }
 
@@ -119,9 +110,4 @@ export interface ConsentHistoryResponse {
   consentId: string
   history: ConsentHistoryEntry[]
   pagination: ConsentHistoryPagination
-}
-
-export interface ConsentHistoryPageParams {
-  limit: number
-  offset: number
 }

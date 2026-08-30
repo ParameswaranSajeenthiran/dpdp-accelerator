@@ -37,7 +37,7 @@ import ConsentApprovalDialog from './components/ConsentApprovalDialog'
 import ConsentRejectionDialog from './components/ConsentRejectionDialog'
 import ConsentRevocationDialog from './components/ConsentRevocationDialog'
 import ConsentAuthorizationsSection from './components/details/ConsentAuthorizationsSection'
-import ConsentHistorySection from './components/details/ConsentHistorySection'
+import ConsentLifecycleSection from './components/details/ConsentLifecycleSection'
 import ConsentMetadataCard from './components/details/ConsentMetadataCard'
 import ConsentPropertiesSection from './components/details/ConsentPropertiesSection'
 import ConsentPurposesSection from './components/details/ConsentPurposesSection'
@@ -219,7 +219,7 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
       <ConsentPropertiesSection properties={detail.properties} />
       <ConsentPurposesSection purposes={detail.purposes} />
       <ConsentAuthorizationsSection authorizations={detail.authorizations ?? []} />
-      <ConsentHistorySection consentId={id} variant={variant} />
+      <ConsentLifecycleSection consentId={id} variant={variant} />
 
       <ConsentApprovalDialog
         open={approvalDialogOpen}

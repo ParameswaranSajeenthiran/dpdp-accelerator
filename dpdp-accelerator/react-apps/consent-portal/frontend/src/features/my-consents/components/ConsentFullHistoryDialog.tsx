@@ -32,13 +32,13 @@ import {
   Stack,
   Typography,
 } from '@wso2/oxygen-ui'
-import { ChevronDown, ChevronRight, History } from '@wso2/oxygen-ui-icons-react'
+import { ChevronRight, History } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
-import type { ConsentHistoryPage } from '../../../hooks/useConsentHistoryPaging'
 import type { ConsentHistoryEntry } from '../../../types/consentHistory'
 import { annotateSnapshot, diffConsentSnapshots } from '../../../utils/consentSnapshotDiff'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { useAdminConsentFullHistoryQuery } from '../../admin-consents/hooks/useAdminConsentHistoryQueries'
+import type { ConsentHistoryQueryResult } from '../hooks/useConsentHistoryQueries'
 import { useConsentFullHistoryQuery } from '../hooks/useConsentHistoryQueries'
 import { getConsentHistoryActionPresentation, isSystemActor } from '../utils/consentHistoryLabels'
 import ConsentSnapshotView from './ConsentSnapshotView'
@@ -130,7 +130,7 @@ function HistoryEntryAccordion({
 }
 
 function renderHistoryBody(
-  history: ConsentHistoryPage<ConsentHistoryEntry>,
+  history: ConsentHistoryQueryResult<ConsentHistoryEntry>,
   t: TranslateFn,
 ): React.JSX.Element {
   if (history.isLoading) {
@@ -167,6 +167,12 @@ function renderHistoryBody(
   )
 }
 
+/**
+ * Shows every history entry's snapshot diff, restricted (via `ConsentSnapshotView`) to
+ * `expiryTime`/`properties`/`authorizations` - the only fields the Identity Server's own
+ * consent-update path can change. Entries arrive newest-first, so `previousEntry` is the next
+ * array element (a later index), not the one before it.
+ */
 function ConsentFullHistoryDialog({
   open,
   consentId,
@@ -202,29 +208,7 @@ function ConsentFullHistoryDialog({
         </Stack>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
-        {renderHistoryBody(history, t)}
-
-        {history.hasMore ? (
-          <Stack alignItems="center" spacing={0.5} sx={{ pt: 2 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              endIcon={<ChevronDown size={14} />}
-              disabled={history.isFetching}
-              onClick={history.loadMore}
-            >
-              {t('consentRegistry.history.loadMore')}
-            </Button>
-            <Typography variant="caption" color="text.disabled">
-              {t('consentRegistry.history.showingCount', {
-                shown: history.entries.length,
-                total: history.totalCount,
-              })}
-            </Typography>
-          </Stack>
-        ) : null}
-      </DialogContent>
+      <DialogContent sx={{ p: 3 }}>{renderHistoryBody(history, t)}</DialogContent>
 
       <DialogActions
         sx={{ p: 2.5, borderTop: 1, borderColor: 'divider', bgcolor: 'background.default' }}

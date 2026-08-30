@@ -16,19 +16,14 @@
  * under the License.
  */
 
-import type {
-  ConsentSnapshot,
-  ConsentSnapshotAuthorization,
-  ConsentSnapshotElement,
-  ConsentSnapshotPurpose,
-} from '../types/consentHistory'
+import type { ConsentSnapshot, ConsentSnapshotAuthorization } from '../types/consentHistory'
 
 export type ConsentSnapshotChangeKind = 'added' | 'removed' | 'changed'
 
 export interface ConsentSnapshotFieldChange {
-  field: 'state' | 'language' | 'expiryTime' | 'piiPrincipalId'
-  before?: string | number
-  after?: string | number
+  field: 'expiryTime'
+  before?: number
+  after?: number
 }
 
 export interface ConsentSnapshotPropertyChange {
@@ -36,22 +31,6 @@ export interface ConsentSnapshotPropertyChange {
   kind: ConsentSnapshotChangeKind
   before?: string
   after?: string
-}
-
-export interface ConsentSnapshotPurposeChange {
-  service: string
-  purpose: string
-  kind: 'added' | 'removed'
-}
-
-export interface ConsentSnapshotElementChange {
-  service: string
-  purpose: string
-  elementName: string
-  elementDisplayName: string
-  kind: ConsentSnapshotChangeKind
-  consentedBefore?: boolean
-  consentedAfter?: boolean
 }
 
 export interface ConsentSnapshotAuthorizationChange {
@@ -67,33 +46,16 @@ export interface ConsentSnapshotDiff {
   hasChanges: boolean
   fields: ConsentSnapshotFieldChange[]
   properties: ConsentSnapshotPropertyChange[]
-  purposes: ConsentSnapshotPurposeChange[]
-  elements: ConsentSnapshotElementChange[]
   authorizations: ConsentSnapshotAuthorizationChange[]
-}
-
-function purposeKey(service: string, uuid: string): string {
-  return `${service}::${uuid}`
-}
-
-function elementKey(service: string, purposeUuid: string, elementName: string): string {
-  return `${service}::${purposeUuid}::${elementName}`
 }
 
 function diffFields(
   before: ConsentSnapshot | undefined,
   after: ConsentSnapshot,
 ): ConsentSnapshotFieldChange[] {
-  const candidates: ConsentSnapshotFieldChange['field'][] = [
-    'state',
-    'piiPrincipalId',
-    'language',
-    'expiryTime',
-  ]
-
-  return candidates
-    .map((field) => ({ field, before: before?.[field], after: after[field] }))
-    .filter(({ before: beforeValue, after: afterValue }) => beforeValue !== afterValue)
+  return before?.expiryTime !== after.expiryTime
+    ? [{ field: 'expiryTime', before: before?.expiryTime, after: after.expiryTime }]
+    : []
 }
 
 function diffProperties(
@@ -121,140 +83,6 @@ function diffProperties(
       return { key, kind: 'changed', before: beforeValue, after: afterValue }
     })
     .filter((change): change is ConsentSnapshotPropertyChange => change !== undefined)
-}
-
-interface IndexedPurpose {
-  service: string
-  purpose: ConsentSnapshotPurpose
-}
-
-/** `service::purposeUuid` -> the purpose, flattened across every service. */
-function indexPurposes(snapshot: ConsentSnapshot | undefined): Map<string, IndexedPurpose> {
-  const index = new Map<string, IndexedPurpose>()
-
-  snapshot?.services?.forEach((service) => {
-    service.purposes.forEach((purpose) => {
-      index.set(purposeKey(service.service, purpose.uuid), { service: service.service, purpose })
-    })
-  })
-
-  return index
-}
-
-function diffPurposesAndElements(
-  before: ConsentSnapshot | undefined,
-  after: ConsentSnapshot,
-): { purposes: ConsentSnapshotPurposeChange[]; elements: ConsentSnapshotElementChange[] } {
-  const beforeIndex = indexPurposes(before)
-  const afterIndex = indexPurposes(after)
-  const purposeKeys = new Set([...beforeIndex.keys(), ...afterIndex.keys()])
-
-  const purposes: ConsentSnapshotPurposeChange[] = []
-  const elements: ConsentSnapshotElementChange[] = []
-
-  purposeKeys.forEach((key) => {
-    const beforeEntry = beforeIndex.get(key)
-    const afterEntry = afterIndex.get(key)
-
-    if (!afterEntry && beforeEntry) {
-      purposes.push({
-        service: beforeEntry.service,
-        purpose: beforeEntry.purpose.purpose,
-        kind: 'removed',
-      })
-      beforeEntry.purpose.elements.forEach((element) => {
-        elements.push({
-          service: beforeEntry.service,
-          purpose: beforeEntry.purpose.purpose,
-          elementName: element.name,
-          elementDisplayName: element.displayName,
-          kind: 'removed',
-          consentedBefore: element.consented,
-        })
-      })
-      return
-    }
-
-    if (afterEntry && !beforeEntry) {
-      purposes.push({
-        service: afterEntry.service,
-        purpose: afterEntry.purpose.purpose,
-        kind: 'added',
-      })
-      afterEntry.purpose.elements.forEach((element) => {
-        elements.push({
-          service: afterEntry.service,
-          purpose: afterEntry.purpose.purpose,
-          elementName: element.name,
-          elementDisplayName: element.displayName,
-          kind: 'added',
-          consentedAfter: element.consented,
-        })
-      })
-      return
-    }
-
-    if (!afterEntry || !beforeEntry) {
-      return
-    }
-
-    const beforeElements = new Map(
-      beforeEntry.purpose.elements.map((element) => [
-        elementKey(beforeEntry.service, beforeEntry.purpose.uuid, element.name),
-        element,
-      ]),
-    )
-    const afterElements = new Map(
-      afterEntry.purpose.elements.map((element) => [
-        elementKey(afterEntry.service, afterEntry.purpose.uuid, element.name),
-        element,
-      ]),
-    )
-    const elementNameKeys = new Set([...beforeElements.keys(), ...afterElements.keys()])
-
-    elementNameKeys.forEach((elementNameKey) => {
-      const beforeElement = beforeElements.get(elementNameKey)
-      const afterElement = afterElements.get(elementNameKey)
-
-      if (beforeElement && !afterElement) {
-        elements.push({
-          service: beforeEntry.service,
-          purpose: beforeEntry.purpose.purpose,
-          elementName: beforeElement.name,
-          elementDisplayName: beforeElement.displayName,
-          kind: 'removed',
-          consentedBefore: beforeElement.consented,
-        })
-        return
-      }
-
-      if (afterElement && !beforeElement) {
-        elements.push({
-          service: afterEntry.service,
-          purpose: afterEntry.purpose.purpose,
-          elementName: afterElement.name,
-          elementDisplayName: afterElement.displayName,
-          kind: 'added',
-          consentedAfter: afterElement.consented,
-        })
-        return
-      }
-
-      if (beforeElement && afterElement && beforeElement.consented !== afterElement.consented) {
-        elements.push({
-          service: afterEntry.service,
-          purpose: afterEntry.purpose.purpose,
-          elementName: afterElement.name,
-          elementDisplayName: afterElement.displayName,
-          kind: 'changed',
-          consentedBefore: beforeElement.consented,
-          consentedAfter: afterElement.consented,
-        })
-      }
-    })
-  })
-
-  return { purposes, elements }
 }
 
 function diffAuthorizations(
@@ -294,10 +122,15 @@ function diffAuthorizations(
 }
 
 /**
- * Diffs one history entry's snapshot against the chronologically previous one.
+ * Diffs one history entry's snapshot against the chronologically previous one, restricted to
+ * `expiryTime`, `properties` and `authorizations` - the only fields `ReceiptUpdateInput` (the
+ * model backing the Identity Server's own consent update path) can actually change. Diffing
+ * `state`/`piiPrincipalId`/`language`/`services` would only ever show noise: those fields never
+ * change via update, and state transitions are already shown by the lifecycle table's own
+ * per-entry status dot.
  *
  * `before` is undefined for the CREATE entry - there is nothing earlier to compare against, so
- * every purpose/element/property in `after` reports as "added" rather than the caller needing a
+ * every property/authorization in `after` reports as "added" rather than the caller needing a
  * separate baseline-rendering code path.
  */
 export function diffConsentSnapshots(
@@ -306,39 +139,31 @@ export function diffConsentSnapshots(
 ): ConsentSnapshotDiff {
   const fields = diffFields(before, after)
   const properties = diffProperties(before?.properties, after.properties)
-  const { purposes, elements } = diffPurposesAndElements(before, after)
   const authorizations = diffAuthorizations(before?.authorizations, after.authorizations)
 
   return {
     isInitial: before === undefined,
-    hasChanges:
-      fields.length > 0 ||
-      properties.length > 0 ||
-      purposes.length > 0 ||
-      elements.length > 0 ||
-      authorizations.length > 0,
+    hasChanges: fields.length > 0 || properties.length > 0 || authorizations.length > 0,
     fields,
     properties,
-    purposes,
-    elements,
     authorizations,
   }
 }
 
 /**
  * Renders the record as it actually looks (like `ConsentPropertiesSection` /
- * `ConsentPurposesSection` / `ConsentAuthorizationsSection` elsewhere in the app), annotated with
- * what changed, rather than a separate list of change lines: unchanged content renders plain,
- * added content is tagged `added`, changed content carries its `before` value alongside the
- * current one, and removed content - present in the previous snapshot but not this one - is
- * folded back in so it stays visible instead of disappearing.
+ * `ConsentAuthorizationsSection` elsewhere in the app), annotated with what changed, rather than
+ * a separate list of change lines: unchanged content renders plain, added content is tagged
+ * `added`, changed content carries its `before` value alongside the current one, and removed
+ * content - present in the previous snapshot but not this one - is folded back in so it stays
+ * visible instead of disappearing.
  */
 export type AnnotatedChangeKind = 'unchanged' | 'added' | 'removed' | 'changed'
 
 export interface AnnotatedField {
   field: ConsentSnapshotFieldChange['field']
-  value?: string | number
-  before?: string | number
+  value?: number
+  before?: number
   kind: AnnotatedChangeKind
 }
 
@@ -347,21 +172,6 @@ export interface AnnotatedProperty {
   value?: string
   before?: string
   kind: AnnotatedChangeKind
-}
-
-export interface AnnotatedElement {
-  name: string
-  displayName: string
-  consented: boolean
-  consentedBefore?: boolean
-  kind: AnnotatedChangeKind
-}
-
-export interface AnnotatedPurpose {
-  service: string
-  purpose: string
-  kind: AnnotatedChangeKind
-  elements: AnnotatedElement[]
 }
 
 export interface AnnotatedAuthorization {
@@ -376,29 +186,22 @@ export interface AnnotatedAuthorization {
 export interface AnnotatedSnapshot {
   fields: AnnotatedField[]
   properties: AnnotatedProperty[]
-  purposes: AnnotatedPurpose[]
   authorizations: AnnotatedAuthorization[]
 }
 
-const ANNOTATED_FIELD_NAMES: ConsentSnapshotFieldChange['field'][] = [
-  'state',
-  'piiPrincipalId',
-  'language',
-  'expiryTime',
-]
-
 function annotateFields(snapshot: ConsentSnapshot, diff: ConsentSnapshotDiff): AnnotatedField[] {
-  const changeByField = new Map(diff.fields.map((change) => [change.field, change]))
-
-  return ANNOTATED_FIELD_NAMES.map((field): AnnotatedField => {
-    const change = changeByField.get(field)
-    return {
-      field,
-      value: snapshot[field],
+  const change = diff.fields.find((fieldChange) => fieldChange.field === 'expiryTime')
+  if (snapshot.expiryTime === undefined && !change) {
+    return []
+  }
+  return [
+    {
+      field: 'expiryTime',
+      value: snapshot.expiryTime,
       before: change?.before,
       kind: change ? 'changed' : 'unchanged',
-    }
-  }).filter((field) => field.value !== undefined || field.kind === 'changed')
+    },
+  ]
 }
 
 function annotateProperties(
@@ -418,82 +221,6 @@ function annotateProperties(
     .forEach((change) => rows.push({ key: change.key, before: change.before, kind: 'removed' }))
 
   return rows
-}
-
-function annotateElement(
-  element: ConsentSnapshotElement,
-  change: ConsentSnapshotElementChange | undefined,
-): AnnotatedElement {
-  return {
-    name: element.name,
-    displayName: element.displayName,
-    consented: element.consented,
-    consentedBefore: change?.consentedBefore,
-    kind: change?.kind ?? 'unchanged',
-  }
-}
-
-function purposeNameKey(service: string, purpose: string): string {
-  return `${service}::${purpose}`
-}
-
-function annotatePurposes(
-  snapshot: ConsentSnapshot,
-  diff: ConsentSnapshotDiff,
-): AnnotatedPurpose[] {
-  const purposeKindByKey = new Map(
-    diff.purposes.map((change) => [purposeNameKey(change.service, change.purpose), change.kind]),
-  )
-  const elementChangesByPurposeKey = new Map<string, ConsentSnapshotElementChange[]>()
-  diff.elements.forEach((change) => {
-    const key = purposeNameKey(change.service, change.purpose)
-    const existing = elementChangesByPurposeKey.get(key)
-    if (existing) {
-      existing.push(change)
-    } else {
-      elementChangesByPurposeKey.set(key, [change])
-    }
-  })
-
-  const groups: AnnotatedPurpose[] = []
-  const seenKeys = new Set<string>()
-
-  snapshot.services?.forEach((service) => {
-    service.purposes.forEach((purpose) => {
-      const key = purposeNameKey(service.service, purpose.purpose)
-      seenKeys.add(key)
-      const elementChangeByName = new Map(
-        (elementChangesByPurposeKey.get(key) ?? []).map((change) => [change.elementName, change]),
-      )
-      groups.push({
-        service: service.service,
-        purpose: purpose.purpose,
-        kind: purposeKindByKey.get(key) ?? 'unchanged',
-        elements: purpose.elements.map((element) =>
-          annotateElement(element, elementChangeByName.get(element.name)),
-        ),
-      })
-    })
-  })
-
-  diff.purposes
-    .filter(
-      (change) =>
-        change.kind === 'removed' && !seenKeys.has(purposeNameKey(change.service, change.purpose)),
-    )
-    .forEach((change) => {
-      const key = purposeNameKey(change.service, change.purpose)
-      const elements = (elementChangesByPurposeKey.get(key) ?? []).map((elementChange) => ({
-        name: elementChange.elementName,
-        displayName: elementChange.elementDisplayName,
-        consented: elementChange.consentedBefore ?? false,
-        consentedBefore: elementChange.consentedBefore,
-        kind: 'removed' as const,
-      }))
-      groups.push({ service: change.service, purpose: change.purpose, kind: 'removed', elements })
-    })
-
-  return groups
 }
 
 function annotateAuthorizations(
@@ -523,7 +250,6 @@ export function annotateSnapshot(
   return {
     fields: annotateFields(snapshot, diff),
     properties: annotateProperties(snapshot, diff),
-    purposes: annotatePurposes(snapshot, diff),
     authorizations: annotateAuthorizations(snapshot, diff),
   }
 }

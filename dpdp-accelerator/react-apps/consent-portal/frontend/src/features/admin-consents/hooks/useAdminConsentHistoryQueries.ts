@@ -16,11 +16,13 @@
  * under the License.
  */
 
+import { useQuery } from '@tanstack/react-query'
 import {
-  type ConsentHistoryPage,
-  useConsentHistoryPaging,
-} from '../../../hooks/useConsentHistoryPaging'
-import type { ConsentHistoryEntry, ConsentStatusAuditEntry } from '../../../types/consentHistory'
+  CONSENT_LIFECYCLE_FETCH_LIMIT,
+  type ConsentHistoryEntry,
+  type ConsentStatusAuditEntry,
+} from '../../../types/consentHistory'
+import type { ConsentHistoryQueryResult } from '../../my-consents/hooks/useConsentHistoryQueries'
 import {
   fetchAdminConsentFullHistory,
   fetchAdminConsentStatusHistory,
@@ -29,27 +31,45 @@ import {
 export function useAdminConsentStatusHistoryQuery(
   consentId: string,
   enabled: boolean,
-): ConsentHistoryPage<ConsentStatusAuditEntry> {
-  return useConsentHistoryPaging(
-    ['admin-consent-status-history', consentId],
-    async ({ limit, offset }) => {
-      const response = await fetchAdminConsentStatusHistory(consentId, { limit, offset })
-      return { entries: response.statusHistory, totalCount: response.pagination.totalCount }
+): ConsentHistoryQueryResult<ConsentStatusAuditEntry> {
+  const query = useQuery({
+    queryKey: ['admin-consent-status-history', consentId],
+    queryFn: async (): Promise<ConsentStatusAuditEntry[]> => {
+      const response = await fetchAdminConsentStatusHistory(consentId, {
+        limit: CONSENT_LIFECYCLE_FETCH_LIMIT,
+        offset: 0,
+      })
+      return response.statusHistory
     },
     enabled,
-  )
+  })
+
+  return {
+    entries: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  }
 }
 
 export function useAdminConsentFullHistoryQuery(
   consentId: string,
   enabled: boolean,
-): ConsentHistoryPage<ConsentHistoryEntry> {
-  return useConsentHistoryPaging(
-    ['admin-consent-full-history', consentId],
-    async ({ limit, offset }) => {
-      const response = await fetchAdminConsentFullHistory(consentId, { limit, offset })
-      return { entries: response.history, totalCount: response.pagination.totalCount }
+): ConsentHistoryQueryResult<ConsentHistoryEntry> {
+  const query = useQuery({
+    queryKey: ['admin-consent-full-history', consentId],
+    queryFn: async (): Promise<ConsentHistoryEntry[]> => {
+      const response = await fetchAdminConsentFullHistory(consentId, {
+        limit: CONSENT_LIFECYCLE_FETCH_LIMIT,
+        offset: 0,
+      })
+      return response.history
     },
     enabled,
-  )
+  })
+
+  return {
+    entries: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+  }
 }
