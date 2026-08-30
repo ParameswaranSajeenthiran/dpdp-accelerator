@@ -93,7 +93,9 @@ function HistoryEntryAccordion({
           sx={{ width: '100%', minWidth: 0 }}
         >
           <Typography variant="body2" sx={{ minWidth: 0, flex: 1 }} noWrap>
-            {t(`consentRegistry.history.actions.${presentation.labelKey}`)}
+            <Typography component="span" variant="body2" fontWeight={700}>
+              {t(`consentRegistry.history.actions.${presentation.labelKey}`)}
+            </Typography>
             {' · '}
             {system ? t('consentRegistry.history.systemActor') : entry.actionBy}
           </Typography>
