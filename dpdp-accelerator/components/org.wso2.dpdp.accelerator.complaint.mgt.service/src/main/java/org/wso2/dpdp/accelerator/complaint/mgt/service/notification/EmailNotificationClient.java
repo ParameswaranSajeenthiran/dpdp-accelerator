@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -32,6 +34,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
@@ -45,8 +48,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * {@link NotificationClient} implementation routing through WSO2 IS's native email notification
@@ -58,7 +59,7 @@ import java.util.logging.Logger;
  */
 public class EmailNotificationClient implements NotificationClient {
 
-    private static final Logger LOGGER = Logger.getLogger(EmailNotificationClient.class.getName());
+    private static final Log LOG = LogFactory.getLog(EmailNotificationClient.class);
 
     private static final String NOTIFICATION_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
     private static final String NOTIFICATION_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
@@ -173,7 +174,7 @@ public class EmailNotificationClient implements NotificationClient {
         try {
             List<Recipient> officers = resolveOfficers(complaint.getOrgId());
             if (officers.isEmpty()) {
-                LOGGER.warning("No complaint officers resolved for tenant '" + complaint.getOrgId()
+                LOG.debug("No complaint officers resolved for tenant '" + LogSanitizer.sanitize(complaint.getOrgId())
                         + "'; nothing to notify.");
             } else {
                 Map<String, Object> placeholders = buildTemplatePlaceholders(complaint, null, false,
@@ -186,7 +187,7 @@ public class EmailNotificationClient implements NotificationClient {
         } catch (Throwable t) {
             // Deliberately never rethrown - see interface javadoc. The complaint write this is
             // called after has already committed; a notification failure must not surface as one.
-            LOGGER.log(Level.WARNING, "Error notifying complaint officers", t);
+            LOG.error("Error notifying complaint officers", t);
         }
         sendAcknowledgement(complaint);
     }
@@ -200,8 +201,8 @@ public class EmailNotificationClient implements NotificationClient {
                             .orElseGet(Collections::emptyList)
                     : resolveOfficers(complaint.getOrgId());
             if (recipients.isEmpty()) {
-                LOGGER.warning("No recipients resolved for a comment-added complaint notification in tenant '"
-                        + complaint.getOrgId() + "'; nothing to send.");
+                LOG.debug("No recipients resolved for a comment-added complaint notification in tenant '"
+                        + LogSanitizer.sanitize(complaint.getOrgId()) + "'; nothing to send.");
                 return;
             }
             Map<String, Object> placeholders = buildTemplatePlaceholders(complaint, event, notifyingCreator,
@@ -211,7 +212,7 @@ public class EmailNotificationClient implements NotificationClient {
             }
         } catch (Throwable t) {
             // Deliberately never rethrown - see interface javadoc.
-            LOGGER.log(Level.WARNING, "Error sending complaint comment notification", t);
+            LOG.error("Error sending complaint comment notification", t);
         }
     }
 
@@ -223,20 +224,20 @@ public class EmailNotificationClient implements NotificationClient {
         try {
             AbstractUserStoreManager userStoreManager = resolveUserStoreManager(complaint.getOrgId());
             if (userStoreManager == null) {
-                LOGGER.warning("Could not resolve a user store manager for tenant '" + complaint.getOrgId()
+                LOG.debug("Could not resolve a user store manager for tenant '" + LogSanitizer.sanitize(complaint.getOrgId())
                         + "'; complaint acknowledgement not sent.");
                 return;
             }
             Optional<String> username = resolveUsername(userStoreManager, complaint.getUserId(),
                     complaint.getUserName());
             if (!username.isPresent()) {
-                LOGGER.warning("Could not resolve a username for complaint creator (userId: "
-                        + complaint.getUserId() + "); complaint acknowledgement not sent.");
+                LOG.debug("Could not resolve a username for complaint creator (userId: "
+                        + LogSanitizer.sanitize(complaint.getUserId()) + "); complaint acknowledgement not sent.");
                 return;
             }
             Optional<String> email = resolveEmail(userStoreManager, username.get());
             if (!email.isPresent()) {
-                LOGGER.warning("No email claim resolvable for user '" + username.get()
+                LOG.debug("No email claim resolvable for user '" + LogSanitizer.sanitize(username.get())
                         + "'; complaint acknowledgement not sent.");
                 return;
             }
@@ -244,8 +245,7 @@ public class EmailNotificationClient implements NotificationClient {
 
             IdentityEventService eventService = eventServiceSupplier.get();
             if (eventService == null) {
-                LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
-                        + "complaint acknowledgement not sent.");
+                LOG.debug("IdentityEventService is not resolvable; complaint acknowledgement not sent.");
                 return;
             }
 
@@ -276,7 +276,7 @@ public class EmailNotificationClient implements NotificationClient {
             eventService.handleEvent(new Event(IdentityEventConstants.Event.TRIGGER_NOTIFICATION, properties));
         } catch (Throwable t) {
             // Deliberately never rethrown - see interface javadoc.
-            LOGGER.log(Level.WARNING, "Error sending complaint acknowledgement", t);
+            LOG.error("Error sending complaint acknowledgement", t);
         }
     }
 
@@ -291,8 +291,8 @@ public class EmailNotificationClient implements NotificationClient {
             OrganizationManager organizationManager = organizationManagerSupplier.get();
             AbstractUserStoreManager userStoreManager = resolveUserStoreManager(tenantDomain);
             if (roleManagementService == null || userStoreManager == null) {
-                LOGGER.warning("Required OSGi services are not resolvable; cannot resolve complaint officers to "
-                        + "notify for tenant: " + tenantDomain);
+                LOG.debug("Required OSGi services are not resolvable; cannot resolve complaint officers to "
+                        + "notify for tenant: " + LogSanitizer.sanitize(tenantDomain));
                 return recipients;
             }
 
@@ -314,7 +314,7 @@ public class EmailNotificationClient implements NotificationClient {
                 }
             }
             if (organizationId == null) {
-                LOGGER.warning("Could not resolve organization or application ID for tenant '" + tenantDomain
+                LOG.debug("Could not resolve organization or application ID for tenant '" + LogSanitizer.sanitize(tenantDomain)
                         + "'; cannot resolve complaint officers to notify.");
                 return recipients;
             }
@@ -326,7 +326,7 @@ public class EmailNotificationClient implements NotificationClient {
             // presence, only from which branch above actually resolved the ID.
             String audience = resolvedAsOrganization ? ROLE_AUDIENCE : "application";
             if (!roleManagementService.isExistingRoleName(ADMIN_ROLE, audience, organizationId, tenantDomain)) {
-                LOGGER.warning("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + tenantDomain
+                LOG.debug("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + LogSanitizer.sanitize(tenantDomain)
                         + "'; cannot resolve complaint officers to notify.");
                 return recipients;
             }
@@ -338,7 +338,7 @@ public class EmailNotificationClient implements NotificationClient {
                         .ifPresent(email -> recipients.add(new Recipient(member.getName(), email)));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error resolving complaint officers to notify for tenant: " + tenantDomain, e);
+            LOG.error("Error resolving complaint officers to notify for tenant: " + LogSanitizer.sanitize(tenantDomain), e);
         }
         return recipients;
     }
@@ -352,8 +352,8 @@ public class EmailNotificationClient implements NotificationClient {
         Optional<String> username = resolveUsername(userStoreManager, complaint.getUserId(),
                 complaint.getUserName());
         if (!username.isPresent()) {
-            LOGGER.warning("Could not resolve a username for complaint creator (userId: " + complaint.getUserId()
-                    + "); cannot notify them.");
+            LOG.debug("Could not resolve a username for complaint creator (userId: "
+                    + LogSanitizer.sanitize(complaint.getUserId()) + "); cannot notify them.");
             return Optional.empty();
         }
         return resolveEmail(userStoreManager, username.get()).map(email -> new Recipient(username.get(), email));
@@ -362,8 +362,7 @@ public class EmailNotificationClient implements NotificationClient {
     private AbstractUserStoreManager resolveUserStoreManager(String tenantDomain) {
         RealmService realmService = realmServiceSupplier.get();
         if (realmService == null) {
-            LOGGER.warning("RealmService is not resolvable via PrivilegedCarbonContext for tenant: "
-                    + tenantDomain);
+            LOG.debug("RealmService is not resolvable for tenant: " + LogSanitizer.sanitize(tenantDomain));
             return null;
         }
         try {
@@ -376,7 +375,7 @@ public class EmailNotificationClient implements NotificationClient {
             return userStoreManager instanceof AbstractUserStoreManager
                     ? (AbstractUserStoreManager) userStoreManager : null;
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error resolving user store manager for tenant: " + tenantDomain, e);
+            LOG.error("Error resolving user store manager for tenant: " + LogSanitizer.sanitize(tenantDomain), e);
             return null;
         }
     }
@@ -400,7 +399,7 @@ public class EmailNotificationClient implements NotificationClient {
             String resolved = userStoreManager.getUserNameFromUserID(userId.trim());
             return (resolved == null || resolved.trim().isEmpty()) ? Optional.empty() : Optional.of(resolved.trim());
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error resolving username for user id '" + userId + "'", e);
+            LOG.error("Error resolving username for user id '" + LogSanitizer.sanitize(userId) + "'", e);
             return Optional.empty();
         }
     }
@@ -409,12 +408,12 @@ public class EmailNotificationClient implements NotificationClient {
         try {
             String email = userStoreManager.getUserClaimValue(username, EMAIL_CLAIM, null);
             if (email == null || email.trim().isEmpty()) {
-                LOGGER.warning("No email claim resolvable for user '" + username + "'");
+                LOG.debug("No email claim resolvable for user '" + LogSanitizer.sanitize(username) + "'");
                 return Optional.empty();
             }
             return Optional.of(email.trim());
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error resolving email claim for user '" + username + "'", e);
+            LOG.error("Error resolving email claim for user '" + LogSanitizer.sanitize(username) + "'", e);
             return Optional.empty();
         }
     }
@@ -427,7 +426,7 @@ public class EmailNotificationClient implements NotificationClient {
                     + (lastName == null ? "" : lastName.trim())).trim();
             return displayName.isEmpty() ? username : displayName;
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error resolving display name for user '" + username
+            LOG.error("Error resolving display name for user '" + LogSanitizer.sanitize(username)
                     + "'; falling back to the username.", e);
             return username;
         }
@@ -587,8 +586,7 @@ public class EmailNotificationClient implements NotificationClient {
             Map<String, Object> placeholders) {
         IdentityEventService eventService = eventServiceSupplier.get();
         if (eventService == null) {
-            LOGGER.warning("IdentityEventService is not resolvable via PrivilegedCarbonContext; "
-                    + "complaint notification not sent.");
+            LOG.debug("IdentityEventService is not resolvable; complaint notification not sent.");
             return;
         }
         Map<String, Object> triggerProperties = new HashMap<>(placeholders);
@@ -601,8 +599,9 @@ public class EmailNotificationClient implements NotificationClient {
                     triggerProperties));
         } catch (Throwable t) {
             // Deliberately never rethrown - see interface javadoc.
-            LOGGER.log(Level.WARNING, "Error triggering '" + notificationType + "' notification email to '"
-                    + recipient.getEmail() + "' in tenant: " + tenantDomain, t);
+            LOG.error("Error triggering '" + notificationType + "' notification email to '"
+                    + LogSanitizer.sanitize(recipient.getEmail()) + "' in tenant: "
+                    + LogSanitizer.sanitize(tenantDomain), t);
         }
     }
 

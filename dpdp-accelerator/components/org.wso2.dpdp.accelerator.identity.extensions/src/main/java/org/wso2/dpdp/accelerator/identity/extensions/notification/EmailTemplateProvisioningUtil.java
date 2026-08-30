@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.governance.exceptions.notiification.NotificationTemplateManagerException;
 import org.wso2.carbon.identity.governance.model.NotificationTemplate;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.io.IOException;
@@ -94,7 +95,7 @@ public final class EmailTemplateProvisioningUtil {
             templateManager.addNotificationTemplateType(templateType, EMAIL_CHANNEL, tenantDomain);
         } catch (NotificationTemplateManagerException e) {
             LOG.debug("Notification template type '" + templateType + "' already registered for tenant '"
-                    + tenantDomain + "'; continuing to (re)write its content.", e);
+                    + LogSanitizer.sanitize(tenantDomain) + "'; continuing to (re)write its content.", e);
         }
 
         try {
@@ -108,9 +109,11 @@ public final class EmailTemplateProvisioningUtil {
             template.setBody(body);
             template.setFooter("");
             templateManager.addNotificationTemplate(template, tenantDomain);
-            LOG.info("Provisioned email template '" + templateType + "' for tenant: " + tenantDomain);
+            LOG.info("Provisioned email template '" + templateType + "' for tenant: "
+                    + LogSanitizer.sanitize(tenantDomain));
         } catch (NotificationTemplateManagerException e) {
-            LOG.error("Error provisioning email template '" + templateType + "' for tenant: " + tenantDomain, e);
+            LOG.error("Error provisioning email template '" + templateType + "' for tenant: "
+                    + LogSanitizer.sanitize(tenantDomain), e);
         }
     }
 }
