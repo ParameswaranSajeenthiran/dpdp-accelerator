@@ -34,6 +34,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.common.util.EmailValidator;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
@@ -404,14 +405,24 @@ public class EmailNotificationClient implements NotificationClient {
         }
     }
 
+    /**
+     * Falls back to the username itself when the email claim is blank but the username looks like
+     * an email address - a common setup on user stores configured with email-as-username, where
+     * the claim is otherwise never populated separately.
+     */
     private static Optional<String> resolveEmail(AbstractUserStoreManager userStoreManager, String username) {
         try {
             String email = userStoreManager.getUserClaimValue(username, EMAIL_CLAIM, null);
-            if (email == null || email.trim().isEmpty()) {
-                LOG.debug("No email claim resolvable for user '" + LogSanitizer.sanitize(username) + "'");
-                return Optional.empty();
+            if (email != null && !email.trim().isEmpty()) {
+                return Optional.of(email.trim());
             }
-            return Optional.of(email.trim());
+            if (EmailValidator.isEmail(username)) {
+                LOG.debug("No email claim resolvable for user '" + LogSanitizer.sanitize(username)
+                        + "'; falling back to the username, which looks like an email address.");
+                return Optional.of(username);
+            }
+            LOG.debug("No email claim resolvable for user '" + LogSanitizer.sanitize(username) + "'");
+            return Optional.empty();
         } catch (Exception e) {
             LOG.error("Error resolving email claim for user '" + LogSanitizer.sanitize(username) + "'", e);
             return Optional.empty();
