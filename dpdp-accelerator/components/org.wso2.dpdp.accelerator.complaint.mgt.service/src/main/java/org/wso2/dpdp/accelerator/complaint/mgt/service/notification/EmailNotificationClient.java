@@ -18,7 +18,6 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.notification;
 
-import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -35,6 +34,7 @@ import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,8 +53,8 @@ import java.util.logging.Logger;
  * mechanism. Resolves every recipient (officers, or the complaint's creator) itself, then fires a
  * standard {@code TRIGGER_NOTIFICATION} event per recipient so IS's own registered notification
  * handler does the actual templated-email + SMTP dispatch - no custom event, no round trip through
- * identity.extensions. OSGi services are resolved via
- * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)}.
+ * identity.extensions. OSGi services are read live from {@link ComplaintServiceDataHolder}, kept
+ * up to date by {@code ComplaintServiceComponent}'s {@code @Reference} bindings.
  */
 public class EmailNotificationClient implements NotificationClient {
 
@@ -139,16 +139,11 @@ public class EmailNotificationClient implements NotificationClient {
     private final Supplier<OrganizationManager> organizationManagerSupplier;
 
     public EmailNotificationClient() {
-        this(() -> (IdentityEventService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .getOSGiService(IdentityEventService.class, null),
-                () -> (RealmService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .getOSGiService(RealmService.class, null),
-                () -> (ApplicationManagementService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .getOSGiService(ApplicationManagementService.class, null),
-                () -> (RoleManagementService) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .getOSGiService(RoleManagementService.class, null),
-                () -> (OrganizationManager) PrivilegedCarbonContext.getThreadLocalCarbonContext()
-                        .getOSGiService(OrganizationManager.class, null));
+        this(() -> ComplaintServiceDataHolder.getInstance().getIdentityEventService(),
+                () -> ComplaintServiceDataHolder.getInstance().getRealmService(),
+                () -> ComplaintServiceDataHolder.getInstance().getApplicationManagementService(),
+                () -> ComplaintServiceDataHolder.getInstance().getRoleManagementService(),
+                () -> ComplaintServiceDataHolder.getInstance().getOrganizationManager());
     }
 
     /** Overload for tests injecting 4 suppliers. */
