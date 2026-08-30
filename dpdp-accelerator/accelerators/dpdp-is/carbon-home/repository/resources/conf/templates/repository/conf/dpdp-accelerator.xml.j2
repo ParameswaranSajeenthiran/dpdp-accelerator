@@ -157,6 +157,13 @@
             <Audience>dpdp-event-notifications</Audience>
             {% endif %}
         </PayloadSigning>
+        <LifecycleEvents>
+            {% if dpdp_accelerator.event_notifications.lifecycle_events.publishing_enabled is defined %}
+            <PublishingEnabled>{{dpdp_accelerator.event_notifications.lifecycle_events.publishing_enabled}}</PublishingEnabled>
+            {% else %}
+            <PublishingEnabled>true</PublishingEnabled>
+            {% endif %}
+        </LifecycleEvents>
     </EventNotifications>
     <ConsentHistory>
         {% if dpdp_accelerator.consent_history.enabled is defined %}

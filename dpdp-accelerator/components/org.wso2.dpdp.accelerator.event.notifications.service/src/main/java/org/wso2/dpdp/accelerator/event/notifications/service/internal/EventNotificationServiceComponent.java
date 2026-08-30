@@ -29,6 +29,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventNotificationDAOProvider;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
@@ -38,6 +39,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.impl.EventFanOutSer
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.EventPublishServiceImpl;
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.SubscriptionServiceImpl;
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.TopicServiceImpl;
+import org.wso2.dpdp.accelerator.event.notifications.service.listener.DPDPLifecycleEventPublisher;
 import org.wso2.dpdp.accelerator.event.notifications.service.recovery.DeliveryRecoveryService;
 
 /**
@@ -59,6 +61,7 @@ public class EventNotificationServiceComponent {
     private ServiceRegistration<TopicService> topicServiceRegistration;
     private ServiceRegistration<SubscriptionService> subscriptionServiceRegistration;
     private ServiceRegistration<EventPublishService> eventPublishServiceRegistration;
+    private ServiceRegistration<DPDPLifecycleEventListener> lifecycleEventListenerRegistration;
 
     @Activate
     protected void activate(ComponentContext context) {
@@ -91,6 +94,13 @@ public class EventNotificationServiceComponent {
                     SubscriptionService.class, subscriptionService, null);
             eventPublishServiceRegistration = context.getBundleContext().registerService(
                     EventPublishService.class, eventPublishService, null);
+
+            if (configurationService.isEventNotificationLifecycleEventsPublishingEnabled()) {
+                DPDPLifecycleEventListener lifecycleEventPublisher =
+                        new DPDPLifecycleEventPublisher(eventPublishService);
+                lifecycleEventListenerRegistration = context.getBundleContext().registerService(
+                        DPDPLifecycleEventListener.class, lifecycleEventPublisher, null);
+            }
             LOG.info("Event Notification services are activated successfully.");
         } catch (RuntimeException e) {
             unregisterPublishedServices();
@@ -107,6 +117,8 @@ public class EventNotificationServiceComponent {
     }
 
     private void unregisterPublishedServices() {
+        unregister(lifecycleEventListenerRegistration);
+        lifecycleEventListenerRegistration = null;
         unregister(eventPublishServiceRegistration);
         eventPublishServiceRegistration = null;
         unregister(subscriptionServiceRegistration);

@@ -132,18 +132,25 @@ topic.
 When an ordinary WSO2 tenant is created, the accelerator creates these topics
 for that tenant:
 
-| Topic | Description |
-|---|---|
-| `consent.update` | Consent update and state transition notifications. |
-| `consent.revoke` | Consent revocation and withdrawal notifications. |
-| `consent.expire` | Consent expiration notifications. |
-| `user.data.change` | User data modification and profile change notifications. |
-| `user.account.delete` | User account deletion and right-to-be-forgotten notifications. |
+| Topic | Description | Has a purpose? |
+|---|---|---|
+| `consent.update` | Consent update and state transition notifications. | Yes |
+| `consent.revoke` | Consent revocation and withdrawal notifications. | Yes |
+| `consent.expire` | Consent expiration notifications. | Yes |
+| `user.data.change` | User data modification and profile change notifications. | No |
+| `user.account.delete` | User account deletion and right-to-be-forgotten notifications. | No |
 
 These topics are marked as managed by the system. A portal administrator can
 use them for subscriptions and events but cannot deregister them. The portal
 disables their deregistration action, and the API rejects direct deletion
 attempts.
+
+**About the "Has a purpose?" column:** a subscription's purpose filter (see
+[§5](#5-register-a-webhook-subscription)) only works if the event actually
+carries a purpose. The 3 consent topics do. `user.data.change` and
+`user.account.delete` don't — a user isn't tied to one processing purpose the
+way a consent is. So use the `all` filter when subscribing to those 2 topics;
+`specific`/`all_except` will simply never match anything on them.
 
 Topic provisioning is independent of Consent Portal auto-provisioning. The
 system-topic step does not create or assign any user, group, or role. Consent
@@ -152,6 +159,22 @@ membership remains a manual administrator action. Updating the tenant safely
 reconciles any missing system topic without creating duplicates. WSO2 does not
 emit a tenant-creation event for `carbon.super`, so these five topics are not
 automatically created for the super tenant.
+
+#### Enabling `user.data.change` / `user.account.delete`
+
+The 3 consent topics work out of the box. These 2 need one extra setting in
+`deployment.toml`:
+
+```toml
+[[event_handler]]
+name = "dpdpUserLifecycleEventHandler"
+subscriptions = ["POST_DELETE_USER", "POST_SET_USER_CLAIMS"]
+```
+
+Already included if you installed with `bin/configure.sh` — nothing to do.
+If you manage `deployment.toml` yourself, add this block and restart the
+server. Without it, these 2 topics stay silent: no events ever publish to
+them.
 
 ### Register a user topic
 

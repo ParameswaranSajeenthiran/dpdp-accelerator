@@ -35,19 +35,19 @@ import static org.testng.Assert.assertTrue;
  * {@code PrivilegedCarbonContext} and OSGi-injected consent-mgt services, neither reproducible in
  * a plain unit test (see the module's pom.xml jacoco exclusions).
  */
-public class DPDPConsentHistoryListenerTest {
+public class DPDPConsentManagementListenerTest {
 
     @Mock
     private DPDPConfigurationService configurationService;
 
-    private DPDPConsentHistoryListener listener;
+    private DPDPConsentManagementListener listener;
 
     @BeforeMethod
     public void setUp() {
 
         MockitoAnnotations.openMocks(this);
         DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(configurationService);
-        listener = new DPDPConsentHistoryListener();
+        listener = new DPDPConsentManagementListener();
     }
 
     @Test

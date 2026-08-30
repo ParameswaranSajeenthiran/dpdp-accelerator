@@ -27,30 +27,35 @@ import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.carbon.consent.mgt.core.model.ReceiptInput;
 import org.wso2.carbon.consent.mgt.core.model.ReceiptUpdateInput;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
+import org.wso2.dpdp.accelerator.identity.extensions.util.DPDPLifecycleEventUtil;
 
 import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Captures consent lifecycle events into {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}.
- * Snapshots are captured on the {@code post*} hooks, tagged directly with the action that just ran -
- * each one means exactly what its label says, since it shows the state that action actually
- * produced.
+ * Captures consent lifecycle events into {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY},
+ * and - for update/revoke - notifies {@code DPDPLifecycleEventListener} so the Event Notification
+ * Framework can fan them out. Snapshots are captured on the {@code post*} hooks, tagged with the
+ * action that just ran.
  *
- * <p>Also maintains {@code DPDP_CONSENT_EXPIRY_TRACKER} (tracked/untracked alongside every
- * status-audit write below) and, on every {@code pre*} hook, checks whether this consent already
- * lapsed before the scheduled {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJob}
- * caught it - see {@link DPDPConsentExpiryReconciler}.
+ * <p>Named after the IS extension point it implements ({@code ConsentManagementListener}), not
+ * either of its jobs - same convention as {@code DPDPIdentityExtensionTenantMgtListener} for
+ * {@code TenantMgtListener}.
  *
- * <p>A capture failure must never block the consent mutation itself, so every hook swallows and
- * logs its own exceptions rather than propagating them - propagating would abort the real
- * business operation the hook fired for.
+ * <p>Also maintains {@code DPDP_CONSENT_EXPIRY_TRACKER} and, on every {@code pre*} hook, checks
+ * whether this consent already lapsed before the scheduled
+ * {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJob} caught
+ * it - see {@link DPDPConsentExpiryReconciler}.
+ *
+ * <p>A capture or notification failure must never block the consent mutation, so every hook
+ * swallows and logs its own exceptions.
  */
-public class DPDPConsentHistoryListener extends AbstractConsentManagementListener {
+public class DPDPConsentManagementListener extends AbstractConsentManagementListener {
 
-    private static final Log LOG = LogFactory.getLog(DPDPConsentHistoryListener.class);
+    private static final Log LOG = LogFactory.getLog(DPDPConsentManagementListener.class);
     private static final int LISTENER_ORDER_ID = 100;
     private static final String ACTIVE_STATUS = "ACTIVE";
     private static final String PENDING_STATUS = "PENDING";
@@ -107,7 +112,9 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
         String previousStatus = takePreviousStatus();
         recordStatusAudit(updateInput.getConsentReceiptId(), tenantDomain, previousStatus, previousStatus,
                 ActionType.UPDATE);
-        captureSnapshot(updateInput.getConsentReceiptId(), tenantDomain, ActionType.UPDATE);
+        Receipt receipt = captureSnapshot(updateInput.getConsentReceiptId(), tenantDomain, ActionType.UPDATE);
+        DPDPLifecycleEventUtil.notify(l -> l.onConsentUpdated(tenantDomain, updateInput.getConsentReceiptId(),
+                previousStatus, previousStatus, getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
 
         // isClearExpiry() and getExpiryTime() are the two distinct signals an update can carry -
         // neither set means this update didn't touch expiry at all, so the tracker is left alone.
@@ -128,9 +135,12 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     @Override
     public void postRevokeConsent(String receiptId, String tenantDomain) {
 
-        recordStatusAudit(receiptId, tenantDomain, takePreviousStatus(), REVOKED_STATUS, ActionType.REVOKE);
-        captureSnapshot(receiptId, tenantDomain, ActionType.REVOKE);
+        String previousStatus = takePreviousStatus();
+        recordStatusAudit(receiptId, tenantDomain, previousStatus, REVOKED_STATUS, ActionType.REVOKE);
+        Receipt receipt = captureSnapshot(receiptId, tenantDomain, ActionType.REVOKE);
         untrackExpiry(receiptId, tenantDomain);
+        DPDPLifecycleEventUtil.notify(l -> l.onConsentRevoked(tenantDomain, receiptId, previousStatus,
+                getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
     }
 
     @Override
@@ -183,7 +193,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
                 untrackExpiry(consentId, tenantDomain);
             }
         } catch (Exception e) {
-            LOG.error("Error reading the post-authorize state for consent: " + sanitize(consentId), e);
+            LOG.error("Error reading the post-authorize state for consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -217,14 +227,16 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
                     .getReceiptWithExtendedSchema(consentId);
             PREVIOUS_STATUS.set(receipt.getState());
         } catch (Exception e) {
-            LOG.error("Error reading the pre-mutation status for consent: " + sanitize(consentId), e);
+            LOG.error("Error reading the pre-mutation status for consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
     /**
-     * Captures a fresh, post-mutation snapshot tagged with the action that just produced it.
+     * Captures a fresh, post-mutation snapshot and returns the {@link Receipt} it fetched, so
+     * callers needing purposes for the lifecycle notification can reuse it instead of a second
+     * fetch. {@code null} if the fetch/capture failed (already logged here).
      */
-    private void captureSnapshot(String consentId, String tenantDomain, ActionType actionType) {
+    private Receipt captureSnapshot(String consentId, String tenantDomain, ActionType actionType) {
 
         try {
             PrivilegedConsentManager consentManager = DPDPIdentityExtensionDataHolder.getInstance()
@@ -232,9 +244,11 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
             Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
             List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
             storeSnapshot(tenantDomain, consentId, actionType, receipt, authorizations);
+            return receipt;
         } catch (Exception e) {
             LOG.error("Error capturing a '" + actionType + "' consent history snapshot for consent: "
-                    + sanitize(consentId), e);
+                    + LogSanitizer.sanitize(consentId), e);
+            return null;
         }
     }
 
@@ -252,7 +266,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
             storeSnapshot(tenantDomain, consentId, actionType, receipt, authorizations);
         } catch (Exception e) {
             LOG.error("Error capturing a '" + actionType + "' consent history snapshot for consent: "
-                    + sanitize(consentId), e);
+                    + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -271,8 +285,8 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
             PREVIOUS_STATUS.set(receipt.getState());
             storeSnapshot(tenantDomain, consentId, ActionType.DELETE, receipt, authorizations);
         } catch (Exception e) {
-            LOG.error("Error capturing the pre-delete consent history snapshot for consent: " + sanitize(consentId),
-                    e);
+            LOG.error("Error capturing the pre-delete consent history snapshot for consent: "
+                    + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -292,8 +306,8 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
                     .recordStatusAudit(tenantDomain, consentId, previousStatus, currentStatus, actionType,
                             getActionBy());
         } catch (Exception e) {
-            LOG.error("Error recording a '" + actionType + "' status-audit row for consent: " + sanitize(consentId),
-                    e);
+            LOG.error("Error recording a '" + actionType + "' status-audit row for consent: "
+                    + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -306,7 +320,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
             DPDPIdentityExtensionDataHolder.getInstance().getConsentExpiryService()
                     .trackExpiry(tenantDomain, consentId, expiryTime.getTime());
         } catch (Exception e) {
-            LOG.error("Error tracking expiry for consent: " + sanitize(consentId), e);
+            LOG.error("Error tracking expiry for consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -316,7 +330,7 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
             DPDPIdentityExtensionDataHolder.getInstance().getConsentExpiryService()
                     .untrackExpiry(tenantDomain, consentId);
         } catch (Exception e) {
-            LOG.error("Error untracking expiry for consent: " + sanitize(consentId), e);
+            LOG.error("Error untracking expiry for consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -330,10 +344,5 @@ public class DPDPConsentHistoryListener extends AbstractConsentManagementListene
     private static String getActionBy() {
 
         return PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
-    }
-
-    private static String sanitize(String value) {
-
-        return value == null ? null : value.replaceAll("[\r\n]", "");
     }
 }
