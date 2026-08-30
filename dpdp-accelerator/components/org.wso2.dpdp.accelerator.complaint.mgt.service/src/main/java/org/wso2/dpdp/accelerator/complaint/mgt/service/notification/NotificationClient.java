@@ -22,16 +22,12 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 
 /**
- * Notifies interested parties about complaint lifecycle events - a complaint being filed, or a
- * comment being added to one. {@link EmailNotificationClient} is the only implementation today,
- * routing through WSO2 IS's own email notification mechanism (see that class's javadoc for the
- * OSGi bridge mechanics) - this interface exists so a future channel (SMS, push, ...) could be
- * added as a sibling implementation without either caller (
- * {@code ComplaintServiceImpl}, {@code ComplaintEventServiceImpl}) changing at all.
+ * Notifies interested parties about complaint lifecycle events. {@link EmailNotificationClient} is
+ * the only implementation today; this interface exists so a future channel (SMS, push, ...) could
+ * be added without either caller changing.
  *
  * <p>Implementations must never let a notification failure propagate to the caller - every method
- * here is fire-and-forget by design, since a complaint or comment write must succeed independently
- * of whether anyone could be notified about it.
+ * here is fire-and-forget by design.
  */
 public interface NotificationClient {
 
@@ -40,8 +36,7 @@ public interface NotificationClient {
 
     /**
      * Notifies the other party of a new comment: complaint officers when a citizen comments, or
-     * the complaint's original creator when an officer comments (see
-     * {@code ComplaintNotificationHandler} for how the actor role decides this).
+     * the complaint's original creator when an officer comments.
      */
     void notifyCommentAdded(Complaint complaint, ComplaintEvent event);
 }

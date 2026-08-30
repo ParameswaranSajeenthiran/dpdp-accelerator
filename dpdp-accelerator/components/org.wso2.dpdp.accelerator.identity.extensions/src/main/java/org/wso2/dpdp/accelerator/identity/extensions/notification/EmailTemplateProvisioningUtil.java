@@ -81,15 +81,10 @@ public final class EmailTemplateProvisioningUtil {
     }
 
     /**
-     * Always (re)writes the template content - {@code addNotificationTemplate} overwrites an
-     * existing type/locale/channel resource rather than failing on one, so this doubles as the
-     * upgrade path when this class's own HTML/subject changes: every tenant picks up the new
-     * content the next time it starts, with no separate migration step. Unlike role/permission
-     * provisioning elsewhere in this bundle, these templates have no supported user-customization
-     * workflow, so "add what's missing" idempotency isn't the right model here - "code always
-     * wins" is. {@code addNotificationTemplateType} itself is NOT similarly upsert-safe - it
-     * throws once the type is already registered for a tenant - so that failure is swallowed
-     * separately and never blocks the content write below it.
+     * Always (re)writes the template content - {@code addNotificationTemplate} upserts, so this
+     * also doubles as the upgrade path when the HTML/subject here changes.
+     * {@code addNotificationTemplateType} is not upsert-safe (throws if already registered), so
+     * that failure is swallowed separately and never blocks the content write below it.
      */
     private static void provisionTemplate(String tenantDomain, String templateType, String subject, String body) {
 

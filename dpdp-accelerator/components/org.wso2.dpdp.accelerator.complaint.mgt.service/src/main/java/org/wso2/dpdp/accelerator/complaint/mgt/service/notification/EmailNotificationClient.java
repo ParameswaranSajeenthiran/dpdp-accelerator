@@ -50,20 +50,11 @@ import java.util.logging.Logger;
 
 /**
  * {@link NotificationClient} implementation routing through WSO2 IS's native email notification
- * mechanism. Every recipient - the complaint officers ({@code dpdp-consent-admin} role members),
- * the complaint's own creator, or both, depending on the event - is resolved right here, and a
- * standard {@code TRIGGER_NOTIFICATION} event is fired directly per recipient so IS's own
- * already-registered internal notification handler does the real templated-email + SMTP dispatch.
- * There is no custom event and no {@code identity.extensions} round trip for any of this: this
- * plain, non-OSGi module reaches every OSGi service it needs (role membership, application lookup,
- * user store, event dispatch) the same way, via
- * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)}, which resolves OSGi
- * services through a static holder ({@code org.wso2.carbon.context.internal.OSGiDataHolder})
- * populated wherever the {@code org.wso2.carbon.context} classes are loaded from Carbon's shared
- * classloader rather than bundled per-webapp - which is exactly why every carbon-identity artifact
- * this class touches is declared {@code provided} in this module's pom rather than bundled into the
- * WAR. This is the same lookup mechanism used throughout Carbon-hosted custom webapps to reach an
- * OSGi service without being an OSGi bundle themselves.
+ * mechanism. Resolves every recipient (officers, or the complaint's creator) itself, then fires a
+ * standard {@code TRIGGER_NOTIFICATION} event per recipient so IS's own registered notification
+ * handler does the actual templated-email + SMTP dispatch - no custom event, no round trip through
+ * identity.extensions. OSGi services are resolved via
+ * {@link PrivilegedCarbonContext#getOSGiService(Class, java.util.Hashtable)}.
  */
 public class EmailNotificationClient implements NotificationClient {
 
