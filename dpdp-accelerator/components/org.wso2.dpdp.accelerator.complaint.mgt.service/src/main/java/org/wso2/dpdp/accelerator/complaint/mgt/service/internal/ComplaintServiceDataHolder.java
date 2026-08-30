@@ -18,6 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.internal;
 
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
+import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAOProvider;
 
@@ -31,6 +36,14 @@ public final class ComplaintServiceDataHolder {
 
     private volatile ComplaintDAOProvider daoProvider;
     private volatile DPDPConfigurationService configurationService;
+    // Consumed by EmailNotificationClient to resolve complaint notification recipients - optional
+    // since a notification failure must never block core complaint functionality (see
+    // NotificationClient's fire-and-forget contract).
+    private volatile IdentityEventService identityEventService;
+    private volatile RealmService realmService;
+    private volatile ApplicationManagementService applicationManagementService;
+    private volatile RoleManagementService roleManagementService;
+    private volatile OrganizationManager organizationManager;
 
     private ComplaintServiceDataHolder() {
     }
@@ -53,5 +66,45 @@ public final class ComplaintServiceDataHolder {
 
     public void setConfigurationService(DPDPConfigurationService configurationService) {
         this.configurationService = configurationService;
+    }
+
+    public IdentityEventService getIdentityEventService() {
+        return identityEventService;
+    }
+
+    public void setIdentityEventService(IdentityEventService identityEventService) {
+        this.identityEventService = identityEventService;
+    }
+
+    public RealmService getRealmService() {
+        return realmService;
+    }
+
+    public void setRealmService(RealmService realmService) {
+        this.realmService = realmService;
+    }
+
+    public ApplicationManagementService getApplicationManagementService() {
+        return applicationManagementService;
+    }
+
+    public void setApplicationManagementService(ApplicationManagementService applicationManagementService) {
+        this.applicationManagementService = applicationManagementService;
+    }
+
+    public RoleManagementService getRoleManagementService() {
+        return roleManagementService;
+    }
+
+    public void setRoleManagementService(RoleManagementService roleManagementService) {
+        this.roleManagementService = roleManagementService;
+    }
+
+    public OrganizationManager getOrganizationManager() {
+        return organizationManager;
+    }
+
+    public void setOrganizationManager(OrganizationManager organizationManager) {
+        this.organizationManager = organizationManager;
     }
 }

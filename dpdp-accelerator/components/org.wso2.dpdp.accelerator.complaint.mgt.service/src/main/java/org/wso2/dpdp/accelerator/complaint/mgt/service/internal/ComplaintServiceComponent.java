@@ -28,6 +28,11 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
+import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
+import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAOProvider;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
@@ -128,6 +133,100 @@ public class ComplaintServiceComponent {
 
         LOG.debug("Unsetting the DPDP Configuration Service.");
         ComplaintServiceDataHolder.getInstance().setConfigurationService(null);
+    }
+
+    // The five references below are all optional: they're only consumed by
+    // EmailNotificationClient to resolve complaint notification recipients, and a notification
+    // failure must never block this bundle's core complaint functionality from activating.
+
+    @Reference(
+            service = IdentityEventService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdentityEventService"
+    )
+    protected void setIdentityEventService(IdentityEventService identityEventService) {
+
+        LOG.debug("Setting the Identity Event Service.");
+        ComplaintServiceDataHolder.getInstance().setIdentityEventService(identityEventService);
+    }
+
+    protected void unsetIdentityEventService(IdentityEventService identityEventService) {
+
+        LOG.debug("Unsetting the Identity Event Service.");
+        ComplaintServiceDataHolder.getInstance().setIdentityEventService(null);
+    }
+
+    @Reference(
+            service = RealmService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService"
+    )
+    protected void setRealmService(RealmService realmService) {
+
+        LOG.debug("Setting the Realm Service.");
+        ComplaintServiceDataHolder.getInstance().setRealmService(realmService);
+    }
+
+    protected void unsetRealmService(RealmService realmService) {
+
+        LOG.debug("Unsetting the Realm Service.");
+        ComplaintServiceDataHolder.getInstance().setRealmService(null);
+    }
+
+    @Reference(
+            service = ApplicationManagementService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetApplicationManagementService"
+    )
+    protected void setApplicationManagementService(ApplicationManagementService applicationManagementService) {
+
+        LOG.debug("Setting the Application Management Service.");
+        ComplaintServiceDataHolder.getInstance().setApplicationManagementService(applicationManagementService);
+    }
+
+    protected void unsetApplicationManagementService(ApplicationManagementService applicationManagementService) {
+
+        LOG.debug("Unsetting the Application Management Service.");
+        ComplaintServiceDataHolder.getInstance().setApplicationManagementService(null);
+    }
+
+    @Reference(
+            service = RoleManagementService.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRoleManagementService"
+    )
+    protected void setRoleManagementService(RoleManagementService roleManagementService) {
+
+        LOG.debug("Setting the Role Management Service.");
+        ComplaintServiceDataHolder.getInstance().setRoleManagementService(roleManagementService);
+    }
+
+    protected void unsetRoleManagementService(RoleManagementService roleManagementService) {
+
+        LOG.debug("Unsetting the Role Management Service.");
+        ComplaintServiceDataHolder.getInstance().setRoleManagementService(null);
+    }
+
+    @Reference(
+            service = OrganizationManager.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetOrganizationManager"
+    )
+    protected void setOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Setting the Organization Manager.");
+        ComplaintServiceDataHolder.getInstance().setOrganizationManager(organizationManager);
+    }
+
+    protected void unsetOrganizationManager(OrganizationManager organizationManager) {
+
+        LOG.debug("Unsetting the Organization Manager.");
+        ComplaintServiceDataHolder.getInstance().setOrganizationManager(null);
     }
 
     private static void unregister(ServiceRegistration<?> registration) {

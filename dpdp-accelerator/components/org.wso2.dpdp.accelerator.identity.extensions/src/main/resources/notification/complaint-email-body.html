@@ -15,20 +15,15 @@
   specific language governing permissions and limitations
   under the License.
 
-  Shared HTML shell for all three complaint notification types (ComplaintCreated,
-  ComplaintCommentAdded, ComplaintAcknowledged) - registered as-is via
-  EmailTemplateProvisioningUtil for each type, with only the subject line differing per type.
-  Every visible piece of content below is a {{placeholder}} computed per-event by
-  complaint.mgt.service's EmailNotificationClient#buildTemplatePlaceholders (headline wording,
-  badges, the quoted message, the action link, the logo URL) - see that class for what each
-  placeholder means and how it varies by notification type and recipient. WSO2 IS's own
-  notification-handler substitution
-  engine looks for exactly this {{name}} delimiter (see NotificationUtil#extractPlaceHolders in
-  org.wso2.carbon.identity.event.handler.notification) - a different delimiter (e.g. ${name}) is
-  silently left in the sent email as literal text instead of being replaced.
+  Shared HTML shell for all three complaint notification types, registered via
+  EmailTemplateProvisioningUtil with only the subject line differing per type. Every
+  {{placeholder}} below is filled in by EmailNotificationClient#buildTemplatePlaceholders - WSO2
+  IS's notification handler looks for exactly this delimiter (NotificationUtil#extractPlaceHolders
+  in org.wso2.carbon.identity.event.handler.notification); a different one (e.g. ${name}) is left
+  as literal text instead of being replaced.
 
-  Table-based layout with inline styles throughout, no CSS classes/external assets/gradients - the
-  common denominator that survives Gmail's and Outlook's HTML sanitizers.
+  Table-based layout with inline styles, no CSS classes/external assets - survives Gmail's and
+  Outlook's HTML sanitizers.
 -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:24px 0;">
   <tr>

@@ -60,16 +60,10 @@
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.utils</artifactId>
             <scope>test</scope>
-            <!--
-                 carbon.utils's own test-scope transitive deps (org.wso2.carbon.bootstrap, jline,
-                 etc.) come along for the ride too, since Maven pulls a test-scope dependency's own
-                 transitive deps in as test-scope regardless of how they were originally scoped.
-                 Among them is the vanilla org.ops4j.pax.logging:pax-logging-api - a different
-                 artifact from WSO2's own org.wso2.org.ops4j.pax.logging:pax-logging-api that
-                 carbon.utils itself depends on `provided` - same PaxLogger class, incompatible
-                 version, so whichever one commons-logging's Carbon-aware LogFactory binds to at
-                 test time can throw NoSuchMethodError. Excluded since nothing here needs it.
-            -->
+            <!-- carbon.utils's test-scope transitive deps pull in the vanilla
+                 org.ops4j.pax.logging:pax-logging-api, a different artifact from WSO2's own fork
+                 with an incompatible same-named PaxLogger class - can throw NoSuchMethodError at
+                 test time. Excluded; nothing here needs it. -->
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.logging</groupId>
@@ -86,8 +80,8 @@
             <groupId>org.wso2.securevault</groupId>
             <artifactId>org.wso2.securevault</artifactId>
             <scope>test</scope>
-            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as carbon.utils above, plus a second
-                 axiom copy (axiom-api/axiom-impl) redundant with the axiom dependency below. -->
+            <!-- Same pax-logging clash as carbon.utils above, plus a second axiom copy
+                 (axiom-api/axiom-impl) redundant with the axiom dependency below. -->
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.logging</groupId>
@@ -106,8 +100,7 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event</artifactId>
-            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.utils below - this
-                 module transitively pulls the vanilla org.ops4j.pax.logging:pax-logging-api. -->
+            <!-- Same pax-logging clash as org.wso2.carbon.utils below. -->
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.logging</groupId>
@@ -115,14 +108,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--
-            EmailNotificationClient resolves every complaint recipient itself - the creator's own
-            email/display name for the ComplaintAcknowledged receipt, and the dpdp-consent-admin
-            role membership for officer notifications - firing TRIGGER_NOTIFICATION directly rather
-            than round-tripping through identity.extensions (see that class's javadoc). All
-            provided, same as org.wso2.carbon.identity.event above: already on Carbon's OSGi
-            classpath at runtime, kept off this module's own compiled/bundled classpath.
-        -->
+        <!-- Needed by EmailNotificationClient to resolve recipients directly - provided, already
+             on Carbon's OSGi classpath at runtime. -->
         <dependency>
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.user.core</artifactId>
@@ -130,7 +117,7 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.core</artifactId>
-            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.identity.event above. -->
+            <!-- Same pax-logging clash as org.wso2.carbon.identity.event above. -->
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.logging</groupId>
@@ -145,8 +132,8 @@
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.application.mgt</artifactId>
-            <!-- Same vanilla-vs-WSO2-fork pax-logging clash as org.wso2.carbon.identity.event above,
-                 pulled in via a different transitive path - both pax-logging artifacts here. -->
+            <!-- Same pax-logging clash as org.wso2.carbon.identity.event above, via a different
+                 transitive path - both pax-logging artifacts here. -->
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.logging</groupId>
@@ -281,6 +268,7 @@
                             org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${project.version}",
                             org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${project.version}",
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.util;version="${project.version}",
                             org.osgi.framework;version="[1.8,2)",
                             *
                         </Import-Package>
