@@ -28,6 +28,7 @@ import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
+import org.wso2.dpdp.accelerator.identity.extensions.notification.EmailTemplateProvisioningUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,24 +129,34 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerAccountSelfServiceApi(tenantDomain);
+            DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(tenantDomain);
+            EmailTemplateProvisioningUtil.provisionTemplates(tenantDomain);
 
             List<String> consentMgtScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);
             List<String> eventNotificationScopes = DPDPApiResourceProvisioningUtil
                     .authorizeEventNotificationAPIs(applicationId, tenantDomain);
-            List<String> authorizeConsentHistoryApi = DPDPApiResourceProvisioningUtil
+            List<String> consentHistoryScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentHistoryApi(applicationId, tenantDomain);
+            List<String> complaintScopes = DPDPApiResourceProvisioningUtil
+                    .authorizeComplaintManagementApi(applicationId, tenantDomain);
 
             List<String> adminScopes = new ArrayList<>(consentMgtScopes);
+            adminScopes.addAll(consentHistoryScopes);
             adminScopes.addAll(eventNotificationScopes);
-            adminScopes.addAll(authorizeConsentHistoryApi);
             // Self-delete goes to the user role only - an admin token must never carry it.
             List<String> userScopes = new ArrayList<>(
                     Arrays.asList(DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
                             DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF));
             userScopes.addAll(DPDPApiResourceProvisioningUtil
                     .authorizeAccountSelfServiceApi(applicationId, tenantDomain));
-
+            for (String complaintScope : complaintScopes) {
+                if (complaintScope.endsWith(":self")) {
+                    userScopes.add(complaintScope);
+                } else {
+                    adminScopes.add(complaintScope);
+                }
+            }
             List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(tenantDomain, adminScopes,
                     userScopes);
             DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(tenantDomain, tenantInfoBean.getAdmin(),

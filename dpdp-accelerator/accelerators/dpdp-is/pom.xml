@@ -46,6 +46,10 @@
         </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.endpoint</artifactId>
             <type>war</type>
         </dependency>
@@ -66,6 +70,11 @@
                  comment), not an OSGi dropin. -->
             <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.dpdp.accelerator</groupId>
+            <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.endpoint</artifactId>
+            <type>war</type>
         </dependency>
     </dependencies>
 
@@ -155,6 +164,12 @@
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.event.notifications.service/target">
                                         <include name="*.jar"/>
                                     </fileset>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.complaint.mgt.dao/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
+                                    <fileset dir="../../components/org.wso2.dpdp.accelerator.complaint.mgt.service/target">
+                                        <include name="*.jar"/>
+                                    </fileset>
                                 </copy>
                                 <unzip src="../../react-apps/consent-portal/target/consent-portal.war"
                                        dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/consent-portal"/>
@@ -170,6 +185,8 @@
                                     <fileset dir="../../components/org.wso2.dpdp.accelerator.consent.extensions/target"
                                               includes="org.wso2.dpdp.accelerator.consent.extensions-*.jar"/>
                                 </copy>
+                                <unzip src="../../internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/target/api#dpdp#complaints#v1.war"
+                                       dest="${project.basedir}/carbon-home/repository/deployment/server/webapps/api#dpdp#complaints#v1/"/>
                             </target>
                         </configuration>
                     </execution>

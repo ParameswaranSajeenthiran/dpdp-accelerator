@@ -28,13 +28,22 @@ with no operator step and no REST call involved:
 | Validate token bindings | enabled | A token lifted out of the browser is rejected. |
 | Revoke tokens on logout | enabled | Signing out invalidates the tokens immediately. |
 
-It also authorizes the three consent management APIs (RBAC) and creates two
-roles: `dpdp-consent-admin`, holding every consent management scope, and
-`dpdp-consent-user`, which carries only `account:self:delete` (see
-[Self-service account deletion](#7-self-service-account-deletion)).
-Provisioning checks each of these — application, and each role —
-individually, creating what's missing and adding any permission a role is
-still short of, so it's always safe to re-run (see
+It also authorizes the consent management, consent-history, event-notification
+and complaint-management APIs (RBAC), and creates two roles. `dpdp-consent-admin`
+holds every consent management scope, the consent-history "any" scopes, the
+event-notification scopes, and the complaint management API's two "any" scopes
+(`complaints:read:any`, `complaints:write:any`) — viewing and managing every
+complaint in the org, including internal notes and status transitions.
+`dpdp-consent-user` holds `account:self:delete` (see
+[Self-service account deletion](#7-self-service-account-deletion)) plus the
+complaint API's two "self" scopes (`complaints:read:self`,
+`complaints:write:self`) — the rest of what it needs, the `internal_consent_mgt_*`
+scopes for managing one's own consents, comes from Identity Server's own default
+role configuration rather than from this role at all.
+
+Provisioning checks each of these — application, API authorization, and each
+role — individually, creating what's missing and adding any permission a role
+is still short of, so it's always safe to re-run (see
 [Recovering a broken tenant](#3-recovering-a-broken-tenant) below).
 
 ## 2. Change or turn off the auto-provisioning
@@ -93,8 +102,8 @@ what is *beyond* that.
 
 | Role | Assign to | Grants |
 |---|---|---|
-| `dpdp-consent-user` | Regular users | Deleting their own account. Nothing else — self-service consent management works without it. |
-| `dpdp-consent-admin` | Administrators | Administering *other people's* consents and editing the purpose and element catalog. **Not** self-service account deletion, which is `dpdp-consent-user` only. |
+| `dpdp-consent-user` | Regular users | Deleting their own account, and reading/writing their own complaints (`complaints:read/write:self`). Neither is needed for self-service consent management, which works without any role. |
+| `dpdp-consent-admin` | Administrators | Administering *other people's* consents, editing the purpose and element catalog, and reading/writing *any* complaint in the org (`complaints:read/write:any`), including internal notes and status transitions. **Not** self-service account deletion, which is `dpdp-consent-user` only. |
 
 > **Users who don't hold `dpdp-consent-user` will not see "Delete my
 > account".** The option is gated on the `account:self:delete` scope that
@@ -109,7 +118,41 @@ what is *beyond* that.
 > account. Keep administrators out of `dpdp-consent-user` if that matters —
 > they lose nothing else by not holding it.
 
-## 5. Open the portal
+## 5. Configure email notifications
+
+The Consent Portal can send email notifications through an SMTP server.
+Configure the SMTP sender settings in the Identity Server's
+`deployment.toml`.
+
+For Gmail or Google Workspace, use the following configuration:
+
+```toml
+# SMTP email sender settings.
+[output_adapter.email]
+from_address = "abc@gmail.com"
+username = "abc@gmail.com"
+password = "<GMAIL_APP_PASSWORD>"
+hostname = "smtp.gmail.com"
+port = 587
+```
+
+### Configure the recipient's primary email
+
+The user's **primary email address** must be configured in their user profile
+for the user to receive email notifications.
+
+In the Console:
+
+1. Go to **User Management → Users**.
+2. Select the user.
+3. Open the user's profile.
+4. Add or update the user's **Primary Email** address.
+5. Save the changes.
+
+Make sure the primary email address is valid and accessible. Notifications
+sent to the user will be delivered to the configured primary email address.
+
+## 6. Open the portal
 
 | Tenant | URL |
 |---|---|

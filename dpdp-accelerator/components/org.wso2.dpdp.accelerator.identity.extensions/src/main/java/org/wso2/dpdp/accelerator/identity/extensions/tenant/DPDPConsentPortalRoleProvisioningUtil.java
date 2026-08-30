@@ -41,7 +41,7 @@ import java.util.Set;
 public final class DPDPConsentPortalRoleProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalRoleProvisioningUtil.class);
-    static final String ADMIN_ROLE = "dpdp-consent-admin";
+    public static final String ADMIN_ROLE = "dpdp-consent-admin";
     static final String USER_ROLE = "dpdp-consent-user";
     static final String ROLE_AUDIENCE = "organization";
 

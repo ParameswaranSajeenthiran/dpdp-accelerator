@@ -160,11 +160,11 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                         list.add(new WebhookDeliveryDispatchContext(
                                 delivery,
                                 rs.getString(EventNotificationDBColumns.ORG_ID),
+                                rs.getString(EventNotificationDBColumns.GROUP_ID),
                                 rs.getString(EventNotificationDBColumns.CALLBACK_URL),
                                 rs.getString(EventNotificationDBColumns.SHARED_SECRET),
                                 rs.getString(EventNotificationDBColumns.PAYLOAD),
                                 rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                                rs.getString(EventNotificationDBColumns.TOPIC_ID),
                                 rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
                     }
                 }
@@ -200,11 +200,11 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                         list.add(new WebhookDeliveryDispatchContext(
                                 delivery,
                                 rs.getString(EventNotificationDBColumns.ORG_ID),
+                                rs.getString(EventNotificationDBColumns.GROUP_ID),
                                 rs.getString(EventNotificationDBColumns.CALLBACK_URL),
                                 rs.getString(EventNotificationDBColumns.SHARED_SECRET),
                                 rs.getString(EventNotificationDBColumns.PAYLOAD),
                                 rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                                rs.getString(EventNotificationDBColumns.TOPIC_ID),
                                 rs.getString(EventNotificationDBColumns.TOPIC_NAME)));
                     }
                 }

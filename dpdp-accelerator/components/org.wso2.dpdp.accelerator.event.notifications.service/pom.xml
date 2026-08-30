@@ -51,6 +51,26 @@
             <artifactId>org.wso2.dpdp.accelerator.event.notifications.dao</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.inbound.auth.oauth2</groupId>
+            <artifactId>org.wso2.carbon.identity.oauth</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.orbit.com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <scope>provided</scope>
@@ -184,6 +204,10 @@
                             org.wso2.dpdp.accelerator.common.util;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.common.*;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.dao.*;version="${project.version}",
+                            org.wso2.carbon.identity.core;version="${carbon.identity.core.version}",
+                            org.wso2.carbon.identity.core.util;version="${carbon.identity.core.version}",
+                            org.wso2.carbon.identity.oauth2.util;version="${carbon.identity.inbound.auth.oauth.version}",
+                            com.nimbusds.jose;version="[10.0.0,11.0.0)",
                             org.osgi.framework;version="[1.8,2)",
                             *
                         </Import-Package>

@@ -39,6 +39,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -61,9 +62,9 @@ public class WebhookDeliveryTaskTest {
     private static final String SUBSCRIPTION_ID = "sub-1";
     private static final String EVENT_ID = "event-1";
     private static final String ORG_ID = "org-1";
+    private static final String GROUP_ID = "group-1";
     private static final String CALLBACK_URL = "https://callback.example.com/hook";
     private static final String SHARED_SECRET = "secret";
-    private static final String TOPIC_ID = "topic-1";
     private static final String TOPIC_NAME = "accounts";
 
     @Mock
@@ -74,6 +75,9 @@ public class WebhookDeliveryTaskTest {
 
     @Mock
     private DPDPConfigurationService configurationService;
+
+    @Mock
+    private EventPayloadSigner payloadSigner;
 
     @BeforeMethod
     public void setUp() {
@@ -107,14 +111,15 @@ public class WebhookDeliveryTaskTest {
         return new WebhookDeliveryTask(
                 delivery,
                 ORG_ID,
+                GROUP_ID,
                 payload,
                 CALLBACK_URL,
                 sharedSecret,
-                TOPIC_ID,
                 TOPIC_NAME,
                 deliveryDAO,
                 httpClient,
-                configurationService);
+                configurationService,
+                payloadSigner);
     }
 
     @SuppressWarnings("unchecked")
@@ -325,8 +330,9 @@ public class WebhookDeliveryTaskTest {
         assertEquals(envelope.get("eventId").asText(), EVENT_ID);
         assertEquals(envelope.get("subscriptionId").asText(), SUBSCRIPTION_ID);
         assertEquals(envelope.get("orgId").asText(), ORG_ID);
-        assertEquals(envelope.get("topicId").asText(), TOPIC_ID);
-        assertEquals(envelope.get("topicName").asText(), TOPIC_NAME);
+        assertNull(envelope.get("topicId"));
+        assertEquals(envelope.get("topic").asText(), TOPIC_NAME);
+        assertNull(envelope.get("topicName"));
     }
 
     @Test
@@ -352,6 +358,63 @@ public class WebhookDeliveryTaskTest {
         String expected = HmacSigner.sign(SHARED_SECRET, body);
         assertEquals(signatureHeader, "sha256=" + expected,
                 "signature must be HMAC over the envelope body");
+    }
+
+    @Test
+    public void testCertificateSignedPayloadEmbedsCompleteEventWithoutUnsignedCopy() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        stubHttpResponse(200);
+        when(deliveryDAO.recordSuccessfulAttempt(any(), any())).thenReturn(true);
+        when(configurationService.isEventNotificationPayloadSigningEnabled()).thenReturn(true);
+        when(configurationService.getEventNotificationPayloadSigningAudience())
+                .thenReturn("dpdp-event-notifications");
+        when(payloadSigner.sign(any(EventPayloadSigningContext.class))).thenReturn("header.claims.signature");
+
+        task(delivery, "{\"hello\":\"world\"}").run();
+
+        HttpRequest request = captureRequest();
+        JsonNode body = new ObjectMapper().readTree(bodyOf(request));
+        assertEquals(body.size(), 1);
+        assertEquals(body.get("signedPayload").asText(), "header.claims.signature");
+        assertNull(body.get("payload"), "the event must not be duplicated outside the JWS");
+        assertNull(body.get("payloadHash"), "the hash is an integrity claim inside the JWS");
+
+        ArgumentCaptor<EventPayloadSigningContext> contextCaptor =
+                ArgumentCaptor.forClass(EventPayloadSigningContext.class);
+        verify(payloadSigner).sign(contextCaptor.capture());
+        EventPayloadSigningContext context = contextCaptor.getValue();
+        assertEquals(context.getTenantDomain(), ORG_ID);
+        assertEquals(context.getSubject(), GROUP_ID);
+        assertEquals(context.getAudience(), "dpdp-event-notifications");
+        assertEquals(context.getDeliveryId(), DELIVERY_ID);
+        assertEquals(context.getEventId(), EVENT_ID);
+        assertEquals(context.getPayload().get("deliveryId").asText(), DELIVERY_ID);
+        assertEquals(context.getPayload().get("subscriptionId").asText(), SUBSCRIPTION_ID);
+        assertEquals(context.getPayload().get("orgId").asText(), ORG_ID);
+        assertEquals(context.getPayload().get("groupId").asText(), GROUP_ID);
+        assertEquals(context.getPayload().get("topic").asText(), TOPIC_NAME);
+        assertEquals(context.getPayload().get("payload").get("hello").asText(), "world");
+        assertEquals(context.getPayloadHash(), HmacSigner.sign(SHARED_SECRET,
+                new ObjectMapper().writeValueAsString(context.getPayload())));
+
+        String expectedBodySignature = "sha256=" + HmacSigner.sign(SHARED_SECRET, bodyOf(request));
+        assertEquals(request.headers().firstValue("Event-Signature").orElse(null), expectedBodySignature);
+    }
+
+    @Test
+    public void testPayloadSigningFailurePreventsHttpRequestAndSchedulesRetry() throws Exception {
+        WebhookDelivery delivery = delivery(0);
+        when(configurationService.isEventNotificationPayloadSigningEnabled()).thenReturn(true);
+        when(configurationService.getEventNotificationPayloadSigningAudience())
+                .thenReturn("dpdp-event-notifications");
+        when(payloadSigner.sign(any(EventPayloadSigningContext.class)))
+                .thenThrow(new IllegalStateException("issuer unavailable"));
+        when(deliveryDAO.recordRetryableFailure(any(), anyString(), anyInt(), any())).thenReturn(true);
+
+        task(delivery, "{\"hello\":\"world\"}").run();
+
+        verify(httpClient, never()).send(any(), any());
+        verify(deliveryDAO).recordRetryableFailure(any(), eq(DELIVERY_ID), eq(1), any());
     }
 
     @Test

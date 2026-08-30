@@ -37,10 +37,11 @@ import java.util.List;
 /**
  * Registers and authorizes every API resource the DPDP Consent Portal application consumes -
  * the IS-native consent-mgt v2 APIs (authorize-only, they already exist), and this
- * accelerator's own Event Notification and Consent History APIs (register + authorize, nothing
- * pre-registers these). All three families share the same register-if-absent /
- * authorize-if-absent shape, so that shared logic lives here once instead of being reimplemented
- * per feature. Application/service-provider provisioning is a separate concern - see
+ * accelerator's own Event Notification, Consent History, and Complaint Management APIs
+ * (register + authorize, nothing pre-registers these). All four families share the same
+ * register-if-absent / authorize-if-absent shape, so that shared logic lives here once instead
+ * of being reimplemented per feature. Application/service-provider provisioning is a separate
+ * concern - see
  * {@link DPDPConsentPortalAppProvisioningUtil} - as is role creation - see
  * {@link DPDPConsentPortalRoleProvisioningUtil}. Every method here assumes it is already running
  * inside the correct tenant's {@code PrivilegedCarbonContext} flow; that setup lives in the
@@ -88,6 +89,13 @@ public final class DPDPApiResourceProvisioningUtil {
     public static final String HISTORY_VIEW_ANY = "consent:history:view:any";
     public static final String HISTORY_VIEW_SELF = "consent:history:view:self";
 
+    private static final String COMPLAINT_API_IDENTIFIER = "/api/dpdp/complaints";
+    private static final String COMPLAINT_API_NAME = "DPDP Complaint Management API";
+
+    public static final String COMPLAINTS_READ_SELF = "complaints:read:self";
+    public static final String COMPLAINTS_WRITE_SELF = "complaints:write:self";
+    public static final String COMPLAINTS_READ_ANY = "complaints:read:any";
+    public static final String COMPLAINTS_WRITE_ANY = "complaints:write:any";
     private static final String ACCOUNT_SELF_SERVICE_API_IDENTIFIER = "/api/dpdp/account/v1/self";
     private static final String ACCOUNT_SELF_SERVICE_API_NAME = "DPDP Account Self-Service";
 
@@ -171,6 +179,39 @@ public final class DPDPApiResourceProvisioningUtil {
             throws Exception {
 
         return authorizeAPIs(applicationId, tenantDomain, new String[]{CONSENT_HISTORY_API_IDENTIFIER});
+    }
+
+    /**
+     * Registers this accelerator's own {@code /api/dpdp/complaints} API resource with its 4
+     * scopes if it doesn't already exist for this tenant.
+     */
+    public static void registerComplaintManagementApi(String tenantDomain) throws Exception {
+
+        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
+        List<Scope> scopes = Arrays.asList(
+                new Scope(null, COMPLAINTS_READ_SELF, "Read own complaints",
+                        "View the authenticated Data Principal's own complaints."),
+                new Scope(null, COMPLAINTS_WRITE_SELF, "Write own complaints",
+                        "Create, comment on, or transition the status of the authenticated Data Principal's own "
+                                + "complaints."),
+                new Scope(null, COMPLAINTS_READ_ANY, "Read any complaint",
+                        "View any complaint in the organization (officer/admin)."),
+                new Scope(null, COMPLAINTS_WRITE_ANY, "Write any complaint",
+                        "Create, comment on, or transition the status of any complaint in the organization "
+                                + "(officer/admin)."));
+        registerApiResourceIfAbsent(apiResourceManager, tenantDomain, COMPLAINT_API_IDENTIFIER, COMPLAINT_API_NAME,
+                "Grievance redressal API for the DPDP Consent Portal - see complaint-server-API.yaml in "
+                        + "org.wso2.dpdp.accelerator.complaint.mgt.endpoint.", scopes);
+    }
+
+    /**
+     * Authorizes the application for the Complaint Management API resource if not already
+     * authorized, and returns its scope names.
+     */
+    public static List<String> authorizeComplaintManagementApi(String applicationId, String tenantDomain)
+            throws Exception {
+
+        return authorizeAPIs(applicationId, tenantDomain, new String[]{COMPLAINT_API_IDENTIFIER});
     }
 
     /**

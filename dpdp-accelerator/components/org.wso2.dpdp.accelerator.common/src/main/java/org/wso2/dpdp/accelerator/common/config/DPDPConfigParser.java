@@ -231,6 +231,24 @@ public final class DPDPConfigParser {
                 .orElse("DPDP_CONSENT_PORTAL");
     }
 
+    public int getComplaintsStatutoryDuePeriodDays() {
+
+        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_STATUTORY_DUE_PERIOD_DAYS);
+    }
+
+    public long getComplaintsAttachmentMaxSizeBytes() {
+
+        return getNonNegativeLong(DPDPCommonConstants.COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_SIZE_BYTES);
+    }
+
+    public int getComplaintsAttachmentMaxFilesPerUpload() {
+
+        return getPositiveInt(DPDPCommonConstants.COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD);
+    }
+
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)
@@ -253,6 +271,19 @@ public final class DPDPConfigParser {
 
         return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_SYSTEM_TOPICS_AUTO_CREATE_ENABLED)
                 .map(Boolean::parseBoolean).orElse(true);
+    }
+
+    public boolean isEventNotificationPayloadSigningEnabled() {
+
+        return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED);
+    }
+
+    public String getEventNotificationPayloadSigningAudience() {
+
+        return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE)
+                .filter(value -> !value.trim().isEmpty())
+                .orElse(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE);
     }
 
     public int getEventNotificationThreadPoolSize() {

@@ -197,11 +197,11 @@ public class WebhookDeliveryWorker implements Runnable {
         new WebhookDeliveryTask(
                 delivery,
                 ctx.getOrgId(),
+                ctx.getGroupId(),
                 ctx.getPayload(),
                 ctx.getCallbackUrl(),
                 ctx.getSharedSecret(),
-                ctx.getTopicId(),
-                ctx.getTopicName(),
+                ctx.getTopic(),
                 deliveryDAO,
                 httpClient,
                 getConfiguration()).run();
