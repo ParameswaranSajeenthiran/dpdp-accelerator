@@ -54,9 +54,10 @@ export const EVENT_SCOPES = {
 
 /**
  * Scopes for the accelerator's own {@code /api/dpdp/consent-mgt/v1} history API - the
- * server registers these via DPDPApiResourceProvisioningUtil, not IS itself. Requested so
- * tokens carry them once the portal wires up the history API, but not yet consumed anywhere -
- * this is expected until that API is wired into the frontend.
+ * server registers these via DPDPApiResourceProvisioningUtil, not IS itself.
+ * ConsentLifecycleSection gates on STATUS_HISTORY_VIEW_ANY/SELF. HISTORY_VIEW_ANY/SELF guard
+ * the full per-snapshot history endpoint, which has no UI consumer - the portal only ever
+ * shows the status-audit timeline.
  */
 export const CONSENT_HISTORY_SCOPES = {
   STATUS_HISTORY_VIEW_ANY: 'consent:status-history:view:any',
