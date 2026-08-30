@@ -245,28 +245,23 @@ public class EventPublishServiceImpl implements EventPublishService {
         }
         Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery> delivery =
                 deliveryDAO.getWebhookDeliveryById(safeDeliveryId, safeOrgId);
-        if (delivery.isEmpty() || subscriptionDAO == null) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
+        if (subscriptionDAO == null) {
+            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                    EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
+                    "Delivery completion services are not initialized.", 500);
         }
-        Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> subscription =
-                subscriptionDAO.getSubscriptionById(delivery.get().getSubscriptionId(), safeOrgId);
-        if (subscription.isEmpty() || !safeGroupId.equalsIgnoreCase(subscription.get().getGroupId())) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
+        Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> subscription = delivery
+                .flatMap(value -> subscriptionDAO.getSubscriptionById(value.getSubscriptionId(), safeOrgId));
+        if (delivery.isEmpty() || subscription.isEmpty()
+                || !safeGroupId.equalsIgnoreCase(subscription.get().getGroupId())
+                || !HmacSigner.verifyCompletion(subscription.get().getSharedSecret(), safeDeliveryId,
+                        requestBody, eventSignature)) {
+            throw invalidCompletionSignature();
         }
         if (!DeliveryStatus.DELIVERED.getValue().equalsIgnoreCase(delivery.get().getStatus())) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
                     EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                     EventNotificationServiceConstants.DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG, 409);
-        }
-        if (!HmacSigner.verifyCompletion(subscription.get().getSharedSecret(), safeDeliveryId,
-                requestBody, eventSignature)) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
-                    EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
-                    EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
         }
         final DeliveryCompletionRequestDTO completion;
         try {
@@ -330,6 +325,12 @@ public class EventPublishServiceImpl implements EventPublishService {
     private static EventNotificationException invalidCompletion(String title, String description) {
         return new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                 title, description, 400);
+    }
+
+    private static EventNotificationException invalidCompletionSignature() {
+        return new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
+                EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
+                EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
     }
 
     private static Set<String> normalizeDeliveryIds(List<String> deliveryIds) {

@@ -48,7 +48,7 @@ public class SignedEventPayloadFactoryTest {
         assertEquals(context.getDeliveryId(), "delivery-1");
         assertEquals(context.getEventId(), "event-1");
         assertEquals(context.getPayload().get("subscriptionId").asText(), "subscription-1");
-        assertEquals(context.getPayload().get("payload").get("balance").asInt(), 10);
+        assertEquals(context.getPayload().get("eventPayload").get("balance").asInt(), 10);
         assertEquals(context.getPayloadHash(), HmacSigner.sign("shared-secret",
                 SignedEventPayloadFactory.buildEnvelopeJson("tenant.example", "group-1", "subscription-1",
                         "delivery-1", "event-1", "accounts", "{\"balance\":10}")));

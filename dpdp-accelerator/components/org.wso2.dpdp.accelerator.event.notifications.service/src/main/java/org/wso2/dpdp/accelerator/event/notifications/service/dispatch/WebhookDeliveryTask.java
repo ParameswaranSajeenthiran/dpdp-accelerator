@@ -195,8 +195,8 @@ public class WebhookDeliveryTask implements Runnable {
     /**
      * Wraps the raw event payload plus accelerator-managed routing metadata in a single
      * JSON object. The original payload is parsed back into a {@code JsonNode} so it stays
-     * an object/array/scalar under {@code "payload"} — not a stringified blob — preserving
-     * receivers' ability to do {@code body.payload.foo} lookups.
+     * an object/array/scalar under {@code "eventPayload"} — not a stringified blob — preserving
+     * receivers' ability to inspect the original event without a second JSON parse.
      *
      * <p>LinkedHashMap preserves field order so the serialized envelope is stable across
      * runs (helpful for snapshot tests and for receivers diffing the body byte-for-byte).

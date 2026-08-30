@@ -311,9 +311,8 @@ public class WebhookDeliveryTaskTest {
 
         // Body must be parseable JSON, distinct from the raw payload string.
         JsonNode envelope = new ObjectMapper().readTree(body);
-        assertTrue(envelope.has("payload"), "envelope should carry a payload field");
-        // Original payload sits nested under "payload" — receivers can do envelope.payload.hello.
-        assertEquals(envelope.get("payload").get("hello").asText(), "world");
+        assertTrue(envelope.has("eventPayload"), "envelope should carry an eventPayload field");
+        assertEquals(envelope.get("eventPayload").get("hello").asText(), "world");
     }
 
     @Test
@@ -394,7 +393,7 @@ public class WebhookDeliveryTaskTest {
         assertEquals(context.getPayload().get("orgId").asText(), ORG_ID);
         assertEquals(context.getPayload().get("groupId").asText(), GROUP_ID);
         assertEquals(context.getPayload().get("topic").asText(), TOPIC_NAME);
-        assertEquals(context.getPayload().get("payload").get("hello").asText(), "world");
+        assertEquals(context.getPayload().get("eventPayload").get("hello").asText(), "world");
         assertEquals(context.getPayloadHash(), HmacSigner.sign(SHARED_SECRET,
                 new ObjectMapper().writeValueAsString(context.getPayload())));
 

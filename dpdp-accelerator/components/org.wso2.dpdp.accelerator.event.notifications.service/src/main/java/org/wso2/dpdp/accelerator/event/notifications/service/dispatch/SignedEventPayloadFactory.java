@@ -52,8 +52,8 @@ public class SignedEventPayloadFactory {
         if (rawPayload == null) {
             throw new IllegalArgumentException("Event payload is null.");
         }
-        JsonNode payload = MAPPER.readTree(rawPayload);
-        if (payload == null || payload.isNull()) {
+        JsonNode eventPayload = MAPPER.readTree(rawPayload);
+        if (eventPayload == null || eventPayload.isNull()) {
             throw new IllegalArgumentException("Event payload is null.");
         }
         Map<String, Object> envelope = new LinkedHashMap<>();
@@ -63,7 +63,7 @@ public class SignedEventPayloadFactory {
         envelope.put("orgId", orgId);
         envelope.put("groupId", groupId);
         envelope.put("topic", topic);
-        envelope.put("payload", payload);
+        envelope.put("eventPayload", eventPayload);
         return MAPPER.writeValueAsString(envelope);
     }
 }

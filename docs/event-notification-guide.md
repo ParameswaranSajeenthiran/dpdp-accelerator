@@ -34,13 +34,26 @@ administrative scopes.
 | Poll event deliveries | `notifications:events:poll` |
 | Submit delivery completion | `notifications:event-deliveries:complete` |
 
-### Role assignment
+### Configure publisher and receiver roles
 
-The Identity Server provisioning flow creates `dpdp-consent-admin` and
-`dpdp-consent-user`. The administrator role receives the consent and Event
-Notification scopes. The user role is currently registered without Event
-Notification scopes; role membership and any additional least-privilege role
-design remain an Identity Server configuration decision.
+For application-to-application access, create separate least-privilege roles
+instead of assigning `dpdp-consent-admin` to publishing and receiving users:
+
+| Role | Assign these scopes |
+|---|---|
+| `event-publisher` | `notifications:events:write` |
+| `event-receiver` | `notifications:events:poll`, `notifications:event-deliveries:complete` |
+
+Create separate publisher and receiver users, assign only the corresponding
+role, and obtain fresh access tokens after role assignment. Use the publisher
+token for `POST /events` and the receiver token for `POST /events/poll` and
+`POST /deliveries/{deliveryId}/completion`. As negative checks, the receiver
+token must receive HTTP `403` when publishing, while the publisher token must
+receive HTTP `403` when polling or submitting completion.
+
+The Identity Server provisioning flow also creates `dpdp-consent-admin` and
+`dpdp-consent-user`. The administrator role receives all Event Notification
+scopes; the user role does not receive them.
 
 ### Tenant-specific URLs
 
@@ -127,8 +140,30 @@ curl -k -X POST "${API_BASE}/events/poll" \
 The response contains `sets`, keyed by `deliveryId`, and `moreAvailable`. Each
 SET value is a compact RS256 JWS built with the tenant signing key using the
 same event envelope as webhook delivery. Clients should retain the key and use
-it in a later poll request's `ack` or `setErrs` field. Webhook consumers can submit a signed completion report
-to `POST /deliveries/{deliveryId}/completion` with the
+it in a later poll request's `ack` or `setErrs` field. For example:
+
+```json
+{
+  "moreAvailable": false,
+  "sets": {
+    "f5f37c64-6130-4d44-9463-136c8bca4278": "<compact-RS256-JWS>"
+  }
+}
+```
+
+When there are no pending deliveries, the response is:
+
+```json
+{
+  "moreAvailable": false,
+  "sets": {}
+}
+```
+
+### Submit webhook delivery completion
+
+Webhook consumers can submit a signed completion report to
+`POST /deliveries/{deliveryId}/completion` with the
 `notifications:event-deliveries:complete` scope. The request body is signed
 using the subscription shared secret and the
 `event-signature: sha256=<hex>` header. The signature input binds the completion
@@ -147,6 +182,11 @@ Completion is accepted only after the webhook delivery reaches `delivered`.
 `completionEvidence` must be an absolute HTTPS URL without credentials or a
 fragment and must not exceed 512 characters. A second completion for the same
 delivery returns `EN-4090` with HTTP `409 Conflict`.
+
+An accepted completion returns HTTP `204 No Content` with an empty response
+body. Unknown deliveries, group mismatches, and invalid signatures return the
+same `401 / EN-4010` response so an unauthenticated caller cannot discover a
+delivery or its state.
 
 For example, a client can calculate and submit the contextual signature with:
 
@@ -305,7 +345,6 @@ these headers:
 | Header | Description |
 |---|---|
 | `Delivery-Id` | Stable delivery identifier. Use it to reject duplicate processing. |
-
 | `event-signature` | `sha256=<hex HMAC-SHA256>` computed using the subscription's shared secret. |
 
 With payload signing enabled (the default), the body contains only the compact
@@ -335,7 +374,7 @@ The decoded JWS claims have the following shape:
     "orgId": "example.com",
     "groupId": "example-group",
     "topic": "consent-status-changed",
-    "payload": {
+    "eventPayload": {
       "consentId": "c7c6b814-ef76-4eb4-9494-8af1b98a9ed1",
       "status": "REVOKED"
     }
@@ -349,8 +388,8 @@ secret as the key. Compare `sha256=<computed lowercase hex value>` with the
 the outer JSON before verification because whitespace and field order change
 the signature. Then verify the compact JWS with the certificate identified by
 its `kid`/`x5t#S256` protected headers, validate `iss`, `sub`, `aud`, `iat`,
-`jti`, and `txn`, and process the event from the signed `payload` claim. The
-event payload is intentionally not repeated outside the JWS.
+`jti`, and `txn`, and process the event from `payload.eventPayload`. The event
+payload is intentionally not repeated outside the JWS.
 
 Return any `2xx` response only after accepting the delivery. Store the
 `Delivery-Id` so that receiving the same delivery again does not repeat the

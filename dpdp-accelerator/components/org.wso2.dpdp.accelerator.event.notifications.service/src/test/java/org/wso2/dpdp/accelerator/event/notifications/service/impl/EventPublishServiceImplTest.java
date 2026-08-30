@@ -348,15 +348,92 @@ public class EventPublishServiceImplTest {
                 1, null, null, null, null);
         Subscription subscription = mock(Subscription.class);
         when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
         when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
         when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{}";
 
         try {
-            publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=ignored");
+            publishService.completeDelivery("org1", "group-1", "delivery-1", body,
+                    "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
             fail("Expected an undelivered webhook delivery to reject completion");
         } catch (EventNotificationException e) {
             assertEquals(e.getStatusCode(), 409);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDeliveryDoesNotRevealUnknownDelivery() {
+        when(deliveryDAO.getWebhookDeliveryById("unknown-delivery", "org1")).thenReturn(Optional.empty());
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "unknown-delivery", "{}", "sha256=bad");
+            fail("Expected an unknown delivery to be rejected as unauthenticated");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
+        }
+        verify(subscriptionDAO, never()).getSubscriptionById(anyString(), anyString());
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDeliveryDoesNotRevealGroupMismatch() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("another-group");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+        String body = "{}";
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", body,
+                    "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
+            fail("Expected a group mismatch to be rejected as unauthenticated");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDeliveryDoesNotRevealMissingSubscription() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "missing-subscription", "event-1", "delivered",
+                1, null, null, null, null);
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("missing-subscription", "org1")).thenReturn(Optional.empty());
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
+            fail("Expected a missing subscription to be rejected as unauthenticated");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
+        }
+        verify(deliveryAckDAO, never()).addDeliveryAck(any());
+    }
+
+    @Test
+    public void completeDeliveryAuthenticatesBeforeExposingDeliveryState() {
+        WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "in_flight",
+                1, null, null, null, null);
+        Subscription subscription = mock(Subscription.class);
+        when(subscription.getGroupId()).thenReturn("group-1");
+        when(subscription.getSharedSecret()).thenReturn("shared-secret");
+        when(deliveryDAO.getWebhookDeliveryById("delivery-1", "org1")).thenReturn(Optional.of(delivery));
+        when(subscriptionDAO.getSubscriptionById("subscription-1", "org1")).thenReturn(Optional.of(subscription));
+
+        try {
+            publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
+            fail("Expected invalid authentication to be rejected before delivery state");
+        } catch (EventNotificationException e) {
+            assertEquals(e.getStatusCode(), 401);
+            assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
         verify(deliveryAckDAO, never()).addDeliveryAck(any());
     }
