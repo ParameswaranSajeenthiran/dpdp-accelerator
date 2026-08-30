@@ -398,6 +398,11 @@ default_max_events = 20
 max_events_limit = 100
 request_hmac_validation_enabled = false
 
+[dpdp_accelerator.event_notifications.lifecycle_events]
+#Controls whether consent and user lifecycle events are automatically published to the Event Notification
+# Framework for the five predefined topics.
+publishing_enabled = true
+
 # Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
 # subscription-verification behavior.
 [dpdp_accelerator.event_notifications.webhook]
