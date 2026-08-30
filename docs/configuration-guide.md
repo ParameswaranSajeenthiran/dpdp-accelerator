@@ -96,7 +96,41 @@ do this in each tenant.
 
 There is currently no role granting ordinary users `complaints:read/write:self` — only `dpdp-consent-admin` carries complaint scopes at all.
 
-## 5. Open the portal
+## 5. Configure email notifications
+
+The Consent Portal can send email notifications through an SMTP server.
+Configure the SMTP sender settings in the Identity Server's
+`deployment.toml`.
+
+For Gmail or Google Workspace, use the following configuration:
+
+```toml
+# SMTP email sender settings.
+[output_adapter.email]
+from_address = "abc@gmail.com"
+username = "abc@gmail.com"
+password = "<GMAIL_APP_PASSWORD>"
+hostname = "smtp.gmail.com"
+port = 587
+```
+
+### Configure the recipient's primary email
+
+The user's **primary email address** must be configured in their user profile
+for the user to receive email notifications.
+
+In the Console:
+
+1. Go to **User Management → Users**.
+2. Select the user.
+3. Open the user's profile.
+4. Add or update the user's **Primary Email** address.
+5. Save the changes.
+
+Make sure the primary email address is valid and accessible. Notifications
+sent to the user will be delivered to the configured primary email address.
+
+## 6. Open the portal
 
 | Tenant | URL |
 |---|---|

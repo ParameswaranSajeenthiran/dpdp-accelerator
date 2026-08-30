@@ -76,8 +76,8 @@ app_password= "dashboard"
 # SMTP email sender settings.
 #[output_adapter.email]
 #from_address= "abcd@gmail.com"
-#username= "abcd"
-#password= "xxxx"
+#username= "abcd@gmail.com"
+#password= "appp-password"
 #hostname= "smtp.gmail.com"
 #port= 587
 

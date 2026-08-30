@@ -28,6 +28,7 @@ import org.wso2.carbon.stratos.common.exception.StratosException;
 import org.wso2.carbon.stratos.common.listeners.TenantMgtListener;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
+import org.wso2.dpdp.accelerator.identity.extensions.notification.EmailTemplateProvisioningUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,6 +129,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(tenantDomain);
+            EmailTemplateProvisioningUtil.provisionTemplates(tenantDomain);
 
             List<String> consentMgtScopes = DPDPApiResourceProvisioningUtil
                     .authorizeConsentManagementAPIs(applicationId, tenantDomain);

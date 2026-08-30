@@ -36,6 +36,7 @@ import org.wso2.carbon.core.ServerStartupObserver;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
@@ -327,5 +328,23 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the Topic Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setTopicService(null);
+    }
+
+    @Reference(
+            service = NotificationTemplateManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetNotificationTemplateManager"
+    )
+    protected void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Setting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(notificationTemplateManager);
+    }
+
+    protected void unsetNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Unsetting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(null);
     }
 }

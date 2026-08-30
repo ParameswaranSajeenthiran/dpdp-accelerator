@@ -110,6 +110,10 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.carbon.identity.governance</groupId>
+            <artifactId>org.wso2.carbon.identity.governance</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
         </dependency>
@@ -140,6 +144,11 @@
                     </suiteXmlFiles>
                     <systemPropertyVariables>
                         <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                        <!-- Mockito's inline mock maker (needed to mock final methods on Carbon
+                             classes like AbstractUserStoreManager) bundles a Byte Buddy version
+                             that predates official JDK 21 support - this is Byte Buddy's own
+                             documented opt-in to run anyway. -->
+                        <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                     </systemPropertyVariables>
                     <reuseForks>true</reuseForks>
                 </configuration>
@@ -212,6 +221,7 @@
                         </Export-Package>
                         <Import-Package>
                             org.wso2.dpdp.accelerator.common.config;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.util;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.common.enums;version="${project.version}",
                             org.wso2.dpdp.accelerator.event.notifications.service;version="${project.version}",
                             org.wso2.dpdp.accelerator.consent.extensions.service;version="${project.version}",
@@ -256,6 +266,9 @@
                             org.wso2.carbon.consent.mgt.core.model;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             org.wso2.carbon.consent.mgt.core.exception;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             !org.quartz.*,
+                            org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
+                            org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
+                            org.wso2.carbon.identity.governance.exceptions.notiification;version="${carbon.identity.governance.version}",
                             *
                         </Import-Package>
                         <!-- Quartz sits on Carbon's shared classpath, not an OSGi bundle, so nothing
