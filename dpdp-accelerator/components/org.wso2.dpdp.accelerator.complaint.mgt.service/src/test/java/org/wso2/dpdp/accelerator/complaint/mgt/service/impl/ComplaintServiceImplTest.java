@@ -38,6 +38,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRespon
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -65,6 +66,8 @@ class ComplaintServiceImplTest {
     private ComplaintDAO complaintDAO;
     @Mock
     private ComplaintEventDAO complaintEventDAO;
+    @Mock
+    private NotificationClient notificationClient;
 
     private ComplaintServiceImpl complaintService;
 
@@ -97,8 +100,9 @@ class ComplaintServiceImplTest {
     @BeforeMethod
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO);
+        complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO, notificationClient);
     }
+
 
     @Test
     void createComplaintThrowsWhenOrgIdIsMissing() {
@@ -172,6 +176,7 @@ class ComplaintServiceImplTest {
         assertEquals("OPEN", captor.getValue().getStatus());
         assertEquals("User One", captor.getValue().getUserName());
         assertTrue(captor.getValue().getStatutoryDueTime() > captor.getValue().getCreatedTime());
+        verify(notificationClient).notifyComplaintCreated(captor.getValue());
     }
 
     @Test
@@ -184,6 +189,7 @@ class ComplaintServiceImplTest {
 
         assertEquals("CO-5000", ex.getCode());
         assertEquals(500, ex.getStatusCode());
+        verify(notificationClient, never()).notifyComplaintCreated(any());
     }
 
     @Test
@@ -230,6 +236,10 @@ class ComplaintServiceImplTest {
         assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
         assertEquals("OPEN", captor.getValue().getToStatus());
         assertEquals(complaint.getId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
+        ArgumentCaptor<Complaint> notifiedComplaintCaptor = ArgumentCaptor.forClass(Complaint.class);
+        verify(notificationClient).notifyComplaintCreated(notifiedComplaintCaptor.capture());
+        assertEquals(complaint.getId(), notifiedComplaintCaptor.getValue().getComplaintId());
     }
 
     @Test

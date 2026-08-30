@@ -427,6 +427,12 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.governance</artifactId>
+                <version>${carbon.identity.governance.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
                 <!-- Shipped by this accelerator itself (accelerators/dpdp-is/carbon-home/repository/components/lib),
                      not provided by the Identity Server - compile scope, not provided. -->
                 <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
@@ -457,6 +463,12 @@
                 <groupId>com.fasterxml.jackson.jaxrs</groupId>
                 <artifactId>jackson-jaxrs-json-provider</artifactId>
                 <version>${jackson.jaxrs.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.event</artifactId>
+                <version>${carbon.identity.event.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
@@ -557,6 +569,8 @@
         <carbon.identity.api.resource.mgt.version>7.10.156</carbon.identity.api.resource.mgt.version>
         <carbon.identity.inbound.auth.oauth.version>7.4.99</carbon.identity.inbound.auth.oauth.version>
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
+        <carbon.identity.event.version>7.10.156</carbon.identity.event.version>
+        <carbon.identity.governance.version>1.8.107</carbon.identity.governance.version>
         <!-- 2.9.10 is the first published version with the listener/hook APIs we need. IS 7.3.0
              actually ships an unpublished 2.9.0.3 hotfix (not on Nexus, so we can't compile
              against it) - decompiled and confirmed API-identical to 2.9.10, so the Import-Package
