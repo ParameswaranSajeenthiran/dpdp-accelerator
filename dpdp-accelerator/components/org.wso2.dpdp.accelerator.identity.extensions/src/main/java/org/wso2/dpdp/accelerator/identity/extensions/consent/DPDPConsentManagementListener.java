@@ -193,6 +193,19 @@ public class DPDPConsentManagementListener extends AbstractConsentManagementList
             recordStatusAudit(consentId, tenantDomain, previousStatus, currentStatus, actionType);
             captureSnapshotFromReceipt(tenantDomain, consentId, actionType, consentManager, receipt);
 
+            // An authorizer revoking their own authorization is still a revocation from the
+            // Event Notification Framework's perspective - fired on the dedicated consent.revoke
+            // topic, same as a direct revokeReceipt() call. Approve/reject are ordinary state
+            // transitions, covered by consent.update (its topic description already says "state
+            // transition notifications").
+            if (actionType == ActionType.AUTHORIZE_REVOKE) {
+                DPDPLifecycleEventUtil.notify(l -> l.onConsentRevoked(tenantDomain, consentId, previousStatus,
+                        getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
+            } else {
+                DPDPLifecycleEventUtil.notify(l -> l.onConsentUpdated(tenantDomain, consentId, previousStatus,
+                        currentStatus, getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
+            }
+
             // REJECTED/REVOKED can never resolve to EXPIRED (see DPDPConsentExpiryReconciler) -
             // only ACTIVE/PENDING are worth tracking. Re-checked on every call, so a consent that
             // moves back to ACTIVE/PENDING later (e.g. a rejected authorization gets re-approved)
