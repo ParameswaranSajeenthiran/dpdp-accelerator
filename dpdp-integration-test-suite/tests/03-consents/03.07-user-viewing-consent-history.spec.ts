@@ -64,7 +64,7 @@ test.describe('User viewing Consent History (UI)', () => {
     await detailPage.goto(consentId)
     await detailPage.openActionDialog('approve')
     await detailPage.confirmAction('approve')
-    await expect(userPage.getByText('Active', { exact: true })).toBeVisible()
+    await expect(userPage.getByText('Active', { exact: true }).first()).toBeVisible()
 
     // See the file-level comment above - the history queries need a fresh page load.
     await detailPage.goto(consentId)
@@ -164,7 +164,7 @@ test.describe('User viewing Consent History (UI)', () => {
     await detailPage.goto(consentId)
     await detailPage.openActionDialog('approve')
     await detailPage.confirmAction('approve')
-    await expect(userPage.getByText('Active', { exact: true })).toBeVisible()
+    await expect(userPage.getByText('Active', { exact: true }).first()).toBeVisible()
 
     // Chained without a reload - Revoke becomes available reactively once Active is reflected.
     await detailPage.openActionDialog('revoke')
