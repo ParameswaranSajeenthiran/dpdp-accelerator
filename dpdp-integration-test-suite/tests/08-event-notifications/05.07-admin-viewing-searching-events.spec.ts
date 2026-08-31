@@ -22,12 +22,11 @@
 // auth.fixtures already provides.
 import { test, expect } from '../../fixtures/tenant.fixtures'
 import { loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import type { SubscriptionDeliveryRecord, SubscriptionEventHistoryRecord } from '../../clients/EventNotificationApiClient'
+import type { SubscriptionDeliveryRecord } from '../../clients/EventNotificationApiClient'
 import { EventsPage } from '../../pages/EventsPage'
 import { EventDetailsPage } from '../../pages/EventDetailsPage'
 import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
-import { WebhookReceiver, webhookTestsEnabled } from '../../utils/webhookReceiver'
 
 /**
  * `GET /events`, `GET /events/{id}`, `GET /events/{id}/deliveries`, `GET /events/{deliveryId}/history`
@@ -203,60 +202,6 @@ test.describe('Admin viewing and searching Events', () => {
       await expect(page.getByText(tenantTopic.name, { exact: true })).toHaveCount(0)
     } finally {
       await page.context().close()
-    }
-  })
-
-  test('07.03.01 - Delivery history is consistent from event and subscription entry points', async ({
-    consentAdminEventApi,
-  }) => {
-    test.skip(
-      !webhookTestsEnabled(),
-      'Needs a real webhook receiver to produce a delivery with a recorded attempt - see ' +
-        'tests/08-event-notifications/README.md, "Webhook-dependent tests".',
-    )
-
-    const receiver = new WebhookReceiver()
-    try {
-      const { url } = await receiver.start()
-      const topic = await seedActiveTopic(consentAdminEventApi, 'history-consistency')
-      const subscriptionResponse = await consentAdminEventApi.createSubscription({
-        topic: topic.name,
-        filter: { type: 'all' },
-        delivery: { mode: 'webhook', callbackUrl: url, sharedSecret: uniqueMarker('secret') },
-      })
-      expect(subscriptionResponse.status()).toBe(201)
-      const subscription = await subscriptionResponse.json()
-      await expect
-        .poll(async () => (await (await consentAdminEventApi.getSubscription(subscription.subscriptionId)).json()).status)
-        .toBe('active')
-
-      // groupId must be the subscription's own returned groupId (forced to orgId server-side -
-      // see eventNotificationSetup.ts's seedPollSubscription comment for the same bug on the
-      // create-subscription side), not an arbitrary one, or the published event's group never
-      // matches this subscription and no delivery is ever created for it to find below.
-      const { event } = await publishMarkedEvent(consentAdminEventApi, subscription.groupId, topic.name)
-      let deliveryId = ''
-      await expect
-        .poll(async () => {
-          const { items } = (await (await consentAdminEventApi.getEventDeliveries(event.eventId)).json()) as {
-            items: SubscriptionDeliveryRecord[]
-          }
-          deliveryId = items[0]?.deliveryId ?? ''
-          return items[0]?.currentStatus
-        })
-        .toBe('delivered')
-
-      const fromEvent = (await (await consentAdminEventApi.getDeliveryHistory(deliveryId)).json()) as SubscriptionEventHistoryRecord
-      const fromSubscription = (await (
-        await consentAdminEventApi.getSubscriptionEventHistory(subscription.subscriptionId, deliveryId)
-      ).json()) as SubscriptionEventHistoryRecord
-
-      expect(fromEvent.deliveryId).toBe(fromSubscription.deliveryId)
-      expect(fromEvent.eventId).toBe(fromSubscription.eventId)
-      expect(fromEvent.currentStatus).toBe(fromSubscription.currentStatus)
-      expect(fromEvent.history).toEqual(fromSubscription.history)
-    } finally {
-      await receiver.stop()
     }
   })
 

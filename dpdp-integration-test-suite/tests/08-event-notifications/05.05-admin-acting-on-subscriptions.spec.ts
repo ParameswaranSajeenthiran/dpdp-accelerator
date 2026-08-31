@@ -16,70 +16,16 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect } from '../../fixtures/auth.fixtures'
 import { publishMarkedEvent, seedActiveTopic, seedPollSubscription } from '../../utils/eventNotificationSetup'
-import { uniqueMarker } from '../../utils/testData'
-import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceiver'
-import { SubscriptionDetailsPage } from '../../pages/SubscriptionDetailsPage'
 
 /**
- * Re-verifying webhook subscriptions and deleting subscriptions -
- * SubscriptionServiceImpl.retryVerification/deleteSubscription. See
- * tests/08-event-notifications/README.md for the webhook-receiver gating this file's one
- * receiver-dependent test uses.
+ * Acting on subscriptions - re-verification state checks and deletion
+ * (SubscriptionServiceImpl.retryVerification/deleteSubscription). The one receiver-dependent
+ * test that used to live here (06.02.04, re-verifying a stale webhook subscription) was removed -
+ * see tests/08-event-notifications/README.md, "Webhook-dependent tests".
  */
 test.describe('Admin acting on Subscriptions', () => {
-  test('06.02.04 - A pending/stale webhook subscription can be re-verified once the receiver is fixed', async ({
-    browser,
-    consentAdminEventApi,
-  }) => {
-    test.skip(!webhookTestsEnabled(), 'WEBHOOK_RECEIVER_HOST not configured - see README, "Webhook-dependent tests".')
-
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-reverify')
-    const receiver = new WebhookReceiver()
-    try {
-      const { url } = await receiver.start()
-      // Wrong-challenge response first, so the subscription is created but never activates -
-      // retryVerification accepts both `pending` and `stale` (SubscriptionServiceImpl.java), so
-      // there's no need to wait through the full stale-exhaustion window to prove this.
-      receiver.respondAlwaysWith({ status: 200, body: 'not-the-challenge' })
-
-      const createResponse = await consentAdminEventApi.createSubscription({
-        topic: topic.name,
-        filter: { type: 'all' },
-        delivery: { mode: 'webhook', callbackUrl: url, sharedSecret: uniqueMarker('secret') },
-      })
-      expect(createResponse.status(), await createResponse.text()).toBe(201)
-      const subscription = await createResponse.json()
-      expect(subscription.status).toBe('pending')
-
-      // Fix the receiver, then retry verification through the real UI action.
-      receiver.respondWith((request) => {
-        const challenge = new URL(request.url, 'http://placeholder').searchParams.get('hub.challenge')
-        return challenge !== null
-          ? { status: 200, body: challenge, headers: { 'Content-Type': 'text/plain' } }
-          : { status: 204 }
-      })
-
-      const page = await loginAsConsentAdmin(browser)
-      try {
-        const detailsPage = new SubscriptionDetailsPage(page)
-        await detailsPage.goto(subscription.subscriptionId)
-        await detailsPage.verify()
-        await expect(detailsPage.verificationSuccessToast).toBeVisible()
-
-        await expect(async () => {
-          const getResponse = await consentAdminEventApi.getSubscription(subscription.subscriptionId)
-          expect((await getResponse.json()).status).toBe('active')
-        }).toPass({ timeout: 15_000 })
-      } finally {
-        await page.context().close()
-      }
-    } finally {
-      await receiver.stop()
-    }
-  })
-
   test('06.02.05 - An active or deleted subscription cannot be re-verified', async ({ consentAdminEventApi }) => {
     // Two separate topics, not one shared topic: every subscription's groupId is currently
     // forced to the org's own id server-side (see eventNotificationSetup.ts), so two

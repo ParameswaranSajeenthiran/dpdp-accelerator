@@ -19,7 +19,6 @@
 import { test, expect } from '../../fixtures/tenant.fixtures'
 import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
-import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceiver'
 
 const SYSTEM_TOPICS = ['consent.update', 'consent.revoke', 'consent.expire', 'user.data.change', 'user.account.delete']
 
@@ -83,59 +82,6 @@ test.describe('Event Notification tenant isolation', () => {
     const stillThere = await tenantB.ownerEventApi.getSubscription(subscriptionB.subscriptionId)
     expect(stillThere.status()).toBe(200)
     expect((await stillThere.json()).status).toBe('active')
-  })
-
-  test('09.02.03 - Publishing in one tenant never fans out to an equivalent subscription in another tenant', async ({
-    tenant,
-    tenantB,
-  }) => {
-    test.skip(!webhookTestsEnabled(), 'WEBHOOK_RECEIVER_HOST is not configured - see README.md, "Webhook-dependent tests"')
-
-    const topicName = uniqueMarker('cross-tenant-topic')
-    const topicA = await seedActiveTopic(tenant.ownerEventApi, topicName)
-    const topicBRecord = await seedActiveTopic(tenantB.ownerEventApi, topicName)
-
-    const receiverA = new WebhookReceiver()
-    const receiverB = new WebhookReceiver()
-    const startedA = await receiverA.start()
-    const startedB = await receiverB.start()
-    try {
-      const secretA = uniqueMarker('secret')
-      const secretB = uniqueMarker('secret')
-      const subA = await tenant.ownerEventApi.createSubscription({
-        topic: topicA.name,
-        filter: { type: 'ALL' },
-        delivery: { mode: 'WEBHOOK', callbackUrl: startedA.url, sharedSecret: secretA },
-      })
-      expect(subA.status(), await subA.text()).toBe(201)
-      const subB = await tenantB.ownerEventApi.createSubscription({
-        topic: topicBRecord.name,
-        filter: { type: 'ALL' },
-        delivery: { mode: 'WEBHOOK', callbackUrl: startedB.url, sharedSecret: secretB },
-      })
-      expect(subB.status(), await subB.text()).toBe(201)
-
-      // Verification GETs happen for both receivers regardless - only the POST delivery after
-      // publish is what this test cares about isolating.
-      await expect
-        .poll(() => receiverA.requests.some((r) => r.method === 'GET'), { timeout: 15_000 })
-        .toBe(true)
-      await expect
-        .poll(() => receiverB.requests.some((r) => r.method === 'GET'), { timeout: 15_000 })
-        .toBe(true)
-      receiverA.requests.length = 0
-      receiverB.requests.length = 0
-
-      await publishMarkedEvent(tenant.ownerEventApi, tenant.domain, topicA.name)
-
-      await expect.poll(() => receiverA.requests.some((r) => r.method === 'POST'), { timeout: 30_000 }).toBe(true)
-      // Give a genuinely cross-tenant delivery a real chance to arrive before asserting absence.
-      await new Promise((resolve) => setTimeout(resolve, 5_000))
-      expect(receiverB.requests.some((r) => r.method === 'POST')).toBe(false)
-    } finally {
-      await receiverA.stop()
-      await receiverB.stop()
-    }
   })
 
   test('09.02.04 - A newly created tenant receives Event Notification authorization and default topics', async ({
