@@ -17,7 +17,8 @@
       <param-value>
         org.wso2.dpdp.accelerator.event.notifications.endpoint.api.SubscriptionEndpoint,
         org.wso2.dpdp.accelerator.event.notifications.endpoint.api.TopicEndpoint,
-        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.EventEndpoint
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.EventEndpoint,
+        org.wso2.dpdp.accelerator.event.notifications.endpoint.api.DeliveryEndpoint
       </param-value>
     </init-param>
     <init-param>

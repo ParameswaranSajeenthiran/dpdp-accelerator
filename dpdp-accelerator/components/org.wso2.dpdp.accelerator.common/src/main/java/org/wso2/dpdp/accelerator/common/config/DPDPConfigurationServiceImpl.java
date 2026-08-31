@@ -232,6 +232,36 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public boolean isEventNotificationPollingDefaultReturnImmediately() {
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_RETURN_IMMEDIATELY
+                : configParser.isEventNotificationPollingDefaultReturnImmediately();
+    }
+
+    @Override
+    public int getEventNotificationPollingDefaultMaxEvents() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS
+                : configParser.getEventNotificationPollingDefaultMaxEvents();
+    }
+
+    @Override
+    public int getEventNotificationPollingMaxEventsLimit() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT
+                : configParser.getEventNotificationPollingMaxEventsLimit();
+    }
+
+    @Override
+    public boolean isEventNotificationPollingRequestHmacValidationEnabled() {
+
+        return configParser == null
+                ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED
+                : configParser.isEventNotificationPollingRequestHmacValidationEnabled();
+    }
+
+    @Override
     public boolean isConsentHistoryEnabled() {
 
         return configParser == null || configParser.isConsentHistoryEnabled();

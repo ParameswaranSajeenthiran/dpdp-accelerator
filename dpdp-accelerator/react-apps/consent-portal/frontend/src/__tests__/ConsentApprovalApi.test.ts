@@ -57,45 +57,35 @@ function pathOf(request: SentRequest): string {
 }
 
 function summary(id: string, state = 'ACTIVE'): Record<string, unknown> {
-  return { id, subjectId: 'admin', serviceId: 'dpdp-portal', state, timestamp: 1785833979893 }
-}
-
-function detail(id: string, state = 'ACTIVE'): Record<string, unknown> {
   return {
-    ...summary(id, state),
+    id,
+    subjectId: 'admin',
+    serviceId: 'dpdp-portal',
+    state,
+    timestamp: 1785833979893,
     purposes: [{ id: 'purpose-1', name: 'marketing-spike', version: '1.0.0', elements: [] }],
     authorizations: [],
   }
 }
 
-/** Answers the list endpoint with `summaries` and each detail lookup by id. */
-function routeConsents(
-  summaries: Record<string, unknown>[],
-  detailFor: (id: string) => unknown = (id) => detail(id),
-): void {
-  transport.httpRequest.mockImplementation(async (config: SentRequest) => {
-    const path = pathOf(config)
-    if (path === SELF_CONSENTS) {
-      return { status: 200, data: summaries }
-    }
-    const id = decodeURIComponent(path.slice(`${SELF_CONSENTS}/`.length))
-    return { status: 200, data: detailFor(id) }
-  })
+function detail(id: string, state = 'ACTIVE'): Record<string, unknown> {
+  return summary(id, state)
 }
 
 describe('self-service consent API', () => {
-  it('over-fetches a page, slices it locally and expands each row', async () => {
+  it('requests attributes and relation, over-fetches a page and slices it locally', async () => {
     const summaries = ['c-0', 'c-1', 'c-2', 'c-3', 'c-4'].map((id) => summary(id))
-    routeConsents(summaries)
+    transport.httpRequest.mockResolvedValue({ status: 200, data: summaries })
 
     const page = await fetchMyConsents({
       limit: 2,
       offset: 1,
       state: 'PENDING',
       serviceId: 'dpdp-portal',
+      relation: 'ANY',
     })
 
-    const [list, ...details] = sentRequests()
+    const [list] = sentRequests()
     const url = new URL(list.url)
     expect(url.pathname).toBe(SELF_CONSENTS)
     expect(Object.fromEntries(url.searchParams)).toEqual({
@@ -104,40 +94,38 @@ describe('self-service consent API', () => {
       // The upstream filter takes a single state, so only the first is sent.
       state: 'PENDING',
       serviceId: 'dpdp-portal',
+      relation: 'ANY',
+      attributes: 'purposes,authorizations',
     })
 
-    expect(details.map(pathOf)).toEqual([`${SELF_CONSENTS}/c-1`, `${SELF_CONSENTS}/c-2`])
+    // No per-row detail lookup - attributes already inlined what the table needs.
+    expect(sentRequests()).toHaveLength(1)
     expect(page.data.map((consent) => consent.id)).toEqual(['c-1', 'c-2'])
-    expect(page.data[0].purposes[0].name).toBe('marketing-spike')
+    expect(page.data[0].purposes?.[0]?.name).toBe('marketing-spike')
     expect(page.metadata).toEqual({ total: summaries.length, offset: 1, count: 2, limit: 2 })
   })
 
-  it('omits the state filter when no status is selected', async () => {
-    routeConsents([])
+  it('omits the state, relation and filter params when unset', async () => {
+    transport.httpRequest.mockResolvedValue({ status: 200, data: [] })
 
     await fetchMyConsents({ limit: 10, offset: 0 })
 
-    expect(Object.fromEntries(new URL(sentRequests()[0].url).searchParams)).toEqual({ limit: '11' })
+    expect(Object.fromEntries(new URL(sentRequests()[0].url).searchParams)).toEqual({
+      limit: '11',
+      attributes: 'purposes,authorizations',
+    })
   })
 
-  it('falls back to the summary when a detail lookup fails', async () => {
-    transport.httpRequest.mockImplementation(async (config: SentRequest) => {
-      if (pathOf(config) === SELF_CONSENTS) {
-        return { status: 200, data: [summary('c-0'), summary('c-1')] }
-      }
-      if (pathOf(config).endsWith('c-1')) {
-        throw Object.assign(new Error('failed'), {
-          response: { status: 500, data: { code: 'CMT-65001', message: 'Server error' } },
-        })
-      }
-      return { status: 200, data: detail('c-0') }
+  it('passes a timestamp filter clause through unchanged', async () => {
+    transport.httpRequest.mockResolvedValue({ status: 200, data: [] })
+
+    await fetchMyConsents({ limit: 10, offset: 0, filter: 'timestamp ge 1700000000000' })
+
+    expect(Object.fromEntries(new URL(sentRequests()[0].url).searchParams)).toEqual({
+      limit: '11',
+      filter: 'timestamp ge 1700000000000',
+      attributes: 'purposes,authorizations',
     })
-
-    const page = await fetchMyConsents({ limit: 10, offset: 0 })
-
-    // One failed lookup must not blank the whole page.
-    expect(page.data.map((consent) => consent.id)).toEqual(['c-0', 'c-1'])
-    expect(page.data[1].purposes).toEqual([])
   })
 
   it('approves a pending consent through the authorize endpoint', async () => {
@@ -166,18 +154,70 @@ describe('self-service consent API', () => {
     expect(JSON.parse(String(authorize.data))).toEqual({ state: 'REJECTED' })
   })
 
-  it('refuses to authorize a consent that is no longer pending', async () => {
-    transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', 'REVOKED') })
+  it.each(['REVOKED', 'EXPIRED'])(
+    'refuses to approve a %s consent - a withdrawal or lapse stays final',
+    async (state) => {
+      transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', state) })
 
-    // A withdrawal has to stay final: the server itself would allow this.
-    const failure = approveMyConsent('db1f6e7a')
-    await expect(failure).rejects.toBeInstanceOf(APIError)
+      // The server itself would allow this; the client keeps it final regardless.
+      const failure = approveMyConsent('db1f6e7a')
+      await expect(failure).rejects.toBeInstanceOf(APIError)
+      await expect(failure).rejects.toMatchObject({
+        code: 'INVALID_CONSENT_STATE',
+        status: 409,
+        message: `This consent cannot be approved right now; it is ${state}.`,
+      })
+      expect(sentRequests().every((request) => request.method === 'GET')).toBe(true)
+    },
+  )
+
+  it('refuses to reject an already-rejected consent', async () => {
+    transport.httpRequest.mockResolvedValue({ status: 200, data: detail('db1f6e7a', 'REJECTED') })
+
+    const failure = rejectMyConsent('db1f6e7a')
     await expect(failure).rejects.toMatchObject({
       code: 'INVALID_CONSENT_STATE',
       status: 409,
-      message: 'Only a pending consent can be approved or rejected; this consent is REVOKED.',
+      message: 'This consent cannot be rejected right now; it is REJECTED.',
     })
     expect(sentRequests().every((request) => request.method === 'GET')).toBe(true)
+  })
+
+  it('allows approving a previously rejected consent - a rejection is reconsiderable', async () => {
+    transport.httpRequest
+      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'REJECTED') })
+      .mockResolvedValueOnce({ status: 204, data: undefined })
+
+    await expect(approveMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
+
+    const [, authorize] = sentRequests()
+    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'APPROVED' })
+  })
+
+  it("allows rejecting an active consent - withdraws just the caller's own approval", async () => {
+    transport.httpRequest
+      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'ACTIVE') })
+      .mockResolvedValueOnce({ status: 204, data: undefined })
+
+    await expect(rejectMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
+
+    const [, authorize] = sentRequests()
+    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'REJECTED' })
+  })
+
+  it("gates on the given authorizer's own decision, not the aggregate state", async () => {
+    transport.httpRequest.mockResolvedValue({
+      status: 200,
+      data: {
+        ...detail('c-1', 'PENDING'),
+        authorizations: [{ userId: 'bob', state: 'APPROVED', updatedTime: 1 }],
+      },
+    })
+
+    // The consent is still PENDING overall (waiting on other authorizers),
+    // but bob already approved, so bob cannot approve again.
+    const failure = approveMyConsent('c-1', 'bob')
+    await expect(failure).rejects.toMatchObject({ code: 'INVALID_CONSENT_STATE' })
   })
 
   it('revokes consent with POST and no request body', async () => {

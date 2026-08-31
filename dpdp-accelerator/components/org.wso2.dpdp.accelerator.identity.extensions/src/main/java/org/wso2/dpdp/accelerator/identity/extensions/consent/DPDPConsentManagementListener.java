@@ -107,21 +107,31 @@ public class DPDPConsentManagementListener extends AbstractConsentManagementList
     @Override
     public void postUpdateConsent(ReceiptUpdateInput updateInput, String tenantDomain) {
 
-        // ReceiptUpdateInput carries no state field - update never changes the consent's
-        // lifecycle status, so previous and current are the same captured pre-mutation value.
+        // Unlike revoke/delete, an update's outcome status isn't fixed in advance - pushing the
+        // expiry into the past or future can flip the resolved state (see
+        // DPDPConsentExpiryReconciler), so the current status is re-read live here, same as
+        // postAuthorizeConsent already does, instead of assuming it matches the pre-mutation value.
+        String consentId = updateInput.getConsentReceiptId();
         String previousStatus = takePreviousStatus();
-        recordStatusAudit(updateInput.getConsentReceiptId(), tenantDomain, previousStatus, previousStatus,
-                ActionType.UPDATE);
-        Receipt receipt = captureSnapshot(updateInput.getConsentReceiptId(), tenantDomain, ActionType.UPDATE);
-        DPDPLifecycleEventUtil.notify(l -> l.onConsentUpdated(tenantDomain, updateInput.getConsentReceiptId(),
-                previousStatus, previousStatus, getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
+        try {
+            PrivilegedConsentManager consentManager = DPDPIdentityExtensionDataHolder.getInstance()
+                    .getPrivilegedConsentManager();
+            Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
+            String currentStatus = receipt.getState();
+            recordStatusAudit(consentId, tenantDomain, previousStatus, currentStatus, ActionType.UPDATE);
+            captureSnapshotFromReceipt(tenantDomain, consentId, ActionType.UPDATE, consentManager, receipt);
+            DPDPLifecycleEventUtil.notify(l -> l.onConsentUpdated(tenantDomain, consentId, previousStatus,
+                    currentStatus, getActionBy(), DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
+        } catch (Exception e) {
+            LOG.error("Error reading the post-update state for consent: " + LogSanitizer.sanitize(consentId), e);
+        }
 
         // isClearExpiry() and getExpiryTime() are the two distinct signals an update can carry -
         // neither set means this update didn't touch expiry at all, so the tracker is left alone.
         if (updateInput.isClearExpiry()) {
-            untrackExpiry(updateInput.getConsentReceiptId(), tenantDomain);
+            untrackExpiry(consentId, tenantDomain);
         } else if (updateInput.getExpiryTime() != null) {
-            trackExpiry(updateInput.getConsentReceiptId(), tenantDomain, updateInput.getExpiryTime());
+            trackExpiry(consentId, tenantDomain, updateInput.getExpiryTime());
         }
     }
 
@@ -181,7 +191,7 @@ public class DPDPConsentManagementListener extends AbstractConsentManagementList
             String currentStatus = receipt.getState();
             ActionType actionType = mapAuthorizeActionType(authStatus);
             recordStatusAudit(consentId, tenantDomain, previousStatus, currentStatus, actionType);
-            captureAuthorizeSnapshot(tenantDomain, consentId, actionType, consentManager, receipt);
+            captureSnapshotFromReceipt(tenantDomain, consentId, actionType, consentManager, receipt);
 
             // REJECTED/REVOKED can never resolve to EXPIRED (see DPDPConsentExpiryReconciler) -
             // only ACTIVE/PENDING are worth tracking. Re-checked on every call, so a consent that
@@ -253,12 +263,12 @@ public class DPDPConsentManagementListener extends AbstractConsentManagementList
     }
 
     /**
-     * {@code postAuthorizeConsent} already has the receipt in hand from resolving the current
-     * status - reused here instead of a second, redundant fetch. Caught separately from that
-     * caller's own try block so a snapshot failure can't also skip the expiry tracking that
-     * follows it.
+     * Shared by {@code postAuthorizeConsent} and {@code postUpdateConsent} - both already have the
+     * receipt in hand from resolving the current status, so it's reused here instead of a second,
+     * redundant fetch. Caught separately from the caller's own try block so a snapshot failure
+     * can't also skip the expiry tracking that follows it there.
      */
-    private void captureAuthorizeSnapshot(String tenantDomain, String consentId, ActionType actionType,
+    private void captureSnapshotFromReceipt(String tenantDomain, String consentId, ActionType actionType,
             PrivilegedConsentManager consentManager, Receipt receipt) {
 
         try {

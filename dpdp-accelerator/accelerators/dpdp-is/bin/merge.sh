@@ -38,23 +38,21 @@ if [ ! -d "${WSO2_IS_HOME}/repository/components" ]; then
 fi
 
 WEBAPPS_PATH="${WSO2_IS_HOME}/repository/deployment/server/webapps"
-PORTAL_PATH="${WEBAPPS_PATH}/consent-portal"
 
-if [ -d "${PORTAL_PATH}" ]; then
-  # A stale exploded webapp from an older accelerator version would be
-  # redeployed alongside the fresh WAR otherwise.
-  echo "Removing the previously deployed consent portal"
-  rm -rf "${PORTAL_PATH}"
-fi
-rm -f "${WEBAPPS_PATH}/consent-portal.war"
-
-# Same as above for the complaint-mgt and event notification endpoints: a WAR finalName
-# change (context path rename) would otherwise leave the old context deployed alongside
-# the new one, both claiming overlapping paths under the same API root.
-echo "Removing the previously deployed complaint-mgt endpoint"
-find "${WEBAPPS_PATH}" -maxdepth 1 -name "api#dpdp#complaints*" -exec rm -rf {} +
-echo "Removing the previously deployed event notification endpoint"
-find "${WEBAPPS_PATH}" -maxdepth 1 -name "api#dpdp#event-notifications*" -exec rm -rf {} +
+# A stale exploded webapp from an older accelerator version would otherwise sit
+# alongside the fresh one - `cp -r` below only adds/overwrites, it never removes
+# a destination file the new build no longer has (a renamed WEB-INF/lib jar, a
+# deleted class). Driven off the accelerator's own webapps so a future webapp
+# is covered automatically instead of needing another hardcoded block.
+for webapp in "${ACCELERATOR_HOME}"/carbon-home/repository/deployment/server/webapps/*/; do
+  name="$(basename "${webapp}")"
+  target="${WEBAPPS_PATH}/${name}"
+  if [ -d "${target}" ]; then
+    echo "Removing the previously deployed ${name}"
+    rm -rf "${target}"
+  fi
+  rm -f "${WEBAPPS_PATH}/${name}.war"
+done
 
 # Likewise for dropins: a stale jar from an older accelerator version (renamed class,
 # version bump) would otherwise sit alongside the new one and load as a duplicate bundle.

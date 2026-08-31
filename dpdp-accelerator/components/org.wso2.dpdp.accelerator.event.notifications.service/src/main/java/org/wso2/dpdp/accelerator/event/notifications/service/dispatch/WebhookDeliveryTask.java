@@ -173,20 +173,11 @@ public class WebhookDeliveryTask implements Runnable {
         }
         String body = buildEnvelope();
         if (configurationService.isEventNotificationPayloadSigningEnabled()) {
-            com.fasterxml.jackson.databind.JsonNode eventPayload = ENVELOPE_MAPPER.readTree(body);
-            String serializedPayload = ENVELOPE_MAPPER.writeValueAsString(eventPayload);
-            String payloadHash = HmacSigner.sign(sharedSecret, serializedPayload);
-            EventPayloadSigningContext signingContext = new EventPayloadSigningContext(
-                    orgId,
-                    groupId,
-                    configurationService.getEventNotificationPayloadSigningAudience(),
-                    delivery.getDeliveryId(),
-                    delivery.getEventId(),
-                    System.currentTimeMillis() / 1000L,
-                    payloadHash,
-                    eventPayload);
             Map<String, Object> signedBody = new LinkedHashMap<>();
-            signedBody.put("signedPayload", payloadSigner.sign(signingContext));
+            signedBody.put("signedPayload", new SignedEventPayloadFactory(payloadSigner).sign(
+                    orgId, groupId, delivery.getSubscriptionId(), delivery.getDeliveryId(),
+                    delivery.getEventId(), topic, payload, sharedSecret,
+                    configurationService.getEventNotificationPayloadSigningAudience()));
             body = ENVELOPE_MAPPER.writeValueAsString(signedBody);
         }
         HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -204,8 +195,8 @@ public class WebhookDeliveryTask implements Runnable {
     /**
      * Wraps the raw event payload plus accelerator-managed routing metadata in a single
      * JSON object. The original payload is parsed back into a {@code JsonNode} so it stays
-     * an object/array/scalar under {@code "payload"} — not a stringified blob — preserving
-     * receivers' ability to do {@code body.payload.foo} lookups.
+     * an object/array/scalar under {@code "eventPayload"} — not a stringified blob — preserving
+     * receivers' ability to inspect the original event without a second JSON parse.
      *
      * <p>LinkedHashMap preserves field order so the serialized envelope is stable across
      * runs (helpful for snapshot tests and for receivers diffing the body byte-for-byte).
@@ -213,35 +204,14 @@ public class WebhookDeliveryTask implements Runnable {
      * failed.</p>
      */
     private String buildEnvelope() throws Exception {
-        Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("deliveryId", delivery.getDeliveryId());
-        envelope.put("eventId", delivery.getEventId());
-        envelope.put("subscriptionId", delivery.getSubscriptionId());
-        envelope.put("orgId", orgId);
-        envelope.put("groupId", groupId);
-        envelope.put("topic", topic);
-
-        Object payloadNode;
-        if (payload == null) {
-            throw new MalformedPayloadException("Event payload is null.", null);
-        } else {
-            com.fasterxml.jackson.databind.JsonNode parsed = null;
-            try {
-                parsed = ENVELOPE_MAPPER.readTree(payload);
-            } catch (Exception parseFailure) {
-                LOG.debug("Event payload for delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
-                        + "] was not parseable JSON; marking delivery as permanently failed.");
-                throw new MalformedPayloadException("Event payload is not valid JSON.", parseFailure);
-            }
-            if (parsed == null || parsed.isNull()) {
-                throw new MalformedPayloadException("Event payload is null.", null);
-            } else {
-                payloadNode = parsed;
-            }
+        try {
+            return SignedEventPayloadFactory.buildEnvelopeJson(orgId, groupId, delivery.getSubscriptionId(),
+                    delivery.getDeliveryId(), delivery.getEventId(), topic, payload);
+        } catch (Exception parseFailure) {
+            LOG.debug("Event payload for delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                    + "] was not parseable JSON; marking delivery as permanently failed.");
+            throw new MalformedPayloadException("Event payload is not valid JSON.", parseFailure);
         }
-        envelope.put("payload", payloadNode);
-
-        return ENVELOPE_MAPPER.writeValueAsString(envelope);
     }
 
     private void recordPermanentFailure(String responseCode) {

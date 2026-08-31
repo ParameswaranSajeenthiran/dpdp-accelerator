@@ -79,6 +79,14 @@ public interface DPDPConfigurationService {
 
     String getEventNotificationPayloadSigningAudience();
 
+    boolean isEventNotificationPollingDefaultReturnImmediately();
+
+    int getEventNotificationPollingDefaultMaxEvents();
+
+    int getEventNotificationPollingMaxEventsLimit();
+
+    boolean isEventNotificationPollingRequestHmacValidationEnabled();
+
     boolean isConsentHistoryEnabled();
 
     boolean isConsentHistorySnapshotEnabled();

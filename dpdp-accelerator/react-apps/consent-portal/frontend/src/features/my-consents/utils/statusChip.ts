@@ -24,14 +24,6 @@ export function normalizeConsentState(state: string): string {
   return state.trim().toUpperCase()
 }
 
-export function isConsentApprovableState(state: string): boolean {
-  return normalizeConsentState(state) === 'PENDING'
-}
-
-export function isConsentRejectableState(state: string): boolean {
-  return normalizeConsentState(state) === 'PENDING'
-}
-
 export function isConsentRevokableState(state: string): boolean {
   return normalizeConsentState(state) === 'ACTIVE'
 }

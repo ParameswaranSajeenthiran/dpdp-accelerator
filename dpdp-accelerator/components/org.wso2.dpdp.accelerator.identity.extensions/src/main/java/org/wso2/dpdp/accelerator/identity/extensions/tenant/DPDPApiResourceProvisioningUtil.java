@@ -31,6 +31,7 @@ import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtens
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -95,6 +96,16 @@ public final class DPDPApiResourceProvisioningUtil {
     public static final String COMPLAINTS_WRITE_SELF = "complaints:write:self";
     public static final String COMPLAINTS_READ_ANY = "complaints:read:any";
     public static final String COMPLAINTS_WRITE_ANY = "complaints:write:any";
+    private static final String ACCOUNT_SELF_SERVICE_API_IDENTIFIER = "/api/dpdp/account/v1/self";
+    private static final String ACCOUNT_SELF_SERVICE_API_NAME = "DPDP Account Self-Service";
+
+    /**
+     * Guards {@code DELETE /scim2/Me}. The resource below is virtual - it never serves traffic
+     * and exists only to mint this scope, which a deployment.toml resource.access_control rule
+     * requires in place of the stock internal_user_mgt_delete. That default would also authorize
+     * {@code DELETE /scim2/Users/{id}}, letting any portal user delete anybody.
+     */
+    public static final String ACCOUNT_SELF_DELETE = "account:self:delete";
 
     private DPDPApiResourceProvisioningUtil() {
 
@@ -201,6 +212,32 @@ public final class DPDPApiResourceProvisioningUtil {
             throws Exception {
 
         return authorizeAPIs(applicationId, tenantDomain, new String[]{COMPLAINT_API_IDENTIFIER});
+    }
+
+    /**
+     * Registers the virtual account self-service API resource, so the tenant has the
+     * {@code account:self:delete} scope. Idempotent, like every other registration here.
+     */
+    public static void registerAccountSelfServiceApi(String tenantDomain) throws Exception {
+
+        APIResourceManager apiResourceManager = DPDPIdentityExtensionDataHolder.getInstance().getApiResourceManager();
+        List<Scope> scopes = Collections.singletonList(
+                new Scope(null, ACCOUNT_SELF_DELETE, "Delete your own account",
+                        "Permission to delete your own user account."));
+        registerApiResourceIfAbsent(apiResourceManager, tenantDomain, ACCOUNT_SELF_SERVICE_API_IDENTIFIER,
+                ACCOUNT_SELF_SERVICE_API_NAME, "Self-service operations a user performs on their own account.",
+                scopes);
+    }
+
+    /**
+     * Authorizes the application for the account self-service API resource if not already
+     * authorized, and returns its scope names. Kept separate from the administrative
+     * authorizations because its scope goes to the user role only.
+     */
+    public static List<String> authorizeAccountSelfServiceApi(String applicationId, String tenantDomain)
+            throws Exception {
+
+        return authorizeAPIs(applicationId, tenantDomain, new String[]{ACCOUNT_SELF_SERVICE_API_IDENTIFIER});
     }
 
     private static void registerApiResourceIfAbsent(APIResourceManager apiResourceManager, String tenantDomain,

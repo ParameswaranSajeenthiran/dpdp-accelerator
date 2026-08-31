@@ -130,4 +130,35 @@ public class EventNotificationUrlValidatorTest {
         Assert.expectThrows(IllegalArgumentException.class,
                 () -> EventNotificationUrlValidator.validate("http://224.0.0.1/hook", allowedPorts, true));
     }
+
+    @Test
+    public void testAllowsHttpsEvidenceUrlWithoutResolvingItsHost() {
+
+        EventNotificationUrlValidator.validateEvidenceUrl(
+                "https://127.0.0.1/evidence/receipt.pdf?version=1");
+    }
+
+    @Test
+    public void testRejectsUnsafeEvidenceUrlForms() {
+
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validateEvidenceUrl("http://example.com/evidence"));
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validateEvidenceUrl("/relative/evidence"));
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validateEvidenceUrl("https://user:pass@example.com/evidence"));
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validateEvidenceUrl("https://example.com/evidence#fragment"));
+    }
+
+    @Test
+    public void testRejectsEvidenceUrlThatExceedsDatabaseColumnLength() {
+
+        StringBuilder url = new StringBuilder("https://example.com/");
+        while (url.length() <= 512) {
+            url.append('a');
+        }
+        Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationUrlValidator.validateEvidenceUrl(url.toString()));
+    }
 }

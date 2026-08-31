@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Arrays;
@@ -101,6 +102,19 @@ public class EventHandlerTest {
         } catch (RuntimeException e) {
             assertEquals(e.getMessage(), "boom");
         }
+    }
+
+    @Test
+    public void pollEventsForwardsSubscriptionAndRawSignedRequest() {
+        EventPollingResponseDTO expected = new EventPollingResponseDTO(false, Collections.emptyMap());
+        when(eventPublishService.pollEvents("org1", "g1", "subscription-1", "{}", "sha256=test"))
+                .thenReturn(expected);
+
+        EventPollingResponseDTO result = eventHandler.pollEvents(
+                "org1", "g1", "subscription-1", "{}", "sha256=test");
+
+        assertEquals(result, expected);
+        verify(eventPublishService).pollEvents("org1", "g1", "subscription-1", "{}", "sha256=test");
     }
 
     @Test

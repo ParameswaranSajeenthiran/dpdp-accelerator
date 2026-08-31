@@ -6,6 +6,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
@@ -21,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
@@ -73,8 +76,8 @@ public class DaoWritePathCoverageTest {
         assertTrue(dao.updateWebhookDeliveryStatus(connection, webhook));
         assertTrue(dao.addWebhookDeliveryAudit(connection, audit));
         assertTrue(dao.addPollDelivery(connection, poll));
-        dao.updatePollDeliveryStatuses(connection, "org-1", "group-1", Collections.singletonList("e-1"),
-                Collections.singletonList("e-2"));
+        dao.updatePollDeliveryStatusesByDeliveryIds(connection, "org-1", "group-1", "s-1",
+                Collections.singletonList("p-1"), Collections.emptyMap());
         assertTrue(dao.claimWebhookDelivery(connection, "d-1"));
         assertTrue(dao.claimStuckWebhookDelivery(connection, "d-1", now));
         assertTrue(dao.releaseWebhookDelivery(connection, "d-1", 1, now));
@@ -84,17 +87,18 @@ public class DaoWritePathCoverageTest {
     }
 
     @Test
-    public void pollCompletionNormalizesIdsAndRejectsOverlappingOutcomes() throws Exception {
+    public void pollStatusUpdatesAreScopedToTheSelectedSubscriptionAndPersistStructuredErrors() throws Exception {
         DeliveryDAOImpl dao = new DeliveryDAOImpl();
+        Map<String, PollDeliveryError> errors = new LinkedHashMap<>();
+        errors.put("delivery-2", new PollDeliveryError("processing_failed", "Unable to process event"));
 
-        dao.updatePollDeliveryStatuses(connection, " org-1 ", " group-1 ",
-                Arrays.asList(" event-1 ", "event-1", null, " "), Collections.emptyList());
+        dao.updatePollDeliveryStatusesByDeliveryIds(" org-1 ", " group-1 ", " subscription-1 ",
+                Collections.singletonList(" delivery-1 "), errors);
 
-        verify(statement, times(1)).addBatch();
-        verify(statement, times(1)).executeBatch();
-        expectThrows(IllegalArgumentException.class,
-                () -> dao.updatePollDeliveryStatuses(connection, "org-1", "group-1",
-                        Arrays.asList("event-1", "event-2"), Arrays.asList("event-3", " event-1 ")));
+        verify(statement, times(2)).addBatch();
+        verify(statement, times(2)).executeBatch();
+        verify(statement, times(2)).clearBatch();
+        verify(connection).prepareStatement(contains("SUBSCRIPTION_ID = ?"));
     }
 
     @Test
@@ -213,9 +217,11 @@ public class DaoWritePathCoverageTest {
         assertTrue(deliveries.claimWebhookDelivery(connection, " "));
         assertTrue(deliveries.claimStuckWebhookDelivery(connection, null, now));
         org.testng.Assert.assertFalse(deliveries.releaseWebhookDelivery(connection, "", 0, now));
-        deliveries.updatePollDeliveryStatuses("org", "group", Collections.emptyList(), Collections.emptyList());
+        deliveries.updatePollDeliveryStatusesByDeliveryIds("org", "group", "subscription",
+                Collections.emptyList(), Collections.emptyMap());
         expectThrows(IllegalArgumentException.class,
-                () -> deliveries.updatePollDeliveryStatuses("", "group", null, null));
+                () -> deliveries.updatePollDeliveryStatusesByDeliveryIds("", "group", "subscription",
+                        null, null));
     }
 
     private void setManagerDataSource(Object value) throws Exception {

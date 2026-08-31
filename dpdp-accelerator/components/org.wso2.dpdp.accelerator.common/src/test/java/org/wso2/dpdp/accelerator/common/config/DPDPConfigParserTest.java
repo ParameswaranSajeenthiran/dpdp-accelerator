@@ -90,6 +90,9 @@ public class DPDPConfigParserTest {
                 + "<WorkerShutdownTimeoutSeconds>6</WorkerShutdownTimeoutSeconds>"
                 + "<PayloadSigning><Enabled>false</Enabled>"
                 + "<Audience>custom-event-audience</Audience></PayloadSigning>"
+                + "<Polling><DefaultReturnImmediately>true</DefaultReturnImmediately>"
+                + "<DefaultMaxEvents>15</DefaultMaxEvents><MaxEventsLimit>75</MaxEventsLimit>"
+                + "<RequestHmacValidationEnabled>true</RequestHmacValidationEnabled></Polling>"
                 + "</EventNotifications>"
                 + "</DPDPAccelerator>").getBytes());
         CarbonTestEnvironment.configure(configDir);
@@ -174,6 +177,10 @@ public class DPDPConfigParserTest {
         assertEquals(parser.getEventNotificationWorkerShutdownTimeoutSeconds(), 6);
         assertTrue(!parser.isEventNotificationPayloadSigningEnabled());
         assertEquals(parser.getEventNotificationPayloadSigningAudience(), "custom-event-audience");
+        assertTrue(parser.isEventNotificationPollingDefaultReturnImmediately());
+        assertEquals(parser.getEventNotificationPollingDefaultMaxEvents(), 15);
+        assertEquals(parser.getEventNotificationPollingMaxEventsLimit(), 75);
+        assertTrue(parser.isEventNotificationPollingRequestHmacValidationEnabled());
     }
 
     @Test
@@ -212,6 +219,10 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 6);
         assertTrue(!service.isEventNotificationPayloadSigningEnabled());
         assertEquals(service.getEventNotificationPayloadSigningAudience(), "custom-event-audience");
+        assertTrue(service.isEventNotificationPollingDefaultReturnImmediately());
+        assertEquals(service.getEventNotificationPollingDefaultMaxEvents(), 15);
+        assertEquals(service.getEventNotificationPollingMaxEventsLimit(), 75);
+        assertTrue(service.isEventNotificationPollingRequestHmacValidationEnabled());
     }
 
     @Test
@@ -243,6 +254,10 @@ public class DPDPConfigParserTest {
         assertEquals(service.getEventNotificationWorkerShutdownTimeoutSeconds(), 5);
         assertTrue(service.isEventNotificationPayloadSigningEnabled());
         assertEquals(service.getEventNotificationPayloadSigningAudience(), "dpdp-event-notifications");
+        assertTrue(service.isEventNotificationPollingDefaultReturnImmediately());
+        assertEquals(service.getEventNotificationPollingDefaultMaxEvents(), 20);
+        assertEquals(service.getEventNotificationPollingMaxEventsLimit(), 100);
+        assertTrue(!service.isEventNotificationPollingRequestHmacValidationEnabled());
     }
 
     @Test

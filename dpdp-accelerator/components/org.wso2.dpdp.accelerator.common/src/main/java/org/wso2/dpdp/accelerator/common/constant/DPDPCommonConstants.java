@@ -84,6 +84,14 @@ public final class DPDPCommonConstants {
             "EventNotifications.PayloadSigning.Audience";
     public static final String EVENT_NOTIFICATIONS_LIFECYCLE_EVENTS_PUBLISHING_ENABLED =
             "EventNotifications.LifecycleEvents.PublishingEnabled";
+    public static final String EVENT_NOTIFICATIONS_POLLING_DEFAULT_RETURN_IMMEDIATELY =
+            "EventNotifications.Polling.DefaultReturnImmediately";
+    public static final String EVENT_NOTIFICATIONS_POLLING_DEFAULT_MAX_EVENTS =
+            "EventNotifications.Polling.DefaultMaxEvents";
+    public static final String EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT =
+            "EventNotifications.Polling.MaxEventsLimit";
+    public static final String EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED =
+            "EventNotifications.Polling.RequestHmacValidationEnabled";
 
     public static final int DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = 4;
     public static final long DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = 5L;
@@ -105,6 +113,10 @@ public final class DPDPCommonConstants {
     public static final String DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE =
             "dpdp-event-notifications";
     public static final boolean DEFAULT_EVENT_NOTIFICATIONS_LIFECYCLE_EVENTS_PUBLISHING_ENABLED = true;
+    public static final boolean DEFAULT_EVENT_NOTIFICATIONS_POLLING_RETURN_IMMEDIATELY = true;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS = 20;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT = 100;
+    public static final boolean DEFAULT_EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED = false;
 
     public static final String CONSENT_HISTORY_ENABLED = "ConsentHistory.Enabled";
     public static final String CONSENT_HISTORY_SNAPSHOT_ENABLED = "ConsentHistory.SnapshotEnabled";

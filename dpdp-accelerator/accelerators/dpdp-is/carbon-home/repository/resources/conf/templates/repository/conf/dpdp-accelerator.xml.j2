@@ -164,6 +164,28 @@
             <PublishingEnabled>true</PublishingEnabled>
             {% endif %}
         </LifecycleEvents>
+        <Polling>
+            {% if dpdp_accelerator.event_notifications.polling.default_return_immediately is defined %}
+            <DefaultReturnImmediately>{{dpdp_accelerator.event_notifications.polling.default_return_immediately}}</DefaultReturnImmediately>
+            {% else %}
+            <DefaultReturnImmediately>true</DefaultReturnImmediately>
+            {% endif %}
+            {% if dpdp_accelerator.event_notifications.polling.default_max_events is defined %}
+            <DefaultMaxEvents>{{dpdp_accelerator.event_notifications.polling.default_max_events}}</DefaultMaxEvents>
+            {% else %}
+            <DefaultMaxEvents>20</DefaultMaxEvents>
+            {% endif %}
+            {% if dpdp_accelerator.event_notifications.polling.max_events_limit is defined %}
+            <MaxEventsLimit>{{dpdp_accelerator.event_notifications.polling.max_events_limit}}</MaxEventsLimit>
+            {% else %}
+            <MaxEventsLimit>100</MaxEventsLimit>
+            {% endif %}
+            {% if dpdp_accelerator.event_notifications.polling.request_hmac_validation_enabled is defined %}
+            <RequestHmacValidationEnabled>{{dpdp_accelerator.event_notifications.polling.request_hmac_validation_enabled}}</RequestHmacValidationEnabled>
+            {% else %}
+            <RequestHmacValidationEnabled>false</RequestHmacValidationEnabled>
+            {% endif %}
+        </Polling>
     </EventNotifications>
     <ConsentHistory>
         {% if dpdp_accelerator.consent_history.enabled is defined %}

@@ -60,8 +60,8 @@ public class EventNotificationCommonConstants {
     public static final String ERROR_GETTING_PENDING_POLL_DELIVERIES = "Error getting pending poll deliveries for group [%s]";
     public static final String ERROR_UPDATING_POLL_DELIVERY_STATUSES = "Error updating poll delivery statuses for group [%s]";
     public static final String ERROR_UPDATING_POLL_DELIVERY_STATUS = "Error updating poll delivery status for [%s]";
-    public static final String ERROR_OVERLAPPING_POLL_COMPLETION_EVENT_IDS =
-            "An event ID cannot be present in both acknowledged and error completion lists.";
+    public static final String ERROR_OVERLAPPING_POLL_COMPLETION_DELIVERY_IDS =
+            "A delivery ID cannot be present in both acknowledged and error completion lists.";
     public static final String ERROR_LISTING_DELIVERIES_FOR_SUBSCRIPTION = "Error listing deliveries for subscription [%s]";
     public static final String ERROR_GETTING_SUBSCRIPTION_DELIVERY = "Error getting subscription delivery [%s]";
     public static final String ERROR_LISTING_ORG_DELIVERIES = "Error listing org deliveries for org [%s]";
@@ -86,4 +86,5 @@ public class EventNotificationCommonConstants {
 
     public static final int DEFAULT_LIMIT = 20;
     public static final int MAX_LIMIT = 100;
+    public static final int MAX_COMPLETION_EVIDENCE_URL_LENGTH = 512;
 }

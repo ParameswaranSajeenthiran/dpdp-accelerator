@@ -31,14 +31,15 @@ import {
   rejectMyConsent,
   revokeMyConsent,
 } from '../api/myConsentsApi'
-import { normalizeConsentState } from '../utils/statusChip'
 import type {
   ConsentDetail,
   ConsentListQueryParams,
   ConsentRecord,
   ConsentRegistryFilters,
 } from '../../../types/consent'
-import { isConsentState } from '../../../types/consent'
+import { toConsentRowFromSummary } from '../../../utils/consentRows'
+import { buildTimestampFilter } from '../../../utils/filterGrammar'
+import { endOfDayMillis, parseDateOnly, startOfDayMillis } from '../../../utils/dateTime'
 
 export interface ConsentListResult {
   rows: ConsentRecord[]
@@ -46,31 +47,22 @@ export interface ConsentListResult {
   hasNextPage: boolean
 }
 
-export function toConsentRow(consent: ConsentDetail): ConsentRecord {
-  const normalizedState = normalizeConsentState(consent.state)
-
-  if (!isConsentState(normalizedState)) {
-    throw new Error(`Unsupported consent state received from API: ${consent.state}`)
-  }
-
-  return {
-    id: consent.id,
-    subjectId: consent.subjectId,
-    serviceId: consent.serviceId,
-    state: normalizedState,
-    timestamp: consent.timestamp,
-    purposes: consent.purposes.map((purpose) => purpose.name),
-  }
-}
-
 function toListParams(
   filters: ConsentRegistryFilters,
   page: number,
   rowsPerPage: number,
 ): ConsentListQueryParams {
+  const afterDate = parseDateOnly(filters.createdAfter)
+  const beforeDate = parseDateOnly(filters.createdBefore)
+
   return {
     state: filters.state === 'All' ? undefined : filters.state,
     serviceId: filters.serviceId.trim() || undefined,
+    relation: filters.relation,
+    filter: buildTimestampFilter(
+      afterDate ? startOfDayMillis(afterDate) : undefined,
+      beforeDate ? endOfDayMillis(beforeDate) : undefined,
+    ),
     limit: rowsPerPage,
     offset: page * rowsPerPage,
   }
@@ -89,7 +81,7 @@ export function useConsentListQuery(
       const response = await fetchMyConsents(params)
 
       return {
-        rows: response.data.map(toConsentRow),
+        rows: response.data.map(toConsentRowFromSummary),
         hasNextPage: response.data.length >= params.limit,
       }
     },
@@ -121,12 +113,16 @@ function useConsentLifecycleMutation(
   })
 }
 
-export function useApproveConsentMutation(): UseMutationResult<unknown, Error, string> {
-  return useConsentLifecycleMutation(approveMyConsent)
+export function useApproveConsentMutation(
+  currentUserId: string,
+): UseMutationResult<unknown, Error, string> {
+  return useConsentLifecycleMutation((consentID) => approveMyConsent(consentID, currentUserId))
 }
 
-export function useRejectConsentMutation(): UseMutationResult<unknown, Error, string> {
-  return useConsentLifecycleMutation(rejectMyConsent)
+export function useRejectConsentMutation(
+  currentUserId: string,
+): UseMutationResult<unknown, Error, string> {
+  return useConsentLifecycleMutation((consentID) => rejectMyConsent(consentID, currentUserId))
 }
 
 export function useRevokeConsentMutation(): UseMutationResult<unknown, Error, string> {
