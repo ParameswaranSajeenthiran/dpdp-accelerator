@@ -273,6 +273,13 @@ public final class DPDPConfigParser {
                 .map(Boolean::parseBoolean).orElse(true);
     }
 
+    public boolean isEventNotificationLifecycleEventsPublishingEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.EVENT_NOTIFICATIONS_LIFECYCLE_EVENTS_PUBLISHING_ENABLED)
+                .map(Boolean::parseBoolean)
+                .orElse(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_LIFECYCLE_EVENTS_PUBLISHING_ENABLED);
+    }
+
     public boolean isEventNotificationPayloadSigningEnabled() {
 
         return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED,

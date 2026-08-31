@@ -18,12 +18,14 @@
 
 import { QueryClient } from '@tanstack/react-query'
 
-const STALE_TIME_IN_MS = 0.5 * 60 * 1000
-
+// Zero staleTime so every navigation to a page re-fetches instead of serving cached data -
+// several views (event subscriptions, event deliveries, consent status) change status
+// entirely server-side (webhook verification, delivery workers, the expiry job), with no
+// frontend action to hang a targeted cache invalidation off of.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: STALE_TIME_IN_MS,
+      staleTime: 0,
       retry: 1,
       refetchOnWindowFocus: false,
     },

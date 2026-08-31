@@ -24,6 +24,7 @@ import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
@@ -31,12 +32,13 @@ import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHis
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
+import org.wso2.dpdp.accelerator.identity.extensions.util.DPDPLifecycleEventUtil;
 
 import java.util.List;
 
 /**
  * Detects and records a consent's {@code EXPIRE} transition - called both from
- * {@link DPDPConsentHistoryListener}'s {@code pre*} hooks (a consent already lapsed being touched
+ * {@link DPDPConsentManagementListener}'s {@code pre*} hooks (a consent already lapsed being touched
  * again before the scheduled job catches it) and from the periodic
  * {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJob}. Both
  * paths funnel through {@link #expireConsentIfDue}, so the "claim, then record" logic exists in
@@ -75,7 +77,7 @@ public final class DPDPConsentExpiryReconciler {
             }
             recordExpiry(orgId, consentId);
         } catch (Exception e) {
-            LOG.error("Error expiring consent: " + sanitize(consentId), e);
+            LOG.error("Error expiring consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
@@ -126,6 +128,9 @@ public final class DPDPConsentExpiryReconciler {
         String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, authorizations);
         consentHistoryService.recordHistorySnapshot(orgId, consentId, ActionType.EXPIRE, snapshotJson,
                 ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
+
+        DPDPLifecycleEventUtil.notify(l -> l.onConsentExpired(orgId, consentId, previousStatus,
+                DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
     }
 
     private static String getLastKnownStatus(String orgId, String consentId,
@@ -134,10 +139,5 @@ public final class DPDPConsentExpiryReconciler {
         PagedResult<ConsentStatusAuditRecord> latest = consentHistoryService.getStatusAuditHistory(orgId, consentId,
                 1, 0);
         return latest.getRecords().isEmpty() ? null : latest.getRecords().get(0).getCurrentStatus();
-    }
-
-    private static String sanitize(String value) {
-
-        return value == null ? null : value.replaceAll("[\r\n]", "");
     }
 }

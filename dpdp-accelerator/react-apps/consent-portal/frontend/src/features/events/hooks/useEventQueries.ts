@@ -16,16 +16,8 @@
  * under the License.
  */
 
-import {
-  keepPreviousData,
-  type UseQueryResult,
-  useQuery,
-} from '@tanstack/react-query'
-import type {
-  EventFilters,
-  EventListQueryParams,
-  EventRecord,
-} from '../../../types/event'
+import { keepPreviousData, type UseQueryResult, useQuery } from '@tanstack/react-query'
+import type { EventFilters, EventListQueryParams, EventRecord } from '../../../types/event'
 import type { SubscriptionEventHistoryRecord } from '../../../types/subscription'
 import {
   fetchEventById,
@@ -50,6 +42,7 @@ function toListParams(
     status: filters.status && filters.status !== 'All' ? filters.status : undefined,
     topic: filters.topic && filters.topic !== 'All' ? filters.topic : undefined,
     groupId: filters.groupId.trim() || undefined,
+    subscriptionId: filters.subscriptionId.trim() || undefined,
     limit: rowsPerPage,
     offset: page * rowsPerPage,
   }

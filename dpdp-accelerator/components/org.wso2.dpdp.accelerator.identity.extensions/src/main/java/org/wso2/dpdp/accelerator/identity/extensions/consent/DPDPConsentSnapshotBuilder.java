@@ -29,7 +29,10 @@ import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshot
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.PurposeSnapshot;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentSnapshotDTO.ServiceSnapshot;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +44,30 @@ public final class DPDPConsentSnapshotBuilder {
 
     private DPDPConsentSnapshotBuilder() {
 
+    }
+
+    /**
+     * Flattens a receipt's purposes across every service into a deduplicated list. {@code null}
+     * for a {@code null} receipt rather than throwing, so the lifecycle notification can still
+     * fire with no purposes.
+     */
+    public static List<String> resolvePurposes(Receipt receipt) {
+
+        if (receipt == null || receipt.getServices() == null) {
+            return null;
+        }
+        Set<String> purposes = new LinkedHashSet<>();
+        for (ReceiptService service : receipt.getServices()) {
+            if (service.getPurposes() == null) {
+                continue;
+            }
+            for (ConsentPurpose purpose : service.getPurposes()) {
+                if (purpose.getPurpose() != null) {
+                    purposes.add(purpose.getPurpose());
+                }
+            }
+        }
+        return new ArrayList<>(purposes);
     }
 
     public static String buildSnapshotJson(Receipt receipt, List<ConsentAuthorization> authorizations) {
