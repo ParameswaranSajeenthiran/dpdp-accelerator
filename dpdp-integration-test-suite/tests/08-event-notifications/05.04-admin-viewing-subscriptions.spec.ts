@@ -101,9 +101,14 @@ test.describe('Admin viewing Subscriptions', () => {
       await subscriptionsPage.search(webhookTopic.name)
       await expect(subscriptionsPage.rowBySubscriptionId(webhookSub.subscriptionId)).toHaveCount(0)
 
+      // The search term is already webhookTopic.name from above and doesn't change again here -
+      // each FILTER change gets its own checkpoint before the next one fires, so the two requests
+      // can't resolve out of order and leave the table on a stale intermediate combination (see
+      // 05.02.04's identical fix for the full explanation). webhookSub (search already narrows to
+      // it) becoming visible is real, verifiable proof each filter change actually took effect.
       await subscriptionsPage.filterByStatus('All Statuses')
+      await expect(subscriptionsPage.rowBySubscriptionId(webhookSub.subscriptionId)).toBeVisible()
       await subscriptionsPage.filterByDeliveryMode('Webhook')
-      await subscriptionsPage.search(webhookTopic.name)
       await expect(subscriptionsPage.rowBySubscriptionId(webhookSub.subscriptionId)).toBeVisible()
 
       await subscriptionsPage.filterByDeliveryMode('Poll')
