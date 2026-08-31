@@ -22,6 +22,7 @@ import { annotateSnapshot, diffConsentSnapshots } from '../utils/consentSnapshot
 
 function buildSnapshot(overrides: Partial<ConsentSnapshot> = {}): ConsentSnapshot {
   return {
+    state: 'ACTIVE',
     expiryTime: 1_700_000_000_000,
     properties: { region: 'EU' },
     authorizations: [
@@ -46,6 +47,22 @@ describe('diffConsentSnapshots', () => {
     expect(diff.isInitial).toBe(true)
     expect(diff.hasChanges).toBe(true)
     expect(diff.properties).toEqual([{ key: 'region', kind: 'added', after: 'EU' }])
+  })
+
+  it('detects a state change, e.g. an EXPIRED consent revived to ACTIVE', () => {
+    const diff = diffConsentSnapshots(
+      buildSnapshot({ state: 'EXPIRED' }),
+      buildSnapshot({ state: 'ACTIVE' }),
+    )
+
+    expect(diff.state).toEqual({ before: 'EXPIRED', after: 'ACTIVE', changed: true })
+    expect(diff.hasChanges).toBe(true)
+  })
+
+  it('does not report a state change for the initial (no "before") snapshot', () => {
+    const diff = diffConsentSnapshots(undefined, buildSnapshot({ state: 'ACTIVE' }))
+
+    expect(diff.state).toEqual({ before: undefined, after: 'ACTIVE', changed: false })
   })
 
   it('detects an expiryTime change', () => {
@@ -188,6 +205,23 @@ describe('annotateSnapshot', () => {
         { key: 'dataCategory', before: 'financial', kind: 'removed' },
       ]),
     )
+  })
+
+  it('marks a state change', () => {
+    const before = buildSnapshot({ state: 'EXPIRED' })
+    const after = buildSnapshot({ state: 'ACTIVE' })
+    const diff = diffConsentSnapshots(before, after)
+    const annotated = annotateSnapshot(after, diff)
+
+    expect(annotated.state).toEqual({ value: 'ACTIVE', before: 'EXPIRED', kind: 'changed' })
+  })
+
+  it('leaves state unchanged when it did not change', () => {
+    const snapshot = buildSnapshot({ state: 'ACTIVE' })
+    const diff = diffConsentSnapshots(snapshot, buildSnapshot({ state: 'ACTIVE' }))
+    const annotated = annotateSnapshot(snapshot, diff)
+
+    expect(annotated.state).toEqual({ value: 'ACTIVE', before: undefined, kind: 'unchanged' })
   })
 
   it('marks an expiryTime change and leaves the rest unchanged', () => {

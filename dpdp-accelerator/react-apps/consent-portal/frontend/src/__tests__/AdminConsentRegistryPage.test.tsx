@@ -104,9 +104,12 @@ describe('AdminConsentRegistryPage', () => {
       limit: 10,
       after: undefined,
       before: undefined,
-      subjectId: undefined,
+      userId: undefined,
+      relation: 'ANY',
       serviceId: undefined,
       state: undefined,
+      purposeId: undefined,
+      filter: undefined,
     })
   })
 

@@ -16,10 +16,11 @@ tags:
       anything in this webapp.
   - name: self
     description: >-
-      Requires the named consent:<resource>:view:self scope; ownership of the specific consent is
-      additionally checked in code by comparing the caller's username against the consent's PII
-      principal ID - the scope only gates whether the caller can reach the route at all, never
-      which row they're allowed to see.
+      Requires the named consent:<resource>:view:self scope; involvement in the specific consent
+      is additionally checked in code - the caller must either be the consent's PII principal, or
+      be listed as one of its authorizers (e.g. a guardian authorizing on behalf of a dependent).
+      The scope only gates whether the caller can reach the route at all, never which row they're
+      allowed to see.
 paths:
   /consents/{consentId}/status-history:
     get:

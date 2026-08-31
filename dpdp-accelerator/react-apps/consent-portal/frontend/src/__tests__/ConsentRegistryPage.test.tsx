@@ -192,8 +192,18 @@ describe('ConsentRegistryPage', () => {
     expect(await screen.findByText('Unable to load consents right now.')).toBeInTheDocument()
   })
 
-  it('does not render approve action for rejected consents', async () => {
+  it('offers approve (not revoke) for a rejected consent, so it can be reconsidered', async () => {
     mockConsentSearch([buildConsent({ state: 'REJECTED' })])
+
+    renderConsentRegistryPage(createQueryClient())
+
+    expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
+    expect(screen.getAllByLabelText('Approve').length).toBeGreaterThan(0)
+    expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
+  })
+
+  it('does not render approve action for a revoked consent - a withdrawal stays final', async () => {
+    mockConsentSearch([buildConsent({ state: 'REVOKED' })])
 
     renderConsentRegistryPage(createQueryClient())
 
@@ -227,6 +237,8 @@ describe('ConsentRegistryPage', () => {
     expect(listParams()).toEqual({
       state: 'PENDING',
       serviceId: 'dpdp-portal',
+      relation: 'ANY',
+      filter: undefined,
       limit: 25,
       offset: 50,
     })
@@ -243,6 +255,22 @@ describe('ConsentRegistryPage', () => {
       'aria-current',
       'page',
     )
+  })
+
+  it('locks state and relation to the pending queue - narrowing either means leaving this view', async () => {
+    mockConsentSearch([])
+
+    renderConsentRegistryPage(createQueryClient(), '/consents?state=PENDING&relation=AUTHORIZER')
+
+    await screen.findByRole('heading', { name: 'My Pending Consents' })
+    expect(screen.getByRole('combobox', { name: 'State' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveTextContent('All')
+    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    // Relation is forced to ANY server-side too, not just visually locked.
+    expect(consentsApi.fetchMyConsents.mock.calls[0]?.[0]).toMatchObject({ relation: 'ANY' })
   })
 
   it('ignores the removed CREATED status in the URL', async () => {

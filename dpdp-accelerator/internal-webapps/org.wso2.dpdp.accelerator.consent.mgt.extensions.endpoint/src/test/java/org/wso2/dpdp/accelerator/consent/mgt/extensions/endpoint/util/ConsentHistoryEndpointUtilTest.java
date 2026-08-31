@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
+import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryResponseDTO;
@@ -29,6 +30,7 @@ import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.Conse
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -85,6 +87,54 @@ public class ConsentHistoryEndpointUtilTest {
 
         expectThrows(ConsentHistoryEndpointException.class,
                 () -> ConsentHistoryEndpointUtil.requireOwner("jdoe@carbon.super", "other@carbon.super"));
+    }
+
+    @Test
+    public void isInvolvedTreatsTheSubjectAsInvolved() {
+
+        assertTrue(ConsentHistoryEndpointUtil.isInvolved("jdoe@carbon.super", "jdoe@carbon.super",
+                Collections.emptyList()));
+    }
+
+    @Test
+    public void isInvolvedTreatsAListedAuthorizerAsInvolved() {
+
+        List<ConsentAuthorization> authorizations = Collections
+                .singletonList(new ConsentAuthorization("consent-1234", "guardian@carbon.super",
+                        ConsentAuthorization.AuthorizationStatus.APPROVED, 1L, "PARENT"));
+
+        assertTrue(ConsentHistoryEndpointUtil.isInvolved("guardian@carbon.super", "child@carbon.super",
+                authorizations));
+    }
+
+    @Test
+    public void isInvolvedRejectsAnUninvolvedCaller() {
+
+        List<ConsentAuthorization> authorizations = Collections
+                .singletonList(new ConsentAuthorization("consent-1234", "guardian@carbon.super",
+                        ConsentAuthorization.AuthorizationStatus.APPROVED, 1L, "PARENT"));
+
+        assertFalse(ConsentHistoryEndpointUtil.isInvolved("stranger@carbon.super", "child@carbon.super",
+                authorizations));
+        assertFalse(ConsentHistoryEndpointUtil.isInvolved("stranger@carbon.super", "child@carbon.super", null));
+        assertFalse(ConsentHistoryEndpointUtil.isInvolved(null, "child@carbon.super", authorizations));
+    }
+
+    @Test
+    public void requireInvolvedThrowsForAnUninvolvedCaller() {
+
+        expectThrows(ConsentHistoryEndpointException.class, () -> ConsentHistoryEndpointUtil
+                .requireInvolved("stranger@carbon.super", "child@carbon.super", Collections.emptyList()));
+    }
+
+    @Test
+    public void requireInvolvedPassesForAListedAuthorizer() {
+
+        List<ConsentAuthorization> authorizations = Collections
+                .singletonList(new ConsentAuthorization("consent-1234", "guardian@carbon.super",
+                        ConsentAuthorization.AuthorizationStatus.APPROVED, 1L, "PARENT"));
+
+        ConsentHistoryEndpointUtil.requireInvolved("guardian@carbon.super", "child@carbon.super", authorizations);
     }
 
     @Test

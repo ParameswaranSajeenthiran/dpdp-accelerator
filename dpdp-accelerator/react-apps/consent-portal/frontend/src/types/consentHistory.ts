@@ -78,11 +78,11 @@ export const CONSENT_LIFECYCLE_FETCH_LIMIT = 100
 
 /**
  * The snapshot stored per history entry is a trimmed view of the consent mgt core `Receipt`
- * (`DPDPConsentSnapshotBuilder` on the server) and carries far more than these three fields
- * (state, piiPrincipalId, language, services/purposes/elements). Only `expiryTime`,
- * `properties` and `authorizations` are typed here because those are the only fields
- * `ReceiptUpdateInput` (the update model IS's own consent-mgt core accepts a PATCH against)
- * can actually change - the full-snapshot view only ever needs to diff what update can affect.
+ * (`DPDPConsentSnapshotBuilder` on the server) and carries far more than these fields
+ * (piiPrincipalId, language, services/purposes/elements aren't typed here). `state` is included
+ * because, despite `ReceiptUpdateInput` having no `state` field of its own, an update can still
+ * change the consent's resolved status - e.g. extending `expiryTime` back into the future revives
+ * an EXPIRED consent to ACTIVE - so it's a real, diffable per-entry value, not a constant.
  */
 export interface ConsentSnapshotAuthorization {
   userId: string
@@ -92,6 +92,7 @@ export interface ConsentSnapshotAuthorization {
 }
 
 export interface ConsentSnapshot {
+  state: string
   expiryTime?: number
   properties?: Record<string, string>
   authorizations?: ConsentSnapshotAuthorization[]

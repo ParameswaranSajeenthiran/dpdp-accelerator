@@ -58,7 +58,8 @@ describe('administrative consent API', () => {
     await fetchAdminConsents({
       limit: 25,
       after: 'Mg==',
-      subjectId: 'admin',
+      userId: 'admin',
+      relation: 'AUTHORIZER',
       serviceId: 'dpdp-portal',
       state: 'ACTIVE',
     })
@@ -68,11 +69,24 @@ describe('administrative consent API', () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       limit: '25',
       after: 'Mg==',
-      subjectId: 'admin',
+      userId: 'admin',
+      relation: 'AUTHORIZER',
       serviceId: 'dpdp-portal',
       state: 'ACTIVE',
+      attributes: 'purposes,authorizations',
     })
     expect(sentRequest().method).toBe('GET')
+  })
+
+  it('never sends relation without a userId, even if one is passed', async () => {
+    respondWith({ totalResults: 0, links: [], Consents: [] })
+
+    await fetchAdminConsents({ limit: 10, relation: 'ANY' })
+
+    expect(Object.fromEntries(new URL(sentRequest().url).searchParams)).toEqual({
+      limit: '10',
+      attributes: 'purposes,authorizations',
+    })
   })
 
   it('sends a before cursor when paging backwards and omits unset filters', async () => {
@@ -83,6 +97,7 @@ describe('administrative consent API', () => {
     expect(Object.fromEntries(new URL(sentRequest().url).searchParams)).toEqual({
       limit: '10',
       before: 'MQ==',
+      attributes: 'purposes,authorizations',
     })
   })
 
@@ -99,6 +114,7 @@ describe('administrative consent API', () => {
       limit: '10',
       purposeId: 'purpose-1',
       filter: 'properties.dataCategory eq "personal"',
+      attributes: 'purposes,authorizations',
     })
   })
 
@@ -111,28 +127,24 @@ describe('administrative consent API', () => {
     expect(buildConsentPropertyFilter('', 'personal')).toBeUndefined()
   })
 
-  it('expands each row with a detail lookup, keeping the summary when one fails', async () => {
-    // The Identity Server's list rows carry no purposes; the table shows them.
+  it('returns list rows as-is, relying on attributes to inline purposes and authorizations', async () => {
     const summaries = [
-      { id: 'consent-1', subjectId: 'alice', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
-      { id: 'consent-2', subjectId: 'bob', serviceId: 'svc', state: 'ACTIVE', timestamp: 2 },
+      {
+        id: 'consent-1',
+        subjectId: 'alice',
+        serviceId: 'svc',
+        state: 'ACTIVE',
+        timestamp: 1,
+        purposes: [{ id: 'p1', name: 'marketing' }],
+        authorizations: [{ userId: 'bob', state: 'APPROVED', updatedTime: 2 }],
+      },
     ]
-    transport.httpRequest
-      .mockResolvedValueOnce({
-        status: 200,
-        data: { totalResults: 2, links: [], Consents: summaries },
-      })
-      .mockResolvedValueOnce({
-        status: 200,
-        data: { ...summaries[0], purposes: [{ id: 'p1', name: 'marketing' }] },
-      })
-      .mockRejectedValueOnce(new Error('detail lookup failed'))
+    respondWith({ totalResults: 1, links: [], Consents: summaries })
 
     const response = await fetchAdminConsents({ limit: 10 })
 
-    expect(response.Consents[0]?.purposes).toEqual([{ id: 'p1', name: 'marketing' }])
-    expect(response.Consents[1]).toEqual(summaries[1])
-    expect(response.totalResults).toBe(2)
+    expect(response.Consents).toEqual(summaries)
+    expect(transport.httpRequest).toHaveBeenCalledTimes(1)
   })
 
   it('reads next and previous cursors out of the returned links', () => {

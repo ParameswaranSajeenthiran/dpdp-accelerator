@@ -36,6 +36,7 @@ import type {
   AnnotatedField,
   AnnotatedProperty,
   AnnotatedSnapshot,
+  AnnotatedState,
 } from '../../../utils/consentSnapshotDiff'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { getConsentStateChipColor, getConsentStateLabelKey } from '../utils/statusChip'
@@ -69,6 +70,43 @@ function ChangeTag({ kind }: { kind: AnnotatedChangeKind }): React.JSX.Element |
     <Typography variant="caption" sx={{ color: changeColor(kind), whiteSpace: 'nowrap' }}>
       {t(`consentRegistry.history.snapshot.${kind}`)}
     </Typography>
+  )
+}
+
+function StateSummary({ state }: { state: AnnotatedState }): React.JSX.Element {
+  const { t } = useTranslation('common')
+
+  return (
+    <Box>
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        sx={{ textTransform: 'uppercase', letterSpacing: 0.4, display: 'block' }}
+      >
+        {t('consentRegistry.details.table.state')}
+      </Typography>
+      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.5 }}>
+        {state.kind === 'changed' && state.before ? (
+          <>
+            <Chip
+              size="small"
+              variant="outlined"
+              color={getConsentStateChipColor(state.before)}
+              label={t(`consentRegistry.status.${getConsentStateLabelKey(state.before)}`)}
+            />
+            <Typography variant="body2" color="text.disabled">
+              →
+            </Typography>
+          </>
+        ) : null}
+        <Chip
+          size="small"
+          variant="outlined"
+          color={getConsentStateChipColor(state.value)}
+          label={t(`consentRegistry.status.${getConsentStateLabelKey(state.value)}`)}
+        />
+      </Stack>
+    </Box>
   )
 }
 
@@ -268,16 +306,19 @@ function SnapshotSection({
 }
 
 /**
- * Deliberately shows only the fields the Identity Server's own consent update path
+ * Shows the resulting state plus the fields the Identity Server's own consent update path
  * (`ReceiptUpdateInput`) can actually change - expiry, properties, authorizations - not the full
- * stored snapshot. `state`/`piiPrincipalId`/`language`/`services`/`purposes`/`elements` never
- * change via update, so diffing them would only ever add noise to this view.
+ * stored snapshot. `state` is included even though `ReceiptUpdateInput` has no `state` field of
+ * its own, because an update can still change the consent's resolved status (e.g. reviving an
+ * EXPIRED consent by extending its expiry). `piiPrincipalId`/`language`/`services`/`purposes`/
+ * `elements` never change via update, so diffing those would only ever add noise to this view.
  */
 function ConsentSnapshotView({ snapshot }: ConsentSnapshotViewProps): React.JSX.Element {
   const { t } = useTranslation('common')
 
   return (
     <Stack spacing={2}>
+      <StateSummary state={snapshot.state} />
       <FieldsSummary fields={snapshot.fields} />
 
       <SnapshotSection title={t('catalog.fields.properties')}>

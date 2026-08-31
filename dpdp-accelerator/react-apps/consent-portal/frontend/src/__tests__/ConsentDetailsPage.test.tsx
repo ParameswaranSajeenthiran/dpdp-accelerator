@@ -136,12 +136,20 @@ describe('ConsentDetailsPage lifecycle actions', () => {
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
-  it('shows revoke only for active consents', async () => {
+  it("shows revoke and reject for active consents - reject withdraws just the caller's own approval", async () => {
     renderConsentDetailsPage('ACTIVE')
 
     expect(await screen.findByRole('button', { name: 'Revoke' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+  })
+
+  it('shows approve only for a rejected consent, so the caller can reconsider', async () => {
+    renderConsentDetailsPage('REJECTED')
+
+    expect(await screen.findByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
   it('hides lifecycle actions without the consent write scope', async () => {
@@ -155,8 +163,8 @@ describe('ConsentDetailsPage lifecycle actions', () => {
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
-  it.each(['REJECTED', 'REVOKED', 'EXPIRED'])(
-    'shows no lifecycle action for %s consents',
+  it.each(['REVOKED', 'EXPIRED'])(
+    'shows no lifecycle action for %s consents - a withdrawal or lapse stays final',
     async (state) => {
       renderConsentDetailsPage(state)
 
@@ -233,6 +241,6 @@ describe('ConsentDetailsPage content', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Consent is not in PENDING state.')
     })
-    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID)
+    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID, 'test-user')
   })
 })

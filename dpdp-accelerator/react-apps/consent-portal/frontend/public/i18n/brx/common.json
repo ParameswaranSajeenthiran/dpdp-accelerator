@@ -93,7 +93,14 @@
       "serviceId": "सिबिथाइ",
       "removeConsentIdForState": "रायजोनि फिल्टारखौ बाहायनो थाखाय गनायथि आइ.डि. फिल्टारखौ बोखार।",
       "propertyFilterLabel": "गनायथि सम्फथि",
-      "removeConsentIdForSubject": "इउजार आइ.डि. फिल्टारखौ बाहायनो थाखाय कन्सेन्ट आइ.डि. फिल्टारखौ बोखार।"
+      "removeConsentIdForSubject": "इउजार आइ.डि. फिल्टारखौ बाहायनो थाखाय कन्सेन्ट आइ.डि. फिल्टारखौ बोखार।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "गासै बोखार",
       "clearAriaLabel": "गासै फिल्टरफोरखौ बोखार",
       "serviceSearchPlaceholder": "सिबिथायजों नागिर",
-      "state": "रायजो"
+      "state": "रायजो",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "गनायथिफोरखौ लोड खालामफुगासिनो...",
