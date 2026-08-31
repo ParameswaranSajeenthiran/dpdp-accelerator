@@ -124,6 +124,15 @@ enable_v2_api = true
 [tenant_mgt]
 enable_email_domain = true
 
+# enable_email_domain above is a behavioral hint, not a validator - the stock username
+# regex (^[^\s*?%]{3,50}$) still accepts any non-whitespace string. This is the actual
+# enforcement, matching the WSO2 Financial Services/Open Banking accelerator's own
+# user-mgt.xml: usernames must look like an email address.
+[user_store.properties]
+UsernameJavaRegEx = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"
+UsernameJavaScriptRegEx = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"
+UsernameJavaRegExViolationErrorMsg = "Username must be a valid email address."
+
 # Lets the Console's flows view read consent purposes.
 [console.flows.scopes]
 read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_purpose_view"]
