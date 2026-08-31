@@ -147,7 +147,6 @@
         "status": "স্ট্যাটাস",
         "updated": "আপডেট হয়েছে",
         "resources": "রিসোর্স",
-        "eventType": "ইভেন্টের প্রকার",
         "date": "তারিখ",
         "time": "সময়",
         "state": "রাজ্য"
@@ -811,6 +810,7 @@
         "description": "বিবরণ",
         "descriptionPlaceholder": "আপনার অভিযোগ বিস্তারিতভাবে বর্ণনা করুন",
         "descriptionHelp": "আমাদের এটি দ্রুত সমাধান করতে সাহায্য করার জন্য যতটা সম্ভব বিশদ অন্তর্ভুক্ত করুন।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "সংযুক্তি (ঐচ্ছিক)",
         "attachmentsHelp": "PDF, DOCX, PNG, বা JPG, প্রতিটি সর্বাধিক {{maxSize}} পর্যন্ত।",
         "uploadButton": "ফাইল আপলোড করুন"

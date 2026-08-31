@@ -147,7 +147,6 @@
         "status": "స్థితి",
         "updated": "నవీకరించబడింది",
         "resources": "వనరులు",
-        "eventType": "ఈవెంట్ రకం",
         "date": "తేదీ",
         "time": "సమయం",
         "state": "రాష్ట్రం"
@@ -811,6 +810,7 @@
         "description": "వివరణ",
         "descriptionPlaceholder": "మీ ఫిర్యాదును వివరంగా తెలపండి",
         "descriptionHelp": "దీన్ని త్వరగా పరిష్కరించడంలో మాకు సహాయపడటానికి సాధ్యమైనంత ఎక్కువ వివరాలను చేర్చండి.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "జోడింపులు (ఐచ్ఛికం)",
         "attachmentsHelp": "PDF, DOCX, PNG, లేదా JPG ఫైల్ ఒక్కొక్కటి {{maxSize}} వరకు అనుమతించబడుతుంది.",
         "uploadButton": "ఫైళ్లను అప్‌లోడ్ చేయండి"

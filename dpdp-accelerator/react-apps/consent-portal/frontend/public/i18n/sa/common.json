@@ -147,7 +147,6 @@
         "status": "स्थितिः",
         "updated": "अद्यतनीकृतम्",
         "resources": "संसाधनानि",
-        "eventType": "घटना-प्रकारः",
         "date": "दिनाङ्कः",
         "time": "समयः",
         "state": "राज्यम्"
@@ -811,6 +810,7 @@
         "description": "विवरणम्",
         "descriptionPlaceholder": "भवतः आक्षेपस्य विस्तृतं वर्णनं कुर्वन्तु",
         "descriptionHelp": "अस्य शीघ्रं समाधानार्थं यथासम्भवं विस्तृतं विवरणं समावेशयन्तु।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "संलग्नानि (वैकल्पिकम्)",
         "attachmentsHelp": "PDF, DOCX, PNG, अथवा JPG प्रत्येकं {{maxSize}} पर्यन्तम्।",
         "uploadButton": "सञ्चिकाः उद्भारयन्तु"

@@ -147,7 +147,6 @@
         "status": "স্থিতি",
         "updated": "আপডেট কৰা হৈছে",
         "resources": "সম্পদসমূহ",
-        "eventType": "ইভেণ্টৰ প্ৰকাৰ",
         "date": "তাৰিখ",
         "time": "সময়",
         "state": "ৰাজ্য"
@@ -811,6 +810,7 @@
         "description": "বিৱৰণ",
         "descriptionPlaceholder": "আপোনাৰ অভিযোগটো বিতংভাৱে বৰ্ণনা কৰক",
         "descriptionHelp": "আমি যাতে ইয়াক সোনকালে সমাধান কৰিব পাৰোঁ তাৰ বাবে যিমান সম্ভৱ সিমান তথ্য অন্তৰ্ভুক্ত কৰক।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "সংলগ্ন ফাইলসমূহ (ঐচ্ছিক)",
         "attachmentsHelp": "PDF, DOCX, PNG, বা JPG প্ৰতিটো {{maxSize}} লৈকে।",
         "uploadButton": "ফাইল আপলোড কৰক"

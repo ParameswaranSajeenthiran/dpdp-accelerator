@@ -147,7 +147,6 @@
         "status": "थासारि",
         "updated": "अपडेट खालामबाय",
         "resources": "संपदफोर",
-        "eventType": "जाथायनि रोखोम",
         "date": "अक्ट'",
         "time": "सम",
         "state": "रायजो"
@@ -811,6 +810,7 @@
         "description": "बेजाय दिन्थिनाय",
         "descriptionPlaceholder": "नोंथांनि अजतखौ गुवारै फोरमाय",
         "descriptionHelp": "गोख्रै सुस्रांनो हेफाजात होनाय गासै मिथिसारनाय सोदेर।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "जोबथापनाय फिफार",
         "attachmentsHelp": "PDF, DOCX, PNG, एबा JPG मोनफ्रोमआव {{maxSize}} सिम।",
         "uploadButton": "फाइलफोर आपलोड खालाम"

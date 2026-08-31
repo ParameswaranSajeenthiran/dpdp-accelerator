@@ -147,7 +147,6 @@
         "status": "حالت",
         "updated": "اپڊيٽ ڪيو ويو",
         "resources": "وسيلا",
-        "eventType": "واقعي جو قسم",
         "date": "تاريخ",
         "time": "وقت",
         "state": "State"
@@ -811,6 +810,7 @@
         "description": "تفصيل",
         "descriptionPlaceholder": "پنهنجي شڪايت تفصيل سان بيان ڪريو",
         "descriptionHelp": "جيترو ٿي سگهي تفصيل شامل ڪريو ته جيئن اسان کي جلدي حل ڪرڻ ۾ مدد ملي.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "منسلڪات (اختياري)",
         "attachmentsHelp": "PDF، DOCX، PNG، يا JPG، هر هڪ جي سائيز {{maxSize}} تائين.",
         "uploadButton": "فائل اپ لوڊ ڪريو"

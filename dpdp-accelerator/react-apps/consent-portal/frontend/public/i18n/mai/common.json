@@ -147,7 +147,6 @@
         "status": "स्थिति",
         "updated": "अद्यतन कएल गेल",
         "resources": "संसाधन सभ",
-        "eventType": "घटना प्रकार",
         "date": "तिथि",
         "time": "समय",
         "state": "राज्य"
@@ -811,6 +810,7 @@
         "description": "विवरण",
         "descriptionPlaceholder": "अपन शिकायतक विस्तार सँ वर्णन करू",
         "descriptionHelp": "अहि केँ जल्दी समाधान करै मे सहायता लेल यथासंभव विवरण शामिल करू।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "संलग्नक (वैकल्पिक)",
         "attachmentsHelp": "प्रत्येक {{maxSize}} तक PDF, DOCX, PNG, वा JPG।",
         "uploadButton": "फ़ाइल अपलोड करू"

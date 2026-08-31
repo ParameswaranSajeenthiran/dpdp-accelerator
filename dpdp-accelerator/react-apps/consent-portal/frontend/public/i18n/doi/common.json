@@ -147,7 +147,6 @@
         "status": "स्टेटस",
         "updated": "अपडेट कीता",
         "resources": "संसाधन",
-        "eventType": "इवेंट प्रकार",
         "date": "तरीक",
         "time": "समैं",
         "state": "राज्य"
@@ -811,6 +810,7 @@
         "description": "विवरण",
         "descriptionPlaceholder": "तुंदी शिकायत दा विस्तार कन्नै वर्णन करो",
         "descriptionHelp": "जितना हो सके उतना ब्यौरा देओ तां जे अस इसगी जल्दी हल करी सकियै।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "अटैचमेंट (मर्जी ऐ)",
         "attachmentsHelp": "PDF, DOCX, PNG, जां JPG हर इक {{maxSize}} तकर।",
         "uploadButton": "फाईलां अपलोड करो"

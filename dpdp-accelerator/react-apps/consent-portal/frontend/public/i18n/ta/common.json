@@ -147,7 +147,6 @@
         "status": "நிலை",
         "updated": "புதுப்பிக்கப்பட்டது",
         "resources": "வளங்கள்",
-        "eventType": "நிகழ்வு வகை",
         "date": "தேதி",
         "time": "நேரம்",
         "state": "மாநிலம்"
@@ -811,6 +810,7 @@
         "description": "விளக்கம்",
         "descriptionPlaceholder": "உங்கள் புகாரை விரிவாக விவரிக்கவும்",
         "descriptionHelp": "இதை விரைவாகத் தீர்க்க எங்களுக்கு உதவ முடிந்தவரை கூடுதல் விவரங்களைச் சேர்க்கவும்.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "இணைப்புகள் (விருப்பத்தேர்வு)",
         "attachmentsHelp": "PDF, DOCX, PNG, அல்லது JPG கோப்புகள் ஒவ்வொன்றும் அதிகபட்சம் {{maxSize}} வரை.",
         "uploadButton": "கோப்புகளைப் பதிவேற்று"

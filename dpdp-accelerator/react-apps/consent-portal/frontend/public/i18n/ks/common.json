@@ -147,7 +147,6 @@
         "status": "سٹیٹَس",
         "updated": "اپڈیٹ",
         "resources": "وسائِل",
-        "eventType": "ایوینٹ قِسم",
         "date": "تاریخ",
         "time": "وَقت",
         "state": "رِیاسَتھ"
@@ -811,6 +810,7 @@
         "description": "تَفصِیل",
         "descriptionPlaceholder": "شِکایَت بَپتھ پُورٕ تَفصِیل لِکھیو",
         "descriptionHelp": "زِیادٕ کھوتہٕ زِیادٕ تَفصِیل شامِل کِریو تاکہ جَلد حَل گَچھیے۔",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "نَسلِ گَنڈ (اِختیاری)",
         "attachmentsHelp": "PDF, DOCX, PNG یا JPG - فی فایِل {{maxSize}} تام۔",
         "uploadButton": "فایِلہِ اَپلوڈ کِریو"

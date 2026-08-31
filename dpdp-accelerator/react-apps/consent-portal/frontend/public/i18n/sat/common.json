@@ -147,7 +147,6 @@
         "status": "ᱥᱴᱮᱴᱚᱥ",
         "updated": "ᱟᱯᱰᱮᱴ ᱟᱠᱟᱱᱟ",
         "resources": "ᱨᱤᱥᱳᱨᱥ",
-        "eventType": "ᱤᱵᱷᱮᱱᱴ ᱴᱟᱭᱤᱯ",
         "date": "ᱢᱟᱹᱦᱤᱛ",
         "time": "ᱚᱠᱛᱚ",
         "state": "ᱯᱚᱱᱚᱛ"
@@ -811,6 +810,7 @@
         "description": "ᱵᱤᱵᱚᱨᱚᱱ",
         "descriptionPlaceholder": "ᱟᱢᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ ᱵᱤᱥᱛᱟᱨ ᱛᱮ ᱞᱟᱹᱭ ᱢᱮ",
         "descriptionHelp": "ᱞᱚᱜᱚᱱ ᱥᱚᱞᱦᱮ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸ ᱛᱤᱱᱟᱹᱜ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱵᱤᱵᱚᱨᱚᱱ ᱮᱢ ᱢᱮ।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "ᱚᱴᱮᱪᱢᱮᱱᱴ (ᱚᱯᱥᱚᱱᱮᱞ)",
         "attachmentsHelp": "PDF, DOCX, PNG, ᱮᱨ JPG ᱡᱚᱛᱚ ᱠᱷᱚᱱ ᱵᱟᱹᱲᱛᱤ {{maxSize}} ᱦᱟᱹᱵᱤᱡ।",
         "uploadButton": "ᱯᱷᱟᱭᱤᱞ ᱟᱯᱞᱳᱰ ᱢᱮ"

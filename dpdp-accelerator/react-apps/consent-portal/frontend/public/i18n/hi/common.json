@@ -147,7 +147,6 @@
         "status": "स्थिति",
         "updated": "अद्यतन तिथि",
         "resources": "संसाधन",
-        "eventType": "इवेंट का प्रकार",
         "date": "दिनांक",
         "time": "समय",
         "state": "राज्य"
@@ -811,6 +810,7 @@
         "description": "विवरण",
         "descriptionPlaceholder": "अपनी शिकायत का विस्तार से वर्णन करें",
         "descriptionHelp": "जल्द से जल्द समाधान में हमारी मदद करने के लिए अधिक से अधिक विवरण शामिल करें।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "संलग्नक (वैकल्पिक)",
         "attachmentsHelp": "प्रत्येक फाइल अधिकतम {{maxSize}} तक PDF, DOCX, PNG या JPG में हो सकती है।",
         "uploadButton": "फाइलें अपलोड करें"

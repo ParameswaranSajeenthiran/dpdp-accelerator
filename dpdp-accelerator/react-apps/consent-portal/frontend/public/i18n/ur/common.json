@@ -147,7 +147,6 @@
         "status": "اسٹیٹس",
         "updated": "اپ ڈیٹ شدہ",
         "resources": "وسائل",
-        "eventType": "تقریب کی قسم",
         "date": "تاریخ",
         "time": "وقت",
         "state": "ریاست"
@@ -811,6 +810,7 @@
         "description": "تفصیل",
         "descriptionPlaceholder": "اپنی شکایت کی تفصیلی وضاحت کریں",
         "descriptionHelp": "اسے جلد حل کرنے میں ہماری مدد کے لیے زیادہ سے زیادہ تفصیلات شامل کریں۔",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "منسلکات (اختیاری)",
         "attachmentsHelp": "ہر ایک فائل {{maxSize}} تک PDF, DOCX, PNG, یا JPG میں۔",
         "uploadButton": "فائلیں اپ لوڈ کریں"

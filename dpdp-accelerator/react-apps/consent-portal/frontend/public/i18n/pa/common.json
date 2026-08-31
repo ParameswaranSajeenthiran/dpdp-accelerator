@@ -147,7 +147,6 @@
         "status": "ਸਥਿਤੀ",
         "updated": "ਅੱਪਡੇਟ ਕੀਤਾ ਗਿਆ",
         "resources": "ਸਰੋਤ",
-        "eventType": "ਘਟਨਾ ਦੀ ਕਿਸਮ",
         "date": "ਤਾਰੀਖ",
         "time": "ਸਮਾਂ",
         "state": "ਰਾਜ"
@@ -811,6 +810,7 @@
         "description": "ਵੇਰਵਾ",
         "descriptionPlaceholder": "ਆਪਣੀ ਸ਼ਿਕਾਇਤ ਦਾ ਵਿਸਥਾਰ ਨਾਲ ਵਰਣਨ ਕਰੋ",
         "descriptionHelp": "ਇਸਨੂੰ ਜਲਦੀ ਹੱਲ ਕਰਨ ਵਿੱਚ ਸਾਡੀ ਮਦਦ ਕਰਨ ਲਈ ਜਿੰਨਾ ਹੋ ਸਕੇ ਵਧੇਰੇ ਵੇਰਵਾ ਸ਼ਾਮਲ ਕਰੋ।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "ਅਟੈਚਮੈਂਟਾਂ (ਵਿਕਲਪਿਕ)",
         "attachmentsHelp": "PDF, DOCX, PNG, ਜਾਂ JPG ਹਰੇਕ {{maxSize}} ਤੱਕ।",
         "uploadButton": "ਫਾਈਲਾਂ ਅੱਪਲੋਡ ਕਰੋ"

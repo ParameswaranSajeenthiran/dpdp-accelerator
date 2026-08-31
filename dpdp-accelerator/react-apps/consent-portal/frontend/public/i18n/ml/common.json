@@ -147,7 +147,6 @@
         "status": "സ്റ്റാറ്റസ്",
         "updated": "അപ്ഡേറ്റ് ചെയ്തത്",
         "resources": "വിഭവങ്ങൾ",
-        "eventType": "ഇവന്റ് തരം",
         "date": "തീയതി",
         "time": "സമയം",
         "state": "സംസ്ഥാനം"
@@ -811,6 +810,7 @@
         "description": "വിവരണം",
         "descriptionPlaceholder": "നിങ്ങളുടെ പരാതി വിശദമായി വിവരിക്കുക",
         "descriptionHelp": "ഇത് വേഗത്തിൽ പരിഹരിക്കാൻ ഞങ്ങളെ സഹായിക്കുന്നതിന് കഴിയുന്നത്ര വിശദാംശങ്ങൾ ഉൾപ്പെടുത്തുക.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "അറ്റാച്ച്മെന്റുകൾ (ഓപ്ഷണൽ)",
         "attachmentsHelp": "ഓരോന്നും {{maxSize}} വരെയുള്ള PDF, DOCX, PNG, അല്ലെങ്കിൽ JPG.",
         "uploadButton": "ഫയലുകൾ അപ്‌ലോഡ് ചെയ്യുക"

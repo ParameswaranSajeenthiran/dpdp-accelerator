@@ -147,7 +147,6 @@
         "status": "स्थिती",
         "updated": "अद्ययावत केलां",
         "resources": "संसाधनां",
-        "eventType": "घडणुकेचो प्रकार",
         "date": "तारीख",
         "time": "वेळ",
         "state": "राज्य"
@@ -811,6 +810,7 @@
         "description": "वर्णन",
         "descriptionPlaceholder": "तुमचे कागाळीचे सविस्तर वर्णन करात",
         "descriptionHelp": "आमकां ही कागाळ बेगीन सोडवपाक मदत जावची म्हणून जावंक शकता तितली सविस्तर म्हायती दियात.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "जोडपत्र (विकल्पीक)",
         "attachmentsHelp": "PDF, DOCX, PNG, वा JPG दर एकाची मर्यादा {{maxSize}}.",
         "uploadButton": "फायली अपलोड करात"

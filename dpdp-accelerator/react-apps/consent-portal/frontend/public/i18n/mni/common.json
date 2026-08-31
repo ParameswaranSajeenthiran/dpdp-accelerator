@@ -147,7 +147,6 @@
         "status": "ফিভম",
         "updated": "নৌহোংবা",
         "resources": "রিসোর্সশিং",
-        "eventType": "থৌদোক মখাল",
         "date": "তারিখ",
         "time": "তম্পাক/সময়",
         "state": "State"
@@ -811,6 +810,7 @@
         "description": "অকুপ্পা সন্দোকনা তাকপা",
         "descriptionPlaceholder": "নহাৎকী ৱাকৎ অসি অকুপ্পা মরোলগা লোয়ননা ইবিয়ু",
         "descriptionHelp": "যাম্না থুনা লোইশিননবগীদমক য়াংনা অকুপ্পা মরোল হাপচিনবিয়ু।",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "ফাইলশিং (অপাম্বা ওইরবদি)",
         "attachmentsHelp": "PDF, DOCX, PNG, বা JPG ফাইল অমা হেক্তদা {{maxSize}} ফাওবা।",
         "uploadButton": "ফাইল আপলোড তৌবা"

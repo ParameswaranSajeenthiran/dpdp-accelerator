@@ -147,7 +147,6 @@
         "status": "ಸ್ಥಿತಿ",
         "updated": "ನವೀಕರಿಸಲಾಗಿದೆ",
         "resources": "ಸಂಪನ್ಮೂಲಗಳು",
-        "eventType": "ಈವೆಂಟ್ ಪ್ರಕಾರ",
         "date": "ದಿನಾಂಕ",
         "time": "ಸಮಯ",
         "state": "ರಾಜ್ಯ"
@@ -811,6 +810,7 @@
         "description": "ವಿವರಣೆ",
         "descriptionPlaceholder": "ನಿಮ್ಮ ದೂರನ್ನು ವಿವರವಾಗಿ ವಿವರಿಸಿ",
         "descriptionHelp": "ಇದನ್ನು ತ್ವರಿತವಾಗಿ ಪರಿಹರಿಸಲು ನಮಗೆ ಸಹಾಯ ಮಾಡಲು ಸಾಧ್ಯವಾದಷ್ಟು ವಿವರಗಳನ್ನು ಸೇರಿಸಿ.",
+        "descriptionPiiWarning": "Please don't include sensitive personal information such as your email, address, or bank account details.",
         "attachments": "ಲಗತ್ತುಗಳು (ಐಚ್ಛಿಕ)",
         "attachmentsHelp": "PDF, DOCX, PNG, ಅಥವಾ JPG ಪ್ರತಿಯೊಂದೂ {{maxSize}} ವರೆಗೆ.",
         "uploadButton": "ಫೈಲ್‌ಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ"
