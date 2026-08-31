@@ -89,6 +89,12 @@ app_password= "dashboard"
 # IS_ADMIN_PASSWORD placeholders that configure.sh substitutes.
 # =============================================================================
 
+# Registers the DPDP user lifecycle event handler with the
+# IS extension point so it is triggered correctly.
+[[event_handler]]
+name = "dpdpUserLifecycleEventHandler"
+subscriptions = ["POST_DELETE_USER", "POST_SET_USER_CLAIMS"]
+
 [datasource.WSO2DPDP_DB]
 id = "WSO2DPDP_DB"
 url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
@@ -380,6 +386,11 @@ system_topics_auto_create_enabled = true
 [dpdp_accelerator.event_notifications.payload_signing]
 enabled = true
 audience = "dpdp-event-notifications"
+
+[dpdp_accelerator.event_notifications.lifecycle_events]
+#Controls whether consent and user lifecycle events are automatically published to the Event Notification
+# Framework for the five predefined topics.
+publishing_enabled = true
 
 [dpdp_accelerator.event_notifications.polling]
 default_return_immediately = true

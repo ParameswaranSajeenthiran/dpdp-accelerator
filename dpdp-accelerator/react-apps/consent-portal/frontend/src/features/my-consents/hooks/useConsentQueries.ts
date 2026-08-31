@@ -109,6 +109,8 @@ function useConsentLifecycleMutation(
     onSuccess: async (_data, consentID): Promise<void> => {
       await queryClient.invalidateQueries({ queryKey: ['consents'] })
       await queryClient.invalidateQueries({ queryKey: ['consent', consentID] })
+      await queryClient.invalidateQueries({ queryKey: ['consent-status-history', consentID] })
+      await queryClient.invalidateQueries({ queryKey: ['consent-full-history', consentID] })
     },
   })
 }

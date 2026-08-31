@@ -73,6 +73,8 @@ public interface DPDPConfigurationService {
 
     boolean isEventNotificationSystemTopicsAutoCreateEnabled();
 
+    boolean isEventNotificationLifecycleEventsPublishingEnabled();
+
     boolean isEventNotificationPayloadSigningEnabled();
 
     String getEventNotificationPayloadSigningAudience();

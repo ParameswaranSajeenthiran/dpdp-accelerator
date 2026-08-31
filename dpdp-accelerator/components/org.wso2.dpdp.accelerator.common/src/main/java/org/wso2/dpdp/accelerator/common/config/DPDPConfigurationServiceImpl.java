@@ -212,6 +212,12 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public boolean isEventNotificationLifecycleEventsPublishingEnabled() {
+
+        return configParser == null || configParser.isEventNotificationLifecycleEventsPublishingEnabled();
+    }
+
+    @Override
     public boolean isEventNotificationPayloadSigningEnabled() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_ENABLED

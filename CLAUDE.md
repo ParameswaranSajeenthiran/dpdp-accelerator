@@ -210,15 +210,10 @@ touching this chain, in order:
   SLF4J or a direct log4j import. Declare it as
   `private static final Log LOG = LogFactory.getLog(<ClassName>.class);`.
 - Any user- or request-supplied string (tenant domain, consent ID, path/query param) must be
-  passed through a `sanitize()` helper before it goes into a log message, to block log
-  injection via embedded `\r`/`\n`:
-  ```java
-  private static String sanitize(String value) {
-      return value == null ? null : value.replaceAll("[\r\n]", "");
-  }
-  ```
-  This is a small private static method per class, not a shared utility — copy the pattern
-  rather than introducing a cross-module dependency for it.
+  passed through `org.wso2.dpdp.accelerator.common.util.LogSanitizer.sanitize()` before it goes
+  into a log message, to block log injection via embedded `\r`/`\n`. A few older classes still
+  carry their own private `sanitize()` copy predating this shared utility — don't add new ones;
+  use `LogSanitizer` for anything new.
 - Level conventions:
     - `LOG.debug` — routine/expected activity: OSGi activate/deactivate, successful writes,
       benign "not found" cases that produce a normal 404 rather than an operator-relevant failure.

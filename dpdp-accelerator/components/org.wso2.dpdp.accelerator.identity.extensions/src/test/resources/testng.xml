@@ -23,6 +23,8 @@
             <package name="org.wso2.dpdp.accelerator.identity.extensions.consent"/>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.internal"/>
             <package name="org.wso2.dpdp.accelerator.identity.extensions.notification"/>
+            <package name="org.wso2.dpdp.accelerator.identity.extensions.user"/>
+            <package name="org.wso2.dpdp.accelerator.identity.extensions.util"/>
         </packages>
     </test>
 </suite>

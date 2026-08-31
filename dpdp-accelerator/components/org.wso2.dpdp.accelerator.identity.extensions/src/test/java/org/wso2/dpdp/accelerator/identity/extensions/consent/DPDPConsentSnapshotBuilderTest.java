@@ -28,11 +28,13 @@ import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.carbon.consent.mgt.core.model.ReceiptService;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class DPDPConsentSnapshotBuilderTest {
@@ -120,5 +122,48 @@ public class DPDPConsentSnapshotBuilderTest {
         assertEquals(elementJson.get("name").getAsString(), "email_address");
         assertEquals(elementJson.get("displayName").getAsString(), "Email Address");
         assertTrue(elementJson.get("consented").getAsBoolean());
+    }
+
+    @Test
+    public void resolvePurposesReturnsNullForNullReceipt() {
+
+        assertNull(DPDPConsentSnapshotBuilder.resolvePurposes(null));
+    }
+
+    @Test
+    public void resolvePurposesReturnsNullWhenReceiptHasNoServices() {
+
+        Receipt receipt = new Receipt();
+        receipt.setState("ACTIVE");
+
+        assertNull(DPDPConsentSnapshotBuilder.resolvePurposes(receipt));
+    }
+
+    @Test
+    public void resolvePurposesFlattensAndDeduplicatesAcrossServices() {
+
+        ConsentPurpose marketing = new ConsentPurpose();
+        marketing.setPurpose("marketing");
+        ConsentPurpose analytics = new ConsentPurpose();
+        analytics.setPurpose("analytics");
+        // Same purpose name reused by a second service - must appear only once in the result.
+        ConsentPurpose marketingAgain = new ConsentPurpose();
+        marketingAgain.setPurpose("marketing");
+
+        ReceiptService serviceA = new ReceiptService();
+        serviceA.setPurposes(Arrays.asList(marketing, analytics));
+        ReceiptService serviceB = new ReceiptService();
+        serviceB.setPurposes(Collections.singletonList(marketingAgain));
+        // A service with no purposes at all must not blow up the traversal.
+        ReceiptService serviceWithNoPurposes = new ReceiptService();
+
+        Receipt receipt = new Receipt();
+        receipt.setServices(Arrays.asList(serviceA, serviceB, serviceWithNoPurposes));
+
+        List<String> purposes = DPDPConsentSnapshotBuilder.resolvePurposes(receipt);
+
+        assertEquals(purposes.size(), 2);
+        assertTrue(purposes.contains("marketing"));
+        assertTrue(purposes.contains("analytics"));
     }
 }
