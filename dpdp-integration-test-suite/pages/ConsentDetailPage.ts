@@ -45,6 +45,9 @@ export class ConsentDetailPage {
   readonly backButton: Locator
   readonly purposesSection: Locator
   readonly authorizationsSection: Locator
+  readonly lifecycleSection: Locator
+  readonly lifecycleRows: Locator
+  readonly viewFullSnapshotButton: Locator
 
   constructor(
     private readonly page: Page,
@@ -59,6 +62,12 @@ export class ConsentDetailPage {
     this.authorizationsSection = page
       .locator('.MuiCard-root')
       .filter({ has: page.getByRole('heading', { name: 'Authorizations' }) })
+    // ConsentLifecycleSection.tsx timeline card; `tbody tr` avoids sweeping in the header row.
+    this.lifecycleSection = page
+      .locator('.MuiCard-root')
+      .filter({ has: page.getByRole('heading', { name: 'Consent Lifecycle' }) })
+    this.lifecycleRows = this.lifecycleSection.locator('tbody tr')
+    this.viewFullSnapshotButton = page.getByRole('button', { name: 'View Full Snapshot History' })
   }
 
   async goto(consentId: string): Promise<void> {
@@ -81,6 +90,19 @@ export class ConsentDetailPage {
 
   authorizationRow(userId: string): Locator {
     return this.authorizationsSection.getByRole('row', { name: new RegExp(userId) })
+  }
+
+  /**
+   * Lifecycle-table row matching "<action>...<actor>". Bridges with `.*`, not literal " by " -
+   * AUTHORIZE_REVOKE's own label is "Revoked by reviewer", so a whole-consent revoke row reads
+   * "Revoked by reviewer by <actor>" with an extra "by" in between.
+   */
+  lifecycleRow(action: string, actor: string): Locator {
+    return this.lifecycleRows.filter({ hasText: new RegExp(`${action}.*${actor}`) })
+  }
+
+  async openFullHistoryDialog(): Promise<void> {
+    await this.viewFullSnapshotButton.click()
   }
 
   private actionButton(action: keyof typeof CONFIRM_LABEL): Locator {
