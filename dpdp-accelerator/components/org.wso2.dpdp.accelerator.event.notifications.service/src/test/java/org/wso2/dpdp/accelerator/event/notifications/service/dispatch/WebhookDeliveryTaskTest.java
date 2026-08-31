@@ -311,9 +311,8 @@ public class WebhookDeliveryTaskTest {
 
         // Body must be parseable JSON, distinct from the raw payload string.
         JsonNode envelope = new ObjectMapper().readTree(body);
-        assertTrue(envelope.has("payload"), "envelope should carry a payload field");
-        // Original payload sits nested under "payload" — receivers can do envelope.payload.hello.
-        assertEquals(envelope.get("payload").get("hello").asText(), "world");
+        assertTrue(envelope.has("eventPayload"), "envelope should carry an eventPayload field");
+        assertEquals(envelope.get("eventPayload").get("hello").asText(), "world");
     }
 
     @Test
@@ -348,7 +347,7 @@ public class WebhookDeliveryTaskTest {
         String body = bodyOf(request);
 
         // The header must be present and prefixed with the algorithm.
-        String signatureHeader = request.headers().firstValue("Event-Signature").orElse(null);
+        String signatureHeader = request.headers().firstValue("event-signature").orElse(null);
         assertNotNull(signatureHeader, "Event-Signature header should be set");
         assertTrue(signatureHeader.startsWith("sha256="),
                 "Event-Signature should be prefixed with 'sha256=', got: " + signatureHeader);
@@ -393,7 +392,7 @@ public class WebhookDeliveryTaskTest {
         assertEquals(context.getPayload().get("orgId").asText(), ORG_ID);
         assertEquals(context.getPayload().get("groupId").asText(), GROUP_ID);
         assertEquals(context.getPayload().get("topic").asText(), TOPIC_NAME);
-        assertEquals(context.getPayload().get("payload").get("hello").asText(), "world");
+        assertEquals(context.getPayload().get("eventPayload").get("hello").asText(), "world");
         assertEquals(context.getPayloadHash(), HmacSigner.sign(SHARED_SECRET,
                 new ObjectMapper().writeValueAsString(context.getPayload())));
 
@@ -432,7 +431,7 @@ public class WebhookDeliveryTaskTest {
 
         HttpRequest request = captureRequest();
         String body = bodyOf(request);
-        String signatureHeader = request.headers().firstValue("Event-Signature").orElseThrow();
+        String signatureHeader = request.headers().firstValue("event-signature").orElseThrow();
 
         String signedOverRawPayload = "sha256=" + HmacSigner.sign(SHARED_SECRET, rawPayload);
         assertNotEquals(signatureHeader, signedOverRawPayload,

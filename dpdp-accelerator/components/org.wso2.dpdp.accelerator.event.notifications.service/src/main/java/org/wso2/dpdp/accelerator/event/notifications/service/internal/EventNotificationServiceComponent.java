@@ -34,6 +34,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.EventFanOutServiceImpl;
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.EventPublishServiceImpl;
 import org.wso2.dpdp.accelerator.event.notifications.service.impl.SubscriptionServiceImpl;
@@ -76,7 +77,8 @@ public class EventNotificationServiceComponent {
                 new EventFanOutServiceImpl(daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO());
         EventPublishService eventPublishService = new EventPublishServiceImpl(
                 daoProvider.getEventDAO(), daoProvider.getTopicDAO(), eventFanOutService,
-                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO());
+                daoProvider.getDeliveryDAO(), daoProvider.getDeliveryAckDAO(), daoProvider.getSubscriptionDAO(),
+                configurationService, new SignedEventPayloadFactory());
         deliveryRecoveryService = new DeliveryRecoveryService(
                 daoProvider.getSubscriptionDAO(), daoProvider.getDeliveryDAO(),
                 subscriptionService, configurationService);

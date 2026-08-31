@@ -19,6 +19,8 @@
 package org.wso2.dpdp.accelerator.event.notifications.service;
 
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -36,6 +38,16 @@ import java.util.Map;
  * {@code EventPublishService} for write operations only.</p>
  */
 public interface EventPublishService {
+
+    /**
+     * Processes OB-style polling acknowledgements/errors and returns pending poll deliveries.
+     */
+    EventPollingResponseDTO pollEvents(String orgId, String groupId, String subscriptionId,
+            String requestBody, String eventSignature);
+
+    /** Stores a signed completion report for a webhook delivery. */
+    void completeDelivery(String orgId, String groupId, String deliveryId,
+            String requestBody, String eventSignature);
 
     /**
      * @param orgId the organisation identifier (required).

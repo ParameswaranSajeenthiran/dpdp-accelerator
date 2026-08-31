@@ -286,6 +286,36 @@ public final class DPDPConfigParser {
                 .orElse(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_PAYLOAD_SIGNING_AUDIENCE);
     }
 
+    public boolean isEventNotificationPollingDefaultReturnImmediately() {
+
+        return getValidatedBoolean(DPDPCommonConstants.EVENT_NOTIFICATIONS_POLLING_DEFAULT_RETURN_IMMEDIATELY,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_RETURN_IMMEDIATELY);
+    }
+
+    public int getEventNotificationPollingDefaultMaxEvents() {
+
+        int defaultMaxEvents = getNonNegativeInt(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_POLLING_DEFAULT_MAX_EVENTS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS);
+        if (defaultMaxEvents > getEventNotificationPollingMaxEventsLimit()) {
+            throw new IllegalStateException("Default polling max events cannot exceed the polling max events limit.");
+        }
+        return defaultMaxEvents;
+    }
+
+    public int getEventNotificationPollingMaxEventsLimit() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT);
+    }
+
+    public boolean isEventNotificationPollingRequestHmacValidationEnabled() {
+
+        return getValidatedBoolean(
+                DPDPCommonConstants.EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED);
+    }
+
     public int getEventNotificationThreadPoolSize() {
 
         return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_THREAD_POOL_SIZE,

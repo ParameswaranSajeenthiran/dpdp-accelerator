@@ -160,12 +160,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         if (deliveryMode == DeliveryMode.WEBHOOK) {
             validateCallbackUrl(callbackUrl);
-            if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                        EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
-                        EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG, 400);
-            }
+        }
+        if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
+                    EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG, 400);
         }
 
         validatePurposeFilterMode(filterType, purposes);

@@ -21,6 +21,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.TopicDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
@@ -69,7 +70,9 @@ public class TransactionIntegrationTest {
                         + "CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128), "
                         + "PRIMARY KEY(SUBSCRIPTION_ID, PURPOSE_NAME));"
                         + "CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, SUBSCRIPTION_ID VARCHAR(64), "
-                        + "EVENT_ID VARCHAR(64), STATUS VARCHAR(32), CREATED_AT TIMESTAMP, COMPLETED_AT TIMESTAMP);"
+                        + "EVENT_ID VARCHAR(64), STATUS VARCHAR(32), ERROR_CODE VARCHAR(64), "
+                        + "ERROR_DETAIL VARCHAR(1024), "
+                        + "CREATED_AT TIMESTAMP, COMPLETED_AT TIMESTAMP);"
                         + "CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
                         + "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD VARCHAR(4096), "
                         + "CREATED_AT TIMESTAMP NOT NULL);"
@@ -450,8 +453,8 @@ public class TransactionIntegrationTest {
             ExecutorService executor = Executors.newFixedThreadPool(2);
             try {
                 Future<Void> acknowledgement = executor.submit(() -> {
-                    deliveryDAO.updatePollDeliveryStatuses(first, "org-1", "group-1",
-                            Collections.singletonList("event-1"), Collections.emptyList());
+                    deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(first, "org-1", "group-1", "sub-1",
+                            Collections.singletonList("delivery-1"), Collections.emptyMap());
                     acknowledgementUpdated.countDown();
                     releaseAcknowledgement.await();
                     first.commit();
@@ -460,8 +463,9 @@ public class TransactionIntegrationTest {
                 Future<Void> error = executor.submit(() -> {
                     acknowledgementUpdated.await();
                     errorStarted.countDown();
-                    deliveryDAO.updatePollDeliveryStatuses(second, "org-1", "group-1",
-                            Collections.emptyList(), Collections.singletonList("event-1"));
+                    deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(second, "org-1", "group-1", "sub-1",
+                            Collections.emptyList(), Collections.singletonMap("delivery-1",
+                                    new PollDeliveryError("processing_failed", "Unable to process event")));
                     second.commit();
                     return null;
                 });

@@ -36,37 +36,24 @@ administrative scopes.
 
 ### Configure publisher and receiver roles
 
-For application-to-application testing, create separate least-privilege roles
-instead of assigning `dpdp-consent-admin` to the publishing and receiving
-users:
+For application-to-application access, create separate least-privilege roles
+instead of assigning `dpdp-consent-admin` to publishing and receiving users:
 
 | Role | Assign these scopes |
 |---|---|
 | `event-publisher` | `notifications:events:write` |
 | `event-receiver` | `notifications:events:poll`, `notifications:event-deliveries:complete` |
 
-Use the exact role name `event-receiver`. In the Identity Server Console for
-the target tenant:
+Create separate publisher and receiver users, assign only the corresponding
+role, and obtain fresh access tokens after role assignment. Use the publisher
+token for `POST /events` and the receiver token for `POST /events/poll` and
+`POST /deliveries/{deliveryId}/completion`. As negative checks, the receiver
+token must receive HTTP `403` when publishing, while the publisher token must
+receive HTTP `403` when polling or submitting completion.
 
-1. Create the `event-publisher` role and grant it only the
-   `notifications:events:write` scope.
-2. Create the `event-receiver` role and grant it only the
-   `notifications:events:poll` and
-   `notifications:event-deliveries:complete` scopes.
-3. Create or select two test users. Assign `event-publisher` to the publishing
-   user and `event-receiver` to the receiving user. Do not assign either user
-   the `dpdp-consent-admin` role when testing least-privilege access.
-4. Obtain a new access token for each user after assigning the roles. Existing
-   tokens do not gain newly assigned scopes.
-5. Confirm that the publisher token contains `notifications:events:write` and
-   that the receiver token contains both receiver scopes.
-
-Use the publisher token for `POST /events`. Use the receiver token for
-`POST /events/poll` and `POST /deliveries/{deliveryId}/completion`. As negative
-authorization tests, the receiver token must be rejected when publishing an
-event, and the publisher token must be rejected when polling or submitting a
-completion. A correctly authenticated token without the required scope should
-receive HTTP `403`.
+The Identity Server provisioning flow also creates `dpdp-consent-admin` and
+`dpdp-consent-user`. The administrator role receives all Event Notification
+scopes; the user role does not receive them.
 
 ### Tenant-specific URLs
 
@@ -102,7 +89,141 @@ RECEIVER_ACCESS_TOKEN="<event-receiver-access-token>"
 
 For the super tenant, set `API_BASE` without the `/t/<tenant>` segment.
 
-## 2. Understand the notification flow
+## 2. Poll event deliveries
+
+Polling uses short, stateless request-response semantics and is scoped to one
+subscription. A poll request may acknowledge previously received deliveries,
+report structured errors, and request pending deliveries in the same call.
+DPDP does not perform long polling, so `returnImmediately=false` is rejected.
+
+The acknowledgement and `setErrs` maps are keyed by `deliveryId`, not `eventId`.
+Each delivery belongs to one subscription, so this prevents an acknowledgement
+for one subscription from updating another subscription's delivery of the same
+event. Only pending deliveries belonging to the request's tenant, group, and
+requested subscription are updated. A delivery ID must not appear in both
+`ack` and `setErrs`.
+
+The first poll may have an empty request body. When request HMAC validation is
+enabled, calculate the signature over the exact bytes sent: an empty request is
+the zero-length byte sequence, not `{}`. The service verifies those bytes first
+and only then applies the same defaults as an empty JSON object. Whitespace-only
+bodies follow the same rule and must be signed with their exact whitespace.
+
+Example:
+
+```sh
+POLL_SUBSCRIPTION_ID="<poll-subscription-id>"
+POLL_SHARED_SECRET="<poll-subscription-shared-secret>"
+POLL_BODY='{
+  "orgId": "example.com",
+  "maxEvents": 20,
+  "returnImmediately": true,
+  "ack": ["delivery-that-succeeded"],
+  "setErrs": {
+    "delivery-that-failed": {
+      "err": "authentication_failed",
+      "description": "Unable to authenticate the signed event"
+    }
+  }
+}'
+POLL_SIGNATURE="sha256=$(printf %s "${POLL_BODY}" | openssl dgst -sha256 -hmac "${POLL_SHARED_SECRET}" -hex | awk '{print $2}')"
+
+curl -k -X POST "${API_BASE}/events/poll" \
+  -H "Authorization: Bearer ${RECEIVER_ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "group-id: processor-1" \
+  -H "subscription-id: ${POLL_SUBSCRIPTION_ID}" \
+  -H "event-signature: ${POLL_SIGNATURE}" \
+  -d "${POLL_BODY}"
+```
+
+The response contains `sets`, keyed by `deliveryId`, and `moreAvailable`. Each
+SET value is a compact RS256 JWS built with the tenant signing key using the
+same event envelope as webhook delivery. Clients should retain the key and use
+it in a later poll request's `ack` or `setErrs` field. For example:
+
+```json
+{
+  "moreAvailable": false,
+  "sets": {
+    "f5f37c64-6130-4d44-9463-136c8bca4278": "<compact-RS256-JWS>"
+  }
+}
+```
+
+When there are no pending deliveries, the response is:
+
+```json
+{
+  "moreAvailable": false,
+  "sets": {}
+}
+```
+
+### Submit webhook delivery completion
+
+Webhook consumers can submit a signed completion report to
+`POST /deliveries/{deliveryId}/completion` with the
+`notifications:event-deliveries:complete` scope. The request body is signed
+using the subscription shared secret and the
+`event-signature: sha256=<hex>` header. The signature input binds the completion
+to its path delivery identifier:
+
+```text
+v1\ncompletion\n<deliveryId>\n<exact-request-body>
+```
+
+Clients must preserve the body bytes exactly after calculating the signature;
+changing whitespace or field order invalidates it. A signature generated for
+one delivery cannot be reused for another delivery. Body-only completion
+signatures are not accepted. The body contains `completionStatus`,
+`completionEvidence`, and an optional `completedAt` epoch-millisecond value.
+Completion is accepted only after the webhook delivery reaches `delivered`.
+`completionEvidence` must be an absolute HTTPS URL without credentials or a
+fragment and must not exceed 512 characters. A second completion for the same
+delivery returns `EN-4090` with HTTP `409 Conflict`.
+
+An accepted completion returns HTTP `204 No Content` with an empty response
+body. Unknown deliveries, group mismatches, and invalid signatures return the
+same `401 / EN-4010` response so an unauthenticated caller cannot discover a
+delivery or its state.
+
+For example, a client can calculate and submit the contextual signature with:
+
+```bash
+DELIVERY_ID="<delivery-id>"
+COMPLETION_SHARED_SECRET="<subscription-shared-secret>"
+COMPLETION_BODY='{"completionStatus":"completed","completionEvidence":"https://processor.example/evidence/receipt.pdf"}'
+COMPLETION_SIGNATURE=$(printf 'v1\ncompletion\n%s\n%s' "${DELIVERY_ID}" "${COMPLETION_BODY}" \
+  | openssl dgst -sha256 -hmac "${COMPLETION_SHARED_SECRET}" | awk '{print $2}')
+
+curl -k -X POST "${API_BASE}/deliveries/${DELIVERY_ID}/completion" \
+  -H "Authorization: Bearer ${RECEIVER_ACCESS_TOKEN}" \
+  -H "group-id: ${GROUP_ID}" \
+  -H "event-signature: sha256=${COMPLETION_SIGNATURE}" \
+  -H "Content-Type: application/json" \
+  -d "${COMPLETION_BODY}"
+```
+
+Polling defaults and request HMAC enforcement are configured in
+`deployment.toml`:
+
+```toml
+[dpdp_accelerator.event_notifications.polling]
+default_return_immediately = true
+default_max_events = 20
+max_events_limit = 100
+request_hmac_validation_enabled = false
+```
+
+When HMAC validation is enabled, `event-signature` is mandatory and is verified
+over the exact request body using the selected poll subscription's shared
+secret. Poll subscriptions always require a shared secret because the same
+secret is used to hash the outgoing event envelope before tenant-key signing.
+An omitted `maxEvents` uses the configured default; `maxEvents=0` is an
+acknowledge-only request. Values above `max_events_limit` are rejected.
+
+## 3. Understand the notification flow
 
 The normal webhook flow is:
 
@@ -121,7 +242,7 @@ The normal webhook flow is:
 | Event | The payload published to a topic for a group. |
 | Delivery | One subscription-specific attempt to deliver an event. |
 
-## 3. Create and manage topics
+## 4. Create and manage topics
 
 In the Consent Portal, open **Event Notifications → Topics**. From this page you
 can search and filter topics, register a topic, or deregister a user-created
@@ -253,7 +374,7 @@ The decoded JWS claims have the following shape:
     "orgId": "example.com",
     "groupId": "example-group",
     "topic": "consent-status-changed",
-    "payload": {
+    "eventPayload": {
       "consentId": "c7c6b814-ef76-4eb4-9494-8af1b98a9ed1",
       "status": "REVOKED"
     }
@@ -274,7 +395,7 @@ location derived from an unverified JWS. The super tenant normally uses
 `/oauth2/token` and `/oauth2/jwks` without `/t/carbon.super`.
 
 Validate `iss`, `sub`, `aud`, `iat`, `jti`, and `txn`, and process the event
-from the signed `payload` claim. The event payload is intentionally not repeated
+from `payload.eventPayload`. The event payload is intentionally not repeated
 outside the JWS. Receivers that previously accepted a bare tenant domain in
 `iss` must be updated to accept the configured Identity Server issuer.
 
