@@ -81,6 +81,8 @@ Equivalent npm scripts are also available:
 | `npm run test:purposes` | `tests/02-purposes` |
 | `npm run test:consents` | `tests/03-consents` |
 | `npm run test:authorization` | `tests/04-authorization` |
+| `npm run test:multi-tenancy` | `tests/05-multi-tenancy` |
+| `npm run test:account` | `tests/06-account` |
 | `npm run test:ui` | any of the above, in Playwright's [UI mode](https://playwright.dev/docs/test-ui-mode) |
 | `npm run report` | opens the last HTML report |
 
@@ -117,7 +119,9 @@ responsible for.
 | `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
 | `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
 | `03-consents/` | Consent records: User and admin registries (view/search/act) |
-| `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes |
+| `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes, including who is offered self-service account deletion |
+| `05-multi-tenancy/` | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
+| `06-account/` | Self-service account deletion end to end. Destructive and irreversible, so each test creates and signs in as its own throwaway user rather than any shared persona, and removes it again afterwards |
 
 ## Operating principles
 

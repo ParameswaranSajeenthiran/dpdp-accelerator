@@ -16,30 +16,44 @@
  * under the License.
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import UserProfileMenu from '../components/layout/main-layout/UserProfileMenu'
 import i18n from '../i18n/i18n'
+import { APIError } from '../utils/apiClient'
+import { REQUIRED_SCOPES, type ScopeRequirement } from '../utils/scopes'
+import TestAuthorizationProvider from './TestAuthorizationProvider'
 
 const authMocks = vi.hoisted(() => ({
   getUserProfile: vi.fn<() => Promise<Record<string, unknown> | undefined>>(),
   logout: vi.fn<() => Promise<void>>(),
+  clearLocalSession: vi.fn<() => Promise<void>>(),
+}))
+
+const accountMocks = vi.hoisted(() => ({
+  deleteMyAccount: vi.fn<() => Promise<'deleted' | 'pendingApproval'>>(),
 }))
 
 vi.mock('../utils/authClient', () => authMocks)
+vi.mock('../features/account/api/accountApi', () => accountMocks)
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
 })
 
-function renderComponent(): void {
+function renderComponent(scopes: ScopeRequirement[] = []): void {
   render(
     <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
       <I18nextProvider i18n={i18n}>
-        <UserProfileMenu />
+        <QueryClientProvider client={new QueryClient()}>
+          <TestAuthorizationProvider scopes={scopes}>
+            <UserProfileMenu />
+          </TestAuthorizationProvider>
+        </QueryClientProvider>
       </I18nextProvider>
     </OxygenUIThemeProvider>,
   )
@@ -50,10 +64,13 @@ function renderComponent(): void {
  * wait for the resolved name before opening the menu, otherwise the assertions
  * race the effect that loads them.
  */
-async function renderMenu(profile?: Record<string, unknown>): Promise<void> {
+async function renderMenu(
+  profile?: Record<string, unknown>,
+  scopes: ScopeRequirement[] = [],
+): Promise<void> {
   authMocks.getUserProfile.mockResolvedValue(profile)
   authMocks.logout.mockResolvedValue()
-  renderComponent()
+  renderComponent(scopes)
   await waitFor(() => expect(authMocks.getUserProfile).toHaveBeenCalled())
   fireEvent.click(await screen.findByRole('button', { name: 'Account' }))
 }
@@ -149,5 +166,104 @@ describe('UserProfileMenu', () => {
 
     completeLogout?.()
     await waitFor(() => expect(authMocks.logout).toHaveBeenCalledOnce())
+  })
+
+  it('hides account deletion from a session without the self-delete scope', async () => {
+    await renderMenu({ name: 'Portal User', email: 'user@example.com' })
+
+    expect(screen.queryByRole('menuitem', { name: 'Delete my account' })).not.toBeInTheDocument()
+  })
+
+  it('deletes the account after confirmation and tears the session down', async () => {
+    accountMocks.deleteMyAccount.mockResolvedValue('deleted')
+    authMocks.clearLocalSession.mockResolvedValue()
+    // jsdom's location cannot be spied on in place; swap the whole object.
+    const replace = vi.fn<(url: string) => void>()
+    const { origin } = window.location
+    vi.stubGlobal('location', { ...window.location, origin, replace })
+
+    try {
+      await renderMenu({ name: 'Portal User', email: 'user@example.com' }, [
+        REQUIRED_SCOPES.ACCOUNT_SELF_DELETE,
+      ])
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Delete my account' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+
+      await waitFor(() => expect(accountMocks.deleteMyAccount).toHaveBeenCalledOnce())
+      await waitFor(() => expect(authMocks.clearLocalSession).toHaveBeenCalledOnce())
+      await waitFor(() =>
+        expect(replace).toHaveBeenCalledWith(expect.stringContaining('/account-deleted')),
+      )
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('shows a translated error and keeps the dialog open when deletion fails', async () => {
+    accountMocks.deleteMyAccount.mockRejectedValue(new Error('deletion failed'))
+
+    await renderMenu({ name: 'Portal User', email: 'user@example.com' }, [
+      REQUIRED_SCOPES.ACCOUNT_SELF_DELETE,
+    ])
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete my account' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+
+    expect(
+      await screen.findByText('Unable to delete your account. Please try again.'),
+    ).toBeInTheDocument()
+    expect(authMocks.clearLocalSession).not.toHaveBeenCalled()
+  })
+
+  /*
+   * With an approval workflow on Delete User the account is not gone - the
+   * Identity Server has only recorded a request - so the session must survive
+   * and the user must not be told they have been deleted.
+   */
+  it('keeps the user signed in and says so when deletion needs approval', async () => {
+    accountMocks.deleteMyAccount.mockResolvedValue('pendingApproval')
+    authMocks.clearLocalSession.mockResolvedValue()
+    const replace = vi.fn<(url: string) => void>()
+    const { origin } = window.location
+    vi.stubGlobal('location', { ...window.location, origin, replace })
+
+    try {
+      await renderMenu({ name: 'Portal User', email: 'user@example.com' }, [
+        REQUIRED_SCOPES.ACCOUNT_SELF_DELETE,
+      ])
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Delete my account' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+
+      expect(
+        await screen.findByText(
+          'Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.',
+        ),
+      ).toBeInTheDocument()
+      expect(authMocks.clearLocalSession).not.toHaveBeenCalled()
+      expect(replace).not.toHaveBeenCalled()
+      expect(screen.queryByText('Your account has been deleted')).not.toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('explains that a deletion request is already awaiting approval on a 400', async () => {
+    accountMocks.deleteMyAccount.mockRejectedValue(
+      new APIError(
+        400,
+        'invalidValue',
+        'There is a pending workflow already defined for the user.',
+      ),
+    )
+
+    await renderMenu({ name: 'Portal User', email: 'user@example.com' }, [
+      REQUIRED_SCOPES.ACCOUNT_SELF_DELETE,
+    ])
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete my account' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete my account' }))
+
+    expect(
+      await screen.findByText('Your account already has a deletion request awaiting approval.'),
+    ).toBeInTheDocument()
+    expect(authMocks.clearLocalSession).not.toHaveBeenCalled()
   })
 })

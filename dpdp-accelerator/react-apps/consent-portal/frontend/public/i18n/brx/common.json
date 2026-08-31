@@ -93,7 +93,14 @@
       "serviceId": "सिबिथाइ",
       "removeConsentIdForState": "रायजोनि फिल्टारखौ बाहायनो थाखाय गनायथि आइ.डि. फिल्टारखौ बोखार।",
       "propertyFilterLabel": "गनायथि सम्फथि",
-      "removeConsentIdForSubject": "इउजार आइ.डि. फिल्टारखौ बाहायनो थाखाय कन्सेन्ट आइ.डि. फिल्टारखौ बोखार।"
+      "removeConsentIdForSubject": "इउजार आइ.डि. फिल्टारखौ बाहायनो थाखाय कन्सेन्ट आइ.डि. फिल्टारखौ बोखार।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "गासै बोखार",
       "clearAriaLabel": "गासै फिल्टरफोरखौ बोखार",
       "serviceSearchPlaceholder": "सिबिथायजों नागिर",
-      "state": "रायजो"
+      "state": "रायजो",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "गनायथिफोरखौ लोड खालामफुगासिनो...",
@@ -275,6 +288,35 @@
         "service": "सिबिथाइ",
         "state": "रायजो"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} सान हाहैबाय",
       "overduePlural": "{{count}} सानफोर हाहैबाय",
       "daysLeftSingular": "{{count}} सान आगोनां",
-      "daysLeftPlural": "{{count}} सानफोर आगोनां"
+      "daysLeftPlural": "{{count}} सानफोर आगोनां",
+      "dueLabel": "थि अक्ट'"
     },
     "timeline": {
       "complaintReceived": "अजत मोनबाय",
@@ -727,8 +770,11 @@
       "empty": "नोंथाङा दासिम जेबो अजत गथायाखै।",
       "emptyFiltered": "सायखनाय फिल्टरजों जेबो अजत गोरोबा।",
       "filters": {
+        "sectionAriaLabel": "आंखा फरायसुंखौ फिल्टार",
         "status": "थासारि",
-        "all": "गासै"
+        "all": "गासै",
+        "clear": "फिल्टार खालाम",
+        "clearAriaLabel": "गासै फिल्टार खालाम"
       },
       "table": {
         "tableAriaLabel": "आंनि अजतनि टेबल",
@@ -745,13 +791,13 @@
       "back": "आंनि अजतफोराव फिन थां",
       "notFound": "अजत मोनाखै",
       "description": "बेजाय दिन्थिनाय",
-      "submittedOn": "{{date}} आव गथायबाय",
       "awaitingInfo": {
         "note": "अजत आपिसारा नोंथांनिफ्राय बांसिन मिथिसारनाय नेगासिनो दं। अननानै गाहायाव फिननाय हो।"
       },
       "resolved": {
         "note": "बे अजतखौ सुस्रांनाय जाबाय।"
-      }
+      },
+      "submittedOnLabel": "दाखिल खालामजाथाय"
     },
     "submit": {
       "title": "अजत गथाय",
@@ -808,7 +854,10 @@
       "empty": "बे अजतआव जेबो फाइल जोबथापाखै।",
       "initialSubmission": "गुबै गथायनाय",
       "internalNote": "सिंनि",
-      "overflowMore": "+{{count}} बांसिन"
+      "overflowMore": "+{{count}} बांसिन",
+      "uploadedCount": "{{count}} आना नया फाइल नांजाबहोबाय",
+      "uploadedCount_one": "गोनां नया फाइल नांजाबहोबाय",
+      "uploadedCount_other": "{{count}} आना नया फाइल नांजाबहोबाय"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "फारिलाइआव फिन थां",
         "notFound": "अजत मोनाखै",
-        "dataPrincipal": "बाहायग्रा"
+        "dataPrincipal": "बाहायग्रा",
+        "resolvedLocked": "बे अजतखौ सुस्रांनाय जाबाय आरो दा बेखौ बन्द खालामनाय जाबाय। नोंथाङा बेखौ थोंजोङै फिन खेवनो हाया — बेखौ खालि अब्लासो फिन खेवनो हागोन जुदि क्लायन्टआ मोनसे गोदान रादाब दैथायो।",
+        "resolveDialog": {
+          "title": "अजतखौ सुस्रां खालाम",
+          "message": "नोंथाङा बे अजदखौ सुस्रांखाबाय होननानै सिन होनो थारैबो लुबैदों ना?",
+          "note": "खेबसे सुस्रांखांब्ला, क्लायन्टआ मोनसे गोदान रादाब दैथायहरैया जासिम नोंथाङा फिन होनो हानाय नङा एबा बेनि थासारिखौ फिन सोलायनो हानाय नङा।",
+          "confirm": "अजतखौ सुस्रां खालाम",
+          "processing": "सुलुं खालामगासिनो...",
+          "resolveFailed": "मोनसे गोरोन्थि जादों आरो अजतखौ सुस्रांनो हायाखै। अननानै उनाव फिन नाजाफिन।"
+        }
       }
     }
   },
@@ -1197,6 +1255,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

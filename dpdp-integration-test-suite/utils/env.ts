@@ -152,4 +152,9 @@ export function tenantPortalUrl(tenantDomain: string): string {
   return `${env.identityServerBaseUrl}/t/${tenantDomain}/consent-portal`
 }
 
+/** SCIM2 user management, used for the throwaway account the deletion test creates. */
+export function scim2UsersUrl(path: string): string {
+  return `${env.identityServerBaseUrl}/scim2/Users${path}`
+}
+
 export type PersonaName = 'user' | 'user-2' | 'consent-admin'

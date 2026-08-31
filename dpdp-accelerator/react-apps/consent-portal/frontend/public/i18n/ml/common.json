@@ -93,7 +93,14 @@
       "serviceId": "സേവനം",
       "removeConsentIdForState": "സംസ്ഥാന ഫിൽട്ടർ ഉപയോഗിക്കുന്നതിന് സമ്മത ഐഡി ഫിൽട്ടർ നീക്കം ചെയ്യുക.",
       "propertyFilterLabel": "സമ്മത സ്വത്ത്",
-      "removeConsentIdForSubject": "ഉപയോക്തൃ ഐഡി ഫിൽട്ടർ ഉപയോഗിക്കുന്നതിന് സമ്മത ഐഡി ഫിൽട്ടർ നീക്കം ചെയ്യുക."
+      "removeConsentIdForSubject": "ഉപയോക്തൃ ഐഡി ഫിൽട്ടർ ഉപയോഗിക്കുന്നതിന് സമ്മത ഐഡി ഫിൽട്ടർ നീക്കം ചെയ്യുക.",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "എല്ലാം മായ്‌ക്കുക",
       "clearAriaLabel": "എല്ലാ ഫിൽട്ടറുകളും മായ്‌ക്കുക",
       "serviceSearchPlaceholder": "സേവനം അനുസരിച്ച് തിരയുക",
-      "state": "സംസ്ഥാനം"
+      "state": "സംസ്ഥാനം",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "സമ്മതങ്ങൾ ലോഡുചെയ്യുന്നു...",
@@ -275,6 +288,35 @@
         "service": "സേവനം",
         "state": "സംസ്ഥാനം"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} ദിവസം വൈകി",
       "overduePlural": "{{count}} ദിവസങ്ങൾ വൈകി",
       "daysLeftSingular": "{{count}} ദിവസം ബാക്കി",
-      "daysLeftPlural": "{{count}} ദിവസങ്ങൾ ബാക്കി"
+      "daysLeftPlural": "{{count}} ദിവസങ്ങൾ ബാക്കി",
+      "dueLabel": "അവസാന തീയതി"
     },
     "timeline": {
       "complaintReceived": "പരാതി ലഭിച്ചു",
@@ -727,8 +770,11 @@
       "empty": "നിങ്ങൾ ഇതുവരെ പരാതികളൊന്നും നൽകിയിട്ടില്ല.",
       "emptyFiltered": "തിരഞ്ഞെടുത്ത ഫിൽട്ടറുമായി പരാതികളൊന്നും പൊരുത്തപ്പെടുന്നില്ല.",
       "filters": {
+        "sectionAriaLabel": "എന്റെ പരാതികളുടെ ഫിൽട്ടറുകൾ",
         "status": "സ്റ്റാറ്റസ്",
-        "all": "എല്ലാം"
+        "all": "എല്ലാം",
+        "clear": "ഫിൽട്ടറുകൾ മായ്‌ക്കുക",
+        "clearAriaLabel": "എല്ലാ ഫിൽട്ടറുകളും മായ്‌ക്കുക"
       },
       "table": {
         "tableAriaLabel": "എന്റെ പരാതികളുടെ പട്ടിക",
@@ -745,13 +791,13 @@
       "back": "എന്റെ പരാതികളിലേക്ക് മടങ്ങുക",
       "notFound": "പരാതി കണ്ടെത്തിയില്ല",
       "description": "വിവരണം",
-      "submittedOn": "{{date}} ൽ സമർപ്പിച്ചു",
       "awaitingInfo": {
         "note": "പരാതി ഉദ്യോഗസ്ഥൻ നിങ്ങളിൽ നിന്ന് കൂടുതൽ വിവരങ്ങൾക്കായി കാത്തിരിക്കുകയാണ്. ദയവായി താഴെ മറുപടി നൽകുക."
       },
       "resolved": {
         "note": "ഈ പരാതി പരിഹരിച്ചു."
-      }
+      },
+      "submittedOnLabel": "സമർപ്പിച്ചത്"
     },
     "submit": {
       "title": "പരാതി നൽകുക",
@@ -808,7 +854,10 @@
       "empty": "ഈ പരാതിയിൽ അറ്റാച്ച്മെന്റുകളൊന്നും ചേർത്തിട്ടില്ല.",
       "initialSubmission": "പ്രാഥമിക സമർപ്പണം",
       "internalNote": "ആന്തരികം",
-      "overflowMore": "+{{count}} കൂടുതൽ"
+      "overflowMore": "+{{count}} കൂടുതൽ",
+      "uploadedCount": "{{count}} പുതിയ ഫയലുകൾ അറ്റാച്ച് ചെയ്‌തു",
+      "uploadedCount_one": "പുതിയ ഫയൽ അറ്റാച്ച് ചെയ്‌തു",
+      "uploadedCount_other": "{{count}} പുതിയ ഫയലുകൾ അറ്റാച്ച് ചെയ്‌തു"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "ക്യൂവിലേക്ക് മടങ്ങുക",
         "notFound": "പരാതി കണ്ടെത്തിയില്ല",
-        "dataPrincipal": "ഉപയോക്താവ്"
+        "dataPrincipal": "ഉപയോക്താവ്",
+        "resolvedLocked": "ഈ പരാതി പരിഹരിക്കപ്പെടുകയും ഇപ്പോൾ ലോക്ക് ചെയ്യപ്പെടുകയും ചെയ്തിരിക്കുന്നു. നിങ്ങൾക്ക് ഇത് നേരിട്ട് വീണ്ടും തുറക്കാൻ കഴിയില്ല — ക്ലയന്റ് പുതിയൊരു സന്ദേശം അയച്ചാൽ മാത്രമേ ഇത് വീണ്ടും തുറക്കാൻ സാധിക്കൂ.",
+        "resolveDialog": {
+          "title": "പരാതി പരിഹാരം",
+          "message": "ഈ പരാതി പരിഹരിച്ചതായി രേഖപ്പെടുത്താൻ നിങ്ങൾ തീർച്ചയായും ആഗ്രഹിക്കുന്നുണ്ടോ?",
+          "note": "പരിഹരിക്കപ്പെട്ടുകഴിഞ്ഞാൽ, ക്ലയന്റ് പുതിയൊരു സന്ദേശം അയക്കുന്നത് വരെ നിങ്ങൾക്ക് മറുപടി നൽകാനോ അതിന്റെ നില മാറ്റാനോ കഴിയില്ല.",
+          "confirm": "പരാതി പരിഹാരം",
+          "processing": "പരിഹരിക്കുന്നു...",
+          "resolveFailed": "എന്തോ പിശക് സംഭവിച്ചു, പരാതി പരിഹരിക്കാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
+        }
       }
     }
   },
@@ -1197,6 +1255,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

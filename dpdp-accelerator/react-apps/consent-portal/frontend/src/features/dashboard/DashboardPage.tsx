@@ -35,7 +35,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import type { ConsentDetail } from '../../types/consent'
+import type { ConsentSummary } from '../../types/consent'
 import { formatEpochTimestamp } from '../../utils/dateTime'
 import { normalizeConsentState } from '../my-consents/utils/statusChip'
 import useDashboardConsentsQuery from './hooks/useDashboardConsentsQuery'
@@ -52,20 +52,20 @@ interface LabelledCount {
 interface DashboardData {
   activeCount: number
   pendingCount: number
-  pending: ConsentDetail[]
+  pending: ConsentSummary[]
   purposes: LabelledCount[]
   services: LabelledCount[]
 }
 
-function summarizePurposes(consent: ConsentDetail): string {
-  const labels = consent.purposes.map((purpose) => purpose.name)
+function summarizePurposes(consent: ConsentSummary): string {
+  const labels = (consent.purposes ?? []).map((purpose) => purpose.name)
 
   if (labels.length === 0) return '-'
   if (labels.length === 1) return labels[0]
   return `${labels[0]} +${String(labels.length - 1)}`
 }
 
-function PendingConsentRow({ consent }: { consent: ConsentDetail }): React.JSX.Element {
+function PendingConsentRow({ consent }: { consent: ConsentSummary }): React.JSX.Element {
   const navigate = useNavigate()
   const consentPath = `/consents/${encodeURIComponent(consent.id)}`
 
@@ -126,7 +126,7 @@ function DashboardPage(): React.JSX.Element {
 
     const purposeCounts = new Map<string, LabelledCount>()
     active.forEach((consent) => {
-      consent.purposes.forEach((purpose) => {
+      ;(consent.purposes ?? []).forEach((purpose) => {
         const existing = purposeCounts.get(purpose.id)
         purposeCounts.set(purpose.id, {
           id: purpose.id,

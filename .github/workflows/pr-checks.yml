@@ -120,9 +120,17 @@ jobs:
       # silently test the wrong code - explicitly pin to the PR's own head commit. A
       # plain workflow_dispatch run has no pull_request context, so it falls back to
       # whatever ref triggered it (actions/checkout's own default).
+      #
+      # allow-unsafe-pr-checkout is required because that head commit can belong to a
+      # fork - actions/checkout otherwise refuses to fetch fork code into a
+      # pull_request_target run (the "pwn request" guard). Safe here specifically
+      # because this job only runs after a maintainer has reviewed the diff and
+      # applied the Action/trigger-e2e label (see the trigger comment above and
+      # `reset-e2e-label-on-push` below) - same pattern FS Accelerator's maven.yml uses.
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
+          allow-unsafe-pr-checkout: ${{ github.event_name == 'pull_request_target' }}
           persist-credentials: false
 
       - uses: actions/setup-java@v5

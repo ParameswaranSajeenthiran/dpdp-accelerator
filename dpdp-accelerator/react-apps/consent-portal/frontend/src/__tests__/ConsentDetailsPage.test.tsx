@@ -39,6 +39,24 @@ const consentsApi = vi.hoisted(() => ({
 
 vi.mock('../features/my-consents/api/myConsentsApi', () => consentsApi)
 
+const EMPTY_STATUS_HISTORY = {
+  consentId: '',
+  statusHistory: [],
+  pagination: { limit: 100, offset: 0, totalCount: 0 },
+}
+
+const consentHistoryApi = vi.hoisted(() => ({
+  fetchMyConsentStatusHistory: vi.fn(),
+  fetchMyConsentFullHistory: vi.fn(),
+}))
+const adminConsentHistoryApi = vi.hoisted(() => ({
+  fetchAdminConsentStatusHistory: vi.fn(),
+  fetchAdminConsentFullHistory: vi.fn(),
+}))
+
+vi.mock('../features/my-consents/api/consentHistoryApi', () => consentHistoryApi)
+vi.mock('../features/admin-consents/api/consentHistoryApi', () => adminConsentHistoryApi)
+
 const CONSENT_ID = '06168ee0-f82a-4b0f-87ea-2a37600ec3f2'
 
 function buildConsent(state: string, overrides: Partial<ConsentDetail> = {}): ConsentDetail {
@@ -99,6 +117,8 @@ function renderConsentDetailsPage(
   overrides: Partial<ConsentDetail> = {},
 ): void {
   consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent(state, overrides))
+  consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+  adminConsentHistoryApi.fetchAdminConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
   renderPage(scopes)
 }
 
@@ -116,12 +136,20 @@ describe('ConsentDetailsPage lifecycle actions', () => {
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
-  it('shows revoke only for active consents', async () => {
+  it("shows revoke and reject for active consents - reject withdraws just the caller's own approval", async () => {
     renderConsentDetailsPage('ACTIVE')
 
     expect(await screen.findByRole('button', { name: 'Revoke' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+  })
+
+  it('shows approve only for a rejected consent, so the caller can reconsider', async () => {
+    renderConsentDetailsPage('REJECTED')
+
+    expect(await screen.findByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
   it('hides lifecycle actions without the consent write scope', async () => {
@@ -135,8 +163,8 @@ describe('ConsentDetailsPage lifecycle actions', () => {
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
-  it.each(['REJECTED', 'REVOKED', 'EXPIRED'])(
-    'shows no lifecycle action for %s consents',
+  it.each(['REVOKED', 'EXPIRED'])(
+    'shows no lifecycle action for %s consents - a withdrawal or lapse stays final',
     async (state) => {
       renderConsentDetailsPage(state)
 
@@ -199,6 +227,8 @@ describe('ConsentDetailsPage content', () => {
 
   it('surfaces the API message when approving a consent that is not PENDING', async () => {
     consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent('PENDING'))
+    consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
+    adminConsentHistoryApi.fetchAdminConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
     consentsApi.approveMyConsent.mockRejectedValue(
       new APIError(409, 'INVALID_CONSENT_STATE', 'Consent is not in PENDING state.'),
     )
@@ -211,6 +241,6 @@ describe('ConsentDetailsPage content', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Consent is not in PENDING state.')
     })
-    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID)
+    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID, 'test-user')
   })
 })

@@ -93,7 +93,14 @@
       "serviceId": "सेवा",
       "removeConsentIdForState": "राज्य-शोधकस्य उपयोगार्थं संमति-अभिज्ञान-शोधकम् निष्कासय।",
       "propertyFilterLabel": "अनुमोदनसम्पत्तिः",
-      "removeConsentIdForSubject": "उपयोक्तृ-अभिज्ञान-अन्तराधिकारम् उपयोक्तुं संमति-अभिज्ञान-अन्तराधिकारम् निष्कासयतु।"
+      "removeConsentIdForSubject": "उपयोक्तृ-अभिज्ञान-अन्तराधिकारम् उपयोक्तुं संमति-अभिज्ञान-अन्तराधिकारम् निष्कासयतु।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "सर्वं मार्जयन्तु",
       "clearAriaLabel": "सर्वान् शोधकान् मार्जयन्तु",
       "serviceSearchPlaceholder": "सेवायाः अन्वेषणम्",
-      "state": "राज्यम्"
+      "state": "राज्यम्",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "सहमतयः भार्यन्ते...",
@@ -275,6 +288,35 @@
         "service": "सेवा",
         "state": "राज्यम्"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} दिनं विलम्बितम्",
       "overduePlural": "{{count}} दिनानि विलम्बितानि",
       "daysLeftSingular": "{{count}} दिनं शेषम्",
-      "daysLeftPlural": "{{count}} दिनानि शेषाणि"
+      "daysLeftPlural": "{{count}} दिनानि शेषाणि",
+      "dueLabel": "अन्तिमतिथिः"
     },
     "timeline": {
       "complaintReceived": "आक्षेपः प्राप्तः",
@@ -727,8 +770,11 @@
       "empty": "भवता अद्यापि कोऽपि आक्षेपः न समर्पितः।",
       "emptyFiltered": "चयनित-शोधकेन सह कोऽपि आक्षेपः न मिलति।",
       "filters": {
+        "sectionAriaLabel": "मम विस्ताराः फिल्टर्",
         "status": "स्थितिः",
-        "all": "सर्वम्"
+        "all": "सर्वम्",
+        "clear": "फिल्टर् परिष्करोतु",
+        "clearAriaLabel": "सर्वाणि फिल्टर् परिष्करोतु"
       },
       "table": {
         "tableAriaLabel": "मम आक्षेपाणां सारणी",
@@ -745,13 +791,13 @@
       "back": "मम आक्षेपान् प्रति गच्छन्तु",
       "notFound": "आक्षेपः न प्राप्तः",
       "description": "विवरणम्",
-      "submittedOn": "{{date}} दिनाङ्के समर्पितम्",
       "awaitingInfo": {
         "note": "आक्षेप-अधिकारी भवतः सकाशात् अधिक-सूचनायाः प्रतीक्षते। कृपया अधः उत्तरं ददतु।"
       },
       "resolved": {
         "note": "अयं आक्षेपः समाहितः अस्ति।"
-      }
+      },
+      "submittedOnLabel": "प्रस्तुतम्"
     },
     "submit": {
       "title": "आक्षेपं समर्पयन्तु",
@@ -808,7 +854,10 @@
       "empty": "अस्मिन् आक्षेपे कानिपि संलग्नानि न योजितानि।",
       "initialSubmission": "प्रारम्भिक-समर्पणम्",
       "internalNote": "आन्तरिकम्",
-      "overflowMore": "+{{count}} अधिकम्"
+      "overflowMore": "+{{count}} अधिकम्",
+      "uploadedCount": "{{count}} नव्यः सञ्चिकाः योजिताः",
+      "uploadedCount_one": "नवा सञ्चिका योजिता",
+      "uploadedCount_other": "{{count}} नव्यः सञ्चिकाः योजिताः"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "पङ्क्तिं प्रति गच्छन्तु",
         "notFound": "आक्षेपः न प्राप्तः",
-        "dataPrincipal": "उपयोक्ता"
+        "dataPrincipal": "उपयोक्ता",
+        "resolvedLocked": "इयं परिवादिनी समाहिता अस्ति तथा अधुना पिहिता अस्ति। भवान् साक्षात् एतां पुनः उद्घाटयितुं न शक्नोति — इयं केवलं तदैव पुनः उद्घाटयितुं शक्यते यदि ग्राहकः नूतनं सन्देशं प्रेषयति।",
+        "resolveDialog": {
+          "title": "आक्षेपस्य समाधानं कुर्वन्तु।",
+          "message": "किं भवान् निश्चितः अस्ति यत् भवान् एतां परिदेदाम् समाहिता इति अङ्कयितुम् इच्छति?",
+          "note": "एकदा समाधानं जातं चेत्, यावत् ग्राहकः नूतनं सन्देशं न प्रेषयति, तावत् भवान् पुनः उत्तरं दातुं वा तस्य स्थितिं परिवर्तयितुं वा न शक्ष्यति।",
+          "confirm": "आक्षेपस्य समाधानं कुर्वन्तु।",
+          "processing": "समाधानम्...",
+          "resolveFailed": "किञ्चित् दोषः जातः तथा च परिवादः न परिहृतः। कृपया पुनः प्रयतताम्।"
+        }
       }
     }
   },
@@ -1197,6 +1255,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

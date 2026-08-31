@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ActionType;
@@ -84,6 +85,40 @@ public final class ConsentHistoryEndpointUtil {
             throw new ConsentHistoryEndpointException(Response.Status.FORBIDDEN.getStatusCode(),
                     ConsentHistoryErrorCodes.FORBIDDEN_NOT_OWNER,
                     "The authenticated user is not the owner of this consent.");
+        }
+    }
+
+    /**
+     * True when the caller is the consent's own subject, or is listed as one of its authorizers -
+     * a delegated consent (e.g. a guardian authorizing on behalf of a dependent) legitimately
+     * concerns both. Mirrors the frontend's {@code isCurrentUserInvolved}. {@code authorizations}
+     * never carries an entry for the subject itself, so the {@link #isOwner} check still has to
+     * run separately even once authorizers are considered.
+     */
+    public static boolean isInvolved(String callerUsername, String piiPrincipalId,
+            List<ConsentAuthorization> authorizations) {
+
+        if (isOwner(callerUsername, piiPrincipalId)) {
+            return true;
+        }
+        if (callerUsername == null || authorizations == null) {
+            return false;
+        }
+        for (ConsentAuthorization authorization : authorizations) {
+            if (callerUsername.equals(authorization.getUserId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void requireInvolved(String callerUsername, String piiPrincipalId,
+            List<ConsentAuthorization> authorizations) {
+
+        if (!isInvolved(callerUsername, piiPrincipalId, authorizations)) {
+            throw new ConsentHistoryEndpointException(Response.Status.FORBIDDEN.getStatusCode(),
+                    ConsentHistoryErrorCodes.FORBIDDEN_NOT_OWNER,
+                    "The authenticated user is neither the subject nor an authorizer of this consent.");
         }
     }
 

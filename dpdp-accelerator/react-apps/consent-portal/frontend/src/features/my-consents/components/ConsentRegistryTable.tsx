@@ -50,10 +50,10 @@ import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import type { ConsentRecord } from '../../../types/consent'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from '../constants'
+import { isApprovableByCurrentUser } from '../utils/consentAuthorization'
 import {
   getConsentStateChipColor,
   getConsentStateLabelKey,
-  isConsentApprovableState,
   isConsentRevokableState,
 } from '../utils/statusChip'
 
@@ -71,6 +71,12 @@ interface ConsentRegistryTableProps {
   detailBasePath?: string
   showSubject?: boolean
   showPurposes?: boolean
+  /**
+   * The signed-in user's own ID. Required when `canApprove` is set, so the
+   * approve action is gated on the caller's own authorization entry rather
+   * than only the consent's aggregate state - see `consentAuthorization.ts`.
+   */
+  currentUserId?: string
   canApprove?: boolean
   canRevoke?: boolean
   onApprove?: (consentID: string) => void
@@ -94,6 +100,7 @@ export default function ConsentRegistryTable({
   detailBasePath = '/consents',
   showSubject = false,
   showPurposes = true,
+  currentUserId = '',
   canApprove = false,
   canRevoke = false,
   onApprove,
@@ -233,7 +240,9 @@ export default function ConsentRegistryTable({
           {!isLoading && !isError
             ? rows.map((row) => {
                 const rowPurposes = row.purposes ?? []
-                const approvable = canApprove && isConsentApprovableState(row.state)
+                const approvable =
+                  canApprove &&
+                  isApprovableByCurrentUser(row.state, row.authorizations, currentUserId)
                 const revokable = canRevoke && isConsentRevokableState(row.state)
 
                 return (
@@ -411,6 +420,7 @@ ConsentRegistryTable.defaultProps = {
   detailBasePath: '/consents',
   showSubject: false,
   showPurposes: true,
+  currentUserId: '',
   canApprove: false,
   canRevoke: false,
   onApprove: undefined,

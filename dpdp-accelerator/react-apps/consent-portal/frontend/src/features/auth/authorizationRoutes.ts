@@ -27,6 +27,8 @@ const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; requirement: ScopeR
   { path: '/events/topics', requirement: REQUIRED_SCOPES.EVENT_TOPICS_READ },
   { path: '/events/subscriptions', requirement: REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_READ },
   { path: '/administration/consents', requirement: REQUIRED_SCOPES.CONSENTS_READ_ANY },
+  { path: '/complaints', requirement: REQUIRED_SCOPES.COMPLAINTS_READ_SELF },
+  { path: '/complaint-management', requirement: REQUIRED_SCOPES.COMPLAINTS_READ_ANY },
 ]
 
 /** The first landing page the session's scopes actually allow. */

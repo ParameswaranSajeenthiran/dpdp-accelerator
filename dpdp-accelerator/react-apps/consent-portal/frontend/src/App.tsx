@@ -35,6 +35,11 @@ import AdminConsentRegistryPage from './features/admin-consents/AdminConsentRegi
 import ConsentDetailsPage from './features/my-consents/ConsentDetailsPage'
 import ConsentRegistryPage from './features/my-consents/ConsentRegistryPage'
 import DashboardPage from './features/dashboard/DashboardPage'
+import ComplaintListPage from './features/complaints/ComplaintListPage'
+import ComplaintDetailPage from './features/complaints/ComplaintDetailPage'
+import ComplaintQueuePage from './features/complaint-management/ComplaintQueuePage'
+import ComplaintCaseDetailPage from './features/complaint-management/ComplaintCaseDetailPage'
+import AccountDeletedPage from './features/account/AccountDeletedPage'
 import { AuthorizationProvider } from './features/auth/AuthorizationProvider'
 import useAuthorization from './features/auth/useAuthorization'
 import firstAuthorizedPath from './features/auth/authorizationRoutes'
@@ -177,7 +182,9 @@ function AuthorizedFallback(): React.JSX.Element {
   return fallback ? <Navigate to={fallback} replace /> : <NoAccessPage />
 }
 
-function App(): React.JSX.Element {
+/** Everything behind the sign-in. Extracted unchanged from App so the public
+ * account-deleted route can live outside the authentication gate. */
+function ProtectedRoutes(): React.JSX.Element {
   return (
     <AuthenticationGate>
       <Routes>
@@ -294,10 +301,51 @@ function App(): React.JSX.Element {
               </AuthorizedRoute>
             }
           />
+          <Route
+            path="/complaints"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.COMPLAINTS_READ_SELF}>
+                <ComplaintListPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/complaints/:id"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.COMPLAINTS_READ_SELF}>
+                <ComplaintDetailPage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/complaint-management"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.COMPLAINTS_READ_ANY}>
+                <ComplaintQueuePage />
+              </AuthorizedRoute>
+            }
+          />
+          <Route
+            path="/complaint-management/:id"
+            element={
+              <AuthorizedRoute scope={REQUIRED_SCOPES.COMPLAINTS_READ_ANY}>
+                <ComplaintCaseDetailPage />
+              </AuthorizedRoute>
+            }
+          />
           <Route path="*" element={<AuthorizedFallback />} />
         </Route>
       </Routes>
     </AuthenticationGate>
+  )
+}
+
+function App(): React.JSX.Element {
+  return (
+    <Routes>
+      <Route path="/account-deleted" element={<AccountDeletedPage />} />
+      <Route path="/*" element={<ProtectedRoutes />} />
+    </Routes>
   )
 }
 

@@ -17,7 +17,7 @@
  */
 
 import { type UseQueryResult, useQuery } from '@tanstack/react-query'
-import type { ConsentDetail } from '../../../types/consent'
+import type { ConsentSummary } from '../../../types/consent'
 import { fetchMyConsents } from '../../my-consents/api/myConsentsApi'
 
 const DASHBOARD_PAGE_SIZE = 100
@@ -31,9 +31,9 @@ const DASHBOARD_MAX_PAGES = 20
  */
 async function fetchConsentPage(
   offset: number,
-  collected: ConsentDetail[],
+  collected: ConsentSummary[],
   remainingPages: number,
-): Promise<ConsentDetail[]> {
+): Promise<ConsentSummary[]> {
   const response = await fetchMyConsents({ limit: DASHBOARD_PAGE_SIZE, offset })
   const consents = [...collected, ...response.data]
 
@@ -44,11 +44,11 @@ async function fetchConsentPage(
   return fetchConsentPage(offset + response.data.length, consents, remainingPages - 1)
 }
 
-async function fetchAllMyConsents(): Promise<ConsentDetail[]> {
+async function fetchAllMyConsents(): Promise<ConsentSummary[]> {
   return fetchConsentPage(0, [], DASHBOARD_MAX_PAGES)
 }
 
-export default function useDashboardConsentsQuery(): UseQueryResult<ConsentDetail[]> {
+export default function useDashboardConsentsQuery(): UseQueryResult<ConsentSummary[]> {
   return useQuery({
     queryKey: ['consents', 'dashboard'],
     queryFn: fetchAllMyConsents,

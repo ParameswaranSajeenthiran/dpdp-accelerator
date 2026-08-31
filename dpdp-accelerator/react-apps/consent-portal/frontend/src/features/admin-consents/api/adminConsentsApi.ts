@@ -49,48 +49,30 @@ export async function fetchAdminConsentByID(consentID: string): Promise<ConsentD
 /**
  * Lists consents across users.
  *
- * The Identity Server's list rows carry no purposes, so each row on the page
- * is expanded with a detail lookup - the table shows which purposes a consent
- * covers. The lookups run together, and a row whose lookup fails keeps its
- * summary rather than blanking the page.
- *
- * The expansion goes away once the list endpoint returns purposes itself:
- * https://github.com/wso2/dpdp-accelerator/issues/23
+ * `attributes=purposes,authorizations` asks the list endpoint to inline what
+ * the table needs directly, so no per-row detail lookup is required here (see
+ * https://github.com/wso2/dpdp-accelerator/issues/23). `relation` is only
+ * meaningful paired with `userId` - the server rejects one without the other
+ * - so it's omitted whenever no user is being searched for.
  */
 export async function fetchAdminConsents(
   params: AdminConsentListQueryParams,
 ): Promise<AdminConsentListResponse> {
-  const response = await apiRequest<AdminConsentListResponse>(`${CONSENT_MGT_V2}/consents`, {
+  return apiRequest<AdminConsentListResponse>(`${CONSENT_MGT_V2}/consents`, {
     method: 'GET',
     query: {
       limit: params.limit,
       after: params.after,
       before: params.before,
-      subjectId: params.subjectId,
+      userId: params.userId,
+      relation: params.userId ? params.relation : undefined,
       serviceId: params.serviceId,
       state: params.state,
       purposeId: params.purposeId,
       filter: params.filter,
+      attributes: 'purposes,authorizations',
     },
   })
-
-  const summaries = response.Consents ?? []
-  if (summaries.length === 0) {
-    return response
-  }
-
-  const consents = await Promise.all(
-    summaries.map(async (summary) => {
-      try {
-        return await fetchAdminConsentByID(summary.id)
-      } catch {
-        // One failed lookup must not blank the whole page.
-        return summary
-      }
-    }),
-  )
-
-  return { ...response, Consents: consents }
 }
 
 export async function revokeAdminConsent(consentID: string): Promise<unknown> {

@@ -114,6 +114,10 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         assertEquals(dto.getOauthConsumerKey(), CLIENT_ID);
         assertEquals(dto.getCallbackUrl(), callbackUrl);
         assertTrue(dto.getPkceMandatory());
+        // Opaque access token - every complaint endpoint resolves the caller from Carbon's own
+        // PrivilegedCarbonContext rather than decoding or introspecting the token itself, so
+        // there's no need for a JWT-embedded "username" Access Token Attribute anymore either.
+        assertEquals(dto.getTokenType(), "Default");
         assertEquals(dto.getTokenBindingType(), "cookie");
         assertTrue(dto.isTokenBindingValidationEnabled());
         assertTrue(dto.isTokenRevocationWithIDPSessionTerminationEnabled());
@@ -142,6 +146,13 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
                 .getInboundAuthKey(), CLIENT_ID);
         assertTrue(serviceProvider.getLocalAndOutBoundAuthenticationConfig().isSkipConsent());
         assertTrue(serviceProvider.getLocalAndOutBoundAuthenticationConfig().isSkipLogoutConsent());
+        // Must be the full local claim URI, not the OIDC claim URI used for
+        // registerOAuthApplication's access token claims - ClaimConfig here is local-dialect
+        // (setLocalClaimDialect(true)), and WSO2 IS rejects "username" alone as an unknown local
+        // claim ("Local claim username is not available in the server").
+        assertTrue(serviceProvider.getClaimConfig().isLocalClaimDialect());
+        assertEquals(serviceProvider.getClaimConfig().getClaimMappings()[0].getLocalClaim().getClaimUri(),
+                "http://wso2.org/claims/username");
     }
 
     @Test

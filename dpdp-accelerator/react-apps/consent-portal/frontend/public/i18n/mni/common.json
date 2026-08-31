@@ -93,7 +93,14 @@
       "serviceId": "Service",
       "removeConsentIdForState": "Remove the Consent ID filter to use the state filter.",
       "propertyFilterLabel": "Consent property",
-      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter."
+      "removeConsentIdForSubject": "Remove the Consent ID filter to use the User ID filter.",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "পুম্নমক সেংদোকপা",
       "clearAriaLabel": "ফিল্টর পুম্নমক সেংদোকপা",
       "serviceSearchPlaceholder": "Search by service",
-      "state": "State"
+      "state": "State",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "য়ানবা লোড তৌরি...",
@@ -275,6 +288,35 @@
         "service": "Service",
         "state": "State"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "নুমিত {{count}} হেলেমখ্রে",
       "overduePlural": "নুমিত {{count}} হেলেমখ্রে",
       "daysLeftSingular": "নুমিত {{count}} ৱাৎলি",
-      "daysLeftPlural": "নুমিত {{count}} ৱাৎলি"
+      "daysLeftPlural": "নুমিত {{count}} ৱাৎলি",
+      "dueLabel": "ꯃꯇꯝ"
     },
     "timeline": {
       "complaintReceived": "ৱাকৎ ফংখ্রে",
@@ -727,8 +770,11 @@
       "empty": "নহাক্না ৱাকৎ অমত্তা পিশিন্দ্রি।",
       "emptyFiltered": "খনব ফিল্টরগা চান্নবা ৱাকৎ লৈত্রে।",
       "filters": {
+        "sectionAriaLabel": "ঐখক কমপ্লেন্তা ফিল্টরশিং",
         "status": "ফিভম",
-        "all": "পুম্নমক"
+        "all": "পুম্নমক",
+        "clear": "ফিল্টরশিং থুমদোকপা",
+        "clearAriaLabel": "ফিল্টর খুদিংমক থুমদোকপা"
       },
       "table": {
         "tableAriaLabel": "ইগী ৱাকৎশিংগী টেবিল",
@@ -745,13 +791,13 @@
       "back": "ইগী ৱাকৎশিংদা হনবা",
       "notFound": "ৱাকৎ থেংনদ্রে",
       "description": "অকুপ্পা সন্দোকনা তাকপা",
-      "submittedOn": "{{date}} দা পিশিনখ্রে",
       "awaitingInfo": {
         "note": "ৱাকৎ অসিগী অফিসারনা নহাৎকী মখাতানবা অকুপ্পা পাউ ঙাইরি। মখাদা পাউখুম পীবিয়ু।"
       },
       "resolved": {
         "note": "ৱাকৎ অসি লোইশিনখ্রে।"
-      }
+      },
+      "submittedOnLabel": "ꯃꯁꯤꯒꯤ ꯋꯥꯀꯠ ꯑꯁꯤ ꯇꯥꯡ ꯑꯁꯤꯗ ꯄꯤꯁꯤꯟꯈ꯭ꯔꯦ"
     },
     "submit": {
       "title": "ৱাকৎ অমা পিশিনবা",
@@ -808,7 +854,10 @@
       "empty": "ৱাকৎ অসিদা ফাইল হাপত্রিবনি।",
       "initialSubmission": "অহানবা পিশিনবা",
       "internalNote": "মনুংগী",
-      "overflowMore": "+{{count}} হেনগৎলি"
+      "overflowMore": "+{{count}} হেনগৎলি",
+      "uploadedCount": "{{count}} অনা ফাইল পুথোকপা",
+      "uploadedCount_one": "অনা ফাইল অমা পুথোকপা",
+      "uploadedCount_other": "{{count}} অনা ফাইল পুথোকপা"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "ক্যু দা হনবা",
         "notFound": "ৱাকৎ থেংনদ্রে",
-        "dataPrincipal": "শীজিন্নবমী"
+        "dataPrincipal": "শীজিন্নবমী",
+        "resolvedLocked": "ꯃꯁꯤꯒꯤ ꯋꯥꯀꯠ ꯑꯁꯤ ꯂꯣꯏꯁꯤꯟꯈ꯭ꯔꯦ ꯑꯃꯁꯨꯡ ꯍꯧꯖꯤꯛꯇꯤ ꯂꯣꯛ ꯇꯧꯔꯦ꯫ ꯅꯍꯥꯛꯅ ꯃꯁꯤ ꯍꯦꯛ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯥꯡꯗꯣꯛꯄ ꯌꯥꯔꯣꯏ — ꯃꯁꯤ ꯀ꯭ꯂꯥꯏꯑꯦꯟꯇꯅ ꯑꯅꯧꯕ ꯄꯥꯎꯖꯦꯜ ꯑꯃ ꯊꯥꯔꯛꯄ ꯃꯇꯝꯗꯇꯪ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯥꯡꯗꯣꯛꯄ ꯌꯥꯒꯅꯤ꯫",
+        "resolveDialog": {
+          "title": "ꯋꯥꯀꯠ ꯂꯣꯏꯁꯤꯟꯕ",
+          "message": "ꯅꯍꯥꯛꯅ ꯋꯥꯀꯠꯄ ꯑꯁꯤ ꯂꯣꯏꯁꯤꯟꯈ꯭ꯔꯦ ꯍꯥꯏꯅ ꯃꯥꯔꯛ ꯇꯧꯕ ꯅꯍꯥꯛꯅ ꯁꯣꯏꯗ꯭ꯔꯥ?",
+          "note": "ꯔꯦꯖꯣꯂꯨꯁꯟ ꯇꯧꯔꯕ ꯃꯇꯨꯡꯗ, ꯀ꯭ꯂꯥꯏꯑꯦꯟꯇꯅ ꯑꯅꯧꯕ ꯄꯥꯎꯖꯦꯜ ꯑꯃ ꯊꯥꯗ꯭ꯔꯤꯕꯃꯈꯩ ꯅꯍꯥꯛꯅ ꯄꯥꯎꯈꯨꯝ ꯄꯤꯕ ꯅꯠꯇ꯭ꯔꯒ ꯃꯁꯤꯒꯤ ꯐꯤꯕꯝ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯡꯗꯣꯛꯄ ꯉꯝꯂꯣꯏ꯫",
+          "confirm": "ꯋꯥꯀꯠ ꯂꯣꯏꯁꯤꯟꯕ",
+          "processing": "ꯔꯤꯖꯣꯂꯨꯏꯡ...",
+          "resolveFailed": "ꯀꯔꯤꯒꯨꯝꯕ ꯑꯁꯣꯏꯕ ꯑꯃ ꯊꯣꯛꯈ꯭ꯔꯦ ꯑꯃꯁꯨꯡ ꯋꯥꯀꯠ ꯑꯗꯨ ꯂꯣꯏꯁꯤꯟꯕ ꯌꯥꯗ꯭ꯔꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
+        }
       }
     }
   },
@@ -1197,6 +1255,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }
