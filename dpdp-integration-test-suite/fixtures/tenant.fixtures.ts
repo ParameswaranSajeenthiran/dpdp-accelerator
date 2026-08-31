@@ -186,8 +186,9 @@ interface CreatedTenant {
  */
 async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const domain = uniqueTenantDomain()
-  const owner: Persona = { username: uniqueMarker('tenant-owner'), password: 'TenantOwner@2026!' }
-  const consentUser: Persona = { username: uniqueMarker('tenant-user'), password: 'TenantUser@2026!' }
+  // Email-shaped: the accelerator enforces an email-address username.
+  const owner: Persona = { username: `${uniqueMarker('tenant-owner')}@dpdp.test`, password: 'TenantOwner@2026!' }
+  const consentUser: Persona = { username: `${uniqueMarker('tenant-user')}@dpdp.test`, password: 'TenantUser@2026!' }
 
   // Step 1: super admin creates the tenant + owner through Console's "New Root Organization"
   // wizard. Confirmed live this is the only tenant-creation path whose password field works
@@ -201,7 +202,7 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
     firstName: 'Tenant',
     lastName: 'Owner',
     username: owner.username,
-    email: `${owner.username}@${domain}`,
+    email: owner.username,
     password: owner.password,
   })
   // Provisioning itself is synchronous (confirmed live: the accelerator's onTenantCreate
@@ -222,7 +223,7 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const addUserWizard = new ConsoleAddUserWizard(ownerConsolePage)
   await addUserWizard.createUser({
     username: consentUser.username,
-    email: `${consentUser.username}@${domain}`,
+    email: consentUser.username,
     firstName: 'Tenant',
     lastName: 'User',
     password: consentUser.password,
