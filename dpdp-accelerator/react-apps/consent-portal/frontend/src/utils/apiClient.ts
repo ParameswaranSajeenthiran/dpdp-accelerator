@@ -51,7 +51,8 @@ export class APIError extends Error {
 export interface RequestOptions {
   method?: string
   headers?: Record<string, string>
-  body?: string
+  /** FormData for multipart uploads (e.g. complaint attachments) - never set a Content-Type header alongside it, the browser adds the correct multipart boundary itself. */
+  body?: string | FormData
   query?: Record<string, string | number | boolean | undefined>
 }
 
@@ -212,6 +213,19 @@ export async function apiRequestNoContent(
   options: RequestOptions = {},
 ): Promise<void> {
   await requestRaw(path, options)
+}
+
+/**
+ * For endpoints where success is not one outcome: the Identity Server answers
+ * 202 rather than 204 when an approval workflow intercepts the operation, and
+ * the caller has to tell the two apart to describe what actually happened.
+ */
+export async function apiRequestForStatus(
+  path: string,
+  options: RequestOptions = {},
+): Promise<number> {
+  const raw = await requestRaw(path, options)
+  return raw.status
 }
 
 /**

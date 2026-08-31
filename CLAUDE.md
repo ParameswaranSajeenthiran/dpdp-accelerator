@@ -210,15 +210,10 @@ touching this chain, in order:
   SLF4J or a direct log4j import. Declare it as
   `private static final Log LOG = LogFactory.getLog(<ClassName>.class);`.
 - Any user- or request-supplied string (tenant domain, consent ID, path/query param) must be
-  passed through a `sanitize()` helper before it goes into a log message, to block log
-  injection via embedded `\r`/`\n`:
-  ```java
-  private static String sanitize(String value) {
-      return value == null ? null : value.replaceAll("[\r\n]", "");
-  }
-  ```
-  This is a small private static method per class, not a shared utility — copy the pattern
-  rather than introducing a cross-module dependency for it.
+  passed through `org.wso2.dpdp.accelerator.common.util.LogSanitizer.sanitize()` before it goes
+  into a log message, to block log injection via embedded `\r`/`\n`. A few older classes still
+  carry their own private `sanitize()` copy predating this shared utility — don't add new ones;
+  use `LogSanitizer` for anything new.
 - Level conventions:
     - `LOG.debug` — routine/expected activity: OSGi activate/deactivate, successful writes,
       benign "not found" cases that produce a normal 404 rather than an operator-relevant failure.
@@ -400,6 +395,15 @@ All versions are declared exactly once, in the root `pom.xml`'s `<dependencyMana
 only `<groupId>`/`<artifactId>` — never repeat a `<version>`. Add `<scope>` in the module only
 when it needs to differ from what's managed (e.g. a dependency is `compile` scope in one
 consumer and `provided` in another); otherwise scope is managed too.
+
+When adding a new internal `org.wso2.dpdp.accelerator.*` module, add it to the root pom's
+`dependencyManagement` in the same change. A missing entry forces every consumer to inline
+`<version>${project.version}</version>` itself — easy to miss in review, and it's exactly how the
+complaint modules drifted from this rule.
+
+A property accidentally declared twice in the root pom's `<properties>` block fails silently —
+Maven takes the later value with no warning or error. After editing that block, verify with
+`mvn -o help:evaluate -Dexpression=<name> -q -DforceStdout` rather than trusting the file by eye.
 
 ## OSGi service lifecycle
 

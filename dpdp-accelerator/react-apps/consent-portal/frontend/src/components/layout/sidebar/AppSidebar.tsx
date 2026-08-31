@@ -17,7 +17,19 @@
  */
 
 import { Sidebar } from '@wso2/oxygen-ui'
-import { Activity, BellRing, Blocks, Clock3, House, Radio, ShieldCheck, ShieldPlus, Target } from '@wso2/oxygen-ui-icons-react'
+import {
+  Activity,
+  AlertTriangle,
+  BellRing,
+  Blocks,
+  Clock3,
+  House,
+  Inbox,
+  Radio,
+  ShieldCheck,
+  ShieldPlus,
+  Target,
+} from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'
@@ -103,6 +115,16 @@ const CATALOG_ITEMS: SidebarItem[] = [
   },
 ]
 
+const COMPLAINT_ITEMS: SidebarItem[] = [
+  {
+    id: 'my-complaints',
+    labelKey: 'sidebar.myComplaints',
+    path: '/complaints',
+    icon: <AlertTriangle size={18} />,
+    requiredScope: REQUIRED_SCOPES.COMPLAINTS_READ_SELF,
+  },
+]
+
 const ADMINISTRATION_ITEMS: SidebarItem[] = [
   {
     id: 'administration-consents',
@@ -110,6 +132,13 @@ const ADMINISTRATION_ITEMS: SidebarItem[] = [
     path: '/administration/consents',
     icon: <ShieldPlus size={18} />,
     requiredScope: REQUIRED_SCOPES.CONSENTS_READ_ANY,
+  },
+  {
+    id: 'complaint-management',
+    labelKey: 'sidebar.complaintManagement',
+    path: '/complaint-management',
+    icon: <Inbox size={18} />,
+    requiredScope: REQUIRED_SCOPES.COMPLAINTS_READ_ANY,
   },
 ]
 
@@ -152,6 +181,14 @@ function mapPathToMenuId(pathname: string, search: string): string {
     return 'elements'
   }
 
+  if (pathname.startsWith('/complaint-management')) {
+    return 'complaint-management'
+  }
+
+  if (pathname.startsWith('/complaints')) {
+    return 'my-complaints'
+  }
+
   return 'dashboard'
 }
 
@@ -172,14 +209,17 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
     : CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const eventItems = EVENT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const catalogItems = CATALOG_ITEMS.filter((item) => hasScope(item.requiredScope))
+  const complaintItems = COMPLAINT_ITEMS.filter((item) => hasScope(item.requiredScope))
   const administrationItems = ADMINISTRATION_ITEMS.filter((item) => hasScope(item.requiredScope))
   const visibleItems = [
     ...dashboardItems,
     ...consentItems,
     ...eventItems,
     ...catalogItems,
+    ...complaintItems,
     ...administrationItems,
   ]
+
 
   const activeItem = mapPathToMenuId(location.pathname, location.search)
 
@@ -218,6 +258,17 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
               </Sidebar.Item>
             ))}
           </Sidebar.Category>
+        ) : null}
+
+        {complaintItems.length > 0 ? (
+            <Sidebar.Category>
+              {complaintItems.map((item) => (
+                  <Sidebar.Item key={item.id} id={item.id}>
+                    <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
+                    <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>
+                  </Sidebar.Item>
+              ))}
+            </Sidebar.Category>
         ) : null}
 
         {eventItems.length > 0 ? (

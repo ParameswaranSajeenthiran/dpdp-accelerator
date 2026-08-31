@@ -22,6 +22,7 @@ import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
@@ -29,6 +30,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 
 /**
@@ -51,6 +53,8 @@ public final class DPDPIdentityExtensionDataHolder {
     private ConsentHistoryService consentHistoryService;
     private ConsentExpiryService consentExpiryService;
     private TopicService topicService;
+    private NotificationTemplateManager notificationTemplateManager;
+    private DPDPLifecycleEventListener lifecycleEventListener;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -179,5 +183,25 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setTopicService(TopicService topicService) {
 
         this.topicService = topicService;
+    }
+
+    public NotificationTemplateManager getNotificationTemplateManager() {
+
+        return notificationTemplateManager;
+    }
+
+    public void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        this.notificationTemplateManager = notificationTemplateManager;
+    }
+
+    public DPDPLifecycleEventListener getLifecycleEventListener() {
+
+        return lifecycleEventListener;
+    }
+
+    public void setLifecycleEventListener(DPDPLifecycleEventListener lifecycleEventListener) {
+
+        this.lifecycleEventListener = lifecycleEventListener;
     }
 }

@@ -24,6 +24,8 @@ public final class EventNotificationEndpointConstants {
     public static final String DEFAULT_LIMIT_STR = "20";
     public static final String DEFAULT_OFFSET_STR = "0";
     public static final String GROUP_ID_HEADER = "group-id";
+    public static final String SUBSCRIPTION_ID_HEADER = "subscription-id";
+    public static final String EVENT_SIGNATURE_HEADER = "event-signature";
 
     private EventNotificationEndpointConstants() {
     }

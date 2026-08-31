@@ -45,6 +45,7 @@ import type {
 } from '../../../types/subscription'
 import { DELIVERY_MODES, PURPOSE_FILTER_MODES } from '../../../types/subscription'
 import { fetchTopics } from '../api/topicsApi'
+import { supportsConsentPurposeFilter } from '../utils/topicCapabilities'
 
 interface SubscriptionRegisterDialogProps {
   open: boolean
@@ -122,7 +123,10 @@ export default function SubscriptionRegisterDialog({
       .map((p) => p.trim())
       .filter(Boolean)
 
-    if (filterMode !== 'all' && trimmedPurposes.length === 0) {
+    const supportsPurposeFilter = supportsConsentPurposeFilter(topic)
+    const effectiveFilterMode: PurposeFilterMode = supportsPurposeFilter ? filterMode : 'all'
+
+    if (effectiveFilterMode !== 'all' && trimmedPurposes.length === 0) {
       setPurposesError(t('subscriptions.dialog.purposesRequired'))
       hasError = true
     } else {
@@ -156,8 +160,8 @@ export default function SubscriptionRegisterDialog({
     onSubmit({
       topic: topic.trim(),
       filter: {
-        type: filterMode,
-        purposes: filterMode !== 'all' ? trimmedPurposes : undefined,
+        type: effectiveFilterMode,
+        purposes: effectiveFilterMode !== 'all' ? trimmedPurposes : undefined,
       },
       delivery: {
         mode: deliveryMode,
@@ -214,7 +218,13 @@ export default function SubscriptionRegisterDialog({
                 value={topic}
                 disabled={topicsLoading}
                 onChange={(e) => {
-                  setTopic(e.target.value)
+                  const nextTopic = e.target.value
+                  setTopic(nextTopic)
+                  if (!supportsConsentPurposeFilter(nextTopic)) {
+                    setFilterMode('all')
+                    setPurposesInput('')
+                    setPurposesError('')
+                  }
                   if (topicError) setTopicError('')
                 }}
               >
@@ -227,39 +237,43 @@ export default function SubscriptionRegisterDialog({
               {topicError ? <FormHelperText>{topicError}</FormHelperText> : null}
             </FormControl>
 
-            <FormControl fullWidth size="small">
-              <InputLabel id="filter-mode-label">
-                {t('subscriptions.dialog.filterModeLabel')}
-              </InputLabel>
-              <Select
-                labelId="filter-mode-label"
-                label={t('subscriptions.dialog.filterModeLabel')}
-                value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value as PurposeFilterMode)}
-              >
-                {PURPOSE_FILTER_MODES.map((mode) => (
-                  <MenuItem key={mode} value={mode}>
-                    {t(`subscriptions.filterType.${mode}`, mode)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {supportsConsentPurposeFilter(topic) ? (
+              <>
+                <FormControl fullWidth size="small">
+                  <InputLabel id="filter-mode-label">
+                    {t('subscriptions.dialog.filterModeLabel')}
+                  </InputLabel>
+                  <Select
+                    labelId="filter-mode-label"
+                    label={t('subscriptions.dialog.filterModeLabel')}
+                    value={filterMode}
+                    onChange={(e) => setFilterMode(e.target.value as PurposeFilterMode)}
+                  >
+                    {PURPOSE_FILTER_MODES.map((mode) => (
+                      <MenuItem key={mode} value={mode}>
+                        {t(`subscriptions.filterType.${mode}`, mode)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-            {filterMode !== 'all' ? (
-              <TextField
-                required
-                fullWidth
-                size="small"
-                label={t('subscriptions.dialog.purposesLabel')}
-                placeholder={t('subscriptions.dialog.purposesPlaceholder')}
-                value={purposesInput}
-                error={Boolean(purposesError)}
-                helperText={purposesError || t('subscriptions.dialog.purposesHelper')}
-                onChange={(e) => {
-                  setPurposesInput(e.target.value)
-                  if (purposesError) setPurposesError('')
-                }}
-              />
+                {filterMode !== 'all' ? (
+                  <TextField
+                    required
+                    fullWidth
+                    size="small"
+                    label={t('subscriptions.dialog.purposesLabel')}
+                    placeholder={t('subscriptions.dialog.purposesPlaceholder')}
+                    value={purposesInput}
+                    error={Boolean(purposesError)}
+                    helperText={purposesError || t('subscriptions.dialog.purposesHelper')}
+                    onChange={(e) => {
+                      setPurposesInput(e.target.value)
+                      if (purposesError) setPurposesError('')
+                    }}
+                  />
+                ) : null}
+              </>
             ) : null}
 
             <FormControl fullWidth size="small">
@@ -348,7 +362,9 @@ export default function SubscriptionRegisterDialog({
             type="submit"
             variant="contained"
             color="primary"
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <Plus size={16} />}
+            startIcon={
+              loading ? <CircularProgress size={16} color="inherit" /> : <Plus size={16} />
+            }
             disabled={loading || topicsLoading}
           >
             {loading

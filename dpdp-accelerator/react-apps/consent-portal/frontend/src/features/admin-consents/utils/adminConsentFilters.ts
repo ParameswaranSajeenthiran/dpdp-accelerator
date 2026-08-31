@@ -16,17 +16,28 @@
  * under the License.
  */
 
-import type { AdminConsentRegistryFilters, ConsentState } from '../../../types/consent'
-import { isConsentState } from '../../../types/consent'
+import type {
+  AdminConsentRegistryFilters,
+  ConsentRelation,
+  ConsentState,
+} from '../../../types/consent'
+import { CONSENT_RELATIONS, isConsentState } from '../../../types/consent'
+
+function isConsentRelation(value: string): value is ConsentRelation {
+  return (CONSENT_RELATIONS as readonly string[]).includes(value)
+}
 
 export const EMPTY_ADMIN_CONSENT_FILTERS: AdminConsentRegistryFilters = {
   state: 'All',
   consentId: '',
-  subjectId: '',
+  userId: '',
+  relation: 'ANY',
   serviceId: '',
   purposeId: '',
   propertyKey: '',
   propertyValue: '',
+  createdAfter: '',
+  createdBefore: '',
 }
 
 export function normalizeAdminConsentFilters(
@@ -35,24 +46,31 @@ export function normalizeAdminConsentFilters(
   return {
     state: filters.state,
     consentId: filters.consentId.trim(),
-    subjectId: filters.subjectId.trim(),
+    userId: filters.userId.trim(),
+    relation: filters.relation,
     serviceId: filters.serviceId.trim(),
     purposeId: filters.purposeId.trim(),
     propertyKey: filters.propertyKey.trim(),
     propertyValue: filters.propertyValue.trim(),
+    createdAfter: filters.createdAfter.trim(),
+    createdBefore: filters.createdBefore.trim(),
   }
 }
 
 export function getAdminConsentFilters(searchParams: URLSearchParams): AdminConsentRegistryFilters {
   const state = searchParams.get('state') ?? ''
+  const relation = searchParams.get('relation') ?? ''
 
   return normalizeAdminConsentFilters({
     state: isConsentState(state) ? (state as ConsentState) : 'All',
     consentId: searchParams.get('consentId') ?? '',
-    subjectId: searchParams.get('subjectId') ?? '',
+    userId: searchParams.get('userId') ?? '',
+    relation: isConsentRelation(relation) ? relation : 'ANY',
     serviceId: searchParams.get('serviceId') ?? '',
     purposeId: searchParams.get('purposeId') ?? '',
     propertyKey: searchParams.get('propertyKey') ?? '',
     propertyValue: searchParams.get('propertyValue') ?? '',
+    createdAfter: searchParams.get('createdAfter') ?? '',
+    createdBefore: searchParams.get('createdBefore') ?? '',
   })
 }

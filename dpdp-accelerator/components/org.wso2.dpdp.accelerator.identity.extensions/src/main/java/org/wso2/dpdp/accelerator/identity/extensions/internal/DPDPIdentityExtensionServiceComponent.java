@@ -36,6 +36,8 @@ import org.wso2.carbon.core.ServerStartupObserver;
 import org.wso2.carbon.identity.api.resource.mgt.APIResourceManager;
 import org.wso2.carbon.identity.application.mgt.ApplicationManagementService;
 import org.wso2.carbon.identity.application.mgt.AuthorizedAPIManagementService;
+import org.wso2.carbon.identity.event.handler.AbstractEventHandler;
+import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
 import org.wso2.carbon.identity.oauth.OAuthAdminServiceImpl;
 import org.wso2.carbon.identity.organization.management.service.OrganizationManager;
 import org.wso2.carbon.identity.role.v2.mgt.core.RoleManagementService;
@@ -45,10 +47,12 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
-import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentHistoryListener;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentManagementListener;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobActivator;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
+import org.wso2.dpdp.accelerator.identity.extensions.user.DPDPUserLifecycleEventHandler;
 
 /**
  * Registers {@link DPDPIdentityExtensionTenantMgtListener} for future tenants, and a
@@ -78,7 +82,9 @@ public class DPDPIdentityExtensionServiceComponent {
                 new DPDPIdentityExtensionTenantMgtListener(), null);
         serverStartupObserverRegistration = bundleContext.registerService(ServerStartupObserver.class,
                 new DPDPServerStartupObserver(), null);
-        bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentHistoryListener(),
+        bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentManagementListener(),
+                null);
+        bundleContext.registerService(AbstractEventHandler.class.getName(), new DPDPUserLifecycleEventHandler(),
                 null);
         new ConsentExpiryJobActivator().activate();
         LOG.debug("DPDP Identity Extensions component activated; tenant management, consent management "
@@ -327,5 +333,46 @@ public class DPDPIdentityExtensionServiceComponent {
 
         LOG.debug("Unsetting the Topic Service.");
         DPDPIdentityExtensionDataHolder.getInstance().setTopicService(null);
+    }
+
+    @Reference(
+            service = NotificationTemplateManager.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetNotificationTemplateManager"
+    )
+    protected void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Setting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(notificationTemplateManager);
+    }
+
+    protected void unsetNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
+
+        LOG.debug("Unsetting the Notification Template Manager.");
+        DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(null);
+    }
+
+    /**
+     * {@code OPTIONAL}, unlike every other reference above - bound once
+     * {@code event.notifications.service}'s publisher registers; every consumer already
+     * null-checks, so this component activates fine either way.
+     */
+    @Reference(
+            service = DPDPLifecycleEventListener.class,
+            cardinality = ReferenceCardinality.OPTIONAL,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetLifecycleEventListener"
+    )
+    protected void setLifecycleEventListener(DPDPLifecycleEventListener lifecycleEventListener) {
+
+        LOG.debug("Setting the DPDP Lifecycle Event Listener.");
+        DPDPIdentityExtensionDataHolder.getInstance().setLifecycleEventListener(lifecycleEventListener);
+    }
+
+    protected void unsetLifecycleEventListener(DPDPLifecycleEventListener lifecycleEventListener) {
+
+        LOG.debug("Unsetting the DPDP Lifecycle Event Listener.");
+        DPDPIdentityExtensionDataHolder.getInstance().setLifecycleEventListener(null);
     }
 }

@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao;
 
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
@@ -28,6 +29,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryDi
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface DeliveryDAO {
@@ -83,12 +85,14 @@ public interface DeliveryDAO {
 
     Optional<PollDelivery> getPollDeliveryById(String deliveryId, String orgId);
 
-    List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, int limit);
+    List<PollDelivery> getPendingPollDeliveries(String orgId, String groupId, String subscriptionId, int limit);
 
-    void updatePollDeliveryStatuses(String orgId, String groupId, List<String> ackEventIds, List<String> errEventIds);
+    /** Applies polling outcomes only to pending deliveries owned by the supplied subscription. */
+    void updatePollDeliveryStatusesByDeliveryIds(String orgId, String groupId, String subscriptionId,
+            List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors);
 
-    void updatePollDeliveryStatuses(Connection connection, String orgId, String groupId,
-            List<String> ackEventIds, List<String> errEventIds);
+    void updatePollDeliveryStatusesByDeliveryIds(Connection connection, String orgId, String groupId,
+            String subscriptionId, List<String> ackDeliveryIds, Map<String, PollDeliveryError> errors);
 
     boolean claimWebhookDelivery(String deliveryId);
 

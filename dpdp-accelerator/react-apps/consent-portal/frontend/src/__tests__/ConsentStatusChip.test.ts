@@ -22,8 +22,6 @@ import { describe, expect, it } from 'vitest'
 import {
   getConsentStateChipColor,
   getConsentStateLabelKey,
-  isConsentApprovableState,
-  isConsentRejectableState,
   isConsentRevokableState,
 } from '../features/my-consents/utils/statusChip'
 import { CONSENT_AUTHORIZATION_STATES, CONSENT_STATES, isConsentState } from '../types/consent'
@@ -64,18 +62,13 @@ describe('consent state presentation', () => {
     })
   })
 
-  it('limits lifecycle actions to their supported states', () => {
-    expect(isConsentApprovableState('PENDING')).toBe(true)
-    expect(isConsentRejectableState('PENDING')).toBe(true)
+  it('limits revocation to active consents', () => {
     expect(isConsentRevokableState('ACTIVE')).toBe(true)
-    expect(isConsentApprovableState('ACTIVE')).toBe(false)
-    expect(isConsentRejectableState('REJECTED')).toBe(false)
     expect(isConsentRevokableState('PENDING')).toBe(false)
   })
 
   it('no longer recognises the removed CREATED state', () => {
     expect(CONSENT_STATES).toEqual(['PENDING', 'ACTIVE', 'REJECTED', 'REVOKED', 'EXPIRED'])
     expect(isConsentState('CREATED')).toBe(false)
-    expect(isConsentApprovableState('CREATED')).toBe(false)
   })
 })

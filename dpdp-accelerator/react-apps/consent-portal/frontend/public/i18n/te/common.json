@@ -93,7 +93,14 @@
       "serviceId": "సేవ",
       "removeConsentIdForState": "రాష్ట్ర ఫిల్టర్‌ను ఉపయోగించడానికి సమ్మతి ID ఫిల్టర్‌ను తీసివేయండి.",
       "propertyFilterLabel": "సమ్మతి ఆస్తి",
-      "removeConsentIdForSubject": "యూజర్ ఐడి ఫిల్టర్‌ను ఉపయోగించడానికి కన్సెంట్ ఐడి ఫిల్టర్‌ను తీసివేయండి."
+      "removeConsentIdForSubject": "యూజర్ ఐడి ఫిల్టర్‌ను ఉపయోగించడానికి కన్సెంట్ ఐడి ఫిల్టర్‌ను తీసివేయండి.",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "అన్నీ క్లియర్ చేయి",
       "clearAriaLabel": "అన్ని ఫిల్టర్‌లను క్లియర్ చేయి",
       "serviceSearchPlaceholder": "సేవల ద్వారా వెతకండి",
-      "state": "రాష్ట్రం"
+      "state": "రాష్ట్రం",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "సమ్మతులు లోడ్ అవుతున్నాయి...",
@@ -275,6 +288,35 @@
         "service": "సేవ",
         "state": "రాష్ట్రం"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} రోజు ఆలస్యమైంది",
       "overduePlural": "{{count}} రోజులు ఆలస్యమైంది",
       "daysLeftSingular": "{{count}} రోజు మిగిలి ఉంది",
-      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి"
+      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "dueLabel": "గడువు"
     },
     "timeline": {
       "complaintReceived": "ఫిర్యాదు స్వీకరించబడింది",
@@ -727,8 +770,11 @@
       "empty": "మీరు ఇంకా ఎలాంటి ఫిర్యాదులు సమర్పించలేదు.",
       "emptyFiltered": "ఎంచుకున్న ఫిల్టర్‌కు ఏ ఫిర్యాదులు సరిపోలలేదు.",
       "filters": {
+        "sectionAriaLabel": "నా ఫిర్యాదల ఫిల్టర్లు",
         "status": "స్థితి",
-        "all": "అన్నీ"
+        "all": "అన్నీ",
+        "clear": "ఫిల్టర్లను క్లియర్ చేయి",
+        "clearAriaLabel": "అన్ని ఫిల్టర్లను క్లియర్ చేయి"
       },
       "table": {
         "tableAriaLabel": "నా ఫిర్యాదుల పట్టిక",
@@ -745,13 +791,13 @@
       "back": "నా ఫిర్యాదులకు తిరిగి వెళ్ళు",
       "notFound": "ఫిర్యాదు కనుగొనబడలేదు",
       "description": "వివరణ",
-      "submittedOn": "{{date}}న సమర్పించబడింది",
       "awaitingInfo": {
         "note": "ఫిర్యాదు అధికారి మీ నుండి మరింత సమాచారం కోసం వేచి ఉన్నారు. దయచేసి కింద రిప్లై ఇవ్వండి."
       },
       "resolved": {
         "note": "ఈ ఫిర్యాదు పరిష్కరించబడింది."
-      }
+      },
+      "submittedOnLabel": "సమర్పించబడింది"
     },
     "submit": {
       "title": "ఫిర్యాదు సమర్పించండి",
@@ -808,7 +854,10 @@
       "empty": "ఈ ఫిర్యాదుకు ఎలాంటి జోడింపులు జోడించబడలేదు.",
       "initialSubmission": "ప్రాథమిక సమర్పణ",
       "internalNote": "అంతర్గతం",
-      "overflowMore": "మరిన్ని +{{count}}"
+      "overflowMore": "మరిన్ని +{{count}}",
+      "uploadedCount": "{{count}} కొత్త ఫైళ్లు జోడించబడ్డాయి",
+      "uploadedCount_one": "కొత్త ఫైల్ జోడించబడింది",
+      "uploadedCount_other": "{{count}} కొత్త ఫైళ్లు జోడించబడ్డాయి"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "క్యూకు తిరిగి వెళ్ళు",
         "notFound": "ఫిర్యాదు కనుగొనబడలేదు",
-        "dataPrincipal": "వినియోగదారు"
+        "dataPrincipal": "వినియోగదారు",
+        "resolvedLocked": "ఈ ఫిర్యాదు పరిష్కరించబడింది మరియు ఇప్పుడు లాక్ చేయబడింది. మీరు దీన్ని నేరుగా తిరిగి తెరవలేరు — క్లయింట్ కొత్త సందేశాన్ని పంపితేనే దీన్ని తిరిగి తెరవవచ్చు.",
+        "resolveDialog": {
+          "title": "ఫిర్యాదు పరిష్కారం",
+          "message": "మీరు ఈ ఫిర్యాదును పరిష్కరించబడినట్లుగా గుర్తించాలని ఖచ్చితంగా అనుకుంటున్నారా?",
+          "note": "పరిష్కరించబడిన తర్వాత, క్లయింట్ కొత్త సందేశాన్ని పంపితే తప్ప, మీరు మళ్ళీ సమాధానం ఇవ్వలేరు లేదా దాని స్థితిని మార్చలేరు.",
+          "confirm": "ఫిర్యాదు పరిష్కారం",
+          "processing": "పరిష్కరిస్తోంది...",
+          "resolveFailed": "ఏదో తప్పు జరిగింది మరియు ఫిర్యాదు పరిష్కరించబడలేదు. దయచేసి మళ్ళీ ప్రయత్నించండి."
+        }
       }
     }
   },
@@ -1051,8 +1109,8 @@
       "registerSubtitle": "Configure a new event notification subscription and delivery mode",
       "topicLabel": "Topic",
       "topicRequired": "Topic is required.",
-      "filterModeLabel": "Purpose Filter Mode",
-      "purposesLabel": "Purposes (comma-separated)",
+      "filterModeLabel": "Consent Purpose Filter Mode",
+      "purposesLabel": "Consent Purposes (comma-separated)",
       "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
       "purposesHelper": "Comma-separated list of consent purposes to filter",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
@@ -1075,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "Unable to load subscription details.",
@@ -1118,7 +1177,9 @@
       "groupId": "Group ID",
       "groupIdPlaceholder": "Filter by Group ID...",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "All",
@@ -1197,6 +1258,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

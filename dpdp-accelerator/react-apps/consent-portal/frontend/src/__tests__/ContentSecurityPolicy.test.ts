@@ -48,6 +48,14 @@ describe('frontend content security policy', () => {
     expect(policy).toContain("font-src 'self' data:")
   })
 
+  it('allows blob: image sources for locally-selected attachment previews', () => {
+    const policy = contentSecurityPolicy({ isBaseURL: '' })
+
+    // Attachment thumbnails are rendered from URL.createObjectURL(file)
+    // before the file is ever uploaded, so img-src must permit blob:.
+    expect(policy).toContain("img-src 'self' data: blob:")
+  })
+
   it('keeps the temporary Emotion exception limited to styles', () => {
     const policy = contentSecurityPolicy({ isBaseURL: 'http://localhost:8080' })
 

@@ -54,7 +54,7 @@ export interface EventListResponse {
 }
 
 export interface EventInput {
-  topicName: string
+  topic: string
   groupId?: string
   purposes?: string[]
   payload: Record<string, unknown>
@@ -65,4 +65,5 @@ export interface EventFilters {
   status: string
   topic: string
   groupId: string
+  subscriptionId: string
 }

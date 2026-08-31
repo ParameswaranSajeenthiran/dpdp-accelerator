@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.consent.mgt.core.exception.ConsentManagementException;
+import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
@@ -34,6 +35,8 @@ import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.Conse
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.util.ConsentHistoryEndpointUtil;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
+
+import java.util.List;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -63,7 +66,7 @@ public class ConsentHistorySelfApi {
 
         ConsentHistoryEndpointUtil.validatePagination(limit, offset);
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        requireCallerOwnsConsent(consentId);
+        requireCallerInvolvedInConsent(consentId);
         try {
             PagedResult<ConsentStatusAuditRecord> result = getConsentHistoryService()
                     .getStatusAuditHistory(tenantDomain, consentId, limit, offset);
@@ -86,7 +89,7 @@ public class ConsentHistorySelfApi {
 
         ConsentHistoryEndpointUtil.validatePagination(limit, offset);
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        requireCallerOwnsConsent(consentId);
+        requireCallerInvolvedInConsent(consentId);
         try {
             PagedResult<ConsentHistoryRecord> result = getConsentHistoryService()
                     .getConsentHistory(tenantDomain, consentId, limit, offset);
@@ -101,13 +104,19 @@ public class ConsentHistorySelfApi {
         }
     }
 
-    private void requireCallerOwnsConsent(String consentId) {
+    /**
+     * A delegated consent (e.g. a guardian authorizing on behalf of a dependent) legitimately
+     * concerns more than one person - both the subject and whoever is listed on it as an
+     * authorizer need to be able to read its history, not just the subject.
+     */
+    private void requireCallerInvolvedInConsent(String consentId) {
 
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         try {
-            String piiPrincipalId = getPrivilegedConsentManager().getReceiptWithExtendedSchema(consentId)
-                    .getPiiPrincipalId();
-            ConsentHistoryEndpointUtil.requireOwner(callerUsername, piiPrincipalId);
+            PrivilegedConsentManager consentManager = getPrivilegedConsentManager();
+            String piiPrincipalId = consentManager.getReceiptWithExtendedSchema(consentId).getPiiPrincipalId();
+            List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
+            ConsentHistoryEndpointUtil.requireInvolved(callerUsername, piiPrincipalId, authorizations);
         } catch (ConsentManagementException e) {
             LOG.debug("Could not resolve consent " + sanitize(consentId) + " for the ownership check.", e);
             throw new ConsentHistoryEndpointException(Response.Status.NOT_FOUND.getStatusCode(),

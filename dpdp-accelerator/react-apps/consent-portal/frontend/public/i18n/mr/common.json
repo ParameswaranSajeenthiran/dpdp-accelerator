@@ -93,7 +93,14 @@
       "serviceId": "सेवा",
       "removeConsentIdForState": "राज्य फिल्टर वापरण्यासाठी संमती आयडी फिल्टर काढा.",
       "propertyFilterLabel": "संमती मालमत्ता",
-      "removeConsentIdForSubject": "युजर आयडी फिल्टर वापरण्यासाठी संमती आयडी फिल्टर काढून टाका."
+      "removeConsentIdForSubject": "युजर आयडी फिल्टर वापरण्यासाठी संमती आयडी फिल्टर काढून टाका.",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "सर्व साफ करा",
       "clearAriaLabel": "सर्व फिल्टर साफ करा",
       "serviceSearchPlaceholder": "सेवेनुसार शोधा",
-      "state": "राज्य"
+      "state": "राज्य",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "संमती लोड होत आहेत...",
@@ -275,6 +288,35 @@
         "service": "सेवा",
         "state": "राज्य"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} दिवस थकीत",
       "overduePlural": "{{count}} दिवस थकीत",
       "daysLeftSingular": "{{count}} दिवस शिल्लक",
-      "daysLeftPlural": "{{count}} दिवस शिल्लक"
+      "daysLeftPlural": "{{count}} दिवस शिल्लक",
+      "dueLabel": "अंतिम तारीख"
     },
     "timeline": {
       "complaintReceived": "तक्रार प्राप्त झाली",
@@ -727,8 +770,11 @@
       "empty": "तुम्ही अद्याप कोणत्याही तक्रारी नोंदवलेल्या नाहीत.",
       "emptyFiltered": "निवडलेल्या फिल्टरशी कोणतीही तक्रार जुळत नाही.",
       "filters": {
+        "sectionAriaLabel": "माझ्या तक्रारींचे फिल्टर",
         "status": "स्थिती",
-        "all": "सर्व"
+        "all": "सर्व",
+        "clear": "फिल्टर साफ करा",
+        "clearAriaLabel": "सर्व फिल्टर साफ करा"
       },
       "table": {
         "tableAriaLabel": "माझ्या तक्रारी तक्ता",
@@ -745,13 +791,13 @@
       "back": "माझ्या तक्रारींकडे परत जा",
       "notFound": "तक्रार आढळली नाही",
       "description": "वर्णन",
-      "submittedOn": "{{date}} रोजी सादर केले",
       "awaitingInfo": {
         "note": "तक्रार अधिकारी तुमच्याकडून अधिक माहितीच्या प्रतीक्षेत आहे. कृपया खाली उत्तर द्या."
       },
       "resolved": {
         "note": "या तक्रारीचे निराकरण झाले आहे."
-      }
+      },
+      "submittedOnLabel": "सादर केले आहे"
     },
     "submit": {
       "title": "तक्रार नोंदवा",
@@ -808,7 +854,10 @@
       "empty": "या तक्रारीसाठी कोणतेही संलग्नक जोडलेले नाहीत.",
       "initialSubmission": "सुरुवातीचे सादरीकरण",
       "internalNote": "अंतर्गत",
-      "overflowMore": "+{{count}} अधिक"
+      "overflowMore": "+{{count}} अधिक",
+      "uploadedCount": "{{count}} नवीन फाइली जोडल्या",
+      "uploadedCount_one": "नवीन फाइल जोडली",
+      "uploadedCount_other": "{{count}} नवीन फाइली जोडल्या"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "रांगेत परत जा",
         "notFound": "तक्रार आढळली नाही",
-        "dataPrincipal": "वापरकर्ता"
+        "dataPrincipal": "वापरकर्ता",
+        "resolvedLocked": "ही तक्रार सोडवली गेली आहे आणि आता ती लॉक केली आहे. तुम्ही ती थेट पुन्हा उघडू शकत नाही — ती केवळ तेव्हाच पुन्हा उघडली जाऊ शकते जर क्लायंट नवीन संदेश पाठवेल.",
+        "resolveDialog": {
+          "title": "तक्रार निवारण करा",
+          "message": "तुम्हाला खात्री आहे की तुम्हाला ही तक्रार सोडवली म्हणून चिन्हांकित करायची आहे?",
+          "note": "एकदा सोडवल्यानंतर, जोपर्यंत क्लायंट नवीन संदेश पाठवत नाही, तोपर्यंत तुम्ही पुन्हा उत्तर देऊ शकणार नाही किंवा त्याची स्थिती बदलू शकणार नाही.",
+          "confirm": "तक्रार निवारण करा",
+          "processing": "सोडवत आहे...",
+          "resolveFailed": "काहीतरी चुकले आहे आणि तक्रार सोडवता आली नाही. कृपया पुन्हा प्रयत्न करा."
+        }
       }
     }
   },
@@ -1051,8 +1109,8 @@
       "registerSubtitle": "Configure a new event notification subscription and delivery mode",
       "topicLabel": "Topic",
       "topicRequired": "Topic is required.",
-      "filterModeLabel": "Purpose Filter Mode",
-      "purposesLabel": "Purposes (comma-separated)",
+      "filterModeLabel": "Consent Purpose Filter Mode",
+      "purposesLabel": "Consent Purposes (comma-separated)",
       "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
       "purposesHelper": "Comma-separated list of consent purposes to filter",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
@@ -1075,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "Unable to load subscription details.",
@@ -1118,7 +1177,9 @@
       "groupId": "Group ID",
       "groupIdPlaceholder": "Filter by Group ID...",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "All",
@@ -1197,6 +1258,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

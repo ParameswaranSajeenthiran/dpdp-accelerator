@@ -37,6 +37,7 @@ import ConsentApprovalDialog from './components/ConsentApprovalDialog'
 import ConsentRejectionDialog from './components/ConsentRejectionDialog'
 import ConsentRevocationDialog from './components/ConsentRevocationDialog'
 import ConsentAuthorizationsSection from './components/details/ConsentAuthorizationsSection'
+import ConsentLifecycleSection from './components/details/ConsentLifecycleSection'
 import ConsentMetadataCard from './components/details/ConsentMetadataCard'
 import ConsentPropertiesSection from './components/details/ConsentPropertiesSection'
 import ConsentPurposesSection from './components/details/ConsentPurposesSection'
@@ -47,10 +48,11 @@ import {
   useRevokeConsentMutation,
 } from './hooks/useConsentQueries'
 import {
-  isConsentApprovableState,
-  isConsentRejectableState,
-  isConsentRevokableState,
-} from './utils/statusChip'
+  isApprovableByCurrentUser,
+  isCurrentUserInvolved,
+  isRejectableByCurrentUser,
+} from './utils/consentAuthorization'
+import { isConsentRevokableState } from './utils/statusChip'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import {
   useAdminConsentDetailQuery,
@@ -72,7 +74,7 @@ function ConsentDetailsLoading(): React.JSX.Element {
         <Skeleton variant="text" width={220} height={48} />
       </Stack>
 
-      {['metadata', 'properties', 'purposes', 'authorizations'].map((section) => (
+      {['metadata', 'properties', 'purposes', 'authorizations', 'history'].map((section) => (
         <Card key={`details-${section}-skeleton`} sx={{ boxShadow: 1 }}>
           <CardHeader title={<Skeleton variant="text" width={220} />} sx={{ pb: 1 }} />
           <Divider />
@@ -95,14 +97,14 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   const navigate = useNavigate()
   const selfConsentDetailQuery = useConsentDetailQuery(variant === 'self' ? id : undefined)
   const adminConsentDetailQuery = useAdminConsentDetailQuery(variant === 'admin' ? id : undefined)
-  const approveMutation = useApproveConsentMutation()
-  const rejectMutation = useRejectConsentMutation()
+  const { currentUser, hasScope } = useAuthorization()
+  const approveMutation = useApproveConsentMutation(currentUser.userId)
+  const rejectMutation = useRejectConsentMutation(currentUser.userId)
   const revokeMutation = useRevokeConsentMutation()
   const adminRevokeMutation = useAdminRevokeConsentMutation()
   const [approvalDialogOpen, setApprovalDialogOpen] = useState<boolean>(false)
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState<boolean>(false)
   const [revocationDialogOpen, setRevocationDialogOpen] = useState<boolean>(false)
-  const { hasScope } = useAuthorization()
   const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
   const consentDetailQuery = variant === 'admin' ? adminConsentDetailQuery : selfConsentDetailQuery
@@ -129,12 +131,26 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   }
 
   const detail = consentDetailQuery.data
+  // The self-service endpoint only ever returns consents the caller is
+  // already involved in, so this check is only meaningful for the admin
+  // registry, which can open any consent regardless of who's viewing it.
+  const isInvolved =
+    variant === 'admin' && detail
+      ? isCurrentUserInvolved(detail.subjectId, detail.authorizations, currentUser.userId)
+      : true
   const canApprove =
-    variant === 'self' && detail ? canWriteSelf && isConsentApprovableState(detail.state) : false
+    detail && isInvolved
+      ? canWriteSelf &&
+        isApprovableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
+      : false
   const canReject =
-    variant === 'self' && detail ? canWriteSelf && isConsentRejectableState(detail.state) : false
+    detail && isInvolved
+      ? canWriteSelf &&
+        isRejectableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
+      : false
   const canRevoke = detail
-    ? (variant === 'admin' ? canWriteAny : canWriteSelf) && isConsentRevokableState(detail.state)
+    ? (variant === 'admin' ? canWriteAny || (isInvolved && canWriteSelf) : canWriteSelf) &&
+      isConsentRevokableState(detail.state)
     : false
 
   if (consentDetailQuery.isLoading) {
@@ -218,6 +234,7 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
       <ConsentPropertiesSection properties={detail.properties} />
       <ConsentPurposesSection purposes={detail.purposes} />
       <ConsentAuthorizationsSection authorizations={detail.authorizations ?? []} />
+      <ConsentLifecycleSection consentId={id} variant={variant} />
 
       <ConsentApprovalDialog
         open={approvalDialogOpen}

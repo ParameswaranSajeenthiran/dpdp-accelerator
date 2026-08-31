@@ -25,7 +25,7 @@ import {
 } from '@asgardeo/auth-spa'
 
 import { runtimeBasePath, serverBaseUrl } from './basePath'
-import { CONSENT_HISTORY_SCOPES, EVENT_SCOPES, IS_SCOPES } from './scopes'
+import { ACCOUNT_SCOPES, COMPLAINT_SCOPES, CONSENT_HISTORY_SCOPES, EVENT_SCOPES, IS_SCOPES } from './scopes'
 
 /**
  * OIDC authentication for the portal, the way the Identity Server's own SPAs
@@ -69,6 +69,8 @@ const DEFAULT_SCOPE: string[] = [
   ...Object.values(IS_SCOPES),
   ...Object.values(EVENT_SCOPES),
   ...Object.values(CONSENT_HISTORY_SCOPES),
+  ...Object.values(COMPLAINT_SCOPES),
+  ...Object.values(ACCOUNT_SCOPES),
 ]
 
 let initPromise: Promise<void> | undefined
@@ -301,6 +303,25 @@ export async function logout(): Promise<void> {
   }
   await initAuth()
   await spaClient().signOut()
+}
+
+/**
+ * Best-effort local teardown for when the account itself is gone: an OIDC
+ * logout redirect would ask the Identity Server about a user that no longer
+ * exists. revokeAccessToken() revokes the token and clears the worker-held
+ * session without navigating anywhere.
+ */
+export async function clearLocalSession(): Promise<void> {
+  if (!isAuthEnabled()) {
+    return
+  }
+  await initAuth()
+  try {
+    await spaClient().revokeAccessToken()
+  } catch {
+    // The account is already deleted server-side; a failed revocation leaves
+    // only a token that no longer belongs to anyone.
+  }
 }
 
 export async function getBasicUser(): Promise<BasicUserInfo | undefined> {

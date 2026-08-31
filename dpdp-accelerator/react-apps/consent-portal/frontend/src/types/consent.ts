@@ -31,6 +31,15 @@ export const CONSENT_AUTHORIZATION_STATES = ['APPROVED', 'REJECTED', 'REVOKED', 
 export type ConsentAuthorizationState = (typeof CONSENT_AUTHORIZATION_STATES)[number]
 
 /**
+ * A caller's relationship to a consent: the data `SUBJECT` it's about, an
+ * `AUTHORIZER` listed to approve/reject it on the subject's behalf (DPDP's
+ * guardian/delegate model), or `ANY` for either.
+ */
+export const CONSENT_RELATIONS = ['SUBJECT', 'AUTHORIZER', 'ANY'] as const
+
+export type ConsentRelation = (typeof CONSENT_RELATIONS)[number]
+
+/**
  * An element referenced by a consented purpose.
  *
  * Consent level elements carry no approval or requirement flags in WSO2
@@ -74,11 +83,12 @@ export interface ConsentDetail {
 }
 
 /**
- * Consents returned by the administrative list endpoint.
+ * Consents returned by the self-service and administrative list endpoints.
  *
- * The Identity Server's raw list rows carry no purposes; `fetchAdminConsents`
- * expands each row on the page with a detail lookup, so `purposes` is present
- * in practice - except on a row whose lookup failed.
+ * `purposes` and `authorizations` are present whenever the list call asked
+ * for them via `attributes=purposes,authorizations` - both list endpoints
+ * request that, so in practice they're populated except on a row whose
+ * expansion the server itself could not resolve.
  */
 export interface ConsentSummary {
   id: string
@@ -87,12 +97,15 @@ export interface ConsentSummary {
   state: ConsentState | string
   timestamp: number
   purposes?: ConsentPurpose[]
+  authorizations?: ConsentAuthorization[]
 }
 
 /**
  * Row model shared by the self-service and administrative consent tables.
  *
  * `purposes` is undefined when the source endpoint does not return them.
+ * `authorizations` backs per-caller approve/reject gating - see
+ * `features/my-consents/utils/consentAuthorization.ts`.
  */
 export interface ConsentRecord {
   id: string
@@ -101,16 +114,20 @@ export interface ConsentRecord {
   state: ConsentState
   timestamp: number
   purposes?: string[]
+  authorizations?: ConsentAuthorization[]
 }
 
 export interface ConsentRegistryFilters {
   state: 'All' | ConsentState
   serviceId: string
+  relation: ConsentRelation
+  createdAfter: string
+  createdBefore: string
 }
 
 export interface AdminConsentRegistryFilters extends ConsentRegistryFilters {
   consentId: string
-  subjectId: string
+  userId: string
   purposeId: string
   propertyKey: string
   propertyValue: string
@@ -130,7 +147,7 @@ export interface ConsentSearchMetadata {
 }
 
 export interface ConsentSearchResponse {
-  data: ConsentDetail[]
+  data: ConsentSummary[]
   metadata: ConsentSearchMetadata
 }
 
@@ -140,13 +157,19 @@ export interface ConsentListQueryParams {
   /** One state, or undefined for all: the filter is a single-select. */
   state?: ConsentState
   serviceId?: string
+  /** Always paired with the signed-in user's own ID; defaults to `ANY` server-side. */
+  relation?: ConsentRelation
+  /** A `timestamp ge/le <epoch-ms>` clause built by `buildTimestampFilter`. */
+  filter?: string
 }
 
 export interface AdminConsentListQueryParams {
   limit: number
   after?: string
   before?: string
-  subjectId?: string
+  userId?: string
+  /** Only meaningful paired with `userId` - never sent alone. */
+  relation?: ConsentRelation
   serviceId?: string
   state?: string
   purposeId?: string

@@ -93,7 +93,14 @@
       "serviceId": "सेवा",
       "removeConsentIdForState": "राज्य फिल्टरक उपयोग करबाक लेल सहमति आईडी फिल्टर हटा दिअ।",
       "propertyFilterLabel": "सहमति संपत्ति",
-      "removeConsentIdForSubject": "यूजर आईडी फिल्टरक उपयोग करबाक लेल सहमति आईडी फिल्टर हटा दिअ।"
+      "removeConsentIdForSubject": "यूजर आईडी फिल्टरक उपयोग करबाक लेल सहमति आईडी फिल्टर हटा दिअ।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "सभ साफ़ करू",
       "clearAriaLabel": "सभ फ़िल्टर साफ़ करू",
       "serviceSearchPlaceholder": "सेवा द्वारा खोजू",
-      "state": "राज्य"
+      "state": "राज्य",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "सहमति सभ लोड भऽ रहल अछि...",
@@ -275,6 +288,35 @@
         "service": "सेवा",
         "state": "राज्य"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} दिन विलंब",
       "overduePlural": "{{count}} दिन विलंब",
       "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी"
+      "daysLeftPlural": "{{count}} दिन बाँकी",
+      "dueLabel": "समय सीमा"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त भेल",
@@ -727,8 +770,11 @@
       "empty": "अहाँ अखनि तक कोनहु शिकायत दर्ज नहि केने छी।",
       "emptyFiltered": "चुनल गेल फ़िल्टर सँ कोनहु शिकायत मेल नहि खाैत अछि।",
       "filters": {
+        "sectionAriaLabel": "हमर शिकायतक फिल्टर",
         "status": "स्थिति",
-        "all": "सभ"
+        "all": "सभ",
+        "clear": "फिल्टर साफ करू",
+        "clearAriaLabel": "सभ फिल्टर साफ करू"
       },
       "table": {
         "tableAriaLabel": "हमर शिकायत तालिका",
@@ -745,13 +791,13 @@
       "back": "हमर शिकायत सभ पर वापस जाऊ",
       "notFound": "शिकायत नहि भेटल",
       "description": "विवरण",
-      "submittedOn": "{{date}} केँ दर्ज कएल गेल",
       "awaitingInfo": {
         "note": "शिकायत अधिकारी अहाँ सँ और जानकारीक प्रतीक्षा मे छथि। कृपया नीचाँ जवाब दिअ।"
       },
       "resolved": {
         "note": "अहि शिकायतक समाधान भऽ गेल अछि।"
-      }
+      },
+      "submittedOnLabel": "ई शिकायत एहि तिथि पर प्रस्तुत कयल गेल छल"
     },
     "submit": {
       "title": "शिकायत दर्ज करू",
@@ -808,7 +854,10 @@
       "empty": "अहि शिकायत मे कोनहु संलग्नक नहि जोड़ल गेल अछि।",
       "initialSubmission": "प्रारंभिक सबमिशन",
       "internalNote": "आंतरिक",
-      "overflowMore": "+{{count}} और"
+      "overflowMore": "+{{count}} और",
+      "uploadedCount": "{{count}} नवी फाइल जोड़ल गेल",
+      "uploadedCount_one": "एकटा नवी फाइल जोड़ल गेल",
+      "uploadedCount_other": "{{count}} नवी फाइल जोड़ल गेल"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "कतार पर वापस जाऊ",
         "notFound": "शिकायत नहि भेटल",
-        "dataPrincipal": "उपयोगकर्ता"
+        "dataPrincipal": "उपयोगकर्ता",
+        "resolvedLocked": "ई शिकायत सुलझा देल गेल अछि आ एखन ई लॉक अछि। अहाँ एकरा सीधे पुनः नहि खोलि सकैत छी — एकरा केवल तखने पुनः खोलल जा सकैत अछि जखन क्लाइंट नव संदेश पठाओत।",
+        "resolveDialog": {
+          "title": "शिकायत निवारण",
+          "message": "की अहाँ निश्चित छी जे अहाँ एहि शिकायतकेँ सुलझाएल गेल चिह्नित करय चाहैत छी?",
+          "note": "एक बेर समाधान भऽ गेला पर, अहाँ फेरसँ उत्तर नहि दऽ सकब वा ओकर स्थिति नहि बदलि सकब, जखन धरि कि क्लाइंट कोनो नव संदेश नहि पठाबय।",
+          "confirm": "शिकायत निवारण",
+          "processing": "समाधान भऽ रहल अछि...",
+          "resolveFailed": "किछु गलत भऽ गेल आ शिकायतक समाधान नहि भऽ सकल। कृपया फेरसँ प्रयास करू।"
+        }
       }
     }
   },
@@ -1051,8 +1109,8 @@
       "registerSubtitle": "Configure a new event notification subscription and delivery mode",
       "topicLabel": "Topic",
       "topicRequired": "Topic is required.",
-      "filterModeLabel": "Purpose Filter Mode",
-      "purposesLabel": "Purposes (comma-separated)",
+      "filterModeLabel": "Consent Purpose Filter Mode",
+      "purposesLabel": "Consent Purposes (comma-separated)",
       "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
       "purposesHelper": "Comma-separated list of consent purposes to filter",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
@@ -1075,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "Unable to load subscription details.",
@@ -1118,7 +1177,9 @@
       "groupId": "Group ID",
       "groupIdPlaceholder": "Filter by Group ID...",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "All",
@@ -1197,6 +1258,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

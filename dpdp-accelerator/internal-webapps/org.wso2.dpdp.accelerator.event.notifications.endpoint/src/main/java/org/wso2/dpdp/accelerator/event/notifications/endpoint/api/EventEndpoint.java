@@ -22,6 +22,7 @@ import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandl
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventCreateDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
@@ -71,6 +72,18 @@ public class EventEndpoint {
             EventCreateDTO request) {
         EventDTO dto = eventHandler.publishEvent(organizationIdResolver.get(), groupId, request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
+    }
+
+    @POST
+    @Path("/poll")
+    public Response pollEvents(
+            @HeaderParam(EventNotificationEndpointConstants.SUBSCRIPTION_ID_HEADER) String subscriptionId,
+            @HeaderParam(EventNotificationEndpointConstants.GROUP_ID_HEADER) String groupId,
+            @HeaderParam(EventNotificationEndpointConstants.EVENT_SIGNATURE_HEADER) String signature,
+            String requestBody) {
+        EventPollingResponseDTO response = eventHandler.pollEvents(organizationIdResolver.get(), groupId,
+                subscriptionId, requestBody, signature);
+        return Response.ok(response).build();
     }
 
     @GET

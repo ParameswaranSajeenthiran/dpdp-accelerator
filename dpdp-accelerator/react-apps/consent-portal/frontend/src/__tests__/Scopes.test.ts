@@ -20,6 +20,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  ACCOUNT_SCOPES,
+  COMPLAINT_SCOPES,
   CONSENT_HISTORY_SCOPES,
   EVENT_SCOPES,
   IS_SCOPES,
@@ -33,6 +35,8 @@ describe('scope requirements', () => {
       ...Object.values(IS_SCOPES),
       ...Object.values(EVENT_SCOPES),
       ...Object.values(CONSENT_HISTORY_SCOPES),
+      ...Object.values(COMPLAINT_SCOPES),
+      ...Object.values(ACCOUNT_SCOPES),
     ])
     Object.values(REQUIRED_SCOPES)
       .flat()
@@ -52,6 +56,12 @@ describe('scope requirements', () => {
     // DPDPApiResourceProvisioningUtil - never a frontend-only fiction.
     Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
       expect(scope.startsWith('consent:')).toBe(true)
+    })
+  })
+
+  it('never invents a complaint scope with nothing on the server to back it', () => {
+    Object.values(COMPLAINT_SCOPES).forEach((scope) => {
+      expect(scope.startsWith('complaints:')).toBe(true)
     })
   })
 
@@ -85,6 +95,12 @@ describe('scope requirements', () => {
       expect(requested).toContain(scope)
     })
     Object.values(CONSENT_HISTORY_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(COMPLAINT_SCOPES).forEach((scope) => {
+      expect(requested).toContain(scope)
+    })
+    Object.values(ACCOUNT_SCOPES).forEach((scope) => {
       expect(requested).toContain(scope)
     })
   })

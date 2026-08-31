@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
@@ -24,6 +25,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import HeaderBreadcrumbs from '../components/layout/main-layout/HeaderBreadcrumbs'
 import MainLayout from '../components/layout/main-layout/MainLayout'
 import i18n from '../i18n/i18n'
+import TestAuthorizationProvider from './TestAuthorizationProvider'
 
 interface MockSidebarProps {
   collapsed: boolean
@@ -44,13 +46,17 @@ function renderMainLayout(initialRoute = '/'): void {
     <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
       <CssBaseline />
       <I18nextProvider i18n={i18n}>
-        <MemoryRouter initialEntries={[initialRoute]}>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<h1>Nested route content</h1>} />
-            </Route>
-          </Routes>
-        </MemoryRouter>
+        <QueryClientProvider client={new QueryClient()}>
+          <TestAuthorizationProvider scopes={[]}>
+            <MemoryRouter initialEntries={[initialRoute]}>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<h1>Nested route content</h1>} />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          </TestAuthorizationProvider>
+        </QueryClientProvider>
       </I18nextProvider>
     </OxygenUIThemeProvider>,
   )

@@ -93,7 +93,14 @@
       "serviceId": "সেৱা",
       "removeConsentIdForState": "ৰাজ্যিক ফিল্টাৰ ব্যৱহাৰ কৰিবলৈ সন্মতি আইডি ফিল্টাৰটো আঁতৰাওক।",
       "propertyFilterLabel": "সন্মতিৰ সম্পত্তি",
-      "removeConsentIdForSubject": "ইউজাৰ আইডি ফিল্টাৰ ব্যৱহাৰ কৰিবলৈ কনছেণ্ট আইডি ফিল্টাৰটো আঁতৰাওক।"
+      "removeConsentIdForSubject": "ইউজাৰ আইডি ফিল্টাৰ ব্যৱহাৰ কৰিবলৈ কনছেণ্ট আইডি ফিল্টাৰটো আঁতৰাওক।",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "সকলো মচি পেলাওক",
       "clearAriaLabel": "সকলো ফিল্টাৰ মচি পেলাওক",
       "serviceSearchPlaceholder": "সেৱা অনুসৰি সন্ধান কৰক",
-      "state": "ৰাজ্য"
+      "state": "ৰাজ্য",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "সন্মতিসমূহ ল'ড হৈ আছে...",
@@ -275,6 +288,35 @@
         "service": "সেৱা",
         "state": "ৰাজ্য"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} দিন পাৰ হৈ গৈছে",
       "overduePlural": "{{count}} দিন পাৰ হৈ গৈছে",
       "daysLeftSingular": "{{count}} দিন বাকী আছে",
-      "daysLeftPlural": "{{count}} দিন বাকী আছে"
+      "daysLeftPlural": "{{count}} দিন বাকী আছে",
+      "dueLabel": "নিৰ্ধাৰিত তাৰিখ"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ পোৱা গৈছে",
@@ -727,8 +770,11 @@
       "empty": "আপুনি এতিয়ালৈকে কোনো অভিযোগ দাখিল কৰা নাই।",
       "emptyFiltered": "নিৰ্বাচিত ফিল্টাৰৰ সৈতে কোনো অভিযোগৰ মিল নাই।",
       "filters": {
+        "sectionAriaLabel": "মোৰ অভিযোগসমূহৰ ফিল্টাৰসমূহ",
         "status": "স্থিতি",
-        "all": "সকলো"
+        "all": "সকলো",
+        "clear": "ফিল্টাৰসমূহ পৰিষ্কাৰ কৰক",
+        "clearAriaLabel": "সকলো ফিল্টাৰ পৰিষ্কাৰ কৰক"
       },
       "table": {
         "tableAriaLabel": "মোৰ অভিযোগৰ তালিকা",
@@ -745,13 +791,13 @@
       "back": "মোৰ অভিযোগসমূহলৈ উভতি যাওক",
       "notFound": "অভিযোগ পোৱা নগ'ল",
       "description": "বিৱৰণ",
-      "submittedOn": "{{date}} তাৰিখে দাখিল কৰা হৈছে",
       "awaitingInfo": {
         "note": "অভিযোগ বিষয়াই আপোনাৰ পৰা অধিক তথ্যৰ বাবে অপেক্ষা কৰি আছে। অনুগ্ৰহ কৰি তলত উত্তৰ দিয়ক।"
       },
       "resolved": {
         "note": "এই অভিযোগটো সমাধান কৰা হৈছে।"
-      }
+      },
+      "submittedOnLabel": "দাখিল কৰা হৈছে"
     },
     "submit": {
       "title": "এটা অভিযোগ দাখিল কৰক",
@@ -808,7 +854,10 @@
       "empty": "এই অভিযোগত কোনো সংলগ্ন ফাইল যোগ কৰা হোৱা নাই।",
       "initialSubmission": "প্ৰাৰম্ভিক দাখিল",
       "internalNote": "আভ্যন্তৰীণ",
-      "overflowMore": "আৰু +{{count}}"
+      "overflowMore": "আৰু +{{count}}",
+      "uploadedCount": "{{count}} টা নতুন ফাইল সংলগ্ন কৰা হ'ল",
+      "uploadedCount_one": "এটা নতুন ফাইল সংলগ্ন কৰা হ'ল",
+      "uploadedCount_other": "{{count}} টা নতুন ফাইল সংলগ্ন কৰা হ'ল"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "শাৰীলৈ উভতি যাওক",
         "notFound": "অভিযোগ পোৱা নগ'ল",
-        "dataPrincipal": "ব্যৱহাৰকাৰী"
+        "dataPrincipal": "ব্যৱহাৰকাৰী",
+        "resolvedLocked": "এই অভিযোগটো সমাধান কৰা হৈছে আৰু এতিয়া ইয়াক লক কৰা হৈছে। আপুনি ইয়াক পোনপটীয়াকৈ পুনৰ খুলিব নোৱাৰে — ইয়াক কেৱল তেতিয়াহে পুনৰ খুলিব পৰা যাব যদিহে গ্ৰাহকে এটা নতুন বাৰ্তা প্ৰেৰণ কৰে।",
+        "resolveDialog": {
+          "title": "অভিযোগ নিষ্পত্তি কৰক",
+          "message": "আপুনি নিশ্চিতনে যে আপুনি এই অভিযোগটো সমাধান হোৱা বুলি চিহ্নিত কৰিব বিচাৰে?",
+          "note": "এবাৰ সমাধান হোৱাৰ পিছত, ক্লায়েণ্টৰ পৰা নতুন বাৰ্তা নোসোৱালৈকে আপুনি পুনৰ উত্তৰ দিব নোৱাৰিব বা ইয়াৰ স্থিতি সলনি কৰিব নোৱাৰিব।",
+          "confirm": "অভিযোগ নিষ্পত্তি কৰক",
+          "processing": "সমাধান কৰা হৈছে...",
+          "resolveFailed": "কিবা এটা ভুল হৈছে আৰু অভিযোগটো সমাধান কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।"
+        }
       }
     }
   },
@@ -1051,8 +1109,8 @@
       "registerSubtitle": "Configure a new event notification subscription and delivery mode",
       "topicLabel": "Topic",
       "topicRequired": "Topic is required.",
-      "filterModeLabel": "Purpose Filter Mode",
-      "purposesLabel": "Purposes (comma-separated)",
+      "filterModeLabel": "Consent Purpose Filter Mode",
+      "purposesLabel": "Consent Purposes (comma-separated)",
       "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
       "purposesHelper": "Comma-separated list of consent purposes to filter",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
@@ -1075,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "Unable to load subscription details.",
@@ -1118,7 +1177,9 @@
       "groupId": "Group ID",
       "groupIdPlaceholder": "Filter by Group ID...",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "All",
@@ -1197,6 +1258,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

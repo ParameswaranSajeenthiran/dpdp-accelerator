@@ -76,8 +76,8 @@ app_password= "dashboard"
 # SMTP email sender settings.
 #[output_adapter.email]
 #from_address= "abcd@gmail.com"
-#username= "abcd"
-#password= "xxxx"
+#username= "abcd@gmail.com"
+#password= "appp-password"
 #hostname= "smtp.gmail.com"
 #port= 587
 
@@ -88,6 +88,12 @@ app_password= "dashboard"
 # deployment.toml, unchanged apart from the IS_HOSTNAME, IS_ADMIN_USERNAME and
 # IS_ADMIN_PASSWORD placeholders that configure.sh substitutes.
 # =============================================================================
+
+# Registers the DPDP user lifecycle event handler with the
+# IS extension point so it is triggered correctly.
+[[event_handler]]
+name = "dpdpUserLifecycleEventHandler"
+subscriptions = ["POST_DELETE_USER", "POST_SET_USER_CLAIMS"]
 
 [datasource.WSO2DPDP_DB]
 id = "WSO2DPDP_DB"
@@ -218,13 +224,138 @@ allowed_auth_handlers = ["OAuthAuthentication"]
 secure = "true"
 http_method = "GET"
 scopes = ["consent:history:view:self"]
+# Self-service account deletion: replaces the default internal_user_mgt_delete
+# requirement on DELETE /scim2/Me with the narrow account:self:delete scope, which
+# tenant provisioning grants to the dpdp-consent-user role only. Deliberately
+# OAuth-only - self-deletion must come from a user-context token, not Basic auth.
+[[resource.access_control]]
+context = "(.*)/scim2/Me"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "DELETE"
+scopes = ["account:self:delete"]
 
 [tenant_context.rewrite]
 custom_webapps = [
     "/consent-portal/",
-    "/api/dpdp/event-notifications/v1/",
-    "/api/dpdp/consent-mgt/v1/"
+    "/api/dpdp/consent-mgt/v1/",
+    "/api/dpdp/complaints/v1/",
+    "/api/dpdp/event-notifications/v1/"
 ]
+# ---- /me/complaints/* (Data Principal, :self scopes) ----
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments/[^/]+"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/attachments"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/comments"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/timeline"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+/status"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints/[^/]+"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:self"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/me/complaints"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:self"]
+
+# ---- /complaints/* (Complaint Officer/admin, :any scopes) ----
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/attachments/[^/]+"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/attachments"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/comments"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/timeline"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+/status"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints/[^/]+"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "POST"
+secure = "true"
+scopes = ["complaints:write:any"]
+
+[[resource.access_control]]
+context = "(.*)/api/dpdp/complaints/v1/complaints"
+allowed_auth_handlers = ["OAuthAuthentication"]
+http_method = "GET"
+secure = "true"
+scopes = ["complaints:read:any"]
+
 
 # Controls the DPDP Consent Portal application/role auto-provisioning that runs
 # on tenant creation and update (see components/org.wso2.dpdp.accelerator.identity.extensions).
@@ -237,11 +368,35 @@ custom_webapps = [
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
 
+# How many days after submission a complaint's statutory due date falls (see
+# StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
+[dpdp_accelerator.complaints]
+statutory_due_period_days = 90
+# Maximum size, in bytes, of a single complaint attachment upload (see AttachmentPolicy).
+attachment_max_size_bytes = 10485760
+# Maximum number of files a single complaint attachment upload request may carry (see AttachmentPolicy).
+attachment_max_files_per_upload = 5
+
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]
 # Automatically reconciles the DPDP system topics (consent.update, consent.revoke, etc.) for
 # every tenant on create/update. Set false to manage system topics manually instead.
 system_topics_auto_create_enabled = true
+
+[dpdp_accelerator.event_notifications.payload_signing]
+enabled = true
+audience = "dpdp-event-notifications"
+
+[dpdp_accelerator.event_notifications.lifecycle_events]
+#Controls whether consent and user lifecycle events are automatically published to the Event Notification
+# Framework for the five predefined topics.
+publishing_enabled = true
+
+[dpdp_accelerator.event_notifications.polling]
+default_return_immediately = true
+default_max_events = 20
+max_events_limit = 100
+request_hmac_validation_enabled = false
 
 # Webhook delivery: callback URL validation, delivery worker sizing, retry/backoff, and
 # subscription-verification behavior.

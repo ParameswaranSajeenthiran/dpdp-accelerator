@@ -49,7 +49,7 @@ function sentRequest(index = 0): { url: string; method?: string; data?: unknown 
 }
 
 describe('eventsApi', () => {
-  it('calls fetchEvents with search, status, topic, groupId, and pagination query parameters', async () => {
+  it('calls fetchEvents with all filters and pagination query parameters', async () => {
     respondWith({ items: [], total: 0 })
 
     await fetchEvents({
@@ -59,6 +59,7 @@ describe('eventsApi', () => {
       status: 'DELIVERED',
       topic: 'consent-events',
       groupId: 'consumer-grp-1',
+      subscriptionId: 'sub-1',
     })
 
     const req = sentRequest()
@@ -71,6 +72,7 @@ describe('eventsApi', () => {
       status: 'DELIVERED',
       topic: 'consent-events',
       groupId: 'consumer-grp-1',
+      subscriptionId: 'sub-1',
     })
     expect(req.method).toBe('GET')
   })
@@ -98,7 +100,7 @@ describe('eventsApi', () => {
     respondWith({ eventId: 'evt-1', topicId: 'topic-1' })
 
     const payload = {
-      topicName: 'consent.revoke',
+      topic: 'consent.revoke',
       groupId: 'group-1',
       purposes: ['MARKETING'],
       payload: { consentId: 'c1', status: 'REVOKED' },

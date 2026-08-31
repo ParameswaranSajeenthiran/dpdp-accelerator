@@ -93,7 +93,14 @@
       "serviceId": "خدمت",
       "removeConsentIdForState": "ریاستی فلٹر استعمال کرنے کے لیے رضامندی شناختی فلٹر ہٹا دیں۔",
       "propertyFilterLabel": "رضامندی کی جائیداد",
-      "removeConsentIdForSubject": "یوزر آئی ڈی فلٹر استعمال کرنے کے لیے کنسنٹ آئی ڈی فلٹر ہٹا دیں۔"
+      "removeConsentIdForSubject": "یوزر آئی ڈی فلٹر استعمال کرنے کے لیے کنسنٹ آئی ڈی فلٹر ہٹا دیں۔",
+      "relation": "Relation",
+      "relationHelperText": "Set a User to filter by relation",
+      "relationOptions": {
+        "any": "Any",
+        "subject": "Subject",
+        "authorizer": "Authorizer"
+      }
     }
   },
   "consentRegistry": {
@@ -246,7 +253,13 @@
       "clear": "سب صاف کریں",
       "clearAriaLabel": "تمام فلٹرز صاف کریں",
       "serviceSearchPlaceholder": "سروس کے ذریعے تلاش کریں۔",
-      "state": "ریاست"
+      "state": "ریاست",
+      "relation": "Relation",
+      "relationOptions": {
+        "any": "All",
+        "subject": "My Own",
+        "authorizer": "Managed by Me"
+      }
     },
     "messages": {
       "loading": "رضامندیاں لوڈ ہو رہی ہیں...",
@@ -275,6 +288,35 @@
         "service": "خدمت",
         "state": "ریاست"
       }
+    },
+    "history": {
+      "systemActor": "System",
+      "actions": {
+        "created": "Consent created",
+        "updated": "Consent updated",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "authorizeRevoked": "Revoked by reviewer",
+        "revoked": "Revoked",
+        "deleted": "Deleted",
+        "expired": "Expired",
+        "unknown": "Updated"
+      },
+      "description": "{{action}} by {{actor}}",
+      "viewFullSnapshot": "View Full Snapshot History",
+      "close": "Close",
+      "snapshot": {
+        "noChanges": "No changes were recorded in this update.",
+        "needsMoreHistory": "Load more history to see what changed in this update.",
+        "initial": "Initial snapshot",
+        "added": "Added",
+        "removed": "Removed",
+        "changed": "Changed",
+        "field": {
+          "expiryTime": "Valid until"
+        }
+      },
+      "empty": "No history is recorded for this consent."
     }
   },
   "catalog": {
@@ -712,7 +754,8 @@
       "overdueSingular": "{{count}} دن کی تاخیر",
       "overduePlural": "{{count}} دنوں کی تاخیر",
       "daysLeftSingular": "{{count}} دن باقی ہے",
-      "daysLeftPlural": "{{count}} دن باقی ہیں"
+      "daysLeftPlural": "{{count}} دن باقی ہیں",
+      "dueLabel": "آخری تاریخ"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",
@@ -727,8 +770,11 @@
       "empty": "آپ نے ابھی تک کوئی شکایت درج نہیں کی ہے۔",
       "emptyFiltered": "منتخب کردہ فلٹر سے کوئی شکایت میچ نہیں کرتی۔",
       "filters": {
+        "sectionAriaLabel": "میری شکایات کے فلٹر",
         "status": "اسٹیٹس",
-        "all": "تمام"
+        "all": "تمام",
+        "clear": "فلٹر صاف کریں",
+        "clearAriaLabel": "تمام فلٹر صاف کریں"
       },
       "table": {
         "tableAriaLabel": "میری شکایتوں کا ٹیبل",
@@ -745,13 +791,13 @@
       "back": "میری شکایتوں پر واپس جائیں",
       "notFound": "شکایت نہیں ملی",
       "description": "تفصیل",
-      "submittedOn": "{{date}} کو درج کی گئی",
       "awaitingInfo": {
         "note": "شکایت افسر آپ سے مزید معلومات کا منتظر ہے۔ براہ کرم نیچے جواب دیں۔"
       },
       "resolved": {
         "note": "یہ شکایت حل کر دی گئی ہے۔"
-      }
+      },
+      "submittedOnLabel": "جمع کرایا گیا"
     },
     "submit": {
       "title": "شکایت درج کریں",
@@ -808,7 +854,10 @@
       "empty": "اس شکایت میں کوئی منسلک فائل شامل نہیں کی گئی ہے۔",
       "initialSubmission": "ابتدائی شکایت",
       "internalNote": "اندرونی",
-      "overflowMore": "+{{count}} مزید"
+      "overflowMore": "+{{count}} مزید",
+      "uploadedCount": "{{count}} نئی فائلیں منسلک کی گئیں",
+      "uploadedCount_one": "ایک نئی فائل منسلک کی گئی",
+      "uploadedCount_other": "{{count}} نئی فائلیں منسلک کی گئیں"
     },
     "management": {
       "queue": {
@@ -846,7 +895,16 @@
       "case": {
         "back": "قطار میں واپس جائیں",
         "notFound": "شکایت نہیں ملی",
-        "dataPrincipal": "صارف (Data Principal)"
+        "dataPrincipal": "صارف (Data Principal)",
+        "resolvedLocked": "یہ شکایت حل کر دی گئی ہے اور اب اسے لاک کر دیا گیا ہے۔ آپ اسے براہِ راست دوبارہ نہیں کھول سکتے — اسے صرف اسی صورت میں دوبارہ کھولا جا سکتا ہے اگر کلائنٹ کوئی نیا پیغام بھیجے۔",
+        "resolveDialog": {
+          "title": "شکایت کا ازالہ کریں",
+          "message": "کیا آپ اس شکایت کو حل شدہ کے طور پر نشان زد کرنا چاہتے ہیں؟",
+          "note": "ایک بار حل ہو جانے کے بعد، آپ دوبارہ جواب دینے یا اس کی حیثیت تبدیل کرنے کے قابل نہیں ہوں گے جب تک کہ کلائنٹ نیا پیغام نہ بھیجے۔",
+          "confirm": "شکایت کا ازالہ کریں",
+          "processing": "حل ہو رہا ہے...",
+          "resolveFailed": "کچھ غلط ہو گیا اور شکایت حل نہیں ہو سکی۔ براہ کرم دوبارہ کوشش کریں۔"
+        }
       }
     }
   },
@@ -1051,8 +1109,8 @@
       "registerSubtitle": "Configure a new event notification subscription and delivery mode",
       "topicLabel": "Topic",
       "topicRequired": "Topic is required.",
-      "filterModeLabel": "Purpose Filter Mode",
-      "purposesLabel": "Purposes (comma-separated)",
+      "filterModeLabel": "Consent Purpose Filter Mode",
+      "purposesLabel": "Consent Purposes (comma-separated)",
       "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
       "purposesHelper": "Comma-separated list of consent purposes to filter",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
@@ -1075,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "Unable to load subscription details.",
@@ -1118,7 +1177,9 @@
       "groupId": "Group ID",
       "groupIdPlaceholder": "Filter by Group ID...",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "All",
@@ -1197,6 +1258,24 @@
       "copyPayloadFailed": "Failed to copy payload to clipboard.",
       "subscriber": "Subscriber",
       "subscribers": "Subscribers"
+    }
+  },
+  "account": {
+    "deleteMenuItem": "Delete my account",
+    "deleteError": "Unable to delete your account. Please try again.",
+    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
+    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deleteDialog": {
+      "accountLabel": "Account",
+      "title": "Delete your account?",
+      "message": "This permanently deletes your account and signs you out.",
+      "note": "This action cannot be undone. You will lose access to this portal, and your sign-in will stop working immediately.",
+      "confirm": "Delete my account"
+    },
+    "deletedPage": {
+      "title": "Your account has been deleted",
+      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "signInLink": "Go to sign-in"
     }
   }
 }

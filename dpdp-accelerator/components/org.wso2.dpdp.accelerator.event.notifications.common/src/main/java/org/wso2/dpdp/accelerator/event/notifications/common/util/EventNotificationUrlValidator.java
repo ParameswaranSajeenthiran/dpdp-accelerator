@@ -17,6 +17,8 @@
  */
 package org.wso2.dpdp.accelerator.event.notifications.common.util;
 
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
+
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -87,6 +89,44 @@ public final class EventNotificationUrlValidator {
                 throw new IllegalArgumentException("Target IP [" + address.getHostAddress()
                         + "] is in a restricted range.");
             }
+        }
+    }
+
+    /**
+     * Validates a completion-evidence reference. Unlike webhook callback validation, this
+     * method deliberately performs no DNS or private-address checks because the accelerator
+     * stores this URL but never dereferences it.
+     *
+     * @param urlString completion evidence URL.
+     * @throws IllegalArgumentException if the value is not an absolute HTTPS URL suitable
+     *                                  for persistence.
+     */
+    public static void validateEvidenceUrl(String urlString) throws IllegalArgumentException {
+
+        if (urlString == null || urlString.trim().isEmpty()) {
+            throw new IllegalArgumentException("Evidence URL cannot be empty.");
+        }
+        String normalizedUrl = urlString.trim();
+        if (normalizedUrl.length() > EventNotificationCommonConstants.MAX_COMPLETION_EVIDENCE_URL_LENGTH) {
+            throw new IllegalArgumentException("Evidence URL exceeds the maximum permitted length.");
+        }
+
+        URI uri = URI.create(normalizedUrl);
+        if (!"https".equalsIgnoreCase(uri.getScheme())) {
+            throw new IllegalArgumentException("Evidence URL must use the HTTPS scheme.");
+        }
+        if (uri.getHost() == null || uri.getHost().trim().isEmpty()) {
+            throw new IllegalArgumentException("Evidence URL host cannot be empty.");
+        }
+        if (uri.getRawUserInfo() != null) {
+            throw new IllegalArgumentException("Evidence URL credentials are not permitted.");
+        }
+        if (uri.getRawFragment() != null) {
+            throw new IllegalArgumentException("Evidence URL fragments are not permitted.");
+        }
+        int port = uri.getPort();
+        if (port < -1 || port > 65535) {
+            throw new IllegalArgumentException("Evidence URL port is invalid.");
         }
     }
 }
