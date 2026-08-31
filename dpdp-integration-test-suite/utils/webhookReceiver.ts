@@ -17,9 +17,7 @@
  */
 
 import http from 'node:http'
-import type { AddressInfo } from 'node:net'
-import ngrok, { type Listener } from '@ngrok/ngrok'
-import { ngrokAuthToken, webhookReceiverConfig } from './env'
+import { webhookReceiverConfig } from './env'
 
 export interface CapturedRequest {
   method: string
@@ -42,18 +40,13 @@ export interface ReceiverResponse {
  * IS host to open a network connection to a receiver process - EventNotificationUrlValidator
  * rejects loopback callback URLs unconditionally, so this can never be exercised by pointing a
  * callback at 127.0.0.1/localhost, no matter what deployment.toml says (see
- * tests/08-event-notifications/README.md, "Webhook-dependent tests"). Two ways to get a real
- * externally-reachable address for `start()` to hand back:
+ * tests/08-event-notifications/README.md, "Webhook-dependent tests"). `WEBHOOK_RECEIVER_HOST`
+ * (utils/env.ts) supplies a real, externally-reachable address for `start()` to bind to and hand
+ * back as `http://<host>:<port>` - for local/CI use where the test runner and IS share a
+ * machine/LAN (see that env var's own doc comment for the deployment.toml prerequisite this path
+ * needs).
  *
- * - `NGROK_AUTH_TOKEN` set - opens a genuine public HTTPS ngrok tunnel to the local listener.
- *   Preferred for CI: a tunnel's hostname is never loopback/RFC1918/link-local, so it passes
- *   EventNotificationUrlValidator under the deployment's *default* settings, no
- *   `allow_private_network_callback_targets`/`allow_http_callback_url` change needed.
- * - `WEBHOOK_RECEIVER_HOST` set - binds locally and hands back `http://<host>:<port>` as-is, for
- *   local dev where the test runner and IS share a machine/LAN (see that env var's own doc
- *   comment in utils/env.ts for the deployment.toml prerequisite this path needs instead).
- *
- * Callers must check `webhookTestsEnabled()` and skip themselves when neither is configured, the
+ * Callers must check `webhookTestsEnabled()` and skip themselves when it isn't configured, the
  * same way `hasSecondUser()`-gated tests do.
  *
  * One instance per test (never shared across tests, per this suite's "assume parallel execution"
@@ -69,14 +62,12 @@ export interface ReceiverResponse {
  * this suite's own local/CI deployment.toml widens the list to 8443-8455 (see this directory's
  * README) - several candidates, not just one, so more than one WEBHOOK_RECEIVER_HOST-mode test
  * can run concurrently (this suite assumes parallel execution) without every worker fighting over
- * a single port. Irrelevant to the ngrok path: a tunnel's public URL carries no explicit port
- * (`uri.getPort()` is `-1`, always allowed), so that path still binds locally on port 0.
+ * a single port.
  */
 const ALLOWED_CALLBACK_PORTS = [8443, 8444, 8445, 8446, 8447, 8448, 8449, 8450, 8451, 8452, 8453, 8454, 8455]
 
 export class WebhookReceiver {
   private server?: http.Server
-  private tunnel?: Listener
   private handler: (request: CapturedRequest) => ReceiverResponse = defaultHandler
   readonly requests: CapturedRequest[] = []
 
@@ -100,12 +91,11 @@ export class WebhookReceiver {
   }
 
   async start(): Promise<{ host: string; port: number; url: string; verificationUrl: (path?: string) => string }> {
-    const ngrokToken = ngrokAuthToken()
     const config = webhookReceiverConfig()
-    if (!ngrokToken && !config) {
+    if (!config) {
       throw new Error(
-        'WebhookReceiver.start() called without NGROK_AUTH_TOKEN or WEBHOOK_RECEIVER_HOST ' +
-          'configured - callers must guard with webhookTestsEnabled()/test.skip() first, see ' +
+        'WebhookReceiver.start() called without WEBHOOK_RECEIVER_HOST configured - callers must ' +
+          'guard with webhookTestsEnabled()/test.skip() first, see ' +
           'tests/08-event-notifications/README.md.',
       )
     }
@@ -129,24 +119,9 @@ export class WebhookReceiver {
       })
     })
 
-    // ngrok takes priority when both happen to be configured - it needs no deployment.toml
-    // change on the IS side, which makes it the strictly less fragile of the two paths. Its local
-    // port is never embedded in the callback URL a subscription actually sees (ngrok's public
-    // hostname is), so an OS-assigned ephemeral port is fine here.
-    if (ngrokToken) {
-      await this.listen(0)
-      const { port } = this.server.address() as AddressInfo
-      this.tunnel = await ngrok.forward({ addr: port, authtoken: ngrokToken })
-      const url = this.tunnel.url()
-      if (!url) {
-        throw new Error('ngrok.forward() returned a listener with no url() - tunnel failed to establish.')
-      }
-      return { host: new URL(url).hostname, port, url, verificationUrl: (path = '') => `${url}${path}` }
-    }
-
-    // WEBHOOK_RECEIVER_HOST path: the port IS part of the callback URL, so it must be one
-    // EventNotificationUrlValidator's allowed-ports check accepts - try each candidate in turn,
-    // falling through to the next only on a genuine port conflict.
+    // The port IS part of the callback URL, so it must be one EventNotificationUrlValidator's
+    // allowed-ports check accepts - try each candidate in turn, falling through to the next only
+    // on a genuine port conflict.
     let boundPort: number | undefined
     for (const candidate of ALLOWED_CALLBACK_PORTS) {
       try {
@@ -166,10 +141,9 @@ export class WebhookReceiver {
       )
     }
 
-    // config is guaranteed defined here - the guard above requires ngrokToken or config.
-    const url = `http://${config?.host}:${String(boundPort)}`
+    const url = `http://${config.host}:${String(boundPort)}`
     return {
-      host: config?.host ?? '',
+      host: config.host,
       port: boundPort,
       url,
       verificationUrl: (path = '') => `${url}${path}`,
@@ -177,9 +151,6 @@ export class WebhookReceiver {
   }
 
   async stop(): Promise<void> {
-    if (this.tunnel) {
-      await this.tunnel.close()
-    }
     await new Promise<void>((resolve, reject) => {
       if (!this.server) {
         resolve()
@@ -222,5 +193,5 @@ function defaultHandler(request: CapturedRequest): ReceiverResponse {
 
 /** Mirrors hasSecondUser() - tests that need a real webhook round trip skip themselves when this is false. */
 export function webhookTestsEnabled(): boolean {
-  return Boolean(ngrokAuthToken()) || Boolean(webhookReceiverConfig())
+  return Boolean(webhookReceiverConfig())
 }

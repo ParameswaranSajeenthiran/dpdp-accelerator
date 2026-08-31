@@ -236,17 +236,4 @@ export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: bo
   return host ? { host, allowPrivateNetwork } : undefined
 }
 
-/**
- * The CI-friendly alternative to WEBHOOK_RECEIVER_HOST above: an ngrok authtoken lets
- * WebhookReceiver open a real public HTTPS tunnel to its local listener (see
- * utils/webhookReceiver.ts) instead of requiring a LAN-reachable address for the test runner to
- * bind to. A tunnel's hostname is a genuine public ngrok domain - never loopback, never
- * RFC1918/link-local/IPv6-ULA - so it passes EventNotificationUrlValidator with the deployment's
- * *default* webhook settings (allow_private_network_callback_targets stays false; no
- * deployment.toml change needed at all). Get a free token at https://dashboard.ngrok.com.
- */
-export function ngrokAuthToken(): string | undefined {
-  return optional('NGROK_AUTH_TOKEN')
-}
-
 export type PersonaName = 'user' | 'user-2' | 'consent-admin'

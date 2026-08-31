@@ -335,9 +335,6 @@ jobs:
 
       # tests/08-event-notifications' real webhook-delivery tests run via WEBHOOK_RECEIVER_HOST -
       # no secret needed, see "Enable private-network webhook callbacks..." above.
-      # WebhookReceiver also supports an NGROK_AUTH_TOKEN env var (a genuine public HTTPS tunnel,
-      # for local use when the runner's own private IP isn't reachable) - deliberately not wired
-      # in here since no such secret exists for this repo and the IP-based path already covers CI.
       - name: Configure the suite
         working-directory: dpdp-integration-test-suite
         run: |
