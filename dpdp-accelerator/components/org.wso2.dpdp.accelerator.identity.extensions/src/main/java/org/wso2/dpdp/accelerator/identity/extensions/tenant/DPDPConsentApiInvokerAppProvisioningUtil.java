@@ -38,10 +38,11 @@ import java.util.List;
  * Registers the DPDP Consent API Invoker application - a machine-to-machine
  * ({@code client_credentials}) OAuth2 client, distinct from the browser-facing
  * {@link DPDPConsentPortalAppProvisioningUtil}'s app, meant for external systems invoking the
- * consent-mgt v2 APIs directly. Unlike the portal, it has no callback URL, no PKCE, and no
- * cookie token binding - none of those apply to a grant type with no browser redirect. API-resource
- * authorization is a separate concern - see {@link DPDPApiResourceProvisioningUtil}, which already
- * takes an application ID as a parameter and needs no changes to authorize this app too - as is
+ * consent-mgt v2 consents API directly - it is authorized for the consents resource only, not
+ * purposes/elements, which stay portal-only. Unlike the portal, it has no callback URL, no PKCE,
+ * and no cookie token binding - none of those apply to a grant type with no browser redirect.
+ * API-resource authorization is a separate concern - see {@link DPDPApiResourceProvisioningUtil},
+ * whose narrower {@code authorizeConsentAPI} this app uses - as is
  * role creation - see {@link DPDPConsentPortalRoleProvisioningUtil}. Every method here assumes it
  * is already running inside the correct tenant's {@code PrivilegedCarbonContext} flow; that setup
  * lives in the caller ({@link DPDPIdentityExtensionTenantMgtListener}), not here.
@@ -128,7 +129,7 @@ public final class DPDPConsentApiInvokerAppProvisioningUtil {
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setApplicationName(APPLICATION_NAME);
         serviceProvider.setDescription(
-                "Machine-to-machine client for external systems invoking the consent-mgt v2 APIs directly.");
+                "Machine-to-machine client for external systems invoking the consent-mgt v2 consents API directly.");
 
         InboundAuthenticationRequestConfig requestConfig = new InboundAuthenticationRequestConfig();
         requestConfig.setInboundAuthKey(clientId);

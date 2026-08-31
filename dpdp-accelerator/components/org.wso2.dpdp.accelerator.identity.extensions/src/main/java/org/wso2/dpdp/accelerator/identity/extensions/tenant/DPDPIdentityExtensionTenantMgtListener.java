@@ -175,9 +175,9 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                     LOG.debug("The DPDP Consent API Invoker application already exists for tenant: " + tenantDomain
                             + "; reconciling its API authorization and roles.");
                 }
-                // Every consent-mgt v2 resource, with all of its scopes - this app exists specifically
-                // to invoke those APIs directly, unlike the portal app's narrower per-role scope split.
-                DPDPApiResourceProvisioningUtil.authorizeConsentManagementAPIs(invokerApplicationId, tenantDomain);
+                // Only the consents resource - this app exists to invoke consent operations
+                // directly, not to manage the purposes/elements catalog.
+                DPDPApiResourceProvisioningUtil.authorizeConsentAPI(invokerApplicationId, tenantDomain);
                 DPDPConsentApiInvokerAppProvisioningUtil.associateOrganizationRoles(tenantDomain,
                         tenantInfoBean.getAdmin(), roles);
             } else {
