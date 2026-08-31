@@ -114,6 +114,10 @@ jobs:
     timeout-minutes: 110
     env:
       IS_BASE_URL: https://localhost:9443
+      # Must match repository/conf/configure.properties - the accelerator's own configure.sh
+      # installs the admin account under these credentials, not the product's stock admin/admin.
+      IS_ADMIN_USERNAME: admin@wso2.com
+      IS_ADMIN_PASSWORD: wso2123
       IS_SOURCE: ${{ github.event_name == 'workflow_dispatch' && inputs.is_source || 'release' }}
     steps:
       # pull_request_target checks out the TARGET branch by default, which would
@@ -274,7 +278,7 @@ jobs:
       - name: Verify accelerator provisioning
         run: |
           roles_found() {
-            curl -sk -u admin:admin \
+            curl -sk -u "${IS_ADMIN_USERNAME}:${IS_ADMIN_PASSWORD}" \
               "${IS_BASE_URL}/scim2/v2/Roles?filter=displayName+eq+dpdp-consent-admin" \
               | python3 -c 'import json, sys; print(json.load(sys.stdin).get("totalResults", 0))'
           }

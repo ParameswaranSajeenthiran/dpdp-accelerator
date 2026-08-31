@@ -119,6 +119,11 @@ connection_verification_timeout_seconds = 1
 [consent_mgt]
 enable_v2_api = true
 
+# Lets users sign in with their email address instead of a separate username, matching the
+# WSO2 Financial Services/Open Banking accelerator's own default.
+[tenant_mgt]
+enable_email_domain = true
+
 # Lets the Console's flows view read consent purposes.
 [console.flows.scopes]
 read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_purpose_view"]
