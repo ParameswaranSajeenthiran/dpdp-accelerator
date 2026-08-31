@@ -46,7 +46,9 @@ export class AdminConsentPage extends ConsentRegistryTable {
 
   async filterBySubjectAndService(subjectId: string, serviceId: string): Promise<void> {
     await this.openAdvancedFilters()
-    await this.page.getByLabel('User').fill(subjectId)
+    // exact: true - a new "Relation" filter's helper text ("Set a User to filter by relation")
+    // also carries an aria-label containing "User", so a substring match resolves to two elements.
+    await this.page.getByLabel('User', { exact: true }).fill(subjectId)
     await this.page.getByLabel('Service').fill(serviceId)
     await this.page.getByRole('button', { name: 'Apply' }).click()
   }

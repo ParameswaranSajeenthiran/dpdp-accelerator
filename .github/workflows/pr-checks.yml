@@ -272,6 +272,11 @@ jobs:
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
 
+      # No-secret webhook-delivery coverage for tests/08-event-notifications - see that script for
+      # why this only works for a fresh CI-deployed IS, not a long-running local install.
+      - name: Enable private-network webhook callbacks for this CI-only IS instance
+        run: bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh "$IS_HOME"
+
       - name: Start the Identity Server
         run: |
           "${IS_HOME}/bin/wso2server.sh" start
@@ -332,6 +337,8 @@ jobs:
           TEST_PASSWORD="${password}" \
             bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
+      # tests/08-event-notifications' real webhook-delivery tests run via WEBHOOK_RECEIVER_HOST -
+      # no secret needed, see "Enable private-network webhook callbacks..." above.
       - name: Configure the suite
         working-directory: dpdp-integration-test-suite
         run: |
@@ -345,6 +352,8 @@ jobs:
           TEST_CONSENT_ADMIN_PASSWORD=${TEST_PASSWORD}
           TEST_USER_2_USERNAME=${{ steps.users.outputs.user2 }}
           TEST_USER_2_PASSWORD=${TEST_PASSWORD}
+          WEBHOOK_RECEIVER_HOST=${WEBHOOK_RECEIVER_HOST}
+          WEBHOOK_RECEIVER_ALLOW_PRIVATE_NETWORK=true
           EOF
           npm ci
           npx playwright install --with-deps chromium
