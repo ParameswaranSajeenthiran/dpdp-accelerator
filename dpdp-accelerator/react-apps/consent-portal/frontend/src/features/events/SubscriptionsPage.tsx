@@ -18,7 +18,8 @@
 
 import { Alert, Box, Button, Snackbar, Stack, Typography } from '@wso2/oxygen-ui'
 import { Plus } from '@wso2/oxygen-ui-icons-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
@@ -28,10 +29,7 @@ import type {
   SubscriptionRecord,
   SubscriptionStatus,
 } from '../../types/subscription'
-import {
-  isDeliveryMode,
-  isSubscriptionStatus,
-} from '../../types/subscription'
+import { isDeliveryMode, isSubscriptionStatus } from '../../types/subscription'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
 import SubscriptionDeleteDialog from './components/SubscriptionDeleteDialog'
@@ -44,6 +42,15 @@ import {
   useSubscriptionsQuery,
   useVerifySubscriptionMutation,
 } from './hooks/useSubscriptionQueries'
+import {
+  normalizeSubscriptionStatus,
+  useWebhookVerificationMonitor,
+} from './hooks/useWebhookVerificationMonitor'
+
+interface NotificationState {
+  severity: 'error' | 'success'
+  message: string
+}
 
 const DEFAULT_FILTERS: SubscriptionFiltersModel = {
   status: 'All',
@@ -112,29 +119,58 @@ function toSearchParams(
 export default function SubscriptionsPage(): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const [selectedDeleteSubscription, setSelectedDeleteSubscription] = useState<
     SubscriptionRecord | undefined
   >()
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
+  const [notification, setNotification] = useState<NotificationState | null>(null)
+  const [verificationSubscriptionId, setVerificationSubscriptionId] = useState<string>()
 
   const filters = useMemo(() => getFiltersFromSearchParams(searchParams), [searchParams])
   const page = useMemo(() => getPageFromSearchParams(searchParams), [searchParams])
-  const rowsPerPage = useMemo(
-    () => getRowsPerPageFromSearchParams(searchParams),
-    [searchParams],
-  )
+  const rowsPerPage = useMemo(() => getRowsPerPageFromSearchParams(searchParams), [searchParams])
 
   const subscriptionsQuery = useSubscriptionsQuery(filters, page, rowsPerPage)
   const createMutation = useCreateSubscriptionMutation()
   const deleteMutation = useDeleteSubscriptionMutation()
   const verifyMutation = useVerifySubscriptionMutation()
+  const verificationMonitor = useWebhookVerificationMonitor(verificationSubscriptionId)
 
   const { hasScope } = useAuthorization()
   const canWrite = hasScope(REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
   const isTableLoading = subscriptionsQuery.isPending || subscriptionsQuery.isPlaceholderData
+
+  useEffect(() => {
+    if (!verificationSubscriptionId) return undefined
+
+    const status = verificationMonitor.normalizedStatus
+    const isTerminalStatus = status === 'STALE' || status === 'ACTIVE' || status === 'DELETED'
+    if (!isTerminalStatus && !verificationMonitor.timedOut) return undefined
+
+    const terminalStatusTimer = window.setTimeout(() => {
+      if (status === 'STALE') {
+        setNotification({
+          severity: 'error',
+          message: t('subscriptions.verification.retriesExhausted'),
+        })
+      }
+      setVerificationSubscriptionId(undefined)
+      if (isTerminalStatus) {
+        queryClient.invalidateQueries({ queryKey: ['subscriptions'] }).catch(() => undefined)
+      }
+    }, 0)
+
+    return () => window.clearTimeout(terminalStatusTimer)
+  }, [
+    queryClient,
+    t,
+    verificationMonitor.normalizedStatus,
+    verificationMonitor.timedOut,
+    verificationSubscriptionId,
+  ])
 
   const updateParams = (
     nextFilters: SubscriptionFiltersModel,
@@ -147,10 +183,16 @@ export default function SubscriptionsPage(): React.JSX.Element {
   const handleVerify = (sub: SubscriptionRecord): void => {
     verifyMutation.mutate(sub.subscriptionId, {
       onSuccess: () => {
-        setSnackbarMessage(t('subscriptions.verification.success', 'Verification triggered successfully.'))
+        setNotification({
+          severity: 'success',
+          message: t('subscriptions.verification.success', 'Verification triggered successfully.'),
+        })
       },
       onError: (err) => {
-        setSnackbarMessage(err.message || t('subscriptions.verification.failed', 'Verification failed.'))
+        setNotification({
+          severity: 'error',
+          message: err.message || t('subscriptions.verification.failed', 'Verification failed.'),
+        })
       },
     })
   }
@@ -210,7 +252,9 @@ export default function SubscriptionsPage(): React.JSX.Element {
             updateParams(filters, DEFAULT_PAGE, nextRowsPerPage)
           }
           onRetry={() => subscriptionsQuery.refetch()}
-          onViewDetails={(sub) => navigate(`/events/subscriptions/${encodeURIComponent(sub.subscriptionId)}`)}
+          onViewDetails={(sub) =>
+            navigate(`/events/subscriptions/${encodeURIComponent(sub.subscriptionId)}`)
+          }
           onVerify={handleVerify}
           onDelete={setSelectedDeleteSubscription}
         />
@@ -226,7 +270,15 @@ export default function SubscriptionsPage(): React.JSX.Element {
             }}
             onSubmit={(payload) => {
               createMutation.mutate(payload, {
-                onSuccess: () => setIsRegisterOpen(false),
+                onSuccess: (subscription) => {
+                  setIsRegisterOpen(false)
+                  if (
+                    payload.delivery.mode === 'webhook' &&
+                    normalizeSubscriptionStatus(subscription.status) === 'PENDING'
+                  ) {
+                    setVerificationSubscriptionId(subscription.subscriptionId)
+                  }
+                },
               })
             }}
           />
@@ -251,17 +303,17 @@ export default function SubscriptionsPage(): React.JSX.Element {
         ) : null}
 
         <Snackbar
-          open={Boolean(snackbarMessage)}
+          open={Boolean(notification)}
           autoHideDuration={4000}
-          onClose={() => setSnackbarMessage(null)}
+          onClose={() => setNotification(null)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
           <Alert
-            onClose={() => setSnackbarMessage(null)}
-            severity={verifyMutation.isError ? 'error' : 'success'}
+            onClose={() => setNotification(null)}
+            severity={notification?.severity ?? 'success'}
             sx={{ width: '100%' }}
           >
-            {snackbarMessage}
+            {notification?.message}
           </Alert>
         </Snackbar>
       </Stack>

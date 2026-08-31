@@ -65,4 +65,5 @@ export interface EventFilters {
   status: string
   topic: string
   groupId: string
+  subscriptionId: string
 }

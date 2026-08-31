@@ -46,7 +46,7 @@ export default function EventFilters({
   const [search, setSearch] = useState(filters.search)
   const [status, setStatus] = useState(filters.status || 'All')
   const [topic, setTopic] = useState(filters.topic || 'All')
-  const [groupId, setGroupId] = useState(filters.groupId || '')
+  const [subscriptionId, setSubscriptionId] = useState(filters.subscriptionId || '')
 
   const topicsQuery = useTopicsQuery({ status: 'ACTIVE', search: '' }, 0, 100)
   const topicRows = topicsQuery.data?.rows ?? []
@@ -55,28 +55,47 @@ export default function EventFilters({
     (filters.status && filters.status !== 'All') ||
     (filters.topic && filters.topic !== 'All') ||
     Boolean(filters.groupId) ||
+    Boolean(filters.subscriptionId) ||
     Boolean(filters.search)
 
   const handleSearchSubmit = (event: React.FormEvent): void => {
     event.preventDefault()
-    onFilterChange({ status, topic, groupId: groupId.trim(), search: search.trim() })
+    onFilterChange({
+      status,
+      topic,
+      groupId: filters.groupId,
+      subscriptionId: subscriptionId.trim(),
+      search: search.trim(),
+    })
   }
 
   const handleStatusChange = (nextStatus: string): void => {
     setStatus(nextStatus)
-    onFilterChange({ status: nextStatus, topic, groupId: groupId.trim(), search: search.trim() })
+    onFilterChange({
+      status: nextStatus,
+      topic,
+      groupId: filters.groupId,
+      subscriptionId: subscriptionId.trim(),
+      search: search.trim(),
+    })
   }
 
   const handleTopicChange = (nextTopic: string): void => {
     setTopic(nextTopic)
-    onFilterChange({ status, topic: nextTopic, groupId: groupId.trim(), search: search.trim() })
+    onFilterChange({
+      status,
+      topic: nextTopic,
+      groupId: filters.groupId,
+      subscriptionId: subscriptionId.trim(),
+      search: search.trim(),
+    })
   }
 
   const handleClear = (): void => {
     setSearch('')
     setStatus('All')
     setTopic('All')
-    setGroupId('')
+    setSubscriptionId('')
     onClear()
   }
 
@@ -85,6 +104,8 @@ export default function EventFilters({
       component="form"
       onSubmit={handleSearchSubmit}
       direction={{ xs: 'column', sm: 'row' }}
+      flexWrap="wrap"
+      useFlexGap
       spacing={2}
       alignItems="center"
     >
@@ -101,11 +122,11 @@ export default function EventFilters({
 
       <TextField
         size="small"
-        placeholder={t('events.filters.groupIdPlaceholder', 'Filter by Group ID...')}
-        label={t('events.filters.groupId', 'Group ID')}
-        value={groupId}
-        onChange={(event) => setGroupId(event.target.value)}
-        sx={{ minWidth: 150 }}
+        placeholder={t('events.filters.subscriptionIdPlaceholder', 'Filter by Subscription ID...')}
+        label={t('events.filters.subscriptionId', 'Subscription ID')}
+        value={subscriptionId}
+        onChange={(event) => setSubscriptionId(event.target.value)}
+        sx={{ minWidth: 190 }}
       />
 
       <TextField
