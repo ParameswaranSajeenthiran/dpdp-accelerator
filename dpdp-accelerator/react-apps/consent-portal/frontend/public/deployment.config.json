@@ -28,6 +28,7 @@
     "consent:status-history:view:any",
     "consent:status-history:view:self",
     "consent:history:view:any",
-    "consent:history:view:self"
+    "consent:history:view:self",
+    "account:self:delete"
   ]
 }

@@ -28,24 +28,23 @@ with no operator step and no REST call involved:
 | Validate token bindings | enabled | A token lifted out of the browser is rejected. |
 | Revoke tokens on logout | enabled | Signing out invalidates the tokens immediately. |
 
-It also authorizes the three consent management APIs (RBAC) and creates two
-roles: `dpdp-consent-admin`, holding every consent management scope, and
-`dpdp-consent-user`, which carries none — the consent-mgt scopes are Identity
-Server's own `internal_consent_mgt_*` permissions, already granted to every
-user by IS's default role configuration, so `dpdp-consent-user` only needs to
-exist, not carry anything.
-
-The complaint management API has no such built-in default: it registers its
-own API resource (`/api/dpdp/complaints`, the four `complaints:*`
-scopes) and folds all four straight into the existing `dpdp-consent-admin`
-role, rather than a dedicated complaint role — `dpdp-consent-admin` ends up
-holding every consent management scope *and* every complaint management
-scope. `dpdp-consent-user` is unaffected either way.
+It also authorizes the consent management, consent-history, event-notification
+and complaint-management APIs (RBAC), and creates two roles. `dpdp-consent-admin`
+holds every consent management scope, the consent-history "any" scopes, the
+event-notification scopes, and the complaint management API's two "any" scopes
+(`complaints:read:any`, `complaints:write:any`) — viewing and managing every
+complaint in the org, including internal notes and status transitions.
+`dpdp-consent-user` holds `account:self:delete` (see
+[Self-service account deletion](#7-self-service-account-deletion)) plus the
+complaint API's two "self" scopes (`complaints:read:self`,
+`complaints:write:self`) — the rest of what it needs, the `internal_consent_mgt_*`
+scopes for managing one's own consents, comes from Identity Server's own default
+role configuration rather than from this role at all.
 
 Provisioning checks each of these — application, API authorization, and each
-role — individually and only creates what's missing, so it's always safe to
-re-run (see [Recovering a broken tenant](#3-recovering-a-broken-tenant)
-below).
+role — individually, creating what's missing and adding any permission a role
+is still short of, so it's always safe to re-run (see
+[Recovering a broken tenant](#3-recovering-a-broken-tenant) below).
 
 ## 2. Change or turn off the auto-provisioning
 
@@ -83,18 +82,41 @@ them without a server restart:
 Saving the update re-runs provisioning for that tenant, recreating the
 application and any missing role.
 
+The same step is how a tenant provisioned by an older version of the
+accelerator picks up a newly introduced scope: re-running provisioning adds
+whatever permissions its existing roles are missing, without recreating the
+roles or touching any permission an operator granted by hand. A tenant created
+before self-service account deletion existed gets `account:self:delete` on
+`dpdp-consent-user` this way — no restart, no role deletion.
+
 ## 4. Assign portal roles
 
-Every user of the portal needs roles assigned in the Console under
-**User Management → Users → *user* → Roles**. Roles belong to one tenant, so
-do this in each tenant.
+Roles are assigned in the Console under **User Management → Users → *user* →
+Roles**. Roles belong to one tenant, so do this in each tenant.
+
+**Signing in and managing your own consents needs no role at all.** Every
+authenticated user gets `internal_login`, and the self-service consent API
+scopes every call to the caller, so a user with no portal role can sign in,
+see their dashboard and manage their own consents. The two roles below grant
+what is *beyond* that.
 
 | Role | Assign to | Grants |
 |---|---|---|
-| `dpdp-consent-user` | Regular users | Managing their own consents. |
-| `dpdp-consent-admin` | Administrators | Everything `dpdp-consent-user` does, plus administering *other people's* consents and editing the purpose and element catalog, plus every complaint management scope (`complaints:read/write:self`, `complaints:read/write:any`) — viewing and managing every complaint in the org, including internal notes and status transitions. |
+| `dpdp-consent-user` | Regular users | Deleting their own account, and reading/writing their own complaints (`complaints:read/write:self`). Neither is needed for self-service consent management, which works without any role. |
+| `dpdp-consent-admin` | Administrators | Administering *other people's* consents, editing the purpose and element catalog, and reading/writing *any* complaint in the org (`complaints:read/write:any`), including internal notes and status transitions. **Not** self-service account deletion, which is `dpdp-consent-user` only. |
 
-There is currently no role granting ordinary users `complaints:read/write:self` — only `dpdp-consent-admin` carries complaint scopes at all.
+> **Users who don't hold `dpdp-consent-user` will not see "Delete my
+> account".** The option is gated on the `account:self:delete` scope that
+> only this role grants, so assign it to every user who should be able to
+> delete their own account. Before self-service deletion existed this role
+> granted nothing, so accounts created earlier are unlikely to hold it —
+> check rather than assume.
+
+> **Assigning both roles to one user re-enables self-deletion for them.** The
+> two roles' permissions add up, so an administrator who also holds
+> `dpdp-consent-user` receives `account:self:delete` and can delete their own
+> account. Keep administrators out of `dpdp-consent-user` if that matters —
+> they lose nothing else by not holding it.
 
 ## 5. Configure email notifications
 
@@ -200,6 +222,97 @@ With this in place, Quartz coordinates through the shared database so that
 exactly one node executes the job on each scheduled tick, no matter how many
 nodes are running. To confirm it's working, check the logs after a
 scheduled run — only one node should log the job firing, not all of them.
+
+## 7. Self-service account deletion
+
+A user holding `dpdp-consent-user` sees **Delete my account** in the portal's
+profile menu, beside Sign out. Confirming it calls `DELETE /scim2/Me`, clears
+the browser session and lands the user on a public confirmation page. The
+deletion is immediate and irreversible — unless an approval workflow is
+configured for the operation, in which case it becomes a request; see
+[With an approval workflow on Delete User](#with-an-approval-workflow-on-delete-user).
+
+Users without that role do not see the option, and the portal is perfectly
+usable without it — so assigning it is a deliberate step, not something
+existing accounts have already. See [Assign portal roles](#4-assign-portal-roles).
+
+### How it is restricted
+
+Identity Server protects `DELETE /scim2/Me` with `internal_user_mgt_delete` by
+default — a scope that *also* authorizes `DELETE /scim2/Users/{id}`, so
+granting it to portal users would let any one of them delete anybody. The
+accelerator's `deployment.toml` therefore overrides that one endpoint to
+require a much narrower scope instead:
+
+```toml
+[[resource.access_control]]
+context = "(.*)/scim2/Me"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "DELETE"
+scopes = ["account:self:delete"]
+```
+
+Tenant provisioning registers `account:self:delete`, authorizes the portal
+application for it, and grants it through the `dpdp-consent-user` role only.
+`internal_user_mgt_delete` is never granted to portal users, so
+`DELETE /scim2/Users/{id}` stays administrator-only.
+
+**The scope check on the token is the enforcement.** An administrator's token
+does not carry `account:self:delete`, so the server answers their
+`DELETE /scim2/Me` with a 403 whether it arrives from the portal, curl, or
+anywhere else. The portal hiding the menu item for them is a convenience on
+top of that, not the control itself.
+
+### With an approval workflow on Delete User
+
+If an approval workflow is associated with the **Delete User** operation, the
+account is not deleted when the user confirms. The Identity Server records a
+request and answers `202` with *"User deletion has sent for the approval"*,
+and the account stays fully usable — the user can keep working and can sign in
+again — until an approver acts.
+
+The portal tells the two outcomes apart by the status code and says which one
+happened, because it has no way of knowing in advance whether a workflow is
+configured:
+
+| Response | What the portal does |
+|---|---|
+| `204` | Clears the session and shows the account-deleted page. |
+| `202` | Keeps the user signed in and reports that the request is awaiting approval. |
+| `400` | Reports that a deletion request is already awaiting approval — the server refuses a second one while the first is pending. |
+
+Approvers act on the request in **My Account** (`/myaccount`) under its
+approvals section — accept or reject it there. The Console's **Workflow
+Requests** page is a monitoring view: it lists requests and can abort one, but
+it does not offer an approve action.
+
+The portal cannot show a user that their own request is pending: the
+workflow-request APIs are administrative, and there is no self-service
+endpoint for "my pending requests". A user who tries again simply gets the
+`400` message above.
+
+### What this does and does not cover
+
+- It prevents administrators deleting **their own** account *through the
+  portal*, which is what would otherwise risk leaving a tenant with no
+  administrator. It does not restrict Identity Server administration: anyone
+  holding `internal_user_mgt_delete` can still delete any account, their own
+  included, via `/scim2/Users/{id}` and the Console. That is unchanged and
+  intended.
+- A user holding both portal roles *can* self-delete — see the note in
+  [Assign portal roles](#4-assign-portal-roles).
+- **The user's DPDP data is not cleaned up.** Deleting the account removes the
+  user from the user store; their consent records and event subscriptions stay
+  behind, now referencing a user that no longer exists. Purging or anonymising
+  that data is a separate operator task today.
+
+### Deployments that override the requested scopes
+
+If your deployment ships its own `scope` array in the portal's
+`deployment.config.json` rather than using the shipped one, add
+`account:self:delete` to it. A scope the application never asks for is a scope
+the token never carries, and the menu item stays hidden.
 
 # Configuring Event Notifications
 

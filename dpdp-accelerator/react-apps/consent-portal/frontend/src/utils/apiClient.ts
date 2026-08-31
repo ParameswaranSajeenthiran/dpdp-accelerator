@@ -216,6 +216,19 @@ export async function apiRequestNoContent(
 }
 
 /**
+ * For endpoints where success is not one outcome: the Identity Server answers
+ * 202 rather than 204 when an approval workflow intercepts the operation, and
+ * the caller has to tell the two apart to describe what actually happened.
+ */
+export async function apiRequestForStatus(
+  path: string,
+  options: RequestOptions = {},
+): Promise<number> {
+  const raw = await requestRaw(path, options)
+  return raw.status
+}
+
+/**
  * For endpoints the Identity Server answers with an empty body on success
  * (revoke, authorize) where the caller still wants a value back.
  */

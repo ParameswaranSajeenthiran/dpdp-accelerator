@@ -128,6 +128,7 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
 
             DPDPApiResourceProvisioningUtil.registerEventNotificationAPIs(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerConsentHistoryApi(tenantDomain);
+            DPDPApiResourceProvisioningUtil.registerAccountSelfServiceApi(tenantDomain);
             DPDPApiResourceProvisioningUtil.registerComplaintManagementApi(tenantDomain);
             EmailTemplateProvisioningUtil.provisionTemplates(tenantDomain);
 
@@ -143,9 +144,12 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
             List<String> adminScopes = new ArrayList<>(consentMgtScopes);
             adminScopes.addAll(consentHistoryScopes);
             adminScopes.addAll(eventNotificationScopes);
-            List<String> userScopes = new ArrayList<>(Arrays.asList(
-                    DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
-                    DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF));
+            // Self-delete goes to the user role only - an admin token must never carry it.
+            List<String> userScopes = new ArrayList<>(
+                    Arrays.asList(DPDPApiResourceProvisioningUtil.STATUS_HISTORY_VIEW_SELF,
+                            DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF));
+            userScopes.addAll(DPDPApiResourceProvisioningUtil
+                    .authorizeAccountSelfServiceApi(applicationId, tenantDomain));
             for (String complaintScope : complaintScopes) {
                 if (complaintScope.endsWith(":self")) {
                     userScopes.add(complaintScope);

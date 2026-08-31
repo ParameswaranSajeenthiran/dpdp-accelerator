@@ -218,6 +218,16 @@ allowed_auth_handlers = ["OAuthAuthentication"]
 secure = "true"
 http_method = "GET"
 scopes = ["consent:history:view:self"]
+# Self-service account deletion: replaces the default internal_user_mgt_delete
+# requirement on DELETE /scim2/Me with the narrow account:self:delete scope, which
+# tenant provisioning grants to the dpdp-consent-user role only. Deliberately
+# OAuth-only - self-deletion must come from a user-context token, not Basic auth.
+[[resource.access_control]]
+context = "(.*)/scim2/Me"
+allowed_auth_handlers = ["OAuthAuthentication"]
+secure = "true"
+http_method = "DELETE"
+scopes = ["account:self:delete"]
 
 [tenant_context.rewrite]
 custom_webapps = [

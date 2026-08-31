@@ -66,6 +66,14 @@ export const CONSENT_HISTORY_SCOPES = {
   HISTORY_VIEW_SELF: 'consent:history:view:self',
 } as const
 
+/**
+ * Guards DELETE /scim2/Me. Granted through the dpdp-consent-user role only, so
+ * administrators never see (or pass) the self-service account deletion.
+ */
+export const ACCOUNT_SCOPES = {
+  SELF_DELETE: 'account:self:delete',
+} as const
+
 /** Any one of these scopes is enough to unlock the area it guards. */
 export type ScopeRequirement = readonly string[]
 
@@ -92,6 +100,7 @@ export const REQUIRED_SCOPES = {
   COMPLAINTS_WRITE_SELF: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_SELF],
   COMPLAINTS_READ_ANY: [COMPLAINT_SCOPES.COMPLAINTS_READ_ANY],
   COMPLAINTS_WRITE_ANY: [COMPLAINT_SCOPES.COMPLAINTS_WRITE_ANY],
+  ACCOUNT_SELF_DELETE: [ACCOUNT_SCOPES.SELF_DELETE],
 } as const satisfies Record<string, ScopeRequirement>
 
 /** Splits the space separated scope string an access token carries. */
