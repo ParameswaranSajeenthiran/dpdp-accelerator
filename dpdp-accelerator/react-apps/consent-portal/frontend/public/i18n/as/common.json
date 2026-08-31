@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ভেৰিফিকেচন পিং সফলতাৰে প্ৰেৰণ কৰা হৈছে।",
-      "failed": "ৱেবহুক ভেৰিফিকেচন ব্যৰ্থ হৈছে। অনুগ্ৰহ কৰি এণ্ডপইণ্টৰ উপলব্ধতা পৰীক্ষা কৰক।"
+      "failed": "ৱেবহুক ভেৰিফিকেচন ব্যৰ্থ হৈছে। অনুগ্ৰহ কৰি এণ্ডপইণ্টৰ উপলব্ধতা পৰীক্ষা কৰক।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "চందాৰ বিৱৰণ লোড কৰিবলৈ অসমৰ্থ।",
@@ -1176,7 +1177,9 @@
       "groupId": "গ্ৰুপ আইডি",
       "groupIdPlaceholder": "গ্ৰুপ আইডিৰ দ্বাৰা ফিল্টাৰ কৰক...",
       "search": "অনুসন্ধান কৰক",
-      "clear": "পৰিষ্কাৰ কৰক"
+      "clear": "পৰিষ্কাৰ কৰক",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "সকলো",

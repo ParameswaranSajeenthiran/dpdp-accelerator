@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ಪರಿಶೀಲನಾ ಪಿಂಗ್ ಅನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರವಾನಿಸಲಾಗಿದೆ.",
-      "failed": "ವೆಬ್‌ಹುಕ್ ಪರಿಶೀಲನೆ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಎಂಡ್‌ಪಾಯಿಂಟ್ ತಲುಪುವಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸಿ."
+      "failed": "ವೆಬ್‌ಹುಕ್ ಪರಿಶೀಲನೆ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಎಂಡ್‌ಪಾಯಿಂಟ್ ತಲುಪುವಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸಿ.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "ಚಂದಾದಾರಿಕೆ ವಿವರಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ.",
@@ -1176,7 +1177,9 @@
       "groupId": "ಗುಂಪು ID",
       "groupIdPlaceholder": "ಗುಂಪು ID ಮೂಲಕ ಫಿಲ್ಟರ್ ಮಾಡಿ...",
       "search": "ಹುಡುಕಿ",
-      "clear": "ತೆಗೆದುಹಾಕು"
+      "clear": "ತೆಗೆದುಹಾಕು",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "ಎಲ್ಲಾ",

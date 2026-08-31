@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यता दे ब्यौरे लोड करने च असमर्थ।",
@@ -1176,7 +1177,9 @@
       "groupId": "समूह आईडी",
       "groupIdPlaceholder": "समूह आईडी राहें फिल्टर करो...",
       "search": "खोजो",
-      "clear": "साफ करो"
+      "clear": "साफ करो",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सभनें",

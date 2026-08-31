@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "যাচাই পিং সফলভাবে প্রেরণ করা হয়েছে।",
-      "failed": "ওয়েবহুক যাচাইকরণ ব্যর্থ হয়েছে। অনুগ্রহ করে এন্ডপয়েন্ট অ্যাক্সেসযোগ্যতা পরীক্ষা করুন।"
+      "failed": "ওয়েবহুক যাচাইকরণ ব্যর্থ হয়েছে। অনুগ্রহ করে এন্ডপয়েন্ট অ্যাক্সেসযোগ্যতা পরীক্ষা করুন।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "সদস্যতার বিবরণ লোড করা যাচ্ছে না।",
@@ -1176,7 +1177,9 @@
       "groupId": "গ্রুপ আইডি",
       "groupIdPlaceholder": "গ্রুপ আইডি দ্বারা ফিল্টার করুন...",
       "search": "অনুসন্ধান",
-      "clear": "পরিষ্কার"
+      "clear": "পরিষ্কার",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "সমস্ত",

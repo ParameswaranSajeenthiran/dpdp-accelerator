@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "تصدیٖق پِنٛگ کٔرِتھ کٔرِتھ کٲمیٲبی سۭتۍ روانہٕ",
-      "failed": "ویب ہک تصدیٖق کٔرِتھ کٔرِتھ ناکام۔ مہربٲنی کٔرِتھ کٔرِو اینڈ پوائنٹ رِچ ایبلٹی چیک۔"
+      "failed": "ویب ہک تصدیٖق کٔرِتھ کٔرِتھ ناکام۔ مہربٲنی کٔرِتھ کٔرِو اینڈ پوائنٹ رِچ ایبلٹی چیک۔",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "سبسکرپشنُک تفصیٖل لوڈ کَرُن چھُ نامُمکِن۔",
@@ -1176,7 +1177,9 @@
       "groupId": "گروپ آی ڈی",
       "groupIdPlaceholder": "گروپ آی ڈی سۭتۍ فلٹر کَرُن...",
       "search": "تلاشی",
-      "clear": "صاف کَرُن"
+      "clear": "صاف کَرُن",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "سٲری",

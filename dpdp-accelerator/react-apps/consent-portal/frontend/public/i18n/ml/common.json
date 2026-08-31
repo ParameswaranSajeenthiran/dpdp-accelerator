@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "പരിശോധന പിംഗ് വിജയകരമായി അയച്ചു.",
-      "failed": "വെബ്ഹൂക്ക് പരിശോധന പരാജയപ്പെട്ടു. ദയവായി എൻഡ് പോയിന്റ് ലഭ്യത പരിശോധിക്കുക."
+      "failed": "വെബ്ഹൂക്ക് പരിശോധന പരാജയപ്പെട്ടു. ദയവായി എൻഡ് പോയിന്റ് ലഭ്യത പരിശോധിക്കുക.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "സബ്സ്ക്രിപ്ഷൻ വിശദാംശങ്ങൾ ലോഡ് ചെയ്യാൻ കഴിയില്ല.",
@@ -1176,7 +1177,9 @@
       "groupId": "ഗ്രൂപ്പ് ഐഡി",
       "groupIdPlaceholder": "ഗ്രൂപ്പ് ഐഡി അനുസരിച്ച് ഫിൽട്ടർ ചെയ്യുക...",
       "search": "തിരയുക",
-      "clear": "ഒഴിവാക്കുക"
+      "clear": "ഒഴിവാക്കുക",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "എല്ലാം",

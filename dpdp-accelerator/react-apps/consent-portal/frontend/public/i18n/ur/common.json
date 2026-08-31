@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "تصدیقی پنگ کامیابی سے روانہ کر دی گئی۔",
-      "failed": "ویب ہک کی تصدیق ناکام ہو گئی۔ براہ کرم اینڈ پوائنٹ کی رسائی کی جانچ کریں۔"
+      "failed": "ویب ہک کی تصدیق ناکام ہو گئی۔ براہ کرم اینڈ پوائنٹ کی رسائی کی جانچ کریں۔",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "سبسکرپشن کی تفصیلات لوڈ کرنے سے قاصر ہیں۔",
@@ -1176,7 +1177,9 @@
       "groupId": "گروپ آئی ڈی",
       "groupIdPlaceholder": "گروپ آئی ڈی کے ذریعے فلٹر کریں...",
       "search": "تلاش",
-      "clear": "صاف کریں"
+      "clear": "صاف کریں",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "تمام",

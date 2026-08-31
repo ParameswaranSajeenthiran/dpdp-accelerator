@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ଯାଞ୍ଚ ପିଙ୍ଗ୍ ସଫଳତାର ସହିତ ପଠାଗଲା।",
-      "failed": "ୱେବହକ୍ ଯାଞ୍ଚ ବିଫଳ ହୋଇଛି। ଦୟାକରି ଏଣ୍ଡପଏଣ୍ଟ୍ ପହଞ୍ଚିବା ଯୋଗ୍ୟତା ଯାଞ୍ଚ କରନ୍ତୁ।"
+      "failed": "ୱେବହକ୍ ଯାଞ୍ଚ ବିଫଳ ହୋଇଛି। ଦୟାକରି ଏଣ୍ଡପଏଣ୍ଟ୍ ପହଞ୍ଚିବା ଯୋଗ୍ୟତା ଯାଞ୍ଚ କରନ୍ତୁ।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "ସବସ୍କ୍ରିପସନ୍ ବିବରଣୀ ଲୋଡ୍ କରିବାକୁ ଅସମର୍ଥ।",
@@ -1176,7 +1177,9 @@
       "groupId": "ଗ୍ରୁପ୍ ID",
       "groupIdPlaceholder": "ଗ୍ରୁପ୍ ID ଦ୍ୱାରା ଫିଲ୍ଟର୍ କରନ୍ତୁ...",
       "search": "ସର୍ଚ୍ଚ କରନ୍ତୁ",
-      "clear": "ସଫା କର"
+      "clear": "ସଫା କର",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "ସମସ୍ତ",

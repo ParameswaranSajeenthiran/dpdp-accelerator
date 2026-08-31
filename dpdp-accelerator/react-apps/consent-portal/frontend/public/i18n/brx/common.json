@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "थारथियारि पिं थारै दैथायहरजाबाय।",
-      "failed": "वेभहक थारथियारिआ जाफुंसारियाखै। अन्थाइ बिन्दो मोननो हाथावनाखौ नाय।"
+      "failed": "वेभहक थारथियारिआ जाफुंसारियाखै। अन्थाइ बिन्दो मोननो हाथावनाखौ नाय।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "साब्सक्रिपसननि बिबुंसारफोरखौ ल'ड खालामनो हायाखै।",
@@ -1176,7 +1177,9 @@
       "groupId": "हान्जा आइ.डि.",
       "groupIdPlaceholder": "हान्जा आइ.डि.जों साफा खालाम...",
       "search": "नायहर",
-      "clear": "साफा खालाम"
+      "clear": "साफा खालाम",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "गासै",

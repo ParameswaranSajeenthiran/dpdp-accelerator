@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "சரிபார்ப்பு பிங் வெற்றிகரமாக அனுப்பப்பட்டது.",
-      "failed": "Webhook சரிபார்ப்பு தோல்வியடைந்தது. இறுதிப்புள்ளி அணுகக்கூடிய தன்மையைச் சரிபார்க்கவும்."
+      "failed": "Webhook சரிபார்ப்பு தோல்வியடைந்தது. இறுதிப்புள்ளி அணுகக்கூடிய தன்மையைச் சரிபார்க்கவும்.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "சந்தா விவரங்களை ஏற்ற முடியவில்லை.",
@@ -1176,7 +1177,9 @@
       "groupId": "குழு ID",
       "groupIdPlaceholder": "குழு ID மூலம் வடிகட்டு...",
       "search": "தேடல்",
-      "clear": "தெளிவுபடுத்து"
+      "clear": "தெளிவுபடுத்து",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "அனைத்தும்",

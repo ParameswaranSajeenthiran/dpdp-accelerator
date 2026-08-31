@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "सत्यापन पिंग यशस्वीपणान धाडला.",
-      "failed": "वेबहुक प्रमाणीकरण अपेशी थारलें. कृपया एंडपॉइंटाची पोहोच तपासचें."
+      "failed": "वेबहुक प्रमाणीकरण अपेशी थारलें. कृपया एंडपॉइंटाची पोहोच तपासचें.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यत्वाचो तपशील लोड करपाक शकना.",
@@ -1176,7 +1177,9 @@
       "groupId": "गट आय.डी.",
       "groupIdPlaceholder": "गट आय.डी. प्रमाण फिल्टर करप...",
       "search": "सोद करात",
-      "clear": "साफ करप"
+      "clear": "साफ करप",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सगळें",

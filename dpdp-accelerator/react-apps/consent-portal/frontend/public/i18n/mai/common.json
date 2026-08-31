@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "सत्यापन पिंग सफलतापूर्वक भेजल गेल।",
-      "failed": "वेबहुक सत्यापन विफल भेल। कृपया एंडपॉइंट पहुँचक जाँच करू।"
+      "failed": "वेबहुक सत्यापन विफल भेल। कृपया एंडपॉइंट पहुँचक जाँच करू।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यता विवरण लोड करब' मे असमर्थ।",
@@ -1176,7 +1177,9 @@
       "groupId": "समूह आईडी",
       "groupIdPlaceholder": "समूह आईडी द्वारा फ़िल्टर करू...",
       "search": "खोजू",
-      "clear": "साफ करू"
+      "clear": "साफ करू",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सब",

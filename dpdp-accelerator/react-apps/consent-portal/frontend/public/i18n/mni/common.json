@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ꯚꯦꯔꯤꯐꯤꯀꯦꯁꯟ ꯄꯤꯡ ꯃꯥꯏꯄꯥꯛꯅ ꯊꯥꯈꯤ꯫",
-      "failed": "Webhook verification failed. Please check endpoint reachability."
+      "failed": "Webhook verification failed. Please check endpoint reachability.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "ꯁꯕꯁꯀ꯭ꯔꯤꯞꯁꯟ ꯗꯤꯇꯦꯜꯁꯤꯡ ꯂꯣꯗ ꯇꯧꯕ ꯌꯥꯔꯛꯇꯦ꯫",
@@ -1176,7 +1177,9 @@
       "groupId": "ꯒ꯭ꯔꯨꯞ ꯑꯥꯏ.ꯗꯤ.",
       "groupIdPlaceholder": "ꯒ꯭ꯔꯨꯞ ꯑꯥꯏ.ꯗꯤ.ꯒꯤ ꯃꯈꯥꯗ ꯐꯤꯜꯇꯔ ꯇꯧ꯫",
       "search": "ꯁꯔꯆ",
-      "clear": "ꯁꯦꯡꯗꯣꯛꯄ"
+      "clear": "ꯁꯦꯡꯗꯣꯛꯄ",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "ꯄꯨꯝꯅꯃꯛ",

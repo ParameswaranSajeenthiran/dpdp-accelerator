@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "वेरिफिकेशन पिंग कामयाबी सां मोकिलियो वियो।",
-      "failed": "वेबहुक जी तस्दीक़ नाक़ाम थी। मेहरबानी करे एंडपॉइंट जी पहुच जी जाच करियो।"
+      "failed": "वेबहुक जी तस्दीक़ नाक़ाम थी। मेहरबानी करे एंडपॉइंट जी पहुच जी जाच करियो।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सब्सक्रिप्शन जा तफ़सील लोड करणु में नाकामी।",
@@ -1176,7 +1177,9 @@
       "groupId": "ग्रुप आई.डी.",
       "groupIdPlaceholder": "ग्रुप आई.डी. सां फ़िल्टर करियो...",
       "search": "ॻोल्हियो",
-      "clear": "साफ़ करियो"
+      "clear": "साफ़ करियो",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सभुं",

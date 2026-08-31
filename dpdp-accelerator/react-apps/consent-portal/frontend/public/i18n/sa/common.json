@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "सत्यापन पिङ्ग् सफलतापूर्वकं प्रेषितम्।",
-      "failed": "वेबहुक् सत्यापनं विफलम्। कृपया अन्तिमबिन्दुं प्राप्यतां परीक्ष्यन्तु।"
+      "failed": "वेबहुक् सत्यापनं विफलम्। कृपया अन्तिमबिन्दुं प्राप्यतां परीक्ष्यन्तु।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यताविवरणानि भारयितुं न शक्यते।",
@@ -1176,7 +1177,9 @@
       "groupId": "समूह परिचय संख्या",
       "groupIdPlaceholder": "समूह परिचय संख्या द्वारा शोधकः...",
       "search": "अन्वेषणम्",
-      "clear": "स्पष्टम्"
+      "clear": "स्पष्टम्",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सर्वे",

@@ -31,6 +31,7 @@ const DEFAULT_FILTERS: EventFiltersModel = {
   status: 'All',
   topic: 'All',
   groupId: '',
+  subscriptionId: '',
 }
 
 const DEFAULT_PAGE = 0
@@ -42,6 +43,7 @@ function getFiltersFromSearchParams(searchParams: URLSearchParams): EventFilters
     status: searchParams.get('status') ?? DEFAULT_FILTERS.status,
     topic: searchParams.get('topic') ?? DEFAULT_FILTERS.topic,
     groupId: searchParams.get('groupId') ?? DEFAULT_FILTERS.groupId,
+    subscriptionId: searchParams.get('subscriptionId') ?? DEFAULT_FILTERS.subscriptionId,
   }
 }
 
@@ -76,6 +78,10 @@ function toSearchParams(
 
   if (filters.groupId.trim()) {
     params.set('groupId', filters.groupId.trim())
+  }
+
+  if (filters.subscriptionId.trim()) {
+    params.set('subscriptionId', filters.subscriptionId.trim())
   }
 
   if (page !== DEFAULT_PAGE) {

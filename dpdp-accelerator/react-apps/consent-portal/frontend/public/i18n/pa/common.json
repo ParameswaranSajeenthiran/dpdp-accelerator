@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ਪੁਸ਼ਟੀਕਰਨ ਪਿੰਗ ਸਫਲਤਾਪੂਰਵਕ ਭੇਜੀ ਗਈ।",
-      "failed": "ਵੈੱਬਹੁੱਕ ਤਸਦੀਕ ਅਸਫਲ ਹੋ ਗਈ। ਕਿਰਪਾ ਕਰਕੇ ਐਂਡਪੁਆਇੰਟ ਦੀ ਪਹੁੰਚਯੋਗਤਾ ਦੀ ਜਾਂਚ ਕਰੋ।"
+      "failed": "ਵੈੱਬਹੁੱਕ ਤਸਦੀਕ ਅਸਫਲ ਹੋ ਗਈ। ਕਿਰਪਾ ਕਰਕੇ ਐਂਡਪੁਆਇੰਟ ਦੀ ਪਹੁੰਚਯੋਗਤਾ ਦੀ ਜਾਂਚ ਕਰੋ।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਵੇਰਵੇ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਮਰੱਥ।",
@@ -1176,7 +1177,9 @@
       "groupId": "ਗਰੁੱਪ ID",
       "groupIdPlaceholder": "ਗਰੁੱਪ ID ਦੁਆਰਾ ਫਿਲਟਰ ਕਰੋ...",
       "search": "ਖੋਜ ਕਰੋ",
-      "clear": "ਸਾਫ਼ ਕਰੋ"
+      "clear": "ਸਾਫ਼ ਕਰੋ",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "ਸਾਰੇ",

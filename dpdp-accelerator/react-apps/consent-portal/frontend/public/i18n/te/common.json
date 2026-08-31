@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ధృవీకరణ పింగ్ విజయవంతంగా పంపబడింది.",
-      "failed": "వెబ్‌హుక్ ధృవీకరణ విఫలమైంది. దయచేసి ఎండ్‌పాయింట్ అందుబాటును తనిఖీ చేయండి."
+      "failed": "వెబ్‌హుక్ ధృవీకరణ విఫలమైంది. దయచేసి ఎండ్‌పాయింట్ అందుబాటును తనిఖీ చేయండి.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "చందా వివరాలను లోడ్ చేయలేము.",
@@ -1176,7 +1177,9 @@
       "groupId": "సమూహ ID",
       "groupIdPlaceholder": "సమూహ ID ద్వారా ఫిల్టర్ చేయి...",
       "search": "వెతకండి",
-      "clear": "తొలగించు"
+      "clear": "తొలగించు",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "అన్నీ",

@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "पडताळणी पिंग यशस्वीरित्या पाठवले.",
-      "failed": "वेबहुक पडताळणी अयशस्वी झाली. कृपया एंडपॉइंट पोहोचण्याची क्षमता तपासा."
+      "failed": "वेबहुक पडताळणी अयशस्वी झाली. कृपया एंडपॉइंट पोहोचण्याची क्षमता तपासा.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यतेचा तपशील लोड करणे शक्य नाही.",
@@ -1176,7 +1177,9 @@
       "groupId": "गट आयडी",
       "groupIdPlaceholder": "गट आयडीनुसार फिल्टर करा...",
       "search": "शोधा",
-      "clear": "साफ करा"
+      "clear": "साफ करा",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सर्व",

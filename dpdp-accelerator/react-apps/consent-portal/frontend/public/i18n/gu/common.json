@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "ચકાસણી પિંગ સફળતાપૂર્વક મોકલવામાં આવી.",
-      "failed": "વેબહૂક ચકાસણી નિષ્ફળ ગઈ. કૃપા કરીને એન્ડપોઇન્ટની પહોંચ ચકાસો."
+      "failed": "વેબહૂક ચકાસણી નિષ્ફળ ગઈ. કૃપા કરીને એન્ડપોઇન્ટની પહોંચ ચકાસો.",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "સબ્સ્ક્રિપ્શનની વિગતો લોડ કરવામાં અસમર્થ.",
@@ -1176,7 +1177,9 @@
       "groupId": "ગ્રુપ ID",
       "groupIdPlaceholder": "ગ્રુપ ID દ્વારા ફિલ્ટર કરો...",
       "search": "શોધો",
-      "clear": "સાફ કરો"
+      "clear": "સાફ કરો",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "બધું",

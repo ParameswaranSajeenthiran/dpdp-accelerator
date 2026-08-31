@@ -1133,7 +1133,8 @@
     },
     "verification": {
       "success": "पक्का पारेर पिंग सफलतापूर्वक पठाइयो।",
-      "failed": "वेभहक प्रमाणीकरण असफल भयो। कृपया अन्तिम बिन्दु पहुँच जाँच गर्नुहोस्।"
+      "failed": "वेभहक प्रमाणीकरण असफल भयो। कृपया अन्तिम बिन्दु पहुँच जाँच गर्नुहोस्।",
+      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
     },
     "details": {
       "loadFailed": "सदस्यता विवरण लोड गर्न असमर्थ।",
@@ -1176,7 +1177,9 @@
       "groupId": "समूह ID",
       "groupIdPlaceholder": "समूह ID द्वारा छान्नुहोस्...",
       "search": "खोज",
-      "clear": "सफा गर्नुहोस्"
+      "clear": "सफा गर्नुहोस्",
+      "subscriptionId": "Subscription ID",
+      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
     },
     "status": {
       "all": "सबै",
