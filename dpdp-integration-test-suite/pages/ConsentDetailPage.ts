@@ -45,6 +45,9 @@ export class ConsentDetailPage {
   readonly backButton: Locator
   readonly purposesSection: Locator
   readonly authorizationsSection: Locator
+  readonly lifecycleSection: Locator
+  readonly lifecycleRows: Locator
+  readonly viewFullSnapshotButton: Locator
 
   constructor(
     private readonly page: Page,
@@ -59,6 +62,13 @@ export class ConsentDetailPage {
     this.authorizationsSection = page
       .locator('.MuiCard-root')
       .filter({ has: page.getByRole('heading', { name: 'Authorizations' }) })
+    // ConsentLifecycleSection.tsx - the status-audit timeline card. Rows are read from `tbody`
+    // directly (not `getByRole('row')`) so the header row never gets swept in.
+    this.lifecycleSection = page
+      .locator('.MuiCard-root')
+      .filter({ has: page.getByRole('heading', { name: 'Consent Lifecycle' }) })
+    this.lifecycleRows = this.lifecycleSection.locator('tbody tr')
+    this.viewFullSnapshotButton = page.getByRole('button', { name: 'View Full Snapshot History' })
   }
 
   async goto(consentId: string): Promise<void> {
@@ -81,6 +91,21 @@ export class ConsentDetailPage {
 
   authorizationRow(userId: string): Locator {
     return this.authorizationsSection.getByRole('row', { name: new RegExp(userId) })
+  }
+
+  /**
+   * A lifecycle-table row, matched by its rendered "<action> by <actor>" description
+   * (ConsentLifecycleSection.describeEntry's i18n template). Bridges with `.*` rather than a
+   * literal " by " - confirmed live that the AUTHORIZE_REVOKE action label is itself "Revoked by
+   * reviewer", so a whole-consent revoke renders "Revoked by reviewer by <actor>": a second,
+   * unrelated "by" sits between the action and the actor this locator is matching on.
+   */
+  lifecycleRow(action: string, actor: string): Locator {
+    return this.lifecycleRows.filter({ hasText: new RegExp(`${action}.*${actor}`) })
+  }
+
+  async openFullHistoryDialog(): Promise<void> {
+    await this.viewFullSnapshotButton.click()
   }
 
   private actionButton(action: keyof typeof CONFIRM_LABEL): Locator {
