@@ -11,10 +11,12 @@
     "test:consents": "playwright test tests/03-consents",
     "test:authorization": "playwright test tests/04-authorization",
     "test:multi-tenancy": "playwright test tests/05-multi-tenancy",
+    "test:event-notifications": "playwright test tests/08-event-notifications",
     "test:account": "playwright test tests/06-account",
     "report": "playwright show-report"
   },
   "devDependencies": {
+    "@ngrok/ngrok": "1.7.0",
     "@playwright/test": "1.62.1",
     "@types/node": "24.12.0",
     "dotenv": "17.2.3",

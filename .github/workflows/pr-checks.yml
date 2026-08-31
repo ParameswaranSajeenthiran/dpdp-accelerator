@@ -257,6 +257,39 @@ jobs:
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
 
+      # CI-only, no-secret path for tests/08-event-notifications' webhook-delivery tests: unlike a
+      # long-running local install (which can't be restarted mid-suite just to flip a config
+      # flag - see that directory's README), this job deploys a fresh IS from scratch every run,
+      # so the deployed deployment.toml can just be patched before the server ever starts, with
+      # no restart needed. Runner IP (never localhost/127.0.0.1, which
+      # EventNotificationUrlValidator rejects unconditionally) becomes the webhook receiver's own
+      # address - reachable because the test runner and this IS instance are the same machine.
+      # An NGROK_AUTH_TOKEN secret, if configured, still takes priority (WebhookReceiver prefers
+      # it) - this is what runs when that secret is absent instead of skipping those tests.
+      - name: Enable private-network webhook callbacks for this CI-only IS instance
+        run: |
+          deployment_toml="${IS_HOME}/repository/conf/deployment.toml"
+          sed -i 's/^allow_private_network_callback_targets = false$/allow_private_network_callback_targets = true/' \
+            "${deployment_toml}"
+          grep -q '^allow_private_network_callback_targets = true$' "${deployment_toml}" \
+            || { echo "::error::Failed to patch allow_private_network_callback_targets - has the deployment.toml key/format changed?"; exit 1; }
+          # The default allowed_callback_ports (-1,80,443,8443) has exactly one unprivileged port
+          # (8443) - WebhookReceiver (utils/webhookReceiver.ts) binds within a small range starting
+          # there so more than one concurrently-running webhook test doesn't fight over one port
+          # (this suite assumes parallel execution - see its README's "assume parallel execution"
+          # rule). Keep this range in sync with ALLOWED_CALLBACK_PORTS in that file.
+          sed -i 's/^allowed_callback_ports = "-1,80,443,8443"$/allowed_callback_ports = "-1,80,443,8443,8444,8445,8446,8447,8448,8449,8450,8451,8452,8453,8454,8455"/' \
+            "${deployment_toml}"
+          grep -q '^allowed_callback_ports = "-1,80,443,8443,8444,8445,8446,8447,8448,8449,8450,8451,8452,8453,8454,8455"$' "${deployment_toml}" \
+            || { echo "::error::Failed to patch allowed_callback_ports - has the deployment.toml key/format changed?"; exit 1; }
+          runner_ip="$(hostname -I | awk '{print $1}')"
+          if [ -z "${runner_ip}" ]; then
+            echo "::error::Could not determine this runner's own IP address"
+            exit 1
+          fi
+          echo "WEBHOOK_RECEIVER_HOST=${runner_ip}" >> "$GITHUB_ENV"
+          echo "Runner IP for webhook callbacks: ${runner_ip}"
+
       - name: Start the Identity Server
         run: |
           "${IS_HOME}/bin/wso2server.sh" start
@@ -317,6 +350,12 @@ jobs:
           TEST_PASSWORD="${password}" \
             bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
+      # tests/08-event-notifications' real webhook-delivery tests run via WEBHOOK_RECEIVER_HOST
+      # by default - no secret needed, see "Enable private-network webhook callbacks..." above.
+      # NGROK_AUTH_TOKEN (optional repository secret) is a second, higher-fidelity path
+      # (WebhookReceiver prefers it when set): a genuine public HTTPS tunnel, useful if you'd
+      # rather not rely on the runner's own private IP being reachable. Neither configured means
+      # those tests just skip themselves, same as any other optional credential here.
       - name: Configure the suite
         working-directory: dpdp-integration-test-suite
         run: |
@@ -330,6 +369,9 @@ jobs:
           TEST_CONSENT_ADMIN_PASSWORD=${TEST_PASSWORD}
           TEST_USER_2_USERNAME=${{ steps.users.outputs.user2 }}
           TEST_USER_2_PASSWORD=${TEST_PASSWORD}
+          NGROK_AUTH_TOKEN=${{ secrets.NGROK_AUTH_TOKEN }}
+          WEBHOOK_RECEIVER_HOST=${WEBHOOK_RECEIVER_HOST}
+          WEBHOOK_RECEIVER_ALLOW_PRIVATE_NETWORK=true
           EOF
           npm ci
           npx playwright install --with-deps chromium
