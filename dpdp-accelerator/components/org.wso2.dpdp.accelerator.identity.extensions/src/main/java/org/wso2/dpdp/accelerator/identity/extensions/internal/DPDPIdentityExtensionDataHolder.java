@@ -30,6 +30,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
 
 /**
@@ -53,6 +54,7 @@ public final class DPDPIdentityExtensionDataHolder {
     private ConsentExpiryService consentExpiryService;
     private TopicService topicService;
     private NotificationTemplateManager notificationTemplateManager;
+    private DPDPLifecycleEventListener lifecycleEventListener;
 
     private DPDPIdentityExtensionDataHolder() {
 
@@ -191,5 +193,15 @@ public final class DPDPIdentityExtensionDataHolder {
     public void setNotificationTemplateManager(NotificationTemplateManager notificationTemplateManager) {
 
         this.notificationTemplateManager = notificationTemplateManager;
+    }
+
+    public DPDPLifecycleEventListener getLifecycleEventListener() {
+
+        return lifecycleEventListener;
+    }
+
+    public void setLifecycleEventListener(DPDPLifecycleEventListener lifecycleEventListener) {
+
+        this.lifecycleEventListener = lifecycleEventListener;
     }
 }

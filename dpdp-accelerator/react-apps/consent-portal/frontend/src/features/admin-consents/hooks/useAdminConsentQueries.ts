@@ -120,6 +120,8 @@ export function useAdminRevokeConsentMutation(): UseMutationResult<unknown, Erro
     onSuccess: async (_data, consentID) => {
       await queryClient.invalidateQueries({ queryKey: ['admin-consents'] })
       await queryClient.invalidateQueries({ queryKey: ['admin-consent', consentID] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-consent-status-history', consentID] })
+      await queryClient.invalidateQueries({ queryKey: ['admin-consent-full-history', consentID] })
     },
   })
 }
