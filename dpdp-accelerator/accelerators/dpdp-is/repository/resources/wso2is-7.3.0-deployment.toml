@@ -373,6 +373,14 @@ scopes = ["complaints:read:any"]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
 
+# A machine-to-machine (client_credentials) OAuth2 application, provisioned per tenant alongside
+# the portal, authorized for every consent-mgt v2 API resource (consents/purposes/elements) with
+# all of their scopes - for external systems that need to invoke those APIs directly rather than
+# through the portal's own narrower scope set. Independently toggleable from the portal.
+[dpdp_accelerator.consent_api_invoker]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_API_INVOKER"
+
 # How many days after submission a complaint's statutory due date falls (see
 # StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
 [dpdp_accelerator.complaints]
