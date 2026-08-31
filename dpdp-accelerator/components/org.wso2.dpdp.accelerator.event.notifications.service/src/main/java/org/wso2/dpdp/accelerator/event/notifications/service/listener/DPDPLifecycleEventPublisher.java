@@ -54,7 +54,6 @@ public class DPDPLifecycleEventPublisher implements DPDPLifecycleEventListener {
         payload.put("consentId", consentId);
         payload.put("previousStatus", previousStatus);
         payload.put("currentStatus", currentStatus);
-        payload.put("actionBy", actionBy);
         eventPublishService.publishEvent(orgId, orgId, DefaultTopic.CONSENT_UPDATE.getName(), purposes, payload);
     }
 
@@ -65,7 +64,6 @@ public class DPDPLifecycleEventPublisher implements DPDPLifecycleEventListener {
         Map<String, Object> payload = new HashMap<>();
         payload.put("consentId", consentId);
         payload.put("previousStatus", previousStatus);
-        payload.put("actionBy", actionBy);
         eventPublishService.publishEvent(orgId, orgId, DefaultTopic.CONSENT_REVOKE.getName(), purposes, payload);
     }
 
