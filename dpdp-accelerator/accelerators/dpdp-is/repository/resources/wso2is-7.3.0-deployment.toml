@@ -119,6 +119,20 @@ connection_verification_timeout_seconds = 1
 [consent_mgt]
 enable_v2_api = true
 
+# Lets users sign in with their email address instead of a separate username, matching the
+# WSO2 Financial Services/Open Banking accelerator's own default.
+[tenant_mgt]
+enable_email_domain = true
+
+# enable_email_domain above is a behavioral hint, not a validator - the stock username
+# regex (^[^\s*?%]{3,50}$) still accepts any non-whitespace string. This is the actual
+# enforcement, matching the WSO2 Financial Services/Open Banking accelerator's own
+# user-mgt.xml: usernames must look like an email address.
+[user_store.properties]
+UsernameJavaRegEx = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"
+UsernameJavaScriptRegEx = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$"
+UsernameJavaRegExViolationErrorMsg = "Username must be a valid email address."
+
 # Lets the Console's flows view read consent purposes.
 [console.flows.scopes]
 read = ["internal_flow_view", "internal_governance_view", "internal_consent_mgt_purpose_view"]
@@ -367,6 +381,14 @@ scopes = ["complaints:read:any"]
 [dpdp_accelerator.consent_portal]
 auto_provisioning_enabled = true
 client_id = "DPDP_CONSENT_PORTAL"
+
+# A machine-to-machine (client_credentials) OAuth2 application, provisioned per tenant alongside
+# the portal, authorized for every consent-mgt v2 API resource (consents/purposes/elements) with
+# all of their scopes - for external systems that need to invoke those APIs directly rather than
+# through the portal's own narrower scope set. Independently toggleable from the portal.
+[dpdp_accelerator.consent_api_invoker]
+auto_provisioning_enabled = true
+client_id = "DPDP_CONSENT_API_INVOKER"
 
 # How many days after submission a complaint's statutory due date falls (see
 # StatutoryDuePeriodPolicy) - the deadline ComplaintSlaIndicator warns against in the portal.
