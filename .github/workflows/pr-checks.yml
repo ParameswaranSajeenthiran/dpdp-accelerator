@@ -242,13 +242,13 @@ jobs:
           fi
           if [ -z "${WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE}" ]; then
             echo "::error::WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE is empty - it must be" \
-                 "configured as a repository secret to decrypt .github/ci-tools/update_tool_setup.sh.enc."
+                 "configured as a repository secret to decrypt .github/ci-tools/update_tool_setup.sh.gpg."
             exit 1
           fi
-          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
-            -in "${GITHUB_WORKSPACE}/.github/ci-tools/update_tool_setup.sh.enc" \
-            -pass env:WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE \
-            -out "$IS_HOME/bin/update_tool_setup.sh"
+          gpg --quiet --batch --yes --decrypt \
+            --passphrase="${WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE}" \
+            --output "$IS_HOME/bin/update_tool_setup.sh" \
+            "${GITHUB_WORKSPACE}/.github/ci-tools/update_tool_setup.sh.gpg"
           chmod +x "$IS_HOME/bin/update_tool_setup.sh"
           cd "$IS_HOME"
           bash bin/update_tool_setup.sh
