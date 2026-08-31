@@ -62,8 +62,7 @@ export class ConsentDetailPage {
     this.authorizationsSection = page
       .locator('.MuiCard-root')
       .filter({ has: page.getByRole('heading', { name: 'Authorizations' }) })
-    // ConsentLifecycleSection.tsx - the status-audit timeline card. Rows are read from `tbody`
-    // directly (not `getByRole('row')`) so the header row never gets swept in.
+    // ConsentLifecycleSection.tsx timeline card; `tbody tr` avoids sweeping in the header row.
     this.lifecycleSection = page
       .locator('.MuiCard-root')
       .filter({ has: page.getByRole('heading', { name: 'Consent Lifecycle' }) })
@@ -94,11 +93,9 @@ export class ConsentDetailPage {
   }
 
   /**
-   * A lifecycle-table row, matched by its rendered "<action> by <actor>" description
-   * (ConsentLifecycleSection.describeEntry's i18n template). Bridges with `.*` rather than a
-   * literal " by " - confirmed live that the AUTHORIZE_REVOKE action label is itself "Revoked by
-   * reviewer", so a whole-consent revoke renders "Revoked by reviewer by <actor>": a second,
-   * unrelated "by" sits between the action and the actor this locator is matching on.
+   * Lifecycle-table row matching "<action>...<actor>". Bridges with `.*`, not literal " by " -
+   * AUTHORIZE_REVOKE's own label is "Revoked by reviewer", so a whole-consent revoke row reads
+   * "Revoked by reviewer by <actor>" with an extra "by" in between.
    */
   lifecycleRow(action: string, actor: string): Locator {
     return this.lifecycleRows.filter({ hasText: new RegExp(`${action}.*${actor}`) })

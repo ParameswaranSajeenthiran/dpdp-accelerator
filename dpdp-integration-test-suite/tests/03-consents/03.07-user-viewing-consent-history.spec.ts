@@ -23,27 +23,17 @@ import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
- * A user's own consent history: ConsentLifecycleSection (status-audit timeline) and
- * ConsentFullHistoryDialog (the per-snapshot diff view) on the self detail page
- * (/consents/:id). See tests/03-consents/03.08-admin-viewing-consent-history.spec.ts for the
- * admin surface (/administration/consents/:id) and the cross-persona scope-boundary tests.
- * `dpdp-consent-user` is provisioned with STATUS_HISTORY_VIEW_SELF/HISTORY_VIEW_SELF
- * unconditionally (DPDPIdentityExtensionTenantMgtListener), so the default user persona needs no
- * extra setup to see either surface.
+ * A user's own consent history: the lifecycle timeline and full-history dialog on the self
+ * detail page (/consents/:id). See 03.08-admin-viewing-consent-history.spec.ts for the admin
+ * surface and cross-persona checks. `dpdp-consent-user` gets *_VIEW_SELF scopes by default, so
+ * no extra setup is needed here.
  *
- * `seedConsent` always creates the consent via the *admin* API (see utils/consentSetup.ts - it's
- * the one step with no create UI), regardless of who the consent's subject is - so every "Consent
- * created by ..." entry below is attributed to `env.consentAdmin.username`, never
- * `env.user.username`, even on the self-service tests in this file. Confirmed live: asserting
- * the subject's own name here finds nothing.
+ * `seedConsent` always creates via the admin API, so every "Consent created by ..." entry below
+ * is attributed to `env.consentAdmin.username`, even in these self-service tests.
  *
- * `detailPage.goto(consentId)` is called again after every UI action that should show up in
- * history. This is deliberate, not caution: useApproveConsentMutation/useRejectConsentMutation/
- * useRevokeConsentMutation only invalidate the `['consent', id]` / `['consents']` query keys,
- * never `['consent-status-history', id]` or `['consent-full-history', id]` - so the lifecycle
- * card and full-history dialog would otherwise keep showing pre-action data until a fresh page
- * load. A real user watching the page live would see the same staleness; that's a product gap,
- * not something to work around silently here.
+ * `detailPage.goto(consentId)` is called again after each action that should appear in history:
+ * the approve/reject/revoke mutations don't invalidate the history query keys, so the lifecycle
+ * card and dialog would otherwise keep showing stale data - a real product gap, not a test quirk.
  */
 test.describe('User viewing Consent History (UI)', () => {
   test('02.07.01 - Approving a Pending consent records CREATE then AUTHORIZE_APPROVE, oldest-first in the table and newest-first in the dialog', async ({
@@ -87,9 +77,8 @@ test.describe('User viewing Consent History (UI)', () => {
     const dialog = new ConsentFullHistoryDialogPage(userPage)
     await expect(dialog.dialog).toBeVisible()
 
-    // Newest-first in the dialog: the same two entries, reversed relative to the table above.
-    // The dialog's own summary text is "<action> · <actor>", not "by" - see
-    // ConsentFullHistoryDialogPage's comment - so these substring checks drop "by".
+    // Newest-first in the dialog, reversed relative to the table above. Summary text uses "·",
+    // not "by" - see ConsentFullHistoryDialogPage - so these checks drop "by".
     const summaryTexts = await dialog.entrySummaries.allTextContents()
     const dialogApprovedIndex = summaryTexts.findIndex((text) => text.includes('Approved'))
     const dialogCreatedIndex = summaryTexts.findIndex((text) => text.includes('Consent created'))
@@ -101,8 +90,7 @@ test.describe('User viewing Consent History (UI)', () => {
       dialog.initialSnapshotChip('Consent created', env.consentAdmin.username),
     ).toBeVisible()
 
-    // The subject's own authorization moves from its pre-approval status to APPROVED - a real
-    // diff against real server data, not a fixture.
+    // A real diff against real server data: the subject's authorization moves to APPROVED.
     await dialog.expand('Approved', env.user.username)
     await expect(dialog.changedTag('Approved', env.user.username)).toBeVisible()
 
@@ -169,9 +157,7 @@ test.describe('User viewing Consent History (UI)', () => {
     await detailPage.confirmAction('approve')
     await expect(userPage.getByText('Active', { exact: true })).toBeVisible()
 
-    // Chained on the same loaded page, no intermediate reload - the Revoke action becomes
-    // available reactively once the Active state above is reflected (see 02.01.03/04's identical
-    // pattern of chaining UI actions without a navigation between them).
+    // Chained without a reload - Revoke becomes available reactively once Active is reflected.
     await detailPage.openActionDialog('revoke')
     await detailPage.confirmAction('revoke')
     await expect(userPage.getByText('Revoked', { exact: true }).first()).toBeVisible()
@@ -179,10 +165,9 @@ test.describe('User viewing Consent History (UI)', () => {
     // See the file-level comment above - the history queries need a fresh page load.
     await detailPage.goto(consentId)
 
-    // Waiting on a visible element (rather than reading text straight off goto()) absorbs this
-    // app's post-navigation OAuth redirect settling - every full page load re-drives the SPA's
-    // silent sign-in redirect (see fixtures/auth.fixtures.ts's own comments on this), and reading
-    // .allTextContents() immediately after goto() can hit a destroyed execution context mid-redirect.
+    // Wait on a visible element rather than reading text straight off goto() - every full page
+    // load re-drives the SPA's silent sign-in redirect, which can otherwise hit a destroyed
+    // execution context (see fixtures/auth.fixtures.ts).
     await expect(detailPage.lifecycleRow('Revoked', env.user.username)).toBeVisible()
 
     const rowTexts = await detailPage.lifecycleRows.allTextContents()
@@ -205,9 +190,7 @@ test.describe('User viewing Consent History (UI)', () => {
     expect(dialogApprovedIndex).toBeGreaterThan(dialogRevokedIndex)
     expect(dialogCreatedIndex).toBeGreaterThan(dialogApprovedIndex)
 
-    // The REVOKE step's diff outcome (whether the authorization itself is also touched) isn't
-    // decidable from this repo - see ConsentFullHistoryDialogPage.diffRendered's own comment.
-    // This only proves the diff rendered a real result, not the needsMoreHistory fallback.
+    // Only proves the diff rendered a real result - see diffRendered's own comment.
     await dialog.expand('Revoked', env.user.username)
     await expect(dialog.diffRendered('Revoked', env.user.username)).toBeVisible()
 

@@ -24,18 +24,12 @@ import { seedConsent } from '../../utils/consentSetup'
 
 /**
  * The admin surface (/administration/consents/:id) of the same two components covered in
- * tests/03-consents/03.07-user-viewing-consent-history.spec.ts - see that file's comment for the
- * shared "why goto() twice" note (useRevokeConsentMutation doesn't invalidate the history query
- * keys, so a fresh page load is needed after any action that should show up in history) and for
- * why every seeded consent's CREATE entry is attributed to the admin persona regardless of who
- * the consent's subject is. `dpdp-consent-admin`'s role permission set is a superset that
- * includes both the ANY and SELF variants of every consent-history scope
- * (DPDPIdentityExtensionTenantMgtListener authorizes the whole API resource, not scope-by-scope),
- * so the admin persona needs no extra setup either.
+ * 03.07-user-viewing-consent-history.spec.ts - see that file's comment for why `goto()` runs
+ * twice and why CREATE is always attributed to the admin persona. `dpdp-consent-admin` gets both
+ * ANY and SELF history scopes by default, so no extra setup is needed here either.
  *
- * Beyond the admin acting on its own seeded consent, this file also proves the ANY-scoped
- * endpoints genuinely return a *different* user's own history, not just the admin's own actions -
- * something no unit test (mocked API) or the self-viewing spec (single persona) can demonstrate.
+ * This file also proves the ANY-scoped endpoints return a *different* user's own history, not
+ * just the admin's own actions - something the self-viewing spec's single persona can't show.
  */
 test.describe('Admin viewing Consent History (UI)', () => {
   test('02.08.01 - Revoking an Active consent as admin attributes CREATE and REVOKE to the admin, showing only the state transition in the diff', async ({
@@ -75,12 +69,9 @@ test.describe('Admin viewing Consent History (UI)', () => {
     const dialog = new ConsentFullHistoryDialogPage(consentAdminPage)
     await expect(dialog.dialog).toBeVisible()
 
-    // Revoking never touched expiryTime/properties/authorizations - this consent had none of the
-    // last to begin with (created with an explicit ACTIVE state, not via authorizations) - but
-    // `state` itself is diffed too (see consentSnapshotDiff.ts), and it did change (Active ->
-    // Revoked), so the diff renders that transition rather than the noChangesNote fallback.
-    // Unlike 02.07.03's revoke-after-approve case, there is no ambiguity here: no authorizer
-    // record ever existed to cascade.
+    // This consent was created directly in ACTIVE state with no authorizations to cascade, so
+    // the only change is `state` itself (Active -> Revoked) - no ambiguity like 02.07.03's
+    // revoke-after-approve case.
     await dialog.expand('Revoked', env.consentAdmin.username)
     await expect(
       dialog.stateTransition('Revoked', env.consentAdmin.username, 'Active', 'Revoked'),
@@ -112,10 +103,8 @@ test.describe('Admin viewing Consent History (UI)', () => {
     await selfDetailPage.confirmAction('approve')
     await expect(userPage.getByText('Active', { exact: true })).toBeVisible()
 
-    // The admin's first-ever load of this consent's detail page happens after the approval
-    // above already landed server-side, so this single navigation - unlike the "goto() twice"
-    // cases elsewhere in this file - already reflects fresh data; there was never a stale
-    // history query to invalidate on this page instance in the first place.
+    // First load happens after the approval already landed server-side, so a single navigation
+    // is enough here - unlike the "goto() twice" cases elsewhere in this file.
     const adminDetailPage = new ConsentDetailPage(consentAdminPage, 'admin')
     await adminDetailPage.goto(consentId)
 
@@ -163,15 +152,11 @@ test.describe('Admin viewing Consent History (UI)', () => {
     await adminDetailPage.confirmAction('revoke')
     await expect(consentAdminPage.getByText('Revoked', { exact: true }).first()).toBeVisible()
 
-    // The revoke mutation above doesn't invalidate the history queries - see the file-level
-    // comment. This is the admin page's second navigation to this URL, specifically to pick up
-    // the REVOKE entry it just produced.
+    // Second navigation to pick up the REVOKE entry - see the file-level comment.
     await adminDetailPage.goto(consentId)
 
-    // Waiting on a visible element (rather than reading text straight off goto()) absorbs this
-    // app's post-navigation OAuth redirect settling - every full page load re-drives the SPA's
-    // silent sign-in redirect (see fixtures/auth.fixtures.ts's own comments on this), and reading
-    // .allTextContents() immediately after goto() can hit a destroyed execution context mid-redirect.
+    // Wait on a visible element rather than reading text straight off goto() - see 03.07's
+    // identical comment on the SPA's post-navigation redirect settling.
     await expect(
       adminDetailPage.lifecycleRow('Revoked', env.consentAdmin.username),
     ).toBeVisible()
@@ -193,8 +178,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
     await adminDetailPage.openFullHistoryDialog()
     const dialog = new ConsentFullHistoryDialogPage(consentAdminPage)
     await expect(dialog.dialog).toBeVisible()
-    // The dialog's own summary text is "<action> · <actor>", not "by" - see
-    // ConsentFullHistoryDialogPage's comment - so these substring checks drop "by".
+    // Summary text uses "·", not "by" - see ConsentFullHistoryDialogPage.
     const summaryTexts = await dialog.entrySummaries.allTextContents()
     const dialogCreatedIndex = summaryTexts.findIndex(
       (text) => text.includes('Consent created') && text.includes(env.consentAdmin.username),
