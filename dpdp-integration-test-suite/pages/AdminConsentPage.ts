@@ -17,6 +17,7 @@
  */
 
 import { type Locator, type Page } from '@playwright/test'
+import { submitFilterValue } from '../utils/filterCommit'
 import { ConsentRegistryTable } from './ConsentRegistryTable'
 
 /** AdminConsentRegistryPage.tsx - the admin view of every subject's consents. */
@@ -36,8 +37,15 @@ export class AdminConsentPage extends ConsentRegistryTable {
   }
 
   async searchByConsentId(consentId: string): Promise<void> {
-    await this.consentIdSearch.fill(consentId)
-    await this.consentIdSearch.press('Enter')
+    await submitFilterValue(
+      this.page,
+      this.consentIdSearch,
+      async () => {
+        await this.consentIdSearch.press('Enter')
+      },
+      'consentId',
+      consentId,
+    )
   }
 
   async openAdvancedFilters(): Promise<void> {

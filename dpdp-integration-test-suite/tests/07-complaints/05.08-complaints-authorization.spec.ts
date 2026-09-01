@@ -30,10 +30,11 @@ import { AppSidebarPage } from '../../pages/AppSidebarPage'
  * renders just "Complaints" (nested under the "Administration" category, alongside
  * `sidebar.adminConsents` - not "Complaint Management" as the key's own name might suggest).
  *
- * Because "the officer" is any `dpdp-consent-admin` member (see 05.05's header comment), the
- * Consent Admin persona carries every `portal:complaints:*` scope, self included - so its sidebar
- * shows BOTH complaint entries, and it can reach /complaint-management directly. There is no
- * persona in this suite that holds COMPLAINTS_READ_SELF without also holding COMPLAINTS_READ_ANY.
+ * The two entries never appear together for either persona: DPDPIdentityExtensionTenantMgtListener
+ * routes every `:self` complaint scope to `dpdp-consent-user` and every `:any` one to
+ * `dpdp-consent-admin`, so an admin-only account sees "Complaints" and not "My Complaints" - the
+ * same split 04.02's sidebar tests assert for "My Consents" vs "All Consents". An operator who
+ * wants both grants the account both roles; no persona in this suite does.
  */
 test.describe('Complaints route-level access control and sidebar visibility (UI)', () => {
   test('05.08.01 - A Data Principal navigating directly to /complaints is not redirected away', async ({
@@ -67,7 +68,7 @@ test.describe('Complaints route-level access control and sidebar visibility (UI)
     await dataPrincipalPage.context().close()
   })
 
-  test('05.08.04 - A Consent Admin can reach /complaint-management directly, and their sidebar shows both complaint entries', async ({
+  test('05.08.04 - A Consent Admin can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints"', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -75,8 +76,8 @@ test.describe('Complaints route-level access control and sidebar visibility (UI)
     await expect(consentAdminPage).toHaveURL(/\/complaint-management$/)
 
     const sidebar = new AppSidebarPage(consentAdminPage)
-    await expect(sidebar.label('My Complaints')).toBeVisible()
     await expect(sidebar.label('Complaints')).toBeVisible()
+    await expect(sidebar.label('My Complaints')).toHaveCount(0)
     await consentAdminPage.context().close()
   })
 })

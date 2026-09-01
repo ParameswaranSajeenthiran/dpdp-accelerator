@@ -17,6 +17,7 @@
  */
 
 import { type Locator, type Page } from '@playwright/test'
+import { submitFilterValue } from '../utils/filterCommit'
 
 export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50] as const
 
@@ -68,13 +69,27 @@ export class EventsPage {
   }
 
   async search(term: string): Promise<void> {
-    await this.searchInput.fill(term)
-    await this.searchButton.click()
+    await submitFilterValue(
+      this.page,
+      this.searchInput,
+      async () => {
+        await this.searchButton.click()
+      },
+      'search',
+      term,
+    )
   }
 
   async filterByGroupId(groupId: string): Promise<void> {
-    await this.groupIdInput.fill(groupId)
-    await this.searchButton.click()
+    await submitFilterValue(
+      this.page,
+      this.groupIdInput,
+      async () => {
+        await this.searchButton.click()
+      },
+      'groupId',
+      groupId,
+    )
   }
 
   async filterByStatus(

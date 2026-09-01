@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { type Browser, type Page, type Request, request as playwrightRequest } from '@playwright/test'
+import { type Browser, type Locator, type Page, type Request, request as playwrightRequest } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { EventNotificationApiClient } from '../clients/EventNotificationApiClient'
 import { ConsoleAddUserWizard } from '../pages/ConsoleAddUserWizard'
@@ -88,20 +88,51 @@ async function fillLoginForm(page: Page, persona: Persona): Promise<void> {
  * different apps than the portal this suite's baseURL points at, so page.goto() here always
  * takes an absolute URL rather than relying on playwright.config.ts's baseURL.
  */
-async function loginToConsole(browser: Browser, consoleUrl: string, persona: Persona): Promise<Page> {
-  const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
-  const page = await context.newPage()
-  await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' })
-  await page.locator('#usernameUserInput').waitFor({ state: 'visible', timeout: 20_000 })
-  await fillLoginForm(page, persona)
-  // Deliberately not checking for a specific post-login element (e.g. the sidebar's
-  // "Applications" link): confirmed empirically that the super tenant's Root Organizations page
-  // renders with no sidebar at all (a different layout than a tenant's own Console shell), so no
-  // single element is common to every page this function is asked to land on. The login form
-  // disappearing, generically, is what every successful login has in common.
-  await page.locator('#usernameUserInput').waitFor({ state: 'hidden', timeout: 30_000 })
-  await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined)
-  return page
+async function loginToConsole(
+  browser: Browser,
+  consoleUrl: string,
+  persona: Persona,
+  ready?: (page: Page) => Locator,
+): Promise<Page> {
+  let lastError: unknown
+
+  // Retried as a whole, with a brand-new context each attempt, because the Console's own token
+  // exchange sometimes fails server-side in a way the SPA never recovers from: IS logs
+  // "IdentityOAuth2Exception: Token binding reference cannot be retrieved from the token binder:
+  // cookie" for client CONSOLE, and the page then sits on its bootstrap spinner indefinitely -
+  // no error, no timeout of its own. Only a fresh cookie jar and a fresh authorize round clear
+  // it, so reloading the same context is not enough.
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
+    const page = await context.newPage()
+
+    try {
+      await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' })
+      await page.locator('#usernameUserInput').waitFor({ state: 'visible', timeout: 20_000 })
+      await fillLoginForm(page, persona)
+      // Deliberately not checking for a specific post-login element (e.g. the sidebar's
+      // "Applications" link): confirmed empirically that the super tenant's Root Organizations page
+      // renders with no sidebar at all (a different layout than a tenant's own Console shell), so no
+      // single element is common to every page this function is asked to land on. The login form
+      // disappearing, generically, is what every successful login has in common. A caller that DOES
+      // know what it is about to interact with passes `ready`, which is what turns the hang above
+      // into a retry instead of a fixture timeout.
+      await page.locator('#usernameUserInput').waitFor({ state: 'hidden', timeout: 30_000 })
+      await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined)
+      if (ready) {
+        await ready(page).waitFor({ state: 'visible', timeout: 30_000 })
+      }
+      return page
+    } catch (error) {
+      lastError = error
+      await context.close()
+    }
+  }
+
+  throw new Error(
+    `Console at ${consoleUrl} never became usable for "${persona.username}" after 3 attempts: ` +
+      `${lastError instanceof Error ? lastError.message : String(lastError)}`,
+  )
 }
 
 /**
@@ -186,14 +217,20 @@ interface CreatedTenant {
  */
 async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const domain = uniqueTenantDomain()
-  const owner: Persona = { username: uniqueMarker('tenant-owner'), password: 'TenantOwner@2026!' }
-  const consentUser: Persona = { username: uniqueMarker('tenant-user'), password: 'TenantUser@2026!' }
+  // Email-shaped: the accelerator enforces an email-address username.
+  const owner: Persona = { username: `${uniqueMarker('tenant-owner')}@dpdp.test`, password: 'TenantOwner@2026!' }
+  const consentUser: Persona = { username: `${uniqueMarker('tenant-user')}@dpdp.test`, password: 'TenantUser@2026!' }
 
   // Step 1: super admin creates the tenant + owner through Console's "New Root Organization"
   // wizard. Confirmed live this is the only tenant-creation path whose password field works
   // immediately - see ConsoleRootOrganizationWizard's own comment for the full comparison
   // against the raw Tenant Management REST API.
-  const adminPage = await loginToConsole(browser, consoleRootOrganizationsUrl(), env.superAdmin)
+  const adminPage = await loginToConsole(
+    browser,
+    consoleRootOrganizationsUrl(),
+    env.superAdmin,
+    (page) => new ConsoleRootOrganizationWizard(page).newRootOrganizationButton,
+  )
   const rootOrgWizard = new ConsoleRootOrganizationWizard(adminPage)
   await rootOrgWizard.open()
   await rootOrgWizard.createTenant({
@@ -201,7 +238,7 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
     firstName: 'Tenant',
     lastName: 'Owner',
     username: owner.username,
-    email: `${owner.username}@${domain}`,
+    email: owner.username,
     password: owner.password,
   })
   // Provisioning itself is synchronous (confirmed live: the accelerator's onTenantCreate
@@ -217,12 +254,16 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
   // Confirmed live to succeed here even though the identical `POST .../scim2/Users` call
   // 401s when replayed directly via curl - see ConsoleAddUserWizard for the full story; this
   // suite never calls SCIM2 directly as a result.
+  // No `ready` locator passed here, unlike step 1: this login has never been observed hanging on
+  // the CONSOLE token-binding failure loginToConsole describes, and any locator picked for it
+  // would be a guess. If this step ever times out on a blank spinner, that is the same bug -
+  // pass the first element the wizard below touches (ConsoleAddUserWizard's addUserButton).
   const ownerConsolePage = await loginToConsole(browser, tenantConsoleUrl(domain), owner)
   await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/users`, { waitUntil: 'domcontentloaded' })
   const addUserWizard = new ConsoleAddUserWizard(ownerConsolePage)
   await addUserWizard.createUser({
     username: consentUser.username,
-    email: `${consentUser.username}@${domain}`,
+    email: consentUser.username,
     firstName: 'Tenant',
     lastName: 'User',
     password: consentUser.password,
@@ -284,8 +325,10 @@ export const test = base.extend<object, WorkerFixtures>({
       await dispose()
     },
     // This setup chains three separate browser logins plus several UI wizards - the default
-    // fixture timeout (tied to a single test's own timeout, 30s) is nowhere near enough.
-    { scope: 'worker', timeout: 120_000 },
+    // fixture timeout (tied to a single test's own timeout, 30s) is nowhere near enough. 120s was
+    // enough when 05.10 ran on its own but not with the full suite in flight: the Console login
+    // alone budgets 80s of waits, and the worker that owns this fixture also pays for tenantB.
+    { scope: 'worker', timeout: 240_000 },
   ],
 
   // Only tests/08-event-notifications/05.10-event-tenant-isolation.spec.ts requests this fixture
@@ -297,7 +340,7 @@ export const test = base.extend<object, WorkerFixtures>({
       await use(context)
       await dispose()
     },
-    { scope: 'worker', timeout: 120_000 },
+    { scope: 'worker', timeout: 240_000 },
   ],
 })
 

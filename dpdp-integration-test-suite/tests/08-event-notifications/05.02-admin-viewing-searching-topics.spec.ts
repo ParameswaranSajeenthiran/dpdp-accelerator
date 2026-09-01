@@ -63,9 +63,12 @@ test.describe('Admin viewing and searching Topics', () => {
       await topicsPage.search(uniqueSuffix)
 
       await expect(topicsPage.rowByName(topic.name)).toBeVisible()
-      for (const row of await topicsPage.rows.all()) {
-        await expect(row).toContainText(uniqueSuffix)
-      }
+      // One assertion over a filtered locator, never a loop over `rows.all()`: .all() snapshots
+      // whatever rows exist at that instant, and the row it hands back can be gone before the
+      // assertion on it runs - the search's own refetch is still narrowing the table, and
+      // rowByName above cannot gate that, since the sought row is present both before and after.
+      // CI failed exactly this way, twice: "rows.nth(1) ... element(s) not found".
+      await expect(topicsPage.rows.filter({ hasNotText: uniqueSuffix })).toHaveCount(0)
     } finally {
       await page.context().close()
     }
