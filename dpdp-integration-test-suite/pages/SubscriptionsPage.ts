@@ -17,6 +17,7 @@
  */
 
 import { type Locator, type Page } from '@playwright/test'
+import { submitFilterValue } from '../utils/filterCommit'
 
 export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50] as const
 
@@ -69,8 +70,15 @@ export class SubscriptionsPage {
   }
 
   async search(term: string): Promise<void> {
-    await this.searchInput.fill(term)
-    await this.searchButton.click()
+    await submitFilterValue(
+      this.page,
+      this.searchInput,
+      async () => {
+        await this.searchButton.click()
+      },
+      'search',
+      term,
+    )
   }
 
   async filterByStatus(label: 'All Statuses' | 'Pending' | 'Active' | 'Stale' | 'Deleted'): Promise<void> {
