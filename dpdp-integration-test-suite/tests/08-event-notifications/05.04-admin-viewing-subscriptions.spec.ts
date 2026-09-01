@@ -106,6 +106,8 @@ test.describe('Admin viewing Subscriptions', () => {
       // can't resolve out of order and leave the table on a stale intermediate combination (see
       // 05.02.04's identical fix for the full explanation). webhookSub (search already narrows to
       // it) becoming visible is real, verifiable proof each filter change actually took effect.
+      // The searches themselves are checkpointed inside SubscriptionsPage.search() rather than
+      // here - a row assertion can't stand in for one, see utils/filterCommit.ts.
       await subscriptionsPage.filterByStatus('All Statuses')
       await expect(subscriptionsPage.rowBySubscriptionId(webhookSub.subscriptionId)).toBeVisible()
       await subscriptionsPage.filterByDeliveryMode('Webhook')
