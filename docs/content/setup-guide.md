@@ -212,12 +212,7 @@ so the other features' scripts would have to be written first.
 >    Server distribution before starting the server. The accelerator includes
 >    the MySQL driver dependency in its packaged components.
 >
-> A complete schema set currently exists for H2 and MySQL. Event Notification
-> additionally provides PostgreSQL and SQLite scripts, but Complaint and
-> Consent History do not yet provide matching scripts for those databases.
-> Oracle, MSSQL, and DB2 are listed as Identity Server database types but do
-> not currently have DPDP feature scripts. Do not claim a database is
-> supported until every enabled DPDP feature has a matching schema.
+> A complete schema set currently exists for H2 and MySQL.
 
 > **`deployment.toml` is replaced, not merged.**
 >
