@@ -387,5 +387,5 @@ jobs:
           "${IS_HOME}/bin/wso2server.sh" stop || true
 
 # The required-check side of this lives in pr-e2e-gate.yml and pr-e2e.yml, which
-# publish the result as the overwritable "E2E gate" commit status rather than as a
+# publish the result as the overwritable "E2E (label-gated)" commit status rather than as a
 # check run per workflow run.

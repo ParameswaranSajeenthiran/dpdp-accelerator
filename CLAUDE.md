@@ -43,7 +43,7 @@ modules on every PR to `main` and `dev`. The E2E suite is not automatic: `pr-e2e
 Identity Server from scratch and runs Playwright against it only once a maintainer applies the
 `Action/trigger-e2e` label, because the job runs PR code with write permissions and repository
 secrets in scope. `pr-e2e-gate.yml` strips that label on every new push and publishes the
-`E2E gate` commit status, so the label can never carry over to unreviewed code. Role *membership*
+`E2E (label-gated)` commit status, so the label can never carry over to unreviewed code. Role *membership*
 is the one thing the accelerator never provisions, so both CI and a fresh local install get their
 accounts from `dpdp-integration-test-suite/scripts/provision-test-users.sh` (idempotent).
 

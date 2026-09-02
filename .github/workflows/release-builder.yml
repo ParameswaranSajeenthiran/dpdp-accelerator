@@ -162,7 +162,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   # Gates the release on the same suite that gates a PR - see e2e.yml. Named
-  # distinctly from the PR workflows' "E2E gate" commit status so that selecting
+  # distinctly from the PR workflows' "E2E (label-gated)" commit status so that selecting
   # required checks by name cannot confuse the two.
   e2e:
     name: E2E release gate

@@ -88,7 +88,7 @@ jobs:
       SOLUTIONS_BOT_U2_PASSWORD: ${{ github.event_name == 'workflow_dispatch' && secrets.SOLUTIONS_BOT_U2_PASSWORD || '' }}
       WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE: ${{ github.event_name == 'workflow_dispatch' && secrets.WSO2_UPDATE_TOOL_SETUP_DECRYPTION_PASSPHRASE || '' }}
 
-  # Flips the "E2E gate" status pr-e2e-gate.yml set to pending, on the head SHA the
+  # Flips the "E2E (label-gated)" status pr-e2e-gate.yml set to pending, on the head SHA the
   # label event carried.
   #
   # Cancelled runs are skipped: a cancellation means a newer push has already
@@ -98,7 +98,7 @@ jobs:
   # `cancelled`, and a failure lands on the by-then-superseded commit. Harmless,
   # since the gate run for the new head publishes its own pending status.
   report:
-    name: Report E2E gate
+    name: Report E2E result
     needs: e2e
     if: >
       always() && github.event_name == 'pull_request_target' &&
@@ -109,20 +109,23 @@ jobs:
     permissions:
       statuses: write
     steps:
-      - name: Set the E2E gate status
+      - name: Set the E2E status
         env:
           GH_TOKEN: ${{ github.token }}
           RESULT: ${{ needs.e2e.result }}
         run: |
+          # Every description has to be actionable on its own: the label is stripped on
+          # each push, so "failed" and "not run yet" both need the reader to know that
+          # re-applying it is what re-runs E2E. GitHub truncates these at 140 chars.
           if [ "$RESULT" = "success" ]; then
             state=success
-            description="E2E passed"
+            description="E2E passed on this commit"
           else
             state=failure
-            description="E2E result: $RESULT - see the run for details"
+            description="E2E $RESULT - see Details, then re-apply Action/trigger-e2e to run it again"
           fi
           gh api "repos/${{ github.repository }}/statuses/${{ github.event.pull_request.head.sha }}" \
             -f state="$state" \
-            -f context="E2E gate" \
+            -f context="E2E (label-gated)" \
             -f description="$description" \
             -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
