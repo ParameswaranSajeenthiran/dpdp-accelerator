@@ -40,6 +40,7 @@ across the whole suite, not as one broken spec. This has already happened once h
 | `fixtures/auth.fixtures.ts` | Personas, API-client fixtures, cleanup tracker. Re-exports `test`/`expect` |
 | `fixtures/tenant.fixtures.ts` | `tests/05-multi-tenancy/` only — see "Multi-tenancy" below |
 | `utils/` | Env/config, auth headers, unique test-data generators, MUI helpers |
+| `scripts/` | Bash, not Playwright: `provision-test-users.sh` sets a deployment up, `verify-database-setup.sh` and `test-database-matrix.sh` check its databases. Reach for these first when specs fail wholesale — they separate a broken install from a broken feature, and neither needs a browser |
 
 Import `test` and `expect` **from `../../fixtures/auth.fixtures`**, never from `@playwright/test`
 directly — the fixtures are only available on the extended `test`. `tests/05-multi-tenancy/`

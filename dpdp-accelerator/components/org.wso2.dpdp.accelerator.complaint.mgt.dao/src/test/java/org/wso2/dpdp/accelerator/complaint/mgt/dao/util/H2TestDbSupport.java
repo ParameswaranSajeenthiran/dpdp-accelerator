@@ -20,7 +20,6 @@ package org.wso2.dpdp.accelerator.complaint.mgt.dao.util;
 
 import org.h2.jdbcx.JdbcDataSource;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -29,9 +28,8 @@ import java.sql.Statement;
 /**
  * Points JDBCPersistenceManager (org.wso2.dpdp.accelerator.common) at a fresh in-memory H2
  * database for a DAO test class - the same reflection-based DataSource injection
- * event-notifications' own DAO tests use (see e.g. EventAndAckDAOImplTest), since
- * JDBCPersistenceManager only resolves its DataSource via JNDI and has no config-based fallback
- * for a plain JUnit JVM the way the old DBUtil did.
+ * event-notifications' own DAO tests use (see e.g. EventAndAckDAOImplTest). The injection itself
+ * lives in {@link PersistenceManagerTestSupport}, shared with {@link MysqlTestDbSupport}.
  */
 public final class H2TestDbSupport {
 
@@ -46,7 +44,7 @@ public final class H2TestDbSupport {
         dataSource.setURL(url);
         dataSource.setUser("sa");
         dataSource.setPassword("");
-        setManagerDataSource(dataSource);
+        PersistenceManagerTestSupport.setDataSource(dataSource);
 
         try (Connection conn = DriverManager.getConnection(url, "sa", "");
                 Statement stmt = conn.createStatement()) {
@@ -58,17 +56,6 @@ public final class H2TestDbSupport {
 
     /** Clears the DataSource set by {@link #setUpDatabase} so it doesn't leak into the next test class. */
     public static void tearDownDatabase() {
-        setManagerDataSource(null);
-    }
-
-    private static void setManagerDataSource(Object dataSource) {
-        try {
-            Field field = Class.forName("org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager")
-                    .getDeclaredField("dataSource");
-            field.setAccessible(true);
-            field.set(null, dataSource);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Unable to set JDBCPersistenceManager's test DataSource.", e);
-        }
+        PersistenceManagerTestSupport.setDataSource(null);
     }
 }

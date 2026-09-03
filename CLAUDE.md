@@ -118,11 +118,24 @@ artifact into the distribution via the antrun `create-solution` execution in
 ### `deployment.toml` is replaced, not merged
 
 `accelerators/dpdp-is/repository/resources/wso2is-7.3.0-deployment.toml` is the **complete** stock
-IS 7.3.0 file, byte-for-byte, with three placeholders (`IS_HOSTNAME`, `IS_ADMIN_USERNAME`,
-`IS_ADMIN_PASSWORD`) that `configure.sh` substitutes, plus the accelerator's settings appended
-under a banner. Keep the banner boundary honest: anything above it must stay identical to stock so
-the diff against a fresh pack remains reviewable. `configure.sh` backs the operator's file up to
-`deployment.toml.bak-<timestamp>`.
+IS 7.3.0 file, byte-for-byte, with placeholders that `configure.sh` substitutes from
+`repository/conf/configure.properties`, plus the accelerator's settings appended under a banner.
+Keep the banner boundary honest: anything above it must stay identical to stock *apart from the
+placeholders* so the diff against a fresh pack remains reviewable. `configure.sh` backs the
+operator's file up to `deployment.toml.bak-<timestamp>`.
+
+The placeholders are `IS_HOSTNAME`, `IS_ADMIN_USERNAME`, `IS_ADMIN_PASSWORD`, and the database
+tokens `IS_DB_TYPE`, `IS_DB_USERNAME`, `IS_DB_PASSWORD`, `IS_DB_DRIVER`, `IS_IDENTITY_DB_URL`,
+`IS_SHARED_DB_URL`, `IS_AGENT_IDENTITY_DB_URL` and `IS_DPDP_DB_URL`. The database tokens are what
+let one template serve h2 and mysql alike — see [Database support](#database-support). Adding a
+token means adding it to `TOML_TOKENS` in `configure.sh` and setting a shell variable of the
+*same name* there; the substitution loop resolves them by name, and refuses to install a
+deployment.toml with a surviving placeholder. No token may be a substring of another.
+
+Substitution is a plain `sed` over the whole file, so **never write a token name in the
+template's prose**, comments included — it gets replaced along with the real placeholders and
+the paragraph turns into a list of the substituted values. The banner comment describes the
+tokens without naming them for exactly this reason and points at `TOML_TOKENS` instead.
 
 Supporting a new IS version means adding a template beside this one and pointing
 `PRODUCT_CONF_PATH` (in `repository/conf/configure.properties`) at it.
@@ -151,6 +164,12 @@ resets. Consequences that shape every test: assert by unique marker or server-is
 empty lists or row counts. Personas log in **once per run**, cached across workers in
 `fixtures/auth.fixtures.ts`. Tests delete Elements/Purposes they create but not Consents — the
 product has no delete-by-id for them, so they accumulate.
+
+That suite assumes the databases are already correct. `dpdp-integration-test-suite/scripts/`
+holds the shell checks for that assumption — `verify-database-setup.sh <IS_HOME>` reads the
+installed `deployment.toml` back and asserts the schema behind it, and `test-database-matrix.sh`
+runs the whole first-install path per MySQL version. Reach for those before debugging a
+wholesale spec failure; they need no browser and no running server.
 
 **Before writing or changing a test there, read `dpdp-integration-test-suite/AGENTS.md`.** It
 carries the rules that aren't guessable: the crossed directory/test-ID numbering, sourcing locators
@@ -377,6 +396,19 @@ See [Tests](#tests) above for the literal commands. Conventions beyond that:
   Banking accelerator's own test-fixture convention (a `src/test/resources/dbScripts/` copy,
   distinct from the real production dbscripts) and catches real SQL mistakes that a mocked
   `ResultSet` never would.
+- The H2 fixture proves the SQL parses; it does not prove the *shipped* `mysql.sql` and the DAO
+  agree. Each DAO module whose feature ships a `mysql.sql` also has a MySQL test that applies that
+  real script in a Testcontainers MySQL and drives the DAOs through it
+  (`ConsentExtensionsMysqlIntegrationTest`, `ComplaintMysqlIntegrationTest`,
+  `DatabaseDialectConcurrencyIntegrationTest`). They all pin the same image tag (`mysql:8.0.36`)
+  so a CI run pulls one image — 8.4 is covered by the deployment test in
+  [Database support](#database-support), not by these, so don't read the pinned tag as the only
+  supported server. They raise `SkipException` via
+  `DockerClientFactory.instance().isDockerAvailable()` rather than failing on a machine without
+  Docker — never make one of these a hard failure, and never leave the skip out. This is where
+  real dialect differences get pinned: the composite primary keys, CHECK constraints and foreign
+  keys the hand-written H2 DDL omits, and MySQL's `JSON` column normalising a stored snapshot
+  where H2's `CLOB` returns it verbatim.
 - A logging-level fix (see the `isXEnabled()` guard note above) can retroactively drop a
   *different* module's coverage below its own `0.8` gate: if a debug-only log line was only ever
   "accidentally" covered because its guard was wrong (e.g. `isInfoEnabled()`, which is usually
@@ -439,11 +471,64 @@ per feature, not per module) and is packaged into the shipped zip automatically 
 `carbon-home/` is included wholesale by the assembly descriptor — no separate wiring needed.
 Unlike the product's own bundled databases (which get a pre-built, pre-populated file baked in
 at WSO2's own build time), a new accelerator-owned database has no such build pipeline: its
-schema gets created at install time by `bin/configure.sh`, which runs the `.sql` file with H2's
-`org.h2.tools.RunScript` using the H2 engine jar already shipped in
-`<IS_HOME>/repository/components/plugins/`. Register the new datasource in `deployment.toml`
-using the product's own named-table form (`[datasource.Name]`, matching
+schema gets created at install time by `bin/configure.sh` — with H2's `org.h2.tools.RunScript`
+(using the H2 engine jar already shipped in `<IS_HOME>/repository/components/plugins/`) for
+`DB_TYPE=h2`, and with the `mysql` client for `DB_TYPE=mysql`. Register the new datasource in
+`deployment.toml` using the product's own named-table form (`[datasource.Name]`, matching
 `[datasource.AgentIdentity]`), not the `[[datasource]]` array form.
+
+A new feature's `<feature>/{h2,mysql}.sql` needs no edit to `configure.sh` — it iterates the
+feature directories. Keep both dialects' scripts idempotent (`CREATE TABLE IF NOT EXISTS`, inline
+`INDEX`/`KEY` clauses rather than standalone `CREATE INDEX`, which MySQL has no
+`IF NOT EXISTS` form for): the accelerator is re-merged over a live `IS_HOME` repeatedly, and
+`configure.sh` re-applies these every time. The product's own scripts are *not* idempotent, which
+is why the steps that run them are behind their own `APPLY_*` switches.
+
+## Database support
+
+`h2` (the default) and `mysql` are the two `DB_TYPE` values `bin/configure.sh` sets up end to end:
+databases, the product's own schema, the consent-mgt v2 migration, the JDBC driver, and the DPDP
+schema. Anything else gets a written `deployment.toml` from the operator's explicit `*_DB_URL` /
+`DB_DRIVER` settings and nothing more.
+
+MySQL is verified end to end (configure, boot, consent-mgt v2 reads and writes) against server
+**8.0.36 and 8.4.11**, both with **Connector/J 8.0.33**; `docs/setup-guide.md` carries the full
+version table. Nothing in `configure.sh` branches on the server version and the two produce
+identical schemas, so keep it that way — a version-specific workaround belongs in the SQL or in
+`DB_URL_PARAMS`, not in a version check. `dpdp-integration-test-suite/scripts/` is where that
+claim is kept honest: `test-database-matrix.sh` reinstalls onto a fresh product against a
+throwaway MySQL per version and `verify-database-setup.sh` checks the result. Adding a version
+to the support claim means adding its tag to that script's `MYSQL_VERSIONS` default and to the
+table in the setup guide, not just editing prose. **Run the matrix against a freshly built
+accelerator zip** — it installs from `ACCELERATOR_ZIP`, so a stale `target/` zip silently tests
+the previous `configure.sh`. Four things about MySQL that were only learned by
+running it, and that a new dialect should be checked against:
+
+- The product's three databases must be created `CHARACTER SET latin1`. Its own
+  `dbscripts/identity/mysql.sql` pins `latin1` on some tables and lets others inherit the database
+  default, and MySQL rejects a foreign key whose two columns disagree on charset (error 3780 on
+  `IDN_OAUTH2_REFRESH_TOKEN_BINDING`). `WSO2DPDP_DB` gets `utf8mb4` instead — every DPDP table
+  names its own charset, so it has no such constraint.
+- The product's `dbscripts/migrations/consent/mysql-migration.txt` is invalid on MySQL as shipped:
+  it adds `CM_RECEIPT.CURSOR_KEY` (`AUTO_INCREMENT`) and its `UNIQUE KEY` as two statements, and
+  MySQL requires an auto-increment column to become a key in the same statement (error 1075).
+  `prepare_mysql_consent_migration` in `configure.sh` merges that one pair rather than vendoring a
+  patched copy of the file, so a future product fix is picked up automatically.
+- `configure.properties` is *sourced* by `configure.sh`, so any value containing a shell
+  metacharacter must be quoted in the file — `DB_URL_PARAMS` joins JDBC params with `&` and is
+  silently lost otherwise.
+- Every value substituted into `deployment.toml` must be **XML-escaped**, because the config
+  mapper copies it verbatim into `master-datasources.xml`. A MySQL URL's `&` between
+  `DB_URL_PARAMS` entries otherwise reads as an XML entity reference, the whole file fails to
+  parse, and *every* datasource in it is lost — the server then fails at `jdbc/SHARED_DB` and
+  `jdbc/WSO2DPDP_DB` lookups with a `NameNotFoundException` that says nothing about the real
+  cause. `xml_escape` in `configure.sh` handles this (WSO2's own MySQL docs tell operators to
+  write `&amp;` by hand for the same reason); it collapses `&amp;` first so an already-escaped
+  `*_DB_URL` override is not double-escaped.
+
+Per-dialect SQL divergence, where it exists, goes through the module's `*QueryFactory` /
+`*Mysql*DBQueries` pair (see [DAO layer conventions](#dao-layer-conventions)); a module whose DML
+is identical across dialects (e.g. `consent.extensions`) keeps one query class and no factory.
 
 ## DAO layer conventions
 

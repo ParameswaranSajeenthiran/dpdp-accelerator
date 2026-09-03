@@ -9,6 +9,7 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
 - [Running the tests](#running-the-tests)
+- [Database setup checks](#database-setup-checks)
 - [Project structure](#project-structure)
 - [Test categories](#test-categories)
 - [Operating principles](#operating-principles)
@@ -98,6 +99,44 @@ npm run test:ui                              # everything, in UI mode
 npx playwright test tests/03-consents --ui   # one category, in UI mode
 ```
 
+## Database setup checks
+
+The Playwright specs assume the accelerator's databases are already correct. Two scripts check
+that assumption directly, without a browser — they are the fastest way to tell a broken install
+from a broken feature.
+
+```sh
+# Check an install you already have. Reads everything back from its deployment.toml,
+# so it needs no arguments beyond <IS_HOME> and works for DB_TYPE=h2 and mysql alike.
+bash scripts/verify-database-setup.sh <IS_HOME>
+```
+
+It asserts that no `IS_*` placeholder survived substitution, that every `url =` value is
+XML-escaped (an unescaped `&` in a MySQL URL makes `master-datasources.xml` unparseable and
+every datasource in it disappears), that the four databases exist with the charsets the product
+requires, that every table the shipped `.sql` files create is present, and that the consent
+management v2 migration actually ran. Every check is a read, so it is safe against a live
+server; with `DB_TYPE=h2` the schema checks are skipped while the server holds the files open.
+
+```sh
+# Install onto a fresh product against a throwaway MySQL of each version, then verify.
+DOCKER_HOST=unix://$HOME/.rd/docker.sock \
+IS_ZIP=~/wso2is-7.3.0.zip \
+ACCELERATOR_ZIP=../dpdp-accelerator/accelerators/dpdp-is/target/wso2-dpdp-is-accelerator-1.0.0-SNAPSHOT.zip \
+JDBC_DRIVER_JAR=~/mysql-connector-j-8.0.33.jar \
+bash scripts/test-database-matrix.sh
+```
+
+Defaults to MySQL `8.0.36` and `8.4.11` (`MYSQL_VERSIONS` overrides it) and runs the whole
+install path — `merge.sh`, `configure.sh`, the product's own schema, the consent v2 migration,
+the DPDP schema — on a server nobody has touched. That first-install path is not otherwise
+covered: the product's own scripts are not idempotent, so it can only be exercised against an
+empty server. It does not start the Identity Server, and it skips (rather than fails) when
+Docker is unavailable — set `REQUIRE_DOCKER=true` in CI so the skip cannot pass unnoticed.
+
+`IS_ZIP` must be an **updated** Identity Server pack: only those ship
+`dbscripts/migrations/consent/`, and without it the consent v2 migration is silently skipped.
+
 ## Project structure
 
 | Path | Purpose |
@@ -107,6 +146,7 @@ npx playwright test tests/03-consents --ui   # one category, in UI mode
 | `clients/` | `ConsentApiClient`, a typed wrapper over WSO2 IS's own consent-mgt v2 and self-service consent REST APIs |
 | `fixtures/` | Authenticated personas (User, Consent Admin) and the test-data cleanup tracker |
 | `utils/` | Env/config loading, auth-storage helpers, unique test-data generators |
+| `scripts/` | Shell helpers that set up or check a deployment — see [Setup](#setup) and [Database setup checks](#database-setup-checks) |
 
 ## Test categories
 
