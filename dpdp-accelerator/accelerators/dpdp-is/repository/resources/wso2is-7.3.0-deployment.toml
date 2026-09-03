@@ -12,23 +12,23 @@ create_admin_account = true
 type = "database_unique_id"
 
 [database.identity_db]
-type = "h2"
-url = "jdbc:h2:./repository/database/WSO2IDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
-username = "wso2carbon"
-password = "wso2carbon"
+type = "IS_DB_TYPE"
+url = "IS_IDENTITY_DB_URL"
+username = "IS_DB_USERNAME"
+password = "IS_DB_PASSWORD"
 
 [database.shared_db]
-type = "h2"
-url = "jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
-username = "wso2carbon"
-password = "wso2carbon"
+type = "IS_DB_TYPE"
+url = "IS_SHARED_DB_URL"
+username = "IS_DB_USERNAME"
+password = "IS_DB_PASSWORD"
 
 [datasource.AgentIdentity]
 id = "AgentIdentity"
-url = "jdbc:h2:./repository/database/WSO2AGENTIDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
-username = "wso2carbon"
-password = "wso2carbon"
-driver = "org.h2.Driver"
+url = "IS_AGENT_IDENTITY_DB_URL"
+username = "IS_DB_USERNAME"
+password = "IS_DB_PASSWORD"
+driver = "IS_DB_DRIVER"
 
 [keystore.primary]
 file_name = "wso2carbon.p12"
@@ -85,8 +85,14 @@ app_password= "dashboard"
 # WSO2 DPDP Accelerator
 #
 # Everything above this banner is the stock WSO2 Identity Server 7.3.0
-# deployment.toml, unchanged apart from the IS_HOSTNAME, IS_ADMIN_USERNAME and
-# IS_ADMIN_PASSWORD placeholders that configure.sh substitutes.
+# deployment.toml, unchanged apart from the hostname, administrator and database
+# placeholders that configure.sh substitutes from
+# repository/conf/configure.properties. Those placeholder names are deliberately
+# not spelled out here - configure.sh replaces every literal occurrence of one in
+# this file, comments included, so naming them would rewrite this paragraph into
+# the substituted values. TOML_TOKENS in bin/configure.sh is the authoritative
+# list. The database placeholders are what let one template serve h2 and mysql
+# alike - see the "Database" section of configure.properties.
 # =============================================================================
 
 # Registers the DPDP user lifecycle event handler with the
@@ -95,12 +101,15 @@ app_password= "dashboard"
 name = "dpdpUserLifecycleEventHandler"
 subscriptions = ["POST_DELETE_USER", "POST_SET_USER_CLAIMS"]
 
+# The accelerator's own database. Its URL/driver/credential tokens are substituted
+# from configure.properties exactly like the product's databases above, so the DPDP
+# schema always lands on the same engine as the identity schema.
 [datasource.WSO2DPDP_DB]
 id = "WSO2DPDP_DB"
-url = "jdbc:h2:./repository/database/WSO2DPDP_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000"
-username = "wso2carbon"
-password = "wso2carbon"
-driver = "org.h2.Driver"
+url = "IS_DPDP_DB_URL"
+username = "IS_DB_USERNAME"
+password = "IS_DB_PASSWORD"
+driver = "IS_DB_DRIVER"
 
 # JDBCPersistenceManager resolves this JNDI datasource name for every accelerator DB read/write.
 # data_source_name must match [datasource.WSO2DPDP_DB].id above (prefixed with "jdbc/") - it's a
