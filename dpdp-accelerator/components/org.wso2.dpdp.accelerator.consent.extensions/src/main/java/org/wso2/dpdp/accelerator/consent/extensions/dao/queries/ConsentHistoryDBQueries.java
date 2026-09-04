@@ -21,8 +21,10 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 
 /**
- * SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. h2 and mysql DML is
- * identical, so one class serves both dialects; instance methods (not {@code static final}
+ * SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. The DML is identical
+ * across h2, mysql and postgresql - {@code LIMIT ? OFFSET ?} is accepted by all three, and SNAPSHOT
+ * is a plain string column on PostgreSQL precisely so setString/getString need no dialect-specific
+ * CAST - so one class serves every dialect; instance methods (not {@code static final}
  * constants) so a dialect-specific subclass could override an individual query later, mirroring
  * the Financial Services accelerator's own {@code ConsentMgtCommonDBQueries}.
  */

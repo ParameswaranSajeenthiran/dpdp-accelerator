@@ -23,6 +23,22 @@ public class DAOConstants {
     private DAOConstants() {
     }
 
+    /**
+     * SQLState class 23 - "integrity constraint violation". Compared as a prefix because the exact
+     * code differs per engine (H2/PostgreSQL 23505, MySQL 23000) and because pgjdbc never throws the
+     * JDBC 4 {@code SQLIntegrityConstraintViolationException} subclass, leaving SQLState as the only
+     * portable signal. See ComplaintDAOImpl.isReferenceIdCollision.
+     */
+    public static final String SQL_STATE_CLASS_INTEGRITY_VIOLATION = "23";
+
+    /**
+     * Name of the (ORG_ID, REFERENCE_ID) unique constraint, as spelled in every dbscripts dialect
+     * file. Matched (upper-cased) against the driver's error message to tell an expected
+     * reference-ID collision from a real COMPLAINT_ID clash, so renaming it in the DDL means
+     * changing this too.
+     */
+    public static final String CONSTRAINT_UQ_COMPLAINT_REFERENCE = "UQ_COMPLAINT_REFERENCE";
+
     // Table Names
     public static final String TABLE_COMPLAINT = "COMPLAINT";
     public static final String TABLE_COMPLAINT_EVENT = "COMPLAINT_EVENT";

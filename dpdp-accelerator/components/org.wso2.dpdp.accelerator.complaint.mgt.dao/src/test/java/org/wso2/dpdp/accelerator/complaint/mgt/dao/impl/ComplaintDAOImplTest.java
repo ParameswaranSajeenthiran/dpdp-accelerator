@@ -121,6 +121,42 @@ class ComplaintDAOImplTest {
         expectThrows(DuplicateReferenceIdException.class, () -> dao.addComplaint(collidingReferenceId));
     }
 
+    // The H2-backed collision test above only proves the path for a driver that throws the JDBC 4
+    // SQLIntegrityConstraintViolationException subclass. PostgreSQL's driver never does - it raises
+    // a plain PSQLException and lower-cases the constraint name - so the detection is asserted here
+    // against each driver's exception shape directly, which no in-memory database can reproduce.
+    @Test
+    void referenceIdCollisionIsDetectedFromPostgresExceptionShape() {
+        SQLException postgres = new SQLException(
+                "ERROR: duplicate key value violates unique constraint \"uq_complaint_reference\"", "23505");
+
+        assertTrue(ComplaintDAOImpl.isReferenceIdCollision(postgres));
+    }
+
+    @Test
+    void referenceIdCollisionIsDetectedFromMysqlExceptionShape() {
+        SQLException mysql = new SQLException(
+                "Duplicate entry 'org1-CMP-2026-1' for key 'UQ_COMPLAINT_REFERENCE'", "23000");
+
+        assertTrue(ComplaintDAOImpl.isReferenceIdCollision(mysql));
+    }
+
+    @Test
+    void integrityViolationOnAnotherConstraintIsNotAReferenceIdCollision() {
+        SQLException primaryKeyClash = new SQLException(
+                "ERROR: duplicate key value violates unique constraint \"complaint_pkey\"", "23505");
+
+        assertFalse(ComplaintDAOImpl.isReferenceIdCollision(primaryKeyClash));
+    }
+
+    @Test
+    void nonIntegrityViolationIsNotAReferenceIdCollision() {
+        SQLException connectionFailure = new SQLException("UQ_COMPLAINT_REFERENCE", "08006");
+
+        assertFalse(ComplaintDAOImpl.isReferenceIdCollision(connectionFailure));
+        assertFalse(ComplaintDAOImpl.isReferenceIdCollision(new SQLException("no sql state at all")));
+    }
+
     @Test
     void getComplaintByIdReturnsEmptyWhenNotFound() {
         Optional<Complaint> fetched = dao.getComplaintById("does-not-exist", "org1");

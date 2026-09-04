@@ -25,6 +25,7 @@ import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintDBColumns;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
@@ -38,9 +39,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class ComplaintDAOImpl implements ComplaintDAO {
@@ -86,18 +87,20 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(11, complaint.getUpdatedTime());
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
-        } catch (SQLIntegrityConstraintViolationException e) {
-
-//            Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID collision (real bug) by checking the driver's error message text — the only portable way,
-//            since neither driver exposes the violated constraint as a structured field.
-            if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
-                    .contains("UQ_COMPLAINT_REFERENCE")) {
-                LOG.warn("Duplicate reference ID for org: " + complaint.getOrgId(), e);
+        } catch (SQLException e) {
+            // Keyed on the SQLState class, not SQLIntegrityConstraintViolationException: pgjdbc never
+            // throws the JDBC 4 subclasses, so on PostgreSQL that catch would miss the collision
+            // entirely and turn an expected retry into a 500. Same check as SubscriptionDAOImpl.
+            // Within an integrity violation, an expected reference-ID collision (retry) is told apart
+            // from a genuine COMPLAINT_ID collision (real bug) by the constraint name in the message
+            // text - no driver exposes the violated constraint as a structured field. PostgreSQL
+            // reports it lower-cased, hence the toUpperCase.
+            if (isReferenceIdCollision(e)) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Duplicate reference ID for org: " + LogSanitizer.sanitize(complaint.getOrgId()));
+                }
                 throw new DuplicateReferenceIdException(e);
             }
-            LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
-            throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
-        } catch (SQLException e) {
             LOG.error("Error adding complaint for org: " + complaint.getOrgId(), e);
             throw new ComplaintDAOException("Error adding complaint for org: " + complaint.getOrgId(), e);
         }
@@ -268,6 +271,14 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         } finally {
             DatabaseUtils.closeConnection(conn);
         }
+    }
+
+    /** Package-private so the per-dialect exception shapes can be asserted without a live server. */
+    static boolean isReferenceIdCollision(SQLException e) {
+        String sqlState = e.getSQLState();
+        return sqlState != null && sqlState.startsWith(DAOConstants.SQL_STATE_CLASS_INTEGRITY_VIOLATION)
+                && e.getMessage() != null && e.getMessage().toUpperCase(Locale.ROOT)
+                .contains(DAOConstants.CONSTRAINT_UQ_COMPLAINT_REFERENCE);
     }
 
     private Complaint mapResultSetToComplaint(ResultSet rs) throws SQLException {

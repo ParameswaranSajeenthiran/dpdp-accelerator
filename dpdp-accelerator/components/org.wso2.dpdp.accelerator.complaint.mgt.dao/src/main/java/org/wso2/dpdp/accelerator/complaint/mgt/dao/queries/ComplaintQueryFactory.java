@@ -26,9 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Factory resolving DB-dialect specific query providers for the DPDP Complaint Management feature.
- * Mirrors {@code EventNotificationQueryFactory} - only {@code mysql} has a dedicated provider today
- * since the feature only ships {@code h2.sql}/{@code mysql.sql}; every other dialect (including H2)
- * falls back to the ANSI baseline.
+ * Mirrors {@code EventNotificationQueryFactory}. Only {@code mysql} has a dedicated provider today,
+ * and it overrides nothing - every other dialect, H2 and PostgreSQL included, falls back to the ANSI
+ * baseline because none of this feature's queries diverge. A new provider belongs here only once a
+ * query actually needs it, not merely because a {@code dbscripts/complaint/<dialect>.sql} ships.
  */
 public class ComplaintQueryFactory {
 

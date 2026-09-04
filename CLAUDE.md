@@ -434,7 +434,7 @@ The real deployment workflow is "rebuild the accelerator, merge it over an alrea
 
 ## Database scripts
 
-DDL lives at `accelerators/dpdp-is/carbon-home/dbscripts/<feature>/{h2,mysql}.sql` (one directory
+DDL lives at `accelerators/dpdp-is/carbon-home/dbscripts/<feature>/{h2,mysql,postgressql}.sql` (one directory
 per feature, not per module) and is packaged into the shipped zip automatically since
 `carbon-home/` is included wholesale by the assembly descriptor — no separate wiring needed.
 Unlike the product's own bundled databases (which get a pre-built, pre-populated file baked in
