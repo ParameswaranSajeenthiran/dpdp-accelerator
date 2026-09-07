@@ -22,7 +22,6 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
@@ -81,32 +80,24 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public Optional<Event> getEventById(String eventId, String orgId) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
-                ps.setString(1, eventId);
-                ps.setString(2, orgId);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        Event event = mapEvent(rs);
-                        event.setPurposes(getEventPurposes(conn, eventId));
-                        DatabaseUtils.commitTransaction(conn);
-                        return Optional.of(event);
-                    }
+    public Optional<Event> getEventById(Connection conn, String eventId, String orgId) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventByIdQuery())) {
+            ps.setString(1, eventId);
+            ps.setString(2, orgId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Event event = mapEvent(rs);
+                    event.setPurposes(getEventPurposes(conn, eventId));
+                    return Optional.of(event);
                 }
-                DatabaseUtils.commitTransaction(conn);
-                return Optional.empty();
-            } catch (SQLException e) {
-                DatabaseUtils.rollbackTransaction(conn);
-                throw new EventNotificationDataAccessException(
-                        String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
             }
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
         }
     }
 
@@ -138,22 +129,10 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public List<String> getEventPurposes(String eventId) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            List<String> purposes = getEventPurposes(conn, eventId);
-            DatabaseUtils.commitTransaction(conn);
-            return purposes;
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
-    }
-
-    @Override
     public List<String> getEventPurposes(Connection conn, String eventId) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
         List<String> purposes = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesQuery())) {
             ps.setString(1, eventId);
@@ -170,38 +149,30 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public boolean hasActiveEventsForTopic(String topicId) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
-                ps.setString(1, topicId);
-                boolean hasActive;
-                try (ResultSet rs = ps.executeQuery()) {
-                    hasActive = rs.next();
-                }
-                DatabaseUtils.commitTransaction(conn);
-                return hasActive;
-            } catch (SQLException e) {
-                DatabaseUtils.rollbackTransaction(conn);
-                throw new EventNotificationDataAccessException(
-                        String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
+    public boolean hasActiveEventsForTopic(Connection conn, String topicId) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
+            ps.setString(1, topicId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
         }
     }
 
     @Override
-    public PaginatedDAOResult<Event> searchEvents(String orgId, String topic, String status, String groupId,
+    public PaginatedDAOResult<Event> searchEvents(Connection conn, String orgId, String topic, String status, String groupId,
             String subscriptionId, String purposes, String search, int limit, int offset) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
         List<Event> events = new ArrayList<>();
-        int[] total = {0};
-        Connection conn = DatabaseUtils.getDBConnection();
+        int total = 0;
         try {
-          try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
             EventQueryBuilder builder = new EventQueryBuilder(orgId, queries)
                     .setTopic(topic)
@@ -222,7 +193,7 @@ public class EventDAOImpl implements EventDAO {
                 }
                 try (ResultSet rs = countPs.executeQuery()) {
                     if (rs.next()) {
-                        total[0] = rs.getInt(1);
+                        total = rs.getInt(1);
                     }
                 }
             }
@@ -250,19 +221,10 @@ public class EventDAOImpl implements EventDAO {
                 }
             }
 
-            PaginatedDAOResult<Event> result = new PaginatedDAOResult<>(events, total[0]);
-            DatabaseUtils.commitTransaction(conn);
-            return result;
-          } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
+            return new PaginatedDAOResult<>(events, total);
+        } catch (SQLException e) {
             throw new EventNotificationDataAccessException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_EVENTS, orgId), e);
-          }
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
         }
     }
 

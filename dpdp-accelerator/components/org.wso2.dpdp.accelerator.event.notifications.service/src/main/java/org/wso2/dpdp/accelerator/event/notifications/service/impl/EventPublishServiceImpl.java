@@ -143,33 +143,9 @@ public class EventPublishServiceImpl implements EventPublishService {
         if (configurationService == null || signedEventPayloadFactory == null || subscriptionDAO == null) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
-                    "Polling services are not initialized.", 500);
+                    EventNotificationServiceConstants.POLLING_SERVICES_NOT_INITIALIZED_ERROR_MSG, 500);
         }
-
-        Subscription subscription = subscriptionDAO.getSubscriptionById(safeSubscriptionId, safeOrgId)
-                .filter(value -> safeOrgId.equalsIgnoreCase(value.getOrgId()))
-                .filter(value -> safeGroupId.equalsIgnoreCase(value.getGroupId()))
-                .filter(value -> DeliveryMode.POLL.getValue().equalsIgnoreCase(value.getDeliveryMode()))
-                .filter(value -> "active".equalsIgnoreCase(value.getStatus()))
-                .orElseThrow(() -> new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
-                        EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
-                        EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404));
-        String sharedSecret = subscription.getSharedSecret();
-        if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
-                    EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                    "The polling subscription does not have a shared secret.", 409);
-        }
-
         String rawBody = requestBody == null ? "" : requestBody;
-        if (configurationService.isEventNotificationPollingRequestHmacValidationEnabled()
-                && !HmacSigner.verify(sharedSecret, rawBody, eventSignature)) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
-                    EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
-                    EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
-        }
-
         EventPollingRequestDTO request;
         try {
             String bodyToParse = rawBody.trim().isEmpty() ? "{}" : rawBody;
@@ -177,12 +153,12 @@ public class EventPublishServiceImpl implements EventPublishService {
         } catch (JsonProcessingException e) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "Polling request body is malformed.", 400);
+                    EventNotificationServiceConstants.POLLING_REQUEST_BODY_MALFORMED_ERROR_MSG, 400);
         }
         if (request.getOrgId() != null && !safeOrgId.equalsIgnoreCase(request.getOrgId().trim())) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "The request organization does not match the tenant context.", 400);
+                    EventNotificationServiceConstants.ORG_MISMATCH_TENANT_CONTEXT_ERROR_MSG, 400);
         }
 
         Set<String> ackIds = normalizeDeliveryIds(
@@ -199,38 +175,63 @@ public class EventPublishServiceImpl implements EventPublishService {
         if (!returnImmediately) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "Long polling is not supported; returnImmediately must be true.", 400);
+                    EventNotificationServiceConstants.LONG_POLLING_NOT_SUPPORTED_ERROR_MSG, 400);
         }
         int maxEvents = resolvePollingMaxEvents(request.getMaxEvents());
 
-        deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(safeOrgId, safeGroupId, safeSubscriptionId,
-                new ArrayList<>(ackIds), errors);
-        int fetchLimit = maxEvents == 0 ? 1 : maxEvents + 1;
-        List<PollDelivery> pending = deliveryDAO.getPendingPollDeliveries(
-                safeOrgId, safeGroupId, safeSubscriptionId, fetchLimit);
-        boolean moreAvailable = pending.size() > maxEvents;
-        Map<String, String> sets = new LinkedHashMap<>();
-        for (int index = 0; index < Math.min(maxEvents, pending.size()); index++) {
-            PollDelivery delivery = pending.get(index);
-            Event event = eventDAO.getEventById(delivery.getEventId(), safeOrgId)
+        return DatabaseUtils.executeInTransaction(conn -> {
+            Subscription subscription = subscriptionDAO.getSubscriptionById(conn, safeSubscriptionId, safeOrgId)
+                    .filter(value -> safeOrgId.equalsIgnoreCase(value.getOrgId()))
+                    .filter(value -> safeGroupId.equalsIgnoreCase(value.getGroupId()))
+                    .filter(value -> DeliveryMode.POLL.getValue().equalsIgnoreCase(value.getDeliveryMode()))
+                    .filter(value -> "active".equalsIgnoreCase(value.getStatus()))
                     .orElseThrow(() -> new EventNotificationException(
-                            EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
-                            EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
-                            EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, 500));
-            try {
-                sets.put(delivery.getDeliveryId(), signedEventPayloadFactory.sign(
-                        safeOrgId, safeGroupId, safeSubscriptionId, delivery.getDeliveryId(),
-                        delivery.getEventId(), event.getTopic(), event.getPayload(), sharedSecret,
-                        configurationService.getEventNotificationPayloadSigningAudience()));
-            } catch (Exception e) {
-                LOG.error("Failed to sign polling delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
-                        + "].", e);
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
-                        EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
-                        "Failed to sign polling event payload.", 500);
+                            EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
+                            EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
+                            EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404));
+            String sharedSecret = subscription.getSharedSecret();
+            if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                        EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                        EventNotificationServiceConstants.POLLING_SUBSCRIPTION_NO_SECRET_ERROR_MSG, 409);
             }
-        }
-        return new EventPollingResponseDTO(moreAvailable, sets);
+
+            if (configurationService.isEventNotificationPollingRequestHmacValidationEnabled()
+                    && !HmacSigner.verify(sharedSecret, rawBody, eventSignature)) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
+                        EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
+                        EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
+            }
+
+            deliveryDAO.updatePollDeliveryStatusesByDeliveryIds(conn, safeOrgId, safeGroupId, safeSubscriptionId,
+                    new ArrayList<>(ackIds), errors);
+            int fetchLimit = maxEvents == 0 ? 1 : maxEvents + 1;
+            List<PollDelivery> pending = deliveryDAO.getPendingPollDeliveries(
+                    conn, safeOrgId, safeGroupId, safeSubscriptionId, fetchLimit);
+            boolean moreAvailable = pending.size() > maxEvents;
+            Map<String, String> sets = new LinkedHashMap<>();
+            for (int index = 0; index < Math.min(maxEvents, pending.size()); index++) {
+                PollDelivery delivery = pending.get(index);
+                Event event = eventDAO.getEventById(conn, delivery.getEventId(), safeOrgId)
+                        .orElseThrow(() -> new EventNotificationException(
+                                EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
+                                EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
+                                EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, 500));
+                try {
+                    sets.put(delivery.getDeliveryId(), signedEventPayloadFactory.sign(
+                            safeOrgId, safeGroupId, safeSubscriptionId, delivery.getDeliveryId(),
+                            delivery.getEventId(), event.getTopic(), event.getPayload(), sharedSecret,
+                            configurationService.getEventNotificationPayloadSigningAudience()));
+                } catch (Exception e) {
+                    LOG.error("Failed to sign polling delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
+                            + "].", e);
+                    throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                            EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
+                            "Failed to sign polling event payload.", 500);
+                }
+            }
+            return new EventPollingResponseDTO(moreAvailable, sets);
+        });
     }
 
     @Override
@@ -238,52 +239,60 @@ public class EventPublishServiceImpl implements EventPublishService {
             String requestBody, String eventSignature) {
         String safeOrgId = requireValue(orgId, EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG);
         String safeGroupId = requireValue(groupId, EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG);
-        String safeDeliveryId = requireValue(deliveryId, EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG);
-        if (requestBody == null || requestBody.trim().isEmpty()) {
-            throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "Completion request body is required.");
-        }
-        Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery> delivery =
-                deliveryDAO.getWebhookDeliveryById(safeDeliveryId, safeOrgId);
+        String safeDeliveryId = requireValue(deliveryId,
+                EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG);
         if (subscriptionDAO == null) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
-                    "Delivery completion services are not initialized.", 500);
+                    EventNotificationServiceConstants.DELIVERY_COMPLETION_SERVICES_NOT_INITIALIZED_ERROR_MSG, 500);
         }
-        Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> subscription = delivery
-                .flatMap(value -> subscriptionDAO.getSubscriptionById(value.getSubscriptionId(), safeOrgId));
-        if (delivery.isEmpty() || subscription.isEmpty()
-                || !safeGroupId.equalsIgnoreCase(subscription.get().getGroupId())
-                || !HmacSigner.verifyCompletion(subscription.get().getSharedSecret(), safeDeliveryId,
-                        requestBody, eventSignature)) {
-            throw invalidCompletionSignature();
-        }
-        if (!DeliveryStatus.DELIVERED.getValue().equalsIgnoreCase(delivery.get().getStatus())) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
-                    EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                    EventNotificationServiceConstants.DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG, 409);
-        }
-        final DeliveryCompletionRequestDTO completion;
-        try {
-            completion = objectMapper.readValue(requestBody, DeliveryCompletionRequestDTO.class);
-        } catch (JsonProcessingException e) {
-            throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "Completion request body is malformed.");
-        }
-        validateCompletion(completion);
-        Timestamp completedAt = completion.getCompletedAt() == null
-                ? new Timestamp(System.currentTimeMillis()) : new Timestamp(completion.getCompletedAt());
-        try {
-            deliveryAckDAO.addDeliveryAck(
-                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck(
-                            UUID.randomUUID().toString(), safeDeliveryId, completedAt,
-                            completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
-                            completion.getCompletionEvidence().trim()));
-        } catch (EventNotificationDuplicateResourceException e) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
-                    EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
-                    EventNotificationServiceConstants.DELIVERY_COMPLETION_ALREADY_EXISTS_ERROR_MSG, 409);
-        }
+
+        DatabaseUtils.<Void>executeInTransaction(conn -> {
+            Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery> delivery = deliveryDAO
+                    .getWebhookDeliveryById(conn, safeDeliveryId, safeOrgId);
+            Optional<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> subscription = delivery
+                    .flatMap(value -> subscriptionDAO.getSubscriptionById(conn, value.getSubscriptionId(), safeOrgId));
+            if (!delivery.isPresent() || !subscription.isPresent()
+                    || !safeGroupId.equalsIgnoreCase(subscription.get().getGroupId())
+                    || !HmacSigner.verifyCompletion(subscription.get().getSharedSecret(), safeDeliveryId,
+                            requestBody, eventSignature)) {
+                throw invalidCompletionSignature();
+            }
+            if (!DeliveryStatus.DELIVERED.getValue().equalsIgnoreCase(delivery.get().getStatus())) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                        EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                        EventNotificationServiceConstants.DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG, 409);
+            }
+
+            if (requestBody == null || requestBody.trim().isEmpty()) {
+                throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                        EventNotificationServiceConstants.COMPLETION_REQUEST_BODY_REQUIRED_ERROR_MSG);
+            }
+            final DeliveryCompletionRequestDTO completion;
+            try {
+                completion = objectMapper.readValue(requestBody, DeliveryCompletionRequestDTO.class);
+            } catch (JsonProcessingException e) {
+                throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                        EventNotificationServiceConstants.COMPLETION_REQUEST_BODY_MALFORMED_ERROR_MSG);
+            }
+            validateCompletion(completion);
+            Timestamp completedAt = completion.getCompletedAt() == null
+                    ? new Timestamp(System.currentTimeMillis())
+                    : new Timestamp(completion.getCompletedAt());
+
+            try {
+                deliveryAckDAO.addDeliveryAck(conn,
+                        new org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck(
+                                UUID.randomUUID().toString(), safeDeliveryId, completedAt,
+                                completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
+                                completion.getCompletionEvidence().trim()));
+            } catch (EventNotificationDuplicateResourceException e) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                        EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
+                        EventNotificationServiceConstants.DELIVERY_COMPLETION_ALREADY_EXISTS_ERROR_MSG, 409);
+            }
+            return null;
+        });
     }
 
     private static String requireValue(String value, String message) {
@@ -304,7 +313,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         if (!("completed".equalsIgnoreCase(status) || "ack".equalsIgnoreCase(status)
                 || "disputed".equalsIgnoreCase(status) || "partial".equalsIgnoreCase(status))) {
             throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "completionStatus must be completed, ack, disputed, or partial.");
+                    EventNotificationServiceConstants.COMPLETION_STATUS_INVALID_CHOICE_ERROR_MSG);
         }
         if (completion.getCompletionEvidence() == null || completion.getCompletionEvidence().trim().isEmpty()) {
             throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -318,7 +327,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         }
         if (completion.getCompletedAt() != null && completion.getCompletedAt() < 0) {
             throw invalidCompletion(EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
-                    "completedAt must not be negative.");
+                    EventNotificationServiceConstants.COMPLETION_COMPLETED_AT_NEGATIVE_ERROR_MSG);
         }
     }
 
@@ -355,11 +364,11 @@ public class EventPublishServiceImpl implements EventPublishService {
                 PollSetErrorDTO error = entry.getValue();
                 String code = error == null ? null : error.getErr();
                 String description = error == null ? null : error.getDescription();
-                if (code == null || code.trim().isEmpty() || code.trim().length()
-                        > EventNotificationServiceConstants.MAX_POLL_ERROR_CODE_LENGTH
+                if (code == null || code.trim().isEmpty()
+                        || code.trim().length() > EventNotificationServiceConstants.MAX_POLL_ERROR_CODE_LENGTH
                         || description == null || description.trim().isEmpty()
-                        || description.trim().length()
-                        > EventNotificationServiceConstants.MAX_POLL_ERROR_DETAIL_LENGTH) {
+                        || description.trim()
+                                .length() > EventNotificationServiceConstants.MAX_POLL_ERROR_DETAIL_LENGTH) {
                     throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                             EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                             EventNotificationServiceConstants.POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG, 400);
@@ -374,7 +383,8 @@ public class EventPublishServiceImpl implements EventPublishService {
     private int resolvePollingMaxEvents(Integer requestedMaxEvents) {
         int configuredLimit = configurationService.getEventNotificationPollingMaxEventsLimit();
         int effectiveMaxEvents = requestedMaxEvents == null
-                ? configurationService.getEventNotificationPollingDefaultMaxEvents() : requestedMaxEvents;
+                ? configurationService.getEventNotificationPollingDefaultMaxEvents()
+                : requestedMaxEvents;
         if (effectiveMaxEvents < 0 || effectiveMaxEvents > configuredLimit) {
             throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -431,33 +441,30 @@ public class EventPublishServiceImpl implements EventPublishService {
         String eventId = UUID.randomUUID().toString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        Connection conn = DatabaseUtils.getDBConnection();
         try {
-            Topic topic = resolveActiveTopic(conn, orgId, topicName);
-            Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
+            return DatabaseUtils.executeInTransaction(conn -> {
+                Topic topic = resolveActiveTopic(conn, orgId, topicName);
+                Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
-            if (!eventDAO.addEvent(conn, event)) {
-                throw new EventNotificationException(
-                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                        EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                        String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
-                                topic.getName()),
-                        400);
-            }
-            if (purposes != null && !purposes.isEmpty()) {
-                eventDAO.addEventPurposes(conn, eventId, purposes);
-            }
-            eventFanOutService.fanOutEvent(conn, event, purposes);
+                if (!eventDAO.addEvent(conn, event)) {
+                    throw new EventNotificationException(
+                            EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                            EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                            String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
+                                    topic.getName()),
+                            400);
+                }
+                if (purposes != null && !purposes.isEmpty()) {
+                    eventDAO.addEventPurposes(conn, eventId, purposes);
+                }
+                eventFanOutService.fanOutEvent(conn, event, purposes);
 
-            EventDTO result = new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
-                    purposes, now, now);
-            DatabaseUtils.commitTransaction(conn);
-            return result;
+                return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
+                        purposes, now, now);
+            });
         } catch (EventNotificationException e) {
-            DatabaseUtils.rollbackTransaction(conn);
             throw e;
-        } catch (Exception e) {
-            DatabaseUtils.rollbackTransaction(conn);
+        } catch (RuntimeException e) {
             LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
                     + LogSanitizer.sanitize(e.getMessage()), e);
             throw new EventNotificationException(
@@ -465,8 +472,6 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
                     500);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
         }
     }
 
@@ -511,15 +516,18 @@ public class EventPublishServiceImpl implements EventPublishService {
         int lim = EventNotificationParameterUtils.normalizeLimit(limit);
         int off = EventNotificationParameterUtils.normalizeOffset(offset);
         String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
-        PaginatedDAOResult<Event> daoResult = subscriptionId == null || subscriptionId.trim().isEmpty()
-                ? eventDAO.searchEvents(orgId.trim(), topic, normalizedStatus, groupId, purposes, search, lim, off)
-                : eventDAO.searchEvents(orgId.trim(), topic, normalizedStatus, groupId, subscriptionId,
-                        purposes, search, lim, off);
-        List<EventDTO> dtoList = new ArrayList<>();
-        for (Event event : daoResult.getItems()) {
-            dtoList.add(mapToDTO(event));
-        }
-        return new PaginatedResult<>(dtoList, daoResult.getTotal());
+        return DatabaseUtils.executeInTransaction(conn -> {
+            PaginatedDAOResult<Event> daoResult = subscriptionId == null || subscriptionId.trim().isEmpty()
+                    ? eventDAO.searchEvents(conn, orgId.trim(), topic, normalizedStatus, groupId, purposes, search, lim,
+                            off)
+                    : eventDAO.searchEvents(conn, orgId.trim(), topic, normalizedStatus, groupId, subscriptionId,
+                            purposes, search, lim, off);
+            List<EventDTO> dtoList = new ArrayList<>();
+            for (Event event : daoResult.getItems()) {
+                dtoList.add(mapToDTO(event));
+            }
+            return new PaginatedResult<>(dtoList, daoResult.getTotal());
+        });
     }
 
     @Override
@@ -535,26 +543,28 @@ public class EventPublishServiceImpl implements EventPublishService {
         String normalizedStatus = EventNotificationParameterUtils.normalizeStatusFilter(status);
         int[] totalOut = new int[1];
 
-        List<SubscriptionDeliverySummary> summaries = deliveryDAO.listOrgDeliveries(
-                orgId.trim(), normalizedStatus, subscriptionId, groupId, purposes, search, lim, off, totalOut);
-
-        List<SubscriptionDeliveryDTO> dtoList = new ArrayList<>();
-        for (SubscriptionDeliverySummary summary : summaries) {
-            dtoList.add(new SubscriptionDeliveryDTO(
-                    summary.getDeliveryId(),
-                    summary.getEventId(),
-                    summary.getSubscriptionId(),
-                    summary.getGroupId(),
-                    summary.getTopicName(),
-                    summary.getCurrentStatus() != null ? summary.getCurrentStatus()
-                            : DeliveryHistoryMapper.defaultStatus(summary.getDeliveryMode()),
-                    summary.getDeliveryMode() != null ? summary.getDeliveryMode()
-                            : DeliveryMode.WEBHOOK.getValue(),
-                    summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
-                            : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime()
-                                    : System.currentTimeMillis())));
-        }
-        return new PaginatedResult<>(dtoList, totalOut[0]);
+        return DatabaseUtils.executeInTransaction(conn -> {
+            List<SubscriptionDeliverySummary> summaries = deliveryDAO.listOrgDeliveries(
+                    conn, orgId.trim(), normalizedStatus, subscriptionId, groupId, purposes, search, lim, off,
+                    totalOut);
+            List<SubscriptionDeliveryDTO> dtoList = new ArrayList<>();
+            for (SubscriptionDeliverySummary summary : summaries) {
+                dtoList.add(new SubscriptionDeliveryDTO(
+                        summary.getDeliveryId(),
+                        summary.getEventId(),
+                        summary.getSubscriptionId(),
+                        summary.getGroupId(),
+                        summary.getTopicName(),
+                        summary.getCurrentStatus() != null ? summary.getCurrentStatus()
+                                : DeliveryHistoryMapper.defaultStatus(summary.getDeliveryMode()),
+                        summary.getDeliveryMode() != null ? summary.getDeliveryMode()
+                                : DeliveryMode.WEBHOOK.getValue(),
+                        summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
+                                : (summary.getCreatedAt() != null ? summary.getCreatedAt().getTime()
+                                        : System.currentTimeMillis())));
+            }
+            return new PaginatedResult<>(dtoList, totalOut[0]);
+        });
     }
 
     @Override
@@ -570,15 +580,18 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG, 400);
         }
 
-        Optional<SubscriptionDeliverySummary> summaryOpt = deliveryDAO.getOrgDeliveryById(orgId.trim(), deliveryId.trim());
-        if (summaryOpt.isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
-                    EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
-        }
+        return DatabaseUtils.executeInTransaction(conn -> {
+            Optional<SubscriptionDeliverySummary> summaryOpt = deliveryDAO.getOrgDeliveryById(conn, orgId.trim(),
+                    deliveryId.trim());
+            if (!summaryOpt.isPresent()) {
+                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
+                        EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
+                        EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
+            }
 
-        return DeliveryHistoryMapper.map(orgId.trim(), deliveryId.trim(), summaryOpt.get(), deliveryDAO,
-                deliveryAckDAO);
+            return DeliveryHistoryMapper.map(conn, orgId.trim(), deliveryId.trim(),
+                    summaryOpt.get(), deliveryDAO, deliveryAckDAO);
+        });
     }
 
     @Override
@@ -597,32 +610,35 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,
                     400);
         }
-        Optional<Event> eventOpt = eventDAO.getEventById(eventId.trim(), orgId.trim());
-        if (!eventOpt.isPresent()) {
-            throw new EventNotificationException(
-                    EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
-                    EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
-                    String.format(EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, eventId.trim()),
-                    404);
-        }
-        Event event = eventOpt.get();
-        EventDTO dto = mapToDTO(event);
-        if (event.getTopicId() != null) {
-            Optional<Topic> topicOpt = topicDAO.getTopicById(event.getTopicId(), orgId.trim());
-            if (topicOpt.isPresent()) {
-                dto.setTopic(topicOpt.get().getName());
-            } else {
-                dto.setTopic(event.getTopicId());
+        return DatabaseUtils.executeInTransaction(conn -> {
+            Optional<Event> eventOpt = eventDAO.getEventById(conn, eventId.trim(), orgId.trim());
+            if (!eventOpt.isPresent()) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
+                        EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
+                        String.format(EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, eventId.trim()),
+                        404);
             }
-        }
-        int[] totalOut = new int[1];
-        deliveryDAO.listEventDeliveries(orgId.trim(), eventId.trim(), 1, 0, totalOut);
-        dto.setDeliveriesCount(totalOut[0]);
-        return dto;
+            Event event = eventOpt.get();
+            EventDTO dto = mapToDTO(event);
+            if (event.getTopicId() != null) {
+                Optional<Topic> topicOpt = topicDAO.getTopicById(conn, event.getTopicId(), orgId.trim());
+                if (topicOpt.isPresent()) {
+                    dto.setTopic(topicOpt.get().getName());
+                } else {
+                    dto.setTopic(event.getTopicId());
+                }
+            }
+            int[] totalOut = new int[1];
+            deliveryDAO.listEventDeliveries(conn, orgId.trim(), eventId.trim(), 1, 0, totalOut);
+            dto.setDeliveriesCount(totalOut[0]);
+            return dto;
+        });
     }
 
     @Override
-    public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit, int offset) {
+    public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit,
+            int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
@@ -640,23 +656,24 @@ public class EventPublishServiceImpl implements EventPublishService {
         int safeLimit = EventNotificationParameterUtils.normalizeLimit(limit);
         int safeOffset = EventNotificationParameterUtils.normalizeOffset(offset);
         int[] totalOut = new int[1];
-        List<SubscriptionDeliverySummary> summaries = deliveryDAO.listEventDeliveries(
-                orgId.trim(), eventId.trim(), safeLimit, safeOffset, totalOut);
-
-        List<SubscriptionDeliveryDTO> dtos = new ArrayList<>();
-        for (SubscriptionDeliverySummary summary : summaries) {
-            SubscriptionDeliveryDTO dto = new SubscriptionDeliveryDTO(
-                    summary.getDeliveryId(),
-                    summary.getEventId(),
-                    summary.getSubscriptionId(),
-                    summary.getGroupId(),
-                    summary.getTopicName(),
-                    summary.getCurrentStatus(),
-                    summary.getDeliveryMode(),
-                    summary.getOccurredAt() != null ? summary.getOccurredAt().getTime() : 0L);
-            dtos.add(dto);
-        }
-        return new PaginatedResult<SubscriptionDeliveryDTO>(dtos, totalOut[0]);
+        return DatabaseUtils.executeInTransaction(conn -> {
+            List<SubscriptionDeliverySummary> summaries = deliveryDAO.listEventDeliveries(
+                    conn, orgId.trim(), eventId.trim(), safeLimit, safeOffset, totalOut);
+            List<SubscriptionDeliveryDTO> dtos = new ArrayList<>();
+            for (SubscriptionDeliverySummary summary : summaries) {
+                SubscriptionDeliveryDTO dto = new SubscriptionDeliveryDTO(
+                        summary.getDeliveryId(),
+                        summary.getEventId(),
+                        summary.getSubscriptionId(),
+                        summary.getGroupId(),
+                        summary.getTopicName(),
+                        summary.getCurrentStatus(),
+                        summary.getDeliveryMode(),
+                        summary.getOccurredAt() != null ? summary.getOccurredAt().getTime() : 0L);
+                dtos.add(dto);
+            }
+            return new PaginatedResult<>(dtos, totalOut[0]);
+        });
     }
 
     private EventDTO mapToDTO(Event event) {

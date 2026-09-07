@@ -33,6 +33,7 @@ import java.sql.SQLException;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.expectThrows;
@@ -169,6 +170,71 @@ public class DatabaseUtilsTest {
         Connection connection = mock(Connection.class);
         doThrow(new SQLException("boom")).when(connection).close();
         DatabaseUtils.closeConnection(connection);
+    }
+
+    @Test
+    public void executeInTransactionCommitsAndClosesAfterSuccess() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+        Object expected = new Object();
+
+        Object result = DatabaseUtils.executeInTransaction(ignored -> expected);
+
+        assertSame(result, expected);
+        verify(connection).commit();
+        verify(connection, never()).rollback();
+        verify(connection).close();
+    }
+
+    @Test
+    public void executeInTransactionRollsBackRuntimeExceptionAndPreservesIt() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+        RuntimeException failure = new RuntimeException("boom");
+
+        RuntimeException thrown = expectThrows(RuntimeException.class,
+                () -> DatabaseUtils.executeInTransaction(ignored -> {
+                    throw failure;
+                }));
+
+        assertSame(thrown, failure);
+        verify(connection, never()).commit();
+        verify(connection).rollback();
+        verify(connection).close();
+    }
+
+    @Test
+    public void executeInTransactionRollsBackErrorAndPreservesIt() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+        AssertionError failure = new AssertionError("boom");
+
+        AssertionError thrown = expectThrows(AssertionError.class,
+                () -> DatabaseUtils.executeInTransaction(ignored -> {
+                    throw failure;
+                }));
+
+        assertSame(thrown, failure);
+        verify(connection, never()).commit();
+        verify(connection).rollback();
+        verify(connection).close();
+    }
+
+    @Test
+    public void executeInTransactionRollsBackAndClosesAfterCommitFailure() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        Mockito.when(dataSource.getConnection()).thenReturn(connection);
+        doThrow(new SQLException("boom")).when(connection).commit();
+
+        expectThrows(DPDPCommonRuntimeException.class,
+                () -> DatabaseUtils.executeInTransaction(ignored -> "result"));
+
+        verify(connection).rollback();
+        verify(connection).close();
     }
 
     private static void setStaticDataSource(DataSource dataSource) throws Exception {
