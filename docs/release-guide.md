@@ -62,10 +62,17 @@ the zip. Pairing it with `run_e2e: off` finishes in a few minutes.
 
 Same inputs, `dry_run` off.
 
-Budget roughly **two hours** with the E2E gate on: it builds Identity Server from
-`product-is` master, because the published-release + U2 update path is currently blocked
-upstream (the public release zip is missing the `migration-resources/` tree the update tool
-needs).
+The gate tests the U2-updated 7.3.0 pack, pulled from the `updates2.0` S3 bucket named by
+the `IS_PACK_S3_URI` secret. The published GitHub release zip is not U2-updatable — it lacks
+the `migration-resources/` tree the update tool needs — so that path was abandoned.
+
+Duration is hard to pin down: the E2E job has historically taken 18–25 minutes, and how much
+`wso2update_linux` adds is not yet measured. A release run may also restore an already-warm
+pack cache and skip the download and update entirely. Check a recent run's step timings
+rather than trusting a number here.
+
+`product-is` master is still exercised, but on a schedule — see
+`.github/workflows/weekly-master-e2e.yml`.
 
 ### 5. Nothing — the version bump is automatic
 
