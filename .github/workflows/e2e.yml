@@ -380,6 +380,21 @@ jobs:
           path: ~/is-pack/updated.tar.zst
           key: ${{ steps.packkey.outputs.key }}
 
+      # Placed after both paths converge: a warm-cache run skips the update step entirely
+      # and so emits no U2 output, leaving this the only record of the level actually under
+      # test - which is the question the weekly refresh exists to move.
+      - name: Report the IS update level
+        run: |
+          cfg="${IS_HOME}/updates/config.json"
+          if [ ! -f "${cfg}" ]; then
+            echo "No updates/config.json - not a U2-updated pack (expected on the master path)."
+            exit 0
+          fi
+          level=$(CFG="${cfg}" python3 -c \
+            'import json, os; print(json.load(open(os.environ["CFG"]))["update-level"])')
+          echo "IS update level: ${level}"
+          echo "IS update level \`${level}\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Apply the accelerator
         run: |
           zip_path=$(find dpdp-accelerator/accelerators/dpdp-is/target -maxdepth 1 -name "wso2-dpdpiam-accelerator-*.zip" | head -1)
