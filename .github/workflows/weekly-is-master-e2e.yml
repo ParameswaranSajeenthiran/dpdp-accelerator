@@ -21,13 +21,14 @@
 #
 # A failure here means master has moved in a way that will matter later, not that the
 # accelerator is broken. Forward-looking work, not a release blocker.
-name: '[Weekly] Test against product-is master'
+name: '[Weekly] Test against IS built from master'
 
 on:
   schedule:
-    # Mondays 02:00 UTC - off-hours in IST and PST, so it does not compete with PR E2E
-    # for concurrent runners.
-    - cron: '0 2 * * 1'
+    # Saturday, off-hours in IST and PST so it does not compete with PR E2E for runners.
+    # Paired with the U2 job the same morning to give one weekly compatibility checkpoint;
+    # first of the two, since its 2.19GB Maven entry should evict before the pack.
+    - cron: '7 2 * * 6'
   workflow_dispatch:
 
 # A queued duplicate would just re-test the same commit, so the later run wins.
