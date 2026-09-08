@@ -33,7 +33,7 @@ import { uniqueMarker } from '../../utils/testData'
  * concurrent replies) - not repeated here since they have no UI of their own to exercise.
  */
 test.describe('Real-world complaint scenarios (UI)', () => {
-  test('05.09.02 - A citizen replying to a Resolved complaint posts the message but does not reopen it', async ({
+  test('05.09.02 - A citizen replying to a Resolved complaint posts the message and reopen it', async ({
     browser,
   }) => {
     // ComplaintDetailPage.tsx's onSend only attaches a toStatus when the complaint is currently
@@ -92,7 +92,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     const reopenMessage = `This is still happening, please look again: ${uniqueMarker('reopen-message')}`
     await detailPage.sendReply(reopenMessage)
     await expect(dataPrincipalPage.getByText(reopenMessage)).toBeVisible()
-    await expect(detailPage.chipWithLabel('Resolved')).toBeVisible()
+    await expect(detailPage.chipWithLabel('Waiting on Internal Review')).toBeVisible()
 
     // Still hidden from the officer's default queue view - the reply above left it RESOLVED.
     await queuePage.goto()
