@@ -31,7 +31,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: weekly-is-pack-refresh
+  group: weekly-e2e-is-latest-u2
   cancel-in-progress: true
 
 permissions:

@@ -47,7 +47,7 @@ secrets in scope. `pr-e2e-gate.yml` strips that label on every new push and publ
 
 The Identity Server under test comes from the `updates2.0` S3 bucket (`IS_PACK_S3_URI`) with U2
 updates applied. The published GitHub release zip is *not* U2-updatable — don't reintroduce that
-path. `e2e.yml` still accepts `is_source: master`, which `weekly-is-master-e2e.yml` runs on a
+path. `e2e.yml` still accepts `is_source: master`, which `weekly-e2e-is-master.yml` runs on a
 schedule so upstream breakage surfaces before the next IS upgrade rather than during it. The
 updated pack is cached, and **only `workflow_dispatch` / `schedule` / `push` runs may write that
 cache** — never the labelled-PR path, or a PR could poison the pack for every later run,

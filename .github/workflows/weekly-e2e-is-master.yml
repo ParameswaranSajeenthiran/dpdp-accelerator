@@ -32,7 +32,7 @@ on:
 
 # A queued duplicate would just re-test the same commit, so the later run wins.
 concurrency:
-  group: weekly-is-master-e2e
+  group: weekly-e2e-is-master
   cancel-in-progress: true
 
 permissions:
