@@ -26,8 +26,7 @@ name: '[Weekly] Test against IS built from master'
 on:
   schedule:
     # Saturday, off-hours in IST and PST so it does not compete with PR E2E for runners.
-    # Paired with the U2 job the same morning to give one weekly compatibility checkpoint;
-    # first of the two, since its 2.19GB Maven entry should evict before the pack.
+    # Same slot as the U2 job, so the two together read as one weekly checkpoint.
     - cron: '7 2 * * 6'
   workflow_dispatch:
 

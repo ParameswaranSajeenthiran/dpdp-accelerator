@@ -25,10 +25,9 @@ name: '[Weekly] Test against latest U2 updated IS and cache the pack'
 
 on:
   schedule:
-    # Saturday, after the Thu/Fri publish, so Monday's PRs get the new updates. Runs after
-    # the master job rather than alongside it: whichever finishes last is the most recently
-    # used cache entry and so the last to be evicted, and the pack is the one PR runs need.
-    - cron: '7 4 * * 6'
+    # Saturday, after the Thu/Fri publish, so Monday's PRs get the new updates. Same slot as
+    # the master job, so the two together read as one weekly checkpoint.
+    - cron: '7 2 * * 6'
   workflow_dispatch:
 
 concurrency:

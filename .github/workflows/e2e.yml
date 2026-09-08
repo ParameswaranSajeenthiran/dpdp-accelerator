@@ -205,17 +205,12 @@ jobs:
           # catch a truncated transfer here, not later as a mystery startup error.
           unzip -tq ~/is-pack/wso2is.zip
 
-      # Only relevant for the master build, which is now the weekly compatibility run and a
-      # manual override; harmless dead weight on the default S3 path.
-      - name: Cache Maven repo for the product-is build
-        if: env.IS_SOURCE == 'master'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.m2/repository
-          key: product-is-master-m2-${{ github.run_id }}
-          restore-keys: |
-            product-is-master-m2-
-
+      # No Maven cache for this build on purpose. It ran on every labelled PR once, where a
+      # warm ~/.m2 cut the build from ~25 minutes to ~3; now only the weekly job takes this
+      # path, and entries expire after 7 days unread, so a weekly cadence sits exactly on
+      # that boundary and would miss about as often as it hit. Keeping it meant writing a
+      # 2.19GB entry weekly against a 10GB budget - crowding out the pack entry that PR runs
+      # actually restore, to speed up a scheduled job nobody waits for.
       - name: Build IS from product-is master
         if: env.IS_SOURCE == 'master'
         run: |
