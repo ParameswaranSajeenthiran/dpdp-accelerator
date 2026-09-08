@@ -338,9 +338,8 @@ jobs:
           echo "Update-tool state:"
           find "${IS_HOME}" -maxdepth 3 -iname '*update*' -printf '%y %10s %p\n' 2>/dev/null | head -30
 
-      # Interlock: if the updater persisted the subscription credential under IS_HOME,
-      # caching it would hand that credential to every run that can restore the entry.
-      # Refuse to save rather than leak it quietly. grep -l prints paths only.
+      # Interlock: a cached entry is restorable by every later run, so refuse to save one
+      # carrying a U2 credential rather than leak it quietly. Prints paths, never contents.
       - name: Package the updated pack for the cache
         id: packpack
         if: >-
@@ -349,18 +348,22 @@ jobs:
            github.event_name == 'push')
         env:
           WSO2_USERNAME: ${{ secrets.SOLUTIONS_BOT_EMAIL }}
+          WSO2_PASSWORD: ${{ secrets.SOLUTIONS_BOT_U2_PASSWORD }}
         run: |
-          if [ -n "${WSO2_USERNAME}" ]; then
-            hits=$(grep -rlF "${WSO2_USERNAME}" "${IS_HOME}" 2>/dev/null || true)
+          # Prune first so the check below sees exactly what gets archived. updates/logs is
+          # the updater's own log, which records the account it authenticated as - per-run
+          # noise, and what tripped this check on its first run.
+          rm -rf "${IS_HOME}/repository/logs"/* "${IS_HOME}/updates/logs"/*
+          for secret in "${WSO2_USERNAME}" "${WSO2_PASSWORD}"; do
+            [ -n "${secret}" ] || continue
+            hits=$(grep -rlF -e "${secret}" "${IS_HOME}" 2>/dev/null || true)
             if [ -n "${hits}" ]; then
-              echo "::error::The U2 username appears in the files below, so this pack will" \
-                   "not be cached. Exclude them from the tarball, then re-run:"
+              echo "::error::A U2 credential appears in the files below, so this pack will" \
+                   "not be cached. Exclude them, then re-run:"
               echo "${hits}" | head -20
               exit 1
             fi
-          fi
-          # Logs are per-run noise and would only inflate the entry.
-          rm -rf "${IS_HOME}/repository/logs"/*
+          done
           # --zstd, not `-I zstd`: -I means --include on bsdtar, --use-compress-program on
           # GNU tar. The long option means the same thing in both.
           tar --zstd -cf ~/is-pack/updated.tar.zst \
