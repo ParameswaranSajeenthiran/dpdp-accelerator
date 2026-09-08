@@ -21,7 +21,7 @@
 # Running the whole suite rather than just rebuilding the pack is the point: if a new update
 # breaks the accelerator, this says so on Saturday instead of a random Monday PR going red
 # for reasons unrelated to its diff. A failure here is about the update, not the PR queue.
-name: Weekly IS pack refresh
+name: '[Weekly] Update the cached IS pack'
 
 on:
   schedule:

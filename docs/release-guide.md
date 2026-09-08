@@ -72,7 +72,7 @@ pack cache and skip the download and update entirely. Check a recent run's step 
 rather than trusting a number here.
 
 `product-is` master is still exercised, but on a schedule — see
-`.github/workflows/weekly-master-e2e.yml`.
+`.github/workflows/weekly-is-master-e2e.yml`.
 
 ### 5. Nothing — the version bump is automatic
 

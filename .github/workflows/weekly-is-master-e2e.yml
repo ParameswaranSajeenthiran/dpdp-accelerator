@@ -21,7 +21,7 @@
 #
 # A failure here means master has moved in a way that will matter later, not that the
 # accelerator is broken. Forward-looking work, not a release blocker.
-name: Weekly master compatibility E2E
+name: '[Weekly] Test against product-is master'
 
 on:
   schedule:
@@ -32,7 +32,7 @@ on:
 
 # A queued duplicate would just re-test the same commit, so the later run wins.
 concurrency:
-  group: weekly-master-e2e
+  group: weekly-is-master-e2e
   cancel-in-progress: true
 
 permissions:
