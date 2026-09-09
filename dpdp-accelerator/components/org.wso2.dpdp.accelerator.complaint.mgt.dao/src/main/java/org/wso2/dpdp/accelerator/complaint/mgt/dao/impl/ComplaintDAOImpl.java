@@ -51,7 +51,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
     }
 
     @Override
-    public boolean addComplaint(Connection conn, Complaint complaint) throws SQLException {
+    public boolean addComplaint(Connection conn, Complaint complaint) {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintQuery())) {
             ps.setString(1, complaint.getComplaintId());
             ps.setString(2, complaint.getOrgId());
@@ -119,7 +119,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus,
-            long updatedTime) throws SQLException {
+            long updatedTime) {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateComplaintStatusQuery())) {
             ps.setString(1, newStatus);
             ps.setLong(2, updatedTime);
