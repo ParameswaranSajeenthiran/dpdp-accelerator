@@ -34,7 +34,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServic
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.AttachmentPolicy;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,29 +62,18 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
         long now = System.currentTimeMillis();
 
-        // The upload event and every attachment it anchors must land together - see
-        // DatabaseUtils#commitTransaction/rollbackTransaction - otherwise a failure partway
-        // through a multi-file upload could leave some attachments stored against an event that
-        // was never actually committed, or vice versa.
-        List<ComplaintAttachment> stored = new ArrayList<>();
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
+        // The upload event and every attachment it anchors must land together in one transaction -
+        // otherwise a failure partway through a multi-file upload could leave some attachments
+        // stored against an event that was never actually committed, or vice versa.
+        List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
             String complaintEventId = recordUploadEvent(conn, orgId, complaintId, isPublic, actorUserId,
                     actorUserName, actorRole, now);
+            List<ComplaintAttachment> attachments = new ArrayList<>();
             for (UploadedFile file : files) {
-                stored.add(store(conn, orgId, complaintId, complaintEventId, file, isPublic, now));
+                attachments.add(store(conn, orgId, complaintId, complaintEventId, file, isPublic, now));
             }
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    ComplaintServiceConstants.ATTACHMENT_STORE_FAILED_ERROR, e);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
+            return attachments;
+        });
 
         List<ComplaintAttachmentResponseDTO> result = new ArrayList<>();
         for (ComplaintAttachment attachment : stored) {
@@ -124,7 +112,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     private String recordUploadEvent(Connection conn, String orgId, String complaintId, boolean isPublic,
-            String actorUserId, String actorUserName, String actorRole, long now) throws SQLException {
+            String actorUserId, String actorUserName, String actorRole, long now) {
         String complaintEventId = UUID.randomUUID().toString();
         // No comment text - this event exists purely to anchor the uploaded attachments on the
         // timeline; the attachments themselves (via ComplaintAttachment#complaintEventId) are what
@@ -142,8 +130,10 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
     @Override
     public List<ComplaintAttachmentResponseDTO> listAttachmentsForComplaint(String orgId, String complaintId) {
+        List<ComplaintAttachment> attachments = DatabaseUtils.executeInTransaction(
+                conn -> attachmentDAO.listAttachmentsForComplaint(conn, orgId, complaintId));
         List<ComplaintAttachmentResponseDTO> beans = new ArrayList<>();
-        for (ComplaintAttachment attachment : attachmentDAO.listAttachmentsForComplaint(orgId, complaintId)) {
+        for (ComplaintAttachment attachment : attachments) {
             beans.add(ComplaintAttachmentResponseDTO.from(attachment));
         }
         return beans;
@@ -152,8 +142,8 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     @Override
     public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
             String attachmentId, boolean restrictToPublicOnly) {
-        Optional<ComplaintAttachment> attachmentOpt =
-                attachmentDAO.getAttachmentWithDataById(attachmentId, orgId, complaintId);
+        Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(
+                conn -> attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId));
         if (attachmentOpt.isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.ATTACHMENT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.ATTACHMENT_NOT_FOUND_ERROR, attachmentId));
@@ -199,7 +189,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     private ComplaintAttachment store(Connection conn, String orgId, String complaintId, String complaintEventId,
-            UploadedFile file, boolean isPublic, long now) throws SQLException {
+            UploadedFile file, boolean isPublic, long now) {
         String attachmentId = UUID.randomUUID().toString();
         ComplaintAttachment attachment = new ComplaintAttachment(attachmentId, orgId, complaintId,
                 file.getFileName(), file.getContentType(), file.getData(), isPublic, now);
