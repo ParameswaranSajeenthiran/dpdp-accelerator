@@ -49,6 +49,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -124,7 +125,8 @@ class ComplaintEventServiceImplTest {
         ComplaintEvent statusChange = new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "USER", true,
                 "note", "OPEN", "IN_PROGRESS", 100L);
         int[] totalOut = new int[1];
-        when(complaintEventDAO.listEvents("org1", "c1", null, null, null, "asc", 10, 0, totalOut))
+        when(complaintEventDAO.listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), isNull(), isNull(),
+                eq("asc"), eq(10), eq(0), eq(totalOut)))
                 .thenReturn(List.of(statusChange));
 
         List<ComplaintEvent> entries =
@@ -140,24 +142,28 @@ class ComplaintEventServiceImplTest {
     void getTimelinePassesIsPublicFilterToDao() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         int[] totalOut = new int[1];
-        when(complaintEventDAO.listEvents("org1", "c1", null, null, false, "asc", 10, 0, totalOut))
+        when(complaintEventDAO.listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), isNull(), eq(false),
+                eq("asc"), eq(10), eq(0), eq(totalOut)))
                 .thenReturn(List.of());
 
         eventService.getTimeline("org1", "c1", null, null, false, "asc", 10, 0, totalOut);
 
-        verify(complaintEventDAO).listEvents("org1", "c1", null, null, false, "asc", 10, 0, totalOut);
+        verify(complaintEventDAO).listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), isNull(),
+                eq(false), eq("asc"), eq(10), eq(0), eq(totalOut));
     }
 
     @Test
     void getTimelinePassesUntilFilterToDao() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         int[] totalOut = new int[1];
-        when(complaintEventDAO.listEvents("org1", "c1", null, 500L, null, "asc", 10, 0, totalOut))
+        when(complaintEventDAO.listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), eq(500L), isNull(),
+                eq("asc"), eq(10), eq(0), eq(totalOut)))
                 .thenReturn(List.of());
 
         eventService.getTimeline("org1", "c1", null, 500L, null, "asc", 10, 0, totalOut);
 
-        verify(complaintEventDAO).listEvents("org1", "c1", null, 500L, null, "asc", 10, 0, totalOut);
+        verify(complaintEventDAO).listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), eq(500L),
+                isNull(), eq("asc"), eq(10), eq(0), eq(totalOut));
     }
 
     // ---- addComment ----
@@ -184,10 +190,10 @@ class ComplaintEventServiceImplTest {
     }
 
     @Test
-    void addCommentAllowsMessageAtExactlyMaxLength() {
+    void addCommentAllowsMessageAtExactlyMaxLength() throws Exception {
         Complaint complaint = openComplaint();
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(complaint);
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
         ComplaintCommentCreateResponseDTO event =
@@ -231,9 +237,9 @@ class ComplaintEventServiceImplTest {
     }
 
     @Test
-    void addCommentAllowsComplaintOfficerToSetIsPublicFalse() {
+    void addCommentAllowsComplaintOfficerToSetIsPublicFalse() throws Exception {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(true);
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
         ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "internal note", false, null);
@@ -246,7 +252,7 @@ class ComplaintEventServiceImplTest {
     }
 
     @Test
-    void addCommentThrowsOnInvalidStatusTransition() {
+    void addCommentThrowsOnInvalidStatusTransition() throws Exception {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
 
         ComplaintException ex = expectThrows(ComplaintException.class,
@@ -255,7 +261,7 @@ class ComplaintEventServiceImplTest {
 
         assertEquals("CO-4090", ex.getCode());
         assertEquals(409, ex.getStatusCode());
-        verify(complaintEventDAO, never()).addEvent(any());
+        verify(complaintEventDAO, never()).addEvent(any(), any());
     }
 
     @Test
@@ -295,9 +301,9 @@ class ComplaintEventServiceImplTest {
     }
 
     @Test
-    void addCommentThrowsInternalErrorWhenAddEventFails() {
+    void addCommentThrowsInternalErrorWhenAddEventFails() throws Exception {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
-        when(complaintEventDAO.addEvent(any(ComplaintEvent.class))).thenReturn(false);
+        when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(false);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", "hello", true, null));
@@ -311,7 +317,8 @@ class ComplaintEventServiceImplTest {
     @Test
     void getTimelineEntryThrows404WhenEventNotFound() {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
-        when(complaintEventDAO.getEventById("e1", "org1", "c1")).thenReturn(Optional.empty());
+        when(complaintEventDAO.getEventById(any(Connection.class), eq("e1"), eq("org1"), eq("c1")))
+                .thenReturn(Optional.empty());
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.getTimelineEntry("org1", "c1", "e1"));
@@ -324,7 +331,8 @@ class ComplaintEventServiceImplTest {
         when(complaintService.requireComplaint("org1", "c1")).thenReturn(openComplaint());
         ComplaintEvent event =
                 new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "USER", true, "hi", null, null, 100L);
-        when(complaintEventDAO.getEventById("e1", "org1", "c1")).thenReturn(Optional.of(event));
+        when(complaintEventDAO.getEventById(any(Connection.class), eq("e1"), eq("org1"), eq("c1")))
+                .thenReturn(Optional.of(event));
 
         ComplaintEvent result = eventService.getTimelineEntry("org1", "c1", "e1");
 

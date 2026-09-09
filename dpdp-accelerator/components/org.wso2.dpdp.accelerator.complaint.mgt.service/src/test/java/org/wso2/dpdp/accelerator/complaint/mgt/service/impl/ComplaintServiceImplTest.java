@@ -54,6 +54,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -158,9 +159,9 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void createComplaintPersistsWithDerivedPriorityAndOpenStatus() {
-        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
-        when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(true);
+    void createComplaintPersistsWithDerivedPriorityAndOpenStatus() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
 
         ComplaintCreateResponseDTO complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
@@ -171,7 +172,7 @@ class ComplaintServiceImplTest {
         assertEquals("user1", complaint.getUserId());
 
         ArgumentCaptor<Complaint> captor = ArgumentCaptor.forClass(Complaint.class);
-        verify(complaintDAO).addComplaint(captor.capture());
+        verify(complaintDAO).addComplaint(any(Connection.class), captor.capture());
         assertEquals("org1", captor.getValue().getOrgId());
         assertEquals("OPEN", captor.getValue().getStatus());
         assertEquals("User One", captor.getValue().getUserName());
@@ -180,9 +181,9 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void createComplaintThrowsInternalErrorWhenPersistFails() {
-        when(complaintDAO.countByReferenceIdPrefix(anyString(), anyString())).thenReturn(0);
-        when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(false);
+    void createComplaintThrowsInternalErrorWhenPersistFails() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), anyString(), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(false);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc"));
@@ -193,9 +194,9 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void createComplaintRetriesWithAFreshReferenceIdOnCollisionAndSucceeds() {
-        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
-        when(complaintDAO.addComplaint(any(Complaint.class)))
+    void createComplaintRetriesWithAFreshReferenceIdOnCollisionAndSucceeds() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class)))
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
                 .thenReturn(true);
 
@@ -203,13 +204,13 @@ class ComplaintServiceImplTest {
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
         assertEquals("OPEN", complaint.getStatus());
-        verify(complaintDAO, times(2)).addComplaint(any(Complaint.class));
+        verify(complaintDAO, times(2)).addComplaint(any(Connection.class), any(Complaint.class));
     }
 
     @Test
-    void createComplaintGivesUpAfterExhaustingReferenceIdRetries() {
-        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
-        when(complaintDAO.addComplaint(any(Complaint.class)))
+    void createComplaintGivesUpAfterExhaustingReferenceIdRetries() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class)))
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
@@ -217,12 +218,12 @@ class ComplaintServiceImplTest {
 
         assertEquals("CO-5000", ex.getCode());
         assertTrue(ex.getCause() instanceof DuplicateReferenceIdException);
-        verify(complaintDAO, times(3)).addComplaint(any(Complaint.class));
+        verify(complaintDAO, times(3)).addComplaint(any(Connection.class), any(Complaint.class));
     }
 
     @Test
     void createComplaintForOfficerIntakeRecordsAuditEventAtomically() throws Exception {
-        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
@@ -253,8 +254,8 @@ class ComplaintServiceImplTest {
 
     @Test
     void createComplaintWithoutActorNeverTouchesComplaintEventDao() throws Exception {
-        when(complaintDAO.countByReferenceIdPrefix(eq("org1"), anyString())).thenReturn(0);
-        when(complaintDAO.addComplaint(any(Complaint.class))).thenReturn(true);
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
 
         complaintService.createComplaint("org1", "user1", null, "DATA_BREACH", "desc");
 
@@ -271,12 +272,12 @@ class ComplaintServiceImplTest {
         assertEquals("CO-4040", ex1.getCode());
         assertEquals(404, ex1.getStatusCode());
         assertEquals("CO-4040", ex2.getCode());
-        verify(complaintDAO, never()).getComplaintById(anyString(), anyString());
+        verify(complaintDAO, never()).getComplaintById(any(Connection.class), anyString(), anyString());
     }
 
     @Test
     void requireComplaintThrows404WhenDaoReturnsEmpty() {
-        when(complaintDAO.getComplaintById("c1", "org1")).thenReturn(Optional.empty());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1"))).thenReturn(Optional.empty());
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> complaintService.requireComplaint("org1", "c1"));
@@ -288,7 +289,8 @@ class ComplaintServiceImplTest {
     void requireComplaintReturnsDtoWhenFound() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
-        when(complaintDAO.getComplaintById("c1", "org1")).thenReturn(Optional.of(complaint));
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(complaint));
 
         Complaint result = complaintService.requireComplaint("org1", "c1");
 
@@ -300,7 +302,8 @@ class ComplaintServiceImplTest {
     void getComplaintDelegatesToRequireComplaint() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
-        when(complaintDAO.getComplaintById("c1", "org1")).thenReturn(Optional.of(complaint));
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(complaint));
 
         Complaint result = complaintService.getComplaint("org1", "c1");
 
@@ -314,7 +317,8 @@ class ComplaintServiceImplTest {
         Complaint c2 = new Complaint("c2", "org1", "user1", "User One", "CMP-2026-00002", "OTHER", "LOW", "OPEN",
                 "desc2", 4L, 5L, 6L);
         int[] totalOut = new int[1];
-        when(complaintDAO.listComplaints("org1", "OPEN", null, "user1", 10, 0, "-updatedTime", totalOut))
+        when(complaintDAO.listComplaints(any(Connection.class), eq("org1"), eq("OPEN"), isNull(), eq("user1"), eq(10),
+                        eq(0), eq("-updatedTime"), eq(totalOut)))
                 .thenReturn(List.of(c1, c2));
 
         List<Complaint> results =
@@ -328,15 +332,16 @@ class ComplaintServiceImplTest {
     @Test
     void listComplaintsReturnsEmptyListWhenDaoReturnsNothing() {
         int[] totalOut = new int[1];
-        when(complaintDAO.listComplaints(anyString(), any(), any(), any(), anyInt(), anyInt(), any(), eq(totalOut)))
+        when(complaintDAO.listComplaints(any(Connection.class), anyString(), any(), any(), any(), anyInt(), anyInt(),
+                any(), eq(totalOut)))
                 .thenReturn(List.of());
 
         List<Complaint> results =
                 complaintService.listComplaints("org1", null, null, null, 10, 0, null, totalOut);
 
         assertTrue(results.isEmpty());
-        verify(complaintDAO, times(1)).listComplaints(anyString(), any(), any(), any(), anyInt(), anyInt(), any(),
-                eq(totalOut));
+        verify(complaintDAO, times(1)).listComplaints(any(Connection.class), anyString(), any(), any(), any(),
+                anyInt(), anyInt(), any(), eq(totalOut));
     }
 
     @Test
@@ -364,7 +369,7 @@ class ComplaintServiceImplTest {
     @Test
     void getQueueStatsDelegatesToDao() {
         ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
-        when(complaintDAO.getQueueStats(eq("org1"), anyLong())).thenReturn(stats);
+        when(complaintDAO.getQueueStats(any(Connection.class), eq("org1"), anyLong())).thenReturn(stats);
 
         ComplaintQueueStatsResponseDTO result = complaintService.getQueueStats("org1");
 
@@ -372,6 +377,6 @@ class ComplaintServiceImplTest {
         assertEquals(stats.getAwaitingInternalReviewCount(), result.getAwaitingInternalReviewCount());
         assertEquals(stats.getResolvedCount(), result.getResolvedCount());
         assertEquals(stats.getSlaBreachedCount(), result.getSlaBreachedCount());
-        verify(complaintDAO).getQueueStats(eq("org1"), anyLong());
+        verify(complaintDAO).getQueueStats(any(Connection.class), eq("org1"), anyLong());
     }
 }

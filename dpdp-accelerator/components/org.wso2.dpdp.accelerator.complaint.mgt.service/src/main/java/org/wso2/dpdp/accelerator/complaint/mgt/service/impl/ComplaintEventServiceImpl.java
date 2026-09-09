@@ -63,8 +63,18 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     public List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since, Long until,
             Boolean isPublic, String order, int limit, int offset, int[] totalOut) {
         complaintService.requireComplaint(orgId, complaintId);
-        return complaintEventDAO.listEvents(orgId, complaintId, since, until, isPublic, order, limit, offset,
-                totalOut);
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            List<ComplaintEvent> events = complaintEventDAO.listEvents(conn, orgId, complaintId, since, until,
+                    isPublic, order, limit, offset, totalOut);
+            DatabaseUtils.commitTransaction(conn);
+            return events;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 
     @Override
@@ -141,10 +151,22 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                 DatabaseUtils.closeConnection(conn);
             }
         } else {
-            boolean added = complaintEventDAO.addEvent(event);
-            if (!added) {
+            Connection conn = DatabaseUtils.getDBConnection();
+            try {
+                if (!complaintEventDAO.addEvent(conn, event)) {
+                    throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                            ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+                }
+                DatabaseUtils.commitTransaction(conn);
+            } catch (RuntimeException e) {
+                DatabaseUtils.rollbackTransaction(conn);
+                throw e;
+            } catch (SQLException e) {
+                DatabaseUtils.rollbackTransaction(conn);
                 throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                        ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
+                        ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR, e);
+            } finally {
+                DatabaseUtils.closeConnection(conn);
             }
         }
 
@@ -165,7 +187,17 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     @Override
     public ComplaintEvent getTimelineEntry(String orgId, String complaintId, String complaintEventId) {
         complaintService.requireComplaint(orgId, complaintId);
-        Optional<ComplaintEvent> eventOpt = complaintEventDAO.getEventById(complaintEventId, orgId, complaintId);
+        Optional<ComplaintEvent> eventOpt;
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            eventOpt = complaintEventDAO.getEventById(conn, complaintEventId, orgId, complaintId);
+            DatabaseUtils.commitTransaction(conn);
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
         if (eventOpt.isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.COMMENT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.TIMELINE_ENTRY_NOT_FOUND_ERROR, complaintEventId));
