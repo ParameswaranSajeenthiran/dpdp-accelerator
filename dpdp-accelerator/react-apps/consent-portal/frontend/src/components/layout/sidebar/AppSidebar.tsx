@@ -68,7 +68,7 @@ const CONSENT_ITEMS: SidebarItem[] = [
   {
     id: 'pending-consents',
     labelKey: 'sidebar.pendingConsents',
-    path: '/consents?state=PENDING',
+    path: '/consents?view=pending&state=PENDING',
     icon: <Clock3 size={18} />,
     requiredScope: REQUIRED_SCOPES.CONSENTS_READ_SELF,
   },
@@ -152,9 +152,7 @@ function mapPathToMenuId(pathname: string, search: string): string {
   }
 
   if (pathname.startsWith('/consents')) {
-    const state = new URLSearchParams(search).get('state')
-
-    if (state === 'PENDING') {
+    if (new URLSearchParams(search).get('view') === 'pending') {
       return 'pending-consents'
     }
 
