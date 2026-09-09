@@ -26,7 +26,8 @@ import java.util.Optional;
 
 /**
  * Every method takes the {@link Connection} as its first parameter - see {@link ComplaintDAO} for
- * why this DAO never opens its own connection or declares a checked {@link java.sql.SQLException}.
+ * why this DAO never opens or manages its own connection, and why nothing here declares a checked
+ * {@link java.sql.SQLException}.
  */
 public interface ComplaintAttachmentDAO {
 

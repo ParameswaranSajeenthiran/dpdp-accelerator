@@ -18,24 +18,19 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.h2.jdbcx.JdbcDataSource;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import static org.testng.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,29 +39,9 @@ class ReferenceIdGeneratorTest {
     @Mock
     private ComplaintDAO complaintDAO;
 
-    /**
-     * generate() owns the count's transaction now, so it opens a real connection - the mocked DAO
-     * never does any I/O with it, but one has to be obtainable.
-     */
-    @BeforeClass
-    static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
-        JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:reference_id_generator_test;DB_CLOSE_DELAY=-1");
-        dataSource.setUser("sa");
-        dataSource.setPassword("");
-        setManagerDataSource(dataSource);
-    }
-
-    @AfterClass
-    static void clearPersistenceManagerDataSource() throws Exception {
-        setManagerDataSource(null);
-    }
-
-    private static void setManagerDataSource(Object dataSource) throws Exception {
-        Field field = JDBCPersistenceManager.class.getDeclaredField("dataSource");
-        field.setAccessible(true);
-        field.set(null, dataSource);
-    }
+    // generate() takes the caller's own Connection now rather than opening one - a plain mock is
+    // enough since complaintDAO is mocked too and never does any real I/O with it.
+    private final Connection conn = mock(Connection.class);
 
     @BeforeMethod
     void setUp() {
@@ -76,9 +51,10 @@ class ReferenceIdGeneratorTest {
     @Test
     void generatesFirstReferenceIdOfTheYearWhenNoneExistYet() {
         long createdTime = ZonedDateTime.of(2026, 3, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant().toEpochMilli();
-        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), any())).thenReturn(0);
+        when(complaintDAO.countByReferenceIdPrefix(eq(conn), eq("org1"), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(0);
 
-        String referenceId = ReferenceIdGenerator.generate(complaintDAO, "org1", createdTime);
+        String referenceId = ReferenceIdGenerator.generate(conn, complaintDAO, "org1", createdTime);
 
         assertEquals("CMP-2026-00001", referenceId);
     }
@@ -86,9 +62,10 @@ class ReferenceIdGeneratorTest {
     @Test
     void incrementsSequenceBasedOnExistingCountForTheYear() {
         long createdTime = ZonedDateTime.of(2026, 3, 1, 0, 0, 0, 0, ZoneOffset.UTC).toInstant().toEpochMilli();
-        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), any())).thenReturn(4820);
+        when(complaintDAO.countByReferenceIdPrefix(eq(conn), eq("org1"), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(4820);
 
-        String referenceId = ReferenceIdGenerator.generate(complaintDAO, "org1", createdTime);
+        String referenceId = ReferenceIdGenerator.generate(conn, complaintDAO, "org1", createdTime);
 
         assertEquals("CMP-2026-04821", referenceId);
     }
@@ -96,10 +73,11 @@ class ReferenceIdGeneratorTest {
     @Test
     void queriesUsingTheYearPrefixDerivedFromCreatedTime() {
         long createdTime = ZonedDateTime.of(2025, 12, 31, 23, 59, 59, 0, ZoneOffset.UTC).toInstant().toEpochMilli();
-        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), any())).thenReturn(0);
+        when(complaintDAO.countByReferenceIdPrefix(eq(conn), eq("org1"), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(0);
 
-        ReferenceIdGenerator.generate(complaintDAO, "org1", createdTime);
+        ReferenceIdGenerator.generate(conn, complaintDAO, "org1", createdTime);
 
-        verify(complaintDAO).countByReferenceIdPrefix(any(Connection.class), eq("org1"), eq("CMP-2025-%"));
+        verify(complaintDAO).countByReferenceIdPrefix(eq(conn), eq("org1"), eq("CMP-2025-%"));
     }
 }
