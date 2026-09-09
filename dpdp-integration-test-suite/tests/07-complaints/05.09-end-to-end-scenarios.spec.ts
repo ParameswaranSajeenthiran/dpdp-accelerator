@@ -94,10 +94,9 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     await expect(dataPrincipalPage.getByText(reopenMessage)).toBeVisible()
     await expect(detailPage.chipWithLabel('Waiting on Internal Review')).toBeVisible()
 
-    // Still hidden from the officer's default queue view - the reply above left it RESOLVED.
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
-    await expect(queuePage.rowByReferenceId(referenceId)).not.toBeVisible()
+    await expect(queuePage.rowByReferenceId(referenceId)).toBeVisible()
 
     await dataPrincipalPage.context().close()
     await officerPage.context().close()
