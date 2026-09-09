@@ -126,7 +126,7 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void uploadComplaintAttachmentsRequiresComplaintToExist() throws Exception {
-        when(complaintService.requireComplaint("org1", "c1")).thenThrow(
+        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenThrow(
                 new ComplaintException("CO-4040", "Complaint not found", "desc", 404));
 
         expectThrows(ComplaintException.class, () -> attachmentService.uploadComplaintAttachments("org1", "c1",
