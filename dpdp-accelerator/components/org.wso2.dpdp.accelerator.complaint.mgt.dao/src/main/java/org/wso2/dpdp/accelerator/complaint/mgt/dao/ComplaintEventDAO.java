@@ -16,24 +16,25 @@
  * under the License.
  */
 
+
 package org.wso2.dpdp.accelerator.complaint.mgt.dao;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Every method takes the {@link Connection} as its first parameter - this DAO never opens or
  * manages its own connection, the service layer owns the transaction. See {@link ComplaintDAO}
- * for why that applies to the read methods too, and for why nothing here declares a checked
- * {@link java.sql.SQLException}.
+ * for why that applies to the read methods too.
  */
 public interface ComplaintEventDAO {
 
     /** Persists a new timeline entry (status change, comment, or internal note). Returns true if a row was inserted. */
-    boolean addEvent(Connection conn, ComplaintEvent event);
+    boolean addEvent(Connection conn, ComplaintEvent event) throws SQLException;
 
     /**
      * Fetches a single timeline entry scoped to its complaint and org.

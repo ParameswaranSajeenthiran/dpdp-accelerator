@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOExcepti
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintCommonDBQueries;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryBuilder;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryResult;
@@ -45,9 +46,13 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     private static final Log LOG = LogFactory.getLog(ComplaintDAOImpl.class);
 
+    private ComplaintCommonDBQueries getQueries(Connection conn) {
+        return ComplaintQueryFactory.getQueryProvider(conn);
+    }
+
     @Override
-    public boolean addComplaint(Connection conn, Complaint complaint) {
-        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getAddComplaintQuery())) {
+    public boolean addComplaint(Connection conn, Complaint complaint) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintQuery())) {
             ps.setString(1, complaint.getComplaintId());
             ps.setString(2, complaint.getOrgId());
             ps.setString(3, complaint.getUserId());
@@ -61,13 +66,10 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(11, complaint.getUpdatedTime());
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
-        /*
-         * Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID
-         * collision (real bug) by checking the driver's error message text - the only portable
-         * way, since neither driver exposes the violated constraint as a structured field.
-         */
         } catch (SQLIntegrityConstraintViolationException e) {
 
+//            Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID collision (real bug) by checking the driver's error message text — the only portable way,
+//            since neither driver exposes the violated constraint as a structured field.
             if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
                     .contains("UQ_COMPLAINT_REFERENCE")) {
                 LOG.warn("Duplicate reference ID for org: " + complaint.getOrgId(), e);
@@ -83,7 +85,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public Optional<Complaint> getComplaintById(Connection conn, String complaintId, String orgId) {
-        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getGetComplaintByIdQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetComplaintByIdQuery())) {
             ps.setString(1, complaintId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -100,7 +102,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public int countByReferenceIdPrefix(Connection conn, String orgId, String referenceIdLikePattern) {
-        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountComplaintsForYearPrefixQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getCountComplaintsForYearPrefixQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, referenceIdLikePattern);
             try (ResultSet rs = ps.executeQuery()) {
@@ -117,8 +119,8 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus,
-            long updatedTime) {
-        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getUpdateComplaintStatusQuery())) {
+            long updatedTime) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateComplaintStatusQuery())) {
             ps.setString(1, newStatus);
             ps.setLong(2, updatedTime);
             ps.setString(3, complaintId);
@@ -136,7 +138,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         List<Complaint> complaints = new ArrayList<>();
 
         try {
-            ComplaintQueryBuilder builder = new ComplaintQueryBuilder(orgId, ComplaintQueryFactory.getQueryProvider(conn))
+            ComplaintQueryBuilder builder = new ComplaintQueryBuilder(orgId, getQueries(conn))
                     .setStatus(status)
                     .setPriority(priority)
                     .setUserId(userId)
@@ -186,7 +188,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
         try {
 
-            try (PreparedStatement statusPs = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountComplaintsByStatusQuery())) {
+            try (PreparedStatement statusPs = conn.prepareStatement(getQueries(conn).getCountComplaintsByStatusQuery())) {
                 statusPs.setString(1, orgId);
                 try (ResultSet statusRs = statusPs.executeQuery()) {
                     while (statusRs.next()) {
@@ -205,7 +207,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                 }
             }
 
-            try (PreparedStatement breachedPs = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountSlaBreachedComplaintsQuery())) {
+            try (PreparedStatement breachedPs = conn.prepareStatement(getQueries(conn).getCountSlaBreachedComplaintsQuery())) {
                 breachedPs.setString(1, orgId);
                 breachedPs.setLong(2, now);
                 try (ResultSet breachedRs = breachedPs.executeQuery()) {
