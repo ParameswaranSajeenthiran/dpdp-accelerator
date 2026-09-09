@@ -47,7 +47,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
     }
 
     @Override
-    public boolean addEvent(Connection conn, ComplaintEvent event) {
+    public boolean addEvent(Connection conn, ComplaintEvent event) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintEventQuery())) {
             ps.setString(1, event.getComplaintEventId());
             ps.setString(2, event.getOrgId());

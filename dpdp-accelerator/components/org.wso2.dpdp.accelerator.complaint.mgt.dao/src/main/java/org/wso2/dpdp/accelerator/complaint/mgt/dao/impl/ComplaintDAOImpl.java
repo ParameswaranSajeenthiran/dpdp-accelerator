@@ -51,7 +51,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
     }
 
     @Override
-    public boolean addComplaint(Connection conn, Complaint complaint) {
+    public boolean addComplaint(Connection conn, Complaint complaint) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintQuery())) {
             ps.setString(1, complaint.getComplaintId());
             ps.setString(2, complaint.getOrgId());
@@ -66,13 +66,10 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(11, complaint.getUpdatedTime());
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
-        /*
-         * Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID
-         * collision (real bug) by checking the driver's error message text - the only portable
-         * way, since neither driver exposes the violated constraint as a structured field.
-         */
         } catch (SQLIntegrityConstraintViolationException e) {
 
+//            Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID collision (real bug) by checking the driver's error message text — the only portable way,
+//            since neither driver exposes the violated constraint as a structured field.
             if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
                     .contains("UQ_COMPLAINT_REFERENCE")) {
                 LOG.warn("Duplicate reference ID for org: " + complaint.getOrgId(), e);
@@ -122,7 +119,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus,
-            long updatedTime) {
+            long updatedTime) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateComplaintStatusQuery())) {
             ps.setString(1, newStatus);
             ps.setLong(2, updatedTime);
