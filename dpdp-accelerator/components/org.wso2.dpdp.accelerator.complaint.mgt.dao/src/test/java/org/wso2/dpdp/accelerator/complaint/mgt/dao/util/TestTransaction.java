@@ -16,24 +16,44 @@
  * under the License.
  */
 
+
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.util;
 
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 
 import java.sql.Connection;
-import java.util.function.Function;
+import java.sql.SQLException;
 
 /**
  * Stands in for the service layer in DAO tests: the DAOs take a {@link Connection} and never open
- * one themselves, so something has to own the transaction. Thin wrapper over
- * {@link DatabaseUtils#executeInTransaction} - the real thing, not a test-only reimplementation.
+ * one themselves, so something has to own the transaction. Commits reads as well as writes, for
+ * the reason spelled out on {@code ComplaintDAO}.
  */
 public final class TestTransaction {
+
+    /** A DAO call. Separate from {@link java.util.function.Function} only to allow SQLException. */
+    public interface Work<T> {
+
+        T run(Connection conn) throws SQLException;
+    }
 
     private TestTransaction() {
     }
 
-    public static <T> T run(Function<Connection, T> work) {
-        return DatabaseUtils.executeInTransaction(work);
+    public static <T> T run(Work<T> work) {
+        Connection conn = DatabaseUtils.getDBConnection();
+        try {
+            T result = work.run(conn);
+            DatabaseUtils.commitTransaction(conn);
+            return result;
+        } catch (RuntimeException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw e;
+        } catch (SQLException e) {
+            DatabaseUtils.rollbackTransaction(conn);
+            throw new IllegalStateException("A DAO call failed in a test transaction.", e);
+        } finally {
+            DatabaseUtils.closeConnection(conn);
+        }
     }
 }

@@ -22,21 +22,14 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Every method takes the {@link Connection} as its first parameter and throws only the unchecked
- * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException} (never a
- * checked {@link java.sql.SQLException}) - reads and writes are handled identically, so a caller
- * composing several calls into one transaction (e.g. via
- * {@link org.wso2.dpdp.accelerator.common.util.DatabaseUtils#executeInTransaction}) never has to
- * special-case which of them declare a checked exception.
- */
 public interface ComplaintDAO {
 
     /** Persists a new complaint row. Returns true if a row was inserted. */
-    boolean addComplaint(Connection conn, Complaint complaint);
+    boolean addComplaint(Connection conn, Complaint complaint) throws SQLException;
 
     /** Fetches a single complaint scoped to its org. */
     Optional<Complaint> getComplaintById(Connection conn, String complaintId, String orgId);
@@ -49,7 +42,8 @@ public interface ComplaintDAO {
     int countByReferenceIdPrefix(Connection conn, String orgId, String referenceIdLikePattern);
 
     /** Updates STATUS and UPDATED_TIME for a complaint. Returns true if a row was updated. */
-    boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus, long updatedTime);
+    boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus, long updatedTime)
+            throws SQLException;
 
     /**
      * Lists complaints for an org with optional status/priority/userId filters, sorting, and

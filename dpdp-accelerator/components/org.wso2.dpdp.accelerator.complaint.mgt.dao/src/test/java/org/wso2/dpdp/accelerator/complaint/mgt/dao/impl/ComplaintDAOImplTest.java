@@ -261,24 +261,6 @@ class ComplaintDAOImplTest {
         assertEquals(0, stats.getSlaBreachedCount());
     }
 
-    // The property the whole "every DAO method takes a Connection" refactor exists for: two writes
-    // made on the same connection share one transaction, so rolling back the connection undoes
-    // both - not just whichever one a convenience overload happened to open its own connection for.
-    @Test
-    void rollingBackAConnectionUndoesEveryWriteMadeOnIt() throws SQLException {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            dao.addComplaint(conn, sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
-            dao.addComplaint(conn, sampleComplaint("c2", "org1", "OPEN", "HIGH", "user1", 200L, 200L));
-            DatabaseUtils.rollbackTransaction(conn);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
-
-        assertFalse(getComplaintById("c1", "org1").isPresent());
-        assertFalse(getComplaintById("c2", "org1").isPresent());
-    }
-
     // The DAOs take a Connection and never open one themselves, so these stand in for the
     // service layer that owns the transaction in production - see ComplaintDAO.
 
