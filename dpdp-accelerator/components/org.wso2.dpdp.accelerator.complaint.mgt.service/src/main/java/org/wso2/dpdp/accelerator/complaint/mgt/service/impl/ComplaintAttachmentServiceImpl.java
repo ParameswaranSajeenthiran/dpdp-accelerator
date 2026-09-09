@@ -56,16 +56,18 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName,
             String actorRole) {
-        complaintService.requireComplaint(orgId, complaintId);
         validateFiles(files);
         validateActor(actorUserId, actorRole);
 
         long now = System.currentTimeMillis();
 
-        // The upload event and every attachment it anchors must land together in one transaction -
-        // otherwise a failure partway through a multi-file upload could leave some attachments
-        // stored against an event that was never actually committed, or vice versa.
+        // The existence check, the upload event, and every attachment it anchors must all share
+        // one transaction - otherwise the complaint could change (or, if a delete path is ever
+        // added, disappear) between the check and the write, or a failure partway through a
+        // multi-file upload could leave some attachments stored against an event that was never
+        // actually committed.
         List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
+            complaintService.requireComplaint(conn, orgId, complaintId);
             String complaintEventId = recordUploadEvent(conn, orgId, complaintId, isPublic, actorUserId,
                     actorUserName, actorRole, now);
             List<ComplaintAttachment> attachments = new ArrayList<>();
