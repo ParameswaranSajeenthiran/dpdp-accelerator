@@ -18,7 +18,6 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
-import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 
 import java.sql.Connection;
@@ -35,24 +34,15 @@ public class ReferenceIdGenerator {
     private ReferenceIdGenerator() {
     }
 
-    public static String generate(ComplaintDAO complaintDAO, String orgId, long createdTimeMillis) {
+    /**
+     * Takes the caller's own {@link Connection} rather than opening one - the count and the
+     * complaint insert it feeds into must land in the same transaction, or a concurrent insert
+     * between the two could be counted twice (or not at all).
+     */
+    public static String generate(Connection conn, ComplaintDAO complaintDAO, String orgId, long createdTimeMillis) {
         int year = Instant.ofEpochMilli(createdTimeMillis).atZone(ZoneOffset.UTC).get(java.time.temporal.ChronoField.YEAR);
         String likePattern = PREFIX + "-" + year + "-%";
-        // The count owns its own short transaction - it runs before the insert's, and the DAO
-        // never opens a connection itself (see ComplaintDAO). Committing a read is not about
-        // saving anything: it is what ends the transaction the pooled connection would otherwise
-        // be handed back still holding.
-        Connection conn = DatabaseUtils.getDBConnection();
-        int existingCount;
-        try {
-            existingCount = complaintDAO.countByReferenceIdPrefix(conn, orgId, likePattern);
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
+        int existingCount = complaintDAO.countByReferenceIdPrefix(conn, orgId, likePattern);
         int nextSeq = existingCount + 1;
         return String.format("%s-%d-%05d", PREFIX, year, nextSeq);
     }

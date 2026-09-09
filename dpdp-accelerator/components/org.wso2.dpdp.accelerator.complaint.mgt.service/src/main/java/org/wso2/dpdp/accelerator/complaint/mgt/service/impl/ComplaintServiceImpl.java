@@ -41,7 +41,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatutoryDuePeriodPolicy;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -123,17 +122,24 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // A fresh reference ID is minted on every attempt (including retries) - see
         // DuplicateReferenceIdException - since retrying with the same one would just collide again.
+        // The count and the insert it feeds share one transaction (ReferenceIdGenerator takes this
+        // same conn) - otherwise a concurrent insert between the two could be counted twice, or
+        // not at all.
         DuplicateReferenceIdException lastCollision = null;
         for (int attempt = 1; attempt <= MAX_REFERENCE_ID_ATTEMPTS; attempt++) {
-            String referenceId = ReferenceIdGenerator.generate(complaintDAO, orgId, now);
-            Complaint complaint = new Complaint(complaintId, orgId, userId.trim(), trimmedUserName, referenceId,
-                    subjectCategory.trim(), priority, OPEN.name(), description.trim(), now, now, statutoryDueTime);
             try {
-                if (recordIntakeEvent) {
-                    persistWithIntakeEvent(complaint, actorUserId.trim(), actorRole, now);
-                } else {
-                    persistComplaint(complaint);
-                }
+                Complaint complaint = DatabaseUtils.executeInTransaction(conn -> {
+                    String referenceId = ReferenceIdGenerator.generate(conn, complaintDAO, orgId, now);
+                    Complaint c = new Complaint(complaintId, orgId, userId.trim(), trimmedUserName, referenceId,
+                            subjectCategory.trim(), priority, OPEN.name(), description.trim(), now, now,
+                            statutoryDueTime);
+                    if (recordIntakeEvent) {
+                        persistWithIntakeEvent(conn, c, actorUserId.trim(), actorRole, now);
+                    } else {
+                        persistComplaint(conn, c);
+                    }
+                    return c;
+                });
                 notificationClient.notifyComplaintCreated(complaint);
                 return ComplaintCreateResponseDTO.from(complaint);
             } catch (DuplicateReferenceIdException e) {
@@ -144,29 +150,11 @@ public class ComplaintServiceImpl implements ComplaintService {
                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, lastCollision);
     }
 
-    /**
-     * The citizen self-service path: just the complaint row, no intake event. Opens and commits
-     * the transaction here rather than in the DAO - see {@link ComplaintDAO} for why the DAO is
-     * never left owning a connection.
-     */
-    private void persistComplaint(Complaint complaint) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            if (!complaintDAO.addComplaint(conn, complaint)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                        ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
-            }
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            // Includes DuplicateReferenceIdException, which createComplaint catches and retries.
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
+    /** The citizen self-service path: just the complaint row, no intake event. */
+    private void persistComplaint(Connection conn, Complaint complaint) {
+        if (!complaintDAO.addComplaint(conn, complaint)) {
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, e);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
+                    ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
         }
     }
 
@@ -174,30 +162,18 @@ public class ComplaintServiceImpl implements ComplaintService {
      * Inserts the complaint and its officer-intake audit event together - so a complaint can
      * never be created with no record of which officer lodged it, or vice versa.
      */
-    private void persistWithIntakeEvent(Complaint complaint, String actorUserId, String actorRole, long now) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            if (!complaintDAO.addComplaint(conn, complaint)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                        ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
-            }
-            ComplaintEvent event = new ComplaintEvent(UUID.randomUUID().toString(), complaint.getOrgId(),
-                    complaint.getComplaintId(), actorUserId, null, actorRole, true,
-                    ComplaintServiceConstants.OFFICER_INTAKE_EVENT_MESSAGE, null, OPEN.name(), now);
-            if (!complaintEventDAO.addEvent(conn, event)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                        ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
-            }
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } catch (SQLException e) {
-            DatabaseUtils.rollbackTransaction(conn);
+    private void persistWithIntakeEvent(Connection conn, Complaint complaint, String actorUserId, String actorRole,
+            long now) {
+        if (!complaintDAO.addComplaint(conn, complaint)) {
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
-                    ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, e);
-        } finally {
-            DatabaseUtils.closeConnection(conn);
+                    ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
+        }
+        ComplaintEvent event = new ComplaintEvent(UUID.randomUUID().toString(), complaint.getOrgId(),
+                complaint.getComplaintId(), actorUserId, null, actorRole, true,
+                ComplaintServiceConstants.OFFICER_INTAKE_EVENT_MESSAGE, null, OPEN.name(), now);
+        if (!complaintEventDAO.addEvent(conn, event)) {
+            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                    ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
         }
     }
 
@@ -212,17 +188,16 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
         }
-        Optional<Complaint> complaintOpt;
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            complaintOpt = complaintDAO.getComplaintById(conn, complaintId.trim(), orgId.trim());
-            DatabaseUtils.commitTransaction(conn);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
+        return DatabaseUtils.executeInTransaction(conn -> requireComplaint(conn, orgId, complaintId));
+    }
+
+    @Override
+    public Complaint requireComplaint(Connection conn, String orgId, String complaintId) {
+        if (complaintId == null || complaintId.trim().isEmpty() || orgId == null || orgId.trim().isEmpty()) {
+            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+                    ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
         }
+        Optional<Complaint> complaintOpt = complaintDAO.getComplaintById(conn, complaintId.trim(), orgId.trim());
         if (complaintOpt.isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
@@ -253,33 +228,15 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_PRIORITY_FILTER_ERROR, priority));
         }
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            List<Complaint> complaints = complaintDAO.listComplaints(conn, orgId, status, priority, userId, limit,
-                    offset, sort, totalOut);
-            DatabaseUtils.commitTransaction(conn);
-            return complaints;
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
+        return DatabaseUtils.executeInTransaction(conn -> complaintDAO.listComplaints(conn, orgId, status, priority,
+                userId, limit, offset, sort, totalOut));
     }
 
     @Override
     public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
-        Connection conn = DatabaseUtils.getDBConnection();
-        try {
-            ComplaintQueueStats stats = complaintDAO.getQueueStats(conn, orgId, System.currentTimeMillis());
-            DatabaseUtils.commitTransaction(conn);
-            return ComplaintQueueStatsResponseDTO.from(stats);
-        } catch (RuntimeException e) {
-            DatabaseUtils.rollbackTransaction(conn);
-            throw e;
-        } finally {
-            DatabaseUtils.closeConnection(conn);
-        }
+        ComplaintQueueStats stats = DatabaseUtils.executeInTransaction(
+                conn -> complaintDAO.getQueueStats(conn, orgId, System.currentTimeMillis()));
+        return ComplaintQueueStatsResponseDTO.from(stats);
     }
 
     private boolean isValidCategory(String category) {

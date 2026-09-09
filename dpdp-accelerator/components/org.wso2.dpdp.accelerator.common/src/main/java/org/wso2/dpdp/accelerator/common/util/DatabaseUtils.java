@@ -26,7 +26,6 @@ import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -57,28 +56,10 @@ public final class DatabaseUtils {
         JDBCPersistenceManager.getInstance().rollbackTransaction(connection);
     }
 
-    /**
-     * Ends any still-open transaction before handing the connection back to the pool. Connections
-     * come out of {@link #getDBConnection()} with autocommit off and read paths never commit, so
-     * without this they return to the pool mid-transaction - which on MySQL (REPEATABLE READ) pins
-     * a snapshot that every later borrower of that connection keeps reading, serving stale rows
-     * indefinitely. The pool does not do this for us: Tomcat JDBC only terminates the transaction
-     * on return when the datasource sets {@code defaultAutoCommit=false}, which the product's own
-     * datasource config does not.
-     */
     public static void closeConnection(Connection connection) {
 
         if (connection == null) {
             return;
-        }
-        try {
-            // Roll back any uncommitted transaction before closing the connection.
-            // Write operations are expected to have committed before this method is called.
-            if (!connection.getAutoCommit()) {
-                connection.rollback();
-            }
-        } catch (SQLException e) {
-            LOG.error("Error while ending the transaction on a DPDP DB connection before close.", e);
         }
         try {
             connection.close();
@@ -92,7 +73,7 @@ public final class DatabaseUtils {
      *
      * <p>The connection is acquired with autocommit disabled, passed to {@code work}, and then:
      * <ul>
-     *   <li>committed if {@code work} returns normally - commit failures are rethrown as a
+     *   <li>committed if {@code work} returns normally — commit failures are rethrown as a
      *       {@link DPDPCommonRuntimeException} so callers cannot silently receive a false
      *       "success" when the data was never actually persisted;</li>
      *   <li>rolled back (best-effort) if the work or commit does not complete successfully.</li>
@@ -116,7 +97,7 @@ public final class DatabaseUtils {
                 conn.commit();
             } catch (SQLException commitEx) {
                 throw new DPDPCommonRuntimeException(
-                        "Transaction commit failed - data may not have been persisted.", commitEx);
+                        "Transaction commit failed — data may not have been persisted.", commitEx);
             }
             committed = true;
             return result;
@@ -130,18 +111,5 @@ public final class DatabaseUtils {
             }
             closeConnection(conn);
         }
-    }
-
-    /**
-     * Same as {@link #executeInTransaction(Function)}, for work with no result to return - a
-     * plain {@link Consumer} instead of a {@link Function} forced to return {@code null}.
-     */
-    public static void runInTransaction(Consumer<Connection> work) {
-
-        Objects.requireNonNull(work, "Transactional work cannot be null.");
-        executeInTransaction(conn -> {
-            work.accept(conn);
-            return null;
-        });
     }
 }
