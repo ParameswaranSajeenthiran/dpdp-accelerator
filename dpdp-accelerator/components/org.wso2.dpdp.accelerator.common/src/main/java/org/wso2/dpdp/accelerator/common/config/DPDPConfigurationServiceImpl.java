@@ -111,7 +111,8 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     @Override
     public boolean isComplaintsEmailNotificationsEnabled() {
 
-        return configParser == null || configParser.isComplaintsEmailNotificationsEnabled();
+        return configParser == null ? DPDPCommonConstants.DEFAULT_COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED
+                : configParser.isComplaintsEmailNotificationsEnabled();
     }
 
     @Override

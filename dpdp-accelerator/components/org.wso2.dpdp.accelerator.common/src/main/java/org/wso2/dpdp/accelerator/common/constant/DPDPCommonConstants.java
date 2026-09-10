@@ -54,6 +54,7 @@ public final class DPDPCommonConstants {
     public static final int DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = 5;
 
     public static final String COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED = "Complaints.EmailNotificationsEnabled";
+    public static final boolean DEFAULT_COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED = true;
 
     public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
     public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";
