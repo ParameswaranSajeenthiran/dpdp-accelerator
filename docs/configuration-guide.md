@@ -154,6 +154,8 @@ sent to the user will be delivered to the configured primary email address.
 
 Complaint emails (creation, comments, acknowledgements) can be turned off independently of the
 SMTP settings above by setting `[dpdp_accelerator.complaints] email_notifications_enabled = false`.
+This flag is read once, at server startup, so a change requires restarting the Identity Server to
+take effect.
 
 ## 6. Open the portal
 

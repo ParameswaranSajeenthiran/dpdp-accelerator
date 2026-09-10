@@ -71,8 +71,9 @@ public class ComplaintServiceComponent {
         ComplaintDAOProvider daoProvider = ComplaintServiceDataHolder.getInstance().getDaoProvider();
         boolean emailNotificationsEnabled = ComplaintServiceDataHolder.getInstance().getConfigurationService()
                 .isComplaintsEmailNotificationsEnabled();
-        NotificationClient notificationClient =
-                emailNotificationsEnabled ? new EmailNotificationClient() : new NoOpNotificationClient();
+        NotificationClient notificationClient = createNotificationClient(emailNotificationsEnabled);
+        LOG.info("Complaint email notifications are " + (emailNotificationsEnabled ? "enabled" : "disabled")
+                + "; using " + notificationClient.getClass().getSimpleName() + ".");
         ComplaintService complaintService = new ComplaintServiceImpl(
                 daoProvider.getComplaintDAO(), daoProvider.getComplaintEventDAO(), notificationClient);
         ComplaintEventService complaintEventService = new ComplaintEventServiceImpl(
@@ -231,6 +232,12 @@ public class ComplaintServiceComponent {
 
         LOG.debug("Unsetting the Organization Manager.");
         ComplaintServiceDataHolder.getInstance().setOrganizationManager(null);
+    }
+
+    /** Extracted so the selection logic itself is unit-testable without an OSGi runtime. */
+    static NotificationClient createNotificationClient(boolean emailNotificationsEnabled) {
+
+        return emailNotificationsEnabled ? new EmailNotificationClient() : new NoOpNotificationClient();
     }
 
     private static void unregister(ServiceRegistration<?> registration) {

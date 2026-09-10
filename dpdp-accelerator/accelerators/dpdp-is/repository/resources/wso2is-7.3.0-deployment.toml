@@ -401,7 +401,7 @@ attachment_max_files_per_upload = 5
 # Set false to disable complaint-related emails (creation, comments, acknowledgements) entirely -
 # a NoOpNotificationClient is wired in instead of EmailNotificationClient at startup, so no
 # handleEvent() call happens even if [output_adapter.email] SMTP settings are configured.
-email_notifications_enabled = false
+email_notifications_enabled = true
 
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]

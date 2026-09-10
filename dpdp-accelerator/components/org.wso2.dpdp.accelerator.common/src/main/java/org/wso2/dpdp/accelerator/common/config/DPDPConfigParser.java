@@ -263,8 +263,8 @@ public final class DPDPConfigParser {
 
     public boolean isComplaintsEmailNotificationsEnabled() {
 
-        return getConfigurationAsString(DPDPCommonConstants.COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED)
-                .map(Boolean::parseBoolean).orElse(true);
+        return getValidatedBoolean(DPDPCommonConstants.COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED,
+                DPDPCommonConstants.DEFAULT_COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED);
     }
 
     public boolean isConsentHistoryEnabled() {
