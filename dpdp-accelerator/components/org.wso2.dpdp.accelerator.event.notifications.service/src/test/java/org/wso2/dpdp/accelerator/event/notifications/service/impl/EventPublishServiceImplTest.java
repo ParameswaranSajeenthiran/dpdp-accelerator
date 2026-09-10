@@ -35,7 +35,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
-import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
@@ -83,7 +82,6 @@ public class EventPublishServiceImplTest {
 
     private EventDAO eventDAO;
     private TopicDAO topicDAO;
-    private EventFanOutService fanOutService;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO deliveryDAO;
     private org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO deliveryAckDAO;
     private SubscriptionDAO subscriptionDAO;
@@ -96,7 +94,6 @@ public class EventPublishServiceImplTest {
     public void setUp() throws Exception {
         eventDAO = mock(EventDAO.class);
         topicDAO = mock(TopicDAO.class);
-        fanOutService = mock(EventFanOutService.class);
         deliveryDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO.class);
         deliveryAckDAO = mock(org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO.class);
         subscriptionDAO = mock(SubscriptionDAO.class);
@@ -113,8 +110,10 @@ public class EventPublishServiceImplTest {
         when(configurationService.getEventNotificationPollingMaxEventsLimit()).thenReturn(100);
         when(configurationService.getEventNotificationPayloadSigningAudience())
                 .thenReturn("dpdp-event-notifications");
-        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, fanOutService, deliveryDAO, deliveryAckDAO,
+        publishService = new EventPublishServiceImpl(eventDAO, topicDAO, deliveryDAO, deliveryAckDAO,
                 subscriptionDAO, configurationService, signedEventPayloadFactory);
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(any(Connection.class), anyString(), anyString()))
+                .thenReturn(Collections.emptyList());
     }
 
     @AfterMethod
@@ -162,7 +161,8 @@ public class EventPublishServiceImplTest {
         assertEquals(persisted.getTopicId(), "topic-id-1");
 
         verify(eventDAO, times(1)).addEventPurposes(eq(connection), eq(dto.getEventId()), eq(Arrays.asList("marketing")));
-        verify(fanOutService, times(1)).fanOutEvent(eq(connection), any(Event.class), eq(Arrays.asList("marketing")));
+        verify(subscriptionDAO, times(1)).getActiveSubscriptionsForFanOut(eq(connection), eq("org1"),
+                eq("topic-id-1"));
     }
 
     @Test
@@ -554,7 +554,6 @@ public class EventPublishServiceImplTest {
         }
         verify(topicDAO, never()).getActiveTopicByOrgAndNameForUpdate(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -566,7 +565,6 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getStatusCode(), 400);
         }
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -582,7 +580,6 @@ public class EventPublishServiceImplTest {
         }
         verify(topicDAO, never()).getActiveTopicByOrgAndNameForUpdate(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -598,7 +595,6 @@ public class EventPublishServiceImplTest {
         }
         verify(topicDAO, never()).getActiveTopicByOrgAndNameForUpdate(any(Connection.class), anyString(), anyString());
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -642,7 +638,6 @@ public class EventPublishServiceImplTest {
             assertTrue(e.getDescription().contains("missing-topic"));
         }
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
@@ -672,15 +667,14 @@ public class EventPublishServiceImplTest {
         assertEquals(exception.getStatusCode(), 400);
         assertEquals(exception.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
         verify(eventDAO, never()).addEventPurposes(any(Connection.class), anyString(), any());
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test
     public void publishEvent_fanOutFails_throws500() {
         when(topicDAO.getActiveTopicByOrgAndNameForUpdate(any(Connection.class), eq("org1"), eq("topic-a")))
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "active")));
-        doThrow(new RuntimeException("boom")).when(fanOutService)
-                .fanOutEvent(any(Connection.class), any(), any());
+        when(subscriptionDAO.getActiveSubscriptionsForFanOut(any(Connection.class), eq("org1"), eq("topic-id-1")))
+                .thenThrow(new RuntimeException("boom"));
 
         try {
             publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), Collections.emptyMap());
@@ -704,7 +698,6 @@ public class EventPublishServiceImplTest {
             assertEquals(e.getStatusCode(), 500);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED);
         }
-        verify(fanOutService, never()).fanOutEvent(any(Connection.class), any(), any());
     }
 
     @Test

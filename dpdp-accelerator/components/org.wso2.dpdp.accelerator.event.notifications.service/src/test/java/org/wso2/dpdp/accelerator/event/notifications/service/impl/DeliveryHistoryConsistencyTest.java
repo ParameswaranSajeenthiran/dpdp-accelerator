@@ -32,7 +32,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
-import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryAttemptDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 
@@ -76,7 +75,7 @@ public class DeliveryHistoryConsistencyTest {
         deliveryDAO = mock(DeliveryDAO.class);
         deliveryAckDAO = mock(DeliveryAckDAO.class);
 
-        eventService = new EventPublishServiceImpl(eventDAO, topicDAO, mock(EventFanOutService.class), deliveryDAO,
+        eventService = new EventPublishServiceImpl(eventDAO, topicDAO, deliveryDAO,
                 deliveryAckDAO);
         subscriptionService = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
                 mock(DPDPConfigurationService.class));

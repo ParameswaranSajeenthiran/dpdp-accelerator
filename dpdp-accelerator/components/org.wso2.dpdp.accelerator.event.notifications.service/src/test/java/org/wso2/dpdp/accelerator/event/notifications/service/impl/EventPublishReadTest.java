@@ -15,7 +15,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAudit;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
@@ -57,7 +56,7 @@ public class EventPublishReadTest {
         topicDAO = mock(TopicDAO.class);
         deliveryDAO = mock(DeliveryDAO.class);
         deliveryAckDAO = mock(DeliveryAckDAO.class);
-        service = new EventPublishServiceImpl(eventDAO, topicDAO, mock(EventFanOutService.class), deliveryDAO,
+        service = new EventPublishServiceImpl(eventDAO, topicDAO, deliveryDAO,
                 deliveryAckDAO);
     }
 

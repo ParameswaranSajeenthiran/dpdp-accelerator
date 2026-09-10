@@ -25,7 +25,10 @@ import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
@@ -40,7 +43,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDeliveryError
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.SubscriptionDeliverySummary;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.service.EventFanOutService;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
@@ -55,6 +57,8 @@ import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
+import org.wso2.dpdp.accelerator.event.notifications.service.matching.FilterMatcher;
+import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 
 import java.sql.Connection;
 import java.sql.Timestamp;
@@ -75,11 +79,10 @@ import org.apache.commons.logging.LogFactory;
  *
  * <p>
  * Synchronously persists the {@code EVENT} row plus its purpose tags and
- * then hands off to {@link EventFanOutService} so the API caller receives a
- * {@code 201 Created} only after delivery rows have been queued for every
- * active matching subscription. The actual outbound HTTP dispatch happens
- * asynchronously via the existing
- * {@code WebhookDeliveryWorker}.
+ * then queues delivery rows for every active matching subscription so the API
+ * caller receives a {@code 201 Created} only after the event and its delivery
+ * records have been persisted. The actual outbound HTTP dispatch happens
+ * asynchronously via the existing {@code WebhookDeliveryWorker}.
  * </p>
  */
 public class EventPublishServiceImpl implements EventPublishService {
@@ -92,8 +95,6 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     private TopicDAO topicDAO;
 
-    private EventFanOutService eventFanOutService;
-
     private DeliveryDAO deliveryDAO;
 
     private DeliveryAckDAO deliveryAckDAO;
@@ -104,28 +105,21 @@ public class EventPublishServiceImpl implements EventPublishService {
     public EventPublishServiceImpl() {
     }
 
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService) {
-        this.eventDAO = eventDAO;
-        this.topicDAO = topicDAO;
-        this.eventFanOutService = eventFanOutService;
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, DeliveryDAO deliveryDAO,
+            DeliveryAckDAO deliveryAckDAO) {
+        this(eventDAO, topicDAO, deliveryDAO, deliveryAckDAO, null);
     }
 
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
-            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO) {
-        this(eventDAO, topicDAO, eventFanOutService, deliveryDAO, deliveryAckDAO, null);
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, DeliveryDAO deliveryDAO,
+            DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO) {
+        this(eventDAO, topicDAO, deliveryDAO, deliveryAckDAO, subscriptionDAO, null, null);
     }
 
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
-            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO) {
-        this(eventDAO, topicDAO, eventFanOutService, deliveryDAO, deliveryAckDAO, subscriptionDAO, null, null);
-    }
-
-    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, EventFanOutService eventFanOutService,
-            DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO,
+    public EventPublishServiceImpl(EventDAO eventDAO, TopicDAO topicDAO, DeliveryDAO deliveryDAO,
+            DeliveryAckDAO deliveryAckDAO, SubscriptionDAO subscriptionDAO,
             DPDPConfigurationService configurationService, SignedEventPayloadFactory signedEventPayloadFactory) {
         this.eventDAO = eventDAO;
         this.topicDAO = topicDAO;
-        this.eventFanOutService = eventFanOutService;
         this.deliveryDAO = deliveryDAO;
         this.deliveryAckDAO = deliveryAckDAO;
         this.subscriptionDAO = subscriptionDAO;
@@ -457,7 +451,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 if (purposes != null && !purposes.isEmpty()) {
                     eventDAO.addEventPurposes(conn, eventId, purposes);
                 }
-                eventFanOutService.fanOutEvent(conn, event, purposes);
+                fanOutEvent(conn, event, purposes);
 
                 return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
                         purposes, now, now);
@@ -472,6 +466,86 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
                     500);
+        }
+    }
+
+    private void fanOutEvent(Connection conn, Event event, List<String> eventPurposes) {
+        if (event == null) {
+            return;
+        }
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null for transactional event fan-out.");
+        }
+
+        List<Subscription> candidates = subscriptionDAO.getActiveSubscriptionsForFanOut(
+                conn, event.getOrgId(), event.getTopicId());
+        Set<String> processed = new HashSet<>();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        for (Subscription subscription : candidates) {
+            if (subscription.getSubscriptionId() == null
+                    || !processed.add(subscription.getSubscriptionId())) {
+                continue;
+            }
+            if (!SubscriptionStatus.ACTIVE.getValue().equals(subscription.getStatus())) {
+                continue;
+            }
+            if (!matchesGroup(subscription, event.getGroupId())) {
+                continue;
+            }
+            if (!FilterMatcher.matches(subscription.getPurposeFilterMode(), subscription.getPurposes(),
+                    eventPurposes)) {
+                continue;
+            }
+
+            DeliveryMode mode = DeliveryMode.fromValueOrDefault(subscription.getDeliveryMode(),
+                    DeliveryMode.WEBHOOK);
+            if (mode == DeliveryMode.WEBHOOK) {
+                queueWebhookDelivery(conn, subscription, event, now);
+            } else {
+                queuePollDelivery(conn, subscription, event, now);
+            }
+        }
+    }
+
+    private static boolean matchesGroup(Subscription subscription, String eventGroupId) {
+        String subscriptionGroupId = subscription.getGroupId();
+        if (subscriptionGroupId == null || subscriptionGroupId.trim().isEmpty()) {
+            return true;
+        }
+        if (eventGroupId == null) {
+            return false;
+        }
+        return subscriptionGroupId.trim().equalsIgnoreCase(eventGroupId.trim());
+    }
+
+    private void queueWebhookDelivery(Connection conn, Subscription subscription, Event event, Timestamp now) {
+        String deliveryId = UUID.randomUUID().toString();
+        WebhookDelivery delivery = new WebhookDelivery(
+                deliveryId, subscription.getSubscriptionId(), event.getEventId(),
+                DeliveryStatus.PENDING.getValue(), 0, null, now, now, null);
+        boolean saved = deliveryDAO.addWebhookDelivery(conn, delivery);
+        if (saved) {
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Queued webhook delivery [" + LogSanitizer.sanitize(deliveryId)
+                        + "] for subscription [" + LogSanitizer.sanitize(subscription.getSubscriptionId())
+                        + "] on event [" + LogSanitizer.sanitize(event.getEventId()) + "].");
+            }
+        } else {
+            throw new EventNotificationDataAccessException("Failed to queue webhook delivery for subscription ["
+                    + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["
+                    + LogSanitizer.sanitize(event.getEventId()) + "] — DAO returned false.");
+        }
+    }
+
+    private void queuePollDelivery(Connection conn, Subscription subscription, Event event, Timestamp now) {
+        PollDelivery delivery = new PollDelivery(
+                UUID.randomUUID().toString(), subscription.getSubscriptionId(), event.getEventId(),
+                PollStatus.PENDING.getValue(), now, null);
+        if (!deliveryDAO.addPollDelivery(conn, delivery)) {
+            throw new EventNotificationDataAccessException("Failed to queue poll delivery for subscription ["
+                    + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["
+                    + LogSanitizer.sanitize(event.getEventId()) + "] — DAO returned false.");
         }
     }
 

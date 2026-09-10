@@ -67,6 +67,11 @@ public final class DatabaseUtils {
      */
     public static void closeConnection(Connection connection) {
 
+        closeConnectionWithRollback(connection);
+    }
+
+    private static void closeConnectionWithRollback(Connection connection) {
+
         if (connection == null) {
             return;
         }
@@ -127,7 +132,21 @@ public final class DatabaseUtils {
                     LOG.error("Rollback failed after transaction error.", rollbackEx);
                 }
             }
-            closeConnection(conn);
+            // The transaction has already been committed or rolled back above. Do not ask the
+            // general read-path cleanup to roll back the same connection a second time.
+            closeConnectionWithoutRollback(conn);
+        }
+    }
+
+    private static void closeConnectionWithoutRollback(Connection connection) {
+
+        if (connection == null) {
+            return;
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOG.error("Error while closing a DPDP DB connection.", e);
         }
     }
 }
