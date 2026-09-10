@@ -42,6 +42,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintAttachmentS
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintEventServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.impl.ComplaintServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotificationClient;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NoOpNotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
 /**
@@ -68,7 +69,10 @@ public class ComplaintServiceComponent {
     @Activate
     protected void activate(ComponentContext context) {
         ComplaintDAOProvider daoProvider = ComplaintServiceDataHolder.getInstance().getDaoProvider();
-        NotificationClient notificationClient = new EmailNotificationClient();
+        boolean emailNotificationsEnabled = ComplaintServiceDataHolder.getInstance().getConfigurationService()
+                .isComplaintsEmailNotificationsEnabled();
+        NotificationClient notificationClient =
+                emailNotificationsEnabled ? new EmailNotificationClient() : new NoOpNotificationClient();
         ComplaintService complaintService = new ComplaintServiceImpl(
                 daoProvider.getComplaintDAO(), daoProvider.getComplaintEventDAO(), notificationClient);
         ComplaintEventService complaintEventService = new ComplaintEventServiceImpl(

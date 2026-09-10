@@ -261,6 +261,12 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD);
     }
 
+    public boolean isComplaintsEmailNotificationsEnabled() {
+
+        return getConfigurationAsString(DPDPCommonConstants.COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED)
+                .map(Boolean::parseBoolean).orElse(true);
+    }
+
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)
