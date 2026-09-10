@@ -122,6 +122,20 @@ public class DatabaseUtilsTest {
     }
 
     @Test
+    public void closeConnectionToleratesNull() {
+
+        DatabaseUtils.closeConnection(null);
+    }
+
+    @Test
+    public void closeConnectionSwallowsSqlException() throws SQLException {
+
+        Connection connection = mock(Connection.class);
+        doThrow(new SQLException("boom")).when(connection).close();
+        DatabaseUtils.closeConnection(connection);
+    }
+
+    @Test
     public void closeConnectionRollsBackAnOpenTransactionBeforeClosing() throws SQLException {
 
         Connection connection = mock(Connection.class);
@@ -142,7 +156,7 @@ public class DatabaseUtilsTest {
 
         DatabaseUtils.closeConnection(connection);
 
-        verify(connection, Mockito.never()).rollback();
+        verify(connection, never()).rollback();
         verify(connection).close();
     }
 
@@ -156,20 +170,6 @@ public class DatabaseUtilsTest {
         DatabaseUtils.closeConnection(connection);
 
         verify(connection).close();
-    }
-
-    @Test
-    public void closeConnectionToleratesNull() {
-
-        DatabaseUtils.closeConnection(null);
-    }
-
-    @Test
-    public void closeConnectionSwallowsSqlException() throws SQLException {
-
-        Connection connection = mock(Connection.class);
-        doThrow(new SQLException("boom")).when(connection).close();
-        DatabaseUtils.closeConnection(connection);
     }
 
     // executeInTransaction/runInTransaction tests below stub getAutoCommit() to true, so
