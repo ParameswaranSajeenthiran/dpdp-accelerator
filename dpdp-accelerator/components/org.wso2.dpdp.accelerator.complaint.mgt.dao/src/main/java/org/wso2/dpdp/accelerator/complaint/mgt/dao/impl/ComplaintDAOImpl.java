@@ -66,10 +66,13 @@ public class ComplaintDAOImpl implements ComplaintDAO {
             ps.setLong(11, complaint.getUpdatedTime());
             ps.setLong(12, complaint.getStatutoryDueTime());
             return ps.executeUpdate() > 0;
+        /*
+         * Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID
+         * collision (real bug) by checking the driver's error message text - the only portable
+         * way, since neither driver exposes the violated constraint as a structured field.
+         */
         } catch (SQLIntegrityConstraintViolationException e) {
 
-//            Distinguishes an expected reference-ID collision (retry) from a genuine COMPLAINT_ID collision (real bug) by checking the driver's error message text — the only portable way,
-//            since neither driver exposes the violated constraint as a structured field.
             if (e.getMessage() != null && e.getMessage().toUpperCase(java.util.Locale.ROOT)
                     .contains("UQ_COMPLAINT_REFERENCE")) {
                 LOG.warn("Duplicate reference ID for org: " + complaint.getOrgId(), e);
