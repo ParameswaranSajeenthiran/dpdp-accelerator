@@ -28,7 +28,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOExcepti
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceIdException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintCommonDBQueries;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryBuilder;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryResult;
@@ -46,13 +45,9 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     private static final Log LOG = LogFactory.getLog(ComplaintDAOImpl.class);
 
-    private ComplaintCommonDBQueries getQueries(Connection conn) {
-        return ComplaintQueryFactory.getQueryProvider(conn);
-    }
-
     @Override
     public boolean addComplaint(Connection conn, Complaint complaint) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getAddComplaintQuery())) {
             ps.setString(1, complaint.getComplaintId());
             ps.setString(2, complaint.getOrgId());
             ps.setString(3, complaint.getUserId());
@@ -88,7 +83,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public Optional<Complaint> getComplaintById(Connection conn, String complaintId, String orgId) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetComplaintByIdQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getGetComplaintByIdQuery())) {
             ps.setString(1, complaintId);
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -105,7 +100,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public int countByReferenceIdPrefix(Connection conn, String orgId, String referenceIdLikePattern) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getCountComplaintsForYearPrefixQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountComplaintsForYearPrefixQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, referenceIdLikePattern);
             try (ResultSet rs = ps.executeQuery()) {
@@ -123,7 +118,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
     @Override
     public boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus,
             long updatedTime) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getUpdateComplaintStatusQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getUpdateComplaintStatusQuery())) {
             ps.setString(1, newStatus);
             ps.setLong(2, updatedTime);
             ps.setString(3, complaintId);
@@ -141,7 +136,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
         List<Complaint> complaints = new ArrayList<>();
 
         try {
-            ComplaintQueryBuilder builder = new ComplaintQueryBuilder(orgId, getQueries(conn))
+            ComplaintQueryBuilder builder = new ComplaintQueryBuilder(orgId, ComplaintQueryFactory.getQueryProvider(conn))
                     .setStatus(status)
                     .setPriority(priority)
                     .setUserId(userId)
@@ -191,7 +186,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
         try {
 
-            try (PreparedStatement statusPs = conn.prepareStatement(getQueries(conn).getCountComplaintsByStatusQuery())) {
+            try (PreparedStatement statusPs = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountComplaintsByStatusQuery())) {
                 statusPs.setString(1, orgId);
                 try (ResultSet statusRs = statusPs.executeQuery()) {
                     while (statusRs.next()) {
@@ -210,7 +205,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                 }
             }
 
-            try (PreparedStatement breachedPs = conn.prepareStatement(getQueries(conn).getCountSlaBreachedComplaintsQuery())) {
+            try (PreparedStatement breachedPs = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getCountSlaBreachedComplaintsQuery())) {
                 breachedPs.setString(1, orgId);
                 breachedPs.setLong(2, now);
                 try (ResultSet breachedRs = breachedPs.executeQuery()) {
