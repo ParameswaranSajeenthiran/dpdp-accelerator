@@ -25,7 +25,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintDBColumns;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintCommonDBQueries;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintEventQueryBuilder;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryFactory;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryResult;
@@ -42,13 +41,9 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
 
     private static final Log LOG = LogFactory.getLog(ComplaintEventDAOImpl.class);
 
-    private ComplaintCommonDBQueries getQueries(Connection conn) {
-        return ComplaintQueryFactory.getQueryProvider(conn);
-    }
-
     @Override
     public boolean addEvent(Connection conn, ComplaintEvent event) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintEventQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getAddComplaintEventQuery())) {
             ps.setString(1, event.getComplaintEventId());
             ps.setString(2, event.getOrgId());
             ps.setString(3, event.getComplaintId());
@@ -70,7 +65,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
     @Override
     public Optional<ComplaintEvent> getEventById(Connection conn, String complaintEventId, String orgId,
             String complaintId) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetComplaintEventByIdQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getGetComplaintEventByIdQuery())) {
             ps.setString(1, complaintEventId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
@@ -92,7 +87,7 @@ public class ComplaintEventDAOImpl implements ComplaintEventDAO {
         List<ComplaintEvent> events = new ArrayList<>();
 
         try {
-            ComplaintEventQueryBuilder builder = new ComplaintEventQueryBuilder(orgId, complaintId, getQueries(conn))
+            ComplaintEventQueryBuilder builder = new ComplaintEventQueryBuilder(orgId, complaintId, ComplaintQueryFactory.getQueryProvider(conn))
                     .setSince(since)
                     .setUntil(until)
                     .setIsPublic(isPublic)
