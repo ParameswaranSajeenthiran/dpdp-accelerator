@@ -347,3 +347,28 @@ pending_subscription_recovery_threshold_seconds = 60
 
 These are server-wide runtime settings. Subscription `shared_secret` values
 remain per-subscription data and are not placed in `dpdp-accelerator.xml`.
+
+# Customizing complaint email templates
+
+The three complaint notification emails (`ComplaintCreated`,
+`ComplaintCommentAdded`, `ComplaintAcknowledged`) are standard IS notification
+templates - edit their subject/body in Console under **Email Templates**, per
+tenant, the same as any other IS template. No rebuild needed; delivery goes
+through the usual `[output_adapter.email]` SMTP config.
+
+Available placeholders: `{{reference-id}}`, `{{message-excerpt}}`,
+`{{data-principal-name}}`, `{{actor-name}}`, `{{category-label}}`,
+`{{priority-label}}`, `{{status-label}}`, `{{sla-label}}`, `{{action-url}}`,
+`{{recipient-role-label}}`, `{{headline-html}}`, `{{footer-text}}`,
+`{{action-badge-html}}`, `{{logo-url}}` (see `EmailNotificationClient` for
+exactly what each resolves to).
+
+Provisioning is check-then-add per tenant, so a Console edit is never
+overwritten by a later tenant update. To force every tenant's templates back
+to the bundled default (e.g. after an accelerator upgrade), set
+`reset_to_default_enabled = true` under `[dpdp_accelerator.complaints.email_templates]`,
+trigger a tenant update, then set it back to `false` - otherwise every future
+update keeps re-clobbering the templates.
+
+All three types currently share one bundled HTML body; splitting them per-type
+is a possible future improvement, not yet decided.
