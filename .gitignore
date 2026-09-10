@@ -47,4 +47,3 @@ docs/build/
 # Env
 .env
 .env.local
-/docs/pnpm-lock.yaml
