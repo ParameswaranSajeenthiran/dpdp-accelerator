@@ -105,10 +105,8 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         // The existence check, the comment write, and its optional status change all share one
         // transaction - so a status-changing comment can never land against a complaint whose
         // status never actually moved (or the reverse), and the existence check can never
-        // disagree with the write that follows it. eventHolder carries the persisted event back
-        // out, since the notification below needs it alongside the (possibly mutated) complaint.
-        ComplaintEvent[] eventHolder = new ComplaintEvent[1];
-        Complaint complaint = DatabaseUtils.executeInTransaction(conn -> {
+        // disagree with the write that follows it.
+        AddCommentResult result = DatabaseUtils.executeInTransaction(conn -> {
             Complaint c = complaintService.requireComplaint(conn, orgId, complaintId);
 
             String fromStatus = null;
@@ -132,23 +130,33 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                 throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
             }
-            eventHolder[0] = event;
             if (hasToStatus) {
                 // complaint was fetched before the DB status update above; without this, the
                 // notification would carry the complaint's pre-transition status.
                 c.setStatus(toStatus);
                 c.setUpdatedTime(now);
             }
-            return c;
+            return new AddCommentResult(c, event);
         });
 
-        ComplaintEvent event = eventHolder[0];
         if (isPublic) {
             // An internal note (isPublic=false, officer-only per the check above) is never shown
             // to the citizen in the timeline - notifying them about it would leak its existence.
-            notificationClient.notifyCommentAdded(complaint, event);
+            notificationClient.notifyCommentAdded(result.complaint, result.event);
         }
-        return ComplaintCommentCreateResponseDTO.from(event);
+        return ComplaintCommentCreateResponseDTO.from(result.event);
+    }
+
+    /** Carries both values a transactional {@code addComment} needs to return out of one lambda. */
+    private static final class AddCommentResult {
+
+        private final Complaint complaint;
+        private final ComplaintEvent event;
+
+        private AddCommentResult(Complaint complaint, ComplaintEvent event) {
+            this.complaint = complaint;
+            this.event = event;
+        }
     }
 
     @Override
