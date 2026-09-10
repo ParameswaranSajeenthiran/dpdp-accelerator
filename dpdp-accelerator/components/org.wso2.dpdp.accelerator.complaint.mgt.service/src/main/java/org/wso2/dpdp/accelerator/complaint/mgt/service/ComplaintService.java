@@ -74,6 +74,13 @@ public interface ComplaintService {
     Complaint requireOwnedComplaint(String orgId, String complaintId, String ownerUserId);
 
     /**
+     * Same as {@link #requireOwnedComplaint(String, String, String)}, run against a caller-owned
+     * connection so the ownership check and whatever the caller does next share one transaction -
+     * same reasoning as {@link #requireComplaint(Connection, String, String)}.
+     */
+    Complaint requireOwnedComplaint(Connection conn, String orgId, String complaintId, String ownerUserId);
+
+    /**
      * Lists complaints for an org with optional status/priority/userId filters, sorting, and
      * limit/offset pagination. totalOut is an out-param - see ComplaintDAO#listComplaints.
      */

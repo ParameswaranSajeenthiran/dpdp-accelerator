@@ -355,7 +355,7 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void uploadOwnComplaintAttachmentsThrowsWhenComplaintIsNotOwnedByCallerAndNeverPersists() throws Exception {
-        when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
+        when(complaintService.requireOwnedComplaint(any(Connection.class), eq("org1"), eq("c1"), eq("user1")))
                 .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
 
         expectThrows(ComplaintException.class, () -> attachmentService.uploadOwnComplaintAttachments("org1", "c1",
@@ -374,7 +374,7 @@ class ComplaintAttachmentServiceImplTest {
 
         assertEquals(1, result.size());
         assertTrue(result.get(0).isPublic());
-        verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
+        verify(complaintService).requireOwnedComplaint(any(Connection.class), eq("org1"), eq("c1"), eq("user1"));
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("USER", captor.getValue().getActorRole());
@@ -382,7 +382,7 @@ class ComplaintAttachmentServiceImplTest {
 
     @Test
     void downloadOwnAttachmentThrowsWhenComplaintIsNotOwnedByCallerAndNeverFetches() {
-        when(complaintService.requireOwnedComplaint("org1", "c1", "user1"))
+        when(complaintService.requireOwnedComplaint(any(Connection.class), eq("org1"), eq("c1"), eq("user1")))
                 .thenThrow(new ComplaintException("CO-4040", "not found", "desc", 404));
 
         expectThrows(ComplaintException.class,
@@ -401,6 +401,6 @@ class ComplaintAttachmentServiceImplTest {
                 () -> attachmentService.downloadOwnAttachment("org1", "c1", "user1", "a1"));
 
         assertEquals("CO-4030", ex.getCode());
-        verify(complaintService).requireOwnedComplaint("org1", "c1", "user1");
+        verify(complaintService).requireOwnedComplaint(any(Connection.class), eq("org1"), eq("c1"), eq("user1"));
     }
 }
