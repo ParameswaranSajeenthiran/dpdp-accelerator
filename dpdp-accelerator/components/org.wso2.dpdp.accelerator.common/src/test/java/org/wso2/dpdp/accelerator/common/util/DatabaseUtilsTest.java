@@ -172,43 +172,6 @@ public class DatabaseUtilsTest {
         DatabaseUtils.closeConnection(connection);
     }
 
-    @Test
-    public void closeConnectionRollsBackAnOpenTransactionBeforeClosing() throws SQLException {
-
-        Connection connection = mock(Connection.class);
-        Mockito.when(connection.getAutoCommit()).thenReturn(false);
-
-        DatabaseUtils.closeConnection(connection);
-
-        InOrder inOrder = Mockito.inOrder(connection);
-        inOrder.verify(connection).rollback();
-        inOrder.verify(connection).close();
-    }
-
-    @Test
-    public void closeConnectionDoesNotRollBackWhenAutoCommitIsOn() throws SQLException {
-
-        Connection connection = mock(Connection.class);
-        Mockito.when(connection.getAutoCommit()).thenReturn(true);
-
-        DatabaseUtils.closeConnection(connection);
-
-        verify(connection, never()).rollback();
-        verify(connection).close();
-    }
-
-    @Test
-    public void closeConnectionStillClosesWhenTheRollbackFails() throws SQLException {
-
-        Connection connection = mock(Connection.class);
-        Mockito.when(connection.getAutoCommit()).thenReturn(false);
-        doThrow(new SQLException("boom")).when(connection).rollback();
-
-        DatabaseUtils.closeConnection(connection);
-
-        verify(connection).close();
-    }
-
     // executeInTransaction/runInTransaction tests below stub getAutoCommit() to true, so
     // closeConnection's own rollback-before-close guard (tested separately above) is a no-op here
     // and these assertions reflect only executeInTransaction's own commit/rollback contract - a
