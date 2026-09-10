@@ -214,10 +214,10 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const visibleItems = [
     ...dashboardItems,
     ...consentItems,
-    ...eventItems,
-    ...catalogItems,
     ...complaintItems,
     ...administrationItems,
+    ...catalogItems,
+    ...eventItems,
   ]
 
   const activeItem = mapPathToMenuId(location.pathname, location.search)
@@ -270,18 +270,6 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
           </Sidebar.Category>
         ) : null}
 
-        {eventItems.length > 0 ? (
-          <Sidebar.Category>
-            <Sidebar.CategoryLabel>{t('sidebar.events')}</Sidebar.CategoryLabel>
-            {eventItems.map((item) => (
-              <Sidebar.Item key={item.id} id={item.id}>
-                <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
-                <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>
-              </Sidebar.Item>
-            ))}
-          </Sidebar.Category>
-        ) : null}
-
         {administrationItems.length > 0 ? (
           <Sidebar.Category>
             <Sidebar.CategoryLabel>{t('sidebar.administration')}</Sidebar.CategoryLabel>
@@ -298,6 +286,18 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
           <Sidebar.Category>
             <Sidebar.CategoryLabel>{t('sidebar.catalog')}</Sidebar.CategoryLabel>
             {catalogItems.map((item) => (
+              <Sidebar.Item key={item.id} id={item.id}>
+                <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
+                <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>
+              </Sidebar.Item>
+            ))}
+          </Sidebar.Category>
+        ) : null}
+
+        {eventItems.length > 0 ? (
+          <Sidebar.Category>
+            <Sidebar.CategoryLabel>{t('sidebar.events')}</Sidebar.CategoryLabel>
+            {eventItems.map((item) => (
               <Sidebar.Item key={item.id} id={item.id}>
                 <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
                 <Sidebar.ItemLabel>{t(item.labelKey)}</Sidebar.ItemLabel>
