@@ -31,10 +31,15 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Registers the three complaint notification email templates for a tenant, idempotently, so no
- * manual IS Console step is needed - mirrors the "only add what's missing" idiom already used for
- * role permissions in {@code DPDPConsentPortalRoleProvisioningUtil}. Called once per tenant
- * alongside role provisioning (see {@code DPDPIdentityExtensionTenantMgtListener}).
+ * Registers the three complaint notification email templates for a tenant, check-then-add -
+ * mirrors the "only add what's missing" idiom already used for role permissions in
+ * {@code DPDPConsentPortalRoleProvisioningUtil}. Runs on every {@code onTenantCreate}/
+ * {@code onTenantUpdate} (see {@code DPDPIdentityExtensionTenantMgtListener}), so an
+ * administrator's Console edit to a template's subject/body is never overwritten by a later
+ * tenant-update event - only a template this tenant doesn't have yet gets written. Pushing an
+ * updated bundled default over an already-customized template is a deliberate, opt-in action; see
+ * {@link org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService
+ * #isComplaintsEmailTemplatesResetToDefaultEnabled()}.
  */
 public final class EmailTemplateProvisioningUtil {
 
@@ -82,10 +87,14 @@ public final class EmailTemplateProvisioningUtil {
     }
 
     /**
-     * Always (re)writes the template content - {@code addNotificationTemplate} upserts, so this
-     * also doubles as the upgrade path when the HTML/subject here changes.
-     * {@code addNotificationTemplateType} is not upsert-safe (throws if already registered), so
-     * that failure is swallowed separately and never blocks the content write below it.
+     * Writes the template content only if this tenant doesn't already have it - an administrator's
+     * Console edit is otherwise indistinguishable from the bundled default once written, so
+     * overwriting unconditionally on every tenant update would silently discard it.
+     * {@code Complaints.EmailTemplates.ResetToDefaultEnabled} bypasses this check, for the
+     * deliberate case of pushing an upgraded bundled default over an existing (possibly
+     * customized) template. {@code addNotificationTemplateType} is not upsert-safe (throws if
+     * already registered), so that failure is swallowed separately and never blocks the check/
+     * write below it.
      */
     private static void provisionTemplate(String tenantDomain, String templateType, String subject, String body) {
 
@@ -95,7 +104,16 @@ public final class EmailTemplateProvisioningUtil {
             templateManager.addNotificationTemplateType(templateType, EMAIL_CHANNEL, tenantDomain);
         } catch (NotificationTemplateManagerException e) {
             LOG.debug("Notification template type '" + templateType + "' already registered for tenant '"
-                    + LogSanitizer.sanitize(tenantDomain) + "'; continuing to (re)write its content.", e);
+                    + LogSanitizer.sanitize(tenantDomain) + "'; continuing to check its content.", e);
+        }
+
+        boolean resetToDefault = DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
+                .isComplaintsEmailTemplatesResetToDefaultEnabled();
+        if (!resetToDefault && templateExists(templateManager, templateType, tenantDomain)) {
+            LOG.debug("Email template '" + templateType + "' already exists for tenant '"
+                    + LogSanitizer.sanitize(tenantDomain) + "'; leaving its content as-is so a Console "
+                    + "customization is preserved.");
+            return;
         }
 
         try {
@@ -114,6 +132,24 @@ public final class EmailTemplateProvisioningUtil {
         } catch (NotificationTemplateManagerException e) {
             LOG.error("Error provisioning email template '" + templateType + "' for tenant: "
                     + LogSanitizer.sanitize(tenantDomain), e);
+        }
+    }
+
+    /**
+     * {@code getNotificationTemplate} returns {@code null} for a template this tenant doesn't have
+     * yet (see its own javadoc); any exception is treated the same way - as "not present yet",
+     * since the only alternative is blocking provisioning entirely on a lookup failure.
+     */
+    private static boolean templateExists(NotificationTemplateManager templateManager, String templateType,
+            String tenantDomain) {
+
+        try {
+            return templateManager.getNotificationTemplate(EMAIL_CHANNEL, templateType, DEFAULT_LOCALE, tenantDomain)
+                    != null;
+        } catch (NotificationTemplateManagerException e) {
+            LOG.debug("Could not look up existing email template '" + templateType + "' for tenant '"
+                    + LogSanitizer.sanitize(tenantDomain) + "'; treating it as not yet provisioned.", e);
+            return false;
         }
     }
 }
