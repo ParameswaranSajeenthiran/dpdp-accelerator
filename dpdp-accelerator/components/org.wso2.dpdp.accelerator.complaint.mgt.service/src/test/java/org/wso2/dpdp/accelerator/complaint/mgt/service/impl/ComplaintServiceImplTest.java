@@ -42,9 +42,11 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.Notification
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.expectThrows;
@@ -72,9 +74,82 @@ class ComplaintServiceImplTest {
 
     private ComplaintServiceImpl complaintService;
 
+    // Counts every real JDBC connection handed out - see #145: a convenience overload that opened
+    // its own connection silently doubled the connections a single service call acquired. Tests
+    // below assert against this to pin that property, not just count DAO calls.
+    private static final AtomicInteger CONNECTION_COUNT = new AtomicInteger();
+
+    /**
+     * Delegates to a real H2 {@link JdbcDataSource}, incrementing {@link #CONNECTION_COUNT} on
+     * every borrow. Composition, not inheritance - {@code JdbcDataSource} is {@code final}.
+     */
+    private static final class CountingDataSource implements javax.sql.DataSource {
+
+        private final JdbcDataSource delegate = new JdbcDataSource();
+
+        void setURL(String url) {
+            delegate.setURL(url);
+        }
+
+        void setUser(String user) {
+            delegate.setUser(user);
+        }
+
+        void setPassword(String password) {
+            delegate.setPassword(password);
+        }
+
+        @Override
+        public Connection getConnection() throws SQLException {
+            CONNECTION_COUNT.incrementAndGet();
+            return delegate.getConnection();
+        }
+
+        @Override
+        public Connection getConnection(String username, String password) throws SQLException {
+            CONNECTION_COUNT.incrementAndGet();
+            return delegate.getConnection(username, password);
+        }
+
+        @Override
+        public java.io.PrintWriter getLogWriter() throws SQLException {
+            return delegate.getLogWriter();
+        }
+
+        @Override
+        public void setLogWriter(java.io.PrintWriter out) throws SQLException {
+            delegate.setLogWriter(out);
+        }
+
+        @Override
+        public void setLoginTimeout(int seconds) throws SQLException {
+            delegate.setLoginTimeout(seconds);
+        }
+
+        @Override
+        public int getLoginTimeout() throws SQLException {
+            return delegate.getLoginTimeout();
+        }
+
+        @Override
+        public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException {
+            return delegate.getParentLogger();
+        }
+
+        @Override
+        public <T> T unwrap(Class<T> iface) throws SQLException {
+            return delegate.unwrap(iface);
+        }
+
+        @Override
+        public boolean isWrapperFor(Class<?> iface) throws SQLException {
+            return delegate.isWrapperFor(iface);
+        }
+    }
+
     @BeforeClass
     static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
-        JdbcDataSource dataSource = new JdbcDataSource();
+        CountingDataSource dataSource = new CountingDataSource();
         dataSource.setURL("jdbc:h2:mem:complaint_service_test;DB_CLOSE_DELAY=-1");
         dataSource.setUser("sa");
         dataSource.setPassword("");
@@ -102,6 +177,7 @@ class ComplaintServiceImplTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         complaintService = new ComplaintServiceImpl(complaintDAO, complaintEventDAO, notificationClient);
+        CONNECTION_COUNT.set(0);
     }
 
 
@@ -378,5 +454,43 @@ class ComplaintServiceImplTest {
         assertEquals(stats.getResolvedCount(), result.getResolvedCount());
         assertEquals(stats.getSlaBreachedCount(), result.getSlaBreachedCount());
         verify(complaintDAO).getQueueStats(any(Connection.class), eq("org1"), anyLong());
+    }
+
+    // ---- one connection per call - the actual property #145 was about ----
+
+    @Test
+    void createComplaintAcquiresExactlyOneConnection() {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
+
+        complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
+
+        // Before the fix, ReferenceIdGenerator opened its own connection separately from the
+        // complaint insert - two connections for one logical create. Now the count and the insert
+        // share the single connection this transaction acquires.
+        assertEquals(1, CONNECTION_COUNT.get());
+    }
+
+    @Test
+    void requireComplaintAcquiresExactlyOneConnection() {
+        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
+                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(complaint));
+
+        complaintService.requireComplaint("org1", "c1");
+
+        assertEquals(1, CONNECTION_COUNT.get());
+    }
+
+    @Test
+    void listComplaintsAcquiresExactlyOneConnection() {
+        int[] totalOut = new int[1];
+        when(complaintDAO.listComplaints(any(Connection.class), anyString(), any(), any(), any(), anyInt(), anyInt(),
+                any(), eq(totalOut))).thenReturn(List.of());
+
+        complaintService.listComplaints("org1", null, null, null, 10, 0, null, totalOut);
+
+        assertEquals(1, CONNECTION_COUNT.get());
     }
 }

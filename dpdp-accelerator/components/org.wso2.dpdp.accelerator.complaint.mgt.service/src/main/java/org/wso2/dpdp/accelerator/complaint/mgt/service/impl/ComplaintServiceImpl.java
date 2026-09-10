@@ -184,10 +184,6 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public Complaint requireComplaint(String orgId, String complaintId) {
-        if (complaintId == null || complaintId.trim().isEmpty() || orgId == null || orgId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
-                    ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
-        }
         return DatabaseUtils.executeInTransaction(conn -> requireComplaint(conn, orgId, complaintId));
     }
 
@@ -207,7 +203,13 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public Complaint requireOwnedComplaint(String orgId, String complaintId, String ownerUserId) {
-        Complaint complaint = requireComplaint(orgId, complaintId);
+        return DatabaseUtils.executeInTransaction(
+                conn -> requireOwnedComplaint(conn, orgId, complaintId, ownerUserId));
+    }
+
+    @Override
+    public Complaint requireOwnedComplaint(Connection conn, String orgId, String complaintId, String ownerUserId) {
+        Complaint complaint = requireComplaint(conn, orgId, complaintId);
         if (!complaint.getUserId().equals(ownerUserId)) {
             throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
