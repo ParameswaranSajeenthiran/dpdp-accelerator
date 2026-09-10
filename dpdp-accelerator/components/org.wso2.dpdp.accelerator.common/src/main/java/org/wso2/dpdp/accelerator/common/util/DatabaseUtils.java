@@ -128,7 +128,7 @@ public final class DatabaseUtils {
                     LOG.error("Rollback failed after transaction error.", rollbackEx);
                 }
             }
-            closeConnection(conn);
+            closeConnectionWithoutRollback(conn);
         }
     }
 
@@ -143,5 +143,17 @@ public final class DatabaseUtils {
             work.accept(conn);
             return null;
         });
+    }
+
+    private static void closeConnectionWithoutRollback(Connection connection) {
+
+        if (connection == null) {
+            return;
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LOG.error("Error while closing a DPDP DB connection.", e);
+        }
     }
 }

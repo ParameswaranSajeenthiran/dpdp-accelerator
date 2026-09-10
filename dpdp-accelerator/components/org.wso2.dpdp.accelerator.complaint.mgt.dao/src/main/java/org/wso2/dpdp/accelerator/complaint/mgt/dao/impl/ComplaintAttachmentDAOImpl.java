@@ -25,7 +25,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintDBColumns;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintCommonDBQueries;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryFactory;
 
 import java.sql.Connection;
@@ -41,13 +40,9 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
 
     private static final Log LOG = LogFactory.getLog(ComplaintAttachmentDAOImpl.class);
 
-    private ComplaintCommonDBQueries getQueries(Connection conn) {
-        return ComplaintQueryFactory.getQueryProvider(conn);
-    }
-
     @Override
     public boolean addAttachment(Connection conn, ComplaintAttachment attachment) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddComplaintAttachmentQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getAddComplaintAttachmentQuery())) {
             ps.setString(1, attachment.getAttachmentId());
             ps.setString(2, attachment.getOrgId());
             ps.setString(3, attachment.getComplaintId());
@@ -73,7 +68,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public Optional<ComplaintAttachment> getAttachmentMetadataById(Connection conn, String attachmentId,
             String orgId, String complaintId) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetAttachmentMetadataByIdQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getGetAttachmentMetadataByIdQuery())) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
@@ -102,7 +97,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public Optional<ComplaintAttachment> getAttachmentWithDataById(Connection conn, String attachmentId,
             String orgId, String complaintId) {
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetAttachmentWithDataByIdQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getGetAttachmentWithDataByIdQuery())) {
             ps.setString(1, attachmentId);
             ps.setString(2, orgId);
             ps.setString(3, complaintId);
@@ -121,7 +116,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
     @Override
     public List<ComplaintAttachment> listAttachmentsForComplaint(Connection conn, String orgId, String complaintId) {
         List<ComplaintAttachment> attachments = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getListAttachmentMetadataByComplaintQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(ComplaintQueryFactory.getQueryProvider(conn).getListAttachmentMetadataByComplaintQuery())) {
             ps.setString(1, orgId);
             ps.setString(2, complaintId);
             try (ResultSet rs = ps.executeQuery()) {
