@@ -58,11 +58,6 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
-
-    // "All" means every status, resolved included - ComplaintQueuePage.tsx narrows the
-    // server-paginated page by the reference/name search only, so the pager's total keeps
-    // matching what the table renders. Filtering explicitly to "Resolved" still works and is
-    // covered by 05.06.03.
     await expect(queuePage.rowByReferenceId(seeded.referenceId)).toBeVisible()
     await officerPage.context().close()
   })

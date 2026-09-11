@@ -69,11 +69,6 @@ function ComplaintQueuePage(): React.JSX.Element {
   const rows = useMemo(() => {
     const search = filters.search.trim().toLowerCase()
 
-    // Status and priority are filtered server-side, so "All" here really is every complaint,
-    // resolved ones included - the pager's total then matches what the table shows. Only the
-    // reference/name search narrows client-side, within the already-paginated page, which can
-    // still make a page render fewer than rowsPerPage rows; Previous/Next stay correct
-    // regardless, since they're driven by the server's offset and total.
     return pageComplaints.filter(
       (complaint) =>
         !(
