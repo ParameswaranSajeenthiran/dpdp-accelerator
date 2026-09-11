@@ -19,11 +19,12 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -68,8 +69,9 @@ public class ComplaintCommentHandler {
         boolean isPublic = requestedIsPublic;
         String toStatus = request != null ? request.getToStatus() : null;
 
-        return complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName, actorRole, message,
-                isPublic, toStatus);
+        ComplaintEvent event = complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName,
+                actorRole, message, isPublic, toStatus);
+        return ComplaintCommentCreateResponseDTO.from(event);
     }
 
     public ComplaintCommentCreateResponseDTO addOwnComment(String orgId, String complaintId, String ownerUserId,
@@ -78,7 +80,8 @@ public class ComplaintCommentHandler {
         String message = request != null ? request.getMessage() : null;
         String toStatus = request != null ? request.getToStatus() : null;
 
-        return complaintEventService.addComment(orgId, complaintId, ownerUserId, ownerUserName, "USER", message,
-                true, toStatus);
+        ComplaintEvent event = complaintEventService.addComment(orgId, complaintId, ownerUserId, ownerUserName,
+                "USER", message, true, toStatus);
+        return ComplaintCommentCreateResponseDTO.from(event);
     }
 }

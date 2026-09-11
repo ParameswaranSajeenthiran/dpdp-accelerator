@@ -30,7 +30,13 @@ import java.util.Optional;
  */
 public interface ComplaintAttachmentDAO {
 
-    /** Persists a new attachment row. Returns true if a row was inserted. */
+    /**
+     * Persists a new attachment row.
+     *
+     * @param conn       connection to execute against
+     * @param attachment attachment to persist
+     * @return true if a row was inserted
+     */
     boolean addAttachment(Connection conn, ComplaintAttachment attachment);
 
     /**
@@ -41,14 +47,38 @@ public interface ComplaintAttachmentDAO {
      * {attachmentId} path segment, and passing both here lets the DAO verify they're
      * consistent - an attachment fetched for the "wrong" complaintId returns empty rather than
      * silently ignoring the mismatch.
+     *
+     * @param conn         connection to execute against
+     * @param attachmentId attachment to fetch
+     * @param orgId        tenant/organization the attachment belongs to
+     * @param complaintId  complaint the attachment is expected to belong to
+     * @return the attachment metadata, or empty if none exists for this id/org/complaint
+     *         combination
      */
     Optional<ComplaintAttachment> getAttachmentMetadataById(Connection conn, String attachmentId, String orgId,
             String complaintId);
 
-    /** Full row including FILE_DATA - used for the download endpoint. Same complaintId scoping as above. */
+    /**
+     * Full row including FILE_DATA - used for the download endpoint. Same complaintId scoping as
+     * {@link #getAttachmentMetadataById}.
+     *
+     * @param conn         connection to execute against
+     * @param attachmentId attachment to fetch
+     * @param orgId        tenant/organization the attachment belongs to
+     * @param complaintId  complaint the attachment is expected to belong to
+     * @return the attachment including its file content, or empty if none exists for this
+     *         id/org/complaint combination
+     */
     Optional<ComplaintAttachment> getAttachmentWithDataById(Connection conn, String attachmentId, String orgId,
             String complaintId);
 
-    /** Attachments bound to the complaint - attachments are complaint-level resources only. */
+    /**
+     * Attachments bound to the complaint - attachments are complaint-level resources only.
+     *
+     * @param conn        connection to execute against
+     * @param orgId       tenant/organization the complaint belongs to
+     * @param complaintId complaint to list attachments for
+     * @return the attachments' metadata
+     */
     List<ComplaintAttachment> listAttachmentsForComplaint(Connection conn, String orgId, String complaintId);
 }

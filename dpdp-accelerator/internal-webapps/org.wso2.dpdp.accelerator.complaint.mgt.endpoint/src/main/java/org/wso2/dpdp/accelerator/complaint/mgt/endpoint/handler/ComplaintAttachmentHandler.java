@@ -21,9 +21,10 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Shared business logic behind both /me/complaints/{id}/attachments (Data Principal) and
@@ -73,14 +75,17 @@ public class ComplaintAttachmentHandler {
     public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
             List<Attachment> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        return complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId, files,
-                isPublic == null || isPublic, actorUserId, actorUserName,
+        List<ComplaintAttachment> stored = complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId,
+                files, isPublic == null || isPublic, actorUserId, actorUserName,
                 ComplaintActorRole.COMPLAINT_OFFICER.name());
+        return toAttachmentDtos(stored);
     }
 
     public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
             String attachmentId) {
-        return complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, false);
+        ComplaintAttachment attachment = complaintAttachmentService.downloadAttachment(orgId, complaintId,
+                attachmentId, false);
+        return toDownloadResponseDto(attachment);
     }
 
     // ---- Data Principal ----
@@ -88,16 +93,28 @@ public class ComplaintAttachmentHandler {
     public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<Attachment> fileParts) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        return complaintAttachmentService.uploadOwnComplaintAttachments(orgId, complaintId, ownerUserId,
-                ownerUserName, files);
+        List<ComplaintAttachment> stored = complaintAttachmentService.uploadOwnComplaintAttachments(orgId,
+                complaintId, ownerUserId, ownerUserName, files);
+        return toAttachmentDtos(stored);
     }
 
     public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
-        return complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId);
+        ComplaintAttachment attachment = complaintAttachmentService.downloadOwnAttachment(orgId, complaintId,
+                ownerUserId, attachmentId);
+        return toDownloadResponseDto(attachment);
     }
 
     // ---- shared ----
+
+    private List<ComplaintAttachmentResponseDTO> toAttachmentDtos(List<ComplaintAttachment> attachments) {
+        return attachments.stream().map(ComplaintAttachmentResponseDTO::from).collect(Collectors.toList());
+    }
+
+    private ComplaintAttachmentDownloadResponseDTO toDownloadResponseDto(ComplaintAttachment attachment) {
+        return new ComplaintAttachmentDownloadResponseDTO(attachment.getAttachmentId(), attachment.getFileName(),
+                attachment.getContentType(), attachment.getFileData());
+    }
 
     private List<UploadedFile> toUploadedFiles(List<Attachment> fileParts) {
         List<UploadedFile> files = new ArrayList<>();

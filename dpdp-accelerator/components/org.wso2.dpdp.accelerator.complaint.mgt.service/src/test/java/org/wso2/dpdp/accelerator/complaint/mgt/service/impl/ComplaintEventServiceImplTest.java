@@ -31,9 +31,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
@@ -62,8 +59,6 @@ class ComplaintEventServiceImplTest {
     @Mock
     private ComplaintDAO complaintDAO;
     @Mock
-    private ComplaintService complaintService;
-    @Mock
     private NotificationClient notificationClient;
 
     private ComplaintEventServiceImpl eventService;
@@ -71,9 +66,9 @@ class ComplaintEventServiceImplTest {
     @BeforeClass
     static void pointPersistenceManagerAtAnInMemoryDatabase() throws Exception {
         // Every method here now runs its DAO calls through DatabaseUtils#executeInTransaction,
-        // which opens a real Connection - complaintEventDAO/complaintDAO/complaintService are
-        // still plain Mockito mocks, so no real SQL executes against it, but
-        // JDBCPersistenceManager.getConnection() itself needs somewhere real to connect. Same
+        // which opens a real Connection - complaintEventDAO/complaintDAO are still plain Mockito
+        // mocks, so no real SQL executes against it, but JDBCPersistenceManager.getConnection()
+        // itself needs somewhere real to connect. Same
         // reflection-based DataSource injection as H2TestDbSupport in the dao module, since
         // JDBCPersistenceManager only resolves its DataSource via JNDI.
         JdbcDataSource dataSource = new JdbcDataSource();
@@ -97,8 +92,7 @@ class ComplaintEventServiceImplTest {
     @BeforeMethod
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        eventService = new ComplaintEventServiceImpl(complaintEventDAO, complaintDAO, complaintService,
-                notificationClient);
+        eventService = new ComplaintEventServiceImpl(complaintEventDAO, complaintDAO, notificationClient);
     }
 
     private Complaint openComplaint() {
@@ -110,8 +104,7 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelineRequiresComplaintToExistFirst() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenThrow(
-                new ComplaintException("CO-4040", "Complaint not found", "desc", 404));
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1"))).thenReturn(Optional.empty());
 
         expectThrows(ComplaintException.class,
                 () -> eventService.getTimeline("org1", "c1", null, null, null, "asc", 10, 0, new int[1]));
@@ -121,7 +114,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelineMapsEventsToDtos() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         ComplaintEvent statusChange = new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "USER", true,
                 "note", "OPEN", "IN_PROGRESS", 100L);
         int[] totalOut = new int[1];
@@ -140,7 +134,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelinePassesIsPublicFilterToDao() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         int[] totalOut = new int[1];
         when(complaintEventDAO.listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), isNull(), eq(false),
                 eq("asc"), eq(10), eq(0), eq(totalOut)))
@@ -154,7 +149,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelinePassesUntilFilterToDao() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         int[] totalOut = new int[1];
         when(complaintEventDAO.listEvents(any(Connection.class), eq("org1"), eq("c1"), isNull(), eq(500L), isNull(),
                 eq("asc"), eq(10), eq(0), eq(totalOut)))
@@ -170,7 +166,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsWhenMessageIsBlank() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", " ", true, null));
@@ -180,7 +177,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsWhenMessageExceedsMaxLength() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         String tooLong = "a".repeat(5001);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
@@ -192,22 +190,24 @@ class ComplaintEventServiceImplTest {
     @Test
     void addCommentAllowsMessageAtExactlyMaxLength() throws Exception {
         Complaint complaint = openComplaint();
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(complaint);
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(complaint));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
-        ComplaintCommentCreateResponseDTO event =
+        ComplaintEvent event =
                 eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
-        assertEquals(atLimit, event.getMessage());
+        assertEquals(atLimit, event.getComment());
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(notificationClient).notifyCommentAdded(eq(complaint), notifiedEventCaptor.capture());
-        assertEquals(event.getId(), notifiedEventCaptor.getValue().getComplaintEventId());
+        assertEquals(event.getComplaintEventId(), notifiedEventCaptor.getValue().getComplaintEventId());
     }
 
     @Test
     void addCommentThrowsWhenActorUserIdIsBlank() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", " ", "User One", "USER", "hello", true, null));
@@ -217,7 +217,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsWhenActorRoleIsInvalid() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "SYSTEM", "hello", true, null));
@@ -227,7 +228,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsForbiddenWhenUserTriesToSetIsPublicFalse() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "user1", "User One", "USER", "hello", false, null));
@@ -238,14 +240,15 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentAllowsComplaintOfficerToSetIsPublicFalse() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "internal note", false, null);
 
         assertEquals(false, event.isPublic());
-        assertEquals("internal note", event.getMessage());
+        assertEquals("internal note", event.getComment());
         // An internal note is never shown to the citizen in the timeline - notifying them about it
         // would leak its existence.
         verify(notificationClient, never()).notifyCommentAdded(any(), any());
@@ -253,7 +256,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsOnInvalidStatusTransition() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.addComment("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", "note",
@@ -267,12 +271,13 @@ class ComplaintEventServiceImplTest {
     @Test
     void addCommentWithValidToStatusUpdatesComplaintStatus() throws Exception {
         Complaint complaint = openComplaint();
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(complaint);
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(complaint));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
 
-        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "note", true, "IN_PROGRESS");
 
         assertEquals("OPEN", event.getFromStatus());
@@ -283,12 +288,13 @@ class ComplaintEventServiceImplTest {
         assertEquals("IN_PROGRESS", complaint.getStatus());
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(notificationClient).notifyCommentAdded(eq(complaint), notifiedEventCaptor.capture());
-        assertEquals(event.getId(), notifiedEventCaptor.getValue().getComplaintEventId());
+        assertEquals(event.getComplaintEventId(), notifiedEventCaptor.getValue().getComplaintEventId());
     }
 
     @Test
     void addCommentThrowsInternalErrorWhenStatusUpdateFails() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(complaintDAO.updateStatus(any(Connection.class), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(false);
@@ -302,7 +308,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void addCommentThrowsInternalErrorWhenAddEventFails() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(false);
 
         ComplaintException ex = expectThrows(ComplaintException.class,
@@ -316,7 +323,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelineEntryThrows404WhenEventNotFound() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintEventDAO.getEventById(any(Connection.class), eq("e1"), eq("org1"), eq("c1")))
                 .thenReturn(Optional.empty());
 
@@ -328,7 +336,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void getTimelineEntryReturnsMappedDtoWhenFound() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         ComplaintEvent event =
                 new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "USER", true, "hi", null, null, 100L);
         when(complaintEventDAO.getEventById(any(Connection.class), eq("e1"), eq("org1"), eq("c1")))
@@ -344,7 +353,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusThrowsWhenActorUserIdIsBlank() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", " ", "User One", "USER", "IN_PROGRESS", null));
@@ -354,7 +364,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusThrowsWhenActorRoleIsInvalid() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "user1", "User One", "SYSTEM", "IN_PROGRESS", null));
@@ -364,7 +375,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusThrowsWhenToStatusIsBlank() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "user1", "User One", "USER", " ", null));
@@ -376,7 +388,8 @@ class ComplaintEventServiceImplTest {
     void updateStatusRequiresNoteWhenTransitioningToResolved() {
         Complaint inProgress = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "IN_PROGRESS", "desc", 1L, 2L, 3L);
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(inProgress);
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(inProgress));
 
         ComplaintException ex = expectThrows(ComplaintException.class, () -> eventService.updateStatus("org1", "c1",
                 "officer1", "Officer One", "COMPLAINT_OFFICER", "RESOLVED", " "));
@@ -387,7 +400,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusThrowsOnInvalidTransition() {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
 
         ComplaintException ex = expectThrows(ComplaintException.class,
                 () -> eventService.updateStatus("org1", "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
@@ -398,15 +412,16 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusPersistsNewStatusAndRecordsEvent() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintStatusUpdateResponseDTO result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
+        Complaint result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "IN_PROGRESS", null);
 
-        assertEquals("IN_PROGRESS", result.getToStatus());
+        assertEquals("IN_PROGRESS", result.getStatus());
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("OPEN", captor.getValue().getFromStatus());
@@ -415,7 +430,8 @@ class ComplaintEventServiceImplTest {
 
     @Test
     void updateStatusThrowsInternalErrorWhenDaoUpdateFails() throws Exception {
-        when(complaintService.requireComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(openComplaint());
+        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
+                .thenReturn(Optional.of(openComplaint()));
         when(complaintDAO.updateStatus(any(Connection.class), anyString(), anyString(), anyString(), anyLong()))
                 .thenReturn(false);
 

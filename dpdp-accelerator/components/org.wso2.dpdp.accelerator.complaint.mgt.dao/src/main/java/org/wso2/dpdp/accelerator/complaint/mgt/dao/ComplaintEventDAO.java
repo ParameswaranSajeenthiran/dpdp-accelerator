@@ -32,7 +32,13 @@ import java.util.Optional;
  */
 public interface ComplaintEventDAO {
 
-    /** Persists a new timeline entry (status change, comment, or internal note). Returns true if a row was inserted. */
+    /**
+     * Persists a new timeline entry (status change, comment, or internal note).
+     *
+     * @param conn  connection to execute against
+     * @param event timeline entry to persist
+     * @return true if a row was inserted
+     */
     boolean addEvent(Connection conn, ComplaintEvent event);
 
     /**
@@ -42,6 +48,12 @@ public interface ComplaintEventDAO {
      * unique per orgId, for the same reason as {@link ComplaintAttachmentDAO}: it lets the DAO
      * verify the two path segments the caller has ({complaintId}, {complaintEventId}) are actually
      * consistent, rather than silently ignoring a mismatch.
+     *
+     * @param conn             connection to execute against
+     * @param complaintEventId timeline entry to fetch
+     * @param orgId            tenant/organization the entry belongs to
+     * @param complaintId      complaint the entry is expected to belong to
+     * @return the timeline entry, or empty if none exists for this id/org/complaint combination
      */
     Optional<ComplaintEvent> getEventById(Connection conn, String complaintEventId, String orgId,
             String complaintId);
@@ -52,10 +64,20 @@ public interface ComplaintEventDAO {
      * inclusive (ACTION_TIME &lt;= until), matching the OpenAPI spec's "at or before" wording for
      * toTime.
      *
-     * <p>totalOut is an out-param, same convention as {@link ComplaintDAO#listComplaints}: pass
-     * {@code new int[1]} and, after the call, {@code totalOut[0]} holds the total row count
-     * matching the filters (ignoring limit/offset). Pass {@code null} or a zero-length array to
-     * skip the count query.
+     * @param conn        connection to execute against
+     * @param orgId       tenant/organization the complaint belongs to
+     * @param complaintId complaint to list entries for
+     * @param since       optional filter; exclusive lower bound on ACTION_TIME
+     * @param until       optional filter; inclusive upper bound on ACTION_TIME
+     * @param isPublic    optional filter by visibility
+     * @param order       sort order
+     * @param limit       maximum number of rows to return
+     * @param offset      number of matching rows to skip
+     * @param totalOut    out-param, same convention as {@link ComplaintDAO#listComplaints}: pass
+     *                    {@code new int[1]} and, after the call, {@code totalOut[0]} holds the
+     *                    total row count matching the filters (ignoring limit/offset). Pass
+     *                    {@code null} or a zero-length array to skip the count query.
+     * @return the page of timeline entries matching the filters
      */
     List<ComplaintEvent> listEvents(Connection conn, String orgId, String complaintId, Long since, Long until,
             Boolean isPublic, String order, int limit, int offset, int[] totalOut);

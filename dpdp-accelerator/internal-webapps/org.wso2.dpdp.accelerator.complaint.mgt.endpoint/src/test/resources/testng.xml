@@ -20,6 +20,7 @@
     <test name="dpdp-complaint-mgt-endpoint-tests">
         <packages>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api"/>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler"/>
         </packages>

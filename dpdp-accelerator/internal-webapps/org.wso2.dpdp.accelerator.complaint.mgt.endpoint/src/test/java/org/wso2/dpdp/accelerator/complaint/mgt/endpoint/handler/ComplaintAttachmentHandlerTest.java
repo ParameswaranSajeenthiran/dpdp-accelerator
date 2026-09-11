@@ -33,8 +33,8 @@ import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
@@ -103,15 +103,6 @@ class ComplaintAttachmentHandlerTest {
         return new ComplaintAttachment(id, ORG_ID, "c1", "a.pdf", "application/pdf", new byte[]{1}, isPublic, 1L);
     }
 
-    private ComplaintAttachmentResponseDTO attachmentBean(String id, boolean isPublic) {
-        return ComplaintAttachmentResponseDTO.from(attachment(id, isPublic));
-    }
-
-    private ComplaintAttachmentDownloadResponseDTO downloadBean(ComplaintAttachment attachment) {
-        return new ComplaintAttachmentDownloadResponseDTO(attachment.getAttachmentId(), attachment.getFileName(),
-                attachment.getContentType(), attachment.getFileData());
-    }
-
     // ---- officer/admin ----
 
     @Test
@@ -123,7 +114,7 @@ class ComplaintAttachmentHandlerTest {
         when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"a.pdf\""));
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER")))
-                .thenReturn(List.of(attachmentBean("att1", false)));
+                .thenReturn(List.of(attachment("att1", false)));
 
         List<ComplaintAttachmentResponseDTO> result = handler.uploadComplaintAttachments(ORG_ID, "c1",
                 List.of(filePart), false, "officer1", "Officer One");
@@ -245,7 +236,7 @@ class ComplaintAttachmentHandlerTest {
         ComplaintAttachment attachment = new ComplaintAttachment("att1", ORG_ID, "c1", "a.pdf", "application/pdf",
                 content, false, 100L);
         when(complaintAttachmentService.downloadAttachment(ORG_ID, "c1", "att1", false))
-                .thenReturn(downloadBean(attachment));
+                .thenReturn(attachment);
 
         ComplaintAttachmentDownloadResponseDTO response = handler.downloadAttachment(ORG_ID, "c1", "att1");
 
@@ -260,7 +251,7 @@ class ComplaintAttachmentHandlerTest {
         // Ownership is enforced by the service (uploadOwnComplaintAttachments), not the handler -
         // see ComplaintAttachmentServiceImpl for the defense-in-depth check.
         when(complaintAttachmentService.uploadOwnComplaintAttachments(eq(ORG_ID), eq("c1"), eq("user1"),
-                eq("User One"), any())).thenReturn(List.of(attachmentBean("att1", true)));
+                eq("User One"), any())).thenReturn(List.of(attachment("att1", true)));
 
         List<ComplaintAttachmentResponseDTO> result =
                 handler.uploadOwnComplaintAttachments(ORG_ID, "c1", "user1", "User One", List.of());
@@ -276,7 +267,7 @@ class ComplaintAttachmentHandlerTest {
         // ComplaintAttachmentServiceImpl for the defense-in-depth check.
         ComplaintAttachment attachment = attachment("att1", true);
         when(complaintAttachmentService.downloadOwnAttachment(ORG_ID, "c1", "user1", "att1"))
-                .thenReturn(downloadBean(attachment));
+                .thenReturn(attachment);
 
         ComplaintAttachmentDownloadResponseDTO response =
                 handler.downloadOwnAttachment(ORG_ID, "c1", "user1", "att1");

@@ -34,8 +34,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
@@ -44,6 +42,8 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.Year;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -239,13 +239,14 @@ class ComplaintServiceImplTest {
         when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint =
+        Complaint complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
 
         assertEquals("CRITICAL", complaint.getPriority());
         assertEquals("OPEN", complaint.getStatus());
         assertEquals("desc", complaint.getDescription());
         assertEquals("user1", complaint.getUserId());
+        assertEquals("CMP-" + Year.now(ZoneOffset.UTC).getValue() + "-00001", complaint.getReferenceId());
 
         ArgumentCaptor<Complaint> captor = ArgumentCaptor.forClass(Complaint.class);
         verify(complaintDAO).addComplaint(any(Connection.class), captor.capture());
@@ -254,6 +255,16 @@ class ComplaintServiceImplTest {
         assertEquals("User One", captor.getValue().getUserName());
         assertTrue(captor.getValue().getStatutoryDueTime() > captor.getValue().getCreatedTime());
         verify(notificationClient).notifyComplaintCreated(captor.getValue());
+    }
+
+    @Test
+    void createComplaintIncrementsReferenceIdSequenceBasedOnExistingCountForTheYear() throws Exception {
+        when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(4820);
+        when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
+
+        Complaint complaint = complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
+
+        assertEquals("CMP-" + Year.now(ZoneOffset.UTC).getValue() + "-04821", complaint.getReferenceId());
     }
 
     @Test
@@ -276,7 +287,7 @@ class ComplaintServiceImplTest {
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
                 .thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint =
+        Complaint complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -303,7 +314,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint = complaintService.createComplaint("org1", "user1", null,
+        Complaint complaint = complaintService.createComplaint("org1", "user1", null,
                 "DATA_BREACH", "desc", "officer1", "COMPLAINT_OFFICER");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -312,11 +323,11 @@ class ComplaintServiceImplTest {
         assertEquals("officer1", captor.getValue().getActorUserId());
         assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
         assertEquals("OPEN", captor.getValue().getToStatus());
-        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
-        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
         ArgumentCaptor<Complaint> notifiedComplaintCaptor = ArgumentCaptor.forClass(Complaint.class);
         verify(notificationClient).notifyComplaintCreated(notifiedComplaintCaptor.capture());
-        assertEquals(complaint.getId(), notifiedComplaintCaptor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), notifiedComplaintCaptor.getValue().getComplaintId());
     }
 
     @Test
@@ -339,11 +350,11 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void requireComplaintThrows404WhenIdOrOrgIsBlank() {
+    void getComplaintThrows404WhenIdOrOrgIsBlank() {
         ComplaintException ex1 = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint("org1", " "));
+                () -> complaintService.getComplaint("org1", " "));
         ComplaintException ex2 = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint(" ", "c1"));
+                () -> complaintService.getComplaint(" ", "c1"));
 
         assertEquals("CO-4040", ex1.getCode());
         assertEquals(404, ex1.getStatusCode());
@@ -352,30 +363,17 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void requireComplaintThrows404WhenDaoReturnsEmpty() {
+    void getComplaintThrows404WhenDaoReturnsEmpty() {
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1"))).thenReturn(Optional.empty());
 
         ComplaintException ex = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint("org1", "c1"));
+                () -> complaintService.getComplaint("org1", "c1"));
 
         assertEquals("CO-4040", ex.getCode());
     }
 
     @Test
-    void requireComplaintReturnsDtoWhenFound() {
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
-        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
-                .thenReturn(Optional.of(complaint));
-
-        Complaint result = complaintService.requireComplaint("org1", "c1");
-
-        assertEquals("c1", result.getComplaintId());
-        assertEquals("CMP-2026-00001", result.getReferenceId());
-    }
-
-    @Test
-    void getComplaintDelegatesToRequireComplaint() {
+    void getComplaintReturnsComplaintWhenFound() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
@@ -384,6 +382,7 @@ class ComplaintServiceImplTest {
         Complaint result = complaintService.getComplaint("org1", "c1");
 
         assertEquals("c1", result.getComplaintId());
+        assertEquals("CMP-2026-00001", result.getReferenceId());
     }
 
     @Test
@@ -447,7 +446,7 @@ class ComplaintServiceImplTest {
         ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
         when(complaintDAO.getQueueStats(any(Connection.class), eq("org1"), anyLong())).thenReturn(stats);
 
-        ComplaintQueueStatsResponseDTO result = complaintService.getQueueStats("org1");
+        ComplaintQueueStats result = complaintService.getQueueStats("org1");
 
         assertEquals(stats.getOpenCount(), result.getOpenCount());
         assertEquals(stats.getAwaitingInternalReviewCount(), result.getAwaitingInternalReviewCount());
@@ -472,13 +471,13 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void requireComplaintAcquiresExactlyOneConnection() {
+    void getComplaintAcquiresExactlyOneConnection() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
                 .thenReturn(Optional.of(complaint));
 
-        complaintService.requireComplaint("org1", "c1");
+        complaintService.getComplaint("org1", "c1");
 
         assertEquals(1, CONNECTION_COUNT.get());
     }

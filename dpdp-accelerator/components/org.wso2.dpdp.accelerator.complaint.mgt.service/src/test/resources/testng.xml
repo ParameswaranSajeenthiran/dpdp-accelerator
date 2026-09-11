@@ -20,7 +20,6 @@
 <suite name="dpdp-complaint-mgt-service-test-suite" preserve-order="true">
     <test name="dpdp-complaint-mgt-service-tests">
         <packages>
-            <package name="org.wso2.dpdp.accelerator.complaint.mgt.service.dto"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.service.exception"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.service.impl"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.service.util"/>

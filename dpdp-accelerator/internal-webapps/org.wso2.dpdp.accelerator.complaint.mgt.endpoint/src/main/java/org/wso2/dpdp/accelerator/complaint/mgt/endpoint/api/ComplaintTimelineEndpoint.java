@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.GET;

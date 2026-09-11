@@ -19,12 +19,12 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintRecordDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintStatusUpdateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.Consumes;

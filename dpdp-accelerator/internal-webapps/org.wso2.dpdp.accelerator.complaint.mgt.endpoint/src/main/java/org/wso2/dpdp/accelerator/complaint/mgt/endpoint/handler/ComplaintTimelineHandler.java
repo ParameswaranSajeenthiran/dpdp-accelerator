@@ -19,14 +19,15 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintTimelineEntryResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.PageMetadataDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintTimelineEntryResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,16 +91,19 @@ public class ComplaintTimelineHandler {
         List<ComplaintEvent> entries = complaintEventService.getTimeline(orgId, complaintId, fromTime, toTime,
                 isPublic, order, lim, off, totalOut);
 
-        Map<String, List<ComplaintAttachmentResponseDTO>> attachmentsByEventId = complaintAttachmentService
+        Map<String, List<ComplaintAttachment>> attachmentsByEventId = complaintAttachmentService
                 .listAttachmentsForComplaint(orgId, complaintId)
                 .stream()
                 .filter(attachment -> attachment.getComplaintEventId() != null)
-                .collect(Collectors.groupingBy(ComplaintAttachmentResponseDTO::getComplaintEventId));
+                .collect(Collectors.groupingBy(ComplaintAttachment::getComplaintEventId));
 
         List<ComplaintTimelineEntryResponseDTO> beanList = new ArrayList<>();
         for (ComplaintEvent entry : entries) {
             List<ComplaintAttachmentResponseDTO> attachments = attachmentsByEventId
-                    .getOrDefault(entry.getComplaintEventId(), Collections.emptyList());
+                    .getOrDefault(entry.getComplaintEventId(), Collections.emptyList())
+                    .stream()
+                    .map(ComplaintAttachmentResponseDTO::from)
+                    .collect(Collectors.toList());
             beanList.add(ComplaintTimelineEntryResponseDTO.from(entry, attachments));
         }
 

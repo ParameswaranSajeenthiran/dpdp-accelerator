@@ -29,8 +29,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponseDTO;
 
 import java.util.List;
 
@@ -122,7 +121,7 @@ class ComplaintTimelineHandlerTest {
         forE1.setAttachmentId("a1");
         forE1.setComplaintEventId("e1");
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(ComplaintAttachmentResponseDTO.from(forE1)));
+                .thenReturn(List.of(forE1));
 
         TimelineListResponseDTO response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 
