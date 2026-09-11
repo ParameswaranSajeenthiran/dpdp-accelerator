@@ -26,7 +26,6 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.governance.exceptions.notiification.NotificationTemplateManagerException;
 import org.wso2.carbon.identity.governance.model.NotificationTemplate;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
-import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
 
 import java.util.List;
@@ -48,15 +47,11 @@ public class EmailTemplateProvisioningUtilTest {
     @Mock
     private NotificationTemplateManager notificationTemplateManager;
 
-    @Mock
-    private DPDPConfigurationService configurationService;
-
     @BeforeMethod
     public void setUp() {
 
         MockitoAnnotations.openMocks(this);
         DPDPIdentityExtensionDataHolder.getInstance().setNotificationTemplateManager(notificationTemplateManager);
-        DPDPIdentityExtensionDataHolder.getInstance().setConfigurationService(configurationService);
     }
 
     @Test
@@ -126,22 +121,6 @@ public class EmailTemplateProvisioningUtilTest {
 
         verify(notificationTemplateManager, org.mockito.Mockito.never()).addNotificationTemplate(
                 org.mockito.ArgumentMatchers.any(NotificationTemplate.class), anyString());
-    }
-
-    @Test
-    public void provisionTemplatesOverwritesAnExistingTemplateWhenResetToDefaultIsEnabled() throws Exception {
-
-        // Complaints.EmailTemplates.ResetToDefaultEnabled is the deliberate, opt-in path for
-        // pushing an upgraded bundled default over a template a tenant already has - even one an
-        // administrator customized.
-        when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
-                eq(TENANT_DOMAIN))).thenReturn(new NotificationTemplate());
-        when(configurationService.isComplaintsEmailTemplatesResetToDefaultEnabled()).thenReturn(true);
-
-        EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
-
-        verify(notificationTemplateManager, times(3)).addNotificationTemplate(
-                org.mockito.ArgumentMatchers.any(NotificationTemplate.class), eq(TENANT_DOMAIN));
     }
 
     @Test

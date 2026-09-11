@@ -53,13 +53,6 @@ public final class DPDPCommonConstants {
     public static final String COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = "Complaints.AttachmentMaxFilesPerUpload";
     public static final int DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = 5;
 
-    // Provisioning is check-then-add per tenant (a Console edit is never clobbered); this is the
-    // opt-in escape hatch for pushing a genuine bundled-default upgrade over an already-customized
-    // template - see EmailTemplateProvisioningUtil.
-    public static final String COMPLAINTS_EMAIL_TEMPLATES_RESET_TO_DEFAULT_ENABLED =
-            "Complaints.EmailTemplates.ResetToDefaultEnabled";
-    public static final boolean DEFAULT_COMPLAINTS_EMAIL_TEMPLATES_RESET_TO_DEFAULT_ENABLED = false;
-
     public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
     public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";
     public static final String EVENT_NOTIFICATIONS_MAX_RETRIES = "EventNotifications.MaxRetries";

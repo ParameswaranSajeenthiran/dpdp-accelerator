@@ -368,12 +368,20 @@ Available placeholders: `{{reference-id}}`, `{{message-excerpt}}`,
 `{{action-badge-html}}`, `{{logo-url}}` (see `EmailNotificationClient` for
 exactly what each resolves to).
 
-Provisioning is check-then-add per tenant, so a Console edit is never
-overwritten by a later tenant update. To force every tenant's templates back
-to the bundled default (e.g. after an accelerator upgrade), set
-`reset_to_default_enabled = true` under `[dpdp_accelerator.complaints.email_templates]`,
-trigger a tenant update, then set it back to `false` - otherwise every future
-update keeps re-clobbering the templates.
+Provisioning is check-then-add per tenant: a template is written once, the
+first time a tenant is provisioned, and never touched again after that - a
+Console edit is permanent and survives every later tenant-update event.
+There is no flag or action that resets an already-provisioned tenant's
+template back to the bundled default; the only way to change what a tenant
+already has is to edit it again in Console. A change to the bundled default
+(see below) only affects tenants provisioned after that change.
+
+The bundled default subject/body itself comes from
+`<IS_HOME>/repository/conf/email/email-dpdp-config.xml` when present, the
+same shape as this product's own `email-admin-config.xml`. Edit that file to
+change the default new tenants get, with no Java rebuild - falls back to the
+accelerator's own bundled resource if the file is missing or doesn't define a
+given type.
 
 All three types currently share one bundled HTML body; splitting them per-type
 is a possible future improvement, not yet decided.

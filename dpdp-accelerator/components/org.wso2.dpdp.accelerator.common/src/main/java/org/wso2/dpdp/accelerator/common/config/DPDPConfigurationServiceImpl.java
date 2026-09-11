@@ -109,12 +109,6 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
-    public boolean isComplaintsEmailTemplatesResetToDefaultEnabled() {
-
-        return configParser != null && configParser.isComplaintsEmailTemplatesResetToDefaultEnabled();
-    }
-
-    @Override
     public int getEventNotificationThreadPoolSize() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE

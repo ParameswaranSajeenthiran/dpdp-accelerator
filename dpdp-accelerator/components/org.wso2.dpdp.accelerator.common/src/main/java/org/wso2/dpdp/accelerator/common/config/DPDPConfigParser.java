@@ -261,12 +261,6 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD);
     }
 
-    public boolean isComplaintsEmailTemplatesResetToDefaultEnabled() {
-
-        return getValidatedBoolean(DPDPCommonConstants.COMPLAINTS_EMAIL_TEMPLATES_RESET_TO_DEFAULT_ENABLED,
-                DPDPCommonConstants.DEFAULT_COMPLAINTS_EMAIL_TEMPLATES_RESET_TO_DEFAULT_ENABLED);
-    }
-
     public boolean isConsentHistoryEnabled() {
 
         return getConfigurationAsString(DPDPCommonConstants.CONSENT_HISTORY_ENABLED)
