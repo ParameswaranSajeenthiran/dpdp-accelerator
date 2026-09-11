@@ -73,13 +73,6 @@
         {% else %}
         <AttachmentMaxFilesPerUpload>5</AttachmentMaxFilesPerUpload>
         {% endif %}
-        <EmailTemplates>
-            {% if dpdp_accelerator.complaints.email_templates.reset_to_default_enabled is defined %}
-            <ResetToDefaultEnabled>{{dpdp_accelerator.complaints.email_templates.reset_to_default_enabled}}</ResetToDefaultEnabled>
-            {% else %}
-            <ResetToDefaultEnabled>false</ResetToDefaultEnabled>
-            {% endif %}
-        </EmailTemplates>
     </Complaints>
     <EventNotifications>
         {% if dpdp_accelerator.event_notifications.webhook.thread_pool_size is defined %}

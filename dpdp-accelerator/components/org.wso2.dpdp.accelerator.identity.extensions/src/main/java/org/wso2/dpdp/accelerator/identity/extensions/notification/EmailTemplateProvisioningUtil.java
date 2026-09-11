@@ -29,6 +29,7 @@ import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtens
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * Registers the three complaint notification email templates for a tenant, check-then-add -
@@ -36,10 +37,16 @@ import java.nio.charset.StandardCharsets;
  * {@code DPDPConsentPortalRoleProvisioningUtil}. Runs on every {@code onTenantCreate}/
  * {@code onTenantUpdate} (see {@code DPDPIdentityExtensionTenantMgtListener}), so an
  * administrator's Console edit to a template's subject/body is never overwritten by a later
- * tenant-update event - only a template this tenant doesn't have yet gets written. Pushing an
- * updated bundled default over an already-customized template is a deliberate, opt-in action; see
- * {@link org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService
- * #isComplaintsEmailTemplatesResetToDefaultEnabled()}.
+ * tenant-update event - only a template this tenant doesn't have yet gets written, permanently.
+ * There is no override path back to the bundled default once a tenant has its own copy; picking
+ * up a bundled-default change (e.g. after editing {@code email-dpdp-config.xml}) only ever
+ * affects tenants provisioned after that change.
+ *
+ * <p>The bundled default subject/body for each type comes from
+ * {@code <IS_HOME>/repository/conf/email/email-dpdp-config.xml} when present ({@link
+ * EmailTemplateConfigLoader}), falling back to this class's own Java literal subjects and the
+ * bundled {@code complaint-email-body.html} classpath resource otherwise - editing that file
+ * changes the bundled default without a Java rebuild.
  */
 public final class EmailTemplateProvisioningUtil {
 
@@ -61,12 +68,10 @@ public final class EmailTemplateProvisioningUtil {
 
     public static void provisionTemplates(String tenantDomain) {
 
-        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMPLAINT_CREATED,
-                "New complaint filed: {{reference-id}}", EMAIL_BODY);
-        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMMENT_ADDED,
-                "New reply on complaint {{reference-id}}", EMAIL_BODY);
+        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMPLAINT_CREATED, "New complaint filed: {{reference-id}}");
+        provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMMENT_ADDED, "New reply on complaint {{reference-id}}");
         provisionTemplate(tenantDomain, TEMPLATE_TYPE_COMPLAINT_ACKNOWLEDGED,
-                "We've received your complaint: {{reference-id}}", EMAIL_BODY);
+                "We've received your complaint: {{reference-id}}");
     }
 
     // Shared HTML shell for all three notification types, bundled as an OSGi resource rather than
@@ -89,14 +94,13 @@ public final class EmailTemplateProvisioningUtil {
     /**
      * Writes the template content only if this tenant doesn't already have it - an administrator's
      * Console edit is otherwise indistinguishable from the bundled default once written, so
-     * overwriting unconditionally on every tenant update would silently discard it.
-     * {@code Complaints.EmailTemplates.ResetToDefaultEnabled} bypasses this check, for the
-     * deliberate case of pushing an upgraded bundled default over an existing (possibly
-     * customized) template. {@code addNotificationTemplateType} is not upsert-safe (throws if
+     * overwriting unconditionally on every tenant update would silently discard it. This check is
+     * unconditional and permanent: there is no flag or action that bypasses it once a template
+     * exists for a tenant. {@code addNotificationTemplateType} is not upsert-safe (throws if
      * already registered), so that failure is swallowed separately and never blocks the check/
      * write below it.
      */
-    private static void provisionTemplate(String tenantDomain, String templateType, String subject, String body) {
+    private static void provisionTemplate(String tenantDomain, String templateType, String defaultSubject) {
 
         NotificationTemplateManager templateManager = DPDPIdentityExtensionDataHolder.getInstance()
                 .getNotificationTemplateManager();
@@ -107,14 +111,18 @@ public final class EmailTemplateProvisioningUtil {
                     + LogSanitizer.sanitize(tenantDomain) + "'; continuing to check its content.", e);
         }
 
-        boolean resetToDefault = DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService()
-                .isComplaintsEmailTemplatesResetToDefaultEnabled();
-        if (!resetToDefault && templateExists(templateManager, templateType, tenantDomain)) {
+        if (templateExists(templateManager, templateType, tenantDomain)) {
             LOG.debug("Email template '" + templateType + "' already exists for tenant '"
                     + LogSanitizer.sanitize(tenantDomain) + "'; leaving its content as-is so a Console "
                     + "customization is preserved.");
             return;
         }
+
+        Optional<EmailTemplateConfigLoader.TemplateContent> fileContent =
+                EmailTemplateConfigLoader.getTemplateContent(templateType);
+        String subject = fileContent.map(EmailTemplateConfigLoader.TemplateContent::getSubject)
+                .orElse(defaultSubject);
+        String body = fileContent.map(EmailTemplateConfigLoader.TemplateContent::getBody).orElse(EMAIL_BODY);
 
         try {
             NotificationTemplate template = new NotificationTemplate();
