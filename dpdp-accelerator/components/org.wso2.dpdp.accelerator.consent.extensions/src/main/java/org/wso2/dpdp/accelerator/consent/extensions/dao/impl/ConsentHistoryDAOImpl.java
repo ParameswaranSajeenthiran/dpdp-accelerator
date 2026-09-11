@@ -27,7 +27,6 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistor
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryCommonDBQueries;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryQueryFactory;
 
 import java.sql.Connection;
@@ -41,15 +40,12 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
 
     private static final Log LOG = LogFactory.getLog(ConsentHistoryDAOImpl.class);
 
-    private ConsentHistoryCommonDBQueries getQueries(Connection conn) {
-        return ConsentHistoryQueryFactory.getQueryProvider(conn);
-    }
-
     @Override
     public void insertStatusAudit(Connection connection, ConsentStatusAuditRecord record) {
 
         try (PreparedStatement statement = connection
-                .prepareStatement(getQueries(connection).getInsertStatusAuditQuery())) {
+                .prepareStatement(ConsentHistoryQueryFactory.getQueryProvider(connection)
+                        .getInsertStatusAuditQuery())) {
             statement.setString(1, record.getAuditId());
             statement.setString(2, record.getConsentId());
             statement.setString(3, record.getOrgId());
@@ -71,7 +67,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     public void insertHistorySnapshot(Connection connection, ConsentHistoryRecord record) {
 
         try (PreparedStatement statement = connection
-                .prepareStatement(getQueries(connection).getInsertHistorySnapshotQuery())) {
+                .prepareStatement(ConsentHistoryQueryFactory.getQueryProvider(connection)
+                        .getInsertHistorySnapshotQuery())) {
             statement.setString(1, record.getHistoryId());
             statement.setString(2, record.getConsentId());
             statement.setString(3, record.getOrgId());
@@ -94,7 +91,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
 
         List<ConsentStatusAuditRecord> records = new ArrayList<>();
         try (PreparedStatement statement = connection
-                .prepareStatement(getQueries(connection).getStatusAuditHistoryQuery())) {
+                .prepareStatement(ConsentHistoryQueryFactory.getQueryProvider(connection)
+                        .getStatusAuditHistoryQuery())) {
             statement.setString(1, consentId);
             statement.setString(2, orgId);
             statement.setInt(3, limit);
@@ -116,7 +114,9 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     @Override
     public int getStatusAuditHistoryCount(Connection connection, String orgId, String consentId) {
 
-        return getCount(connection, getQueries(connection).getStatusAuditHistoryCountQuery(), orgId, consentId);
+        return getCount(connection,
+                ConsentHistoryQueryFactory.getQueryProvider(connection).getStatusAuditHistoryCountQuery(), orgId,
+                consentId);
     }
 
     @Override
@@ -125,7 +125,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
 
         List<ConsentHistoryRecord> records = new ArrayList<>();
         try (PreparedStatement statement = connection
-                .prepareStatement(getQueries(connection).getConsentHistoryQuery())) {
+                .prepareStatement(ConsentHistoryQueryFactory.getQueryProvider(connection)
+                        .getConsentHistoryQuery())) {
             statement.setString(1, consentId);
             statement.setString(2, orgId);
             statement.setInt(3, limit);
@@ -146,7 +147,9 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     @Override
     public int getConsentHistoryCount(Connection connection, String orgId, String consentId) {
 
-        return getCount(connection, getQueries(connection).getConsentHistoryCountQuery(), orgId, consentId);
+        return getCount(connection,
+                ConsentHistoryQueryFactory.getQueryProvider(connection).getConsentHistoryCountQuery(), orgId,
+                consentId);
     }
 
     private int getCount(Connection connection, String countQuery, String orgId, String consentId) {

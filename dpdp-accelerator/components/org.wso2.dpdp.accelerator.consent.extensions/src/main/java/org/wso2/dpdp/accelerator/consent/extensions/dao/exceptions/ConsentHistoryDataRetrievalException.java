@@ -18,11 +18,6 @@
 
 package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
-/**
- * Thrown when status-audit or history snapshot rows could not be read. Unchecked, matching the
- * Event Notification/Complaint DAO layers' {@code *DataAccessException}/{@code *DAOException}
- * convention, so DAO interfaces stay free of {@code throws} clauses.
- */
 public class ConsentHistoryDataRetrievalException extends RuntimeException {
 
     public ConsentHistoryDataRetrievalException(String message, Throwable cause) {
