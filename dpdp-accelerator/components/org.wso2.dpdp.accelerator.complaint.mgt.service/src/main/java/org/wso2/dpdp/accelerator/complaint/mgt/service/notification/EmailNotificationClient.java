@@ -34,6 +34,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.EmailValidator;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
@@ -139,13 +140,15 @@ public class EmailNotificationClient implements NotificationClient {
     private final Supplier<ApplicationManagementService> applicationManagementServiceSupplier;
     private final Supplier<RoleManagementService> roleManagementServiceSupplier;
     private final Supplier<OrganizationManager> organizationManagerSupplier;
+    private final Supplier<DPDPConfigurationService> configurationServiceSupplier;
 
     public EmailNotificationClient() {
         this(() -> ComplaintServiceDataHolder.getInstance().getIdentityEventService(),
                 () -> ComplaintServiceDataHolder.getInstance().getRealmService(),
                 () -> ComplaintServiceDataHolder.getInstance().getApplicationManagementService(),
                 () -> ComplaintServiceDataHolder.getInstance().getRoleManagementService(),
-                () -> ComplaintServiceDataHolder.getInstance().getOrganizationManager());
+                () -> ComplaintServiceDataHolder.getInstance().getOrganizationManager(),
+                () -> ComplaintServiceDataHolder.getInstance().getConfigurationService());
     }
 
     /** Overload for tests injecting 4 suppliers. */
@@ -154,7 +157,7 @@ public class EmailNotificationClient implements NotificationClient {
             Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
             Supplier<RoleManagementService> roleManagementServiceSupplier) {
         this(eventServiceSupplier, realmServiceSupplier, applicationManagementServiceSupplier,
-                roleManagementServiceSupplier, () -> null);
+                roleManagementServiceSupplier, () -> null, () -> null);
     }
 
     /** Test seam - lets a test inject mock suppliers instead of a real OSGi lookup. */
@@ -163,15 +166,44 @@ public class EmailNotificationClient implements NotificationClient {
             Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
             Supplier<RoleManagementService> roleManagementServiceSupplier,
             Supplier<OrganizationManager> organizationManagerSupplier) {
+        this(eventServiceSupplier, realmServiceSupplier, applicationManagementServiceSupplier,
+                roleManagementServiceSupplier, organizationManagerSupplier, () -> null);
+    }
+
+    /** Test seam - lets a test inject mock suppliers instead of a real OSGi lookup. */
+    EmailNotificationClient(Supplier<IdentityEventService> eventServiceSupplier,
+            Supplier<RealmService> realmServiceSupplier,
+            Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
+            Supplier<RoleManagementService> roleManagementServiceSupplier,
+            Supplier<OrganizationManager> organizationManagerSupplier,
+            Supplier<DPDPConfigurationService> configurationServiceSupplier) {
         this.eventServiceSupplier = eventServiceSupplier;
         this.realmServiceSupplier = realmServiceSupplier;
         this.applicationManagementServiceSupplier = applicationManagementServiceSupplier;
         this.roleManagementServiceSupplier = roleManagementServiceSupplier;
         this.organizationManagerSupplier = organizationManagerSupplier;
+        this.configurationServiceSupplier = configurationServiceSupplier;
+    }
+
+    /**
+     * {@code Complaints.EmailNotificationsEnabled} defaults to {@code false} (opt-in). A missing
+     * configuration service is treated as enabled, not disabled - mirrors every other null-safe
+     * collaborator lookup in this class (e.g. {@code eventServiceSupplier}) and
+     * {@link org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl}'s own
+     * {@code configParser == null || ...} idiom - an unresolvable OSGi reference should not be
+     * indistinguishable from a deliberate opt-out.
+     */
+    private boolean emailNotificationsEnabled() {
+        DPDPConfigurationService configurationService = configurationServiceSupplier.get();
+        return configurationService == null || configurationService.isComplaintsEmailNotificationsEnabled();
     }
 
     @Override
     public void notifyComplaintCreated(Complaint complaint) {
+        if (!emailNotificationsEnabled()) {
+            LOG.debug("Complaint email notifications are disabled; complaint-created notification not sent.");
+            return;
+        }
         try {
             List<Recipient> officers = resolveOfficers(complaint.getOrgId());
             if (officers.isEmpty()) {
@@ -195,6 +227,10 @@ public class EmailNotificationClient implements NotificationClient {
 
     @Override
     public void notifyCommentAdded(Complaint complaint, ComplaintEvent event) {
+        if (!emailNotificationsEnabled()) {
+            LOG.debug("Complaint email notifications are disabled; comment-added notification not sent.");
+            return;
+        }
         try {
             boolean notifyingCreator = ACTOR_ROLE_COMPLAINT_OFFICER.equals(event.getActorRole());
             List<Recipient> recipients = notifyingCreator
