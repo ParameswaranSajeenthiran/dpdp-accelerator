@@ -178,6 +178,12 @@ public class DatabaseUtilsTest {
     // real connection would still stay autocommit=false and take one extra, harmless rollback from
     // that guard on every path, exactly as its own tests already cover.
 
+    // executeInTransaction/runInTransaction tests below stub getAutoCommit() to true, so
+    // closeConnection's own rollback-before-close guard (tested separately above) is a no-op here
+    // and these assertions reflect only executeInTransaction's own commit/rollback contract - a
+    // real connection would still stay autocommit=false and take one extra, harmless rollback from
+    // that guard on every path, exactly as its own tests already cover.
+
     @Test
     public void executeInTransactionCommitsAndClosesAfterSuccess() throws Exception {
 
