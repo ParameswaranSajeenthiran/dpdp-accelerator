@@ -157,10 +157,10 @@ In the Console:
 Make sure the primary email address is valid and accessible. Notifications
 sent to the user will be delivered to the configured primary email address.
 
-Complaint emails (creation, comments, acknowledgements) can be turned off independently of the
-SMTP settings above by setting `[dpdp_accelerator.complaints] email_notifications_enabled = false`.
-This flag is read once, at server startup, so a change requires restarting the Identity Server to
-take effect.
+Complaint emails (creation, comments, acknowledgements) are off by default, independently of the
+SMTP settings above. Turn them on by setting
+`[dpdp_accelerator.complaints] email_notifications_enabled = true`. This flag is read once, at
+server startup, so a change requires restarting the Identity Server to take effect.
 
 ## 6. Open the portal
 

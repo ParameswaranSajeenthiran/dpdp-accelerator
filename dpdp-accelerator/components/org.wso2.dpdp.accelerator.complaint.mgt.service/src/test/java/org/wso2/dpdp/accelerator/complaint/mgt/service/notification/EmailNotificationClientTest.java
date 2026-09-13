@@ -36,6 +36,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.tenant.TenantManager;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.testng.Assert;
@@ -99,6 +100,9 @@ public class EmailNotificationClientTest {
     @Mock
     private OrganizationManager organizationManager;
 
+    @Mock
+    private DPDPConfigurationService configurationService;
+
     private MockedStatic<IdentityUtil> identityUtilMock;
     private AutoCloseable mocks;
 
@@ -112,6 +116,10 @@ public class EmailNotificationClientTest {
         identityUtilMock = Mockito.mockStatic(IdentityUtil.class);
         identityUtilMock.when(() -> IdentityUtil.getServerURL(anyString(), anyBoolean(), anyBoolean()))
                 .thenReturn("https://localhost:9443/consent-portal/");
+
+        // Complaints.EmailNotificationsEnabled defaults to false (opt-in) - every test below is
+        // exercising the actual send behavior, so it needs the flag on unless it says otherwise.
+        when(configurationService.isComplaintsEmailNotificationsEnabled()).thenReturn(true);
     }
 
     @AfterMethod
@@ -147,7 +155,8 @@ public class EmailNotificationClientTest {
                 () -> realmService,
                 () -> applicationManagementService,
                 () -> roleManagementService,
-                () -> organizationManager
+                () -> organizationManager,
+                () -> configurationService
         );
     }
 
@@ -270,6 +279,37 @@ public class EmailNotificationClientTest {
         Assert.assertTrue(
                 ((String) ackProps.get("headline-html"))
                         .contains("has been received"));
+    }
+
+    @Test
+    public void notifyComplaintCreatedSendsNothingWhenEmailNotificationsAreDisabled()
+            throws Exception {
+
+        stubUserRealm();
+        stubOfficerResolution(List.of(new UserBasicInfo("o1", "officer1")));
+        stubEmailClaim("officer1", "officer1@example.com");
+        stubEmailClaim("User One", "user1@example.com");
+        when(configurationService.isComplaintsEmailNotificationsEnabled()).thenReturn(false);
+
+        fullClient().notifyComplaintCreated(complaint());
+
+        verify(identityEventService, never()).handleEvent(any());
+    }
+
+    @Test
+    public void notifyCommentAddedSendsNothingWhenEmailNotificationsAreDisabled()
+            throws Exception {
+
+        stubUserRealm();
+        stubOfficerResolution(List.of(new UserBasicInfo("o1", "officer1")));
+        stubEmailClaim("officer1", "officer1@example.com");
+        when(configurationService.isComplaintsEmailNotificationsEnabled()).thenReturn(false);
+
+        fullClient().notifyCommentAdded(complaint(),
+                new ComplaintEvent("e1", "org1", "c1", "user1", "User One", "DATA_PRINCIPAL", true, "a comment",
+                        null, null, 1L));
+
+        verify(identityEventService, never()).handleEvent(any());
     }
 
     @Test

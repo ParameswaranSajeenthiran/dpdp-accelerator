@@ -150,7 +150,7 @@ public class DPDPConfigParserTest {
         Map<String, Object> backup = new HashMap<>(values);
         try {
             values.remove("Complaints.EmailNotificationsEnabled");
-            assertTrue(parser.isComplaintsEmailNotificationsEnabled());
+            assertTrue(!parser.isComplaintsEmailNotificationsEnabled());
 
             values.put("Complaints.EmailNotificationsEnabled", "false");
             assertTrue(!parser.isComplaintsEmailNotificationsEnabled());
@@ -227,7 +227,7 @@ public class DPDPConfigParserTest {
         assertEquals(service.getComplaintsStatutoryDuePeriodDays(), CUSTOM_STATUTORY_DUE_PERIOD_DAYS);
         assertEquals(service.getComplaintsAttachmentMaxSizeBytes(), CUSTOM_ATTACHMENT_MAX_SIZE_BYTES);
         assertEquals(service.getComplaintsAttachmentMaxFilesPerUpload(), CUSTOM_ATTACHMENT_MAX_FILES_PER_UPLOAD);
-        assertTrue(service.isComplaintsEmailNotificationsEnabled());
+        assertTrue(!service.isComplaintsEmailNotificationsEnabled());
         assertEquals(service.getJdbcConnectionVerificationTimeoutSeconds(), 3);
         assertTrue(service.isConsentPortalProvisioningEnabled());
         assertEquals(service.getEventNotificationThreadPoolSize(), 8);
