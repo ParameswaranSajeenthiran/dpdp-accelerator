@@ -36,20 +36,17 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintExcept
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ReferenceIdGenerator;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatutoryDuePeriodPolicy;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus.OPEN;
 
 public class ComplaintServiceImpl implements ComplaintService {
 
-    // ReferenceIdGenerator's count-then-format sequence is inherently racy under concurrent
+    // ComplaintServiceUtil's count-then-format sequence is inherently racy under concurrent
     // submissions for the same org/year - see DuplicateReferenceIdException. A handful of attempts
     // is enough to ride out that race without masking a genuinely broken database as a slow request.
     private static final int MAX_REFERENCE_ID_ATTEMPTS = 3;
@@ -116,20 +113,20 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         String complaintId = UUID.randomUUID().toString();
         long now = System.currentTimeMillis();
-        String priority = PriorityMapper.derivePriority(subjectCategory.trim());
-        long statutoryDueTime = now + StatutoryDuePeriodPolicy.getDuePeriodMillis();
+        String priority = ComplaintServiceUtil.derivePriority(subjectCategory.trim());
+        long statutoryDueTime = now + ComplaintServiceUtil.getStatutoryDuePeriodMillis();
         String trimmedUserName = userName != null && !userName.trim().isEmpty() ? userName.trim() : null;
 
         // A fresh reference ID is minted on every attempt (including retries) - see
         // DuplicateReferenceIdException - since retrying with the same one would just collide again.
-        // The count and the insert it feeds share one transaction (ReferenceIdGenerator takes this
+        // The count and the insert it feeds share one transaction (generateReferenceId takes this
         // same conn) - otherwise a concurrent insert between the two could be counted twice, or
         // not at all.
         DuplicateReferenceIdException lastCollision = null;
         for (int attempt = 1; attempt <= MAX_REFERENCE_ID_ATTEMPTS; attempt++) {
             try {
                 Complaint complaint = DatabaseUtils.executeInTransaction(conn -> {
-                    String referenceId = ReferenceIdGenerator.generate(conn, complaintDAO, orgId, now);
+                    String referenceId = ComplaintServiceUtil.generateReferenceId(conn, complaintDAO, orgId, now);
                     Complaint c = new Complaint(complaintId, orgId, userId.trim(), trimmedUserName, referenceId,
                             subjectCategory.trim(), priority, OPEN.name(), description.trim(), now, now,
                             statutoryDueTime);
@@ -179,42 +176,15 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public Complaint getComplaint(String orgId, String complaintId) {
-        return requireComplaint(orgId, complaintId);
-    }
-
-    @Override
-    public Complaint requireComplaint(String orgId, String complaintId) {
-        return DatabaseUtils.executeInTransaction(conn -> requireComplaint(conn, orgId, complaintId));
-    }
-
-    @Override
-    public Complaint requireComplaint(Connection conn, String orgId, String complaintId) {
-        if (complaintId == null || complaintId.trim().isEmpty() || orgId == null || orgId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
-                    ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
-        }
-        Optional<Complaint> complaintOpt = complaintDAO.getComplaintById(conn, complaintId.trim(), orgId.trim());
-        if (complaintOpt.isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
-                    String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
-        }
-        return complaintOpt.get();
-    }
-
-    @Override
-    public Complaint requireOwnedComplaint(String orgId, String complaintId, String ownerUserId) {
         return DatabaseUtils.executeInTransaction(
-                conn -> requireOwnedComplaint(conn, orgId, complaintId, ownerUserId));
+                conn -> ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId));
     }
 
     @Override
-    public Complaint requireOwnedComplaint(Connection conn, String orgId, String complaintId, String ownerUserId) {
-        Complaint complaint = requireComplaint(conn, orgId, complaintId);
-        if (!complaint.getUserId().equals(ownerUserId)) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
-                    String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
-        }
-        return complaint;
+    public Complaint getOwnedComplaint(String orgId, String complaintId, String ownerUserId) {
+        return DatabaseUtils.executeInTransaction(
+                conn -> ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId,
+                        ownerUserId));
     }
 
     @Override
@@ -242,6 +212,6 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     private boolean isValidCategory(String category) {
-        return PriorityMapper.isKnownCategory(category);
+        return ComplaintServiceUtil.isKnownCategory(category);
     }
 }

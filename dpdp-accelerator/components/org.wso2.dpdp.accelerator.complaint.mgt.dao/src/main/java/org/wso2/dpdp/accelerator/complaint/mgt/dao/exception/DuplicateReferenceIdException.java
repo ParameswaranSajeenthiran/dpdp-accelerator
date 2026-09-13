@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 /**
  * Thrown when {@code addComplaint} fails because another concurrent request already took the same
- * (ORG_ID, REFERENCE_ID) - the count-then-format sequence in ReferenceIdGenerator is inherently
+ * (ORG_ID, REFERENCE_ID) - the count-then-format sequence in ComplaintServiceUtil is inherently
  * racy under concurrent submissions, so the caller is expected to catch this, generate a fresh
  * reference ID, and retry rather than surface a generic 500.
  */

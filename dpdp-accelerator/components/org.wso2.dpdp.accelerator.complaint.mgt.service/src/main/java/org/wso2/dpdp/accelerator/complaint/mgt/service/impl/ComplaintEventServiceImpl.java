@@ -26,14 +26,13 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.StatusTransitionValidator;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,14 +44,12 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
 
     private final ComplaintEventDAO complaintEventDAO;
     private final ComplaintDAO complaintDAO;
-    private final ComplaintService complaintService;
     private final NotificationClient notificationClient;
 
     public ComplaintEventServiceImpl(ComplaintEventDAO complaintEventDAO, ComplaintDAO complaintDAO,
-            ComplaintService complaintService, NotificationClient notificationClient) {
+            NotificationClient notificationClient) {
         this.complaintEventDAO = complaintEventDAO;
         this.complaintDAO = complaintDAO;
-        this.complaintService = complaintService;
         this.notificationClient = notificationClient;
     }
 
@@ -62,7 +59,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         // The existence check and the read share one transaction - see ComplaintService -
         // otherwise they could disagree about whether the complaint exists.
         return DatabaseUtils.executeInTransaction(conn -> {
-            complaintService.requireComplaint(conn, orgId, complaintId);
+            ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             return complaintEventDAO.listEvents(conn, orgId, complaintId, since, until, isPublic, order, limit,
                     offset, totalOut);
         });
@@ -107,12 +104,12 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         // status never actually moved (or the reverse), and the existence check can never
         // disagree with the write that follows it.
         AddCommentResult result = DatabaseUtils.executeInTransaction(conn -> {
-            Complaint c = complaintService.requireComplaint(conn, orgId, complaintId);
+            Complaint c = ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
 
             String fromStatus = null;
             if (hasToStatus) {
                 fromStatus = c.getStatus();
-                if (!StatusTransitionValidator.isValidTransition(fromStatus, toStatus)) {
+                if (!ComplaintServiceUtil.isValidTransition(fromStatus, toStatus)) {
                     throw new ComplaintException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
                             String.format(ComplaintServiceConstants.INVALID_STATUS_TRANSITION_ERROR, fromStatus,
                                     toStatus));
@@ -162,7 +159,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     @Override
     public ComplaintEvent getTimelineEntry(String orgId, String complaintId, String complaintEventId) {
         Optional<ComplaintEvent> eventOpt = DatabaseUtils.executeInTransaction(conn -> {
-            complaintService.requireComplaint(conn, orgId, complaintId);
+            ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             return complaintEventDAO.getEventById(conn, complaintEventId, orgId, complaintId);
         });
         if (eventOpt.isEmpty()) {
@@ -206,9 +203,9 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         // so a partial failure can never leave the status changed with no record of why, or vice
         // versa.
         Complaint complaint = DatabaseUtils.executeInTransaction(conn -> {
-            Complaint c = complaintService.requireComplaint(conn, orgId, complaintId);
+            Complaint c = ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             String fromStatus = c.getStatus();
-            if (!StatusTransitionValidator.isValidTransition(fromStatus, toStatus)) {
+            if (!ComplaintServiceUtil.isValidTransition(fromStatus, toStatus)) {
                 throw new ComplaintException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
                         String.format(ComplaintServiceConstants.INVALID_STATUS_TRANSITION_ERROR, fromStatus,
                                 toStatus));

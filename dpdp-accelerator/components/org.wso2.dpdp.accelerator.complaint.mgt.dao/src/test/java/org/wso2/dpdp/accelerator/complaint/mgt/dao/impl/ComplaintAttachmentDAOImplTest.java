@@ -26,7 +26,6 @@ import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.TestTransaction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -167,20 +166,20 @@ class ComplaintAttachmentDAOImplTest {
     // layer that owns the transaction in production - see ComplaintAttachmentDAO.
 
     private boolean addAttachment(ComplaintAttachment attachment) {
-        return TestTransaction.run(conn -> dao.addAttachment(conn, attachment));
+        return DatabaseUtils.executeInTransaction(conn -> dao.addAttachment(conn, attachment));
     }
 
     private Optional<ComplaintAttachment> getAttachmentMetadataById(String attachmentId, String orgId,
             String complaintId) {
-        return TestTransaction.run(conn -> dao.getAttachmentMetadataById(conn, attachmentId, orgId, complaintId));
+        return DatabaseUtils.executeInTransaction(conn -> dao.getAttachmentMetadataById(conn, attachmentId, orgId, complaintId));
     }
 
     private Optional<ComplaintAttachment> getAttachmentWithDataById(String attachmentId, String orgId,
             String complaintId) {
-        return TestTransaction.run(conn -> dao.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId));
+        return DatabaseUtils.executeInTransaction(conn -> dao.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId));
     }
 
     private List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
-        return TestTransaction.run(conn -> dao.listAttachmentsForComplaint(conn, orgId, complaintId));
+        return DatabaseUtils.executeInTransaction(conn -> dao.listAttachmentsForComplaint(conn, orgId, complaintId));
     }
 }

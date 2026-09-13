@@ -26,7 +26,6 @@ import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.TestTransaction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -207,16 +206,16 @@ class ComplaintEventDAOImplTest {
     // layer that owns the transaction in production - see ComplaintDAO.
 
     private boolean addEvent(ComplaintEvent event) {
-        return TestTransaction.run(conn -> dao.addEvent(conn, event));
+        return DatabaseUtils.executeInTransaction(conn -> dao.addEvent(conn, event));
     }
 
     private Optional<ComplaintEvent> getEventById(String complaintEventId, String orgId, String complaintId) {
-        return TestTransaction.run(conn -> dao.getEventById(conn, complaintEventId, orgId, complaintId));
+        return DatabaseUtils.executeInTransaction(conn -> dao.getEventById(conn, complaintEventId, orgId, complaintId));
     }
 
     private List<ComplaintEvent> listEvents(String orgId, String complaintId, Long since, Long until,
             Boolean isPublic, String order, int limit, int offset, int[] totalOut) {
-        return TestTransaction.run(conn -> dao.listEvents(conn, orgId, complaintId, since, until, isPublic, order,
+        return DatabaseUtils.executeInTransaction(conn -> dao.listEvents(conn, orgId, complaintId, since, until, isPublic, order,
                 limit, offset, totalOut));
     }
 }

@@ -20,18 +20,18 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.AttachmentPolicy;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -43,13 +43,13 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
     private final ComplaintAttachmentDAO attachmentDAO;
     private final ComplaintEventDAO complaintEventDAO;
-    private final ComplaintService complaintService;
+    private final ComplaintDAO complaintDAO;
 
     public ComplaintAttachmentServiceImpl(ComplaintAttachmentDAO attachmentDAO, ComplaintEventDAO complaintEventDAO,
-            ComplaintService complaintService) {
+            ComplaintDAO complaintDAO) {
         this.attachmentDAO = attachmentDAO;
         this.complaintEventDAO = complaintEventDAO;
-        this.complaintService = complaintService;
+        this.complaintDAO = complaintDAO;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         // multi-file upload could leave some attachments stored against an event that was never
         // actually committed.
         List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
-            complaintService.requireComplaint(conn, orgId, complaintId);
+            ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             return performUpload(conn, orgId, complaintId, files, isPublic, actorUserId, actorUserName, actorRole,
                     now);
         });
@@ -84,7 +84,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         // gates must share one transaction, not two sequential connections with the ownership
         // check's result no longer guaranteed true by the time the write runs.
         List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
-            complaintService.requireOwnedComplaint(conn, orgId, complaintId, ownerUserId);
+            ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return performUpload(conn, orgId, complaintId, files, true, ownerUserId, ownerUserName,
                     ComplaintActorRole.USER.name(), now);
         });
@@ -117,7 +117,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         // The ownership check and the attachment fetch share one transaction - same reasoning as
         // uploadOwnComplaintAttachments.
         Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(conn -> {
-            complaintService.requireOwnedComplaint(conn, orgId, complaintId, ownerUserId);
+            ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId);
         });
         return toDownloadResponse(attachmentOpt, attachmentId, true);
@@ -195,18 +195,18 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.FILE_LIST_REQUIRED_ERROR);
         }
-        int maxFiles = AttachmentPolicy.getMaxFilesPerUpload();
+        int maxFiles = ComplaintServiceUtil.getAttachmentMaxFilesPerUpload();
         if (files.size() > maxFiles) {
             throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, files.size()));
         }
-        long maxSize = AttachmentPolicy.getMaxSizeBytes();
+        long maxSize = ComplaintServiceUtil.getAttachmentMaxSizeBytes();
         for (UploadedFile file : files) {
             if (file.getData() == null || file.getData().length == 0) {
                 throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                         ComplaintServiceConstants.UPLOADED_FILE_EMPTY_ERROR);
             }
-            if (!AttachmentPolicy.isAllowedContentType(file.getContentType())) {
+            if (!ComplaintServiceUtil.isAllowedAttachmentContentType(file.getContentType())) {
                 throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
                         String.format(ComplaintServiceConstants.UNSUPPORTED_CONTENT_TYPE_ERROR,
                                 file.getContentType()));

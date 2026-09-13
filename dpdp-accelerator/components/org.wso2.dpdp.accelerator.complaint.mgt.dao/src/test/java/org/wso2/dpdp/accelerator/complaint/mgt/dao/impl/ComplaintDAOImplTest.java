@@ -28,7 +28,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.H2TestDbSupport;
-import org.wso2.dpdp.accelerator.complaint.mgt.dao.util.TestTransaction;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -283,28 +282,28 @@ class ComplaintDAOImplTest {
     // service layer that owns the transaction in production - see ComplaintDAO.
 
     private boolean addComplaint(Complaint complaint) {
-        return TestTransaction.run(conn -> dao.addComplaint(conn, complaint));
+        return DatabaseUtils.executeInTransaction(conn -> dao.addComplaint(conn, complaint));
     }
 
     private Optional<Complaint> getComplaintById(String complaintId, String orgId) {
-        return TestTransaction.run(conn -> dao.getComplaintById(conn, complaintId, orgId));
+        return DatabaseUtils.executeInTransaction(conn -> dao.getComplaintById(conn, complaintId, orgId));
     }
 
     private int countByReferenceIdPrefix(String orgId, String referenceIdLikePattern) {
-        return TestTransaction.run(conn -> dao.countByReferenceIdPrefix(conn, orgId, referenceIdLikePattern));
+        return DatabaseUtils.executeInTransaction(conn -> dao.countByReferenceIdPrefix(conn, orgId, referenceIdLikePattern));
     }
 
     private boolean updateStatus(String complaintId, String orgId, String newStatus, long updatedTime) {
-        return TestTransaction.run(conn -> dao.updateStatus(conn, complaintId, orgId, newStatus, updatedTime));
+        return DatabaseUtils.executeInTransaction(conn -> dao.updateStatus(conn, complaintId, orgId, newStatus, updatedTime));
     }
 
     private List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
             int offset, String sort, int[] totalOut) {
-        return TestTransaction.run(conn -> dao.listComplaints(conn, orgId, status, priority, userId, limit, offset,
+        return DatabaseUtils.executeInTransaction(conn -> dao.listComplaints(conn, orgId, status, priority, userId, limit, offset,
                 sort, totalOut));
     }
 
     private ComplaintQueueStats getQueueStats(String orgId, long now) {
-        return TestTransaction.run(conn -> dao.getQueueStats(conn, orgId, now));
+        return DatabaseUtils.executeInTransaction(conn -> dao.getQueueStats(conn, orgId, now));
     }
 }

@@ -155,7 +155,7 @@ class ComplaintServiceImplTest {
         dataSource.setPassword("");
         setManagerDataSource(dataSource);
 
-        // Normally bound by ComplaintServiceComponent's OSGi @Reference; StatutoryDuePeriodPolicy
+        // Normally bound by ComplaintServiceComponent's OSGi @Reference; ComplaintServiceUtil
         // reads it via ComplaintServiceDataHolder, so tests running outside a live Carbon
         // environment must seed it themselves.
         ComplaintServiceDataHolder.getInstance().setConfigurationService(new DPDPConfigurationServiceImpl());
@@ -339,11 +339,11 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void requireComplaintThrows404WhenIdOrOrgIsBlank() {
+    void getComplaintThrows404WhenIdOrOrgIsBlank() {
         ComplaintException ex1 = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint("org1", " "));
+                () -> complaintService.getComplaint("org1", " "));
         ComplaintException ex2 = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint(" ", "c1"));
+                () -> complaintService.getComplaint(" ", "c1"));
 
         assertEquals("CO-4040", ex1.getCode());
         assertEquals(404, ex1.getStatusCode());
@@ -352,30 +352,17 @@ class ComplaintServiceImplTest {
     }
 
     @Test
-    void requireComplaintThrows404WhenDaoReturnsEmpty() {
+    void getComplaintThrows404WhenDaoReturnsEmpty() {
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1"))).thenReturn(Optional.empty());
 
         ComplaintException ex = expectThrows(ComplaintException.class,
-                () -> complaintService.requireComplaint("org1", "c1"));
+                () -> complaintService.getComplaint("org1", "c1"));
 
         assertEquals("CO-4040", ex.getCode());
     }
 
     @Test
-    void requireComplaintReturnsDtoWhenFound() {
-        Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
-                "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
-        when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
-                .thenReturn(Optional.of(complaint));
-
-        Complaint result = complaintService.requireComplaint("org1", "c1");
-
-        assertEquals("c1", result.getComplaintId());
-        assertEquals("CMP-2026-00001", result.getReferenceId());
-    }
-
-    @Test
-    void getComplaintDelegatesToRequireComplaint() {
+    void getComplaintReturnsComplaintWhenFound() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
@@ -384,6 +371,7 @@ class ComplaintServiceImplTest {
         Complaint result = complaintService.getComplaint("org1", "c1");
 
         assertEquals("c1", result.getComplaintId());
+        assertEquals("CMP-2026-00001", result.getReferenceId());
     }
 
     @Test
@@ -465,20 +453,20 @@ class ComplaintServiceImplTest {
 
         complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
-        // Before the fix, ReferenceIdGenerator opened its own connection separately from the
+        // Before the fix, ComplaintServiceUtil.generateReferenceId opened its own connection separately from the
         // complaint insert - two connections for one logical create. Now the count and the insert
         // share the single connection this transaction acquires.
         assertEquals(1, CONNECTION_COUNT.get());
     }
 
     @Test
-    void requireComplaintAcquiresExactlyOneConnection() {
+    void getComplaintAcquiresExactlyOneConnection() {
         Complaint complaint = new Complaint("c1", "org1", "user1", "User One", "CMP-2026-00001", "DATA_BREACH",
                 "CRITICAL", "OPEN", "desc", 1L, 2L, 3L);
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1")))
                 .thenReturn(Optional.of(complaint));
 
-        complaintService.requireComplaint("org1", "c1");
+        complaintService.getComplaint("org1", "c1");
 
         assertEquals(1, CONNECTION_COUNT.get());
     }
