@@ -117,6 +117,7 @@ test.describe('Admin acting on Consents (UI)', () => {
 
     const detailPage = new ConsentDetailPage(consentAdminPage, 'admin')
     await detailPage.goto(consentId)
+    await expect(detailPage.purposesSection).toBeVisible()
     await expect(consentAdminPage.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0)
     await expect(consentAdminPage.getByRole('button', { name: 'Reject', exact: true })).toHaveCount(0)
     await expect(consentAdminPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)

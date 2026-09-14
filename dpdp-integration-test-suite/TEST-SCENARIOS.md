@@ -122,7 +122,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsent` create
 | `03.01.02` | Rejecting a Pending consent from its detail page moves it to Rejected |  |
 | `03.01.03` | Revoking an Active consent from the list moves it to Revoked and removes the revoke action | Row reads Revoked **and** the Revoke button is gone from that row. |
 | `03.01.04` | Approving from the detail page works the same way as from the list |  |
-| `03.01.05` | A Rejected consent offers no approve, reject, or revoke action on its detail page | Terminal-state guard: none of the three actions is offered. |
+| `03.01.05` | A Rejected consent can be approved again, but offers no reject or revoke | Rejection is not terminal: `isApprovableByCurrentUser()` covers PENDING and REJECTED, so a principal may change their mind. Reject and Revoke are not offered. |
 
 ### `03.02-user-viewing-consents.spec.ts`
 

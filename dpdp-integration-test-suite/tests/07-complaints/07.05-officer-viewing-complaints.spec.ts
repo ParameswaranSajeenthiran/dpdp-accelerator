@@ -64,6 +64,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     // to "Resolved" (covered by 07.06.03). Asserting on this specific row, not on the word
     // "Resolved" being absent anywhere on the page - the "Resolved" stat tile's own label makes
     // that word always present regardless of this filtering behavior.
+    await expect(queuePage.table).toBeVisible()
     await expect(queuePage.rowByReferenceId(seeded.referenceId)).not.toBeVisible()
     await officerPage.context().close()
   })

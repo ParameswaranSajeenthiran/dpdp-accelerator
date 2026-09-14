@@ -81,6 +81,7 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
     await detailPage.goto(seeded.id)
 
+    await expect(detailPage.replyField).toBeVisible()
     // ComplaintDetailPage.tsx passes canPostInternalNote={false} to ComplaintReplyComposer, which
     // then never renders the ToggleButtonGroup at all - not merely disabled.
     await expect(detailPage.internalNoteToggle).toHaveCount(0)

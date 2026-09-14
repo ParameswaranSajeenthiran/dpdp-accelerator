@@ -83,6 +83,7 @@ test.describe('Data Principal searching/filtering complaints (UI)', () => {
     await listPage.goto()
     await listPage.setRowsPerPage(25)
     await listPage.filterByStatus('Open')
+    await expect(listPage.rowByReferenceId(openComplaint.referenceId)).toBeVisible()
     await expect(listPage.rowByReferenceId(inProgressComplaint.referenceId)).not.toBeVisible()
 
     await listPage.filterByStatus('All')

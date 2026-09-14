@@ -82,6 +82,7 @@ test.describe('Event Notification authorization and access control', () => {
     const userPage = await loginAsUser(browser)
     await userPage.goto('dashboard')
     const sidebar = new AppSidebarPage(userPage)
+    await expect(sidebar.label('My Consents')).toBeVisible()
     // Filtered out of the DOM entirely (AppSidebar.tsx's hasScope filter), not merely hidden.
     await expect(sidebar.label('Topics')).toHaveCount(0)
     await expect(sidebar.label('Subscriptions')).toHaveCount(0)
