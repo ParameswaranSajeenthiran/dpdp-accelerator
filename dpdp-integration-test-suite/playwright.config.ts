@@ -17,7 +17,7 @@
  */
 
 import { defineConfig, devices } from '@playwright/test'
-import { env } from './utils/env'
+import { config } from './utils/config'
 
 // No webServer entry: this suite targets a real, already-running WSO2 IS + accelerator
 // deployment (configured via e2e-config.json), not something this config starts itself.
@@ -37,8 +37,7 @@ export default defineConfig({
   globalSetup: './global-setup.ts',
   globalTeardown: './global-teardown.ts',
   use: {
-    baseURL: env.portalNavigationBaseUrl,
-    ignoreHTTPSErrors: env.ignoreHttpsErrors,
+    ignoreHTTPSErrors: config.identityServer.ignoreHttpsErrors,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
