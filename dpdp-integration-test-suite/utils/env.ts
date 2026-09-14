@@ -32,7 +32,7 @@ export interface Persona {
  * how the configuration is stored.
  */
 
-function persona(which: 'user' | 'user2' | 'consentAdmin'): Persona {
+function persona(which: 'user' | 'user2' | 'consentAdmin' | 'dpo'): Persona {
   const configured = config.personas[which]
   return {
     username: requireConfigured(configured.username, `personas.${which}.username`),
@@ -64,6 +64,11 @@ export const env = {
   // scope, so this single persona both drives the admin consent registry UI and creates
   // Purposes/Elements/Consents via the API as test setup for the UI layer.
   consentAdmin: persona('consentAdmin'),
+
+  // Holds only the complaints:read:any/write:any scopes - see
+  // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE. Provisioned on every tenant automatically;
+  // no test used it before this persona existed.
+  dpo: persona('dpo'),
 
   /**
    * Optional: a second user account, used only by ownership-isolation tests that

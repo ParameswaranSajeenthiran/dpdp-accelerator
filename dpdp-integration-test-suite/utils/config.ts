@@ -61,10 +61,12 @@ export interface E2EConfig {
     user: Credentials
     user2: Credentials
     consentAdmin: Credentials
+    dpo: Credentials
   }
   personaRoles: {
     user: string
     consentAdmin: string
+    dpo: string
   }
   webhook: {
     receiverHost: string | null

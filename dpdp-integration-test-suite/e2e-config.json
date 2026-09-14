@@ -21,11 +21,16 @@
     "consentAdmin": {
       "username": "dpdp-ci-admin@dpdp.test",
       "password": null
+    },
+    "dpo": {
+      "username": "dpdp-ci-dpo@dpdp.test",
+      "password": null
     }
   },
   "personaRoles": {
     "user": "dpdp-consent-user",
-    "consentAdmin": "dpdp-consent-admin"
+    "consentAdmin": "dpdp-consent-admin",
+    "dpo": "dpdp-consent-dpo"
   },
   "webhook": {
     "receiverHost": null,
