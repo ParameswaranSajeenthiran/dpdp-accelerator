@@ -538,17 +538,8 @@ public class EmailNotificationClient implements NotificationClient {
     }
 
     /**
-     * The call to action is per-notification-type rather than part of the shared shell, because it
-     * tells the recipient to act - true for the officer's "new complaint" mail and for either
-     * side's "new reply" mail, but not for the acknowledgement, which confirms receipt of the
-     * citizen's own complaint and quotes their own description back at them. A "Review & Reply"
-     * button there asks them to reply to themselves. The shell's footer link is on
-     * {@code action-url} regardless, so an acknowledgement with no button still offers a way in.
-     * <p>
-     * The URL is interpolated here rather than left as an {@code action-url} placeholder inside
-     * this markup: IS's notification handler substitutes the template in a single pass, so a
-     * placeholder occurring within another placeholder's *value* is never expanded and would ship
-     * as literal text in the href.
+     * The URL is interpolated directly since IS's single-pass template substitution won't expand
+     * a placeholder nested inside another placeholder's value.
      */
     private static String buildActionButton(String actionUrl) {
         return "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" align=\"center\" "
