@@ -274,9 +274,9 @@ public class EmailNotificationClient implements NotificationClient {
                     "You're receiving this because you filed this complaint. We'll email you when there's "
                             + "an update.");
             properties.put(PLACEHOLDER_ACTION_BADGE_HTML, ACKNOWLEDGEMENT_BADGE_HTML);
-            // Deliberately empty, and deliberately still set: IS leaves an unmatched placeholder
-            // in the template as literal text, so omitting the key ships "{{action-button-html}}"
-            // in the mail body. See buildActionButton for why this type has no button.
+            // Acknowledgement has no CTA (buildActionButton) but must still set this key to "":
+            // an omitted key leaves the placeholder unresolved, and IS ships that as literal
+            // "{{action-button-html}}" text in the mail body instead of blanking it.
             properties.put(PLACEHOLDER_ACTION_BUTTON_HTML, "");
 
             eventService.handleEvent(new Event(IdentityEventConstants.Event.TRIGGER_NOTIFICATION, properties));
