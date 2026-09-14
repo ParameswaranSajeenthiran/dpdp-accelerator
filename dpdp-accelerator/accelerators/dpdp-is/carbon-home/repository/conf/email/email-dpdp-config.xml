@@ -24,9 +24,13 @@
  ~ change the bundled default without a Java rebuild - only affects tenants provisioned after the
  ~ edit; a tenant that already has its own copy in Console (Email Templates) is never affected,
  ~ and there is no action that resets it back to this file's content.
+ ~
+ ~ Only <configuration type="...">'s type attribute and its <subject>/<body> children are read -
+ ~ unlike email-admin-config.xml, there is no display/locale/emailContentType attribute here;
+ ~ EmailTemplateProvisioningUtil hardcodes those (the template type, en_US, and text/html).
  -->
 <configurations>
-    <configuration type="ComplaintCreated" display="ComplaintCreated" locale="en_US" emailContentType="text/html">
+    <configuration type="ComplaintCreated">
         <subject>New complaint filed: {{reference-id}}</subject>
         <body><![CDATA[
 <!--
@@ -125,7 +129,7 @@
 </table>
         ]]></body>
     </configuration>
-    <configuration type="ComplaintCommentAdded" display="ComplaintCommentAdded" locale="en_US" emailContentType="text/html">
+    <configuration type="ComplaintCommentAdded">
         <subject>New reply on complaint {{reference-id}}</subject>
         <body><![CDATA[
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:24px 0;">
@@ -213,7 +217,7 @@
 </table>
         ]]></body>
     </configuration>
-    <configuration type="ComplaintAcknowledged" display="ComplaintAcknowledged" locale="en_US" emailContentType="text/html">
+    <configuration type="ComplaintAcknowledged">
         <subject>We've received your complaint: {{reference-id}}</subject>
         <body><![CDATA[
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:24px 0;">

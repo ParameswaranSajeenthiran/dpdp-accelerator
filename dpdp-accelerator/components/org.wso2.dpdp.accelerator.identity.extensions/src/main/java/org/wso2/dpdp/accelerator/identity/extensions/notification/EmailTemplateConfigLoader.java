@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.identity.extensions.notification;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axiom.om.OMException;
 import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -111,6 +110,11 @@ final class EmailTemplateConfigLoader {
             OMElement rootElement = OMXMLBuilderFactory
                     .createStAXOMBuilder(xmlInputFactory.createXMLStreamReader(inStream))
                     .getDocumentElement();
+            if (rootElement == null) {
+                LOG.debug(configFile + " has no document element; falling back to the bundled classpath default "
+                        + "for every complaint email template.");
+                return Collections.emptyMap();
+            }
             Map<String, TemplateContent> templates = new HashMap<>();
             for (Iterator<OMElement> children = rootElement.getChildElements(); children.hasNext();) {
                 OMElement configuration = children.next();
@@ -121,7 +125,10 @@ final class EmailTemplateConfigLoader {
             }
             LOG.debug("Loaded " + templates.size() + " complaint email template override(s) from " + configFile);
             return Collections.unmodifiableMap(templates);
-        } catch (IOException | XMLStreamException | OMException e) {
+        } catch (IOException | XMLStreamException | RuntimeException e) {
+            // RuntimeException also covers OMException (a parse failure) and IllegalArgumentException
+            // (an XMLInputFactory property the ambient StAX implementation doesn't support) - this
+            // loader must not be the reason provisioning fails outright over either.
             LOG.error("Error parsing " + configFile + "; falling back to the bundled classpath default for every "
                     + "complaint email template.", e);
             return Collections.emptyMap();

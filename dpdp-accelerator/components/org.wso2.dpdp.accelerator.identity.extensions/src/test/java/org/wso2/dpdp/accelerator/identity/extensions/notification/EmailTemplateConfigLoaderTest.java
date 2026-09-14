@@ -126,6 +126,14 @@ public class EmailTemplateConfigLoaderTest {
     }
 
     @Test
+    public void returnsEmptyForAZeroByteFile() throws IOException {
+
+        writeConfigFile("");
+
+        assertFalse(EmailTemplateConfigLoader.getTemplateContent("ComplaintCreated").isPresent());
+    }
+
+    @Test
     public void doesNotResolveAnExternalEntity() throws IOException {
 
         // Any DOCTYPE is rejected outright rather than resolved, same as a malformed file.
