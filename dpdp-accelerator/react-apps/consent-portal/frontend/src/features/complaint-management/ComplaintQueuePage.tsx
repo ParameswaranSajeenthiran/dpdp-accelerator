@@ -60,24 +60,12 @@ function ComplaintQueuePage(): React.JSX.Element {
   const listQuery = useManagedComplaintListQuery({
     status: filters.status === 'All' ? undefined : filters.status,
     priority: filters.priority === 'All' ? undefined : filters.priority,
+    search: filters.search.trim() || undefined,
     limit: rowsPerPage,
     offset: page * rowsPerPage,
   })
-  const pageComplaints = useMemo(() => listQuery.data?.rows ?? [], [listQuery.data])
+  const rows = useMemo(() => listQuery.data?.rows ?? [], [listQuery.data])
   const total = listQuery.data?.total ?? 0
-
-  const rows = useMemo(() => {
-    const search = filters.search.trim().toLowerCase()
-
-    return pageComplaints.filter(
-      (complaint) =>
-        !(
-          search &&
-          !complaint.referenceId.toLowerCase().includes(search) &&
-          !complaint.dataPrincipalName.toLowerCase().includes(search)
-        ),
-    )
-  }, [pageComplaints, filters])
 
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
