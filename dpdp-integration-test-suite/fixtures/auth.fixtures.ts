@@ -36,8 +36,8 @@ import { resolveTarget, type Target } from '../utils/targets'
  * in this suite), built from a real login driven against the real Identity Server - never a
  * stub. A given persona only ever logs in once for the whole run, the first time any test needs
  * it - see getPersonaState below for how that one login's result is cached to a gitignored file
- * under `.auth/` and read back by every later test/worker that needs the same persona, instead of
- * each one logging in for itself.
+ * under `.auth/<target.name>/` and read back by every later test/worker that needs the same
+ * persona, instead of each one logging in for itself.
  */
 
 /**
@@ -176,7 +176,8 @@ async function ensureSignedIn(page: Page, persona: Persona): Promise<Request> {
 
 /**
  * Drives the real Identity Server login form once and captures the resulting session -
- * getPersonaState is the one place that persists it, to `.auth/<persona>.json`. Reuses the
+ * getPersonaState is the one place that persists it, to `.auth/<target.name>/<persona>.json` -
+ * per-target, so the same persona name under the two profiles never shares a cache. Reuses the
  * worker's own `browser` (Playwright's built-in `browser` fixture is worker-scoped, i.e. one
  * instance per worker process already) for a throwaway context/page rather than launching a
  * separate browser just for this.
@@ -217,10 +218,11 @@ async function loginAndCaptureState(
 }
 
 /**
- * Cross-process cache: one gitignored JSON file per persona under `.auth/`, holding exactly the
- * object `context.storageState()` returns. A file can be read by any worker regardless of which
- * one happens to run first, so a persona logs in at most once for the whole run, not once per
- * test or per worker. `global-teardown.ts` deletes this directory at the end of every run, so the
+ * Cross-process cache: one gitignored JSON file per persona under `.auth/<target.name>/` (the
+ * target-name subdirectory keeps the two profiles' caches apart, since the same persona name
+ * means a different account under each), holding exactly the object `context.storageState()`
+ * returns. A file can be read by any worker regardless of which one happens to run first, so a
+ * persona logs in at most once for the whole run, not once per test or per worker. `global-teardown.ts` deletes this directory at the end of every run, so the
  * next run always starts with a fresh login.
  */
 const AUTH_DIR = path.resolve(import.meta.dirname, '..', '.auth')
@@ -558,11 +560,11 @@ export function hasSecondUser(): boolean {
 }
 
 /**
- * Same rationale as hasSecondUser/env.secondUser(): the ownership-isolation tests in
- * the complaint ownership-isolation tests need a second real user's ComplaintApiClient, and there is no
- * always-on fixture for it since most runs don't configure personas.user2.
- * Returns undefined when it isn't configured; callers check hasSecondUser() first and skip
- * themselves, same pattern as the consent-side ownership tests.
+ * The complaint ownership-isolation tests need a second real user's ComplaintApiClient, and there
+ * is no always-on fixture for it. The `| undefined` in the return type is kept only for signature
+ * compatibility with the pre-provisioning-redesign world: `user2` is now provisioned
+ * unconditionally for both targets, so by the time any test calls this the persona always exists -
+ * and resolving it throws rather than coming back undefined if it somehow doesn't.
  */
 export async function getSecondUserComplaintApi(
   browser: Browser,

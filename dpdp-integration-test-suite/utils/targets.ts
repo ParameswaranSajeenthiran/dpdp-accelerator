@@ -44,10 +44,19 @@ export interface Target {
   }
 }
 
-function requirePersona(credential: PersonaCredential | undefined, where: string): Persona {
+/**
+ * `sourceFile` is where the credential should already have been recorded, and differs per target:
+ * the multi-tenant personas land in .e2e-run-state.json, while the super tenant's user2 comes from
+ * the e2e config. Naming the wrong one sends an operator to a file that can't hold the answer.
+ */
+function requirePersona(
+  credential: PersonaCredential | undefined,
+  where: string,
+  sourceFile: string,
+): Persona {
   if (!credential) {
     throw new Error(
-      `No ${where} persona in .e2e-run-state.json. The "user-setup" project must run before any ` +
+      `No ${where} persona in ${sourceFile}. The "user-setup" project must run before any ` +
         'test that needs it - see playwright.config.ts.',
     )
   }
@@ -63,7 +72,11 @@ export function resolveTarget(projectName: string): Target {
       personas: {
         consentAdmin: env.consentAdmin,
         user: env.user,
-        user2: requirePersona(env.secondUser(), 'super-tenant user2'),
+        user2: requirePersona(
+          env.secondUser(),
+          'super-tenant user2',
+          'e2e-config.json (or e2e-config.local.json)',
+        ),
         dpo: env.dpo,
       },
     }
@@ -82,10 +95,14 @@ export function resolveTarget(projectName: string): Target {
       tenantDomain: tenant.domain,
       portalBaseUrl: `${tenantPortalUrl(tenant.domain)}/`,
       personas: {
-        consentAdmin: requirePersona(tenant.personas?.consentAdmin, 'tenant consentAdmin'),
-        user: requirePersona(tenant.personas?.user, 'tenant user'),
-        user2: requirePersona(tenant.personas?.user2, 'tenant user2'),
-        dpo: requirePersona(tenant.personas?.dpo, 'tenant dpo'),
+        consentAdmin: requirePersona(
+          tenant.personas?.consentAdmin,
+          'tenant consentAdmin',
+          '.e2e-run-state.json',
+        ),
+        user: requirePersona(tenant.personas?.user, 'tenant user', '.e2e-run-state.json'),
+        user2: requirePersona(tenant.personas?.user2, 'tenant user2', '.e2e-run-state.json'),
+        dpo: requirePersona(tenant.personas?.dpo, 'tenant dpo', '.e2e-run-state.json'),
       },
     }
   }
