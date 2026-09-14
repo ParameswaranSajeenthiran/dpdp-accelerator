@@ -41,5 +41,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'tenant-setup',
+      testMatch: /01-provisioning\/01\.01-.*\.spec\.ts$/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+  ],
 })
