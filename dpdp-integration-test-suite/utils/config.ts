@@ -18,6 +18,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { deepMerge } from './deepMerge'
 
 /**
  * The suite's configuration, and the only place it comes from.
@@ -89,35 +90,12 @@ function readJson(file: string): Record<string, unknown> {
   }
 }
 
-/**
- * Merges one level deeper than a spread: the local file names individual settings
- * (`{"personas": {"user": {"password": "..."}}}`) without having to restate every sibling key
- * of every group it touches.
- */
-function merge(base: Record<string, unknown>, override: Record<string, unknown>): Record<string, unknown> {
-  const merged: Record<string, unknown> = { ...base }
-  for (const [key, value] of Object.entries(override)) {
-    const existing = merged[key]
-    const bothPlainObjects =
-      existing !== null &&
-      value !== null &&
-      typeof existing === 'object' &&
-      typeof value === 'object' &&
-      !Array.isArray(existing) &&
-      !Array.isArray(value)
-    merged[key] = bothPlainObjects
-      ? merge(existing as Record<string, unknown>, value as Record<string, unknown>)
-      : value
-  }
-  return merged
-}
-
 function load(): E2EConfig {
   if (!fs.existsSync(CONFIG_PATH)) {
     throw new Error(`Missing ${path.basename(CONFIG_PATH)} - it is committed, so this is a broken checkout.`)
   }
   const base = readJson(CONFIG_PATH)
-  const merged = fs.existsSync(LOCAL_CONFIG_PATH) ? merge(base, readJson(LOCAL_CONFIG_PATH)) : base
+  const merged = fs.existsSync(LOCAL_CONFIG_PATH) ? deepMerge(base, readJson(LOCAL_CONFIG_PATH)) : base
   return merged as unknown as E2EConfig
 }
 
@@ -152,9 +130,9 @@ export function requireConfigured<T>(value: T | null | undefined, key: string): 
  */
 export function updateLocalConfig(patch: Record<string, unknown>): void {
   const existing = fs.existsSync(LOCAL_CONFIG_PATH) ? readJson(LOCAL_CONFIG_PATH) : {}
-  const updated = merge(existing, patch)
+  const updated = deepMerge(existing, patch)
   fs.writeFileSync(LOCAL_CONFIG_PATH, `${JSON.stringify(updated, null, 2)}\n`, { mode: 0o600 })
-  Object.assign(config, merge(config as unknown as Record<string, unknown>, patch))
+  Object.assign(config, deepMerge(config as unknown as Record<string, unknown>, patch))
 }
 
 export function trimTrailingSlash(value: string): string {
