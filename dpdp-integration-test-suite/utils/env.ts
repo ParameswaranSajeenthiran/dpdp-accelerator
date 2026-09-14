@@ -198,4 +198,4 @@ export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: bo
   return receiverHost ? { host: receiverHost, allowPrivateNetwork } : undefined
 }
 
-export type PersonaName = 'user' | 'user-2' | 'consent-admin'
+export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'

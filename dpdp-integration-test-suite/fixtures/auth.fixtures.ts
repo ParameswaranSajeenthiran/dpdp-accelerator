@@ -29,6 +29,7 @@ import {
   type PersonaStorageState,
 } from '../utils/authStorage'
 import { consentPurposesApiUrl, env, type Persona, type PersonaName } from '../utils/env'
+import { resolveTarget, type Target } from '../utils/targets'
 
 /**
  * Every fixture here represents an already-authenticated "state" (per the fixtures/ folder's job
@@ -108,16 +109,16 @@ async function terminateAllSessions(persona: Persona): Promise<void> {
  * Purpose/Element/Consent creation silently 401s/403s) instead of one clear error naming the
  * actual problem, right at this persona's one login for the run.
  */
-async function verifyConsentAdminAuthorized(state: PersonaAuthState): Promise<void> {
-  const response = await fetch(consentPurposesApiUrl(''), {
+async function verifyConsentAdminAuthorized(target: Target, state: PersonaAuthState): Promise<void> {
+  const response = await fetch(consentPurposesApiUrl('', target.tenantDomain), {
     headers: { ...authHeadersFromPersonaState(state) },
     signal: AbortSignal.timeout(10_000),
   })
   if (response.status === 401 || response.status === 403) {
     throw new Error(
-      `The consent admin ("${env.consentAdmin.username}") logged in successfully but ` +
+      `The consent admin ("${target.personas.consentAdmin.username}") logged in successfully but ` +
         `is not authorized for the consent-management admin API (got ${String(response.status)} ` +
-        `from ${consentPurposesApiUrl('')}). Assign this account the dpdp-consent-admin role in ` +
+        `from ${consentPurposesApiUrl('', target.tenantDomain)}). Assign this account the dpdp-consent-admin role in ` +
         `the Console - see docs/content/configuration-guide.md, "Grant administration access".`,
     )
   }
@@ -185,11 +186,15 @@ async function ensureSignedIn(page: Page, persona: Persona): Promise<Request> {
  * itself is verified as part of this already-existing flow rather than by a separate, dedicated
  * login test.
  */
-async function loginAndCaptureState(browser: Browser, persona: Persona): Promise<PersonaAuthState> {
+async function loginAndCaptureState(
+  browser: Browser,
+  target: Target,
+  persona: Persona,
+): Promise<PersonaAuthState> {
   const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
   try {
     const page = await context.newPage()
-    await page.goto(`${env.portalBaseUrl}/`, { waitUntil: 'networkidle' })
+    await page.goto(target.portalBaseUrl, { waitUntil: 'networkidle' })
     const authenticatedRequest = await ensureSignedIn(page, persona)
 
     const authorization = authenticatedRequest.headers().authorization
@@ -220,17 +225,20 @@ async function loginAndCaptureState(browser: Browser, persona: Persona): Promise
  */
 const AUTH_DIR = path.resolve(import.meta.dirname, '..', '.auth')
 
-function authFilePath(personaName: PersonaName): string {
-  return path.join(AUTH_DIR, `${personaName}.json`)
+function authFilePath(target: Target, personaName: PersonaName): string {
+  return path.join(AUTH_DIR, target.name, `${personaName}.json`)
 }
 
-function lockFilePath(personaName: PersonaName): string {
-  return path.join(AUTH_DIR, `${personaName}.lock`)
+function lockFilePath(target: Target, personaName: PersonaName): string {
+  return path.join(AUTH_DIR, target.name, `${personaName}.lock`)
 }
 
-async function readCachedState(personaName: PersonaName): Promise<PersonaAuthState | undefined> {
+async function readCachedState(
+  target: Target,
+  personaName: PersonaName,
+): Promise<PersonaAuthState | undefined> {
   try {
-    return JSON.parse(await readFile(authFilePath(personaName), 'utf-8')) as PersonaAuthState
+    return JSON.parse(await readFile(authFilePath(target, personaName), 'utf-8')) as PersonaAuthState
   } catch {
     return undefined
   }
@@ -246,10 +254,10 @@ async function readCachedState(personaName: PersonaName): Promise<PersonaAuthSta
  * and log in, and whichever finished second would invalidate the first one's session out from
  * under whatever test was already using it.
  */
-async function acquireLoginLock(personaName: PersonaName): Promise<boolean> {
-  await mkdir(AUTH_DIR, { recursive: true })
+async function acquireLoginLock(target: Target, personaName: PersonaName): Promise<boolean> {
+  await mkdir(path.join(AUTH_DIR, target.name), { recursive: true })
   try {
-    await (await open(lockFilePath(personaName), 'wx')).close()
+    await (await open(lockFilePath(target, personaName), 'wx')).close()
     return true
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
@@ -259,8 +267,8 @@ async function acquireLoginLock(personaName: PersonaName): Promise<boolean> {
   }
 }
 
-async function releaseLoginLock(personaName: PersonaName): Promise<void> {
-  await rm(lockFilePath(personaName), { force: true })
+async function releaseLoginLock(target: Target, personaName: PersonaName): Promise<void> {
+  await rm(lockFilePath(target, personaName), { force: true })
 }
 
 /**
@@ -269,10 +277,10 @@ async function releaseLoginLock(personaName: PersonaName): Promise<void> {
  * its own test reports the real error; a test blocked here instead times out with the generic
  * message below - check the run for a failed login test first.
  */
-async function waitForCachedState(personaName: PersonaName): Promise<PersonaAuthState> {
+async function waitForCachedState(target: Target, personaName: PersonaName): Promise<PersonaAuthState> {
   const deadline = Date.now() + 60_000
   while (Date.now() < deadline) {
-    const cached = await readCachedState(personaName)
+    const cached = await readCachedState(target, personaName)
     if (cached) {
       return cached
     }
@@ -300,33 +308,34 @@ export async function getPersonaState(
   personaName: PersonaName,
   persona: Persona,
 ): Promise<PersonaAuthState> {
-  const cached = await readCachedState(personaName)
+  const target = resolveTarget(test.info().project.name)
+  const cached = await readCachedState(target, personaName)
   if (cached) {
     return cached
   }
 
-  const acquiredLock = await acquireLoginLock(personaName)
+  const acquiredLock = await acquireLoginLock(target, personaName)
   if (!acquiredLock) {
-    return waitForCachedState(personaName)
+    return waitForCachedState(target, personaName)
   }
 
   try {
     // Another worker may have finished writing the file between our read above and acquiring
     // the lock just now - re-check before logging in again.
-    const cachedAfterLock = await readCachedState(personaName)
+    const cachedAfterLock = await readCachedState(target, personaName)
     if (cachedAfterLock) {
       return cachedAfterLock
     }
 
     await terminateAllSessions(persona)
-    const state = await loginAndCaptureState(browser, persona)
+    const state = await loginAndCaptureState(browser, target, persona)
     if (personaName === 'consent-admin') {
-      await verifyConsentAdminAuthorized(state)
+      await verifyConsentAdminAuthorized(target, state)
     }
-    await writeFile(authFilePath(personaName), JSON.stringify(state))
+    await writeFile(authFilePath(target, personaName), JSON.stringify(state))
     return state
   } finally {
-    await releaseLoginLock(personaName)
+    await releaseLoginLock(target, personaName)
   }
 }
 
@@ -376,13 +385,14 @@ export async function pageForPersonaState(
   personaState: PersonaAuthState,
   persona: Persona,
 ): Promise<Page> {
+  const target = resolveTarget(test.info().project.name)
   // browser.newContext() here bypasses playwright.config.ts's `use` block entirely (that's only
   // auto-applied to the base test's own default context/page) - baseURL and ignoreHTTPSErrors have
   // to be passed explicitly or relative goto() calls break and the self-signed cert kills every
   // navigation.
   const context = await browser.newContext({
     storageState: withoutServletSessionCookies(personaState.storageState),
-    baseURL: env.portalNavigationBaseUrl,
+    baseURL: target.portalBaseUrl,
     ignoreHTTPSErrors: env.ignoreHttpsErrors,
   })
   const page = await context.newPage()
@@ -446,8 +456,9 @@ export async function loginAsThrowawayUser(
   browser: Browser,
   persona: Persona,
 ): Promise<ThrowawaySession> {
+  const target = resolveTarget(test.info().project.name)
   const context = await browser.newContext({
-    baseURL: env.portalNavigationBaseUrl,
+    baseURL: target.portalBaseUrl,
     ignoreHTTPSErrors: env.ignoreHttpsErrors,
   })
   const page = await context.newPage()
@@ -462,42 +473,56 @@ export async function loginAsThrowawayUser(
 }
 
 export async function loginAsUser(browser: Browser): Promise<Page> {
-  return loginAs(browser, 'user', env.user)
+  const target = resolveTarget(test.info().project.name)
+  return loginAs(browser, 'user', target.personas.user)
 }
 
 export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
-  return loginAs(browser, 'consent-admin', env.consentAdmin)
+  const target = resolveTarget(test.info().project.name)
+  return loginAs(browser, 'consent-admin', target.personas.consentAdmin)
 }
 
 export const test = base.extend<Fixtures>({
   userConsentApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'user', env.user)
-    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState)))
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'user', target.personas.user)
+    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 
   consentAdminConsentApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'consent-admin', env.consentAdmin)
-    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState)))
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'consent-admin', target.personas.consentAdmin)
+    await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 
+  // ComplaintApiClient takes no tenantDomain: the complaint-server webapp is not IS-native, so it
+  // has no /t/<tenant> form to qualify (see utils/env.ts's COMPLAINT_SERVER_BASE).
   userComplaintApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'user', env.user)
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'user', target.personas.user)
     await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState)))
   },
 
   officerComplaintApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'consent-admin', env.consentAdmin)
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'consent-admin', target.personas.consentAdmin)
     await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState)))
   },
 
   consentAdminEventApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'consent-admin', env.consentAdmin)
-    await use(new EventNotificationApiClient(request, authHeadersFromPersonaState(personaState)))
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'consent-admin', target.personas.consentAdmin)
+    await use(
+      new EventNotificationApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain),
+    )
   },
 
   userEventApi: async ({ browser, request }, use) => {
-    const personaState = await getPersonaState(browser, 'user', env.user)
-    await use(new EventNotificationApiClient(request, authHeadersFromPersonaState(personaState)))
+    const target = resolveTarget(test.info().project.name)
+    const personaState = await getPersonaState(browser, 'user', target.personas.user)
+    await use(
+      new EventNotificationApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain),
+    )
   },
 
   consentCleanupTracker: async ({ consentAdminConsentApi }, use) => {
@@ -528,7 +553,8 @@ export { expect } from '@playwright/test'
  * login succeeding.
  */
 export function hasSecondUser(): boolean {
-  return Boolean(env.secondUser())
+  const target = resolveTarget(test.info().project.name)
+  return Boolean(target.personas.user2)
 }
 
 /**
@@ -542,10 +568,7 @@ export async function getSecondUserComplaintApi(
   browser: Browser,
   request: APIRequestContext,
 ): Promise<ComplaintApiClient | undefined> {
-  const secondUser = env.secondUser()
-  if (!secondUser) {
-    return undefined
-  }
-  const personaState = await getPersonaState(browser, 'user-2', secondUser)
+  const target = resolveTarget(test.info().project.name)
+  const personaState = await getPersonaState(browser, 'user-2', target.personas.user2)
   return new ComplaintApiClient(request, authHeadersFromPersonaState(personaState))
 }
