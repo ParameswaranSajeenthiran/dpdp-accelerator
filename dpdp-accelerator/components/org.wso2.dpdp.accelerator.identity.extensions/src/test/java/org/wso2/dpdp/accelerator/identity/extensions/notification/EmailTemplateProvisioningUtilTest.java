@@ -85,11 +85,8 @@ public class EmailTemplateProvisioningUtilTest {
     @Test
     public void provisionTemplatesStillWritesContentWhenTheTypeIsAlreadyRegistered() throws Exception {
 
-        // addNotificationTemplateType throws once a tenant already has the type registered -
-        // unlike addNotificationTemplate, it is not itself upsert-safe. That failure must be
-        // swallowed without skipping the content-existence check below it (here, the template's
-        // content itself is not yet present - getNotificationTemplate is unstubbed and returns
-        // null - so the type being already registered must not by itself skip the write).
+        // addNotificationTemplateType isn't upsert-safe - that failure must be swallowed
+        // without skipping the content-existence check below it.
         org.mockito.Mockito.doThrow(new NotificationTemplateManagerException("already exists"))
                 .when(notificationTemplateManager).addNotificationTemplateType(anyString(), anyString(), anyString());
 
@@ -113,8 +110,7 @@ public class EmailTemplateProvisioningUtilTest {
     @Test
     public void provisionTemplatesLeavesAnAlreadyExistingTemplateUntouched() throws Exception {
 
-        // A tenant re-update (any metadata change, not just an accelerator upgrade) must never
-        // reset an administrator's Console edit back to the bundled default.
+        // A tenant re-update must never reset an administrator's Console edit.
         when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
                 eq(TENANT_DOMAIN))).thenReturn(new NotificationTemplate());
 
@@ -127,8 +123,8 @@ public class EmailTemplateProvisioningUtilTest {
     @Test
     public void provisionTemplatesWritesContentWhenTheTemplateIsGenuinelyNotFound() throws Exception {
 
-        // getNotificationTemplate throwing with the NTM error code for "not found" (rather than
-        // returning null) must still be treated as "not present yet" and proceed to the write.
+        // Throwing with the "not found" error code (instead of returning null) must still
+        // proceed to the write.
         when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
                 eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException(
                 IdentityMgtConstants.ErrorMessages.ERROR_CODE_NO_TEMPLATE_FOUND.getCode(), "not found"));
@@ -142,10 +138,7 @@ public class EmailTemplateProvisioningUtilTest {
     @Test
     public void provisionTemplatesSkipsWriteWhenTheExistenceCheckFailsUnexpectedly() throws Exception {
 
-        // getNotificationTemplate failing with anything other than the "not found" error code
-        // (e.g. a transient registry error) could just as easily be hiding an existing, customized
-        // template - it must never be treated as "not present", or the write below would risk
-        // overwriting that customization.
+        // Any other error code could be hiding an existing customization - must skip the write.
         when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
                 eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException("lookup failed"));
 

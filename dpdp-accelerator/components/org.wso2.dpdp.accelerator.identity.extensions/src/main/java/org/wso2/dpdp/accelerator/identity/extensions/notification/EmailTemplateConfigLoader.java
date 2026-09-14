@@ -41,13 +41,11 @@ import javax.xml.stream.XMLStreamException;
 
 /**
  * Loads the bundled default subject/body for the complaint notification email templates from
- * {@code <IS_HOME>/repository/conf/email/email-dpdp-config.xml}, mirroring the shape of this
- * product's own {@code repository/conf/email/email-admin-config.xml}. Lets the bundled default
- * be changed by editing this file directly, with no Java rebuild - only affects tenants
- * provisioned after the edit, since an already-provisioned tenant's template is never rewritten
- * (see {@link EmailTemplateProvisioningUtil}). That class falls back to its own bundled classpath
- * resource for any template type this file doesn't define, or if the file itself is missing or
- * fails to parse - the file is entirely optional.
+ * {@code <IS_HOME>/repository/conf/email/email-dpdp-config.xml}, mirroring the shape of
+ * {@code email-admin-config.xml}. Editing this file changes the bundled default with no Java
+ * rebuild, but only for tenants provisioned after the edit (see {@link
+ * EmailTemplateProvisioningUtil}). Entirely optional: falls back to the classpath default for
+ * any type it doesn't define, or if the file is missing or unparseable.
  */
 final class EmailTemplateConfigLoader {
 
@@ -92,9 +90,8 @@ final class EmailTemplateConfigLoader {
             configFile = new File(CarbonUtils.getCarbonConfigDirPath(),
                     CONFIG_DIRECTORY + File.separator + CONFIG_FILE_NAME);
         } catch (RuntimeException e) {
-            // CarbonUtils.getCarbonConfigDirPath() throws if neither the carbon.home system
-            // property nor the CARBON_HOME env var is set - never expected in a real IS runtime,
-            // but this loader must not be the reason provisioning fails outright over it.
+            // Throws if neither carbon.home nor CARBON_HOME is set - never expected in a real
+            // IS runtime, but this loader must not be the reason provisioning fails over it.
             LOG.debug("Could not resolve the carbon config directory; falling back to the bundled classpath "
                     + "default for every complaint email template.", e);
             return Collections.emptyMap();
@@ -106,9 +103,8 @@ final class EmailTemplateConfigLoader {
         }
 
         try (InputStream inStream = Files.newInputStream(configFile.toPath())) {
-            // Disable DTD/external-entity resolution explicitly rather than relying on the
-            // ambient StAX implementation's default - XXE hardening for an XML file read off
-            // disk (operator-editable, like dpdp-accelerator.xml, but still worth the two lines).
+            // XXE hardening: disable DTD/external-entity resolution rather than trust the
+            // ambient StAX default.
             XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
             xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
             xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);

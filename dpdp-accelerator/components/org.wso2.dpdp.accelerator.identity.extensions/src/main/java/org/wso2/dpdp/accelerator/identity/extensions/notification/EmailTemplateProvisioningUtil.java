@@ -34,20 +34,13 @@ import java.util.Optional;
 
 /**
  * Registers the three complaint notification email templates for a tenant, check-then-add -
- * mirrors the "only add what's missing" idiom already used for role permissions in
- * {@code DPDPConsentPortalRoleProvisioningUtil}. Runs on every {@code onTenantCreate}/
- * {@code onTenantUpdate} (see {@code DPDPIdentityExtensionTenantMgtListener}), so an
- * administrator's Console edit to a template's subject/body is never overwritten by a later
- * tenant-update event - only a template this tenant doesn't have yet gets written, permanently.
- * There is no override path back to the bundled default once a tenant has its own copy; picking
- * up a bundled-default change (e.g. after editing {@code email-dpdp-config.xml}) only ever
- * affects tenants provisioned after that change.
+ * mirrors the idiom already used for role permissions in
+ * {@code DPDPConsentPortalRoleProvisioningUtil}. A Console edit is never overwritten by a
+ * later tenant-update event, and there is no path back to the bundled default once written.
  *
- * <p>The bundled default subject/body for each type comes from
- * {@code <IS_HOME>/repository/conf/email/email-dpdp-config.xml} when present ({@link
- * EmailTemplateConfigLoader}), falling back to this class's own Java literal subjects and the
- * bundled {@code complaint-email-body.html} classpath resource otherwise - editing that file
- * changes the bundled default without a Java rebuild.
+ * <p>The bundled default comes from {@code email-dpdp-config.xml} when present ({@link
+ * EmailTemplateConfigLoader}), falling back to this class's own literals and the bundled
+ * {@code complaint-email-body.html} otherwise.
  */
 public final class EmailTemplateProvisioningUtil {
 
@@ -56,9 +49,7 @@ public final class EmailTemplateProvisioningUtil {
     private static final String DEFAULT_LOCALE = "en_US";
     private static final String CONTENT_TYPE = "text/html";
 
-    // Template types - each mirrors the TEMPLATE_TYPE value the notification's own trigger sets
-    // (see complaint.mgt.service's EmailNotificationClient, which fires TRIGGER_NOTIFICATION
-    // directly and duplicates these same three literals rather than depending on this bundle).
+    // Mirrors the TEMPLATE_TYPE literals EmailNotificationClient uses to fire TRIGGER_NOTIFICATION.
     private static final String TEMPLATE_TYPE_COMPLAINT_CREATED = "ComplaintCreated";
     private static final String TEMPLATE_TYPE_COMMENT_ADDED = "ComplaintCommentAdded";
     private static final String TEMPLATE_TYPE_COMPLAINT_ACKNOWLEDGED = "ComplaintAcknowledged";
@@ -75,8 +66,7 @@ public final class EmailTemplateProvisioningUtil {
                 "We've received your complaint: {{reference-id}}");
     }
 
-    // Shared HTML shell for all three notification types, bundled as an OSGi resource rather than
-    // an inline Java string - see that file's own header comment for what it contains and why.
+    // Shared HTML shell for all three types - see that file's own header for why.
     private static final String EMAIL_BODY_RESOURCE = "/notification/complaint-email-body.html";
     private static final String EMAIL_BODY = loadResource(EMAIL_BODY_RESOURCE);
 
@@ -93,13 +83,10 @@ public final class EmailTemplateProvisioningUtil {
     }
 
     /**
-     * Writes the template content only if this tenant doesn't already have it - an administrator's
-     * Console edit is otherwise indistinguishable from the bundled default once written, so
-     * overwriting unconditionally on every tenant update would silently discard it. This check is
-     * unconditional and permanent: there is no flag or action that bypasses it once a template
-     * exists for a tenant. {@code addNotificationTemplateType} is not upsert-safe (throws if
-     * already registered), so that failure is swallowed separately and never blocks the check/
-     * write below it.
+     * Writes template content only if this tenant doesn't have it yet - a Console edit is
+     * indistinguishable from the bundled default once written, so overwriting on update would
+     * silently discard it. {@code addNotificationTemplateType} isn't upsert-safe (throws if
+     * already registered); that failure is swallowed and never blocks the check/write below.
      */
     private static void provisionTemplate(String tenantDomain, String templateType, String defaultSubject) {
 
@@ -114,10 +101,8 @@ public final class EmailTemplateProvisioningUtil {
 
         Optional<Boolean> exists = templateExists(templateManager, templateType, tenantDomain);
         if (exists.isEmpty()) {
-            // The lookup itself failed for a reason other than "genuinely not found" (see
-            // templateExists' own javadoc) - we cannot tell whether a Console customization is
-            // sitting there, so skip the write rather than risk clobbering it. The next
-            // tenant-update event retries.
+            // Lookup failed for some other reason - could be hiding a customization, so skip
+            // rather than risk overwriting it. Retries on the next tenant-update event.
             return;
         }
         if (exists.get()) {
@@ -152,23 +137,16 @@ public final class EmailTemplateProvisioningUtil {
         }
     }
 
-    // The error code the real NotificationTemplateManager implementation raises for a genuinely
-    // absent template - the interface's own default no-op methods return null for "not found"
-    // (see getNotificationTemplate's javadoc), but the shipped implementation is free to (and, per
-    // this code, does) throw instead. Sourced from IdentityMgtConstants.ErrorMessages rather than
-    // hardcoded so it stays in lockstep with whatever the governance bundle ships.
+    // Error code the real NotificationTemplateManager throws for "not found" - the interface's
+    // own default returns null instead (see getNotificationTemplate's javadoc).
     private static final String ERROR_CODE_NO_TEMPLATE_FOUND =
             IdentityMgtConstants.ErrorMessages.ERROR_CODE_NO_TEMPLATE_FOUND.getCode();
 
     /**
-     * @return {@code true}/{@code false} for whether the template exists, or empty if the lookup
-     * failed for a reason other than the template genuinely not existing yet.
-     * {@code getNotificationTemplate} returns {@code null} for "not found" per its own javadoc,
-     * but null-or-throw is not this class's call to make - we treat only a "not found" exception
-     * (matched by error code, not by catching the whole exception type) the same as a null return.
-     * Any other exception must NOT be folded into "not present": that lookup could just as easily
-     * be failing on an existing, customized template, and returning false then would let the write
-     * path in {@link #provisionTemplate} silently overwrite it.
+     * @return whether the template exists, or empty if the lookup failed for some other reason.
+     * Only this specific "not found" error code is folded into "not present" - any other
+     * exception could be hiding an existing customization, and returning false would let
+     * {@link #provisionTemplate} overwrite it.
      */
     private static Optional<Boolean> templateExists(NotificationTemplateManager templateManager,
             String templateType, String tenantDomain) {

@@ -35,10 +35,8 @@ import static org.testng.Assert.assertTrue;
 
 /**
  * {@link EmailTemplateConfigLoader} caches its result in a static field for the JVM's lifetime,
- * so every test resets that cache (via reflection, the same technique
- * {@code DPDPConfigParserTest} already uses on {@code DPDPConfigParser}'s own private field) and
- * clears the {@code carbon.config.dir.path} system property it reads, so tests never leak state
- * into each other or into other test classes sharing this module's reused surefire fork.
+ * so every test resets it via reflection (same technique as {@code DPDPConfigParserTest}) and
+ * clears the {@code carbon.config.dir.path} system property, so tests never leak state.
  */
 public class EmailTemplateConfigLoaderTest {
 
@@ -130,9 +128,7 @@ public class EmailTemplateConfigLoaderTest {
     @Test
     public void doesNotResolveAnExternalEntity() throws IOException {
 
-        // XXE hardening (SUPPORT_DTD / IS_SUPPORTING_EXTERNAL_ENTITIES disabled) rejects any
-        // DOCTYPE outright rather than resolving it, same as any other malformed file: falls back
-        // to the bundled classpath default instead of leaking file content into the subject.
+        // Any DOCTYPE is rejected outright rather than resolved, same as a malformed file.
         writeConfigFile("<?xml version=\"1.0\"?>"
                 + "<!DOCTYPE configurations [<!ENTITY xxe SYSTEM \"file:///etc/hostname\">]>"
                 + "<configurations>"
