@@ -242,6 +242,23 @@ class ComplaintDAOImplTest {
     }
 
     @Test
+    void listComplaintsFiltersBySearchAgainstReferenceIdOrUserName() {
+        dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+        dao.addComplaint(sampleComplaint("c2", "org1", "OPEN", "HIGH", "user2", 200L, 200L));
+
+        int[] totalOut = new int[1];
+        List<Complaint> byReferenceId =
+                dao.listComplaints("org1", null, null, null, "cmp-2026-c1", 10, 0, null, totalOut);
+        List<Complaint> byUserName =
+                dao.listComplaints("org1", null, null, null, "user2-name", 10, 0, null, totalOut);
+
+        assertEquals(1, byReferenceId.size());
+        assertEquals("c1", byReferenceId.get(0).getComplaintId());
+        assertEquals(1, byUserName.size());
+        assertEquals("c2", byUserName.get(0).getComplaintId());
+    }
+
+    @Test
     void listComplaintsSortsDescendingWhenSortHasMinusPrefix() {
         dao.addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
         dao.addComplaint(sampleComplaint("c2", "org1", "OPEN", "HIGH", "user1", 300L, 300L));
