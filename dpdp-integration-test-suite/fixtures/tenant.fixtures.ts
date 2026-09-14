@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { type Browser, type Locator, type Page, type Request, request as playwrightRequest } from '@playwright/test'
+import { type Browser, type Page, type Request, request as playwrightRequest } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { EventNotificationApiClient } from '../clients/EventNotificationApiClient'
 import { ConsoleAddUserWizard } from '../pages/ConsoleAddUserWizard'
@@ -24,6 +24,7 @@ import { ConsoleRoleAssignment } from '../pages/ConsoleRoleAssignment'
 import { ConsoleRootOrganizationWizard } from '../pages/ConsoleRootOrganizationWizard'
 import { LoginPage } from '../pages/LoginPage'
 import { authHeadersFromPersonaState, type PersonaAuthState } from '../utils/authStorage'
+import { fillLoginForm, loginToConsole } from '../utils/consoleSessions'
 import { consoleRootOrganizationsUrl, env, tenantConsoleUrl, tenantPortalUrl, type Persona } from '../utils/env'
 import { uniqueMarker, uniqueTenantDomain } from '../utils/testData'
 // Extends auth.fixtures's own `test`, not raw @playwright/test - tests/05-multi-tenancy needs
@@ -64,75 +65,6 @@ export interface TenantContext {
 interface WorkerFixtures {
   tenant: TenantContext
   tenantB: TenantContext
-}
-
-/**
- * Waits for a Console/portal login form to appear and fills it in. Deliberately not a call into
- * fixtures/auth.fixtures.ts's ensureSignedIn: that function is tightly coupled to the super
- * tenant's own portal base URL and to a cross-worker `.auth/` login cache, neither of which
- * applies here - every tenant this fixture creates belongs to exactly one worker for the
- * whole run, so there is nothing to cache and no other worker to race against.
- */
-async function fillLoginForm(page: Page, persona: Persona): Promise<void> {
-  const loginPage = new LoginPage(page)
-  await loginPage.signIn(persona)
-  if (await loginPage.errorMessage.isVisible({ timeout: 5_000 }).catch(() => false)) {
-    const message = (await loginPage.errorMessage.textContent())?.trim()
-    throw new Error(`Sign-in failed for persona "${persona.username}": ${message ?? 'Login failed.'}`)
-  }
-}
-
-/**
- * Logs into a Console URL as `persona`, in a fresh context. `consoleUrl` is a full absolute URL
- * (the super tenant's root-organizations page, or a specific tenant's own `/console`) - both are
- * different apps than the portal this suite's baseURL points at, so page.goto() here always
- * takes an absolute URL rather than relying on playwright.config.ts's baseURL.
- */
-async function loginToConsole(
-  browser: Browser,
-  consoleUrl: string,
-  persona: Persona,
-  ready?: (page: Page) => Locator,
-): Promise<Page> {
-  let lastError: unknown
-
-  // Retried as a whole, with a brand-new context each attempt, because the Console's own token
-  // exchange sometimes fails server-side in a way the SPA never recovers from: IS logs
-  // "IdentityOAuth2Exception: Token binding reference cannot be retrieved from the token binder:
-  // cookie" for client CONSOLE, and the page then sits on its bootstrap spinner indefinitely -
-  // no error, no timeout of its own. Only a fresh cookie jar and a fresh authorize round clear
-  // it, so reloading the same context is not enough.
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
-    const page = await context.newPage()
-
-    try {
-      await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' })
-      await page.locator('#usernameUserInput').waitFor({ state: 'visible', timeout: 20_000 })
-      await fillLoginForm(page, persona)
-      // Deliberately not checking for a specific post-login element (e.g. the sidebar's
-      // "Applications" link): confirmed empirically that the super tenant's Root Organizations page
-      // renders with no sidebar at all (a different layout than a tenant's own Console shell), so no
-      // single element is common to every page this function is asked to land on. The login form
-      // disappearing, generically, is what every successful login has in common. A caller that DOES
-      // know what it is about to interact with passes `ready`, which is what turns the hang above
-      // into a retry instead of a fixture timeout.
-      await page.locator('#usernameUserInput').waitFor({ state: 'hidden', timeout: 30_000 })
-      await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined)
-      if (ready) {
-        await ready(page).waitFor({ state: 'visible', timeout: 30_000 })
-      }
-      return page
-    } catch (error) {
-      lastError = error
-      await context.close()
-    }
-  }
-
-  throw new Error(
-    `Console at ${consoleUrl} never became usable for "${persona.username}" after 3 attempts: ` +
-      `${lastError instanceof Error ? lastError.message : String(lastError)}`,
-  )
 }
 
 /**
