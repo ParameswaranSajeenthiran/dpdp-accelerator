@@ -75,16 +75,16 @@ to a real test and every referenced path exists.
 files, with `KK` continuing across a nested describe boundary rather than restarting:
 
 ```
-08.01-admin-managing-topics.spec.ts            UI
+09.01-admin-managing-topics.spec.ts            UI
   Admin managing Topics
     Registering
-      08.01.01 … 08.01.04
+      09.01.01 … 09.01.04
     Deregistering
-      08.01.05                                 ← continues the sequence across the group
+      09.01.05                                 ← continues the sequence across the group
 
-08.06-topic-lifecycle-api.spec.ts              API — no browser anywhere in the file
+09.06-topic-lifecycle-api.spec.ts              API — no browser anywhere in the file
   Topic lifecycle rules
-      08.06.01 … 08.06.03
+      09.06.01 … 09.06.03
 ```
 
 The describe chain is already printed in Playwright's report line, so the group does not need to
@@ -304,7 +304,7 @@ the page object, don't assume.
 
 ## Webhook-dependent tests
 
-`tests/08-event-notifications/08.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
+`tests/08-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
 process can actually reach, and skips itself otherwise. To run it:
 
 1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which

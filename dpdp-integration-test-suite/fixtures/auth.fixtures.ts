@@ -292,7 +292,7 @@ async function waitForCachedState(personaName: PersonaName): Promise<PersonaAuth
  * later call, from any fixture, any test, any worker, just reads the file this first call wrote.
  * Shared by every fixture below, and by the one place outside the fixtures that needs a persona
  * this suite has no always-on fixture for - the ownership-isolation test in
- * `tests/03-consents/03.02-user-viewing-consents.spec.ts` calls this directly for
+ * `tests/04-consents/04.02-user-viewing-consents.spec.ts` calls this directly for
  * `user-2`.
  */
 export async function getPersonaState(
@@ -360,7 +360,7 @@ function withoutServletSessionCookies(state: PersonaStorageState): PersonaStorag
  * Builds an already-authenticated page for a persona whose `PersonaAuthState` the caller already
  * has - split out of `loginAs` below for the one place outside these fixtures that calls
  * `getPersonaState` directly (the ownership-isolation test in
- * `tests/03-consents/03.02-user-viewing-consents.spec.ts`, for `user-2`, which has no always-on
+ * `tests/04-consents/04.02-user-viewing-consents.spec.ts`, for `user-2`, which has no always-on
  * fixture of its own). The caller owns the returned page's context and must close it itself
  * (`await page.context().close()`) once done with it.
  *

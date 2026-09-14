@@ -72,7 +72,7 @@ export async function seedConsent(
    * subject approving their own consent) - every caller before this parameter existed relied on
    * exactly that. Pass a different `userId`/`type` (e.g. `{ userId: parentId, type: 'PARENT' }`)
    * to seed a delegated consent instead, where the subject and the authorizer are different
-   * people - see tests/03-consents/03.07-user-viewing-consent-history.spec.ts's delegated-consent
+   * people - see tests/04-consents/04.07-user-viewing-consent-history.spec.ts's delegated-consent
    * case.
    */
   authorizations: AuthorizationEntry[] = [{ userId: subjectId, type: 'USER' }],

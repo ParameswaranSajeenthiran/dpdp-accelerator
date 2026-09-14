@@ -206,19 +206,19 @@ ID, what it drives and what it asserts, plus known gaps, the product bugs the te
 and the measured flake profile. Open that when you need to know what is covered, plan a change, or
 work out what a CI failure was checking. This table is only the map of what each directory owns.
 
-Test IDs are derived from location — `<area>.<file>.<test>`, so `03.06.04` is the fourth test in
+Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is the fourth test in
 `tests/03-consents/03.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
 
 | Directory | Tests | Covers |
 | --- | --- | --- |
-| `01-elements/` | 9 | Element catalog: admin creating, viewing and searching Elements |
-| `02-purposes/` | 9 | Purpose catalog: admin creating, viewing and searching Purposes |
-| `03-consents/` | 33 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
-| `04-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
-| `05-multi-tenancy/` | 3 | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
-| `06-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
-| `07-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
-| `08-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `02-elements/` | 9 | Element catalog: admin creating, viewing and searching Elements |
+| `03-purposes/` | 9 | Purpose catalog: admin creating, viewing and searching Purposes |
+| `04-consents/` | 33 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
+| `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
+| `06-multi-tenancy/` | 3 | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
+| `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
+| `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
+| `09-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 
