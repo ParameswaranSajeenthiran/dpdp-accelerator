@@ -69,7 +69,7 @@ public class EmailNotificationClientTest {
 
     private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
     private static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String ADMIN_ROLE = "dpdp-consent-admin";
+    private static final String DPO_ROLE = "dpdp-consent-dpo";
     private static final String ROLE_AUDIENCE = "organization";
     private static final String ORGANIZATION_ID = "org-id-1";
     private static final String APPLICATION_ID = "app1";
@@ -179,17 +179,17 @@ public class EmailNotificationClientTest {
 
     /**
      * Wires the DPDP Consent Portal organization lookup +
-     * dpdp-consent-admin role membership.
+     * dpdp-consent-dpo role membership.
      */
     private void stubOfficerResolution(List<UserBasicInfo> members) throws Exception {
         when(organizationManager.resolveOrganizationId("org1")).thenReturn(ORGANIZATION_ID);
 
         when(roleManagementService.isExistingRoleName(
-                ADMIN_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
+                DPO_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
                 .thenReturn(true);
 
         when(roleManagementService.getRoleIdByName(
-                ADMIN_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
+                DPO_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
                 .thenReturn(ROLE_ID);
 
         when(roleManagementService.getUserListOfRole(
