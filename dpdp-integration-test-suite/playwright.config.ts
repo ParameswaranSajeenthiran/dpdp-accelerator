@@ -47,6 +47,12 @@ export default defineConfig({
       testMatch: /01-provisioning\/01\.01-.*\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'user-setup',
+      testMatch: /01-provisioning\/01\.02-.*\.spec\.ts$/,
+      dependencies: ['tenant-setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
 })
