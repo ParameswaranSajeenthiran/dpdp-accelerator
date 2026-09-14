@@ -279,6 +279,7 @@
                             org.wso2.carbon.consent.mgt.core.model;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             org.wso2.carbon.consent.mgt.core.exception;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             !org.quartz.*,
+                            org.wso2.carbon.identity.governance;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.exceptions.notiification;version="${carbon.identity.governance.version}",

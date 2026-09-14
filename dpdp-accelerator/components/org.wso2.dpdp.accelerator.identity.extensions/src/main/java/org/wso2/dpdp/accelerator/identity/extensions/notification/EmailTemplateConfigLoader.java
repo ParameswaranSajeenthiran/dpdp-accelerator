@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.identity.extensions.notification;
 
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMException;
-import org.apache.axiom.om.impl.builder.StAXOMBuilder;
+import org.apache.axiom.om.OMXMLBuilderFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.utils.CarbonUtils;
@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 
 /**
@@ -105,8 +106,15 @@ final class EmailTemplateConfigLoader {
         }
 
         try (InputStream inStream = Files.newInputStream(configFile.toPath())) {
-            StAXOMBuilder builder = new StAXOMBuilder(inStream);
-            OMElement rootElement = builder.getDocumentElement();
+            // Disable DTD/external-entity resolution explicitly rather than relying on the
+            // ambient StAX implementation's default - XXE hardening for an XML file read off
+            // disk (operator-editable, like dpdp-accelerator.xml, but still worth the two lines).
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+            xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+            xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+            OMElement rootElement = OMXMLBuilderFactory
+                    .createStAXOMBuilder(xmlInputFactory.createXMLStreamReader(inStream))
+                    .getDocumentElement();
             Map<String, TemplateContent> templates = new HashMap<>();
             for (Iterator<OMElement> children = rootElement.getChildElements(); children.hasNext();) {
                 OMElement configuration = children.next();

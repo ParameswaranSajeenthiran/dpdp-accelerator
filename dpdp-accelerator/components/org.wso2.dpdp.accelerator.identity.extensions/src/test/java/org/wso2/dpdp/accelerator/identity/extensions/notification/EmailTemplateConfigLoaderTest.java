@@ -127,6 +127,24 @@ public class EmailTemplateConfigLoaderTest {
         assertFalse(EmailTemplateConfigLoader.getTemplateContent("ComplaintCreated").isPresent());
     }
 
+    @Test
+    public void doesNotResolveAnExternalEntity() throws IOException {
+
+        // XXE hardening (SUPPORT_DTD / IS_SUPPORTING_EXTERNAL_ENTITIES disabled) rejects any
+        // DOCTYPE outright rather than resolving it, same as any other malformed file: falls back
+        // to the bundled classpath default instead of leaking file content into the subject.
+        writeConfigFile("<?xml version=\"1.0\"?>"
+                + "<!DOCTYPE configurations [<!ENTITY xxe SYSTEM \"file:///etc/hostname\">]>"
+                + "<configurations>"
+                + "<configuration type=\"ComplaintCreated\" locale=\"en_US\" emailContentType=\"text/html\">"
+                + "<subject>&xxe;</subject>"
+                + "<body><![CDATA[<p>body</p>]]></body>"
+                + "</configuration>"
+                + "</configurations>");
+
+        assertFalse(EmailTemplateConfigLoader.getTemplateContent("ComplaintCreated").isPresent());
+    }
+
     private void writeConfigFile(String xml) throws IOException {
 
         Path configDir = Files.createTempDirectory("email-dpdp-config-test");

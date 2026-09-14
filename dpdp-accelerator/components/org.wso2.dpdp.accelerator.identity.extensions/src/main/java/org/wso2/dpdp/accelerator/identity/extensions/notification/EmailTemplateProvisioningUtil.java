@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.identity.extensions.notification;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.governance.IdentityMgtConstants;
 import org.wso2.carbon.identity.governance.exceptions.notiification.NotificationTemplateManagerException;
 import org.wso2.carbon.identity.governance.model.NotificationTemplate;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
@@ -111,7 +112,15 @@ public final class EmailTemplateProvisioningUtil {
                     + LogSanitizer.sanitize(tenantDomain) + "'; continuing to check its content.", e);
         }
 
-        if (templateExists(templateManager, templateType, tenantDomain)) {
+        Optional<Boolean> exists = templateExists(templateManager, templateType, tenantDomain);
+        if (exists.isEmpty()) {
+            // The lookup itself failed for a reason other than "genuinely not found" (see
+            // templateExists' own javadoc) - we cannot tell whether a Console customization is
+            // sitting there, so skip the write rather than risk clobbering it. The next
+            // tenant-update event retries.
+            return;
+        }
+        if (exists.get()) {
             LOG.debug("Email template '" + templateType + "' already exists for tenant '"
                     + LogSanitizer.sanitize(tenantDomain) + "'; leaving its content as-is so a Console "
                     + "customization is preserved.");
@@ -143,21 +152,39 @@ public final class EmailTemplateProvisioningUtil {
         }
     }
 
+    // The error code the real NotificationTemplateManager implementation raises for a genuinely
+    // absent template - the interface's own default no-op methods return null for "not found"
+    // (see getNotificationTemplate's javadoc), but the shipped implementation is free to (and, per
+    // this code, does) throw instead. Sourced from IdentityMgtConstants.ErrorMessages rather than
+    // hardcoded so it stays in lockstep with whatever the governance bundle ships.
+    private static final String ERROR_CODE_NO_TEMPLATE_FOUND =
+            IdentityMgtConstants.ErrorMessages.ERROR_CODE_NO_TEMPLATE_FOUND.getCode();
+
     /**
-     * {@code getNotificationTemplate} returns {@code null} for a template this tenant doesn't have
-     * yet (see its own javadoc); any exception is treated the same way - as "not present yet",
-     * since the only alternative is blocking provisioning entirely on a lookup failure.
+     * @return {@code true}/{@code false} for whether the template exists, or empty if the lookup
+     * failed for a reason other than the template genuinely not existing yet.
+     * {@code getNotificationTemplate} returns {@code null} for "not found" per its own javadoc,
+     * but null-or-throw is not this class's call to make - we treat only a "not found" exception
+     * (matched by error code, not by catching the whole exception type) the same as a null return.
+     * Any other exception must NOT be folded into "not present": that lookup could just as easily
+     * be failing on an existing, customized template, and returning false then would let the write
+     * path in {@link #provisionTemplate} silently overwrite it.
      */
-    private static boolean templateExists(NotificationTemplateManager templateManager, String templateType,
-            String tenantDomain) {
+    private static Optional<Boolean> templateExists(NotificationTemplateManager templateManager,
+            String templateType, String tenantDomain) {
 
         try {
-            return templateManager.getNotificationTemplate(EMAIL_CHANNEL, templateType, DEFAULT_LOCALE, tenantDomain)
-                    != null;
+            return Optional.of(
+                    templateManager.getNotificationTemplate(EMAIL_CHANNEL, templateType, DEFAULT_LOCALE,
+                            tenantDomain) != null);
         } catch (NotificationTemplateManagerException e) {
-            LOG.debug("Could not look up existing email template '" + templateType + "' for tenant '"
-                    + LogSanitizer.sanitize(tenantDomain) + "'; treating it as not yet provisioned.", e);
-            return false;
+            if (ERROR_CODE_NO_TEMPLATE_FOUND.equals(e.getErrorCode())) {
+                return Optional.of(false);
+            }
+            LOG.error("Could not look up existing email template '" + templateType + "' for tenant '"
+                    + LogSanitizer.sanitize(tenantDomain) + "'; skipping provisioning rather than risk "
+                    + "overwriting an existing customization. Will retry on the next tenant-update event.", e);
+            return Optional.empty();
         }
     }
 }

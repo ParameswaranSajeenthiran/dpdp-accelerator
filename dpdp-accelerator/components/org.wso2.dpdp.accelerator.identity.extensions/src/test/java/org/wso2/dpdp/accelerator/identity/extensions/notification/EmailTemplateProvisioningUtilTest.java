@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.carbon.identity.governance.IdentityMgtConstants;
 import org.wso2.carbon.identity.governance.exceptions.notiification.NotificationTemplateManagerException;
 import org.wso2.carbon.identity.governance.model.NotificationTemplate;
 import org.wso2.carbon.identity.governance.service.notification.NotificationTemplateManager;
@@ -124,17 +125,33 @@ public class EmailTemplateProvisioningUtilTest {
     }
 
     @Test
-    public void provisionTemplatesWritesContentWhenTheExistenceCheckItselfFails() throws Exception {
+    public void provisionTemplatesWritesContentWhenTheTemplateIsGenuinelyNotFound() throws Exception {
 
-        // getNotificationTemplate failing (e.g. a transient registry error) must not permanently
-        // block provisioning for a tenant that genuinely has no template yet - it is treated the
-        // same as "not present".
+        // getNotificationTemplate throwing with the NTM error code for "not found" (rather than
+        // returning null) must still be treated as "not present yet" and proceed to the write.
         when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
-                eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException("lookup failed"));
+                eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException(
+                IdentityMgtConstants.ErrorMessages.ERROR_CODE_NO_TEMPLATE_FOUND.getCode(), "not found"));
 
         EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
 
         verify(notificationTemplateManager, times(3)).addNotificationTemplate(
                 org.mockito.ArgumentMatchers.any(NotificationTemplate.class), eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void provisionTemplatesSkipsWriteWhenTheExistenceCheckFailsUnexpectedly() throws Exception {
+
+        // getNotificationTemplate failing with anything other than the "not found" error code
+        // (e.g. a transient registry error) could just as easily be hiding an existing, customized
+        // template - it must never be treated as "not present", or the write below would risk
+        // overwriting that customization.
+        when(notificationTemplateManager.getNotificationTemplate(eq(EMAIL_CHANNEL), anyString(), eq(DEFAULT_LOCALE),
+                eq(TENANT_DOMAIN))).thenThrow(new NotificationTemplateManagerException("lookup failed"));
+
+        EmailTemplateProvisioningUtil.provisionTemplates(TENANT_DOMAIN);
+
+        verify(notificationTemplateManager, org.mockito.Mockito.never()).addNotificationTemplate(
+                org.mockito.ArgumentMatchers.any(NotificationTemplate.class), anyString());
     }
 }
