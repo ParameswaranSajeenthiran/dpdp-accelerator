@@ -50,7 +50,7 @@ Import `test` and `expect` **from `../../fixtures/auth.fixtures`**, never from `
 directly — the fixtures are only available on the extended `test`. Specs needing a throwaway tenant
 import from `../../fixtures/tenant.fixtures` instead, which itself extends `auth.fixtures`'s `test`
 (so `consentAdminConsentApi` etc. are still available there too). `tests/05-multi-tenancy/` and
-three files in `tests/08-event-notifications/` do this today.
+three files in `tests/09-event-notifications/` do this today.
 
 ## Numbering and layout
 
@@ -65,7 +65,7 @@ reference to anything external.
 | **R4 · Test** | `test('<NN>.<MM>.<KK> - <observable behaviour>')`. `KK` sequential from `01`, **flat across any nesting**, in declaration order. |
 | **R5 · Sequential** | Every level is dense — no gaps. A deletion renumbers the survivors after it, **and their cross-references**. |
 | **R6 · API-only files** | A filename ending `-api.spec.ts` means the file **drives no browser at all**. A test that needs a browser for setup is not an `-api` file even if it asserts only on API responses (`03.09` is exactly this case). |
-| **R7 · Cross-cutting** | `04-authorization` and `05-multi-tenancy` hold only tests of a *global mechanism* or tests spanning features. A single feature's own guard lives in that feature's area as `<NN>.<MM>-<feature>-authorization.spec.ts` (see `07.08`, `08.05`). |
+| **R7 · Cross-cutting** | `04-authorization` and `05-multi-tenancy` hold only tests of a *global mechanism* or tests spanning features. A single feature's own guard lives in that feature's area as `<NN>.<MM>-<feature>-authorization.spec.ts` (see `08.08`, `09.05`). |
 | **R8 · Area exclusivity** | Every filename and every test ID under `tests/<NN>-*/` begins with `<NN>`. No exceptions. |
 
 `npm run verify:ids` enforces all of the above, plus that every ID mentioned in a comment resolves
@@ -93,9 +93,9 @@ appear in the number.
 ### Selecting tests
 
 ```sh
-npx playwright test --grep "03\.06\.04"        # one test — ESCAPE THE DOTS or they are wildcards
-npx playwright test --grep "03\.06\."          # one file
-npx playwright test tests/03-consents          # one area, by path
+npx playwright test --grep "04\.06\.04"        # one test — ESCAPE THE DOTS or they are wildcards
+npx playwright test --grep "04\.06\."          # one file
+npx playwright test tests/04-consents          # one area, by path
 ```
 
 `--grep` matches the file path as well as the describe and test titles, which is why an ID prefix
@@ -304,7 +304,7 @@ the page object, don't assume.
 
 ## Webhook-dependent tests
 
-`tests/08-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
+`tests/09-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
 process can actually reach, and skips itself otherwise. To run it:
 
 1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which

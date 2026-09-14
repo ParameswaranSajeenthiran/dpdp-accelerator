@@ -28,7 +28,7 @@ const SYSTEM_TOPICS = ['consent.update', 'consent.revoke', 'consent.expire', 'us
  * notifications:* scope) - `ownerEventApi` on each is already tenant-qualified. Every event
  * notification resource lives under `TENANT.ORG_ID` (DPDPTenantContext.getOrganizationId()), so
  * these tests exercise that column as the isolation boundary directly, the same way
- * tests/05-multi-tenancy does for consent-mgt resources.
+ * tests/06-multi-tenancy does for consent-mgt resources.
  */
 test.describe('Event Notification tenant isolation', () => {
   test('09.11.01 - Tenants with the same topic name receive separate topic identities and lists', async ({

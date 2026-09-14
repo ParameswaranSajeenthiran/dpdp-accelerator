@@ -49,8 +49,8 @@ export interface TenantContext {
    * (no permissions) - the tenant-local equivalent of the super tenant's plain `user` persona. */
   consentUser: Persona
   ownerConsentApi: ConsentApiClient
-  // Tenant-qualified the same way ownerConsentApi is - tests/08-event-notifications' tenant
-  // isolation file (05.10) uses this directly rather than re-deriving tenant-scoped headers of
+  // Tenant-qualified the same way ownerConsentApi is - tests/09-event-notifications' tenant
+  // isolation file (09.11) uses this directly rather than re-deriving tenant-scoped headers of
   // its own.
   ownerEventApi: EventNotificationApiClient
 }
@@ -209,7 +209,7 @@ interface CreatedTenant {
 
 /**
  * The full create-tenant-then-create-second-user-then-assign-role setup, factored out so both
- * the `tenant` and `tenantB` fixtures below can share it - tests/08-event-notifications'
+ * the `tenant` and `tenantB` fixtures below can share it - tests/09-event-notifications'
  * tenant-isolation file needs two live tenants at once, everything else in this suite needs one.
  * Returns the owner's captured auth state rather than building API clients itself, so the
  * caller (see the `tenant`/`tenantB` fixtures below) owns and disposes the `APIRequestContext`
@@ -326,7 +326,7 @@ export const test = base.extend<object, WorkerFixtures>({
     },
     // This setup chains three separate browser logins plus several UI wizards - the default
     // fixture timeout (tied to a single test's own timeout, 30s) is nowhere near enough. 120s was
-    // enough when 05.10 ran on its own but not with the full suite in flight: the Console login
+    // enough when 09.11 ran on its own but not with the full suite in flight: the Console login
     // alone budgets 80s of waits, and the worker that owns this fixture also pays for tenantB.
     { scope: 'worker', timeout: 240_000 },
   ],

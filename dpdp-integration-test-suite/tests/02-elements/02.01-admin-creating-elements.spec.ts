@@ -24,7 +24,7 @@ import { uniqueElementName } from '../../utils/testData'
 /**
  * The "Add Element" form's validation rules. The happy-path creation flow is not duplicated here:
  * every consent test drives this same form as setup via `seedConsent` (utils/consentSetup.ts), so
- * a passing 03-consents run already proves it. Elements created here are registered with
+ * a passing 04-consents run already proves it. Elements created here are registered with
  * `consentCleanupTracker` so they're deleted again once the test finishes - see
  * fixtures/auth.fixtures.ts's ConsentCleanupTracker.
  */

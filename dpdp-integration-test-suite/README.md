@@ -33,7 +33,7 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
      administrator: `tests/04-authorization` asserts this account holds only `internal_login`.
    - **Consent Admin** — assigned `dpdp-consent-admin` (see `../docs/content/configuration-guide.md`,
      "Grant administration access"). Drives the admin UI and seeds Purposes/Elements/Consents via
-     the API for `tests/01-elements`, `tests/02-purposes` and `tests/03-consents`.
+     the API for `tests/02-elements`, `tests/03-purposes` and `tests/04-consents`.
    - **Second User** — optional, a distinct plain account. Without it the ownership-isolation
      tests skip themselves.
 
@@ -116,7 +116,7 @@ The override file only names what it changes; it is merged into the defaults key
 | `personas.user2.*` | `dpdp-ci-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
 | `personas.consentAdmin.*` | `dpdp-ci-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
 | `personaRoles.user` / `.consentAdmin` | `dpdp-consent-user` / `dpdp-consent-admin` | The roles provisioning assigns. The accelerator creates the roles themselves; it never assigns membership. |
-| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/08-event-notifications/README.md`. |
+| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/09-event-notifications/README.md`. |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
 | `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after shortening `[dpdp_accelerator.consent_expiry] cron_value` on the server and restarting it. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. |
 
@@ -136,7 +136,7 @@ breaks CI too.
 
 ```sh
 ./run-e2e.sh                       # everything
-./run-e2e.sh tests/03-consents     # one area
+./run-e2e.sh tests/04-consents     # one area
 npm run report                     # open the last HTML report
 ```
 
@@ -156,14 +156,14 @@ Equivalent npm scripts:
 | Command | Runs |
 | --- | --- |
 | `npm test` | the full suite |
-| `npm run test:elements` | `tests/01-elements` |
-| `npm run test:purposes` | `tests/02-purposes` |
-| `npm run test:consents` | `tests/03-consents` |
-| `npm run test:authorization` | `tests/04-authorization` |
-| `npm run test:multi-tenancy` | `tests/05-multi-tenancy` |
-| `npm run test:account` | `tests/06-account` |
-| `npm run test:complaints` | `tests/07-complaints` |
-| `npm run test:event-notifications` | `tests/08-event-notifications` |
+| `npm run test:elements` | `tests/02-elements` |
+| `npm run test:purposes` | `tests/03-purposes` |
+| `npm run test:consents` | `tests/04-consents` |
+| `npm run test:authorization` | `tests/05-authorization` |
+| `npm run test:multi-tenancy` | `tests/06-multi-tenancy` |
+| `npm run test:account` | `tests/07-account` |
+| `npm run test:complaints` | `tests/08-complaints` |
+| `npm run test:event-notifications` | `tests/09-event-notifications` |
 | `npm run test:ui` | any of the above, in Playwright's [UI mode](https://playwright.dev/docs/test-ui-mode) |
 | `npm run report` | opens the last HTML report |
 
@@ -183,7 +183,7 @@ the browser actually did.
 ```sh
 npm run test:ui                              # everything, in UI mode
 ./run-e2e.sh --ui                            # same, via run-e2e.sh
-npx playwright test tests/03-consents --ui   # one category, in UI mode
+npx playwright test tests/04-consents --ui   # one category, in UI mode
 ```
 
 ## Project structure
@@ -207,7 +207,7 @@ and the measured flake profile. Open that when you need to know what is covered,
 work out what a CI failure was checking. This table is only the map of what each directory owns.
 
 Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is the fourth test in
-`tests/03-consents/03.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
+`tests/04-consents/04.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
 
 | Directory | Tests | Covers |
 | --- | --- | --- |

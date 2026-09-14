@@ -12,20 +12,20 @@ in CI was actually checking.
 |---|---|
 | **Tests** | 157 across 42 spec files in 8 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
-| **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `08.10` (webhook receiver) |
+| **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
 ## Finding a test from a failure
 
 IDs are derived from location — `<area>.<file>.<test>` — so a failing `04.06.04` is the fourth
-test in `tests/03-consents/03.06-*.spec.ts`. Playwright also prints `file:line` in every report
+test in `tests/04-consents/04.06-*.spec.ts`. Playwright also prints `file:line` in every report
 line, which is more precise still.
 
 ```sh
-npx playwright test --grep "03\.06\.04"        # one test — escape the dots, they are wildcards
-npx playwright test --grep "03\.06\."          # one file
-npx playwright test tests/03-consents          # one area
+npx playwright test --grep "04\.06\.04"        # one test — escape the dots, they are wildcards
+npx playwright test --grep "04\.06\."          # one file
+npx playwright test tests/04-consents          # one area
 ```
 
 ## Why the assertions look the way they do
@@ -196,7 +196,7 @@ Exercises `DPDPConsentExpiryReconciler`. Asserts only on API responses, but stil
 
 ## `05-authorization/` — Route guards and sidebar visibility
 
-Tests the global mechanism - `AuthorizedRoute` plus `AppSidebar`'s scope filter. A single feature's own guard lives with that feature (07.08, 08.05).
+Tests the global mechanism - `AuthorizedRoute` plus `AppSidebar`'s scope filter. A single feature's own guard lives with that feature (08.08, 09.05).
 
 **Not covered:** `NoAccessPage` ("No portal access") - no persona in this suite is scope-less, so it is unreachable here.
 
