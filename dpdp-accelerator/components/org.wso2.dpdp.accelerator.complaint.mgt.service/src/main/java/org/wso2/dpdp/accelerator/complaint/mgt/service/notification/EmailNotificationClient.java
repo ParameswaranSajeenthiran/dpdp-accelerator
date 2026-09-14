@@ -101,10 +101,12 @@ public class EmailNotificationClient implements NotificationClient {
     // plain string.
     private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
     // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME /
-    // DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE - duplicated rather than depended on, same
-    // as every other constant in this class.
+    // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE - duplicated rather than depended on, same
+    // as every other constant in this class. dpdp-consent-dpo (not dpdp-consent-admin) is the
+    // complaint officer distribution list - it already carries complaints:read:any/write:any,
+    // so its members can act on what they're notified about.
     private static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String ADMIN_ROLE = "dpdp-consent-admin";
+    private static final String DPO_ROLE = "dpdp-consent-dpo";
     private static final String ROLE_AUDIENCE = "organization";
 
     // Mirrors the portal frontend's own status labels exactly (complaintDisplay.ts's
@@ -318,7 +320,7 @@ public class EmailNotificationClient implements NotificationClient {
     }
 
     /**
-     * Resolves every member of {@code dpdp-consent-admin} for the given tenant that has a
+     * Resolves every member of {@code dpdp-consent-dpo} for the given tenant that has a
      * resolvable email address. Members without one are skipped (logged), not fatal to the batch.
      */
     private List<Recipient> resolveOfficers(String tenantDomain) {
@@ -362,12 +364,12 @@ public class EmailNotificationClient implements NotificationClient {
             // this same constraint), so this can never be derived from organizationManager's mere
             // presence, only from which branch above actually resolved the ID.
             String audience = resolvedAsOrganization ? ROLE_AUDIENCE : "application";
-            if (!roleManagementService.isExistingRoleName(ADMIN_ROLE, audience, organizationId, tenantDomain)) {
-                LOG.debug("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + LogSanitizer.sanitize(tenantDomain)
+            if (!roleManagementService.isExistingRoleName(DPO_ROLE, audience, organizationId, tenantDomain)) {
+                LOG.debug("Role '" + DPO_ROLE + "' does not exist for tenant '" + LogSanitizer.sanitize(tenantDomain)
                         + "'; cannot resolve complaint officers to notify.");
                 return recipients;
             }
-            String roleId = roleManagementService.getRoleIdByName(ADMIN_ROLE, audience, organizationId,
+            String roleId = roleManagementService.getRoleIdByName(DPO_ROLE, audience, organizationId,
                     tenantDomain);
             List<UserBasicInfo> members = roleManagementService.getUserListOfRole(roleId, tenantDomain);
             for (UserBasicInfo member : members) {
