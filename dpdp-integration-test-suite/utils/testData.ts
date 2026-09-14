@@ -16,12 +16,20 @@
  * under the License.
  */
 
+import { randomBytes } from 'node:crypto'
+
 // This suite runs against a real, persistent environment (no per-test tenant reset), so every
 // scenario that creates a record stamps a unique marker into its name and asserts by that
 // marker or by the server-issued ID - never by "the list is empty" or "there's exactly one
 // record", both of which would be false against an environment with prior runs' data still in it.
 export function uniqueMarker(label: string): string {
   return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+/** A policy-compliant random password, in the same shape scripts/setup-local.sh generates. */
+export function generatePassword(): string {
+  const random = randomBytes(18).toString('base64').replace(/[^A-Za-z0-9]/g, '')
+  return `${random}Aa1!`
 }
 
 // Catalog-management/lifecycle tests create real Purposes/Elements/Consents as setup for what the
