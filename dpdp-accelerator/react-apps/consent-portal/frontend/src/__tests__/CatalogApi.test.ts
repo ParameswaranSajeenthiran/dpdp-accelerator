@@ -27,7 +27,6 @@ const transport = vi.hoisted(() => ({
 
 vi.mock('../utils/authClient', () => ({
   httpRequest: transport.httpRequest,
-  isAuthEnabled: () => true,
   login: transport.login,
 }))
 

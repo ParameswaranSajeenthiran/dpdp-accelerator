@@ -18,7 +18,7 @@
 
 import type { HttpRequestConfig } from '@asgardeo/auth-spa'
 
-import { httpRequest, isAuthEnabled, login } from './authClient'
+import { httpRequest, login } from './authClient'
 import { serverBaseUrl } from './basePath'
 
 /**
@@ -144,19 +144,6 @@ async function send(path: string, options: RequestOptions): Promise<RawResponse>
   const method = options.method ?? 'GET'
   const headers: Record<string, string> = { Accept: 'application/json', ...options.headers }
 
-  if (!isAuthEnabled()) {
-    // Development affordance: no SDK session, plain same-origin call.
-    const response = await fetch(url, { method, headers, body: options.body })
-    const text = await response.text()
-    let data: unknown
-    try {
-      data = text ? JSON.parse(text) : undefined
-    } catch {
-      data = undefined
-    }
-    return { status: response.status, data }
-  }
-
   try {
     const response = await httpRequest({
       data: options.body,
@@ -183,7 +170,7 @@ async function send(path: string, options: RequestOptions): Promise<RawResponse>
 async function requestRaw(path: string, options: RequestOptions): Promise<RawResponse> {
   const raw = await send(path, options)
 
-  if (raw.status === 401 && isAuthEnabled()) {
+  if (raw.status === 401) {
     // The SDK refreshes silently, so a 401 means the session is really gone.
     void login()
     throw payloadToError(raw.status, raw.data)
