@@ -34,6 +34,13 @@ export interface ScimSurface {
   roleScopes: string[]
 }
 
+/**
+ * Deliberately narrower than secondaryTenantScimSurface below, which carries view/delete too: the
+ * super tenant's own internal_user_mgt_view/delete (what utils/throwawayUser.ts needs) are declared
+ * in utils/provisioningScopes.ts's PROVISIONING_APIS instead, and authorized onto the same
+ * "DPDP E2E Provisioning" app by scripts/bootstrap-provisioning-app.ts. Don't "fix" the asymmetry
+ * by copying them here - they already exist, just in that file.
+ */
 export function superTenantScimSurface(): ScimSurface {
   return {
     usersUrl: `${isBaseUrl}/scim2/Users`,

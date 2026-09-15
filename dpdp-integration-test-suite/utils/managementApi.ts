@@ -91,7 +91,7 @@ export async function openManagementSession(consoleUrl: string, persona: Persona
 async function managementApiCall(
   session: ManagementSession,
   baseApiUrl: string,
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH',
   path: string,
   body?: unknown,
 ): Promise<{ status: number; location: string | null; json: unknown }> {
@@ -104,7 +104,12 @@ async function managementApiCall(
     ...(body === undefined ? {} : { data: body }),
     timeout: 30_000,
   }
-  const response = method === 'GET' ? await session.request.get(url, options) : await session.request.post(url, options)
+  const response =
+    method === 'GET'
+      ? await session.request.get(url, options)
+      : method === 'PATCH'
+        ? await session.request.patch(url, options)
+        : await session.request.post(url, options)
 
   const text = await response.text()
   let json: unknown
@@ -170,7 +175,15 @@ export async function createM2mApplication(
   return id
 }
 
-/** Idempotent - a no-op if `apiResourceId` is already authorized on `applicationId`. */
+/**
+ * Idempotent, and reconciles the scope SET rather than just the resource: a tenant provisioned by
+ * an older revision of this suite has the resource authorized for a smaller scope list, and merely
+ * seeing it in `authorized-apis` would leave the newer scopes ungranted forever - mintScimToken
+ * then fails the whole run with "minted a token missing scope(s): ...". Only a resource already
+ * carrying every requested scope skips the network call entirely; a partially-authorized one gets
+ * the missing scopes PATCHed on (added, never removed - another caller may legitimately have
+ * authorized more than this one asks for).
+ */
 export async function authorizeApiResource(
   session: ManagementSession,
   baseApiUrl: string,
@@ -179,15 +192,30 @@ export async function authorizeApiResource(
   scopes: string[],
 ): Promise<void> {
   const { json } = await managementApiCall(session, baseApiUrl, 'GET', `/applications/${applicationId}/authorized-apis`)
-  const existing = (json as { id: string }[] | undefined) ?? []
-  if (existing.some((authorized) => authorized.id === apiResourceId)) {
+  const existing = (json as { id: string; authorizedScopes?: { name: string }[] }[] | undefined) ?? []
+  const authorized = existing.find((entry) => entry.id === apiResourceId)
+
+  if (!authorized) {
+    await managementApiCall(session, baseApiUrl, 'POST', `/applications/${applicationId}/authorized-apis`, {
+      id: apiResourceId,
+      policyIdentifier: 'RBAC',
+      scopes,
+    })
     return
   }
-  await managementApiCall(session, baseApiUrl, 'POST', `/applications/${applicationId}/authorized-apis`, {
-    id: apiResourceId,
-    policyIdentifier: 'RBAC',
-    scopes,
-  })
+
+  const granted = new Set((authorized.authorizedScopes ?? []).map((scope) => scope.name))
+  const missing = scopes.filter((scope) => !granted.has(scope))
+  if (missing.length === 0) {
+    return
+  }
+  await managementApiCall(
+    session,
+    baseApiUrl,
+    'PATCH',
+    `/applications/${applicationId}/authorized-apis/${apiResourceId}`,
+    { addedScopes: missing, removedScopes: [] },
+  )
 }
 
 export async function readOidcCredentials(

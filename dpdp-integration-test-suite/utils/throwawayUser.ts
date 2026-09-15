@@ -227,33 +227,39 @@ function basicAdminHeaders(admin: Persona): Record<string, string> {
 /** Approves the pending Delete User task for one username, if the admin has it. */
 async function approvePendingDeletion(username: string): Promise<void> {
   const target = resolveTarget(test.info().project.name)
-  // The account this workflow's admin surface must sign in as differs per target: the super
-  // tenant's own admin for the super tenant, the tenant owner (the only account guaranteed to
-  // administer this specific per-run tenant) for multi-tenant.
-  const admin: Persona =
-    target.name === 'super-tenant'
-      ? env.superAdmin
-      : (() => {
-          const { tenant } = readRunState()
-          if (!tenant) {
-            throw new Error('No tenant in .e2e-run-state.json.')
-          }
-          return tenant.owner
-        })()
-  const tenantDomain = target.tenantDomain
+  // Basic auth - the only credential these /me/ endpoints accept - is disabled for every root
+  // organization created after the cutoff in IS 7.3's compatibility-settings-metadata.json, which
+  // is every per-run tenant this suite creates. The machinery below stays for the day that
+  // changes; today it can only ever 401 under multi-tenant.
+  if (target.name !== 'super-tenant') {
+    return
+  }
 
   try {
-    const listed = await fetch(
-      `${env.identityServerBaseUrl}${tenantDomain ? `/t/${tenantDomain}` : ''}/api/users/v2/me/approval-tasks`,
-      { headers: basicAdminHeaders(admin), signal: AbortSignal.timeout(20_000) },
-    )
+    // The account this workflow's admin surface must sign in as differs per target: the super
+    // tenant's own admin for the super tenant, the tenant owner (the only account guaranteed to
+    // administer this specific per-run tenant) for multi-tenant.
+    let admin: Persona = env.superAdmin
+    if (target.name !== 'super-tenant') {
+      const { tenant } = readRunState()
+      if (!tenant) {
+        throw new Error('No tenant in .e2e-run-state.json.')
+      }
+      admin = tenant.owner
+    }
+    const prefix = target.tenantDomain ? `/t/${target.tenantDomain}` : ''
+
+    const listed = await fetch(`${env.identityServerBaseUrl}${prefix}/api/users/v2/me/approval-tasks`, {
+      headers: basicAdminHeaders(admin),
+      signal: AbortSignal.timeout(20_000),
+    })
     if (!listed.ok) {
       return
     }
     const tasks = (await listed.json()) as { id: string; approvalStatus: string }[]
     for (const task of tasks.filter((t) => t.approvalStatus === 'READY')) {
       const detailResponse = await fetch(
-        `${env.identityServerBaseUrl}${tenantDomain ? `/t/${tenantDomain}` : ''}/api/users/v2/me/approval-tasks/${task.id}`,
+        `${env.identityServerBaseUrl}${prefix}/api/users/v2/me/approval-tasks/${task.id}`,
         { headers: basicAdminHeaders(admin), signal: AbortSignal.timeout(20_000) },
       )
       if (!detailResponse.ok) {
@@ -265,7 +271,7 @@ async function approvePendingDeletion(username: string): Promise<void> {
         continue
       }
       await fetch(
-        `${env.identityServerBaseUrl}${tenantDomain ? `/t/${tenantDomain}` : ''}/api/users/v2/me/approval-tasks/${task.id}/state`,
+        `${env.identityServerBaseUrl}${prefix}/api/users/v2/me/approval-tasks/${task.id}/state`,
         {
           method: 'PUT',
           headers: basicAdminHeaders(admin),

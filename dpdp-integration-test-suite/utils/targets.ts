@@ -24,9 +24,9 @@ export type TargetName = 'multi-tenant' | 'super-tenant'
 /**
  * Resolved from the running Playwright project's name (see playwright.config.ts) - never from a
  * parameter a spec file passes, so no test needs to know which of the two it is running under.
- * Only ever called from fixtures/auth.fixtures.ts, which only ever runs inside the
- * "multi-tenant"/"super-tenant" projects, both of which depend on "user-setup" - by the time this
- * resolves, every persona below is guaranteed to already exist.
+ * Called from fixtures/auth.fixtures.ts and from utils/throwawayUser.ts (three places), all of
+ * which only ever run inside the "multi-tenant"/"super-tenant" projects, both of which depend on
+ * "user-setup" - by the time this resolves, every persona below is guaranteed to already exist.
  */
 export interface Target {
   name: TargetName
