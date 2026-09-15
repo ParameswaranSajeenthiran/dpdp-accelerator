@@ -66,11 +66,12 @@ public interface ComplaintService {
     Complaint requireOwnedComplaint(String orgId, String complaintId, String ownerUserId);
 
     /**
-     * Lists complaints for an org with optional status/priority/userId filters, sorting, and
-     * limit/offset pagination. totalOut is an out-param - see ComplaintDAO#listComplaints.
+     * Lists complaints for an org with optional status/priority/userId filters, a free-text
+     * search, sorting, and limit/offset pagination. totalOut is an out-param - see
+     * ComplaintDAO#listComplaints.
      */
-    List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
-            int offset, String sort, int[] totalOut);
+    List<Complaint> listComplaints(String orgId, String status, String priority, String userId, String search,
+            int limit, int offset, String sort, int[] totalOut);
 
     /** Org-wide counts for the officer/admin queue's summary tiles - see ComplaintDAO#getQueueStats. */
     ComplaintQueueStatsResponseDTO getQueueStats(String orgId);
