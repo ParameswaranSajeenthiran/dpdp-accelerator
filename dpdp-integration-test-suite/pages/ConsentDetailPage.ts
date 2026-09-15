@@ -93,12 +93,21 @@ export class ConsentDetailPage {
   }
 
   /**
-   * Lifecycle-table row matching "<action>...<actor>". Bridges with `.*`, not literal " by " -
-   * AUTHORIZE_REVOKE's own label is "Revoked by reviewer", so a whole-consent revoke row reads
-   * "Revoked by reviewer by <actor>" with an extra "by" in between.
+   * Lifecycle-table row matching "<action>...<actor>" - a loose match, deliberately, since this
+   * is only for locating the row a test wants to act on next. To verify the row's own rendered
+   * text is actually correct (not just present), assert against lifecycleDescription instead -
+   * this locator alone would not have caught the "Revoked by reviewer by <actor>" duplicate-"by"
+   * bug fixed in ConsentLifecycleSection.tsx's authorizeRevoked label (see git history).
    */
   lifecycleRow(action: string, actor: string): Locator {
     return this.lifecycleRows.filter({ hasText: new RegExp(`${action}.*${actor}`) })
+  }
+
+  /** A lifecycle row's own description cell (last column) - exact text, for verifying the
+   * rendered "<action> by <actor>" string precisely rather than loosely matching a substring
+   * that a garbled render could also satisfy. */
+  lifecycleDescription(row: Locator): Locator {
+    return row.locator('td').last()
   }
 
   async openFullHistoryDialog(): Promise<void> {

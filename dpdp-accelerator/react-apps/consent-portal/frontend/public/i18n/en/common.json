@@ -217,7 +217,7 @@
         "updated": "Consent updated",
         "approved": "Approved",
         "rejected": "Rejected",
-        "authorizeRevoked": "Revoked by reviewer",
+        "authorizeRevoked": "Revoked",
         "revoked": "Revoked",
         "deleted": "Deleted",
         "expired": "Expired",

@@ -184,7 +184,15 @@ test.describe('User viewing Consent History (UI)', () => {
     // Wait on a visible element rather than reading text straight off goto() - every full page
     // load re-drives the SPA's silent sign-in redirect, which can otherwise hit a destroyed
     // execution context (see fixtures/auth.fixtures.ts).
-    await expect(detailPage.lifecycleRow('Revoked', target.personas.user.username)).toBeVisible()
+    const revokedRow = detailPage.lifecycleRow('Revoked', target.personas.user.username)
+    await expect(revokedRow).toBeVisible()
+    // Exact text, not a loose substring match: a self-service revoke's own label used to read
+    // "Revoked by reviewer" before being composed with "by <actor>", rendering the doubled
+    // "Revoked by reviewer by <actor>" - a real product bug that `.includes('Revoked by')` below
+    // would never have caught, since it's still a substring of the broken text too.
+    await expect(detailPage.lifecycleDescription(revokedRow)).toHaveText(
+      `Revoked by ${target.personas.user.username}`,
+    )
 
     const rowTexts = await detailPage.lifecycleRows.allTextContents()
     const createdIndex = rowTexts.findIndex((text) => text.includes('Consent created'))
