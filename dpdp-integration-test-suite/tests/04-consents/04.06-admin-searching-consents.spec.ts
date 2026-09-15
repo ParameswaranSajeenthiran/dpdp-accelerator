@@ -173,7 +173,8 @@ test.describe('Admin searching Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
-    // for the authorizer, same as tests/04-consents/04.07's delegated-consent case.
+    // for the authorizer, same as tests/04-consents/04.07-user-viewing-consent-history.spec.ts's
+    // delegated-consent case.
     test.skip(!hasSecondUser(), 'personas.user2 is not configured')
     const authorizer = target.personas.user2
     if (!authorizer) {

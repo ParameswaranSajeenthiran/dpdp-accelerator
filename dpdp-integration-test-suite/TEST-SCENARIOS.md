@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 171 across 48 spec files in 9 areas |
+| **Tests** | 175 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -168,7 +168,7 @@ overview card shows).
 
 The largest area. **Consent creation has no UI at all**, so `seedConsent` creates the Element and Purpose through the real admin forms and the consent through the admin API. `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
-**33 tests, 9 spec files.**
+**37 tests, 9 spec files.**
 
 ### `04.01-user-acting-on-consents.spec.ts`
 
@@ -187,6 +187,8 @@ The largest area. **Consent creation has no UI at all**, so `seedConsent` create
 | `04.02.01` | The detail page renders subject, service, and purpose/element structure | Subject, service id, "Not applicable", and the element row under its expanded purpose. |
 | `04.02.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
 | `04.02.03` | A different user cannot open another user's consent by its URL | Ownership isolation. Skips unless `personas.user2` is configured. |
+| `04.02.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
+| `04.02.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
 
 ### `04.03-user-searching-consents.spec.ts`
 
@@ -212,6 +214,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsent` create
 | --- | --- | --- |
 | `04.05.01` | A consent created via the API appears in the admin list with its subject |  |
 | `04.05.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
+| `04.05.03` | The rows-per-page control caps the number of rendered rows at the selected size |  |
 
 ### `04.06-admin-searching-consents.spec.ts`
 
@@ -222,6 +225,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsent` create
 | `04.06.03` | Combining the state filter with the advanced subject/service filters narrows the list further | State filter stays *enabled* with subject/service filters, unlike with consent-ID. |
 | `04.06.04` | Searching by a non-existent consent id shows the load-failed message, not the empty-results one | Load-failed, not "no results" - the consent-ID path is a direct GET-by-ID that 404s. |
 | `04.06.05` | A subject/service filter matching nothing shows the empty-results message | Empty-results - subject/service go through the real list-filter API. |
+| `04.06.06` | The Relation filter distinguishes a consent's subject from its authorizer | Seeds a PENDING consent whose subject and authorizer are deliberately different personas, same as 04.07's delegated-consent case. |
 
 ### `04.07-user-viewing-consent-history.spec.ts`
 
