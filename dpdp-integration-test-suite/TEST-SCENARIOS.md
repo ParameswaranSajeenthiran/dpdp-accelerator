@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 157 across 42 spec files in 8 areas |
+| **Tests** | 163 across 45 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -48,11 +48,34 @@ users.
 
 ---
 
+## `01-provisioning/` — Per-run setup
+
+Not feature tests: the `tenant-setup`/`user-setup` Playwright projects every other project
+depends on (see `playwright.config.ts`). Each is resumable - it checks `.e2e-run-state.json`
+first and only does its real work if that run hasn't already done it, so re-running the suite
+never creates a second tenant or re-provisions personas that already exist.
+
+**3 tests, 2 spec files.**
+
+### `01.01-tenant-creation.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `01.01.01` | Creates a fresh tenant via the root-organization wizard, and its owner can sign into it | Skips tenant creation on a resumed run; the sign-in assertion always runs, on both the create and resume paths. |
+
+### `01.02-user-provisioning.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `01.02.01` | Provisions the per-run tenant's four personas and assigns their roles | Bootstraps a tenant-scoped M2M client through the tenant's own Console, then SCIM2. |
+| `01.02.02` | Provisions the super tenant's four personas and assigns their roles | Reuses an already-configured persona's password from `e2e-config.local.json` rather than regenerating it. |
+
 ## `02-elements/` — Element catalog
 
-Admin-only. Every test drives the real "Add Element" dialog; elements created are tracked for deletion.
+Admin-only. Every test drives the real "Add Element" dialog; elements created are tracked for
+deletion, except where deletion is itself under test.
 
-**9 tests, 3 spec files.**
+**12 tests, 4 spec files.**
 
 ### `02.01-admin-creating-elements.spec.ts`
 
@@ -69,6 +92,7 @@ Admin-only. Every test drives the real "Add Element" dialog; elements created ar
 | `02.02.01` | The list renders and its rows-per-page control accepts a new page size without erroring |  |
 | `02.02.02` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds 11 elements, sets page size to 10: exactly 10 rows and Next enabled. A page-size cap, not a shared-list count. |
 | `02.02.03` | An unknown element id shows the load-failed message with a way back to the list |  |
+| `02.02.04` | A newly created element's detail page shows its display name, description, and properties correctly | Created with a display name, description and 2 properties; re-navigates to the detail page fresh (not the post-submit redirect) to prove the server actually persisted every field. |
 
 ### `02.03-admin-searching-elements.spec.ts`
 
@@ -77,6 +101,13 @@ Admin-only. Every test drives the real "Add Element" dialog; elements created ar
 | `02.03.01` | Searching by a partial name still finds the matching element | Searches on the middle timestamp segment only, proving the API filter is `name co` (substring). |
 | `02.03.02` | Resetting the search clears the filter and shows the unfiltered list again | The empty-results placeholder is itself a row, so the message plus the row count staying at 1 is what proves the filter applied. |
 | `02.03.03` | A search with no matches shows the empty-results message |  |
+
+### `02.04-admin-deleting-elements.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `02.04.01` | An admin deletes an element that isn't referenced by any purpose | Confirms via a fresh detail-page navigation afterward (load-failed) that the server actually deleted it, not just that the UI navigated away. |
+| `02.04.02` | An element still referenced by a purpose cannot be deleted | The purpose is created via `PurposeFormDialog.addElementByName`, which searches the picker server-side rather than relying on the unfiltered (oldest-first, capped) page - see `pages/PurposeFormDialog.ts`. Asserts the 409 conflict message and that the element still resolves afterward. |
 
 ## `03-purposes/` — Purpose catalog
 

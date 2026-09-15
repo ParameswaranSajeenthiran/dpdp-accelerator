@@ -21,12 +21,13 @@ import { test, expect, loginAsConsentAdmin, type ConsentCleanupTracker } from '.
 import { ElementDetailPage } from '../../pages/ElementDetailPage'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
-import { uniqueElementName } from '../../utils/testData'
+import { randomElementProfile, uniqueElementName } from '../../utils/testData'
 
 /**
- * The read-only Elements list at /elements: rendering, pagination, and the load-failed path for
- * a bad detail-page id. Elements seeded here only exist to give the list rows to page through -
- * see tests/02-elements/02.01-admin-creating-elements.spec.ts for the actual creation flow.
+ * The read-only Elements list at /elements: rendering, pagination, the load-failed path for a bad
+ * detail-page id, and that a created element's fields actually round-trip through the detail
+ * page. Elements seeded here only exist to give the list rows to page through - see
+ * tests/02-elements/02.01-admin-creating-elements.spec.ts for creation-form validation.
  */
 
 /** Creates an element through the UI, tracks it for cleanup, and returns its id. */
@@ -96,6 +97,43 @@ test.describe('Admin viewing the Elements list (UI)', () => {
     await expect(detailPage.loadFailedMessage).toBeVisible()
     await detailPage.backButton.click()
     await expect(consentAdminPage).toHaveURL(/\/elements$/)
+    await consentAdminPage.context().close()
+  })
+
+  test("02.02.04 - A newly created element's detail page shows its display name, description, and properties correctly", async ({
+    browser,
+    consentCleanupTracker,
+  }) => {
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    const profile = randomElementProfile()
+    const properties = { retention_days: '365', encryption: 'AES-256' }
+
+    const listPage = new ElementListPage(consentAdminPage)
+    await listPage.goto()
+    await listPage.openCreateDialog()
+    const createDialog = new ElementFormDialog(consentAdminPage)
+    await createDialog.fill({ name: profile.name, displayName: profile.displayName, description: profile.description })
+    for (const [key, value] of Object.entries(properties)) {
+      await createDialog.addProperty(key, value)
+    }
+    await createDialog.submit()
+    await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
+    const elementId = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
+    if (!elementId) {
+      throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
+    }
+    consentCleanupTracker.trackElement(elementId)
+
+    // A fresh navigation, not just the post-submit redirect - proves the server actually
+    // persisted every field, not just that the create form's own optimistic state looked right.
+    const detailPage = new ElementDetailPage(consentAdminPage)
+    await detailPage.goto(elementId)
+    await expect(detailPage.nameValue(profile.name)).toBeVisible()
+    await expect(detailPage.fieldValue('Display name')).toHaveText(profile.displayName)
+    await expect(detailPage.fieldValue('Description')).toHaveText(profile.description)
+    for (const [key, value] of Object.entries(properties)) {
+      await expect(detailPage.propertyRow(key)).toContainText(value)
+    }
     await consentAdminPage.context().close()
   })
 })

@@ -211,7 +211,8 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 
 | Directory | Tests | Covers |
 | --- | --- | --- |
-| `02-elements/` | 9 | Element catalog: admin creating, viewing and searching Elements |
+| `01-provisioning/` | 3 | Per-run setup: creates the throwaway tenant, provisions its personas and the super tenant's |
+| `02-elements/` | 12 | Element catalog: admin creating, viewing, searching, and deleting Elements |
 | `03-purposes/` | 9 | Purpose catalog: admin creating, viewing and searching Purposes |
 | `04-consents/` | 33 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
 | `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |

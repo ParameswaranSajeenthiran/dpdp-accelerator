@@ -99,7 +99,7 @@ test.describe('Webhook delivery', () => {
   // Skipped by default, not deleted: real, working coverage (confirmed passing standalone -
   // ~29s), but base_backoff_seconds=5 x3-multiplier retries make it genuinely slow (up to 90s)
   // to wait through in every routine run. Run explicitly with
-  // `npx playwright test -g "08\.10\.01"` when touching retry/backoff logic.
+  // `npx playwright test -g "09\.10\.01"` when touching retry/backoff logic.
   test.skip('09.10.01 - A non-2xx response records failure and retries with the same delivery id', async ({
     consentAdminEventApi,
   }) => {
@@ -155,7 +155,7 @@ test.describe('Webhook delivery', () => {
 
   // Skipped by default, not deleted: max_retries=5 at x3-multiplier backoff genuinely takes up
   // to ~11 minutes to exhaust (5+15+45+135+405s) - real product behavior, not a bug, but far too
-  // slow for a routine run. Run explicitly with `npx playwright test -g "08\.10\.02"` when
+  // slow for a routine run. Run explicitly with `npx playwright test -g "09\.10\.02"` when
   // touching retry-exhaustion logic.
   test.skip('09.10.02 - Persistent receiver failure transitions the delivery to failed', async ({ consentAdminEventApi }) => {
     // base_backoff_seconds=5, max_retries=5, x3 multiplier per attempt: 5+15+45+135+405 =~ 605s

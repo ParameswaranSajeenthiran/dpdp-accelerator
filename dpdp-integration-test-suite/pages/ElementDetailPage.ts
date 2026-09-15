@@ -23,6 +23,7 @@ export class ElementDetailPage {
   readonly propertiesTable: Locator
   readonly loadFailedMessage: Locator
   readonly backButton: Locator
+  readonly deleteButton: Locator
 
   constructor(private readonly page: Page) {
     this.propertiesTable = page
@@ -31,6 +32,10 @@ export class ElementDetailPage {
       .getByRole('table')
     this.loadFailedMessage = page.getByText('Unable to load elements right now.')
     this.backButton = page.getByRole('button', { name: 'Back to elements' })
+    // Only rendered for a persona holding ELEMENTS_WRITE - see ElementDetailsPage.tsx's
+    // `canWrite` check. "Delete", not "Delete Element" - that text belongs to the confirmation
+    // dialog's own title/confirm button, see ElementDeleteDialog.
+    this.deleteButton = page.getByRole('button', { name: 'Delete', exact: true })
   }
 
   async goto(elementId: string): Promise<void> {
@@ -59,5 +64,16 @@ export class ElementDetailPage {
   /** The Element ID shown (and copyable) in the card header above the name/displayName/description fields. */
   elementIdValue(id: string): Locator {
     return this.page.getByText(id, { exact: true })
+  }
+
+  /**
+   * A DetailGrid field's rendered value, found via its label (e.g. "Display name", "Description" -
+   * see ElementDetailsPage.tsx's `fields` array). DetailGrid.tsx renders the label and value as
+   * two sibling Typography elements inside one Stack, with no other structure to hook into, so
+   * this locates the label text and takes its next sibling rather than guessing at a class name.
+   * Not used for `name` - see nameValue, which needs the `<code>` scoping this doesn't have.
+   */
+  fieldValue(label: string): Locator {
+    return this.page.getByText(label, { exact: true }).locator('xpath=following-sibling::*[1]')
   }
 }
