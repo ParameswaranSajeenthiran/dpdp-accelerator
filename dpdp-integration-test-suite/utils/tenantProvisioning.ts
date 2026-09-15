@@ -41,6 +41,15 @@ export interface ProvisionedPersonas {
   dpo: PersonaCredential
 }
 
+export interface ProvisioningToken {
+  token: string
+  /** Persisted by the tenant path (see .e2e-run-state.json's TenantRunState.provisioningClient) so
+   * utils/throwawayUser.ts can mint further on-demand SCIM tokens for the same tenant later in the
+   * run, without repeating this whole browser-driven bootstrap. */
+  clientId: string
+  clientSecret: string
+}
+
 const APP_NAME = 'DPDP E2E Provisioning'
 const APP_DESCRIPTION =
   'Machine-to-machine client the DPDP integration test suite provisions its test accounts with. ' +
@@ -58,7 +67,7 @@ export async function bootstrapProvisioningToken(
   tokenUrl: string,
   signInAs: Persona,
   surface: ScimSurface,
-): Promise<string> {
+): Promise<ProvisioningToken> {
   const session = await openManagementSession(consoleUrl, signInAs)
   try {
     let applicationId = await findApplicationId(session, managementApiBase, APP_NAME)
@@ -79,10 +88,11 @@ export async function bootstrapProvisioningToken(
     await authorizeApiResource(session, managementApiBase, applicationId, roleApiId, surface.roleScopes)
 
     const { clientId, clientSecret } = await readOidcCredentials(session, managementApiBase, applicationId)
-    return await mintScimToken(session.request, tokenUrl, clientId, clientSecret, [
+    const token = await mintScimToken(session.request, tokenUrl, clientId, clientSecret, [
       ...surface.userScopes,
       ...surface.roleScopes,
     ])
+    return { token, clientId, clientSecret }
   } finally {
     await session.browser.close()
   }

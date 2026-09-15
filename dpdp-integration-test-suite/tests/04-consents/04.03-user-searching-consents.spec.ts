@@ -18,7 +18,6 @@
 
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { MyConsentPage } from '../../pages/MyConsentPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
 
@@ -30,6 +29,7 @@ import { randomServiceId } from '../../utils/testData'
 test.describe('User searching Consents (UI)', () => {
   test('04.03.01 - The state filter narrows the list to only the selected state', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -43,7 +43,7 @@ test.describe('User searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
       serviceId,
     )
@@ -51,7 +51,7 @@ test.describe('User searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       serviceId,
     )
@@ -79,6 +79,7 @@ test.describe('User searching Consents (UI)', () => {
 
   test('04.03.02 - Searching by the exact service id finds the matching consent', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -89,7 +90,7 @@ test.describe('User searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       serviceId,
     )
@@ -115,6 +116,7 @@ test.describe('User searching Consents (UI)', () => {
 
   test('04.03.04 - A service search for only a partial match finds nothing', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -124,7 +126,7 @@ test.describe('User searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 

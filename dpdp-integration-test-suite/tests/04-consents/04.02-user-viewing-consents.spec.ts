@@ -26,7 +26,6 @@ import {
   pageForPersonaState,
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -38,6 +37,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('User viewing Consents (UI)', () => {
   test('04.02.01 - The detail page renders subject, service, and purpose/element structure', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -47,13 +47,13 @@ test.describe('User viewing Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
     const detailPage = new ConsentDetailPage(userPage, 'self')
     await detailPage.goto(consentId)
-    await expect(userPage.getByText(env.user.username)).toBeVisible()
+    await expect(userPage.getByText(target.personas.user.username)).toBeVisible()
     await expect(userPage.getByText(serviceId)).toBeVisible()
     await expect(userPage.getByText('Not applicable')).toBeVisible()
 
@@ -77,12 +77,13 @@ test.describe('User viewing Consents (UI)', () => {
 
   test("04.02.03 - A different user cannot open another user's consent by its URL", async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
     test.skip(!hasSecondUser(), 'personas.user2 is not configured')
     // hasSecondUser() already confirmed this is set - the skip above guards it.
-    const secondUser = env.secondUser()
+    const secondUser = target.personas.user2
     if (!secondUser) {
       throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
@@ -92,7 +93,7 @@ test.describe('User viewing Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 

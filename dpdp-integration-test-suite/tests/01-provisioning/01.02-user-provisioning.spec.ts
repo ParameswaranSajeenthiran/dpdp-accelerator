@@ -38,7 +38,13 @@ test.describe('Test-account provisioning', () => {
     const tokenUrl = `${isBaseUrl}/t/${tenant.domain}/oauth2/token`
     const surface = secondaryTenantScimSurface(tenant.domain)
 
-    const token = await bootstrapProvisioningToken(consoleUrl, managementApiBase, tokenUrl, tenant.owner, surface)
+    const { token, clientId, clientSecret } = await bootstrapProvisioningToken(
+      consoleUrl,
+      managementApiBase,
+      tokenUrl,
+      tenant.owner,
+      surface,
+    )
 
     const apiContext = await playwrightRequest.newContext({ ignoreHTTPSErrors: true })
     try {
@@ -55,7 +61,10 @@ test.describe('Test-account provisioning', () => {
         { consentAdmin: 'dpdp-consent-admin', user: 'dpdp-consent-user', dpo: 'dpdp-consent-dpo' },
         tenant.personas ?? {},
       )
-      writeRunState({ tenant: { ...tenant, personas } })
+      // Persisted so utils/throwawayUser.ts (tests/07-account) can mint further on-demand SCIM
+      // tokens for this same tenant later in the run, without repeating this whole browser-driven
+      // bootstrap for every throwaway account it needs.
+      writeRunState({ tenant: { ...tenant, personas, provisioningClient: { clientId, clientSecret } } })
 
       expect(personas.consentAdmin.username).toBeTruthy()
       expect(personas.user.username).toBeTruthy()
@@ -72,7 +81,7 @@ test.describe('Test-account provisioning', () => {
     const managementApiBase = `${isBaseUrl}/api/server/v1`
     const tokenUrl = `${isBaseUrl}/oauth2/token`
 
-    const token = await bootstrapProvisioningToken(consoleUrl, managementApiBase, tokenUrl, superAdmin, surface)
+    const { token } = await bootstrapProvisioningToken(consoleUrl, managementApiBase, tokenUrl, superAdmin, surface)
 
     const usernames = {
       consentAdmin: config.personas.consentAdmin.username,

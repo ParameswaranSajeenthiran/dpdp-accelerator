@@ -51,6 +51,12 @@ export interface ConsentCleanupTracker {
 }
 
 interface Fixtures {
+  // The current run's resolved target (multi-tenant per-run tenant, or the super tenant) - the
+  // one place a test needs an actual persona username/password rather than a ready-made,
+  // already-authenticated fixture (e.g. seeding a consent for a specific username, or asserting
+  // that username appears in the UI). Using `env.user`/`env.consentAdmin` directly for this
+  // would silently assert the wrong (super-tenant) account under the multi-tenant profile.
+  target: Target
   userConsentApi: ConsentApiClient
   consentAdminConsentApi: ConsentApiClient
   consentCleanupTracker: ConsentCleanupTracker
@@ -464,7 +470,11 @@ export async function loginAsThrowawayUser(
     ignoreHTTPSErrors: env.ignoreHttpsErrors,
   })
   const page = await context.newPage()
-  await page.goto('/', { waitUntil: 'networkidle' })
+  // "./", never "/" - a leading slash REPLACES baseURL's path (see the long note in
+  // pageForPersonaState below), which under a tenant-qualified baseURL lands on the IS root
+  // instead of the tenant portal. Confirmed live: this broke 07.01's account-deletion flow under
+  // the multi-tenant profile.
+  await page.goto('./', { waitUntil: 'networkidle' })
   const authenticatedRequest = await ensureSignedIn(page, persona)
 
   const authorization = authenticatedRequest.headers().authorization
@@ -485,6 +495,10 @@ export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
 }
 
 export const test = base.extend<Fixtures>({
+  target: async ({}, use) => {
+    await use(resolveTarget(test.info().project.name))
+  },
+
   userConsentApi: async ({ browser, request }, use) => {
     const target = resolveTarget(test.info().project.name)
     const personaState = await getPersonaState(browser, 'user', target.personas.user)
@@ -497,18 +511,20 @@ export const test = base.extend<Fixtures>({
     await use(new ConsentApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 
-  // ComplaintApiClient takes no tenantDomain: the complaint-server webapp is not IS-native, so it
-  // has no /t/<tenant> form to qualify (see utils/env.ts's COMPLAINT_SERVER_BASE).
+  // The complaint-server webapp isn't IS-native, but it IS deployed through the same per-tenant
+  // webapp routing every other accelerator webapp gets (confirmed live: a tenant-qualified path
+  // 401s just like the unqualified one, rather than 404ing) - so ComplaintApiClient needs
+  // target.tenantDomain the same way ConsentApiClient/EventNotificationApiClient above do.
   userComplaintApi: async ({ browser, request }, use) => {
     const target = resolveTarget(test.info().project.name)
     const personaState = await getPersonaState(browser, 'user', target.personas.user)
-    await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState)))
+    await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 
   officerComplaintApi: async ({ browser, request }, use) => {
     const target = resolveTarget(test.info().project.name)
     const personaState = await getPersonaState(browser, 'consent-admin', target.personas.consentAdmin)
-    await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState)))
+    await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 
   consentAdminEventApi: async ({ browser, request }, use) => {
@@ -572,5 +588,5 @@ export async function getSecondUserComplaintApi(
 ): Promise<ComplaintApiClient | undefined> {
   const target = resolveTarget(test.info().project.name)
   const personaState = await getPersonaState(browser, 'user-2', target.personas.user2)
-  return new ComplaintApiClient(request, authHeadersFromPersonaState(personaState))
+  return new ComplaintApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain)
 }

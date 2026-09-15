@@ -28,7 +28,6 @@ import { ConsentApiClient } from '../../clients/ConsentApiClient'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
 import { authHeadersFromPersonaState } from '../../utils/authStorage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -38,7 +37,7 @@ import { seedConsent } from '../../utils/consentSetup'
  * no extra setup is needed here.
  *
  * `seedConsent` always creates via the admin API, so every "Consent created by ..." entry below
- * is attributed to `env.consentAdmin.username`, even in these self-service tests.
+ * is attributed to `target.personas.consentAdmin.username`, even in these self-service tests.
  *
  * `detailPage.goto(consentId)` is called again after each action that should appear in history:
  * the approve/reject/revoke mutations don't invalidate the history query keys, so the lifecycle
@@ -47,6 +46,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('User viewing Consent History (UI)', () => {
   test('04.07.01 - Approving a Pending consent records CREATE then AUTHORIZE_APPROVE, oldest-first in the table and newest-first in the dialog', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -56,7 +56,7 @@ test.describe('User viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -71,9 +71,9 @@ test.describe('User viewing Consent History (UI)', () => {
 
     await expect(detailPage.lifecycleSection).toBeVisible()
     await expect(
-      detailPage.lifecycleRow('Consent created', env.consentAdmin.username),
+      detailPage.lifecycleRow('Consent created', target.personas.consentAdmin.username),
     ).toBeVisible()
-    await expect(detailPage.lifecycleRow('Approved', env.user.username)).toBeVisible()
+    await expect(detailPage.lifecycleRow('Approved', target.personas.user.username)).toBeVisible()
 
     // Oldest-first in the table: CREATE row precedes the AUTHORIZE_APPROVE row.
     const rowTexts = await detailPage.lifecycleRows.allTextContents()
@@ -89,7 +89,7 @@ test.describe('User viewing Consent History (UI)', () => {
     // about the entries. allTextContents() below does not retry, so without a gate on real
     // content it can snapshot an empty accordion list. Gate on the newest entry: it is the last
     // one the fetch can produce, so its presence means the list is fully rendered.
-    await expect(dialog.entry('Approved', env.user.username)).toBeVisible()
+    await expect(dialog.entry('Approved', target.personas.user.username)).toBeVisible()
 
     // Newest-first in the dialog, reversed relative to the table above. Summary text uses "·",
     // not "by" - see ConsentFullHistoryDialogPage - so these checks drop "by".
@@ -99,14 +99,14 @@ test.describe('User viewing Consent History (UI)', () => {
     expect(dialogApprovedIndex).toBeGreaterThanOrEqual(0)
     expect(dialogCreatedIndex).toBeGreaterThan(dialogApprovedIndex)
 
-    await dialog.expand('Consent created', env.consentAdmin.username)
+    await dialog.expand('Consent created', target.personas.consentAdmin.username)
     await expect(
-      dialog.initialSnapshotChip('Consent created', env.consentAdmin.username),
+      dialog.initialSnapshotChip('Consent created', target.personas.consentAdmin.username),
     ).toBeVisible()
 
     // A real diff against real server data: the subject's authorization moves to APPROVED.
-    await dialog.expand('Approved', env.user.username)
-    await expect(dialog.changedTag('Approved', env.user.username)).toBeVisible()
+    await dialog.expand('Approved', target.personas.user.username)
+    await expect(dialog.changedTag('Approved', target.personas.user.username)).toBeVisible()
 
     await dialog.close()
     await userPage.context().close()
@@ -115,6 +115,7 @@ test.describe('User viewing Consent History (UI)', () => {
 
   test('04.07.02 - Rejecting a Pending consent records AUTHORIZE_REJECT with a diffed authorization', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -124,7 +125,7 @@ test.describe('User viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -138,12 +139,12 @@ test.describe('User viewing Consent History (UI)', () => {
 
     await detailPage.goto(consentId)
 
-    await expect(detailPage.lifecycleRow('Rejected', env.user.username)).toBeVisible()
+    await expect(detailPage.lifecycleRow('Rejected', target.personas.user.username)).toBeVisible()
 
     await detailPage.openFullHistoryDialog()
     const dialog = new ConsentFullHistoryDialogPage(userPage)
-    await dialog.expand('Rejected', env.user.username)
-    await expect(dialog.changedTag('Rejected', env.user.username)).toBeVisible()
+    await dialog.expand('Rejected', target.personas.user.username)
+    await expect(dialog.changedTag('Rejected', target.personas.user.username)).toBeVisible()
 
     await dialog.close()
     await userPage.context().close()
@@ -152,6 +153,7 @@ test.describe('User viewing Consent History (UI)', () => {
 
   test('04.07.03 - A full self-service lifecycle (created, approved, then revoked) is captured in order end to end', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -161,7 +163,7 @@ test.describe('User viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -182,7 +184,7 @@ test.describe('User viewing Consent History (UI)', () => {
     // Wait on a visible element rather than reading text straight off goto() - every full page
     // load re-drives the SPA's silent sign-in redirect, which can otherwise hit a destroyed
     // execution context (see fixtures/auth.fixtures.ts).
-    await expect(detailPage.lifecycleRow('Revoked', env.user.username)).toBeVisible()
+    await expect(detailPage.lifecycleRow('Revoked', target.personas.user.username)).toBeVisible()
 
     const rowTexts = await detailPage.lifecycleRows.allTextContents()
     const createdIndex = rowTexts.findIndex((text) => text.includes('Consent created'))
@@ -199,7 +201,7 @@ test.describe('User viewing Consent History (UI)', () => {
     // about the entries. allTextContents() below does not retry, so without a gate on real
     // content it can snapshot an empty accordion list. Gate on the newest entry: it is the last
     // one the fetch can produce, so its presence means the list is fully rendered.
-    await expect(dialog.entry('Revoked', env.user.username)).toBeVisible()
+    await expect(dialog.entry('Revoked', target.personas.user.username)).toBeVisible()
     const summaryTexts = await dialog.entrySummaries.allTextContents()
     const dialogCreatedIndex = summaryTexts.findIndex((text) => text.includes('Consent created'))
     const dialogApprovedIndex = summaryTexts.findIndex((text) => text.includes('Approved'))
@@ -210,8 +212,8 @@ test.describe('User viewing Consent History (UI)', () => {
     expect(dialogCreatedIndex).toBeGreaterThan(dialogApprovedIndex)
 
     // Only proves the diff rendered a real result - see diffRendered's own comment.
-    await dialog.expand('Revoked', env.user.username)
-    await expect(dialog.diffRendered('Revoked', env.user.username)).toBeVisible()
+    await dialog.expand('Revoked', target.personas.user.username)
+    await expect(dialog.diffRendered('Revoked', target.personas.user.username)).toBeVisible()
 
     await dialog.close()
     await userPage.context().close()
@@ -221,13 +223,14 @@ test.describe('User viewing Consent History (UI)', () => {
   test('04.07.04 - A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject', async ({
     browser,
     request,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
-    // for the parent, and env.user (this file's usual subject) stands in for the child.
+    // for the parent, and target.personas.user (this file's usual subject) stands in for the child.
     test.skip(!hasSecondUser(), 'personas.user2 is not configured')
-    const parent = env.secondUser()
+    const parent = target.personas.user2
     if (!parent) {
       throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
@@ -240,7 +243,7 @@ test.describe('User viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
       undefined,
       undefined,
@@ -253,7 +256,11 @@ test.describe('User viewing Consent History (UI)', () => {
     // makes a delegated/guardian approval possible at all. Called directly via the API (not the
     // UI) since this test's point is the resulting history attribution, not the approve form.
     const parentPersonaState = await getPersonaState(browser, 'user-2', parent)
-    const parentConsentApi = new ConsentApiClient(request, authHeadersFromPersonaState(parentPersonaState))
+    const parentConsentApi = new ConsentApiClient(
+      request,
+      authHeadersFromPersonaState(parentPersonaState),
+      target.tenantDomain,
+    )
     const authorizeResponse = await parentConsentApi.authorizeMyConsent(consentId, 'APPROVED')
     expect(authorizeResponse.ok()).toBe(true)
 
@@ -266,9 +273,9 @@ test.describe('User viewing Consent History (UI)', () => {
     await detailPage.goto(consentId)
     // The page's own metadata card renders the subject as plain text (see 04.02.01) - confirms
     // the child, not the parent, is who this consent is about.
-    await expect(childPage.getByText(env.user.username)).toBeVisible()
+    await expect(childPage.getByText(target.personas.user.username)).toBeVisible()
     await expect(detailPage.lifecycleRow('Approved', parent.username)).toBeVisible()
-    await expect(detailPage.lifecycleRow('Approved', env.user.username)).toHaveCount(0)
+    await expect(detailPage.lifecycleRow('Approved', target.personas.user.username)).toHaveCount(0)
 
     await detailPage.openFullHistoryDialog()
     const dialog = new ConsentFullHistoryDialogPage(childPage)

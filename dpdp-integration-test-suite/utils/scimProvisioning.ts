@@ -51,7 +51,15 @@ export function secondaryTenantScimSurface(domain: string): ScimSurface {
     rolesUrl: `${isBaseUrl}/t/${domain}/o/scim2/v2/Roles`,
     userResourceIdentifier: '/o/scim2/Users',
     roleResourceIdentifier: '/o/scim2/Roles',
-    userScopes: ['internal_org_user_mgt_list', 'internal_org_user_mgt_create'],
+    // list/create: tests/01-provisioning's own persona provisioning. view/delete: added for
+    // utils/throwawayUser.ts's tenant-scoped throwaway accounts (tests/07-account) - mirrors the
+    // super tenant's PROVISIONING_SCOPES, which lists the identical rationale per scope.
+    userScopes: [
+      'internal_org_user_mgt_list',
+      'internal_org_user_mgt_create',
+      'internal_org_user_mgt_view',
+      'internal_org_user_mgt_delete',
+    ],
     roleScopes: ['internal_org_role_mgt_view', 'internal_org_role_mgt_users_update'],
   }
 }

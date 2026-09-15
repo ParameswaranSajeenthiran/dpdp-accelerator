@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { consentExpirySchedulerPollTimeoutMs, env } from '../../utils/env'
+import { consentExpirySchedulerPollTimeoutMs } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 interface StatusAuditEntry {
@@ -60,6 +60,7 @@ interface HistoryEntry {
 test.describe('Consent expiry reconciliation (API)', () => {
   test('04.09.01 - A consent whose expiry time has not yet passed has no EXPIRE entry in its history', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -69,7 +70,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       undefined,
       futureExpiry,
@@ -85,6 +86,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
 
   test('04.09.02 - Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -97,7 +99,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       undefined,
       pastExpiry,
@@ -128,6 +130,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
 
   test('04.09.03 - The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -150,7 +153,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       undefined,
       dueSince,

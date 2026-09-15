@@ -18,7 +18,6 @@
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
 
@@ -32,6 +31,7 @@ import { randomServiceId } from '../../utils/testData'
 test.describe('Admin searching Consents (UI)', () => {
   test('04.06.01 - Filtering by the exact consent id shows only that consent and disables the state filter', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -40,14 +40,14 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
     const second = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -63,6 +63,7 @@ test.describe('Admin searching Consents (UI)', () => {
 
   test('04.06.02 - The advanced subject and service filters narrow the list', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -72,17 +73,17 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       serviceId,
     )
 
     const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
-    await registryPage.filterBySubjectAndService(env.user.username, serviceId)
+    await registryPage.filterBySubjectAndService(target.personas.user.username, serviceId)
 
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
-    await expect(registryPage.activeFilterChip(`User: ${env.user.username}`)).toBeVisible()
+    await expect(registryPage.activeFilterChip(`User: ${target.personas.user.username}`)).toBeVisible()
     await expect(registryPage.activeFilterChip(`Service: ${serviceId}`)).toBeVisible()
 
     await registryPage.clearAllFilters()
@@ -92,6 +93,7 @@ test.describe('Admin searching Consents (UI)', () => {
 
   test('04.06.03 - Combining the state filter with the advanced subject/service filters narrows the list further', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -106,7 +108,7 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
       serviceId,
     )
@@ -114,14 +116,14 @@ test.describe('Admin searching Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
       serviceId,
     )
 
     const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
-    await registryPage.filterBySubjectAndService(env.user.username, serviceId)
+    await registryPage.filterBySubjectAndService(target.personas.user.username, serviceId)
     await expect(registryPage.stateFilter).toBeEnabled()
     await registryPage.filterByState('Pending')
 

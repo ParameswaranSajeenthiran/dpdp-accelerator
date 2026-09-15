@@ -19,7 +19,6 @@
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { MyConsentPage } from '../../pages/MyConsentPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -33,6 +32,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('User acting on Consents (UI)', () => {
   test('04.01.01 - Approving a Pending consent from the list moves it to Active', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -42,7 +42,7 @@ test.describe('User acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -63,6 +63,7 @@ test.describe('User acting on Consents (UI)', () => {
 
   test('04.01.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -72,7 +73,7 @@ test.describe('User acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -92,6 +93,7 @@ test.describe('User acting on Consents (UI)', () => {
 
   test('04.01.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -101,7 +103,7 @@ test.describe('User acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -123,6 +125,7 @@ test.describe('User acting on Consents (UI)', () => {
 
   test('04.01.04 - Approving from the detail page works the same way as from the list', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -132,7 +135,7 @@ test.describe('User acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -148,6 +151,7 @@ test.describe('User acting on Consents (UI)', () => {
 
   test('04.01.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -157,7 +161,7 @@ test.describe('User acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'REJECTED',
     )
 

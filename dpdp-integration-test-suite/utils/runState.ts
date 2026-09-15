@@ -34,6 +34,11 @@ export interface TenantRunState {
     user2?: PersonaCredential
     dpo?: PersonaCredential
   }
+  /** The tenant-scoped M2M client 01.02-user-provisioning.spec.ts mints (see
+   * tenantProvisioning.ts's bootstrapProvisioningToken) - persisted so utils/throwawayUser.ts can
+   * mint its own on-demand SCIM tokens against this tenant without re-running that whole
+   * browser-driven bootstrap for every throwaway account it needs. */
+  provisioningClient?: { clientId: string; clientSecret: string }
 }
 
 export interface RunState {

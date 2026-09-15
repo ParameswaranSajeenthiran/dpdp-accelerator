@@ -19,7 +19,6 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -31,6 +30,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('Admin viewing Consents (UI)', () => {
   test('04.05.01 - A consent created via the API appears in the admin list with its subject', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -39,7 +39,7 @@ test.describe('Admin viewing Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -48,7 +48,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     // The unfiltered list is sorted oldest-first with no way to jump pages, so a freshly
     // created row is found by its own id rather than by browsing.
     await registryPage.searchByConsentId(consentId)
-    await expect(registryPage.rowByConsentId(consentId)).toContainText(env.user.username)
+    await expect(registryPage.rowByConsentId(consentId)).toContainText(target.personas.user.username)
     await expect(registryPage.rowByConsentId(consentId)).toContainText(serviceId)
     await consentAdminPage.context().close()
   })

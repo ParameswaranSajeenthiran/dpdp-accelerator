@@ -19,7 +19,6 @@
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -34,6 +33,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('Admin viewing Consent History (UI)', () => {
   test('04.08.01 - Revoking an Active consent as admin attributes CREATE and REVOKE to the admin, showing only the state transition in the diff', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -42,7 +42,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -56,9 +56,9 @@ test.describe('Admin viewing Consent History (UI)', () => {
     await detailPage.goto(consentId)
 
     await expect(
-      detailPage.lifecycleRow('Consent created', env.consentAdmin.username),
+      detailPage.lifecycleRow('Consent created', target.personas.consentAdmin.username),
     ).toBeVisible()
-    await expect(detailPage.lifecycleRow('Revoked', env.consentAdmin.username)).toBeVisible()
+    await expect(detailPage.lifecycleRow('Revoked', target.personas.consentAdmin.username)).toBeVisible()
 
     const rowTexts = await detailPage.lifecycleRows.allTextContents()
     const createdIndex = rowTexts.findIndex((text) => text.includes('Consent created'))
@@ -72,9 +72,9 @@ test.describe('Admin viewing Consent History (UI)', () => {
     // This consent was created directly in ACTIVE state with no authorizations to cascade, so
     // the only change is `state` itself (Active -> Revoked) - no ambiguity like 04.07.03's
     // revoke-after-approve case.
-    await dialog.expand('Revoked', env.consentAdmin.username)
+    await dialog.expand('Revoked', target.personas.consentAdmin.username)
     await expect(
-      dialog.stateTransition('Revoked', env.consentAdmin.username, 'Active', 'Revoked'),
+      dialog.stateTransition('Revoked', target.personas.consentAdmin.username, 'Active', 'Revoked'),
     ).toBeVisible()
 
     await dialog.close()
@@ -83,6 +83,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
 
   test("04.08.02 - The admin surface shows the data principal's own approval, not just admin-authored history", async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -92,7 +93,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -109,16 +110,16 @@ test.describe('Admin viewing Consent History (UI)', () => {
     await adminDetailPage.goto(consentId)
 
     await expect(
-      adminDetailPage.lifecycleRow('Consent created', env.consentAdmin.username),
+      adminDetailPage.lifecycleRow('Consent created', target.personas.consentAdmin.username),
     ).toBeVisible()
-    await expect(adminDetailPage.lifecycleRow('Approved', env.user.username)).toBeVisible()
+    await expect(adminDetailPage.lifecycleRow('Approved', target.personas.user.username)).toBeVisible()
 
     await adminDetailPage.openFullHistoryDialog()
     const dialog = new ConsentFullHistoryDialogPage(consentAdminPage)
-    await expect(dialog.entry('Approved', env.user.username)).toBeVisible()
+    await expect(dialog.entry('Approved', target.personas.user.username)).toBeVisible()
 
-    await dialog.expand('Approved', env.user.username)
-    await expect(dialog.changedTag('Approved', env.user.username)).toBeVisible()
+    await dialog.expand('Approved', target.personas.user.username)
+    await expect(dialog.changedTag('Approved', target.personas.user.username)).toBeVisible()
 
     await dialog.close()
     await userPage.context().close()
@@ -127,6 +128,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
 
   test('04.08.03 - A full multi-actor lifecycle (admin creates, the data principal approves, admin revokes) is captured in order with each actor attributed correctly', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -136,7 +138,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -158,18 +160,18 @@ test.describe('Admin viewing Consent History (UI)', () => {
     // Wait on a visible element rather than reading text straight off goto() - see 03.07's
     // identical comment on the SPA's post-navigation redirect settling.
     await expect(
-      adminDetailPage.lifecycleRow('Revoked', env.consentAdmin.username),
+      adminDetailPage.lifecycleRow('Revoked', target.personas.consentAdmin.username),
     ).toBeVisible()
 
     const rowTexts = await adminDetailPage.lifecycleRows.allTextContents()
     const createdIndex = rowTexts.findIndex(
-      (text) => text.includes('Consent created') && text.includes(env.consentAdmin.username),
+      (text) => text.includes('Consent created') && text.includes(target.personas.consentAdmin.username),
     )
     const approvedIndex = rowTexts.findIndex(
-      (text) => text.includes('Approved by') && text.includes(env.user.username),
+      (text) => text.includes('Approved by') && text.includes(target.personas.user.username),
     )
     const revokedIndex = rowTexts.findIndex(
-      (text) => text.includes('Revoked by') && text.includes(env.consentAdmin.username),
+      (text) => text.includes('Revoked by') && text.includes(target.personas.consentAdmin.username),
     )
     expect(createdIndex).toBeGreaterThanOrEqual(0)
     expect(approvedIndex).toBeGreaterThan(createdIndex)
@@ -182,17 +184,17 @@ test.describe('Admin viewing Consent History (UI)', () => {
     // about the entries. allTextContents() below does not retry, so without a gate on real
     // content it can snapshot an empty accordion list. Gate on the newest entry: it is the last
     // one the fetch can produce, so its presence means the list is fully rendered.
-    await expect(dialog.entry('Revoked', env.consentAdmin.username)).toBeVisible()
+    await expect(dialog.entry('Revoked', target.personas.consentAdmin.username)).toBeVisible()
     // Summary text uses "·", not "by" - see ConsentFullHistoryDialogPage.
     const summaryTexts = await dialog.entrySummaries.allTextContents()
     const dialogCreatedIndex = summaryTexts.findIndex(
-      (text) => text.includes('Consent created') && text.includes(env.consentAdmin.username),
+      (text) => text.includes('Consent created') && text.includes(target.personas.consentAdmin.username),
     )
     const dialogApprovedIndex = summaryTexts.findIndex(
-      (text) => text.includes('Approved') && text.includes(env.user.username),
+      (text) => text.includes('Approved') && text.includes(target.personas.user.username),
     )
     const dialogRevokedIndex = summaryTexts.findIndex(
-      (text) => text.includes('Revoked') && text.includes(env.consentAdmin.username),
+      (text) => text.includes('Revoked') && text.includes(target.personas.consentAdmin.username),
     )
     // Newest-first: REVOKE (admin), then APPROVE (user), then CREATE (admin).
     expect(dialogRevokedIndex).toBeGreaterThanOrEqual(0)

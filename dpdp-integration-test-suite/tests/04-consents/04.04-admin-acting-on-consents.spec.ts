@@ -19,7 +19,6 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { env } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
@@ -33,6 +32,7 @@ import { seedConsent } from '../../utils/consentSetup'
 test.describe('Admin acting on Consents (UI)', () => {
   test('04.04.01 - Admin can revoke an Active consent from the list', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -41,7 +41,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -57,6 +57,7 @@ test.describe('Admin acting on Consents (UI)', () => {
 
   test('04.04.02 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -65,7 +66,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'ACTIVE',
     )
 
@@ -79,6 +80,7 @@ test.describe('Admin acting on Consents (UI)', () => {
 
   test('04.04.03 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -87,7 +89,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 
@@ -103,6 +105,7 @@ test.describe('Admin acting on Consents (UI)', () => {
 
   test('04.04.04 - The admin detail page offers no action at all for a Pending consent', async ({
     browser,
+    target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
@@ -111,7 +114,7 @@ test.describe('Admin acting on Consents (UI)', () => {
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
-      env.user.username,
+      target.personas.user.username,
       'PENDING',
     )
 

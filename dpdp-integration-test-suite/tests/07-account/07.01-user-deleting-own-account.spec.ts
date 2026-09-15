@@ -23,7 +23,6 @@ import {
   type ThrowawaySession,
 } from '../../fixtures/auth.fixtures'
 import { UserProfileMenuPage } from '../../pages/UserProfileMenuPage'
-import { env } from '../../utils/env'
 import {
   attemptDeleteAsUser,
   createThrowawayUser,
@@ -38,13 +37,12 @@ import {
  * Deleting an account is irreversible, so every test here creates its own throwaway user rather
  * than touching the shared personas the rest of the suite depends on staying alive for the whole
  * run - those have to still exist when this file is done with them. Creating and removing that
- * user needs the super-tenant admin, the same persona tests/05-multi-tenancy provisions with.
+ * user goes through whichever SCIM admin surface matches the running target - see
+ * utils/throwawayUser.ts's resolveScimAdminContext.
  */
 const PORTAL_USER_ROLE = 'dpdp-consent-user'
 
 test.describe('Self-service account deletion (UI)', () => {
-  const admin = env.superAdmin
-
   let throwaway: ThrowawayUser | undefined
   let session: ThrowawaySession | undefined
 
@@ -58,7 +56,7 @@ test.describe('Self-service account deletion (UI)', () => {
     // Expected to be a no-op on the happy path - the account is already gone. This is here for
     // the failure paths, so a broken run doesn't leave accounts behind.
     if (throwaway) {
-      await deleteThrowawayUser(admin, throwaway.id, throwaway.username)
+      await deleteThrowawayUser(throwaway.id, throwaway.username)
     }
     session = undefined
     throwaway = undefined
@@ -131,7 +129,7 @@ test.describe('Self-service account deletion (UI)', () => {
       expect([401, 403]).toContain(status)
       expect(await userExists(victim.id)).toBe(true)
     } finally {
-      await deleteThrowawayUser(admin, victim.id, victim.username)
+      await deleteThrowawayUser(victim.id, victim.username)
     }
   })
 })

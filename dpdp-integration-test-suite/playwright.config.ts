@@ -53,6 +53,17 @@ export default defineConfig({
       dependencies: ['tenant-setup'],
       use: { ...devices['Desktop Chrome'] },
     },
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'multi-tenant',
+      testIgnore: /01-provisioning\//,
+      dependencies: ['user-setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'super-tenant',
+      testIgnore: /01-provisioning\//,
+      dependencies: ['user-setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 })
