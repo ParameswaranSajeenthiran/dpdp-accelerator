@@ -179,22 +179,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!--
-                        EmailNotificationClientTest statically mocks IdentityUtil (via Mockito's
-                        inline mock maker - see src/test/resources/mockito-extensions), which
-                        depends more heavily on Byte Buddy than the default subclass mock maker;
-                        Byte Buddy predates official JDK 21 support, and this is the one-line
-                        workaround its own error message documents.
-                    -->
-                    <systemPropertyVariables>
-                        <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
