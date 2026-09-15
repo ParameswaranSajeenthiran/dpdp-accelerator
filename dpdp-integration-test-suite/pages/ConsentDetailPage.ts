@@ -124,7 +124,7 @@ export class ConsentDetailPage {
   }
 
   async confirmAction(action: keyof typeof CONFIRM_LABEL): Promise<void> {
-    await this.page.getByRole('button', { name: CONFIRM_LABEL[action] }).click()
+    await this.page.getByRole('button', { name: CONFIRM_LABEL[action], exact: true }).click()
   }
 
   dialogTitle(action: keyof typeof CONFIRM_LABEL): Locator {
