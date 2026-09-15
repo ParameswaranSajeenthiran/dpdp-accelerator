@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 163 across 45 spec files in 9 areas |
+| **Tests** | 171 across 47 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -111,9 +111,11 @@ deletion, except where deletion is itself under test.
 
 ## `03-purposes/` — Purpose catalog
 
-Same shape as elements, plus a type filter.
+Same shape as elements, plus a type filter and version management (a Purpose has one or more
+versions; exactly one is "latest" at a time - the one whose elements/properties/description the
+overview card shows).
 
-**9 tests, 3 spec files.**
+**17 tests, 5 spec files.**
 
 ### `03.01-admin-creating-purposes.spec.ts`
 
@@ -129,6 +131,8 @@ Same shape as elements, plus a type filter.
 | --- | --- | --- |
 | `03.02.01` | The rows-per-page control accepts a new page size without erroring |  |
 | `03.02.02` | An unknown purpose id shows the load-failed message with a way back to the list |  |
+| `03.02.03` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds 11 purposes, sets page size to 10: exactly 10 rows and Next enabled. |
+| `03.02.04` | A newly created purpose's detail page shows its type, latest version, description, elements, and properties correctly | Created with an element (`addElementByName`, not `addElements` - needs this specific element), a description and 2 properties; re-navigates to the detail page fresh to prove the server actually persisted every field. |
 
 ### `03.03-admin-searching-purposes.spec.ts`
 
@@ -138,6 +142,22 @@ Same shape as elements, plus a type filter.
 | `03.03.02` | Filtering by an exact type finds only purposes of that type | Uses a unique type value, not a realistic one - type is matched exactly (`eq`), so a common value would be ambiguous in a shared environment. |
 | `03.03.03` | Resetting the search clears both filters and shows the unfiltered list again | Both name and type inputs cleared; rows return. |
 | `03.03.04` | A search with no matches shows the empty-results message |  |
+
+### `03.04-admin-deleting-purposes.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `03.04.01` | An admin deletes a purpose that isn't referenced by any consent | Confirms via a fresh detail-page navigation afterward (load-failed) that the server actually deleted it. |
+| `03.04.02` | A purpose still referenced by a consent cannot be deleted | The purpose is one `seedConsent` creates for itself (Consents are permanent, so this is the only way to get one genuinely referenced). Asserts the 409 conflict message and that the purpose still resolves afterward. |
+
+### `03.05-admin-managing-purpose-versions.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `03.05.01` | Adding a new version does not change which version is latest unless "Set as latest" is checked | The checkbox defaults to checked; this test explicitly unchecks it. |
+| `03.05.02` | Adding a version with a name that already exists shows the duplicate-version validation error and blocks submission | The Create button itself stays enabled - this validation is a no-op in the submit handler, not a disabled button; the real proof is the dialog staying open. |
+| `03.05.03` | Setting a version as latest moves the "Latest" label to it, and its own delete action becomes enabled | Also confirms the reverse: the version just promoted away from latest becomes deletable, and the newly-latest one's own delete becomes disabled. |
+| `03.05.04` | Deleting a non-latest version removes it from the version history |  |
 
 ## `04-consents/` — Consent records
 
