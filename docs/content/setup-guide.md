@@ -12,6 +12,30 @@ server.
 - The database client tools needed to create databases and execute SQL scripts
 - The JDBC driver JAR for the selected DBMS
 
+## Choose automated or manual database setup
+
+The installer supports `h2` and `mysql` profiles in
+`repository/conf/dbprofiles.properties`. For automated MySQL setup, edit
+`repository/conf/configure.properties` before running `bin/configure.sh`:
+set `DB_TYPE=mysql`, `DB_HOST`, `DB_PORT` if needed, `DB_USER`, and `DB_PASS`.
+Install the `mysql` command-line client and give the configured account
+permission to create the databases on the first run.
+
+The script downloads the configured JDBC driver into
+`<IS_HOME>/repository/components/lib`, configures the datasource URLs, creates
+missing databases, and applies the Identity Server schemas to databases it
+creates. It applies the consent migration to a newly created identity database
+when `APPLY_IS_CONSENT_MGT_V2_MIGRATION=true`, and the DPDP schemas when
+`APPLY_DPDP_DB_MIGRATION=true`. Keep `RECREATE_DATABASES=false` to preserve
+existing databases; setting it to `true` drops and recreates all four.
+
+After a successful automated run, review the generated connection settings
+for your environment, including TLS, and skip schema steps already completed.
+For manually managed databases, follow the steps below and apply each required
+migration only once. PostgreSQL, Oracle, and Microsoft SQL Server require
+manual configuration; they do not have shipped installer profiles. See the
+[Quickstart](quickstart.md) for installation commands.
+
 ## 1. Create the databases
 
 Create the databases required by the Identity Server and the accelerator. Use
@@ -26,13 +50,16 @@ Use the database names, users, character sets, and permissions recommended by
 your DBMS documentation.
 
 For example, the following MySQL commands create the databases used by the
-Identity Server and accelerator. Replace the user, host, character set, and
-collation values for your environment:
+Identity Server and accelerator. Replace the user and host for your environment.
+Keep the Identity Server databases on `latin1` for the shipped MySQL scripts:
+these scripts mix explicitly `latin1` tables with tables that inherit the
+database character set, including foreign-key relationships. Use `utf8mb4` for
+the DPDP database, matching the installer database profile:
 
 ```sql
-CREATE DATABASE WSO2IDENTITY_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE WSO2SHARED_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE WSO2AGENTIDENTITY_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE WSO2IDENTITY_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+CREATE DATABASE WSO2SHARED_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+CREATE DATABASE WSO2AGENTIDENTITY_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
 CREATE DATABASE WSO2DPDP_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER '<database-user>'@'localhost' IDENTIFIED BY '<database-password>';

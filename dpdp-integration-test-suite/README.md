@@ -228,8 +228,8 @@ A filename ending `-api.spec.ts` drives no browser at all.
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | Rules and conventions — read before writing or changing a test. Covers the shared-environment premise every rule follows from, the numbering scheme, personas, page objects and the seed helpers |
 | [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md) | Every test, known gaps, product bugs, known flakiness |
-| `docs/setup-guide.md` (repo root) | Installing and starting the Identity Server |
-| `docs/configuration-guide.md` (repo root) | Portal application and role configuration |
+| [Quickstart](../docs/content/quickstart.md) | Installing and starting the Identity Server |
+| [Configuration Guide](../docs/content/configuration-guide.md) | Portal application and role configuration |
 
 | Directory | Covers |
 | --- | --- |

@@ -83,7 +83,7 @@ statutory Consent Manager.
 #### Data Fiduciary - CarePulse Telehealth *(The Healthcare Platform)*
 
 - **Defines purposes & catalogs data:** Determines why data is required (e.g., vitals for consultation vs. address for courier delivery).
-- **Captures & audits consent:** Employs the WSO2 DPDP Accelerator to record Priya's affirmative choices and log cryptographic audit trails.
+- **Captures & audits consent:** Employs the WSO2 DPDP Accelerator to record Priya's affirmative choices and record consent status and snapshot audit history.
 - **Coordinates the ecosystem:** Communicates relevant consent changes to downstream consumers.
 - **Maintains accountability:** Ensures legal basis compliance and oversees internal grievance resolution.
 

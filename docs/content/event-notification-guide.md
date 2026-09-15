@@ -183,9 +183,10 @@ Topic provisioning is independent of Consent Portal auto-provisioning. The
 system-topic step does not create or assign any user, group, or role. Consent
 Portal auto-provisioning separately creates its application roles, but role
 membership remains a manual administrator action. Updating the tenant safely
-reconciles any missing system topic without creating duplicates. WSO2 does not
-emit a tenant-creation event for `carbon.super`, so these five topics are not
-automatically created for the super tenant.
+reconciles any missing system topic without creating duplicates. For
+`carbon.super`, the server startup observer invokes the same provisioning flow
+after startup. The five system topics are therefore also created for the super
+tenant when `system_topics_auto_create_enabled` is `true`.
 
 #### Enabling `user.data.change` / `user.account.delete`
 

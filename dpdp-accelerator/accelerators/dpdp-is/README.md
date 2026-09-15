@@ -39,15 +39,18 @@ Building from source? See the [repository README](../../../README.md#build)
    administrator-credential, database type, and schema-migration settings.
    `IS_PORT` is not currently substituted. The script installs
    `deployment.toml`, applies the Identity Server consent migration and DPDP
-   feature schemas automatically for the embedded H2 database, and prints the
-   migration scripts to apply manually when using an external database.
+   feature schemas automatically for the embedded H2 database. For
+   `DB_TYPE=mysql`, it downloads the configured JDBC driver, configures the
+   datasources, creates missing databases, and applies the Identity Server
+   schemas to newly created databases. The consent and DPDP migrations are
+   controlled by their respective flags in `configure.properties`. Keep
+   `RECREATE_DATABASES=false` to preserve existing databases.
 
-   For external databases, create the databases, install the JDBC driver, and
-   configure the datasources before starting Identity Server. Apply the
-   Identity Server and DPDP feature SQL scripts manually as described in the
-   [Setup Guide](../../../docs/content/setup-guide.md). External database
-   connection details must be applied to the deployment template or installed
-   `deployment.toml`.
+   See the [Setup Guide](../../../docs/content/setup-guide.md) for automated
+   MySQL prerequisites and manual database setup. Do not repeat migrations
+   already applied by the installer. PostgreSQL, Oracle, and Microsoft SQL
+   Server have no shipped installer profile and require manual datasource
+   and schema configuration before startup.
 
    > **`deployment.toml` is replaced, not merged.** The accelerator ships a
    > complete file — `repository/resources/wso2is-7.3.0-deployment.toml`, the

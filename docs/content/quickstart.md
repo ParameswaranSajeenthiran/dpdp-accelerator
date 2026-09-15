@@ -30,8 +30,9 @@ same process on an existing deployment.
 Expected result: both scripts finish successfully and the accelerator
 configuration is applied.
 
-For source builds, external databases, and configuration replacement details,
-see the [Setup Guide](setup-guide.md).
+For source-build prerequisites, see the [repository README](https://github.com/wso2/dpdp-accelerator#build).
+For automated MySQL and manual external database setup, see the
+[Setup Guide](setup-guide.md).
 
 ## 2. Start Identity Server
 

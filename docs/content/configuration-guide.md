@@ -94,8 +94,12 @@ manually in Identity Server before using the portal.
 
 ### Consent API Invoker provisioning
 
-A second, independently controlled application supports machine-to-machine
-calls to the Consent Management v2 consents resource:
+A second application supports machine-to-machine calls to the Consent
+Management v2 consents resource. It has its own provisioning flag, but the
+current listener reaches this step only when Consent Portal provisioning is
+enabled. Setting `consent_portal.auto_provisioning_enabled = false` also skips
+creation and reconciliation of the Consent API Invoker, even when its own flag
+is `true`:
 
 ```toml
 [dpdp_accelerator.consent_api_invoker]
