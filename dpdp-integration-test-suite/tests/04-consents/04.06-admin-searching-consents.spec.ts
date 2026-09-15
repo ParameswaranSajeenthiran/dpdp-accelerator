@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, hasSecondUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
@@ -163,6 +163,45 @@ test.describe('Admin searching Consents (UI)', () => {
       `no-such-service-${Date.now().toString()}`,
     )
     await expect(registryPage.emptyStateMessage).toBeVisible()
+    await consentAdminPage.context().close()
+  })
+
+  test("04.06.06 - The Relation filter distinguishes a consent's subject from its authorizer", async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+    consentCleanupTracker,
+  }) => {
+    // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
+    // for the authorizer, same as tests/04-consents/04.07's delegated-consent case.
+    test.skip(!hasSecondUser(), 'personas.user2 is not configured')
+    const authorizer = target.personas.user2
+    if (!authorizer) {
+      throw new Error('Unreachable: hasSecondUser() already checked this above.')
+    }
+
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    // subjectId (target.personas.user) and authorizations[].userId (authorizer) deliberately
+    // don't match - see the identical rationale in 04.07's delegated-consent test.
+    const { consentId } = await seedConsent(
+      consentAdminPage,
+      consentAdminConsentApi,
+      consentCleanupTracker,
+      target.personas.user.username,
+      'PENDING',
+      undefined,
+      undefined,
+      [{ userId: authorizer.username, type: 'PARENT' }],
+    )
+
+    const registryPage = new AdminConsentPage(consentAdminPage)
+    await registryPage.goto()
+    await registryPage.filterByUserAndRelation(authorizer.username, 'Authorizer')
+    await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
+
+    await registryPage.clearAllFilters()
+    await registryPage.filterByUserAndRelation(authorizer.username, 'Subject')
+    await expect(registryPage.rowByConsentId(consentId)).toHaveCount(0)
     await consentAdminPage.context().close()
   })
 })

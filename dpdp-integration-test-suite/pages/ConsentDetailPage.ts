@@ -123,6 +123,16 @@ export class ConsentDetailPage {
     await this.actionButton(action).click()
   }
 
+  /**
+   * Whether `action`'s button is rendered at all - not just enabled/disabled. canApprove/
+   * canReject/canRevoke in ConsentDetailsPage.tsx gate these on variant and current state, so a
+   * consent that's moved past a state (e.g. Rejected) genuinely has no revoke/approve/reject
+   * button in the DOM to click, rather than a disabled one.
+   */
+  actionAvailable(action: keyof typeof CONFIRM_LABEL): Locator {
+    return this.actionButton(action)
+  }
+
   async confirmAction(action: keyof typeof CONFIRM_LABEL): Promise<void> {
     await this.page.getByRole('button', { name: CONFIRM_LABEL[action], exact: true }).click()
   }

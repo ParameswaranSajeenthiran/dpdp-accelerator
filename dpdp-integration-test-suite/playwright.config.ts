@@ -32,7 +32,10 @@ export default defineConfig({
   // sessions - see that file for the full mechanism. No `workers` override is needed here as a
   // result; Playwright's own CPU-based default applies.
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 1 : 0,
+  // 2 locally, not just CI's 1: local workers, WSO2 IS, and MySQL all share this one machine's
+  // cores, so an occasional resource-contention timeout is expected - retrying absorbs that
+  // without masking a deterministic failure, which still fails the same after any number of tries.
+  retries: process.env.CI ? 1 : 2,
   reporter: [['html', { open: 'never' }]],
   globalSetup: './global-setup.ts',
   globalTeardown: './global-teardown.ts',

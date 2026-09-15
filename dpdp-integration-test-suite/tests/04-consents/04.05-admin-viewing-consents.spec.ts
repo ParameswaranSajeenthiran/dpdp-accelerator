@@ -64,4 +64,27 @@ test.describe('Admin viewing Consents (UI)', () => {
     await expect(consentAdminPage).toHaveURL(/\/administration\/consents$/)
     await consentAdminPage.context().close()
   })
+
+  test('04.05.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+    consentCleanupTracker,
+  }) => {
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    // One more than the smallest page size, so there's guaranteed to be a next page regardless
+    // of how many consents already exist in this shared, ever-accumulating environment.
+    const seedCount = 6
+    for (let i = 0; i < seedCount; i += 1) {
+      await seedConsent(consentAdminPage, consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
+    }
+
+    const registryPage = new AdminConsentPage(consentAdminPage)
+    await registryPage.goto()
+    await registryPage.setRowsPerPage(5)
+
+    await expect(registryPage.rows).toHaveCount(5)
+    await expect(registryPage.nextPageButton).toBeEnabled()
+    await consentAdminPage.context().close()
+  })
 })

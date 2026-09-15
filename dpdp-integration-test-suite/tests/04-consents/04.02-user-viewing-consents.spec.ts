@@ -26,12 +26,13 @@ import {
   pageForPersonaState,
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
+import { MyConsentPage } from '../../pages/MyConsentPage'
 import { seedConsent } from '../../utils/consentSetup'
 
 /**
  * A user's own consent detail page at /consents/:id: what it renders, the load-failed
  * path for an unknown id, and that a different user can't reach someone else's
- * consent by guessing its id. See
+ * consent by guessing its id. Also the registry list's own pagination cap - see
  * tests/04-consents/04.01-user-acting-on-consents.spec.ts for approve/reject/revoke.
  */
 test.describe('User viewing Consents (UI)', () => {
@@ -107,6 +108,71 @@ test.describe('User viewing Consents (UI)', () => {
     await expect(otherDetailPage.loadFailedMessage).toBeVisible()
 
     await otherPage.context().close()
+    await consentAdminPage.context().close()
+  })
+
+  test('04.02.04 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+    consentCleanupTracker,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    // One more than the smallest page size, so there's guaranteed to be a next page regardless
+    // of how many consents this persona already has from earlier runs - consents accumulate
+    // forever (AGENTS.md), so this is never seeding into a genuinely empty list.
+    const seedCount = 6
+    for (let i = 0; i < seedCount; i += 1) {
+      await seedConsent(consentAdminPage, consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
+    }
+
+    const listPage = new MyConsentPage(userPage)
+    await listPage.goto()
+    await listPage.setRowsPerPage(5)
+
+    await expect(listPage.rows).toHaveCount(5)
+    await expect(listPage.nextPageButton).toBeEnabled()
+    await userPage.context().close()
+    await consentAdminPage.context().close()
+  })
+
+  test('04.02.05 - A rejected consent shows Rejected and no further action on a fresh detail-page load', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+    consentCleanupTracker,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    const { consentId } = await seedConsent(
+      consentAdminPage,
+      consentAdminConsentApi,
+      consentCleanupTracker,
+      target.personas.user.username,
+      'PENDING',
+    )
+
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.goto(consentId)
+    await detailPage.openActionDialog('reject')
+    await detailPage.confirmAction('reject')
+    await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
+
+    // A fresh navigation, not just the in-page state after confirming - proves the server
+    // actually persisted the rejection, not just that the dialog's own optimistic update looked
+    // right (see the identical rationale in 02.02.04/03.02.04's re-navigation checks).
+    await detailPage.goto(consentId)
+    await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
+    // Rejected is not terminal for Approve specifically: isApprovableByCurrentUser (consentAuthorization.ts)
+    // deliberately treats REJECTED the same as PENDING, so the subject can change their mind
+    // later - confirmed against the actual source, not assumed. Reject and Revoke, however, both
+    // require a state Rejected no longer is (isRejectableByCurrentUser excludes REJECTED;
+    // isConsentRevokableState requires ACTIVE), so those two genuinely disappear.
+    await expect(detailPage.actionAvailable('approve')).toHaveCount(1)
+    await expect(detailPage.actionAvailable('reject')).toHaveCount(0)
+    await expect(detailPage.actionAvailable('revoke')).toHaveCount(0)
+    await userPage.context().close()
     await consentAdminPage.context().close()
   })
 })

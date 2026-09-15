@@ -61,6 +61,37 @@ export class AdminConsentPage extends ConsentRegistryTable {
     await this.page.getByRole('button', { name: 'Apply' }).click()
   }
 
+  get relationFilter(): Locator {
+    // getByLabel, not getByRole('combobox', ...) like stateFilter above - confirmed live this
+    // Select's rendered role="combobox" isn't recognised as such by Chromium's own accessibility
+    // tree (missing aria-controls, most likely), so a role query resolves to nothing even though
+    // the label association is otherwise identical. getByLabel resolves it correctly regardless.
+    return this.page.getByLabel('Relation', { exact: true })
+  }
+
+  /**
+   * Distinguishes "consents about this user" (Subject) from "consents this user authorized,
+   * possibly on someone else's behalf" (Authorizer) - the one mechanism for finding a delegated
+   * consent by its authorizer rather than its subject. No separate Apply click needed here: the
+   * Select's own onChange applies immediately, carrying along whatever User value is already
+   * typed - unlike filterBySubjectAndService's plain text inputs, which stay in a draft state
+   * until Apply is clicked.
+   *
+   * User/Relation/State are their own always-visible toolbar controls, distinct from the
+   * "Advanced filters" popover (Service/Purpose/etc.) - unlike filterBySubjectAndService, this
+   * never opens that popover. It did once, and that popover's own full-viewport invisible
+   * backdrop then intercepted the click meant for the toolbar's Relation control, which sits
+   * outside the popover entirely - not a product bug, just this method clicking through a panel
+   * it never needed open.
+   */
+  async filterByUserAndRelation(userId: string, relation: 'Any' | 'Subject' | 'Authorizer'): Promise<void> {
+    const userField = this.page.getByLabel('User', { exact: true })
+    await userField.fill(userId)
+    await userField.press('Tab')
+    await this.relationFilter.click()
+    await this.page.getByRole('option', { name: relation, exact: true }).click()
+  }
+
   get stateFilter(): Locator {
     // getByLabel('State') also matches an unrelated tooltip whose aria-label contains "state" as
     // a substring ("Remove the Consent ID filter to use the state filter."), so this goes
