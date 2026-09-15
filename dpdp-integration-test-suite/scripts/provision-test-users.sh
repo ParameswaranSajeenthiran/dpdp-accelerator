@@ -47,7 +47,7 @@ SUITE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # The persona usernames must stay identical to what the TypeScript side signs in as, so both
 # read them from the same file rather than each carrying its own copy. They are email-shaped
 # because the accelerator enforces it: the username regex is
-# ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$, so a bare "dpdp-ci-user" is rejected with
+# ^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$, so a bare "dpdp-user-1" is rejected with
 # SCIM2 31301 and provisioning aborts.
 #
 # The plain user persona must NOT be an administrator: tests/04-authorization asserts it holds

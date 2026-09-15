@@ -112,9 +112,9 @@ The override file only names what it changes; it is merged into the defaults key
 | `identityServer.portalBaseUrl` | `…/consent-portal` | Where the consent-portal WAR is served from; the URL real users hit. |
 | `identityServer.ignoreHttpsErrors` | `true` | The shipped certificate is self-signed. Set `false` only against a properly trusted one. |
 | `superAdmin.username` / `.password` | `admin@wso2.com` / `wso2123` | The Console account the one-time bootstrap signs in as, and the account `tests/05-multi-tenancy` creates a throwaway organization with. Must match what this deployment actually has. |
-| `personas.user.*` | `dpdp-ci-user@dpdp.test` | The low-privilege persona. Deliberately not an administrator: `tests/04-authorization` asserts it holds only `internal_login`. |
-| `personas.user2.*` | `dpdp-ci-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
-| `personas.consentAdmin.*` | `dpdp-ci-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
+| `personas.user.*` | `dpdp-user-1@dpdp.test` | The low-privilege persona. Deliberately not an administrator: `tests/04-authorization` asserts it holds only `internal_login`. |
+| `personas.user2.*` | `dpdp-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
+| `personas.consentAdmin.*` | `dpdp-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
 | `personaRoles.user` / `.consentAdmin` | `dpdp-consent-user` / `dpdp-consent-admin` | The roles provisioning assigns. The accelerator creates the roles themselves; it never assigns membership. |
 | `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/09-event-notifications/README.md`. |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
