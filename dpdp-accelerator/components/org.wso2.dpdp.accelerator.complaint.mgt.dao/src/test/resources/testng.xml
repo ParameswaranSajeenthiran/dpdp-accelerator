@@ -23,6 +23,7 @@
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.dao.constants"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.dao.impl"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.dao.model"/>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.dao.queries"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.dao.util"/>
         </packages>
     </test>

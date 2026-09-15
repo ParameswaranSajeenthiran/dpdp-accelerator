@@ -143,6 +143,8 @@ export interface ComplaintListQueryParamsAPI {
   status?: ComplaintStatus
   priority?: ComplaintPriorityAPI
   userId?: string
+  /** Case-insensitive substring match against referenceId or userName/userId - unlike userId, this is a partial match. */
+  search?: string
   limit?: number
   offset?: number
   sort?: string
