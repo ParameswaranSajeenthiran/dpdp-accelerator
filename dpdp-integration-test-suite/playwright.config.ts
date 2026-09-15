@@ -51,9 +51,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
+      // Only the per-run tenant's own personas - depends on tenant-setup because it needs that
+      // tenant to exist first. Kept in its own project (and its own spec file, 01.02) so
+      // "super-tenant" below never has to depend on "tenant-setup" for personas it doesn't need.
       name: 'user-setup',
       testMatch: /01-provisioning\/01\.02-.*\.spec\.ts$/,
       dependencies: ['tenant-setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // The super tenant always exists, so this has no "tenant-setup" dependency at all.
+      name: 'super-tenant-user-setup',
+      testMatch: /01-provisioning\/01\.03-.*\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -65,7 +74,7 @@ export default defineConfig({
     {
       name: 'super-tenant',
       testIgnore: /01-provisioning\//,
-      dependencies: ['user-setup'],
+      dependencies: ['super-tenant-user-setup'],
       use: { ...devices['Desktop Chrome'] },
     },
   ],

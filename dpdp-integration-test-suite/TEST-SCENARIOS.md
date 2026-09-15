@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 171 across 47 spec files in 9 areas |
+| **Tests** | 171 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -55,7 +55,7 @@ depends on (see `playwright.config.ts`). Each is resumable - it checks `.e2e-run
 first and only does its real work if that run hasn't already done it, so re-running the suite
 never creates a second tenant or re-provisions personas that already exist.
 
-**3 tests, 2 spec files.**
+**3 tests, 3 spec files.**
 
 ### `01.01-tenant-creation.spec.ts`
 
@@ -68,7 +68,12 @@ never creates a second tenant or re-provisions personas that already exist.
 | ID | Scenario | Notes |
 | --- | --- | --- |
 | `01.02.01` | Provisions the per-run tenant's four personas and assigns their roles | Bootstraps a tenant-scoped M2M client through the tenant's own Console, then SCIM2. |
-| `01.02.02` | Provisions the super tenant's four personas and assigns their roles | Reuses an already-configured persona's password from `e2e-config.local.json` rather than regenerating it. |
+
+### `01.03-super-tenant-user-provisioning.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `01.03.01` | Provisions the super tenant's four personas and assigns their roles | Reuses an already-configured persona's password from `e2e-config.local.json` rather than regenerating it. Kept out of `01.02` so the "super-tenant" Playwright project never depends on tenant-setup - see `playwright.config.ts`. |
 
 ## `02-elements/` — Element catalog
 
