@@ -26,14 +26,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Complaint DAO interface.
- *
- * <p>Every method takes the {@link Connection} as its first parameter and throws only the
- * unchecked {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException}
- * (never a checked {@link java.sql.SQLException}) - reads and writes are handled identically, so a
- * caller composing several calls into one transaction (e.g. via
- * {@link org.wso2.dpdp.accelerator.common.util.DatabaseUtils#executeInTransaction}) never has to
- * special-case which of them declare a checked exception.
+ * Complaint DAO interface. Every method takes a {@link Connection} and throws only the unchecked
+ * {@link org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException}, so calls
+ * compose freely inside a transaction (e.g. {@link
+ * org.wso2.dpdp.accelerator.common.util.DatabaseUtils#executeInTransaction}).
  */
 public interface ComplaintDAO {
 

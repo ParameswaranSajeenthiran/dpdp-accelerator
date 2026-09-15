@@ -18,12 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;
 
-/**
- * The valid values of the COMPLAINT.PRIORITY column. ComplaintPriority is server-derived (see
- * ComplaintServiceUtil), but the [categoryPriority] deployment.toml override is still operator-supplied
- * input, so ComplaintServiceUtil#configure validates against this enum before accepting an override.
- * CHK_COMPLAINT_PRIORITY in mysql.sql remains a DB-level backstop.
- */
+/** The valid values of the COMPLAINT.PRIORITY column; also validates operator overrides in ComplaintServiceUtil#configure. */
 public enum ComplaintPriority {
 
     CRITICAL,
