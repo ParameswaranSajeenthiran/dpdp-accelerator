@@ -132,6 +132,14 @@ applies the `Action/trigger-e2e` label after reviewing the diff, and the label i
 every new push. It performs the same steps as the setup above, so a change that breaks local setup
 breaks CI too.
 
+PR runs exercise only the `multi-tenant` project - `super-tenant` differs mainly in the frontend's
+unqualified-root routing (`basePath.ts`) and skipping tenant creation, not in re-testing already
+covered features, and running both sequentially in the same job roughly doubled the runtime.
+`.github/workflows/nightly-e2e.yml` runs every project once a day instead, so a super-tenant-only
+regression surfaces within a day rather than only at the next weekly or release run. Both
+`weekly-e2e-is-master.yml`/`weekly-e2e-is-latest-u2.yml` and the release gate also run every
+project, unconditionally.
+
 ## Running the tests
 
 ```sh
