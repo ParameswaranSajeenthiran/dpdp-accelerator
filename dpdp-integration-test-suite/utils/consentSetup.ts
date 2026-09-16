@@ -16,13 +16,9 @@
  * under the License.
  */
 
-import { expect, type Page } from '@playwright/test'
+import { expect } from '@playwright/test'
 import type { AuthorizationEntry, ConsentApiClient } from '../clients/ConsentApiClient'
 import type { ConsentCleanupTracker } from '../fixtures/auth.fixtures'
-import { ElementFormDialog } from '../pages/ElementFormDialog'
-import { ElementListPage } from '../pages/ElementListPage'
-import { PurposeFormDialog } from '../pages/PurposeFormDialog'
-import { PurposeListPage } from '../pages/PurposeListPage'
 import { randomElementProfile, randomPurposeProfile, randomServiceId } from './testData'
 
 export interface SeededConsent {
@@ -32,24 +28,20 @@ export interface SeededConsent {
   serviceId: string
 }
 
-/** Reads the id out of a `.../<segment>/<id>` detail URL, e.g. after a create-form redirect. */
-function idFromDetailUrl(url: string, segment: 'elements' | 'purposes'): string {
-  const match = new RegExp(`/${segment}/([^/]+)$`).exec(url)
-  if (!match) {
-    throw new Error(`Could not read an id out of the ${segment} detail URL: ${url}`)
-  }
-  return match[1]
-}
-
 /**
- * Only Consent creation has no create UI at all, so it's the one
- * step here that goes through the admin API; the Element and Purpose it needs are created
- * through the real "Add Element" / "Add Purpose" admin UI forms, same as a real admin would use.
+ * Every caller here uses the Element/Purpose only as a Consent needs them to exist at all - none
+ * of these tests are exercising the create-Element/create-Purpose UI forms (that's
+ * tests/02-elements/02.01-admin-creating-elements.spec.ts and
+ * tests/03-purposes/03.01-admin-creating-purposes.spec.ts), so both are created via the admin API
+ * instead of the real UI forms - a real admin's UI is still exercised for the Consent-acting
+ * flows this setup feeds into, just not for this incidental fixture data.
+ *
+ * Only Consent creation has no create UI at all, so it was already the one step going through
+ * the admin API.
  *
  * The Purpose is created with no elements attached - the consent-mgt v2 API records whichever
  * elements a Consent's own `purposes[].elements[]` lists independently of what the Purpose
- * definition itself requires, so there's no need to fight the Purpose form's element picker (see
- * PurposeFormDialog.addElements's own comments on its quirks) just to satisfy this helper.
+ * definition itself requires, so there's no need to attach one here just to satisfy this helper.
  *
  * `state: 'PENDING'` supplies `authorizations` instead of `state` - the consent-mgt v2 API sets
  * PENDING automatically when authorizations are present and rejects an explicit PENDING state.
@@ -59,7 +51,6 @@ function idFromDetailUrl(url: string, segment: 'elements' | 'purposes'): string 
  * disposable, test-specific setup, never the persistent realistic demo dataset.
  */
 export async function seedConsent(
-  adminPage: Page,
   adminApi: ConsentApiClient,
   tracker: ConsentCleanupTracker,
   subjectId: string,
@@ -80,35 +71,25 @@ export async function seedConsent(
   const element = randomElementProfile()
   const elementDisplayName = element.displayName
 
-  const elementListPage = new ElementListPage(adminPage)
-  await elementListPage.goto()
-  await elementListPage.openCreateDialog()
-  const elementDialog = new ElementFormDialog(adminPage)
-  await elementDialog.fill({
+  const elementResponse = await adminApi.createElement({
     name: element.name,
     displayName: elementDisplayName,
     description: element.description,
   })
-  await elementDialog.submit()
-  await expect(adminPage).toHaveURL(/\/elements\/[^/]+$/)
-  const elementId = idFromDetailUrl(adminPage.url(), 'elements')
+  expect(elementResponse.status()).toBe(201)
+  const elementId = ((await elementResponse.json()) as { id: string }).id
   tracker.trackElement(elementId)
 
   const purpose = randomPurposeProfile()
   const purposeName = purpose.name
-  const purposeListPage = new PurposeListPage(adminPage)
-  await purposeListPage.goto()
-  await purposeListPage.openCreateDialog()
-  const purposeDialog = new PurposeFormDialog(adminPage)
-  await purposeDialog.fill({
+  const purposeResponse = await adminApi.createPurpose({
     name: purposeName,
     type: purpose.type,
     version: 'v1',
     description: purpose.description,
   })
-  await purposeDialog.submit()
-  await expect(adminPage).toHaveURL(/\/purposes\/[^/]+$/)
-  const purposeId = idFromDetailUrl(adminPage.url(), 'purposes')
+  expect(purposeResponse.status()).toBe(201)
+  const purposeId = ((await purposeResponse.json()) as { id: string }).id
   tracker.trackPurpose(purposeId)
 
   const consentResponse = await adminApi.createConsent({

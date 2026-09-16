@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect } from '../../fixtures/auth.fixtures'
 import { consentExpirySchedulerPollTimeoutMs } from '../../utils/env'
 import { seedConsent } from '../../utils/consentSetup'
 
@@ -59,15 +59,12 @@ interface HistoryEntry {
  */
 test.describe('Consent expiry reconciliation (API)', () => {
   test('04.09.01 - A consent whose expiry time has not yet passed has no EXPIRE entry in its history', async ({
-    browser,
     target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const futureExpiry = Date.now() + 24 * 60 * 60 * 1000
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -80,23 +77,18 @@ test.describe('Consent expiry reconciliation (API)', () => {
     expect(historyResponse.status()).toBe(200)
     const { history } = (await historyResponse.json()) as { history: Array<{ actionType: string }> }
     expect(history.some((entry) => entry.actionType === 'EXPIRE')).toBe(false)
-
-    await consentAdminPage.context().close()
   })
 
   test('04.09.02 - Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry', async ({
-    browser,
     target,
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     // A full minute in the past so the reconciler's own now-vs-expiryTime comparison (evaluated at
     // revoke time below, not at seed time) is unambiguously due regardless of the gap between this
     // seed call and the revoke call that follows it.
     const pastExpiry = Date.now() - 60_000
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -124,12 +116,9 @@ test.describe('Consent expiry reconciliation (API)', () => {
     const expireSnapshot = history.find((entry) => entry.actionType === 'EXPIRE')
     expect(expireSnapshot).toBeDefined()
     expect(expireSnapshot?.actionBy).toBe('SYSTEM')
-
-    await consentAdminPage.context().close()
   })
 
   test('04.09.03 - The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp', async ({
-    browser,
     target,
     consentAdminConsentApi,
     consentCleanupTracker,
@@ -145,12 +134,10 @@ test.describe('Consent expiry reconciliation (API)', () => {
     // scheduler test - extend it to comfortably cover the poll plus setup/teardown.
     test.setTimeout((pollTimeout ?? 0) + 30_000)
 
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const dueSince = Date.now()
     // Already due at creation, so the only thing this test waits on is the job noticing it, not
     // it also becoming due first.
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -193,7 +180,5 @@ test.describe('Consent expiry reconciliation (API)', () => {
     expect(expireSnapshot?.actionBy).toBe('SYSTEM')
     expect(expireSnapshot?.actionTime).toBeGreaterThanOrEqual(dueSince)
     expect(expireSnapshot?.actionTime).toBeLessThanOrEqual(observedAt)
-
-    await consentAdminPage.context().close()
   })
 })

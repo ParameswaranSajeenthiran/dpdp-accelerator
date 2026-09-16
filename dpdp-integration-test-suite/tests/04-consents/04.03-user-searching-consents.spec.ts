@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { MyConsentPage } from '../../pages/MyConsentPage'
 import { seedConsent } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
@@ -34,13 +34,11 @@ test.describe('User searching Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     // Both seeded under the same unique service id and narrowed to it first, so the state
     // filter's effect is checked within a controlled two-row set instead of the full,
     // ever-growing unfiltered list.
     const serviceId = randomServiceId()
     const pending = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -48,7 +46,6 @@ test.describe('User searching Consents (UI)', () => {
       serviceId,
     )
     const active = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -74,7 +71,6 @@ test.describe('User searching Consents (UI)', () => {
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(active.consentId)).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.03.02 - Searching by the exact service id finds the matching consent', async ({
@@ -84,10 +80,8 @@ test.describe('User searching Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const serviceId = randomServiceId()
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -100,7 +94,6 @@ test.describe('User searching Consents (UI)', () => {
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.03.03 - A service filter matching nothing shows the empty-results message', async ({
@@ -121,9 +114,7 @@ test.describe('User searching Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { serviceId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -140,6 +131,5 @@ test.describe('User searching Consents (UI)', () => {
     await registryPage.searchByService(partialServiceId)
     await expect(registryPage.emptyStateMessage).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 })

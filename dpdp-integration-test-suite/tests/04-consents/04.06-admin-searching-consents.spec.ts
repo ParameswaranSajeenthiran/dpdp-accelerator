@@ -37,14 +37,12 @@ test.describe('Admin searching Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const first = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
     const second = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -70,7 +68,6 @@ test.describe('Admin searching Consents (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const serviceId = randomServiceId()
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -105,7 +102,6 @@ test.describe('Admin searching Consents (UI)', () => {
     // two-row set instead of the full, ever-growing unfiltered list.
     const serviceId = randomServiceId()
     const pending = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -113,7 +109,6 @@ test.describe('Admin searching Consents (UI)', () => {
       serviceId,
     )
     const active = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -185,7 +180,6 @@ test.describe('Admin searching Consents (UI)', () => {
     // subjectId (target.personas.user) and authorizations[].userId (authorizer) deliberately
     // don't match - see the identical rationale in 04.07's delegated-consent test.
     const { consentId, serviceId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,

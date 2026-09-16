@@ -22,7 +22,6 @@ import {
   getPersonaState,
   hasSecondUser,
   loginAsUser,
-  loginAsConsentAdmin,
   pageForPersonaState,
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
@@ -43,9 +42,7 @@ test.describe('User viewing Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId, purposeName, elementDisplayName, serviceId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -61,7 +58,6 @@ test.describe('User viewing Consents (UI)', () => {
     await detailPage.expandPurpose(purposeName)
     await expect(detailPage.elementRow(elementDisplayName)).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.02.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
@@ -89,9 +85,7 @@ test.describe('User viewing Consents (UI)', () => {
       throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
 
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -108,7 +102,6 @@ test.describe('User viewing Consents (UI)', () => {
     await expect(otherDetailPage.loadFailedMessage).toBeVisible()
 
     await otherPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.02.04 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
@@ -117,19 +110,15 @@ test.describe('User viewing Consents (UI)', () => {
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    // Six sequential seedConsent calls, each its own real admin-UI round trip (Element, Purpose,
-    // then the consent itself) - comfortably over the default 30s on a loaded or CPU-constrained
-    // runner (confirmed timing out in CI, not locally). The assertions this test actually cares
-    // about are cheap; only the setup is slow.
-    test.setTimeout(60_000)
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
     // of how many consents this persona already has from earlier runs - consents accumulate
-    // forever (AGENTS.md), so this is never seeding into a genuinely empty list.
+    // forever (AGENTS.md), so this is never seeding into a genuinely empty list. Seeded via the
+    // admin API (Element/Purpose/Consent all API calls, see utils/consentSetup.ts) since this
+    // test isn't exercising any create-UI flow - only the pagination it feeds into is real UI.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
-      await seedConsent(consentAdminPage, consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
+      await seedConsent(consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
     }
 
     const listPage = new MyConsentPage(userPage)
@@ -139,7 +128,6 @@ test.describe('User viewing Consents (UI)', () => {
     await expect(listPage.rows).toHaveCount(5)
     await expect(listPage.nextPageButton).toBeEnabled()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.02.05 - A rejected consent shows Rejected and no further action on a fresh detail-page load', async ({
@@ -149,9 +137,7 @@ test.describe('User viewing Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -178,6 +164,5 @@ test.describe('User viewing Consents (UI)', () => {
     await expect(detailPage.actionAvailable('reject')).toHaveCount(0)
     await expect(detailPage.actionAvailable('revoke')).toHaveCount(0)
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 })

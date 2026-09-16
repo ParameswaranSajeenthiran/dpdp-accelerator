@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { MyConsentPage } from '../../pages/MyConsentPage'
 import { seedConsent } from '../../utils/consentSetup'
@@ -25,9 +25,11 @@ import { seedConsent } from '../../utils/consentSetup'
  * Approve/reject/revoke, from both the list and the detail page, plus the terminal-state guard
  * (a Rejected consent offers none of these actions). Only Consent creation goes through the
  * admin API (see utils/consentSetup.ts - it has no create UI at all); the Element and Purpose
- * each seeded consent needs are created through the real admin "Add Element"/"Add Purpose"
- * forms. `internal_login` alone (granted to every signed-in user, no role needed) is enough for
- * both consent scopes here, so the existing user persona needs no extra role for any of this.
+ * each seeded consent needs are also created via the admin API, since none of these tests are
+ * exercising the create-Element/create-Purpose forms - only `consentAdminConsentApi` is needed
+ * for seeding, so there's no admin browser session to log in or close here.
+ * `internal_login` alone (granted to every signed-in user, no role needed) is enough for both
+ * consent scopes here, so the existing user persona needs no extra role for any of this.
  */
 test.describe('User acting on Consents (UI)', () => {
   test('04.01.01 - Approving a Pending consent from the list moves it to Active', async ({
@@ -37,9 +39,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId, serviceId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -58,7 +58,6 @@ test.describe('User acting on Consents (UI)', () => {
 
     await expect(registryPage.rowByConsentId(consentId)).toContainText('Active')
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.01.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
@@ -68,9 +67,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -88,7 +85,6 @@ test.describe('User acting on Consents (UI)', () => {
     // is also moved to Rejected.
     await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.01.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
@@ -98,9 +94,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId, serviceId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -120,7 +114,6 @@ test.describe('User acting on Consents (UI)', () => {
       registryPage.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }),
     ).toHaveCount(0)
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.01.04 - Approving from the detail page works the same way as from the list', async ({
@@ -130,9 +123,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -146,7 +137,6 @@ test.describe('User acting on Consents (UI)', () => {
 
     await expect(userPage.getByText('Active', { exact: true }).first()).toBeVisible()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.01.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
@@ -156,9 +146,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -172,6 +160,5 @@ test.describe('User acting on Consents (UI)', () => {
     await expect(userPage.getByRole('button', { name: 'Reject', exact: true })).toHaveCount(0)
     await expect(userPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 })

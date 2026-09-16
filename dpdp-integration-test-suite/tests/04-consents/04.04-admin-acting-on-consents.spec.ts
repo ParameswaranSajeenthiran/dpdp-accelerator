@@ -38,7 +38,6 @@ test.describe('Admin acting on Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -63,7 +62,6 @@ test.describe('Admin acting on Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -86,7 +84,6 @@ test.describe('Admin acting on Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -111,7 +108,6 @@ test.describe('Admin acting on Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,

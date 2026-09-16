@@ -73,7 +73,6 @@ test.describe('Admin deleting Purposes (UI)', () => {
     // referenced by a real, permanent Consent (Consents can never be deleted, see AGENTS.md), so
     // it can't be seeded any other way.
     const { purposeName } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,

@@ -16,13 +16,7 @@
  * under the License.
  */
 
-import type { Page } from '@playwright/test'
-import {
-  test,
-  expect,
-  loginAsConsentAdmin,
-  type ConsentCleanupTracker,
-} from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
 import { PurposeDetailPage } from '../../pages/PurposeDetailPage'
@@ -35,23 +29,6 @@ import { randomPurposeProfile, uniqueElementName, uniquePurposeName } from '../.
  * detail-page id, and that a created purpose's fields actually round-trip through the detail
  * page. See tests/03-purposes/03.01-admin-creating-purposes.spec.ts for creation-form validation.
  */
-
-/** Creates a purpose through the UI, tracks it for cleanup, and returns its id. */
-async function createPurposeViaUi(page: Page, tracker: ConsentCleanupTracker): Promise<string> {
-  const listPage = new PurposeListPage(page)
-  await listPage.goto()
-  await listPage.openCreateDialog()
-  const dialog = new PurposeFormDialog(page)
-  await dialog.fill({ name: uniquePurposeName(), type: 'Policy', version: 'v1' })
-  await dialog.submit()
-  await expect(page).toHaveURL(/\/purposes\/[^/]+$/)
-  const match = /\/purposes\/([^/]+)$/.exec(page.url())
-  if (!match) {
-    throw new Error(`Could not read a purpose id out of the detail URL: ${page.url()}`)
-  }
-  tracker.trackPurpose(match[1])
-  return match[1]
-}
 test.describe('Admin viewing the Purposes list (UI)', () => {
   test('03.02.01 - The rows-per-page control accepts a new page size without erroring', async ({
     browser,
@@ -92,19 +69,24 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
 
   test('03.02.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
+    consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
-    // 11 sequential real-UI purpose creations - comfortably over the default 30s on a loaded or
-    // CPU-constrained runner (confirmed timing out in CI, not locally). See the identical
-    // rationale on 04.02.04/04.05.03; this one seeds even more, so it gets more headroom.
-    test.setTimeout(90_000)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
-    // of how many purposes earlier runs already left in this shared environment.
+    // of how many purposes earlier runs already left in this shared environment. Seeded via the
+    // admin API, not the create-Purpose UI form - this test isn't exercising that form (see
+    // tests/03-purposes/03.01-admin-creating-purposes.spec.ts for that), only the pagination it
+    // feeds into is real UI.
     const seedCount = 11
-    // Each creation is its own UI round-trip - sequential by design, not perf-sensitive.
     for (let i = 0; i < seedCount; i += 1) {
-      await createPurposeViaUi(consentAdminPage, consentCleanupTracker)
+      const response = await consentAdminConsentApi.createPurpose({
+        name: uniquePurposeName(),
+        type: 'Policy',
+        version: 'v1',
+      })
+      expect(response.status()).toBe(201)
+      consentCleanupTracker.trackPurpose(((await response.json()) as { id: string }).id)
     }
 
     const listPage = new PurposeListPage(consentAdminPage)

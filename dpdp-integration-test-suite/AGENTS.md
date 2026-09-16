@@ -238,10 +238,14 @@ ordered steps, use `test.describe.serial` and say why in a comment.
 
 **Use the seed helpers** rather than hand-rolling setup: `seedConsent` (`utils/consentSetup.ts`),
 `seedComplaint` / `moveComplaintToStatus` (`utils/complaintSetup.ts`), `seedActiveTopic` /
-`seedPollSubscription` / `publishMarkedEvent` (`utils/eventNotificationSetup.ts`). Consent creation
-is the only step with no create UI, so it goes through the admin API; the Element and Purpose it
-needs are created through the real admin forms. Note `state: 'PENDING'` is expressed by supplying
-`authorizations` — the v2 API sets PENDING itself and rejects an explicit `PENDING`.
+`seedPollSubscription` / `publishMarkedEvent` (`utils/eventNotificationSetup.ts`). `seedConsent`
+creates its Element, Purpose, and Consent all through the admin API, not the UI forms — none of
+its callers are testing the create-Element/create-Purpose flow itself (that's
+`02-elements/02.01-*` and `03-purposes/03.01-*`), so there's no value in re-driving those forms
+just to get fixture data. Note `state: 'PENDING'` is expressed by supplying `authorizations` — the
+v2 API sets PENDING itself and rejects an explicit `PENDING`. The same principle applies anywhere
+else you seed data purely as setup: prefer the admin API over the UI unless the test is actually
+exercising that creation flow.
 
 ## Page objects
 

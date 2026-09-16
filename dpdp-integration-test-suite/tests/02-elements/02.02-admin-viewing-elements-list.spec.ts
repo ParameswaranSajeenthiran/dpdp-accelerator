@@ -68,15 +68,20 @@ test.describe('Admin viewing the Elements list (UI)', () => {
 
   test('02.02.02 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
+    consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
-    // of how many elements earlier runs already left in this shared environment.
+    // of how many elements earlier runs already left in this shared environment. Seeded via the
+    // admin API, not the create-Element UI form - this test isn't exercising that form (see
+    // tests/02-elements/02.01-admin-creating-elements.spec.ts for that), only the pagination it
+    // feeds into is real UI.
     const seedCount = 11
-    // Each creation is its own UI round-trip - sequential by design, not perf-sensitive.
     for (let i = 0; i < seedCount; i += 1) {
-      await createElementViaUi(consentAdminPage, consentCleanupTracker)
+      const response = await consentAdminConsentApi.createElement({ name: uniqueElementName() })
+      expect(response.status()).toBe(201)
+      consentCleanupTracker.trackElement(((await response.json()) as { id: string }).id)
     }
 
     const listPage = new ElementListPage(consentAdminPage)

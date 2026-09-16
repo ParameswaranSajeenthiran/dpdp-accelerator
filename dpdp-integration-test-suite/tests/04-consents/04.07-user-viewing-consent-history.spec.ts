@@ -16,14 +16,7 @@
  * under the License.
  */
 
-import {
-  test,
-  expect,
-  getPersonaState,
-  hasSecondUser,
-  loginAsUser,
-  loginAsConsentAdmin,
-} from '../../fixtures/auth.fixtures'
+import { test, expect, getPersonaState, hasSecondUser, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ConsentApiClient } from '../../clients/ConsentApiClient'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
@@ -51,9 +44,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -110,7 +101,6 @@ test.describe('User viewing Consent History (UI)', () => {
 
     await dialog.close()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.07.02 - Rejecting a Pending consent records AUTHORIZE_REJECT with a diffed authorization', async ({
@@ -120,9 +110,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -148,7 +136,6 @@ test.describe('User viewing Consent History (UI)', () => {
 
     await dialog.close()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.07.03 - A full self-service lifecycle (created, approved, then revoked) is captured in order end to end', async ({
@@ -158,9 +145,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -225,7 +210,6 @@ test.describe('User viewing Consent History (UI)', () => {
 
     await dialog.close()
     await userPage.context().close()
-    await consentAdminPage.context().close()
   })
 
   test('04.07.04 - A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject', async ({
@@ -243,12 +227,10 @@ test.describe('User viewing Consent History (UI)', () => {
       throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
 
-    const consentAdminPage = await loginAsConsentAdmin(browser)
     // authorizations lists only the parent, never the child - carbon-consent-mgt-core's model has
     // no separate "subject" field on an authorization; delegation is expressed purely by the
     // subjectId (child) and authorizations[].userId (parent) not matching.
     const { consentId } = await seedConsent(
-      consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
       target.personas.user.username,
@@ -292,6 +274,5 @@ test.describe('User viewing Consent History (UI)', () => {
     await dialog.close()
 
     await childPage.context().close()
-    await consentAdminPage.context().close()
   })
 })

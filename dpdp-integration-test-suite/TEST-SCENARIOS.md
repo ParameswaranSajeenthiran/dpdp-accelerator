@@ -169,7 +169,7 @@ overview card shows).
 
 ## `04-consents/` — Consent records
 
-The largest area. **Consent creation has no UI at all**, so `seedConsent` creates the Element and Purpose through the real admin forms and the consent through the admin API. `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
+The largest area. **Consent creation has no UI at all**, so `seedConsent` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
 **37 tests, 9 spec files.**
 
@@ -692,6 +692,10 @@ Worth stating, since everything above is a gap or a caveat:
   SCIM2's tenant limitation.
 - **Negative assertions use `toHaveCount(0)`**, matching how the sidebar and action buttons behave
   — removed from the DOM, not hidden.
-- **Setup goes through the real UI wherever a UI exists**, dropping to the API only where the
-  product genuinely has no form (consent creation, event publishing).
+- **Setup goes through the real UI only when the test is exercising that UI, or has no API
+  alternative** (event publishing). Incidental fixture data - Elements/Purposes/Consents created
+  purely so some other feature has something to act on or page through, never to test creation
+  itself - goes through the admin API instead (`seedConsent`, the two rows-per-page pagination
+  seeds in `02-elements/02.02-*` and `03-purposes/03.02-*`): faster, and avoids exercising the
+  same create-form flow dozens of times per run for no additional coverage.
 - **Known flakiness is measured**, not hand-waved.
