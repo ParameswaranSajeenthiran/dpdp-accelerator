@@ -131,7 +131,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                             subjectCategory.trim(), priority, OPEN.name(), description.trim(), now, now,
                             statutoryDueTime);
                     if (recordIntakeEvent) {
-                        persistWithIntakeEvent(conn, c, actorUserId.trim(), actorRole, now);
+                        persistWithComplaintEventIntake(conn, c, actorUserId.trim(), actorRole, now);
                     } else {
                         persistComplaint(conn, c);
                     }
@@ -159,7 +159,7 @@ public class ComplaintServiceImpl implements ComplaintService {
      * Inserts the complaint and its officer-intake audit event together - so a complaint can
      * never be created with no record of which officer lodged it, or vice versa.
      */
-    private void persistWithIntakeEvent(Connection conn, Complaint complaint, String actorUserId, String actorRole,
+    private void persistWithComplaintEventIntake(Connection conn, Complaint complaint, String actorUserId, String actorRole,
             long now) {
         if (!complaintDAO.addComplaint(conn, complaint)) {
             throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
@@ -176,15 +176,43 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Override
     public Complaint getComplaint(String orgId, String complaintId) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId));
+        requireLookupKeys(orgId, complaintId);
+        return DatabaseUtils.executeInTransaction(conn -> loadComplaint(conn, orgId, complaintId));
     }
 
     @Override
     public Complaint getOwnedComplaint(String orgId, String complaintId, String ownerUserId) {
-        return DatabaseUtils.executeInTransaction(
-                conn -> ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId,
-                        ownerUserId));
+        requireLookupKeys(orgId, complaintId);
+        return DatabaseUtils.executeInTransaction(conn -> {
+            Complaint complaint = loadComplaint(conn, orgId, complaintId);
+            // A 404 rather than a 403 - /me/* must not confirm a complaint's existence to a caller
+            // who doesn't own it (see complaint-server-API.yaml).
+            if (!complaint.getUserId().equals(ownerUserId)) {
+                throw complaintNotFound(complaintId);
+            }
+            return complaint;
+        });
+    }
+
+    // Blank id/org is a 404, not a 400 - the API must not distinguish a malformed id from a
+    // complaint that isn't there. Checked before executeInTransaction so a request that can never
+    // match doesn't take a connection from the pool.
+    private void requireLookupKeys(String orgId, String complaintId) {
+        if (orgId == null || orgId.trim().isEmpty() || complaintId == null || complaintId.trim().isEmpty()) {
+            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+                    ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
+        }
+    }
+
+    /** Caller must have passed {@link #requireLookupKeys} first - this trims without null checks. */
+    private Complaint loadComplaint(Connection conn, String orgId, String complaintId) {
+        return complaintDAO.getComplaintById(conn, complaintId.trim(), orgId.trim())
+                .orElseThrow(() -> complaintNotFound(complaintId));
+    }
+
+    private ComplaintException complaintNotFound(String complaintId) {
+        return new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+                String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
     }
 
     @Override
