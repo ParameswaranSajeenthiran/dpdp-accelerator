@@ -117,6 +117,11 @@ test.describe('User viewing Consents (UI)', () => {
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
+    // Six sequential seedConsent calls, each its own real admin-UI round trip (Element, Purpose,
+    // then the consent itself) - comfortably over the default 30s on a loaded or CPU-constrained
+    // runner (confirmed timing out in CI, not locally). The assertions this test actually cares
+    // about are cheap; only the setup is slow.
+    test.setTimeout(60_000)
     const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless

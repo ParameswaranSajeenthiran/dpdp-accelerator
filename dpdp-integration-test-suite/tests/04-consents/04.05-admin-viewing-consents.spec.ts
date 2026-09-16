@@ -71,6 +71,10 @@ test.describe('Admin viewing Consents (UI)', () => {
     consentAdminConsentApi,
     consentCleanupTracker,
   }) => {
+    // Six sequential seedConsent calls, each its own real admin-UI round trip - comfortably over
+    // the default 30s on a loaded or CPU-constrained runner (confirmed timing out in CI, not
+    // locally). See the identical rationale on 04.02.04.
+    test.setTimeout(60_000)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
     // of how many consents already exist in this shared, ever-accumulating environment.

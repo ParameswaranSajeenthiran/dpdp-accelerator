@@ -94,6 +94,10 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
     browser,
     consentCleanupTracker,
   }) => {
+    // 11 sequential real-UI purpose creations - comfortably over the default 30s on a loaded or
+    // CPU-constrained runner (confirmed timing out in CI, not locally). See the identical
+    // rationale on 04.02.04/04.05.03; this one seeds even more, so it gets more headroom.
+    test.setTimeout(90_000)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
     // of how many purposes earlier runs already left in this shared environment.
