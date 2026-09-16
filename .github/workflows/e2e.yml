@@ -485,7 +485,7 @@ jobs:
           password = os.environ['PASSWORD']
           config = {
               'personas': {
-                  name: {'password': password} for name in ('user', 'user2', 'consentAdmin')
+                  name: {'password': password} for name in ('user', 'user2', 'consentAdmin', 'dpo')
               },
               'webhook': {
                   'receiverHost': os.environ['WEBHOOK_HOST'] or None,

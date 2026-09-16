@@ -75,7 +75,7 @@ except (FileNotFoundError, ValueError):
     config = {}
 
 personas = config.setdefault('personas', {})
-for name in ('user', 'user2', 'consentAdmin'):
+for name in ('user', 'user2', 'consentAdmin', 'dpo'):
     personas.setdefault(name, {})['password'] = password
 
 with open(path, 'w') as handle:
