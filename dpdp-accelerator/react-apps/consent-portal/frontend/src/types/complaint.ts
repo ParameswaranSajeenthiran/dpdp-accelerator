@@ -49,11 +49,7 @@ export const COMPLAINT_PRIORITIES: ComplaintPriorityAPI[] = ['CRITICAL', 'HIGH',
 // predate that spec revision and consistently use WAITING_ON_CLIENT instead. Kept as-is rather
 // than renamed across the DB/enum layer for this pass - see the integration notes for this gap.
 export type ComplaintStatus =
-  | 'OPEN'
-  | 'IN_PROGRESS'
-  | 'WAITING_ON_CLIENT'
-  | 'AWAITING_INTERNAL_REVIEW'
-  | 'RESOLVED'
+  'OPEN' | 'IN_PROGRESS' | 'WAITING_ON_CLIENT' | 'AWAITING_INTERNAL_REVIEW' | 'RESOLVED'
 
 export const COMPLAINT_STATUSES: ComplaintStatus[] = [
   'OPEN',
