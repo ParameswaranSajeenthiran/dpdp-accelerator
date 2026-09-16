@@ -23,7 +23,12 @@ import { randomBytes } from 'node:crypto'
 // marker or by the server-issued ID - never by "the list is empty" or "there's exactly one
 // record", both of which would be false against an environment with prior runs' data still in it.
 export function uniqueMarker(label: string): string {
-  return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  // Math.random() here flowed into usernames used to sign in (e.g. a tenant owner's), which
+  // CodeQL's js/insecure-randomness rule flags regardless of this being a disambiguating suffix
+  // rather than an actual secret - randomBytes costs nothing extra since generatePassword below
+  // already pulls it in, and it closes the finding outright rather than arguing it's a false
+  // positive.
+  return `${label}-${Date.now()}-${randomBytes(4).toString('hex')}`
 }
 
 /** A policy-compliant random password, in the same shape scripts/setup-local.sh generates. */
