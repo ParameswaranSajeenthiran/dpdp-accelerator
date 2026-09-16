@@ -16,15 +16,12 @@
  * under the License.
  */
 
-import { Box, Stack, Tooltip, Typography } from '@wso2/oxygen-ui'
+import { Stack, Tooltip, Typography } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintStatus } from '../../../types/complaint'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
-import {
-  getComplaintSlaDaysRemaining,
-  getComplaintSlaState,
-  getComplaintStatusLabelKey,
-} from '../utils/complaintDisplay'
+import { getComplaintSlaDaysRemaining, getComplaintStatusLabelKey } from '../utils/complaintDisplay'
+import ComplaintSlaDot from './ComplaintSlaDot'
 
 interface ComplaintSlaIndicatorProps {
   statutoryDueDate: number
@@ -37,19 +34,11 @@ const SLA_DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
 }
 
-const SLA_DOT_COLOR = {
-  onTrack: 'success.main',
-  atRisk: 'warning.main',
-  breached: 'error.main',
-  met: 'text.disabled',
-} as const
-
 function ComplaintSlaIndicator({
   statutoryDueDate,
   status,
 }: ComplaintSlaIndicatorProps): React.JSX.Element {
   const { t } = useTranslation('common')
-  const slaState = getComplaintSlaState(statutoryDueDate, status)
   const daysRemaining = getComplaintSlaDaysRemaining(statutoryDueDate)
 
   let label: string
@@ -78,15 +67,7 @@ function ComplaintSlaIndicator({
       })}
     >
       <Stack direction="row" spacing={0.75} alignItems="center">
-        <Box
-          sx={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            bgcolor: SLA_DOT_COLOR[slaState],
-            flexShrink: 0,
-          }}
-        />
+        <ComplaintSlaDot statutoryDueDate={statutoryDueDate} status={status} />
         <Typography variant="body2">{label}</Typography>
       </Stack>
     </Tooltip>
