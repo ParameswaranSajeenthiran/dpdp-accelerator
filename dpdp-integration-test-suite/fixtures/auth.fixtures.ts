@@ -53,13 +53,13 @@ interface Fixtures {
   userConsentApi: ConsentApiClient
   consentAdminConsentApi: ConsentApiClient
   consentCleanupTracker: ConsentCleanupTracker
-  // "Officer" here is any dpdp-consent-admin holder (see tests/07-complaints/README.md's
+  // "Officer" here is any dpdp-consent-admin holder (see AGENTS.md's
   // Personas section) - reuses the same consent-admin persona/login as consentAdminConsentApi,
   // just wrapped in the complaint client instead of the consent one.
   userComplaintApi: ComplaintApiClient
   officerComplaintApi: ComplaintApiClient
   // dpdp-consent-admin holds every notifications:* scope (see
-  // tests/08-event-notifications/README.md), so this one persona doubles as the admin, the
+  // AGENTS.md), so this one persona doubles as the admin, the
   // event publisher, and the webhook-verification actor - same "one role covers every surface"
   // rationale as officerComplaintApi above.
   consentAdminEventApi: EventNotificationApiClient
@@ -102,7 +102,7 @@ async function terminateAllSessions(persona: Persona): Promise<void> {
 /**
  * A successful login only proves the consent-admin persona's credentials are valid, not that the
  * account actually holds the `dpdp-consent-admin` role - that role assignment is a manual Console
- * step (see docs/configuration-guide.md, "Grant administration access") that's easy to forget for
+ * step (see docs/content/configuration-guide.md, "Grant administration access") that's easy to forget for
  * a freshly created test account. Without this check, a missing role surfaces as dozens of
  * unrelated, confusing assertion failures scattered across the suite (every seeded
  * Purpose/Element/Consent creation silently 401s/403s) instead of one clear error naming the
@@ -115,10 +115,10 @@ async function verifyConsentAdminAuthorized(state: PersonaAuthState): Promise<vo
   })
   if (response.status === 401 || response.status === 403) {
     throw new Error(
-      `TEST_CONSENT_ADMIN_USERNAME ("${env.consentAdmin.username}") logged in successfully but ` +
+      `The consent admin ("${env.consentAdmin.username}") logged in successfully but ` +
         `is not authorized for the consent-management admin API (got ${String(response.status)} ` +
         `from ${consentPurposesApiUrl('')}). Assign this account the dpdp-consent-admin role in ` +
-        `the Console - see docs/configuration-guide.md, "Grant administration access".`,
+        `the Console - see docs/content/configuration-guide.md, "Grant administration access".`,
     )
   }
 }
@@ -126,7 +126,7 @@ async function verifyConsentAdminAuthorized(state: PersonaAuthState): Promise<vo
 /**
  * Waits for `persona` to reach a signed-in state on `page`, filling in the real Identity Server
  * login form if (and only if) it actually appears, and returns the request that proved sign-in
- * completed. The portal has no backend of its own any more (see docs/configuration-guide.md): the
+ * completed. The portal has no backend of its own any more (see docs/content/configuration-guide.md): the
  * SPA keeps its access token inside its auth SDK's own web worker, never in a cookie or anywhere
  * else `storageState` or page JS can read directly (see utils/authStorage.ts) - so "signed in" has
  * to be observed off the wire instead, as the first outgoing request that actually carries a
@@ -533,8 +533,8 @@ export function hasSecondUser(): boolean {
 
 /**
  * Same rationale as hasSecondUser/env.secondUser(): the ownership-isolation tests in
- * tests/06-complaints-api need a second real user's ComplaintApiClient, and there is no
- * always-on fixture for it since most runs don't configure TEST_USER_2_USERNAME/PASSWORD.
+ * the complaint ownership-isolation tests need a second real user's ComplaintApiClient, and there is no
+ * always-on fixture for it since most runs don't configure personas.user2.
  * Returns undefined when it isn't configured; callers check hasSecondUser() first and skip
  * themselves, same pattern as the consent-side ownership tests.
  */
