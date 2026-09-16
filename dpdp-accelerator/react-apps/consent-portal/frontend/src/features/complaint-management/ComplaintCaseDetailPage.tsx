@@ -39,7 +39,7 @@ import ComplaintActivityFeed from '../complaints/components/ComplaintActivityFee
 import ComplaintAttachmentsPanel from '../complaints/components/ComplaintAttachmentsPanel'
 import ComplaintPriorityChip from '../complaints/components/ComplaintPriorityChip'
 import ComplaintReplyComposer from '../complaints/components/ComplaintReplyComposer'
-import ComplaintSlaIndicator from '../complaints/components/ComplaintSlaIndicator'
+import ComplaintSlaDot from '../complaints/components/ComplaintSlaDot'
 import ComplaintStatusChip from '../complaints/components/ComplaintStatusChip'
 import { COMPLAINT_NEXT_STATUSES } from '../complaints/constants'
 import {
@@ -147,10 +147,6 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
           <ComplaintPriorityChip priority={complaint.priority} />
           <ComplaintStatusChip status={complaint.status} viewerRole="ComplaintOfficer" />
-          <ComplaintSlaIndicator
-            statutoryDueDate={complaint.statutoryDueDate}
-            status={complaint.status}
-          />
         </Stack>
       </Stack>
 
@@ -206,9 +202,15 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                 >
                   {t('complaints.sla.dueLabel')}
                 </Typography>
-                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  {formatEpochTimestamp(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
-                </Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                  <ComplaintSlaDot
+                    statutoryDueDate={complaint.statutoryDueDate}
+                    status={complaint.status}
+                  />
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                    {formatEpochTimestamp(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
+                  </Typography>
+                </Stack>
               </Box>
             </Box>
 
