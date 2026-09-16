@@ -30,13 +30,8 @@ export default defineConfig({
   // cache under .auth/, guarded by a lock only for the brief moment of that one login) precisely
   // so that multiple workers don't each log in independently and keep invalidating each other's
   // sessions - see that file for the full mechanism.
-  // Capped at 2 locally: each worker drives its own full Chromium instance alongside WSO2 IS and
-  // MySQL on this same machine, and the CPU-based default (half the detected cores, 4 on an 8-core
-  // Mac) was measurably causing resource-contention timeouts - a fixed, low worker count trades
-  // wall-clock time for a meaningfully lower flake rate. CI's own runner already computes to 1
-  // worker on its own (2 vCPUs / 2) via the untouched default - leave that alone rather than
-  // raising it to 2, since CI has even less headroom (2 vCPUs, 7 GB, shared with IS and MySQL) than
-  // this fix assumes.
+  // Capped at 2 locally to avoid resource-contention flakiness alongside WSO2 IS and MySQL on the
+  // same machine - GitHub's own ubuntu-latest runner already computes the same 2 by default.
   workers: process.env.CI ? undefined : 2,
   forbidOnly: Boolean(process.env.CI),
   // 2 locally, not just CI's 1: local workers, WSO2 IS, and MySQL all share this one machine's
