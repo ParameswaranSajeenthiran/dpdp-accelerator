@@ -29,19 +29,15 @@ export interface SeededConsent {
 }
 
 /**
- * Every caller here uses the Element/Purpose only as a Consent needs them to exist at all - none
- * of these tests are exercising the create-Element/create-Purpose UI forms (that's
+ * Element, Purpose, and Consent are all created via the admin API, not their UI forms - none of
+ * this helper's callers are testing purpose/element creation itself (see
  * tests/02-elements/02.01-admin-creating-elements.spec.ts and
- * tests/03-purposes/03.01-admin-creating-purposes.spec.ts), so both are created via the admin API
- * instead of the real UI forms - a real admin's UI is still exercised for the Consent-acting
- * flows this setup feeds into, just not for this incidental fixture data.
- *
- * Only Consent creation has no create UI at all, so it was already the one step going through
- * the admin API.
+ * tests/03-purposes/03.01-admin-creating-purposes.spec.ts for that coverage), and Consent has no
+ * create UI at all.
  *
  * The Purpose is created with no elements attached - the consent-mgt v2 API records whichever
  * elements a Consent's own `purposes[].elements[]` lists independently of what the Purpose
- * definition itself requires, so there's no need to attach one here just to satisfy this helper.
+ * definition itself requires.
  *
  * `state: 'PENDING'` supplies `authorizations` instead of `state` - the consent-mgt v2 API sets
  * PENDING automatically when authorizations are present and rejects an explicit PENDING state.

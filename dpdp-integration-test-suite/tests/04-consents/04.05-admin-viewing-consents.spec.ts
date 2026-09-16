@@ -72,9 +72,7 @@ test.describe('Admin viewing Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
-    // of how many consents already exist in this shared, ever-accumulating environment. Seeded
-    // via the admin API (see utils/consentSetup.ts), so this no longer needs a longer timeout -
-    // only the pagination assertions below exercise real UI.
+    // of how many consents already exist in this shared, ever-accumulating environment.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
       await seedConsent(consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')

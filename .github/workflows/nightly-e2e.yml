@@ -14,11 +14,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pr-e2e.yml runs only the `multi-tenant` project to keep the label-gated PR path fast -
-# `super-tenant`'s own coverage (unqualified-root routing via basePath.ts, the
-# tenant-provisioning-skip path) would otherwise go untested between the Saturday weekly runs.
-# This exercises every project every night instead, against the same S3 pack + U2 updates a
-# real install gets, so a super-tenant-only regression surfaces within a day, not a week.
+# pr-e2e.yml runs only the `multi-tenant` project, so `super-tenant`'s own coverage
+# (unqualified-root routing via basePath.ts, the tenant-provisioning-skip path) would otherwise
+# go untested between the Saturday weekly runs. This exercises every project nightly instead.
 name: '[Nightly] Test every E2E project'
 
 on:

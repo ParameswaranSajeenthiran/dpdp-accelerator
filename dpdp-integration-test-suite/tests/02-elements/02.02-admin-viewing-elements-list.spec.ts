@@ -74,9 +74,7 @@ test.describe('Admin viewing the Elements list (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
     // of how many elements earlier runs already left in this shared environment. Seeded via the
-    // admin API, not the create-Element UI form - this test isn't exercising that form (see
-    // tests/02-elements/02.01-admin-creating-elements.spec.ts for that), only the pagination it
-    // feeds into is real UI.
+    // admin API - see 02.01-admin-creating-elements.spec.ts for the create-form coverage itself.
     const seedCount = 11
     for (let i = 0; i < seedCount; i += 1) {
       const response = await consentAdminConsentApi.createElement({ name: uniqueElementName() })

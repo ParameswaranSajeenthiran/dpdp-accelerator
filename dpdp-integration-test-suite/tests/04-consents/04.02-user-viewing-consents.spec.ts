@@ -113,9 +113,7 @@ test.describe('User viewing Consents (UI)', () => {
     const userPage = await loginAsUser(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
     // of how many consents this persona already has from earlier runs - consents accumulate
-    // forever (AGENTS.md), so this is never seeding into a genuinely empty list. Seeded via the
-    // admin API (Element/Purpose/Consent all API calls, see utils/consentSetup.ts) since this
-    // test isn't exercising any create-UI flow - only the pagination it feeds into is real UI.
+    // forever (AGENTS.md), so this is never seeding into a genuinely empty list.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
       await seedConsent(consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
