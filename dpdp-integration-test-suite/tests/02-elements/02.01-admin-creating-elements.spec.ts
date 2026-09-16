@@ -20,35 +20,44 @@ import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ElementDetailPage } from '../../pages/ElementDetailPage'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
-import { uniqueElementName } from '../../utils/testData'
+import { randomElementProfile, uniqueElementName } from '../../utils/testData'
 
 /**
  * The "Add Element" form: the happy path plus its validation rules.
  */
 test.describe('Admin creating Elements (UI)', () => {
-  test('02.01.01 - Creating an element with a name, display name, description, and properties succeeds', async ({
+  test("02.01.01 - A newly created element's detail page shows its display name, description, and properties correctly", async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const elementName = uniqueElementName()
-    const displayName = `Display ${elementName}`
-    const description = 'Used to send account and service notifications.'
+    const profile = randomElementProfile()
+    const properties = { retention_days: '365', encryption: 'AES-256' }
 
     const listPage = new ElementListPage(consentAdminPage)
     await listPage.goto()
     await listPage.openCreateDialog()
-    const dialog = new ElementFormDialog(consentAdminPage)
-    await dialog.fill({ name: elementName, displayName, description })
-    await dialog.addProperty('retention_days', '365')
-    await dialog.submit()
-
+    const createDialog = new ElementFormDialog(consentAdminPage)
+    await createDialog.fill({ name: profile.name, displayName: profile.displayName, description: profile.description })
+    for (const [key, value] of Object.entries(properties)) {
+      await createDialog.addProperty(key, value)
+    }
+    await createDialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
+    const elementId = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
+    if (!elementId) {
+      throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
+    }
 
+    // A fresh navigation, not just the post-submit redirect - proves the server actually
+    // persisted every field, not just that the create form's own optimistic state looked right.
     const detailPage = new ElementDetailPage(consentAdminPage)
-    await expect(detailPage.nameValue(elementName)).toBeVisible()
-    await expect(detailPage.fieldValue('Display name')).toHaveText(displayName)
-    await expect(detailPage.fieldValue('Description')).toHaveText(description)
-    await expect(detailPage.propertyRow('retention_days')).toContainText('365')
+    await detailPage.goto(elementId)
+    await expect(detailPage.nameValue(profile.name)).toBeVisible()
+    await expect(detailPage.fieldValue('Display name')).toHaveText(profile.displayName)
+    await expect(detailPage.fieldValue('Description')).toHaveText(profile.description)
+    for (const [key, value] of Object.entries(properties)) {
+      await expect(detailPage.propertyRow(key)).toContainText(value)
+    }
     await consentAdminPage.context().close()
   })
 
