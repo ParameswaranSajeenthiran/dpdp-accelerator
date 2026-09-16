@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 175 across 48 spec files in 9 areas |
+| **Tests** | 176 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -83,15 +83,16 @@ re-provisions personas that already exist; `01.03` is resumable the same way via
 Admin-only. Every test drives the real "Add Element" dialog; elements created are tracked for
 deletion, except where deletion is itself under test.
 
-**12 tests, 4 spec files.**
+**13 tests, 4 spec files.**
 
 ### `02.01-admin-creating-elements.spec.ts`
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `02.01.01` | Leaving name empty shows the required-field error and blocks submission |  |
-| `02.01.02` | Creating an element with a name that already exists shows the duplicate-name message | Exact duplicate-name message; dialog stays open, so nothing was created twice. |
-| `02.01.03` | A property value with no key blocks submission until the key is filled in or the row is removed | Create button disabled while an orphaned value exists. |
+| `02.01.01` | Creating an element with a name, display name, description, and properties succeeds | The happy path: re-navigates to the detail page fresh to prove the server actually persisted every field. |
+| `02.01.02` | Leaving name empty shows the required-field error and blocks submission |  |
+| `02.01.03` | Creating an element with a name that already exists shows the duplicate-name message | Exact duplicate-name message; dialog stays open, so nothing was created twice. |
+| `02.01.04` | A property value with no key blocks submission until the key is filled in or the row is removed | Create button disabled while an orphaned value exists. |
 
 ### `02.02-admin-viewing-elements-list.spec.ts`
 

@@ -17,19 +17,50 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { ElementDetailPage } from '../../pages/ElementDetailPage'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
 import { uniqueElementName } from '../../utils/testData'
 
 /**
- * The "Add Element" form's validation rules. The happy-path creation flow is not duplicated here:
- * every consent test drives this same form as setup via `seedConsent` (utils/consentSetup.ts), so
- * a passing 04-consents run already proves it. Elements created here are registered with
- * `consentCleanupTracker` so they're deleted again once the test finishes - see
+ * The "Add Element" form: the happy path plus its validation rules. Elements created here are
+ * registered with `consentCleanupTracker` so they're deleted again once the test finishes - see
  * fixtures/auth.fixtures.ts's ConsentCleanupTracker.
  */
 test.describe('Admin creating Elements (UI)', () => {
-  test('02.01.01 - Leaving name empty shows the required-field error and blocks submission', async ({
+  test('02.01.01 - Creating an element with a name, display name, description, and properties succeeds', async ({
+    browser,
+    consentCleanupTracker,
+  }) => {
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    const elementName = uniqueElementName()
+    const displayName = `Display ${elementName}`
+    const description = 'Used to send account and service notifications.'
+
+    const listPage = new ElementListPage(consentAdminPage)
+    await listPage.goto()
+    await listPage.openCreateDialog()
+    const dialog = new ElementFormDialog(consentAdminPage)
+    await dialog.fill({ name: elementName, displayName, description })
+    await dialog.addProperty('retention_days', '365')
+    await dialog.submit()
+
+    await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
+    const elementId = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
+    if (!elementId) {
+      throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
+    }
+    consentCleanupTracker.trackElement(elementId)
+
+    const detailPage = new ElementDetailPage(consentAdminPage)
+    await expect(detailPage.nameValue(elementName)).toBeVisible()
+    await expect(detailPage.fieldValue('Display name')).toHaveText(displayName)
+    await expect(detailPage.fieldValue('Description')).toHaveText(description)
+    await expect(detailPage.propertyRow('retention_days')).toContainText('365')
+    await consentAdminPage.context().close()
+  })
+
+  test('02.01.02 - Leaving name empty shows the required-field error and blocks submission', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -46,7 +77,7 @@ test.describe('Admin creating Elements (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('02.01.02 - Creating an element with a name that already exists shows the duplicate-name message', async ({
+  test('02.01.03 - Creating an element with a name that already exists shows the duplicate-name message', async ({
     browser,
     consentCleanupTracker,
   }) => {
@@ -79,7 +110,7 @@ test.describe('Admin creating Elements (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('02.01.03 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
+  test('02.01.04 - A property value with no key blocks submission until the key is filled in or the row is removed', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
