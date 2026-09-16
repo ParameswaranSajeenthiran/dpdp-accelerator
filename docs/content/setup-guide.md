@@ -80,7 +80,7 @@ Download the JDBC driver that matches the selected DBMS and its supported
 version. Copy the driver JAR to:
 
 ```text
-<IS_HOME>/repository/components/dropins
+<IS_HOME>/repository/components/lib
 ```
 
 > **Note:** The MySQL, PostgreSQL, Oracle, and Microsoft SQL Server JDBC driver
