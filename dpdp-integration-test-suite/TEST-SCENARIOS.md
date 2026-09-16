@@ -333,7 +333,7 @@ Destructive and irreversible, so each test creates and signs in as its own throw
 
 ## `08-complaints/` — Grievance redressal
 
-Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona **is** `dpdp-consent-admin` - there is no distinct Complaint Officer persona. Complaints are seeded via `seedComplaint`; status moves via `moveComplaintToStatus`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
+Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona **is** `dpdp-consent-admin` - there is no distinct Complaint Officer persona. Complaints are seeded via `seedComplaintViaApi`; status moves via `moveComplaintToStatusViaApi`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
 
 **Not covered:** the list's true empty state - the shared `user` persona always has history.
 
@@ -648,7 +648,7 @@ Real defects, confirmed live, that dictate how tests above are written. Recorded
 | **Consent mutations do not invalidate the history query keys.** | `03.07`/`03.08` navigate a second time after each action, or the lifecycle card and dialog show stale data. |
 | **`CM_RECEIPT.LANGUAGE` is `NOT NULL` with no server-side default**, so omitting it yields a generic `CM_00084` wrapping an H2 constraint violation. | `seedConsentViaApi` always sends `language: 'en'`. |
 | **Deleting a Purpose version referenced by a consent is rejected server-side, but `PurposeDetailsPage.tsx`'s `deleteVersionErrorMessage` treats every failure as unexpected** and shows a generic "Something went wrong" message - unlike the whole-Purpose delete, which has its own "still referenced by one or more consents" text. | `03.05.05` asserts the generic text, since that is what the product actually shows. |
-| **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatus` always sends a note, even where the API does not require one. |
+| **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatusViaApi` always sends a note, even where the API does not require one. |
 | **`TopicRegisterDialog.tsx`'s custom "Topic name is required." branch is unreachable** — the form has no `noValidate` and the field is natively `required`, so the browser blocks submit before React sees it. | `09.01.02` asserts `validity.valid === false`, the observable outcome. |
 
 ---

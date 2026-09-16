@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth.fixtures'
-import { seedActiveTopic, seedPollSubscription } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi } from '../../utils/eventNotificationSetup'
 
 /**
  * Topic lifecycle rules enforced by TopicServiceImpl: the guards on deregistering a topic, and
@@ -28,8 +28,8 @@ test.describe('Topic lifecycle rules', () => {
   test('09.06.01 - A topic with a live subscription cannot be deregistered', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'has-subscription')
-    await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'has-subscription')
+    await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
 
     const deleteResponse = await consentAdminEventApi.deleteTopic(topic.topicId)
     expect(deleteResponse.status()).toBe(409)
@@ -45,7 +45,7 @@ test.describe('Topic lifecycle rules', () => {
   test('09.06.02 - Deregistering the same topic twice does not mutate it again', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'double-deregister')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'double-deregister')
     const first = await consentAdminEventApi.deleteTopic(topic.topicId)
     expect(first.status()).toBe(200)
 
@@ -60,7 +60,7 @@ test.describe('Topic lifecycle rules', () => {
   test('09.06.03 - Re-registering a previously deregistered topic name creates a new topic', async ({
     consentAdminEventApi,
   }) => {
-    const original = await seedActiveTopic(consentAdminEventApi, 'reused-name')
+    const original = await seedActiveTopicViaApi(consentAdminEventApi, 'reused-name')
     const deregisterResponse = await consentAdminEventApi.deleteTopic(original.topicId)
     expect(deregisterResponse.status()).toBe(200)
 

@@ -19,12 +19,12 @@
 import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ComplaintDetailPage } from '../../pages/ComplaintDetailPage'
 import { ComplaintListPage } from '../../pages/ComplaintListPage'
-import { seedComplaint } from '../../utils/complaintSetup'
+import { seedComplaintViaApi } from '../../utils/complaintSetup'
 
 /**
  * A Data Principal viewing their own complaint list and one complaint's detail -
  * ComplaintListPage.tsx / ComplaintDetailPage.tsx at /complaints and /complaints/:id. Complaints
- * are seeded through the REST API (seedComplaint) rather than assumed to already exist from a
+ * are seeded through the REST API (seedComplaintViaApi) rather than assumed to already exist from a
  * prior test run - see this suite's root README's "Tests run in parallel by default" and
  * "The environment never resets" operating principles.
  *
@@ -38,7 +38,7 @@ test.describe('Data Principal viewing complaints (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    await seedComplaint(userComplaintApi, 'OTHER', 'list-columns')
+    await seedComplaintViaApi(userComplaintApi, 'OTHER', 'list-columns')
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)
     await listPage.goto()
@@ -55,7 +55,7 @@ test.describe('Data Principal viewing complaints (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'DATA_BREACH', 'appears-in-list')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'DATA_BREACH', 'appears-in-list')
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)
     await listPage.goto()
@@ -74,7 +74,7 @@ test.describe('Data Principal viewing complaints (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'open-from-list')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'open-from-list')
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)
     await listPage.goto()
@@ -90,7 +90,7 @@ test.describe('Data Principal viewing complaints (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'PURPOSE_VIOLATION', 'detail-fields')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'PURPOSE_VIOLATION', 'detail-fields')
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
     await detailPage.goto(seeded.id)

@@ -18,7 +18,7 @@
 
 import { loginAsConsentAdmin, test, expect } from '../../fixtures/auth.fixtures'
 import { TopicsPage } from '../../pages/TopicsPage'
-import { seedActiveTopic } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi } from '../../utils/eventNotificationSetup'
 
 /**
  * Listing, searching, and filtering Event Notification topics (TopicsPage.tsx/TopicTable.tsx/
@@ -30,7 +30,7 @@ test.describe('Admin viewing and searching Topics', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    await seedActiveTopic(consentAdminEventApi, 'list-visible')
+    await seedActiveTopicViaApi(consentAdminEventApi, 'list-visible')
     const page = await loginAsConsentAdmin(browser)
     try {
       const topicsPage = new TopicsPage(page)
@@ -53,7 +53,7 @@ test.describe('Admin viewing and searching Topics', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'consent-status-changed')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'consent-status-changed')
     const uniqueSuffix = topic.name.split('-').slice(-2).join('-')
 
     const page = await loginAsConsentAdmin(browser)

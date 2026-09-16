@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth.fixtures'
-import { seedActiveTopic, publishMarkedEvent } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceiver'
 
@@ -42,7 +42,7 @@ test.describe('Webhook delivery', () => {
     consentAdminEventApi: import('../../clients/EventNotificationApiClient').EventNotificationApiClient,
     label: string,
   ): Promise<{ receiver: WebhookReceiver; secret: string; topicName: string; subscriptionId: string }> {
-    const topic = await seedActiveTopic(consentAdminEventApi, label)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, label)
     const receiver = new WebhookReceiver()
     const started = await receiver.start()
     const secret = uniqueMarker('secret')
@@ -118,7 +118,7 @@ test.describe('Webhook delivery', () => {
         return { status: postCount < 3 ? 500 : 204 }
       })
 
-      const { event } = await publishMarkedEvent(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
 
       // base_backoff_seconds=5, x3 multiplier - the third attempt lands well within 90s.
       await expect.poll(() => postCount, { timeout: 90_000 }).toBeGreaterThanOrEqual(3)
@@ -167,7 +167,7 @@ test.describe('Webhook delivery', () => {
     )
     try {
       receiver.respondWith((request) => (request.method === 'POST' ? { status: 503 } : { status: 204 }))
-      const { event } = await publishMarkedEvent(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
 
       const delivery = await findDeliveryForEvent(consentAdminEventApi, subscriptionId, event.eventId)
 

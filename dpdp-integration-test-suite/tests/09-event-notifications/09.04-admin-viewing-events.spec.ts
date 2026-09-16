@@ -25,7 +25,7 @@ import { loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import type { SubscriptionDeliveryRecord } from '../../clients/EventNotificationApiClient'
 import { EventsPage } from '../../pages/EventsPage'
 import { EventDetailsPage } from '../../pages/EventDetailsPage'
-import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -33,7 +33,7 @@ import { uniqueMarker } from '../../utils/testData'
  * (EventEndpoint) plus the portal's Events list/detail screens - see
  * AGENTS.md for the "no publish-event UI" and "no `25` rows-per-page"
  * notes this file relies on. Every event published here goes through
- * utils/eventNotificationSetup.ts's publishMarkedEvent, whose unique `marker` in the payload is
+ * utils/eventNotificationSetup.ts's publishMarkedEventViaApi, whose unique `marker` in the payload is
  * what search-based assertions key off, since this environment never resets.
  */
 test.describe('Admin viewing and searching Events', () => {
@@ -41,10 +41,10 @@ test.describe('Admin viewing and searching Events', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'list-render')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, { type: 'all' })
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'list-render')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, { type: 'all' })
     const groupId = subscription.groupId!
-    const { event, marker } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, ['account'])
+    const { event, marker } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, ['account'])
 
     const page = await loginAsConsentAdmin(browser)
     try {
@@ -70,16 +70,16 @@ test.describe('Admin viewing and searching Events', () => {
   })
 
   test('09.04.02 - Search finds an event by a partial payload value', async ({ browser, consentAdminEventApi }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'payload-search')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'payload-search')
     // groupId MUST come from a seeded subscription's own returned groupId, never a caller-chosen
     // value directly (see README's "Bugs found" - EventEndpoint.listEvents hardcodes the caller's
     // orgId as GROUP_ID for every GET /events call, `search` included, regardless of what a
     // caller actually asked for; the endpoint doesn't even declare a groupId query param. An
     // event published under any other group id can never be found via GET /events at all, no
     // matter the search term - confirmed live, not a payload/search-specific bug).
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, { type: 'all' })
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, { type: 'all' })
     const groupId = subscription.groupId!
-    const { event, marker } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name)
+    const { event, marker } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name)
 
     // API-level proof first: `search` matches a payload substring even though the UI's search
     // placeholder only advertises "delivery ID, event ID, or topic" - the backend's EventQueryBuilder
@@ -109,23 +109,23 @@ test.describe('Admin viewing and searching Events', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'details')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'details')
     // Two DISJOINT purpose filters, not two overlapping ones - SubscriptionDAOImpl.addSubscription
     // rejects a new subscription whose purpose set *overlaps* any existing one in the same
     // (org, group, topic, deliveryMode) as EN-4090 "Duplicate subscription" (PurposeOverlapUtils
     // .overlaps - confirmed live: even two SPECIFIC filters that merely share one purpose collide,
     // not just identical ones). Publishing an event whose purposes cover BOTH disjoint sets still
     // reaches both subscriptions, since each only needs to overlap the *event's* purposes.
-    const subA = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const subA = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['account'],
     })
-    const subB = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const subB = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['profile'],
     })
     const groupId = subA.groupId!
-    const { event, marker } = await publishMarkedEvent(
+    const { event, marker } = await publishMarkedEventViaApi(
       consentAdminEventApi,
       groupId,
       topic.name,
@@ -168,8 +168,8 @@ test.describe('Admin viewing and searching Events', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'no-subscribers')
-    const { event } = await publishMarkedEvent(consentAdminEventApi, uniqueMarker('group'), topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'no-subscribers')
+    const { event } = await publishMarkedEventViaApi(consentAdminEventApi, uniqueMarker('group'), topic.name)
 
     const page = await loginAsConsentAdmin(browser)
     try {
@@ -191,8 +191,8 @@ test.describe('Admin viewing and searching Events', () => {
       await expect(detailsPage.loadFailedAlert).toBeVisible()
 
       // A real event id, just one that belongs to a different tenant entirely.
-      const tenantTopic = await seedActiveTopic(tenant.ownerEventApi, 'cross-tenant')
-      const { event: tenantEvent } = await publishMarkedEvent(
+      const tenantTopic = await seedActiveTopicViaApi(tenant.ownerEventApi, 'cross-tenant')
+      const { event: tenantEvent } = await publishMarkedEventViaApi(
         tenant.ownerEventApi,
         uniqueMarker('group'),
         tenantTopic.name,

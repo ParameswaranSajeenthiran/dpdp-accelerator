@@ -23,7 +23,7 @@ import { AppSidebarPage } from '../../pages/AppSidebarPage'
 import { EventsPage } from '../../pages/EventsPage'
 import { SubscriptionsPage } from '../../pages/SubscriptionsPage'
 import { TopicsPage } from '../../pages/TopicsPage'
-import { seedActiveTopic, seedPollSubscription } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi } from '../../utils/eventNotificationSetup'
 
 /**
  * Route/sidebar gating (AuthorizedRoute + AppSidebar.tsx, both keyed on
@@ -67,8 +67,8 @@ test.describe('Event Notification authorization and access control', () => {
 
     // A details route too - subscription details, seeded via a poll subscription so no webhook
     // receiver is needed just to prove the route itself is reachable.
-    const topic = await seedActiveTopic(consentAdminEventApi, '09-01-01-topic')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, '09-01-01-topic')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
     await adminPage.goto(`events/subscriptions/${subscription.subscriptionId}`)
     await expect(adminPage).toHaveURL(new RegExp(`/events/subscriptions/${subscription.subscriptionId}$`))
 

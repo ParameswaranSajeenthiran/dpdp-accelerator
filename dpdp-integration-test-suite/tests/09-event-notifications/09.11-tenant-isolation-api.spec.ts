@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/tenant.fixtures'
-import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 const SYSTEM_TOPICS = ['consent.update', 'consent.revoke', 'consent.expire', 'user.data.change', 'user.account.delete']
@@ -62,9 +62,9 @@ test.describe('Event Notification tenant isolation', () => {
     tenant,
     tenantB,
   }) => {
-    const topicB = await seedActiveTopic(tenantB.ownerEventApi, '09-02-02-topic')
-    const subscriptionB = await seedPollSubscription(tenantB.ownerEventApi, topicB.name)
-    const { event: eventB } = await publishMarkedEvent(tenantB.ownerEventApi, tenantB.domain, topicB.name)
+    const topicB = await seedActiveTopicViaApi(tenantB.ownerEventApi, '09-02-02-topic')
+    const subscriptionB = await seedPollSubscriptionViaApi(tenantB.ownerEventApi, topicB.name)
+    const { event: eventB } = await publishMarkedEventViaApi(tenantB.ownerEventApi, tenantB.domain, topicB.name)
 
     // Tenant A's own token, tenant B's resource ids - every operation must behave exactly like
     // an unknown id, never exposing that the id belongs to someone else.
@@ -102,8 +102,8 @@ test.describe('Event Notification tenant isolation', () => {
       expect(systemTopic?.initiatedBy?.toLowerCase()).toBe('system')
     }
 
-    const topic = await seedActiveTopic(tenant.ownerEventApi, '09-02-04-user-topic')
-    const subscription = await seedPollSubscription(tenant.ownerEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(tenant.ownerEventApi, '09-02-04-user-topic')
+    const subscription = await seedPollSubscriptionViaApi(tenant.ownerEventApi, topic.name)
     expect(subscription.status).toBe('active')
   })
 })

@@ -17,7 +17,7 @@
  */
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
-import { publishMarkedEvent, seedActiveTopic, seedPollSubscription } from '../../utils/eventNotificationSetup'
+import { publishMarkedEventViaApi, seedActiveTopicViaApi, seedPollSubscriptionViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 import { SubscriptionsPage } from '../../pages/SubscriptionsPage'
 import { SubscriptionDetailsPage } from '../../pages/SubscriptionDetailsPage'
@@ -33,8 +33,8 @@ test.describe('Admin viewing Subscriptions', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-view')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-view')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
 
     const page = await loginAsConsentAdmin(browser)
     try {
@@ -65,13 +65,13 @@ test.describe('Admin viewing Subscriptions', () => {
     // Two DIFFERENT topics, not two groups on one topic: confirmed live that the mixed-webhook/
     // poll conflict and the duplicate-subscription check are both scoped to (org, topic) only -
     // every subscription's groupId is silently forced to the org's own id regardless of what a
-    // caller sends (see eventNotificationSetup.ts's seedPollSubscription comment for the
+    // caller sends (see eventNotificationSetup.ts's seedPollSubscriptionViaApi comment for the
     // underlying bug), so two subscriptions on the same topic are always "the same group" no
     // matter what groupId either one requested.
-    const pollTopic = await seedActiveTopic(consentAdminEventApi, 'sub-filter-poll')
-    const pollSub = await seedPollSubscription(consentAdminEventApi, pollTopic.name)
+    const pollTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-filter-poll')
+    const pollSub = await seedPollSubscriptionViaApi(consentAdminEventApi, pollTopic.name)
 
-    const webhookTopic = await seedActiveTopic(consentAdminEventApi, 'sub-filter-webhook')
+    const webhookTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-filter-webhook')
     // A webhook subscription always starts `pending` regardless of callback reachability
     // (SubscriptionServiceImpl.createSubscription sets initialStatus before the verification
     // task is even scheduled) - a real, resolvable, non-private host is enough to pass
@@ -128,8 +128,8 @@ test.describe('Admin viewing Subscriptions', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-search')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-search')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
 
     const page = await loginAsConsentAdmin(browser)
     try {
@@ -155,11 +155,11 @@ test.describe('Admin viewing Subscriptions', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-details')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-details')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
     // subscription.groupId is server-forced to the org id (see eventNotificationSetup.ts) -
     // publish using that exact value, not a value chosen here, to get a matching delivery.
-    const { event } = await publishMarkedEvent(consentAdminEventApi, subscription.groupId!, topic.name)
+    const { event } = await publishMarkedEventViaApi(consentAdminEventApi, subscription.groupId!, topic.name)
 
     // Confirm the delivery actually landed before asserting on it through the UI - the API is the
     // ground truth this page's rendering is checked against.

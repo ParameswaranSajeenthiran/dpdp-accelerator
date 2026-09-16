@@ -22,7 +22,7 @@ import { ComplaintDetailPage } from '../../pages/ComplaintDetailPage'
 import { ComplaintListPage } from '../../pages/ComplaintListPage'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
 import { ComplaintSubmitDialog } from '../../pages/ComplaintSubmitDialog'
-import { seedComplaint } from '../../utils/complaintSetup'
+import { seedComplaintViaApi } from '../../utils/complaintSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -131,7 +131,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     // the default 30s timeout is nowhere near enough once that compounds over five rounds.
     test.setTimeout(180_000)
 
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'thread-roundtrip')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'thread-roundtrip')
     const dataPrincipalPage = await loginAsUser(browser)
     const officerPage = await loginAsConsentAdmin(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)

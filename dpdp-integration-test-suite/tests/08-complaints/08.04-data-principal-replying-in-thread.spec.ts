@@ -18,7 +18,7 @@
 
 import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ComplaintDetailPage } from '../../pages/ComplaintDetailPage'
-import { moveComplaintToStatus, seedComplaint } from '../../utils/complaintSetup'
+import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -42,8 +42,8 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     // Seeded straight into AWAITING_INTERNAL_REVIEW so this reply carries no implicit status
     // transition (see the file header comment) - isolates "does the message show up" from any
     // status-transition side effect, covered separately below.
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-basic')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-basic')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
@@ -60,8 +60,8 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-clears')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-clears')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
@@ -76,7 +76,7 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'no-internal-toggle')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'no-internal-toggle')
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
     await detailPage.goto(seeded.id)
@@ -95,7 +95,7 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     // OPEN isn't WAITING_ON_CLIENT, so ComplaintDetailPage.tsx's onSend attaches no toStatus at
     // all here (see the file header comment) - the officer hasn't asked the citizen for anything,
     // so an unprompted reply shouldn't move the complaint into internal review on its own.
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-from-open')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-from-open')
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
     await detailPage.goto(seeded.id)
@@ -112,8 +112,8 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-from-waiting-on-client')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'WAITING_ON_CLIENT')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-from-waiting-on-client')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'WAITING_ON_CLIENT')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
@@ -132,8 +132,8 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
   }) => {
     // Same "no toStatus unless WAITING_ON_CLIENT" rule as 08.04.04 - IN_PROGRESS is not
     // WAITING_ON_CLIENT, so this reply carries no implicit transition either.
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-from-in-progress')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'IN_PROGRESS')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-from-in-progress')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
@@ -161,8 +161,8 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-attachment')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-attachment')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'AWAITING_INTERNAL_REVIEW')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
@@ -189,11 +189,11 @@ test.describe('Data Principal replying in a complaint thread (UI)', () => {
     // RESOLVED is the one status an officer cannot manually transition out of
     // (StatusTransitionValidator.java allows only RESOLVED -> AWAITING_INTERNAL_REVIEW), so a
     // reply here is the sole way a closed complaint reopens. OPEN -> RESOLVED is not a direct
-    // transition either, hence the explicit IN_PROGRESS hop that moveComplaintToStatus only
+    // transition either, hence the explicit IN_PROGRESS hop that moveComplaintToStatusViaApi only
     // automates for AWAITING_INTERNAL_REVIEW.
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'reply-from-resolved')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'IN_PROGRESS')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'RESOLVED')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'reply-from-resolved')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'RESOLVED')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)

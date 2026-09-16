@@ -20,7 +20,7 @@ import { loginAsConsentAdmin, test, expect } from '../../fixtures/auth.fixtures'
 import { TopicDeleteDialog } from '../../pages/TopicDeleteDialog'
 import { TopicRegisterDialog } from '../../pages/TopicRegisterDialog'
 import { TopicsPage } from '../../pages/TopicsPage'
-import { seedActiveTopic } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -93,7 +93,7 @@ test.describe('Admin managing Topics', () => {
     }) => {
       const page = await loginAsConsentAdmin(browser)
       try {
-        const existing = await seedActiveTopic(consentAdminEventApi, 'case-collide')
+        const existing = await seedActiveTopicViaApi(consentAdminEventApi, 'case-collide')
 
         const topicsPage = new TopicsPage(page)
         await topicsPage.goto()
@@ -146,7 +146,7 @@ test.describe('Admin managing Topics', () => {
       browser,
       consentAdminEventApi,
     }) => {
-      const topic = await seedActiveTopic(consentAdminEventApi, 'deregister-me')
+      const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'deregister-me')
       const page = await loginAsConsentAdmin(browser)
       try {
         const topicsPage = new TopicsPage(page)

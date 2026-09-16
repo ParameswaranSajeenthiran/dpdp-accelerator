@@ -18,7 +18,7 @@
 
 import { test, expect } from '../../fixtures/auth.fixtures'
 import type { SubscriptionDeliveryRecord } from '../../clients/EventNotificationApiClient'
-import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 
 /**
  * Query and scoping rules on the event/delivery read endpoints (EventEndpoint): the
@@ -35,19 +35,19 @@ test.describe('Event query and delivery scoping', () => {
   test('09.09.01 - The subscriptionId filter returns only events delivered to that subscription', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'subscription-filter')
-    const subA = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'subscription-filter')
+    const subA = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['account'],
     })
-    const subB = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const subB = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['marketing'],
     })
     const groupId = subA.groupId!
 
-    const { event: accountEvent } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, ['account'])
-    const { event: marketingEvent } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, [
+    const { event: accountEvent } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, ['account'])
+    const { event: marketingEvent } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, [
       'marketing',
     ])
 
@@ -71,19 +71,19 @@ test.describe('Event query and delivery scoping', () => {
   test("09.09.02 - A delivery id belonging to another subscription can't be read through the wrong subscription path", async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'wrong-subscription-path')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'wrong-subscription-path')
     // Disjoint SPECIFIC filters, not overlapping ones - see 09.04.03's comment on why two
     // subscriptions with overlapping purpose sets on the same topic 409 as duplicates.
-    const subA = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const subA = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['account'],
     })
-    const subB = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const subB = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['other'],
     })
     const groupId = subA.groupId!
-    const { event } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, ['account', 'other'])
+    const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, ['account', 'other'])
 
     const deliveriesForB = (
       (await (await consentAdminEventApi.listSubscriptionEvents(subB.subscriptionId)).json()) as {

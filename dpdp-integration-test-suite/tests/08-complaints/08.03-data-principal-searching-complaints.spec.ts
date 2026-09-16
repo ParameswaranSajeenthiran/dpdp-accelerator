@@ -18,7 +18,7 @@
 
 import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ComplaintListPage } from '../../pages/ComplaintListPage'
-import { moveComplaintToStatus, seedComplaint } from '../../utils/complaintSetup'
+import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 
 /**
  * Narrowing a Data Principal's own complaint list - ComplaintListPage.tsx only offers a status
@@ -34,9 +34,9 @@ test.describe('Data Principal searching/filtering complaints (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const openComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-open')
-    const inProgressComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-in-progress')
-    await moveComplaintToStatus(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
+    const openComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-open')
+    const inProgressComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-in-progress')
+    await moveComplaintToStatusViaApi(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)
@@ -54,9 +54,9 @@ test.describe('Data Principal searching/filtering complaints (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const openComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-open-2')
-    const inProgressComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-in-progress-2')
-    await moveComplaintToStatus(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
+    const openComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-open-2')
+    const inProgressComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-in-progress-2')
+    await moveComplaintToStatusViaApi(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)
@@ -74,9 +74,9 @@ test.describe('Data Principal searching/filtering complaints (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const openComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-clear-open')
-    const inProgressComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'filter-clear-in-progress')
-    await moveComplaintToStatus(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
+    const openComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-clear-open')
+    const inProgressComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'filter-clear-in-progress')
+    await moveComplaintToStatusViaApi(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
 
     const dataPrincipalPage = await loginAsUser(browser)
     const listPage = new ComplaintListPage(dataPrincipalPage)

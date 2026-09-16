@@ -19,7 +19,7 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ComplaintCaseDetailPage } from '../../pages/ComplaintCaseDetailPage'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
-import { moveComplaintToStatus, seedComplaint } from '../../utils/complaintSetup'
+import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 
 /**
  * A Complaint Officer viewing the org-wide queue and one case's detail -
@@ -32,7 +32,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    await seedComplaint(userComplaintApi, 'OTHER', 'queue-columns')
+    await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-columns')
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
@@ -50,9 +50,9 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'resolved-hidden')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'IN_PROGRESS')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'resolved-hidden')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
 
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
@@ -73,7 +73,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'queue-open-case')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-open-case')
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()

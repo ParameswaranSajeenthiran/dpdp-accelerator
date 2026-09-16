@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth.fixtures'
-import { publishMarkedEvent, seedActiveTopic, seedPollSubscription } from '../../utils/eventNotificationSetup'
+import { publishMarkedEventViaApi, seedActiveTopicViaApi, seedPollSubscriptionViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -36,7 +36,7 @@ test.describe('Subscription lifecycle rules', () => {
   test('09.07.01 - An overlapping subscription with equivalent purposes and callback URL is rejected', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'duplicate-check')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'duplicate-check')
     const callbackUrl = `https://Example.com/${uniqueMarker('hook')}`
     const first = await consentAdminEventApi.createSubscription({
       topic: topic.name,
@@ -58,7 +58,7 @@ test.describe('Subscription lifecycle rules', () => {
   test('09.07.02 - The same tenant/group/topic cannot mix webhook and poll delivery modes', async ({
     consentAdminEventApi,
   }) => {
-    const topicA = await seedActiveTopic(consentAdminEventApi, 'mixed-mode-a')
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'mixed-mode-a')
     const groupA = uniqueMarker('group')
     const webhookFirst = await consentAdminEventApi.createSubscription({
       topic: topicA.name,
@@ -75,7 +75,7 @@ test.describe('Subscription lifecycle rules', () => {
     })
     expect(pollConflict.status()).toBe(409)
 
-    const topicB = await seedActiveTopic(consentAdminEventApi, 'mixed-mode-b')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'mixed-mode-b')
     const groupB = uniqueMarker('group')
     const pollFirst = await consentAdminEventApi.createSubscription({
       topic: topicB.name,
@@ -98,15 +98,15 @@ test.describe('Subscription lifecycle rules', () => {
     // Two separate topics, not one shared topic: every subscription's groupId is currently
     // forced to the org's own id server-side (see eventNotificationSetup.ts), so two
     // same-filter poll subscriptions on the very same topic would collide as duplicates.
-    const activeTopic = await seedActiveTopic(consentAdminEventApi, 'sub-reverify-invalid-active')
-    const activeSub = await seedPollSubscription(consentAdminEventApi, activeTopic.name)
+    const activeTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-reverify-invalid-active')
+    const activeSub = await seedPollSubscriptionViaApi(consentAdminEventApi, activeTopic.name)
 
     const activeVerify = await consentAdminEventApi.verifySubscription(activeSub.subscriptionId)
     expect(activeVerify.status()).toBe(409)
     expect((await activeVerify.json()).code).toBe('EN-4003')
 
-    const deletedTopic = await seedActiveTopic(consentAdminEventApi, 'sub-reverify-invalid-deleted')
-    const toDelete = await seedPollSubscription(consentAdminEventApi, deletedTopic.name)
+    const deletedTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-reverify-invalid-deleted')
+    const toDelete = await seedPollSubscriptionViaApi(consentAdminEventApi, deletedTopic.name)
     const deleteResponse = await consentAdminEventApi.deleteSubscription(toDelete.subscriptionId)
     expect(deleteResponse.status()).toBe(200)
 
@@ -117,10 +117,10 @@ test.describe('Subscription lifecycle rules', () => {
   test('09.07.04 - Deleting a subscription soft-deletes it while preserving its record', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-delete')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-delete')
     // No deliveries at all - deleting is allowed with either completed or no deliveries, and no
     // deliveries is the simplest of the two to seed reliably.
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
 
     const deleteResponse = await consentAdminEventApi.deleteSubscription(subscription.subscriptionId)
     expect(deleteResponse.status(), await deleteResponse.text()).toBe(200)
@@ -141,11 +141,11 @@ test.describe('Subscription lifecycle rules', () => {
     // endpoint (confirmed: SubscriptionServiceImpl.deleteSubscription checks
     // subscriptionDAO.hasPendingOrInFlightDeliveries) - the reliable, receiver-free way to get a
     // delivery stuck `pending` for this test.
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-delete-blocked')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-delete-blocked')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
     // subscription.groupId is server-forced to the org id (see eventNotificationSetup.ts) -
     // publish using that exact value to get a matching delivery.
-    await publishMarkedEvent(consentAdminEventApi, subscription.groupId!, topic.name)
+    await publishMarkedEventViaApi(consentAdminEventApi, subscription.groupId!, topic.name)
 
     await expect(async () => {
       const eventsResponse = await consentAdminEventApi.listSubscriptionEvents(subscription.subscriptionId)
@@ -163,8 +163,8 @@ test.describe('Subscription lifecycle rules', () => {
   })
 
   test('09.07.06 - Deleting an already-deleted subscription returns not found', async ({ consentAdminEventApi }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'sub-delete-twice')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name)
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-delete-twice')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name)
 
     const firstDelete = await consentAdminEventApi.deleteSubscription(subscription.subscriptionId)
     expect(firstDelete.status()).toBe(200)

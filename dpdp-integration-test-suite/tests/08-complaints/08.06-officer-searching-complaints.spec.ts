@@ -18,7 +18,7 @@
 
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
-import { moveComplaintToStatus, seedComplaint } from '../../utils/complaintSetup'
+import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 
 /**
  * Narrowing the officer's org-wide queue - ComplaintQueueFilters.tsx offers a status filter, a
@@ -36,9 +36,9 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const openComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'queue-filter-open')
-    const inProgressComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'queue-filter-in-progress')
-    await moveComplaintToStatus(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
+    const openComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-open')
+    const inProgressComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-in-progress')
+    await moveComplaintToStatusViaApi(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
 
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
@@ -55,8 +55,8 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const criticalComplaint = await seedComplaint(userComplaintApi, 'DATA_BREACH', 'queue-filter-critical')
-    const lowComplaint = await seedComplaint(userComplaintApi, 'OTHER', 'queue-filter-low')
+    const criticalComplaint = await seedComplaintViaApi(userComplaintApi, 'DATA_BREACH', 'queue-filter-critical')
+    const lowComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-low')
 
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
@@ -74,9 +74,9 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     userComplaintApi,
     officerComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'queue-filter-resolved')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'IN_PROGRESS')
-    await moveComplaintToStatus(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-resolved')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
+    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
 
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
@@ -96,7 +96,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'queue-search-reference')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-search-reference')
     const officerPage = await loginAsConsentAdmin(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
@@ -114,7 +114,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     browser,
     userComplaintApi,
   }) => {
-    const seeded = await seedComplaint(userComplaintApi, 'OTHER', 'queue-search-name')
+    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-search-name')
     const record = await (await userComplaintApi.getMyComplaint(seeded.id)).json()
     const dataPrincipalName = (record.userName as string | null) ?? (record.userId as string)
 

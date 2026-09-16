@@ -18,7 +18,7 @@
 
 import { test, expect } from '../../fixtures/auth.fixtures'
 import type { SubscriptionDeliveryRecord } from '../../clients/EventNotificationApiClient'
-import { seedActiveTopic, seedPollSubscription, publishMarkedEvent } from '../../utils/eventNotificationSetup'
+import { seedActiveTopicViaApi, seedPollSubscriptionViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 
 /**
@@ -26,12 +26,12 @@ import { uniqueMarker } from '../../utils/testData'
  * real API calls against a real deployment, no UI (there is no publish-event screen anywhere in
  * the portal, see AGENTS.md).
  *
- * Every subscription here is POLL-mode (see utils/eventNotificationSetup.ts's seedPollSubscription):
+ * Every subscription here is POLL-mode (see utils/eventNotificationSetup.ts's seedPollSubscriptionViaApi):
  * fan-out matching itself has nothing to do with delivery transport, and POLL needs no callback
  * URL/webhook receiver at all. Fan-out is matched by exact SQL equality on
  * `(ORG_ID, GROUP_ID, TOPIC_ID)` (EventNotificationCommonDBQueries) - `SubscriptionHandler
  * .createSubscription` silently ignores whatever `groupId` a caller sends and always forces it to
- * the org id (see seedPollSubscription's own comment for the full story), so every test below
+ * the org id (see seedPollSubscriptionViaApi's own comment for the full story), so every test below
  * reads the subscription's *returned* `groupId` back and publishes with that exact value, rather
  * than inventing its own.
  */
@@ -39,11 +39,11 @@ test.describe('Publisher publishing events', () => {
   test('09.08.01 - Publishing an event creates matching delivery records atomically', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'atomic')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, { type: 'all' })
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'atomic')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, { type: 'all' })
     const groupId = subscription.groupId!
 
-    const { event, marker } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, [
+    const { event, marker } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, [
       'account-management',
     ])
     expect(typeof event.eventId).toBe('string')
@@ -71,7 +71,7 @@ test.describe('Publisher publishing events', () => {
   })
 
   test('09.08.02 - Publishing without a group-id header is rejected', async ({ consentAdminEventApi }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'no-group-id')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'no-group-id')
     // An empty header value hits the exact same `groupId == null || groupId.trim().isEmpty()`
     // check the server uses for a genuinely absent header (EventPublishServiceImpl#publishEvent).
     const response = await consentAdminEventApi.publishEvent('', { topic: topic.name, payload: { ok: true } })
@@ -90,7 +90,7 @@ test.describe('Publisher publishing events', () => {
     expect(unknownResponse.status()).toBe(404)
     expect((await unknownResponse.json()).code).toBe('EN-4041')
 
-    const topic = await seedActiveTopic(consentAdminEventApi, 'to-deregister')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'to-deregister')
     const deregisterResponse = await consentAdminEventApi.deleteTopic(topic.topicId)
     expect(deregisterResponse.status()).toBe(200)
 
@@ -105,7 +105,7 @@ test.describe('Publisher publishing events', () => {
   test('09.08.04 - A null or missing payload is rejected rather than treated as an empty object', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'null-payload')
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'null-payload')
     const groupId = uniqueMarker('group')
 
     const nullPayloadResponse = await consentAdminEventApi.publishEvent(groupId, {
@@ -125,12 +125,12 @@ test.describe('Publisher publishing events', () => {
   test('09.08.05 - An ALL-filter subscription receives every event regardless of purposes', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'all-filter')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, { type: 'all' })
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'all-filter')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, { type: 'all' })
     const groupId = subscription.groupId!
 
     for (const purposes of [[], ['account'], ['account', 'profile']]) {
-      const { event } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, purposes)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, purposes)
       const deliveriesResponse = await consentAdminEventApi.getEventDeliveries(event.eventId)
       const { items: deliveries } = (await deliveriesResponse.json()) as { items: SubscriptionDeliveryRecord[] }
       const matching = deliveries.filter((delivery) => delivery.subscriptionId === subscription.subscriptionId)
@@ -141,14 +141,14 @@ test.describe('Publisher publishing events', () => {
   test('09.08.06 - SPECIFIC purpose matching is case-insensitive and requires overlap', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'specific-filter')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'specific-filter')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'specific',
       purposes: ['Account-Management'],
     })
     const groupId = subscription.groupId!
 
-    const { event: overlapping } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, [
+    const { event: overlapping } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, [
       'account-management',
       'marketing',
     ])
@@ -161,7 +161,7 @@ test.describe('Publisher publishing events', () => {
       true,
     )
 
-    const { event: unrelated } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, ['marketing'])
+    const { event: unrelated } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, ['marketing'])
     const unrelatedDeliveries = (
       (await (await consentAdminEventApi.getEventDeliveries(unrelated.eventId)).json()) as {
         items: SubscriptionDeliveryRecord[]
@@ -175,14 +175,14 @@ test.describe('Publisher publishing events', () => {
   test('09.08.07 - ALL_EXCEPT matches only when the event carries a purpose outside the exclusion set', async ({
     consentAdminEventApi,
   }) => {
-    const topic = await seedActiveTopic(consentAdminEventApi, 'all-except-filter')
-    const subscription = await seedPollSubscription(consentAdminEventApi, topic.name, {
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'all-except-filter')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {
       type: 'all_except',
       purposes: ['marketing'],
     })
     const groupId = subscription.groupId!
 
-    const { event: excludedOnly } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, [
+    const { event: excludedOnly } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, [
       'marketing',
     ])
     const excludedOnlyDeliveries = (
@@ -194,7 +194,7 @@ test.describe('Publisher publishing events', () => {
       false,
     )
 
-    const { event: mixed } = await publishMarkedEvent(consentAdminEventApi, groupId, topic.name, [
+    const { event: mixed } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name, [
       'marketing',
       'account-management',
     ])
