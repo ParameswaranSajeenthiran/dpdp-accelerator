@@ -45,6 +45,13 @@ Identity Server from scratch and runs Playwright against it only once a maintain
 secrets in scope. `pr-e2e-gate.yml` strips that label on every new push and publishes the
 `E2E (label-gated)` commit status, so the label can never carry over to unreviewed code.
 
+`pr-e2e.yml` runs only the `multi-tenant` Playwright project - `super-tenant`'s own coverage
+(unqualified-root routing, the tenant-provisioning-skip path) isn't exercised on every PR. Instead
+`nightly-e2e.yml` runs every project (`e2e.yml`'s own default when its `projects` input is empty)
+against the default branch nightly, so a super-tenant-only regression surfaces within a day rather
+than going unnoticed until the Saturday weekly jobs or a release gate. `release-builder.yml`
+likewise passes no `projects` override, so a release is still gated on every project.
+
 The Identity Server under test comes from the `updates2.0` S3 bucket (`IS_PACK_S3_URI`) with U2
 updates applied. The published GitHub release zip is *not* U2-updatable — don't reintroduce that
 path. `e2e.yml` still accepts `is_source: master`, which `weekly-e2e-is-master.yml` runs on a

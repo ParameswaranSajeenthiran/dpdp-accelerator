@@ -1,0 +1,45 @@
+# Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+#
+# WSO2 LLC. licenses this file to you under the Apache License,
+# Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# pr-e2e.yml runs only the `multi-tenant` project to keep the label-gated PR path fast -
+# `super-tenant`'s own coverage (unqualified-root routing via basePath.ts, the
+# tenant-provisioning-skip path) would otherwise go untested between the Saturday weekly runs.
+# This exercises every project every night instead, against the same S3 pack + U2 updates a
+# real install gets, so a super-tenant-only regression surfaces within a day, not a week.
+name: '[Nightly] Test every E2E project'
+
+on:
+  schedule:
+    # Off-hours in IST and PST, distinct from the Saturday weekly slot so it does not compete
+    # with those jobs for runners.
+    - cron: '15 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-e2e
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    # No `ref`: a scheduled run checks out the default branch, which is what we want tested.
+    # No `projects`: e2e.yml's own default is every project.
+    uses: ./.github/workflows/e2e.yml
+    with:
+      is_source: s3
+    secrets: inherit

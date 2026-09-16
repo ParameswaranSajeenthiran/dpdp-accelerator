@@ -76,6 +76,10 @@ jobs:
       expected_head_sha: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || '' }}
       is_source: ${{ github.event_name == 'workflow_dispatch' && inputs.is_source || 's3' }}
       allow_unsafe_pr_checkout: ${{ github.event_name == 'pull_request_target' }}
+      # super-tenant's own coverage (unqualified-root routing, tenant-provisioning skip) runs
+      # nightly instead (nightly-e2e.yml) - keeping the label-gated PR path to one profile is
+      # most of what made it faster, see the projects input's own description in e2e.yml.
+      projects: multi-tenant
     secrets: inherit
 
   # Flips the "E2E (label-gated)" status pr-e2e-gate.yml set to pending, on the head SHA the
