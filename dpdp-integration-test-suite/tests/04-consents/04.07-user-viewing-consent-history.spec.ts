@@ -118,7 +118,7 @@ test.describe('User viewing Consent History (UI)', () => {
     await detailPage.openActionDialog('reject')
     await detailPage.confirmAction('reject')
     // .first(): the metadata card's state chip and the authorizations table's own state chip
-    // both render the literal state text (see 04.01.02's identical comment).
+    // both render the literal state text (see 04.03.02's identical comment).
     await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
 
     await detailPage.goto(consentId)
@@ -253,7 +253,7 @@ test.describe('User viewing Consent History (UI)', () => {
     const childPage = await loginAsUser(browser)
     const detailPage = new ConsentDetailPage(childPage, 'self')
     await detailPage.goto(consentId)
-    // The page's own metadata card renders the subject as plain text (see 04.02.01) - confirms
+    // The page's own metadata card renders the subject as plain text (see 04.01.01) - confirms
     // the child, not the parent, is who this consent is about.
     await expect(childPage.getByText(target.personas.user.username)).toBeVisible()
     await expect(detailPage.lifecycleRow('Approved', parent.username)).toBeVisible()

@@ -25,12 +25,12 @@ import { seedConsentViaApi } from '../../utils/consentSetup'
  * The admin registry (/administration/consents) only ever offers Revoke, never Approve/Reject -
  * ConsentRegistryTable.tsx's `canApprove` prop is never passed on this page and
  * ConsentDetailsPage.tsx only computes canApprove/canReject when `variant === 'self'` - so
- * several tests below assert that invariant directly rather than assuming it. Only Consent
- * creation goes through the admin API (see utils/consentSetup.ts); the Element and Purpose it
- * needs are created through the real admin UI forms first, on this same consentAdminPage.
+ * several tests below assert that invariant directly rather than assuming it. Element, Purpose,
+ * and Consent are all seeded via the admin API (see utils/consentSetup.ts) - none of these tests
+ * are exercising the create-Element/create-Purpose forms.
  */
 test.describe('Admin acting on Consents (UI)', () => {
-  test('04.04.01 - Admin can revoke an Active consent from the list', async ({
+  test('04.06.01 - Admin can revoke an Active consent from the list', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -52,7 +52,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.04.02 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
+  test('04.06.02 - The admin detail page shows Revoke but never Approve or Reject for an Active consent', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -72,7 +72,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.04.03 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
+  test('04.06.03 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -94,7 +94,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.04.04 - The admin detail page offers no action at all for a Pending consent', async ({
+  test('04.06.04 - The admin detail page offers no action at all for a Pending consent', async ({
     browser,
     target,
     consentAdminConsentApi,

@@ -24,10 +24,10 @@ import { randomServiceId } from '../../utils/testData'
 /**
  * The self-service registry's state filter and service search: narrowing, Clear, exact-match
  * semantics, and the no-match empty state. See
- * tests/04-consents/04.01-user-acting-on-consents.spec.ts for approve/reject/revoke.
+ * tests/04-consents/04.03-user-acting-on-consents.spec.ts for approve/reject/revoke.
  */
 test.describe('User searching Consents (UI)', () => {
-  test('04.03.01 - The state filter narrows the list to only the selected state', async ({
+  test('04.02.01 - The state filter narrows the list to only the selected state', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -70,7 +70,7 @@ test.describe('User searching Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.03.02 - Searching by the exact service id finds the matching consent', async ({
+  test('04.02.02 - Searching by the exact service id finds the matching consent', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -91,7 +91,7 @@ test.describe('User searching Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.03.03 - A service filter matching nothing shows the empty-results message', async ({
+  test('04.02.03 - A service filter matching nothing shows the empty-results message', async ({
     browser,
   }) => {
     const userPage = await loginAsUser(browser)
@@ -102,7 +102,7 @@ test.describe('User searching Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.03.04 - A service search for only a partial match finds nothing', async ({
+  test('04.02.04 - A service search for only a partial match finds nothing', async ({
     browser,
     target,
     consentAdminConsentApi,

@@ -32,10 +32,10 @@ import { seedConsentViaApi } from '../../utils/consentSetup'
  * A user's own consent detail page at /consents/:id: what it renders, the load-failed
  * path for an unknown id, and that a different user can't reach someone else's
  * consent by guessing its id. Also the registry list's own pagination cap - see
- * tests/04-consents/04.01-user-acting-on-consents.spec.ts for approve/reject/revoke.
+ * tests/04-consents/04.03-user-acting-on-consents.spec.ts for approve/reject/revoke.
  */
 test.describe('User viewing Consents (UI)', () => {
-  test('04.02.01 - The detail page renders subject, service, and purpose/element structure', async ({
+  test('04.01.01 - The detail page renders subject, service, and purpose/element structure', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -58,7 +58,7 @@ test.describe('User viewing Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.02.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
+  test('04.01.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
     browser,
   }) => {
     const userPage = await loginAsUser(browser)
@@ -70,7 +70,7 @@ test.describe('User viewing Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test("04.02.03 - A different user cannot open another user's consent by its URL", async ({
+  test("04.01.03 - A different user cannot open another user's consent by its URL", async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -100,7 +100,7 @@ test.describe('User viewing Consents (UI)', () => {
     await otherPage.context().close()
   })
 
-  test('04.02.04 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
+  test('04.01.04 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -123,7 +123,7 @@ test.describe('User viewing Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.02.05 - A rejected consent shows Rejected and no further action on a fresh detail-page load', async ({
+  test('04.01.05 - A rejected consent shows Rejected and no further action on a fresh detail-page load', async ({
     browser,
     target,
     consentAdminConsentApi,

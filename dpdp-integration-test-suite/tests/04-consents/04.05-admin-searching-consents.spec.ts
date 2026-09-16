@@ -29,7 +29,7 @@ import { randomServiceId } from '../../utils/testData'
  * results".
  */
 test.describe('Admin searching Consents (UI)', () => {
-  test('04.06.01 - Filtering by the exact consent id shows only that consent and disables the state filter', async ({
+  test('04.05.01 - Filtering by the exact consent id shows only that consent and disables the state filter', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -56,7 +56,7 @@ test.describe('Admin searching Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.06.02 - The advanced subject and service filters narrow the list', async ({
+  test('04.05.02 - The advanced subject and service filters narrow the list', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -83,7 +83,7 @@ test.describe('Admin searching Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.06.03 - Combining the state filter with the advanced subject/service filters narrows the list further', async ({
+  test('04.05.03 - Combining the state filter with the advanced subject/service filters narrows the list further', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -119,7 +119,7 @@ test.describe('Admin searching Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.06.04 - Searching by a non-existent consent id shows the load-failed message, not the empty-results one', async ({
+  test('04.05.04 - Searching by a non-existent consent id shows the load-failed message, not the empty-results one', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -137,7 +137,7 @@ test.describe('Admin searching Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.06.05 - A subject/service filter matching nothing shows the empty-results message', async ({
+  test('04.05.05 - A subject/service filter matching nothing shows the empty-results message', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -153,7 +153,7 @@ test.describe('Admin searching Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test("04.06.06 - The Relation filter distinguishes a consent's subject from its authorizer", async ({
+  test("04.05.06 - The Relation filter distinguishes a consent's subject from its authorizer", async ({
     browser,
     target,
     consentAdminConsentApi,

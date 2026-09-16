@@ -12,14 +12,14 @@ in CI was actually checking.
 |---|---|
 | **Tests** | 176 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
-| **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
+| **Skipped when unconfigured** | `04.01.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
 ## Finding a test from a failure
 
-IDs are derived from location — `<area>.<file>.<test>` — so a failing `04.06.04` is the fourth
-test in `tests/04-consents/04.06-*.spec.ts`. Playwright also prints `file:line` in every report
+IDs are derived from location — `<area>.<file>.<test>` — so a failing `04.05.04` is the fourth
+test in `tests/04-consents/04.05-*.spec.ts`. Playwright also prints `file:line` in every report
 line, which is more precise still.
 
 ```sh
@@ -176,62 +176,62 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 
 **37 tests, 9 spec files.**
 
-### `04.01-user-acting-on-consents.spec.ts`
+### `04.01-user-viewing-consents.spec.ts`
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.01.01` | Approving a Pending consent from the list moves it to Active |  |
-| `04.01.02` | Rejecting a Pending consent from its detail page moves it to Rejected |  |
-| `04.01.03` | Revoking an Active consent from the list moves it to Revoked and removes the revoke action | Row reads Revoked **and** the Revoke button is gone from that row. |
-| `04.01.04` | Approving from the detail page works the same way as from the list |  |
-| `04.01.05` | A Rejected consent can be approved again, but offers no reject or revoke | Rejection is not terminal: `isApprovableByCurrentUser()` covers PENDING and REJECTED, so a principal may change their mind. Reject and Revoke are not offered. |
+| `04.01.01` | The detail page renders subject, service, and purpose/element structure | Subject, service id, "Not applicable", and the element row under its expanded purpose. |
+| `04.01.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
+| `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation. Skips unless `personas.user2` is configured. |
+| `04.01.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
+| `04.01.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
 
-### `04.02-user-viewing-consents.spec.ts`
-
-| ID | Scenario | Notes |
-| --- | --- | --- |
-| `04.02.01` | The detail page renders subject, service, and purpose/element structure | Subject, service id, "Not applicable", and the element row under its expanded purpose. |
-| `04.02.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
-| `04.02.03` | A different user cannot open another user's consent by its URL | Ownership isolation. Skips unless `personas.user2` is configured. |
-| `04.02.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
-| `04.02.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
-
-### `04.03-user-searching-consents.spec.ts`
+### `04.02-user-searching-consents.spec.ts`
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.03.01` | The state filter narrows the list to only the selected state | Two consents on one service id; after Clear, re-narrows to prove the *state* filter reset too, not just the service box. |
-| `04.03.02` | Searching by the exact service id finds the matching consent |  |
-| `04.03.03` | A service filter matching nothing shows the empty-results message |  |
-| `04.03.04` | A service search for only a partial match finds nothing | Finds nothing - serviceId is an exact server-side match, unlike the catalog's substring search. |
+| `04.02.01` | The state filter narrows the list to only the selected state | Two consents on one service id; after Clear, re-narrows to prove the *state* filter reset too, not just the service box. |
+| `04.02.02` | Searching by the exact service id finds the matching consent |  |
+| `04.02.03` | A service filter matching nothing shows the empty-results message |  |
+| `04.02.04` | A service search for only a partial match finds nothing | Finds nothing - serviceId is an exact server-side match, unlike the catalog's substring search. |
 
-### `04.04-admin-acting-on-consents.spec.ts`
-
-| ID | Scenario | Notes |
-| --- | --- | --- |
-| `04.04.01` | Admin can revoke an Active consent from the list |  |
-| `04.04.02` | The admin detail page shows Revoke but never Approve or Reject for an Active consent | Revoke visible; Approve/Reject absent. The admin registry never offers approve/reject. |
-| `04.04.03` | The admin list shows no Approve action for a Pending consent, and no Revoke action either | Neither Approve nor Revoke offered on a Pending row. |
-| `04.04.04` | The admin detail page offers no action at all for a Pending consent | No action at all. |
-
-### `04.05-admin-viewing-consents.spec.ts`
+### `04.03-user-acting-on-consents.spec.ts`
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.05.01` | A consent created via the API appears in the admin list with its subject |  |
-| `04.05.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
-| `04.05.03` | The rows-per-page control caps the number of rendered rows at the selected size |  |
+| `04.03.01` | Approving a Pending consent from the list moves it to Active |  |
+| `04.03.02` | Rejecting a Pending consent from its detail page moves it to Rejected |  |
+| `04.03.03` | Revoking an Active consent from the list moves it to Revoked and removes the revoke action | Row reads Revoked **and** the Revoke button is gone from that row. |
+| `04.03.04` | Approving from the detail page works the same way as from the list |  |
+| `04.03.05` | A Rejected consent can be approved again, but offers no reject or revoke | Rejection is not terminal: `isApprovableByCurrentUser()` covers PENDING and REJECTED, so a principal may change their mind. Reject and Revoke are not offered. |
 
-### `04.06-admin-searching-consents.spec.ts`
+### `04.04-admin-viewing-consents.spec.ts`
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.06.01` | Filtering by the exact consent id shows only that consent and disables the state filter | Only that consent shown, **and the state filter is disabled**. |
-| `04.06.02` | The advanced subject and service filters narrow the list |  |
-| `04.06.03` | Combining the state filter with the advanced subject/service filters narrows the list further | State filter stays *enabled* with subject/service filters, unlike with consent-ID. |
-| `04.06.04` | Searching by a non-existent consent id shows the load-failed message, not the empty-results one | Load-failed, not "no results" - the consent-ID path is a direct GET-by-ID that 404s. |
-| `04.06.05` | A subject/service filter matching nothing shows the empty-results message | Empty-results - subject/service go through the real list-filter API. |
-| `04.06.06` | The Relation filter distinguishes a consent's subject from its authorizer | Seeds a PENDING consent whose subject and authorizer are deliberately different personas, same as 04.07's delegated-consent case. |
+| `04.04.01` | A consent created via the API appears in the admin list with its subject |  |
+| `04.04.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
+| `04.04.03` | The rows-per-page control caps the number of rendered rows at the selected size |  |
+
+### `04.05-admin-searching-consents.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `04.05.01` | Filtering by the exact consent id shows only that consent and disables the state filter | Only that consent shown, **and the state filter is disabled**. |
+| `04.05.02` | The advanced subject and service filters narrow the list |  |
+| `04.05.03` | Combining the state filter with the advanced subject/service filters narrows the list further | State filter stays *enabled* with subject/service filters, unlike with consent-ID. |
+| `04.05.04` | Searching by a non-existent consent id shows the load-failed message, not the empty-results one | Load-failed, not "no results" - the consent-ID path is a direct GET-by-ID that 404s. |
+| `04.05.05` | A subject/service filter matching nothing shows the empty-results message | Empty-results - subject/service go through the real list-filter API. |
+| `04.05.06` | The Relation filter distinguishes a consent's subject from its authorizer | Seeds a PENDING consent whose subject and authorizer are deliberately different personas, same as 04.07's delegated-consent case. |
+
+### `04.06-admin-acting-on-consents.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `04.06.01` | Admin can revoke an Active consent from the list |  |
+| `04.06.02` | The admin detail page shows Revoke but never Approve or Reject for an Active consent | Revoke visible; Approve/Reject absent. The admin registry never offers approve/reject. |
+| `04.06.03` | The admin list shows no Approve action for a Pending consent, and no Revoke action either | Neither Approve nor Revoke offered on a Pending row. |
+| `04.06.04` | The admin detail page offers no action at all for a Pending consent | No action at all. |
 
 ### `04.07-user-viewing-consent-history.spec.ts`
 
@@ -581,7 +581,7 @@ complaint.
 | Gap | Why it matters |
 |---|---|
 | **Attachment authorization** | An officer upload defaulting to public, marking one internal, and a citizen being unable to download an officer's internal attachment while still getting public ones. A data-protection boundary, not a nicety. |
-| **Complaint ownership isolation** | That a second user cannot read, comment on, transition, or download another person's complaint. Consents have this (`04.02.03`); complaints no longer do. |
+| **Complaint ownership isolation** | That a second user cannot read, comment on, transition, or download another person's complaint. Consents have this (`04.01.03`); complaints no longer do. |
 | **Officer-assisted intake** | `POST /complaints` on a named Data Principal's behalf, and that principal then seeing it. No UI exists and `ComplaintApiClient` has no method for it, so it is currently untestable as written. |
 | **7 of 10 complaint categories** | Only `DATA_BREACH`, `OTHER` and `PURPOSE_VIOLATION` are ever used. Untested: `CONSENT_LIFECYCLE_ISSUE`, `CONSENT_WITHDRAWN_DATA_STILL_USED`, `DATA_ACCESS_DENIED`, `DATA_CORRECTION_NOT_COMPLETED`, `DATA_ERASURE_NOT_COMPLETED`, `EXCESSIVE_DATA_COLLECTION`, `UNAUTHORIZED_DATA_SHARING` — each with its own priority mapping. |
 | **Validation boundaries** | The 5000-character description limit on both sides of it, empty and oversized comments, unrecognized enum values returning 422 rather than a silently empty page, more than 5 files per request, unsupported content types, oversize files. |
@@ -666,7 +666,7 @@ own comment. The older "one run failed 18 tests with `401` on API seeding... unr
 unexplained" note this section used to carry was very likely this same cause, just not yet
 isolated to worker count at the time it was written.
 
-**`04.06.06`'s old "sometimes fails" was not flakiness — it was two real, deterministic bugs**,
+**`04.05.06`'s old "sometimes fails" was not flakiness — it was two real, deterministic bugs**,
 both since fixed (see `pages/AdminConsentPage.ts`'s `filterByUserRelationAndService` and
 `clearAllFilters`): a Relation-filter query that could fall off its own default page once a shared
 persona's consent count passed one page, and a filter-panel remount race after "Clear all" that
@@ -689,7 +689,7 @@ Worth stating, since everything above is a gap or a caveat:
 
 - **Assertions are honest about the product.** Several tests deliberately pin *current* behaviour
   and say so when it differs from what the backend supports — `09.01.02`'s unreachable validation
-  message, `04.06.04`'s load-fail-vs-empty-results distinction.
+  message, `04.05.04`'s load-fail-vs-empty-results distinction.
   That is the right call for a regression suite.
 - **Claims are verified, not assumed.** Comments record what was confirmed against a real server:
   the exact-vs-substring semantics of each filter, the forced `groupId`, the `GET /events` bug,

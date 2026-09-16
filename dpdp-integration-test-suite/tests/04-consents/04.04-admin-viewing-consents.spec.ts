@@ -24,11 +24,11 @@ import { seedConsentViaApi } from '../../utils/consentSetup'
 /**
  * The admin registry's read surface: a freshly-created consent appearing in the list, and the
  * load-failed path for an unknown id. See
- * tests/04-consents/04.04-admin-acting-on-consents.spec.ts for Revoke and the action-gating
+ * tests/04-consents/04.06-admin-acting-on-consents.spec.ts for Revoke and the action-gating
  * invariants.
  */
 test.describe('Admin viewing Consents (UI)', () => {
-  test('04.05.01 - A consent created via the API appears in the admin list with its subject', async ({
+  test('04.04.01 - A consent created via the API appears in the admin list with its subject', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -50,7 +50,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.05.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
+  test('04.04.02 - An unknown consent id shows the load-failed message with a way back to the registry', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
@@ -62,7 +62,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.05.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
+  test('04.04.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
     target,
     consentAdminConsentApi,

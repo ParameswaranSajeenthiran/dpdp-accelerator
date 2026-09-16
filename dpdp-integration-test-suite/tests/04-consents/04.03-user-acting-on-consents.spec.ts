@@ -32,7 +32,7 @@ import { seedConsentViaApi } from '../../utils/consentSetup'
  * consent scopes here, so the existing user persona needs no extra role for any of this.
  */
 test.describe('User acting on Consents (UI)', () => {
-  test('04.01.01 - Approving a Pending consent from the list moves it to Active', async ({
+  test('04.03.01 - Approving a Pending consent from the list moves it to Active', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -58,7 +58,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.01.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
+  test('04.03.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -83,7 +83,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.01.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
+  test('04.03.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -110,7 +110,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.01.04 - Approving from the detail page works the same way as from the list', async ({
+  test('04.03.04 - Approving from the detail page works the same way as from the list', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -131,7 +131,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.01.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
+  test('04.03.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
     browser,
     target,
     consentAdminConsentApi,
