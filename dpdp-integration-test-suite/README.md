@@ -224,7 +224,7 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 | `03-purposes/` | 18 | Purpose catalog: admin creating, viewing, searching, deleting Purposes, and managing versions |
 | `04-consents/` | 37 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
 | `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
-| `06-multi-tenancy/` | 3 | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
+| `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
 | `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
 | `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
 | `09-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |

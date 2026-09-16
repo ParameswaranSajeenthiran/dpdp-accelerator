@@ -304,8 +304,18 @@ export async function getPersonaState(
   browser: Browser,
   personaName: PersonaName,
   persona: Persona,
+  /**
+   * Defaults to the currently running project's own target. Pass an explicit target to reach a
+   * *different* one instead - e.g. the super tenant's consent-admin from inside a test running
+   * under the "multi-tenant" project (see
+   * tests/06-multi-tenancy/06.01-purpose-data-isolation-across-tenants.spec.ts). The cache/lock
+   * key is `target.name`, so this still interoperates safely with whatever the "super-tenant"
+   * project's own tests do with the same persona if both run in the same invocation - no separate
+   * login, no session collision.
+   */
+  targetOverride?: Target,
 ): Promise<PersonaAuthState> {
-  const target = resolveTarget(test.info().project.name)
+  const target = targetOverride ?? resolveTarget(test.info().project.name)
   const cached = await readCachedState(target, personaName)
   if (cached) {
     return cached

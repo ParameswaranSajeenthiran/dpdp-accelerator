@@ -79,8 +79,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
+      // 06-multi-tenancy needs a second tenant to test isolation against (the multi-tenant
+      // project's own per-run tenant) - the super tenant is the only tenant this project ever
+      // has, so there's nothing for it to compare against here.
       name: 'super-tenant',
-      testIgnore: /01-provisioning\//,
+      testIgnore: /(01-provisioning|06-multi-tenancy)\//,
       dependencies: ['super-tenant-user-setup'],
       use: { ...devices['Desktop Chrome'] },
     },

@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 176 across 48 spec files in 9 areas |
+| **Tests** | 174 across 46 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.01.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -286,29 +286,21 @@ Tests the global mechanism - `AuthorizedRoute` plus `AppSidebar`'s scope filter.
 | `05.02.01` | A user's sidebar shows only the Dashboard and Consent sections | Absent items asserted with `toHaveCount(0)` - filtered out of the DOM, not hidden. |
 | `05.02.02` | A Consent Admin's sidebar shows every section, including Definitions and Administration | Admin has no "My Consents" and no Consent category at all: `hideSelfConsentsForAdmins: true` means the admin is not a superset of the user. |
 
-## `06-multi-tenancy/` — Tenant provisioning and isolation
+## `06-multi-tenancy/` — Cross-tenant data isolation
 
-The `tenant` fixture creates one throwaway tenant per worker **entirely through the real Console UI**, because SCIM2 against a secondary tenant 401s on IS 7.3.0 regardless of credentials. No teardown: a fresh domain each run.
+Only runs under the "multi-tenant" project - the "super-tenant" project has no second tenant to
+compare against, so `playwright.config.ts` excludes this whole directory there. Reuses this run's
+own per-run tenant (`consentAdminConsentApi`) and the super tenant (its own consent-admin, logged
+into separately via `getPersonaState`'s explicit target override) - no dedicated throwaway tenant
+is created for this.
 
-**3 tests, 3 spec files.**
+**1 test, 1 spec file.**
 
-### `06.01-tenant-provisioning-and-login.spec.ts`
-
-| ID | Scenario | Notes |
-| --- | --- | --- |
-| `06.01.01` | The tenant owner can sign in tenant-qualified and create a Purpose | A tenant-qualified sign-in plus a working create proves `DPDPIdentityExtensionTenantMgtListener.onTenantCreate` provisioned both the portal app and its roles. |
-
-### `06.02-tenant-data-isolation-api.spec.ts` · API-only
+### `06.01-purpose-data-isolation-across-tenants.spec.ts` · API-only
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `06.02.01` | A Purpose created in a tenant is invisible from the super tenant, and vice versa | Invisible in both directions (`totalResults === 0`). |
-
-### `06.03-tenant-user-role-assignment.spec.ts`
-
-| ID | Scenario | Notes |
-| --- | --- | --- |
-| `06.03.01` | The tenant's second user, holding only `dpdp-consent-user`, is redirected away from /purposes | The same route-guard behaviour as the super tenant, proving the Console-driven role assignment took effect. |
+| `06.01.01` | A Purpose created in one tenant is invisible from the other, and vice versa | Invisible in both directions (`totalResults === 0`). |
 
 ## `07-account/` — Self-service account deletion
 
