@@ -172,26 +172,28 @@ off the SPA's first authenticated request) and is bound to the `atbv` cookie by 
 ## Multi-tenancy
 
 ```ts
-const page = await loginAsTenantOwner(browser, tenant)         // holds every internal_consent_mgt_* scope
-const page = await loginAsTenantConsentUser(browser, tenant)   // holds dpdp-consent-user (no permissions)
+const page = await loginAsTenantOwner(browser, tenant)   // holds every internal_consent_mgt_* scope
 ```
 
 `tenant` (worker-scoped, from `fixtures/tenant.fixtures.ts`) creates one throwaway tenant per
-worker — a unique domain every run, an owner, and a second `dpdp-consent-user` account with its
-role already assigned — entirely by driving the real Console UI in a browser, the same way an
-actual admin would. There's no teardown call: a fresh domain every run means nothing to collide
-with, and there's no real tenant delete on this product without enabling a `carbon.xml` flag this
-accelerator doesn't set. `tenantB` gives a second, independent tenant for isolation tests.
+worker — a unique domain every run and an owner with its role already assigned — entirely by
+driving the real Console UI in a browser, the same way an actual admin would. There's no teardown
+call: a fresh domain every run means nothing to collide with, and there's no real tenant delete on
+this product without enabling a `carbon.xml` flag this accelerator doesn't set. `tenantB` gives a
+second, independent tenant for isolation tests - currently only
+`tests/09-event-notifications/09.11-tenant-isolation-api.spec.ts` needs two live at once.
+`tests/06-multi-tenancy` reuses this run's own per-run tenant and the super tenant instead of
+creating its own - see that file's own docblock.
 
 **Do not add a `TenantScimClient` or call SCIM2 against a secondary tenant directly.** Confirmed
 live, repeatedly: Basic-auth and Bearer-token SCIM2 calls against `/t/<tenant>/scim2/...` both
 401 for any tenant other than `carbon.super`, regardless of whose credentials — a real IS 7.3.0
 product limitation (see the WSO2 IAM community discussion "Invalid tenant domain of user error
 when use scim2 API"), not something fixable from this codebase. What *does* work is driving the
-same operations through Console's own UI, which is why tenant creation, second-user creation and
-role assignment all go through `ConsoleRootOrganizationWizard`, `ConsoleAddUserWizard` and
-`ConsoleRoleAssignment` in `pages/`. If you need a tenant-side Console operation this suite doesn't
-have yet, add another page object in that style rather than reaching for SCIM2.
+same operations through Console's own UI, which is why tenant creation and role assignment go
+through `ConsoleRootOrganizationWizard` and `ConsoleRoleAssignment` in `pages/`. If you need a
+tenant-side Console operation this suite doesn't have yet, add another page object in that style
+rather than reaching for SCIM2.
 
 Tenant creation has no REST shortcut worth using either: `POST /api/server/v1/tenants`'s
 `owners[].password` doesn't become usable for login without a separate follow-up call, while

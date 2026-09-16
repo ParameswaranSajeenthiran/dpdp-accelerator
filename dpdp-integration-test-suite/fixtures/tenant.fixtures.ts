@@ -19,7 +19,6 @@
 import { type Browser, type Page, type Request, request as playwrightRequest } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { EventNotificationApiClient } from '../clients/EventNotificationApiClient'
-import { ConsoleAddUserWizard } from '../pages/ConsoleAddUserWizard'
 import { ConsoleRoleAssignment } from '../pages/ConsoleRoleAssignment'
 import { ConsoleRootOrganizationWizard } from '../pages/ConsoleRootOrganizationWizard'
 import { LoginPage } from '../pages/LoginPage'
@@ -34,9 +33,9 @@ import { uniqueMarker, uniqueTenantDomain } from '../utils/testData'
 import { test as base } from './auth.fixtures'
 
 /**
- * Everything tests/05-multi-tenancy needs about the one throwaway tenant this worker created:
- * its domain, its two personas (see the `tenant` fixture below for what each is for), and a
- * ready-made API client bound to the owner's auth, tenant-qualified.
+ * Everything tests/09-event-notifications needs about the one throwaway tenant this worker
+ * created: its domain, its owner persona, and ready-made API clients bound to the owner's auth,
+ * tenant-qualified.
  */
 export interface TenantContext {
   domain: string
@@ -46,9 +45,6 @@ export interface TenantContext {
    * application role (confirmed live: without the explicit assignment below, the owner's sidebar
    * has no admin items at all). */
   owner: Persona
-  /** Created via the owner's own Console "Add User" wizard and assigned dpdp-consent-user
-   * (no permissions) - the tenant-local equivalent of the super tenant's plain `user` persona. */
-  consentUser: Persona
   ownerConsentApi: ConsentApiClient
   // Tenant-qualified the same way ownerConsentApi is - tests/09-event-notifications' tenant
   // isolation file (09.11) uses this directly rather than re-deriving tenant-scoped headers of
@@ -135,23 +131,20 @@ async function loginToTenantPortal(
 interface CreatedTenant {
   domain: string
   owner: Persona
-  consentUser: Persona
   authState: PersonaAuthState
 }
 
 /**
- * The full create-tenant-then-create-second-user-then-assign-role setup, factored out so both
- * the `tenant` and `tenantB` fixtures below can share it - tests/09-event-notifications'
- * tenant-isolation file needs two live tenants at once, everything else in this suite needs one.
- * Returns the owner's captured auth state rather than building API clients itself, so the
- * caller (see the `tenant`/`tenantB` fixtures below) owns and disposes the `APIRequestContext`
- * those clients are bound to.
+ * The full create-tenant-then-assign-role setup, factored out so both the `tenant` and `tenantB`
+ * fixtures below can share it - tests/09-event-notifications' tenant-isolation file needs two
+ * live tenants at once, everything else in this suite needs one. Returns the owner's captured
+ * auth state rather than building API clients itself, so the caller (see the `tenant`/`tenantB`
+ * fixtures below) owns and disposes the `APIRequestContext` those clients are bound to.
  */
 async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const domain = uniqueTenantDomain()
   // Email-shaped: the accelerator enforces an email-address username.
   const owner: Persona = { username: `${uniqueMarker('tenant-owner')}@dpdp.test`, password: 'TenantOwner@2026!' }
-  const consentUser: Persona = { username: `${uniqueMarker('tenant-user')}@dpdp.test`, password: 'TenantUser@2026!' }
 
   // Step 1: super admin creates the tenant + owner through Console's "New Root Organization"
   // wizard. Confirmed live this is the only tenant-creation path whose password field works
@@ -182,52 +175,31 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
 
   // Step 2: the tenant owner logs into their OWN Console (never the super admin - confirmed
   // live that `admin` cannot log into a secondary tenant's Console at all, since classic
-  // tenants have fully independent user stores) and creates the second, lower-privilege user.
-  // Confirmed live to succeed here even though the identical `POST .../scim2/Users` call
-  // 401s when replayed directly via curl - see ConsoleAddUserWizard for the full story; this
+  // tenants have fully independent user stores) and is assigned dpdp-consent-admin. Role
+  // MEMBERSHIP is never auto-provisioned, only the roles themselves - true for the super tenant
+  // too (see scripts/provision-test-users.sh and docs/content/configuration-guide.md's "Recovering a
+  // broken tenant" section) and confirmed live here: the freshly created owner has no admin
+  // sidebar items at all until this assignment. Being the tenant's owner only grants
+  // Console/IS-level administration, not this custom application role - the two are unrelated.
+  // Confirmed live to succeed here even though the identical `PATCH .../scim2/v2/Roles/{id}` call
+  // 401s when replayed directly via curl - see ConsoleRoleAssignment for the full story; this
   // suite never calls SCIM2 directly as a result.
-  // No `ready` locator passed here, unlike step 1: this login has never been observed hanging on
-  // the CONSOLE token-binding failure loginToConsole describes, and any locator picked for it
-  // would be a guess. If this step ever times out on a blank spinner, that is the same bug -
-  // pass the first element the wizard below touches (ConsoleAddUserWizard's addUserButton).
   const ownerConsolePage = await loginToConsole(browser, tenantConsoleUrl(domain), owner)
-  await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/users`, { waitUntil: 'domcontentloaded' })
-  const addUserWizard = new ConsoleAddUserWizard(ownerConsolePage)
-  await addUserWizard.createUser({
-    username: consentUser.username,
-    email: consentUser.username,
-    firstName: 'Tenant',
-    lastName: 'User',
-    password: consentUser.password,
-  })
-
-  // Role MEMBERSHIP is never auto-provisioned, only the roles themselves - true for the
-  // super tenant too (see scripts/provision-test-users.sh and docs/content/configuration-guide.md's
-  // "Recovering a broken tenant" section) and confirmed live here: the freshly created owner
-  // has no admin sidebar items at all until explicitly assigned dpdp-consent-admin. Being the
-  // tenant's owner only grants Console/IS-level administration, not this custom application
-  // role - the two are unrelated.
   const roleAssignment = new ConsoleRoleAssignment(ownerConsolePage)
   await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/roles`, { waitUntil: 'domcontentloaded' })
   await roleAssignment.openRoleByName('dpdp-consent-admin')
   await roleAssignment.openUsersTab()
   await roleAssignment.assignUser(owner.username)
-
-  await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/roles`, { waitUntil: 'domcontentloaded' })
-  await roleAssignment.openRoleByName('dpdp-consent-user')
-  await roleAssignment.openUsersTab()
-  await roleAssignment.assignUser(consentUser.username)
   await ownerConsolePage.context().close()
 
   // Step 3: log the owner into their own tenant-qualified portal for real, the same way
   // fixtures/auth.fixtures.ts does for the super tenant, and keep the resulting auth state
-  // around as ready-made, tenant-qualified API clients - tests/05-multi-tenancy and
-  // tests/08-event-notifications use these to seed/verify records without needing their own
-  // login for every API call.
+  // around as ready-made, tenant-qualified API clients - tests/09-event-notifications uses
+  // these to seed/verify records without needing their own login for every API call.
   const { page: ownerPortalPage, authState } = await loginToTenantPortal(browser, domain, owner)
   await ownerPortalPage.context().close()
 
-  return { domain, owner, consentUser, authState }
+  return { domain, owner, authState }
 }
 
 // Worker-scoped: one throwaway tenant per worker for the whole run, not per test - createTenant's
@@ -241,7 +213,6 @@ async function toTenantContext(created: CreatedTenant): Promise<{ context: Tenan
     context: {
       domain: created.domain,
       owner: created.owner,
-      consentUser: created.consentUser,
       ownerConsentApi: new ConsentApiClient(apiContext, headers, created.domain),
       ownerEventApi: new EventNotificationApiClient(apiContext, headers, created.domain),
     },
@@ -306,10 +277,4 @@ export async function loginAsTenantOwnerWithToken(
 ): Promise<{ page: Page; bearerToken: string }> {
   const { page, authState } = await loginToTenantPortal(browser, tenant.domain, tenant.owner)
   return { page, bearerToken: authState.bearerToken }
-}
-
-/** Signed-in `Page` for the tenant's second, lower-privilege user - see `TenantContext.consentUser`. */
-export async function loginAsTenantConsentUser(browser: Browser, tenant: TenantContext): Promise<Page> {
-  const { page } = await loginToTenantPortal(browser, tenant.domain, tenant.consentUser)
-  return page
 }
