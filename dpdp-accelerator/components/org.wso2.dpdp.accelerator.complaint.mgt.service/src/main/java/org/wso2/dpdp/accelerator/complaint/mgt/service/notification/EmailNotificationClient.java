@@ -51,6 +51,9 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.DPO_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ROLE_AUDIENCE;
+
 /**
  * {@link NotificationClient} implementation routing through WSO2 IS's native email notification
  * mechanism. Resolves every recipient (officers, or the complaint's creator) itself, then fires a
@@ -100,14 +103,9 @@ public class EmailNotificationClient implements NotificationClient {
     // depended on directly here, since the actor role already crosses into ComplaintEvent as a
     // plain string.
     private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
-    // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME /
-    // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE - duplicated rather than depended on, same
-    // as every other constant in this class. dpdp-consent-dpo (not dpdp-consent-admin) is the
-    // complaint officer distribution list - it already carries complaints:read:any/write:any,
-    // so its members can act on what they're notified about.
+    // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME -
+    // duplicated rather than depended on, same as every other constant in this class.
     private static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String DPO_ROLE = "dpdp-consent-dpo";
-    private static final String ROLE_AUDIENCE = "organization";
 
     // Mirrors the portal frontend's own status labels exactly (complaintDisplay.ts's
     // STATUS_LABEL_KEYS + public/i18n/en/common.json's complaints.status.* strings) rather than a
@@ -188,16 +186,15 @@ public class EmailNotificationClient implements NotificationClient {
     }
 
     /**
-     * {@code Complaints.EmailNotificationsEnabled} defaults to {@code false} (opt-in). A missing
-     * configuration service is treated as enabled, not disabled - mirrors every other null-safe
-     * collaborator lookup in this class (e.g. {@code eventServiceSupplier}) and
-     * {@link org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl}'s own
-     * {@code configParser == null || ...} idiom - an unresolvable OSGi reference should not be
-     * indistinguishable from a deliberate opt-out.
+     * {@code Complaints.EmailNotificationsEnabled} defaults to {@code false} (opt-in), so an
+     * unresolvable configuration service fails closed - the same stance
+     * {@code DPDPConfigurationServiceImpl} takes for its own missing config parser. Unlike the
+     * core IS collaborators in this class (where a null is a plain wiring bug), reading this one
+     * optimistically would mean a transient OSGi hiccup sends mail nobody opted into.
      */
     private boolean emailNotificationsEnabled() {
         DPDPConfigurationService configurationService = configurationServiceSupplier.get();
-        return configurationService == null || configurationService.isComplaintsEmailNotificationsEnabled();
+        return configurationService != null && configurationService.isComplaintsEmailNotificationsEnabled();
     }
 
     @Override
@@ -371,6 +368,11 @@ public class EmailNotificationClient implements NotificationClient {
             }
             String roleId = roleManagementService.getRoleIdByName(DPO_ROLE, audience, organizationId,
                     tenantDomain);
+            if (roleId == null || roleId.isEmpty()) {
+                LOG.debug("Role '" + DPO_ROLE + "' resolved no role ID for tenant '"
+                        + LogSanitizer.sanitize(tenantDomain) + "'; cannot resolve complaint officers to notify.");
+                return recipients;
+            }
             List<UserBasicInfo> members = roleManagementService.getUserListOfRole(roleId, tenantDomain);
             for (UserBasicInfo member : members) {
                 resolveEmail(userStoreManager, member.getName())

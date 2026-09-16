@@ -56,6 +56,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.DPO_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ROLE_AUDIENCE;
 
 /**
  * Exercises {@link EmailNotificationClient} against mocked OSGi services - the real lookups go
@@ -69,8 +71,6 @@ public class EmailNotificationClientTest {
 
     private static final String EMAIL_CLAIM = "http://wso2.org/claims/emailaddress";
     private static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String DPO_ROLE = "dpdp-consent-dpo";
-    private static final String ROLE_AUDIENCE = "organization";
     private static final String ORGANIZATION_ID = "org-id-1";
     private static final String APPLICATION_ID = "app1";
     private static final String ROLE_ID = "role1";
@@ -297,6 +297,54 @@ public class EmailNotificationClientTest {
     }
 
     @Test
+    public void notifyComplaintCreatedSendsNothingWhenTheConfigurationServiceIsUnresolvable()
+            throws Exception {
+
+        stubUserRealm();
+        stubOfficerResolution(List.of(new UserBasicInfo("o1", "officer1")));
+        stubEmailClaim("officer1", "officer1@example.com");
+        stubEmailClaim("User One", "user1@example.com");
+
+        // Fails closed: an unresolvable DPDPConfigurationService must read as opted-out, never as
+        // opted-in, or an OSGi hiccup sends mail the operator never enabled.
+        EmailNotificationClient client =
+                new EmailNotificationClient(
+                        () -> identityEventService,
+                        () -> realmService,
+                        () -> applicationManagementService,
+                        () -> roleManagementService,
+                        () -> organizationManager,
+                        () -> null
+                );
+
+        client.notifyComplaintCreated(complaint());
+
+        verify(identityEventService, never()).handleEvent(any());
+    }
+
+    @Test
+    public void noOfficersAreNotifiedWhenTheDpoRoleResolvesNoRoleId()
+            throws Exception {
+
+        stubUserRealm();
+        stubEmailClaim("User One", "user1@example.com");
+        when(organizationManager.resolveOrganizationId("org1")).thenReturn(ORGANIZATION_ID);
+        when(roleManagementService.isExistingRoleName(
+                DPO_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
+                .thenReturn(true);
+        // Role reported as existing but yields no ID - must not reach getUserListOfRole(null, ..).
+        when(roleManagementService.getRoleIdByName(
+                DPO_ROLE, ROLE_AUDIENCE, ORGANIZATION_ID, "org1"))
+                .thenReturn(null);
+
+        fullClient().notifyComplaintCreated(complaint());
+
+        verify(roleManagementService, never()).getUserListOfRole(anyString(), anyString());
+        // Only the creator's acknowledgement goes out; there are no officer recipients.
+        verify(identityEventService, times(1)).handleEvent(any());
+    }
+
+    @Test
     public void notifyCommentAddedSendsNothingWhenEmailNotificationsAreDisabled()
             throws Exception {
 
@@ -324,7 +372,9 @@ public class EmailNotificationClientTest {
                         () -> identityEventService,
                         () -> realmService,
                         () -> null,
-                        () -> null
+                        () -> null,
+                        () -> null,
+                        () -> configurationService
                 );
 
         client.notifyComplaintCreated(complaint());
@@ -479,7 +529,9 @@ public class EmailNotificationClientTest {
                         () -> identityEventService,
                         () -> realmService,
                         () -> null,
-                        () -> null
+                        () -> null,
+                        () -> null,
+                        () -> configurationService
                 );
 
         client.notifyCommentAdded(complaint(), event);
@@ -671,7 +723,9 @@ public class EmailNotificationClientTest {
                         () -> identityEventService,
                         () -> realmService,
                         () -> null,
-                        () -> null
+                        () -> null,
+                        () -> null,
+                        () -> configurationService
                 );
 
         client.notifyCommentAdded(
