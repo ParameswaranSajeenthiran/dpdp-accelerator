@@ -24,8 +24,8 @@ import { config } from './utils/config'
 export default defineConfig({
   testDir: 'tests',
   fullyParallel: true,
-  // Every test authenticates as one of a couple of shared IS accounts (ctizen1, dpdp.testuser),
-  // and IS enforces a single active session per account. fixtures/auth.fixtures.ts's
+  // Every test authenticates as one of a handful of shared IS accounts (dpdp-user-1@dpdp.test,
+  // dpdp-admin@dpdp.test, etc.), and IS enforces a single active session per account. fixtures/auth.fixtures.ts's
   // getPersonaState logs each persona in at most once per run (via a file-based cross-process
   // cache under .auth/, guarded by a lock only for the brief moment of that one login) precisely
   // so that multiple workers don't each log in independently and keep invalidating each other's

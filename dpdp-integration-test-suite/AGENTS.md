@@ -230,9 +230,11 @@ const id = /\/elements\/([^/]+)$/.exec(page.url())?.[1]
 **Consents and complaints cannot be cleaned up** — the product has no delete-by-id for either, so
 every seeded record is permanent. Seed the minimum you need.
 
-**Assume parallel execution.** `fullyParallel: true` and no `workers` override. Your test must not
-depend on ordering, on another test's data, or on being alone. If you genuinely need ordered steps,
-use `test.describe.serial` and say why in a comment.
+**Assume parallel execution.** `fullyParallel: true`, and locally capped at 2 workers rather than
+Playwright's own CPU-based default (see `playwright.config.ts` — the higher default measurably
+caused resource-contention flakiness on top of WSO2 IS and MySQL sharing the same machine). Your
+test must not depend on ordering, on another test's data, or on being alone. If you genuinely need
+ordered steps, use `test.describe.serial` and say why in a comment.
 
 **Use the seed helpers** rather than hand-rolling setup: `seedConsent` (`utils/consentSetup.ts`),
 `seedComplaint` / `moveComplaintToStatus` (`utils/complaintSetup.ts`), `seedActiveTopic` /

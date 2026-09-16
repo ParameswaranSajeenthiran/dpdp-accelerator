@@ -12,7 +12,7 @@ in CI was actually checking.
 |---|---|
 | **Tests** | 175 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
-| **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron); all of `09.10` (webhook receiver) |
+| **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
@@ -50,10 +50,13 @@ users.
 
 ## `01-provisioning/` — Per-run setup
 
-Not feature tests: the `tenant-setup`/`user-setup` Playwright projects every other project
-depends on (see `playwright.config.ts`). Each is resumable - it checks `.e2e-run-state.json`
-first and only does its real work if that run hasn't already done it, so re-running the suite
-never creates a second tenant or re-provisions personas that already exist.
+Not feature tests: the Playwright setup projects the two profiles depend on (see
+`playwright.config.ts`). `01.01`/`01.02` back `tenant-setup`/`user-setup`, which `multi-tenant`
+depends on; `01.03` backs its own `super-tenant-user-setup`, which `super-tenant` depends on
+directly - it never creates or needs a tenant. `01.01`/`01.02` are resumable via
+`.e2e-run-state.json`, checked first so re-running the suite never creates a second tenant or
+re-provisions personas that already exist; `01.03` is resumable the same way via
+`e2e-config.local.json` instead (see `utils/config.ts`).
 
 **3 tests, 3 spec files.**
 
@@ -599,7 +602,9 @@ Worth recording because they were product observations, not test scaffolding:
 `09.10-webhook-delivery-api.spec.ts` has **no runnable tests**. The three core success-path tests
 (payload envelope and integrity headers, HMAC signature verification, 2xx-marks-delivered) were
 deleted — they were unreliable on a machine whose LAN IP changes mid-session. The three that
-remain are skipped in code *and* gated on `webhook.receiverHost`:
+remain are all skipped in code (`test.skip(title, fn)`, unconditional) for reasons unrelated to
+`webhook.receiverHost` - the file's own `beforeEach` still gates on it too, but that gate is moot
+today, since all three are already permanently skipped before it would ever matter:
 
 - `09.10.01` — real, working coverage (~29s standalone); skipped only for being slow.
 - `09.10.02` — retry exhaustion genuinely takes ~11 minutes (5+15+45+135+405s backoff).
@@ -646,14 +651,29 @@ Real defects, confirmed live, that dictate how tests above are written. Recorded
 
 # Known flakiness
 
-The suite is **not** fully deterministic. Measured over 12 consecutive parallel runs: 9 clean, 2
-with a single failure, 1 with 18. Two open modes:
+**Worker count is the dominant factor.** Playwright's own CPU-based default (half the detected
+cores) drives one full Chromium instance per worker alongside WSO2 IS and MySQL on the same
+machine — measured directly: a full-suite run at 4 workers on an 8-core machine produced a wide,
+inconsistent spread of session and API-auth failures (`401`s on cached-token API calls, timeouts
+inside `page.waitForRequest`/fixture setup, occasional browser-context crashes), while repeated
+full-suite runs at 2 workers came back completely clean (0 failed, 0 flaky) on the same
+environment. `playwright.config.ts` now caps local workers at 2 for exactly this reason — see its
+own comment. The older "one run failed 18 tests with `401` on API seeding... unreproduced and
+unexplained" note this section used to carry was very likely this same cause, just not yet
+isolated to worker count at the time it was written.
 
-- A deep-linked `goto()` occasionally lands on `/dashboard` instead of the requested route, so the
-  test times out waiting for an element on a page that never rendered. Not slowness — extra waiting
-  does not help.
-- One run failed 18 tests with `401` on API seeding using the cached admin token. Unreproduced and
-  unexplained.
+**`04.06.06`'s old "sometimes fails" was not flakiness — it was two real, deterministic bugs**,
+both since fixed (see `pages/AdminConsentPage.ts`'s `filterByUserRelationAndService` and
+`clearAllFilters`): a Relation-filter query that could fall off its own default page once a shared
+persona's consent count passed one page, and a filter-panel remount race after "Clear all" that
+could silently wipe a just-typed value. Verified with 8 consecutive clean runs (zero retries)
+after the fix, versus a measured ~30-60% failure rate before it.
+
+**Still open:** a deep-linked `goto()` occasionally lands on `/dashboard` instead of the requested
+route, so the test times out waiting for an element on a page that never rendered. Not slowness —
+extra waiting does not help. Not reproduced or specifically diagnosed since the worker-count fix
+above; it may turn out to be the same class of contention issue, or something distinct — treat it
+as open until it recurs at 2 workers.
 
 Run with `--workers=1` to distinguish a real failure from a flake.
 
