@@ -19,7 +19,7 @@
 import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * The admin surface (/administration/consents/:id) of the same two components covered in
@@ -37,7 +37,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -85,7 +85,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
   }) => {
     const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -127,7 +127,7 @@ test.describe('Admin viewing Consent History (UI)', () => {
   }) => {
     const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

@@ -19,7 +19,7 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * The admin registry (/administration/consents) only ever offers Revoke, never Approve/Reject -
@@ -36,7 +36,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -58,7 +58,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -78,7 +78,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -100,7 +100,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

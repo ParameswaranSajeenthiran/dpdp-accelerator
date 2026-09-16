@@ -18,7 +18,7 @@
 
 import { test, expect } from '../../fixtures/auth.fixtures'
 import { consentExpirySchedulerPollTimeoutMs } from '../../utils/env'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 interface StatusAuditEntry {
   actionType: string
@@ -63,7 +63,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
     consentAdminConsentApi,
   }) => {
     const futureExpiry = Date.now() + 24 * 60 * 60 * 1000
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -85,7 +85,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
     // revoke time below, not at seed time) is unambiguously due regardless of the gap between this
     // seed call and the revoke call that follows it.
     const pastExpiry = Date.now() - 60_000
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -132,7 +132,7 @@ test.describe('Consent expiry reconciliation (API)', () => {
     const dueSince = Date.now()
     // Already due at creation, so the only thing this test waits on is the job noticing it, not
     // it also becoming due first.
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',

@@ -18,7 +18,7 @@
 
 import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { MyConsentPage } from '../../pages/MyConsentPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
 
 /**
@@ -37,13 +37,13 @@ test.describe('User searching Consents (UI)', () => {
     // filter's effect is checked within a controlled two-row set instead of the full,
     // ever-growing unfiltered list.
     const serviceId = randomServiceId()
-    const pending = await seedConsent(
+    const pending = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
       serviceId,
     )
-    const active = await seedConsent(
+    const active = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -77,7 +77,7 @@ test.describe('User searching Consents (UI)', () => {
   }) => {
     const userPage = await loginAsUser(browser)
     const serviceId = randomServiceId()
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -108,7 +108,7 @@ test.describe('User searching Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { serviceId } = await seedConsent(
+    const { serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',

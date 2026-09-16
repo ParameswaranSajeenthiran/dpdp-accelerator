@@ -21,7 +21,7 @@ import { ConsentApiClient } from '../../clients/ConsentApiClient'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
 import { authHeadersFromPersonaState } from '../../utils/authStorage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * A user's own consent history: the lifecycle timeline and full-history dialog on the self
@@ -29,7 +29,7 @@ import { seedConsent } from '../../utils/consentSetup'
  * surface and cross-persona checks. `dpdp-consent-user` gets *_VIEW_SELF scopes by default, so
  * no extra setup is needed here.
  *
- * `seedConsent` always creates via the admin API, so every "Consent created by ..." entry below
+ * `seedConsentViaApi` always creates via the admin API, so every "Consent created by ..." entry below
  * is attributed to `target.personas.consentAdmin.username`, even in these self-service tests.
  *
  * `detailPage.goto(consentId)` is called again after each action that should appear in history:
@@ -43,7 +43,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -107,7 +107,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -140,7 +140,7 @@ test.describe('User viewing Consent History (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -223,7 +223,7 @@ test.describe('User viewing Consent History (UI)', () => {
     // authorizations lists only the parent, never the child - carbon-consent-mgt-core's model has
     // no separate "subject" field on an authorization; delegation is expressed purely by the
     // subjectId (child) and authorizations[].userId (parent) not matching.
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

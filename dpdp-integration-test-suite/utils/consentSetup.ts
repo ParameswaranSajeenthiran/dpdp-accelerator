@@ -45,7 +45,7 @@ export interface SeededConsent {
  * this suite (there's no delete-by-id for Consents at all), they accumulate in the shared
  * environment for good.
  */
-export async function seedConsent(
+export async function seedConsentViaApi(
   adminApi: ConsentApiClient,
   subjectId: string,
   state: 'ACTIVE' | 'REJECTED' | 'PENDING',

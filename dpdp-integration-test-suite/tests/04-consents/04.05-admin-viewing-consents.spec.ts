@@ -19,7 +19,7 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * The admin registry's read surface: a freshly-created consent appearing in the list, and the
@@ -34,7 +34,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const { consentId, serviceId } = await seedConsent(
+    const { consentId, serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -72,7 +72,7 @@ test.describe('Admin viewing Consents (UI)', () => {
     // of how many consents already exist in this shared, ever-accumulating environment.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
-      await seedConsent(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
+      await seedConsentViaApi(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
     }
 
     const registryPage = new AdminConsentPage(consentAdminPage)

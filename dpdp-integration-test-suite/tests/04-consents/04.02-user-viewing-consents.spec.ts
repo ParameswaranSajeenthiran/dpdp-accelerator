@@ -26,7 +26,7 @@ import {
 } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { MyConsentPage } from '../../pages/MyConsentPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * A user's own consent detail page at /consents/:id: what it renders, the load-failed
@@ -41,7 +41,7 @@ test.describe('User viewing Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId, purposeName, elementDisplayName, serviceId } = await seedConsent(
+    const { consentId, purposeName, elementDisplayName, serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -82,7 +82,7 @@ test.describe('User viewing Consents (UI)', () => {
       throw new Error('Unreachable: hasSecondUser() already checked this above.')
     }
 
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -111,7 +111,7 @@ test.describe('User viewing Consents (UI)', () => {
     // forever (AGENTS.md), so this is never seeding into a genuinely empty list.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
-      await seedConsent(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
+      await seedConsentViaApi(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
     }
 
     const listPage = new MyConsentPage(userPage)
@@ -129,7 +129,7 @@ test.describe('User viewing Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

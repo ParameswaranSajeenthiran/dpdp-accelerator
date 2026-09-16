@@ -19,7 +19,7 @@
 import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { MyConsentPage } from '../../pages/MyConsentPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
  * Approve/reject/revoke, from both the list and the detail page, plus the terminal-state guard
@@ -38,7 +38,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId, serviceId } = await seedConsent(
+    const { consentId, serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -64,7 +64,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -89,7 +89,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId, serviceId } = await seedConsent(
+    const { consentId, serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -116,7 +116,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
@@ -137,7 +137,7 @@ test.describe('User acting on Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const userPage = await loginAsUser(browser)
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'REJECTED',

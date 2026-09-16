@@ -18,7 +18,7 @@
 
 import { test, expect, hasSecondUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
 
 /**
@@ -35,12 +35,12 @@ test.describe('Admin searching Consents (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const first = await seedConsent(
+    const first = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
     )
-    const second = await seedConsent(
+    const second = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -63,7 +63,7 @@ test.describe('Admin searching Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const serviceId = randomServiceId()
-    const { consentId } = await seedConsent(
+    const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -95,13 +95,13 @@ test.describe('Admin searching Consents (UI)', () => {
     // narrowed to it first, so the state filter's effect is checked within a controlled
     // two-row set instead of the full, ever-growing unfiltered list.
     const serviceId = randomServiceId()
-    const pending = await seedConsent(
+    const pending = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',
       serviceId,
     )
-    const active = await seedConsent(
+    const active = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'ACTIVE',
@@ -170,7 +170,7 @@ test.describe('Admin searching Consents (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // subjectId (target.personas.user) and authorizations[].userId (authorizer) deliberately
     // don't match - see the identical rationale in 04.07's delegated-consent test.
-    const { consentId, serviceId } = await seedConsent(
+    const { consentId, serviceId } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 175 across 48 spec files in 9 areas |
+| **Tests** | 176 across 48 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.02.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -125,7 +125,7 @@ Same shape as elements, plus a type filter and version management (a Purpose has
 versions; exactly one is "latest" at a time - the one whose elements/properties/description the
 overview card shows).
 
-**17 tests, 5 spec files.**
+**18 tests, 5 spec files.**
 
 ### `03.01-admin-creating-purposes.spec.ts`
 
@@ -158,7 +158,7 @@ overview card shows).
 | ID | Scenario | Notes |
 | --- | --- | --- |
 | `03.04.01` | An admin deletes a purpose that isn't referenced by any consent | Confirms via a fresh detail-page navigation afterward (load-failed) that the server actually deleted it. |
-| `03.04.02` | A purpose still referenced by a consent cannot be deleted | The purpose is one `seedConsent` creates for itself (Consents are permanent, so this is the only way to get one genuinely referenced). Asserts the 409 conflict message and that the purpose still resolves afterward. |
+| `03.04.02` | A purpose still referenced by a consent cannot be deleted | The purpose is one `seedConsentViaApi` creates for itself (Consents are permanent, so this is the only way to get one genuinely referenced). Asserts the 409 conflict message and that the purpose still resolves afterward. |
 
 ### `03.05-admin-managing-purpose-versions.spec.ts`
 
@@ -168,10 +168,11 @@ overview card shows).
 | `03.05.02` | Adding a version with a name that already exists shows the duplicate-version validation error and blocks submission | The Create button itself stays enabled - this validation is a no-op in the submit handler, not a disabled button; the real proof is the dialog staying open. |
 | `03.05.03` | Setting a version as latest moves the "Latest" label to it, and its own delete action becomes enabled | Also confirms the reverse: the version just promoted away from latest becomes deletable, and the newly-latest one's own delete becomes disabled. |
 | `03.05.04` | Deleting a non-latest version removes it from the version history |  |
+| `03.05.05` | A version referenced by a consent cannot be deleted | Confirmed live: the server rejects this, but the frontend shows only a generic error - see "Product bugs the tests work around" below. |
 
 ## `04-consents/` — Consent records
 
-The largest area. **Consent creation has no UI at all**, so `seedConsent` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
+The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
 **37 tests, 9 spec files.**
 
@@ -645,7 +646,8 @@ Real defects, confirmed live, that dictate how tests above are written. Recorded
 | **`GET /events` hardcodes the caller's orgId as `GROUP_ID`** and does not even declare a `groupId` query param. An event published under any other group id can never be found through `GET /events`, whatever the search term. | Every event test reads a seeded subscription's *returned* `groupId` and publishes with that exact value. |
 | **`SubscriptionHandler.createSubscription` silently forces `groupId` to the org id**, ignoring what the caller sent. Fan-out matches on exact `(ORG_ID, GROUP_ID, TOPIC_ID)`. | Two subscriptions on one topic are always "the same group", so tests needing two distinct subscriptions use two topics or disjoint purpose filters. |
 | **Consent mutations do not invalidate the history query keys.** | `03.07`/`03.08` navigate a second time after each action, or the lifecycle card and dialog show stale data. |
-| **`CM_RECEIPT.LANGUAGE` is `NOT NULL` with no server-side default**, so omitting it yields a generic `CM_00084` wrapping an H2 constraint violation. | `seedConsent` always sends `language: 'en'`. |
+| **`CM_RECEIPT.LANGUAGE` is `NOT NULL` with no server-side default**, so omitting it yields a generic `CM_00084` wrapping an H2 constraint violation. | `seedConsentViaApi` always sends `language: 'en'`. |
+| **Deleting a Purpose version referenced by a consent is rejected server-side, but `PurposeDetailsPage.tsx`'s `deleteVersionErrorMessage` treats every failure as unexpected** and shows a generic "Something went wrong" message - unlike the whole-Purpose delete, which has its own "still referenced by one or more consents" text. | `03.05.05` asserts the generic text, since that is what the product actually shows. |
 | **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatus` always sends a note, even where the API does not require one. |
 | **`TopicRegisterDialog.tsx`'s custom "Topic name is required." branch is unreachable** — the form has no `noValidate` and the field is natively `required`, so the browser blocks submit before React sees it. | `09.01.02` asserts `validity.valid === false`, the observable outcome. |
 
@@ -697,7 +699,7 @@ Worth stating, since everything above is a gap or a caveat:
 - **Setup goes through the real UI only when the test is exercising that UI, or has no API
   alternative** (event publishing). Incidental fixture data - Elements/Purposes/Consents created
   purely so some other feature has something to act on or page through, never to test creation
-  itself - goes through the admin API instead (`seedConsent`, the two rows-per-page pagination
+  itself - goes through the admin API instead (`seedConsentViaApi`, the two rows-per-page pagination
   seeds in `02-elements/02.02-*` and `03-purposes/03.02-*`): faster, and avoids exercising the
   same create-form flow dozens of times per run for no additional coverage.
 - **Known flakiness is measured**, not hand-waved.

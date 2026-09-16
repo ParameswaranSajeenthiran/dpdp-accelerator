@@ -21,7 +21,7 @@ import { PurposeDeleteDialog } from '../../pages/PurposeDeleteDialog'
 import { PurposeDetailPage } from '../../pages/PurposeDetailPage'
 import { PurposeFormDialog } from '../../pages/PurposeFormDialog'
 import { PurposeListPage } from '../../pages/PurposeListPage'
-import { seedConsent } from '../../utils/consentSetup'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 import { uniquePurposeName } from '../../utils/testData'
 
 /**
@@ -66,10 +66,10 @@ test.describe('Admin deleting Purposes (UI)', () => {
     consentAdminConsentApi,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    // seedConsent creates its own Purpose (and Element) - that Purpose is what this test needs
+    // seedConsentViaApi creates its own Purpose (and Element) - that Purpose is what this test needs
     // referenced by a real, permanent Consent (Consents can never be deleted, see AGENTS.md), so
     // it can't be seeded any other way.
-    const { purposeName } = await seedConsent(
+    const { purposeName } = await seedConsentViaApi(
       consentAdminConsentApi,
       target.personas.user.username,
       'PENDING',

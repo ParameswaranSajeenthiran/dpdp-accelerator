@@ -23,6 +23,7 @@ import { PurposeFormDialog } from '../../pages/PurposeFormDialog'
 import { PurposeListPage } from '../../pages/PurposeListPage'
 import { PurposeVersionDeleteDialog } from '../../pages/PurposeVersionDeleteDialog'
 import { PurposeVersionFormDialog } from '../../pages/PurposeVersionFormDialog'
+import { seedConsentViaApi } from '../../utils/consentSetup'
 import { uniquePurposeName } from '../../utils/testData'
 
 /**
@@ -151,6 +152,51 @@ test.describe('Admin managing Purpose versions (UI)', () => {
     await expect(detailPage.versionRow('v2')).not.toBeVisible()
     // v1, the latest, is unaffected and still resolves.
     await expect(detailPage.versionRow('v1')).toContainText('Latest')
+    await consentAdminPage.context().close()
+  })
+
+  test('03.05.05 - A version referenced by a consent cannot be deleted', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const consentAdminPage = await loginAsConsentAdmin(browser)
+    // seedConsentViaApi creates its own Purpose (and Element) - that Purpose's v1 is what this
+    // test needs referenced by a real, permanent Consent (Consents can never be deleted, see
+    // AGENTS.md), so it can't be seeded any other way.
+    const { purposeName } = await seedConsentViaApi(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
+
+    // Searched by name, not just goto() + openByName: the unfiltered list only shows its first
+    // page, and this shared environment accumulates far more purposes than that.
+    const listPage = new PurposeListPage(consentAdminPage)
+    await listPage.goto()
+    await listPage.search({ name: purposeName })
+    await listPage.openByName(purposeName)
+    await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
+
+    const detailPage = new PurposeDetailPage(consentAdminPage)
+    await detailPage.addVersionButton.click()
+    const versionDialog = new PurposeVersionFormDialog(consentAdminPage)
+    await versionDialog.fill({ version: 'v2' })
+    await versionDialog.submit()
+    await expect(detailPage.versionRow('v2')).toBeVisible()
+
+    // v1 is no longer latest, so its delete action is enabled - but the consent seeded above
+    // still references it.
+    const v1Row = detailPage.versionRow('v1')
+    await detailPage.versionDeleteButton(v1Row).click()
+    const deleteDialog = new PurposeVersionDeleteDialog(consentAdminPage)
+    await deleteDialog.confirm()
+
+    // Confirmed live: the server does reject this, but PurposeDetailsPage.tsx's
+    // deleteVersionErrorMessage treats every failure as unexpected and shows this generic text -
+    // unlike the whole-Purpose delete, there's no version-specific "still referenced" message.
+    await expect(deleteDialog.errorAlert).toContainText(
+      'Something went wrong and the version could not be deleted. Please try again.',
+    )
+    await expect(deleteDialog.root).toBeVisible()
+    await deleteDialog.cancel()
+    await expect(v1Row).toBeVisible()
     await consentAdminPage.context().close()
   })
 })

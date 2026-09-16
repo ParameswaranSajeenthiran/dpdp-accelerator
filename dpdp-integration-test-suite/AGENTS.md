@@ -230,9 +230,9 @@ caused resource-contention flakiness on top of WSO2 IS and MySQL sharing the sam
 test must not depend on ordering, on another test's data, or on being alone. If you genuinely need
 ordered steps, use `test.describe.serial` and say why in a comment.
 
-**Use the seed helpers** rather than hand-rolling setup: `seedConsent` (`utils/consentSetup.ts`),
+**Use the seed helpers** rather than hand-rolling setup: `seedConsentViaApi` (`utils/consentSetup.ts`),
 `seedComplaint` / `moveComplaintToStatus` (`utils/complaintSetup.ts`), `seedActiveTopic` /
-`seedPollSubscription` / `publishMarkedEvent` (`utils/eventNotificationSetup.ts`). `seedConsent`
+`seedPollSubscription` / `publishMarkedEvent` (`utils/eventNotificationSetup.ts`). `seedConsentViaApi`
 creates its Element, Purpose, and Consent all through the admin API, not the UI forms — none of
 its callers are testing the create-Element/create-Purpose flow itself (that's
 `02-elements/02.01-*` and `03-purposes/03.01-*`), so there's no value in re-driving those forms
