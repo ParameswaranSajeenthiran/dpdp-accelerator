@@ -44,12 +44,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ADMIN_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.DPO_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ROLE_AUDIENCE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.USER_ROLE;
 
 public class DPDPConsentPortalRoleProvisioningUtilTest {
 
     private static final String TENANT_DOMAIN = "tenant-a.com";
     private static final String ORGANIZATION_ID = "org-1234";
-    private static final String ROLE_AUDIENCE = "organization";
     private static final String ADMIN_ROLE_ID = "role-admin-1234";
     private static final String USER_ROLE_ID = "role-user-1234";
     private static final String DPO_ROLE_ID = "role-dpo-1234";
@@ -69,15 +72,15 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         when(organizationManager.resolveOrganizationId(TENANT_DOMAIN)).thenReturn(ORGANIZATION_ID);
 
         RoleBasicInfo adminRoleBasicInfo = roleBasicInfo(ADMIN_ROLE_ID);
-        when(roleManagementService.addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE), anyList(),
+        when(roleManagementService.addRole(eq(ADMIN_ROLE), anyList(),
                 anyList(), anyList(), eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN)))
                 .thenReturn(adminRoleBasicInfo);
         RoleBasicInfo userRoleBasicInfo = roleBasicInfo(USER_ROLE_ID);
-        when(roleManagementService.addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE), anyList(), anyList(),
+        when(roleManagementService.addRole(eq(USER_ROLE), anyList(), anyList(),
                 anyList(), eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN)))
                 .thenReturn(userRoleBasicInfo);
         RoleBasicInfo dpoRoleBasicInfo = roleBasicInfo(DPO_ROLE_ID);
-        when(roleManagementService.addRole(eq(DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE), anyList(), anyList(),
+        when(roleManagementService.addRole(eq(DPO_ROLE), anyList(), anyList(),
                 anyList(), eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN)))
                 .thenReturn(dpoRoleBasicInfo);
     }
@@ -95,26 +98,26 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
 
         assertEquals(roles.size(), 3);
         assertEquals(roles.get(0).getId(), ADMIN_ROLE_ID);
-        assertEquals(roles.get(0).getName(), DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE);
+        assertEquals(roles.get(0).getName(), ADMIN_ROLE);
         assertEquals(roles.get(1).getId(), USER_ROLE_ID);
-        assertEquals(roles.get(1).getName(), DPDPConsentPortalRoleProvisioningUtil.USER_ROLE);
+        assertEquals(roles.get(1).getName(), USER_ROLE);
         assertEquals(roles.get(2).getId(), DPO_ROLE_ID);
-        assertEquals(roles.get(2).getName(), DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE);
+        assertEquals(roles.get(2).getName(), DPO_ROLE);
 
         ArgumentCaptor<List<Permission>> adminPermissionsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
+        verify(roleManagementService).addRole(eq(ADMIN_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), adminPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
         assertEquals(permissionNames(adminPermissionsCaptor.getValue()), adminScopes);
 
         ArgumentCaptor<List<Permission>> userPermissionsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE),
+        verify(roleManagementService).addRole(eq(USER_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), userPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
         assertEquals(permissionNames(userPermissionsCaptor.getValue()), userScopes);
 
         ArgumentCaptor<List<Permission>> dpoPermissionsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE),
+        verify(roleManagementService).addRole(eq(DPO_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), dpoPermissionsCaptor.capture(),
                 eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
         assertEquals(permissionNames(dpoPermissionsCaptor.getValue()), dpoScopes);
@@ -129,7 +132,7 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
         DPDPConsentPortalRoleProvisioningUtil.createRoles(TENANT_DOMAIN, Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
 
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
+        verify(roleManagementService).addRole(eq(ADMIN_ROLE),
                 eq(Collections.emptyList()), eq(Collections.emptyList()), eq(Collections.emptyList()),
                 eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
     }
@@ -137,23 +140,42 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     @Test
     public void createRolesSkipsCreatingRolesThatAlreadyExist() throws Exception {
 
-        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE,
+        when(roleManagementService.isExistingRoleName(ADMIN_ROLE,
                 ROLE_AUDIENCE, ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(true);
-        when(roleManagementService.getRoleIdByName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE, ROLE_AUDIENCE,
+        when(roleManagementService.getRoleIdByName(ADMIN_ROLE, ROLE_AUDIENCE,
                 ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(ADMIN_ROLE_ID);
         Role adminRole = roleWithPermissions();
         when(roleManagementService.getRole(ADMIN_ROLE_ID, TENANT_DOMAIN)).thenReturn(adminRole);
-        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE, ROLE_AUDIENCE,
+        when(roleManagementService.isExistingRoleName(USER_ROLE, ROLE_AUDIENCE,
                 ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(false);
 
         List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(TENANT_DOMAIN, Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList());
 
         assertEquals(roles.get(0).getId(), ADMIN_ROLE_ID);
-        verify(roleManagementService, never()).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE),
+        verify(roleManagementService, never()).addRole(eq(ADMIN_ROLE),
                 anyList(), anyList(), anyList(), anyString(), anyString(), anyString());
-        verify(roleManagementService).addRole(eq(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE), anyList(),
+        verify(roleManagementService).addRole(eq(USER_ROLE), anyList(),
                 anyList(), anyList(), eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
+    }
+
+    @Test
+    public void createRolesRecreatesARoleThatReportsExistingButResolvesNoRoleId() throws Exception {
+
+        // isExistingRoleName says yes, getRoleIdByName says nothing - deleted in between, or a
+        // stale audience pairing. Recreate rather than NPE inside reconcilePermissions.
+        when(roleManagementService.isExistingRoleName(ADMIN_ROLE,
+                ROLE_AUDIENCE, ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(true);
+        when(roleManagementService.getRoleIdByName(ADMIN_ROLE, ROLE_AUDIENCE,
+                ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(null);
+
+        List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(TENANT_DOMAIN,
+                Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+
+        assertEquals(roles.get(0).getId(), ADMIN_ROLE_ID);
+        verify(roleManagementService, never()).getRole(anyString(), anyString());
+        verify(roleManagementService).addRole(eq(ADMIN_ROLE), anyList(), anyList(), anyList(),
+                eq(ROLE_AUDIENCE), eq(ORGANIZATION_ID), eq(TENANT_DOMAIN));
     }
 
     /**
@@ -164,15 +186,15 @@ public class DPDPConsentPortalRoleProvisioningUtilTest {
     @Test
     public void createRolesAddsNewlyDesiredScopesToAnExistingRoleWithoutRemovingItsExistingOnes() throws Exception {
 
-        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE,
+        when(roleManagementService.isExistingRoleName(ADMIN_ROLE,
                 ROLE_AUDIENCE, ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(true);
-        when(roleManagementService.getRoleIdByName(DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE, ROLE_AUDIENCE,
+        when(roleManagementService.getRoleIdByName(ADMIN_ROLE, ROLE_AUDIENCE,
                 ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(ADMIN_ROLE_ID);
         Role adminRole = roleWithPermissions("consent:status-history:view:any");
         when(roleManagementService.getRole(ADMIN_ROLE_ID, TENANT_DOMAIN)).thenReturn(adminRole);
-        when(roleManagementService.isExistingRoleName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE, ROLE_AUDIENCE,
+        when(roleManagementService.isExistingRoleName(USER_ROLE, ROLE_AUDIENCE,
                 ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(true);
-        when(roleManagementService.getRoleIdByName(DPDPConsentPortalRoleProvisioningUtil.USER_ROLE, ROLE_AUDIENCE,
+        when(roleManagementService.getRoleIdByName(USER_ROLE, ROLE_AUDIENCE,
                 ORGANIZATION_ID, TENANT_DOMAIN)).thenReturn(USER_ROLE_ID);
         Role userRole = roleWithPermissions();
         when(roleManagementService.getRole(USER_ROLE_ID, TENANT_DOMAIN)).thenReturn(userRole);
