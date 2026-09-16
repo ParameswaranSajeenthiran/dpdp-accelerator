@@ -12,8 +12,6 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 - [Running the tests](#running-the-tests)
 - [Project structure](#project-structure)
 - [Test areas](#test-areas)
-- [Operating principles](#operating-principles)
-- [Known limitations](#known-limitations)
 - [Further reading](#further-reading)
 
 ## Prerequisites
@@ -239,37 +237,3 @@ A filename ending `-api.spec.ts` drives no browser at all.
 | [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md) | Every test, known gaps, product bugs, known flakiness |
 | [Quickstart](../docs/content/quickstart.md) | Installing and starting the Identity Server |
 | [Configuration Guide](../docs/content/configuration-guide.md) | Portal application and role configuration |
-
-| Directory | Covers |
-| --- | --- |
-| `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
-| `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
-| `03-consents/` | Consent records: User and admin registries (view/search/act) |
-| `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes, including who is offered self-service account deletion |
-| `05-multi-tenancy/` | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
-| `06-account/` | Self-service account deletion end to end. Destructive and irreversible, so each test creates and signs in as its own throwaway user rather than any shared persona, and removes it again afterwards |
-
-## Operating principles
-
-A handful of things shape how every test here is written, driven by running against a real,
-persistent, shared environment rather than a disposable one:
-
-- **The environment never resets.** Data from every prior run is still there. Tests assert by
-  unique marker or server-issued ID, never by "the list is empty" or exact row counts.
-- **Tests run in parallel by default** (Playwright's `fullyParallel: true`) — no extra setup
-  needed to make a full run fast.
-- **Personas log in once per run, not once per test.** IS allows only one active session per
-  account; `fixtures/auth.fixtures.ts` caches each persona's login across every worker so
-  concurrent tests don't invalidate each other's sessions.
-- **Tests clean up their own setup data — except Consents and complaints.** Elements/Purposes
-  created as setup are deleted when the test finishes; Consents and complaints are left in
-  place, since neither supports delete-by-ID cleanup.
-- **Every spec is independent.** Nothing in the suite uses `test.describe.serial` — every test can
-  run in any order, on any worker, without coordination.
-
-## Known limitations
-
-- **Session concurrency is capped by IS itself**, not this suite — scaling truly concurrent
-  logins for the same persona means provisioning additional test accounts, not a config change.
-- **Consents and complaints created as test setup are never deleted** and accumulate in the shared environment
-  over time (see [Operating principles](#operating-principles)).
