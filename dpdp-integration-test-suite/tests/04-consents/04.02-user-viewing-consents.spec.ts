@@ -143,7 +143,7 @@ test.describe('User viewing Consents (UI)', () => {
 
     // A fresh navigation, not just the in-page state after confirming - proves the server
     // actually persisted the rejection, not just that the dialog's own optimistic update looked
-    // right (see the identical rationale in 02.01.01/03.02.04's re-navigation checks).
+    // right (see the identical rationale in 02.01.01/03.01.02's re-navigation checks).
     await detailPage.goto(consentId)
     await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
     // Rejected is not terminal for Approve specifically: isApprovableByCurrentUser (consentAuthorization.ts)

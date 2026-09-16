@@ -132,8 +132,9 @@ overview card shows).
 | ID | Scenario | Notes |
 | --- | --- | --- |
 | `03.01.01` | A purpose with no elements and no properties shows the catalog empty-state messages | Detail page shows "No custom properties." and "No elements are configured for this version." |
-| `03.01.02` | Leaving name, type, and version empty shows all three required-field errors and blocks submission |  |
-| `03.01.03` | A property value with no key blocks submission until the key is filled in or the row is removed |  |
+| `03.01.02` | A newly created purpose's detail page shows its type, latest version, description, elements, and properties correctly | Created with an element (`addElementByName`, not `addElements` - needs this specific element), a description and 2 properties; re-navigates to the detail page fresh to prove the server actually persisted every field. |
+| `03.01.03` | Leaving name, type, and version empty shows all three required-field errors and blocks submission |  |
+| `03.01.04` | A property value with no key blocks submission until the key is filled in or the row is removed |  |
 
 ### `03.02-admin-viewing-purposes-list.spec.ts`
 
@@ -142,7 +143,6 @@ overview card shows).
 | `03.02.01` | The rows-per-page control accepts a new page size without erroring |  |
 | `03.02.02` | An unknown purpose id shows the load-failed message with a way back to the list |  |
 | `03.02.03` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds 11 purposes, sets page size to 10: exactly 10 rows and Next enabled. |
-| `03.02.04` | A newly created purpose's detail page shows its type, latest version, description, elements, and properties correctly | Created with an element (`addElementByName`, not `addElements` - needs this specific element), a description and 2 properties; re-navigates to the detail page fresh to prove the server actually persisted every field. |
 
 ### `03.03-admin-searching-purposes.spec.ts`
 
