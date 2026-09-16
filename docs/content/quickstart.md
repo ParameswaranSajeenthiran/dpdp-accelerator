@@ -1,8 +1,9 @@
 # DPDP Accelerator quickstart
 
-Use this guide to install the accelerator, open the Consent Portal, and verify
-the initial portal access. Follow the linked reference guides before using the
-deployment in production.
+Use this guide for a local evaluation: install the accelerator with its default
+embedded H2 databases, open the Consent Portal, and verify initial access.
+Use the [Setup Guide](setup-guide.md) for external databases and the
+[Configuration Guide](configuration-guide.md) for roles and runtime settings.
 
 ## Prerequisites
 
@@ -34,6 +35,25 @@ For source-build prerequisites, see the [repository README](https://github.com/w
 For automated MySQL and manual external database setup, see the
 [Setup Guide](setup-guide.md).
 
+### Set the local administrator password
+
+For a fresh local installation, configure
+`[super_admin]` in `<IS_HOME>/repository/conf/deployment.toml` before the first
+server start, replacing the password placeholder with a unique password:
+
+```toml
+[super_admin]
+username = "admin@wso2.com"
+password = "<unique-local-administrator-password>"
+create_admin_account = true
+```
+
+Replace the existing `[super_admin]` values instead of adding a duplicate table.
+If the administrator already exists, use its current credentials
+and change its password through Identity Server; editing the bootstrap setting
+does not reset an existing account. Rotate evaluation credentials before any
+production use.
+
 ## 2. Start Identity Server
 
 ```sh
@@ -48,15 +68,7 @@ https://localhost:9443/console
 
 ## 3. Sign in to the Console
 
-Sign in to the Console with the default administrator credentials:
-
-```text
-Username: admin@wso2.com
-Password: wso2123
-```
-
-These credentials are for the quickstart only. Change the administrator
-password before using the deployment in production.
+Sign in with the administrator account and password configured in step 1.
 
 ## 4. Create users and assign portal access
 

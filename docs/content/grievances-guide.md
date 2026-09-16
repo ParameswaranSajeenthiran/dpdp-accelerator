@@ -201,7 +201,7 @@ the self-service surface.
 
 | Symptom | Check |
 |---|---|
-| `403 Forbidden` | The token lacks the required `complaints:read:*` or `complaints:write:*` scope, or the user has not signed in again after role assignment. |
+| `403 Forbidden` | Check the operation's exact scope: `complaints:read:self` or `complaints:write:self` for self-service, and `complaints:read:any` or `complaints:write:any` for tenant-wide management. Sign in again after role assignment. |
 | `404 Not Found` on `/me` | The complaint belongs to another user, or the ID is incorrect. |
 | Attachment rejected | Confirm the MIME type, file size, and number of files against the configured limits. |
 | `409` on a status change | The requested target is not permitted from the current status. |

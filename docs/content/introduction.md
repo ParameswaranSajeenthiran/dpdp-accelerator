@@ -16,9 +16,10 @@ operation.
 ## What is the DPDP Act?
 
 The DPDP Act applies to digital personal data processed in India, including
-data collected in non-digital form and digitised later. It can also apply to
+data collected in non-digital form and digitised later. It also applies to
 processing outside India when that processing is connected with offering
-goods or services to Data Principals(individual to whom the personal data relates) in India. The Act excludes specified
+goods or services to Data Principals (the individuals the personal data relates
+to) in India. The Act excludes specified
 personal or domestic processing and certain personal data made publicly
 available by the Data Principal or by a person legally required to publish it.
 
@@ -30,7 +31,8 @@ The framework is built around several practical ideas:
   unconditional, unambiguous, and expressed through clear affirmative action
   when consent is the basis for processing.
 - Make withdrawing consent as easy as giving it and communicate the resulting
-  change to the processors acting for the Data Fiduciary.
+  change to the processors acting for the Data Fiduciary, the organization or
+  person deciding why and how the data is processed.
 - Keep personal data accurate where it is used to make decisions or disclosed
   to another Data Fiduciary, apply reasonable security safeguards, and respond
   to personal-data breaches.
@@ -45,14 +47,21 @@ not impersonating another person or submitting a false or frivolous grievance.
 The precise conditions and exceptions in the Act still apply to every right
 and obligation.
 
-The Central Government brought the Act into force in phases through a
-[13 November 2025 commencement notification](https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf).
-Always consult the current notifications and rules before setting a compliance
-timeline.
+The Act's provisions commence in phases. Use the
+[official commencement notification](https://www.meity.gov.in/static/uploads/2025/11/c56ceae6c383460ca69577428d36828b.pdf)
+to check when a provision takes effect; this product guide does not define a
+compliance deadline.
 
 ## Participants in the DPDP ecosystem
 
 ![DPDP ecosystem showing the relationships among a Data Principal, Data Fiduciary, Data Processor, Consent Manager, and Data Protection Board of India](../assets/dpdp-ecosystem.svg)
+
+The diagram shows consent communicated through a Consent Manager,
+breach notification to the Board, and a complaint after exhausting grievance
+redressal. These relationships are described in sections 6, 8, and 13 of the
+[Act](https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf).
+They describe the wider ecosystem; the accelerator does not submit complaints
+or breach notifications to the Board automatically.
 
 | Participant | Role under the Act |
 |---|---|
@@ -82,7 +91,7 @@ statutory Consent Manager.
 
 #### Data Fiduciary - CarePulse Telehealth *(The Healthcare Platform)*
 
-- **Defines purposes & catalogs data:** Determines why data is required (e.g., vitals for consultation vs. address for courier delivery).
+- **Defines purposes and data needs:** Determines why data is required (e.g., vitals for consultation vs. address for courier delivery).
 - **Captures & audits consent:** Employs the WSO2 DPDP Accelerator to record Priya's affirmative choices and record consent status and snapshot audit history.
 - **Coordinates the ecosystem:** Communicates relevant consent changes to downstream consumers.
 - **Maintains accountability:** Ensures legal basis compliance and oversees internal grievance resolution.
@@ -106,7 +115,9 @@ statutory Consent Manager.
 ## WSO2 Identity Server and the WSO2 DPDP Accelerator
 
 WSO2 Identity Server provides the identity, authentication, authorization, and
-core consent foundation. The WSO2 DPDP Accelerator extends that foundation with
+core consent foundation, including APIs for purposes, data elements, and consent
+records. See [Identity Server consent management](https://is.docs.wso2.com/en/latest/guides/consent-management/).
+The WSO2 DPDP Accelerator extends that foundation with
 DPDP-focused consent management, audit, grievance handling, and lifecycle event
 capabilities that help organizations operationalize DPDP compliance.
 
@@ -121,13 +132,13 @@ Consent Portal plus supporting services.
 
 | Operational need | Accelerator capability |
 |---|---|
-| Define why data is requested | A purpose and data-element catalog lets administrators model the information presented in consent experiences. |
+| Define why data is requested | Administrators maintain a reusable list of purposes and data elements, called the catalog, to describe what data is requested and why. |
 | Capture and manage consent | Data Principals can view and manage their own consents, while authorized administrators can manage tenant-wide consent records. |
 | Demonstrate consent history | Status audit and snapshot history preserve the recorded evolution of a consent for authorized review. |
 | Provide a grievance channel | Data Principals can submit and track complaints; DPO and administrator views support assignment, messages, attachments, status changes, and due-date tracking. |
 | Propagate lifecycle changes | Event Notification records consent and user lifecycle events and supports webhook or polling subscriptions for downstream consumers. |
 | Separate responsibilities | Tenant roles distinguish personal history and complaint self-service, complaint handling, and broader portal administration. Dedicated integration roles can be created with narrower scopes. |
-| Support accessible notices | The portal interface supports English and the languages listed in the Eighth Schedule to the Constitution; catalog content can be localized separately. |
+| Support accessible notices | The portal interface supports English and the languages listed in the Eighth Schedule to the Constitution; purpose and data-element descriptions can be localized separately. |
 | Support account lifecycle actions | An authorized user can request self-service account deletion, and a lifecycle event can notify configured receivers. |
 
 The accelerator also publishes lifecycle events for configured downstream
@@ -135,7 +146,12 @@ systems, which can receive them through webhook or polling subscriptions.
 
 ## Start using the accelerator
 
-1. Follow the [Quickstart](quickstart.md) to set up a local solution tenant.
+- [Quickstart](quickstart.md): install and try the solution locally with the
+  default embedded H2 databases, then verify portal access.
+- [Setup Guide](setup-guide.md): configure external databases, JDBC drivers,
+  datasources, schemas, and migrations before starting the server.
+- [Configuration Guide](configuration-guide.md): configure provisioning, roles,
+  email, and optional runtime features after installation.
 
 ## Official references
 

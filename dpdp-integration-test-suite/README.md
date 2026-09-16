@@ -11,7 +11,7 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 - [Continuous integration](#continuous-integration)
 - [Running the tests](#running-the-tests)
 - [Project structure](#project-structure)
-- [Test categories](#test-categories)
+- [Test areas](#test-areas)
 - [Operating principles](#operating-principles)
 - [Known limitations](#known-limitations)
 - [Further reading](#further-reading)
@@ -252,9 +252,9 @@ persistent, shared environment rather than a disposable one:
 - **Personas log in once per run, not once per test.** IS allows only one active session per
   account; `fixtures/auth.fixtures.ts` caches each persona's login across every worker so
   concurrent tests don't invalidate each other's sessions.
-- **Tests clean up their own setup data — except Consents.** Elements/Purposes created as setup
-  are deleted when the test finishes; Consents are left in place, since the product has no
-  delete-by-id for them.
+- **Tests clean up their own setup data — except Consents and complaints.** Elements/Purposes
+  created as setup are deleted when the test finishes; Consents and complaints are left in
+  place, since neither supports delete-by-ID cleanup.
 - **Every spec is independent.** Nothing in the suite uses `test.describe.serial` — every test can
   run in any order, on any worker, without coordination.
 
@@ -262,6 +262,5 @@ persistent, shared environment rather than a disposable one:
 
 - **Session concurrency is capped by IS itself**, not this suite — scaling truly concurrent
   logins for the same persona means provisioning additional test accounts, not a config change.
-- **Consents created as test setup are never deleted** and accumulate in the shared environment
+- **Consents and complaints created as test setup are never deleted** and accumulate in the shared environment
   over time (see [Operating principles](#operating-principles)).
-

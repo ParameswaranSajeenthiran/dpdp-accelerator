@@ -47,6 +47,7 @@ const config = {
           path: 'content',
           routeBasePath: 'docs',
           sidebarPath: './sidebars.js',
+          // Docusaurus appends the configured content directory and document path.
           editUrl: 'https://github.com/wso2/dpdp-accelerator/edit/main/docs/',
           showLastUpdateTime: true,
         },

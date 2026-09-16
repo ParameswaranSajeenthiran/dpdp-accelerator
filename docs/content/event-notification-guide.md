@@ -190,8 +190,10 @@ tenant when `system_topics_auto_create_enabled` is `true`.
 
 #### Enabling `user.data.change` / `user.account.delete`
 
-The 3 consent topics work out of the box. These 2 need one extra setting in
-`deployment.toml`:
+With the shipped defaults, consent callbacks and expiry tracking are enabled
+through `consent_history.enabled`, and the expiry reconciler is enabled through
+`consent_expiry.enabled`. Keep lifecycle publishing enabled as well. These two
+user topics additionally need this setting in `deployment.toml`:
 
 ```toml
 [[event_handler]]
@@ -329,14 +331,111 @@ from `payload.eventPayload`. The event payload is intentionally not repeated
 outside the JWS. Receivers that previously accepted a bare tenant domain in
 `iss` must be updated to accept the configured Identity Server issuer.
 
-Return any `2xx` response only after accepting the delivery. Store the
-`Delivery-Id` so that receiving the same delivery again does not repeat the
-business operation.
+Restrict the accepted signing algorithm to `RS256`. Check that `jti`, the
+`Delivery-Id` header, and `payload.deliveryId` agree; likewise match `txn` to
+`payload.eventId`. Check the expected tenant, group, topic, and subscription
+before handing `payload.eventPayload` to the business application. Keep an
+operator-controlled signing-key cache and refresh it from the trusted tenant
+JWKS endpoint during key rotation; an unknown key must not bypass verification.
+
+### Acceptance, retries, and processing responsibilities
+
+Return a `2xx` response only after durable acceptance, for example after
+committing the verified event to an inbox database or durable queue. The sender
+currently waits up to five seconds for the HTTP request. Perform long-running
+business work asynchronously after that commit.
+
+| Receiver outcome | HTTP response | What happens next |
+|---|---|---|
+| Verified event committed to the inbox | `202` or another `2xx` | Sender records delivery as `delivered`; your worker processes the accepted event. |
+| Same verified delivery already accepted | `2xx` | Acknowledge it again without repeating the business operation. |
+| Invalid signature or unexpected tenant/subscription | `401` or `403` | Reject it; investigate the configuration or sender. |
+| Storage unavailable before acceptance | `503` | Sender retries according to its configured retry policy. |
+
+Every non-`2xx` response, including `4xx`, and transport failure follows the
+sender's retry policy. With `max_retries = 5`, there are at most six attempts.
+The current backoff is `base_backoff_seconds × 3^(retry number - 1)`; worker
+scheduling can delay an attempt further. Exhausted deliveries become `failed`
+and require operator investigation. Do not expect a redirect or a `409`
+duplicate response to count as success.
+
+Use a durable uniqueness constraint on `Delivery-Id` and retain deduplication
+records across process restarts and any permitted replay window. A timeout can
+occur after your inbox commit, and sender-side recovery can resend a delivery.
+The HTTP body may be signed again on retry, so deduplicate by delivery ID,
+not by the body bytes. Do not assume deliveries arrive in order.
+
+A `2xx` response proves acceptance, not completed business work. Your worker
+must retry or quarantine failures after acceptance, make its business effects
+idempotent, and retain processing outcomes. If you use completion evidence,
+submit it only after processing, using the separate
+[completion API](#submit-webhook-delivery-completion). The sender can briefly
+still have the delivery in flight after your HTTP response; wait for its
+`delivered` state before reporting completion. A completion report does not
+replace the original HTTP acknowledgement.
 
 For production deployments, use HTTPS and a certificate trusted by Identity
 Server. HTTP callback URLs should be enabled only for controlled development
 environments through the Event Notification settings described in
 [`configuration-guide.md`](configuration-guide.md#9-configure-event-notifications).
+
+### Run the sample listener
+
+The [Node.js sample](pathname:///examples/webhook-listener.mjs) verifies raw-body HMAC and
+RS256 JWS, checks configured routing claims, and commits accepted events to a
+SQLite inbox before returning `202`. It uses Node.js 24 or later and built-in
+modules, with no npm dependencies. From a repository checkout, its path is
+`docs/static/examples/webhook-listener.mjs`. If downloading it from this page,
+save it as `webhook-listener.mjs` and replace that repository path with
+`./webhook-listener.mjs` in the commands below.
+
+1. Obtain the tenant's expected issuer and JWKS URL from trusted server
+   configuration. Download the JWKS using certificate validation, for example
+   `curl --fail --cacert /path/to/issuer-ca.pem https://is.example.com:9443/t/example.com/oauth2/jwks -o tenant-jwks.json`.
+   The super tenant normally uses `/oauth2/jwks`. Never obtain the URL from an
+   unverified event. Refresh this file and restart the sample when signing keys
+   rotate.
+2. Set the receiver configuration in a terminal. Use the same shared secret
+   when registering the subscription; treat it as a credential. Initially omit
+   the subscription ID so the listener serves verification requests but returns
+   `503` for event deliveries:
+
+   ```bash
+   export SHARED_SECRET="$(openssl rand -hex 32)"
+   export JWKS_FILE="$PWD/tenant-jwks.json"
+   export EXPECTED_ISSUER="https://is.example.com:9443/t/example.com/oauth2/token"
+   export EXPECTED_TENANT="example.com"
+   export EXPECTED_GROUP="<subscription-group-id>"
+   export EXPECTED_TOPIC="consent.revoke"
+   export INBOX_DB="$PWD/webhook-inbox.sqlite"
+   node docs/static/examples/webhook-listener.mjs
+   ```
+
+   By default it listens on `127.0.0.1:8443` behind your HTTPS reverse proxy.
+   Expose `/dpdp/events` at a reachable HTTPS address with a certificate trusted
+   by Identity Server. For the isolated LAN tryout instead, set
+   `HOST=0.0.0.0`, use the LAN callback URL, and apply only the
+   [development overrides](configuration-guide.md#local-development-callback-settings).
+3. [Register the subscription](#register-a-webhook-subscription) for the same
+   topic and group, using the configured secret and callback URL. Confirm it
+   becomes `active`. Stop the sample with Ctrl+C, set
+   `export EXPECTED_SUBSCRIPTION_ID="<created-subscription-id>"`, and restart it
+   using the same inbox path. Start triggering events only after this restart.
+4. Follow the [automatic-event tryout](tryout-flows.md#flow-5-publish-and-deliver-an-automatic-lifecycle-event).
+   For `consent.revoke`, revoke a disposable consent whose purpose and group
+   match the subscription. Confirm the event and its `delivered` row in the
+   portal, then run `node docs/static/examples/webhook-listener.mjs --list`
+   in another terminal with the same `INBOX_DB` to inspect accepted IDs.
+
+This is a single-subscription acceptance example, not a complete processor:
+it intentionally leaves inbox rows as `accepted`. Add a worker for your
+business action and completion reports. It requires signed payloads, accepts
+up to 1 MiB per request, and reads a pinned JWKS file only at startup. It checks
+future `iat` values with 60 seconds of clock tolerance; delayed authentic
+events remain acceptable and are deduplicated by ID. Protect the inbox as
+personal data, size its storage and retention, and add monitoring, key refresh,
+rate limits, backup, and worker recovery before production use. Keep TLS
+termination and the receiver-to-inbox path within your trusted deployment.
 
 ## 5. Register a subscription
 
@@ -640,6 +739,6 @@ event and delivery audit history.
 | No topics appear when registering a subscription | Create a topic and confirm it is `active`. |
 | Subscription remains `pending` or becomes `stale` | Confirm the callback is reachable from Identity Server and returns the exact verification challenge with HTTP `200`. Then retry verification. |
 | Subscription creation returns `409` | Check for an existing or overlapping subscription for the same topic and purposes, and delete the conflicting subscription if it is no longer needed. |
-| A system topic exists but no automatic lifecycle events appear | Confirm `lifecycle_events.publishing_enabled = true`. For user topics, also confirm `dpdpUserLifecycleEventHandler` subscribes to the required Identity Events; for consent topics, confirm consent history is enabled. |
+| A system topic exists but no automatic lifecycle events appear | Confirm `lifecycle_events.publishing_enabled = true`. Consent callbacks and expiry tracking currently require `consent_history.enabled = true`; expiry reconciliation also requires `consent_expiry.enabled = true`. For user topics, confirm the `dpdpUserLifecycleEventHandler` subscriptions. |
 | Event is created but no delivery appears | Confirm the subscription is `active`, the topic and purpose filters match, and `group-id` equals the subscription's group ID. |
 | Webhook signature does not match | Compute the HMAC over the unmodified raw request body, not only the nested `payload`. |

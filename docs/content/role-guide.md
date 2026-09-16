@@ -122,6 +122,14 @@ Of the three automatically provisioned portal roles, only `dpdp-consent-admin` r
 
 The final two scopes exist in Identity Server so a dedicated receiver client can use the corresponding APIs. Their existence does not grant them to `dpdp-consent-admin`, `dpdp-consent-user`, or `dpdp-consent-dpo`.
 
+When upgrading an existing tenant, reconcile the portal roles with
+auto-provisioning enabled to remove polling and completion permissions that
+older versions granted to `dpdp-consent-admin`. Tenant updates invoke this
+reconciliation; super-tenant provisioning also runs at server startup. If
+auto-provisioning is disabled, remove those two permissions manually and assign
+them to a dedicated receiver role. Obtain fresh access tokens after changing
+permissions; already issued tokens are not rewritten by role reconciliation.
+
 The five predefined lifecycle topics are a separate system-publishing path.
 When automatic lifecycle publication is enabled, the accelerator publishes
 their events as the matching consent or user lifecycle actions occur. This does

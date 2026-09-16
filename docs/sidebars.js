@@ -30,6 +30,11 @@ const sidebars = {
     {
       type: 'category',
       label: 'Developer Guide',
+      link: {
+        type: 'generated-index',
+        slug: '/developer-guide',
+        description: 'Reference guides for roles, Event Notifications, grievances, and localization.',
+      },
       items: [
         { type: 'doc', id: 'role-guide', label: 'Role Guide' },
         { type: 'doc', id: 'event-notification-guide', label: 'Event Notification' },

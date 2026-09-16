@@ -85,7 +85,8 @@ version. Copy the driver JAR to:
 
 > **Note:** The MySQL, PostgreSQL, Oracle, and Microsoft SQL Server JDBC driver
 > JARs must be downloaded separately and copied to the Identity Server
-> `dropins` directory before the server starts. Use the driver version
+> `repository/components/lib` directory before the server starts. The
+> `dropins` directory is for existing OSGi bundles. Use the driver version
 > recommended for your DBMS and Identity Server version.
 
 The driver versions listed in the WSO2 reference are:
@@ -254,29 +255,33 @@ CA before using it in a deployed environment.
 <details>
 <summary>Microsoft SQL Server</summary>
 
+Use a database hostname that matches its TLS certificate and configure the
+JVM truststore to trust the issuing CA. Keep encryption and certificate
+validation enabled for each datasource.
+
 ```toml
     [database.identity_db]
     type = "mssql"
-    url = "jdbc:sqlserver://localhost:1433;databaseName=WSO2IDENTITY_DB;encrypt=false"
+    url = "jdbc:sqlserver://<database-host>:1433;databaseName=WSO2IDENTITY_DB;encrypt=true;trustServerCertificate=false"
     username = "<database-user>"
     password = "<database-password>"
 
     [database.shared_db]
     type = "mssql"
-    url = "jdbc:sqlserver://localhost:1433;databaseName=WSO2SHARED_DB;encrypt=false"
+    url = "jdbc:sqlserver://<database-host>:1433;databaseName=WSO2SHARED_DB;encrypt=true;trustServerCertificate=false"
     username = "<database-user>"
     password = "<database-password>"
 
     [datasource.AgentIdentity]
     id = "AgentIdentity"
-    url = "jdbc:sqlserver://localhost:1433;databaseName=WSO2AGENTIDENTITY_DB;encrypt=false"
+    url = "jdbc:sqlserver://<database-host>:1433;databaseName=WSO2AGENTIDENTITY_DB;encrypt=true;trustServerCertificate=false"
     username = "<database-user>"
     password = "<database-password>"
     driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 
     [datasource.WSO2DPDP_DB]
     id = "WSO2DPDP_DB"
-    url = "jdbc:sqlserver://localhost:1433;databaseName=WSO2DPDP_DB;encrypt=false"
+    url = "jdbc:sqlserver://<database-host>:1433;databaseName=WSO2DPDP_DB;encrypt=true;trustServerCertificate=false"
     username = "<database-user>"
     password = "<database-password>"
     driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"

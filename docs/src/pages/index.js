@@ -3,6 +3,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+/** Renders the documentation title and introduction. */
 function Hero() {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -18,9 +19,10 @@ const guides = [
   { title: 'Getting Started', description: 'Install the accelerator and open the Consent Portal.', to: '/docs/quickstart' },
   { title: 'Install and Setup', description: 'Prepare databases and configure portal roles and runtime features.', to: '/docs/setup-guide' },
   { title: 'Learn and Tryout', description: 'Explore real stories and follow feature walkthroughs.', to: '/docs/learn' },
-  { title: 'Developer Guide', description: 'Explore roles, Event Notifications, grievances, and localization.', to: '/docs/role-guide' },
+  { title: 'Developer Guide', description: 'Explore roles, Event Notifications, grievances, and localization.', to: '/docs/developer-guide' },
 ];
 
+/** Links a guide category to its documentation entry point. */
 function GuideCard({ title, description, to }) {
   return (
     <Link
@@ -40,6 +42,7 @@ function GuideCard({ title, description, to }) {
   );
 }
 
+/** Renders the documentation landing page and its guide categories. */
 export default function Home() {
   return (
     <Layout title="Home" description="Documentation for the WSO2 DPDP Accelerator">

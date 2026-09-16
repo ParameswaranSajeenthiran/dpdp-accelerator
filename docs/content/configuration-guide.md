@@ -89,8 +89,10 @@ client_id = "DPDP_CONSENT_PORTAL"
 
 When `auto_provisioning_enabled` is `false`, the listener skips creation and
 reconciliation of the Consent Portal application, its API authorizations, and
-the `dpdp-consent-admin` and `dpdp-consent-user` roles. Configure those items
-manually in Identity Server before using the portal.
+the `dpdp-consent-admin`, `dpdp-consent-user`, and `dpdp-consent-dpo` roles.
+Configure those items manually in Identity Server before using the portal.
+Grant `complaints:read:any` and `complaints:write:any` to the DPO role;
+see the [Role Guide](role-guide.md) for the other roles' permissions.
 
 ### Consent API Invoker provisioning
 
@@ -172,7 +174,7 @@ what is *beyond* that.
 > delete their own account. Users provisioned before a permission was added to
 > the role may need tenant reconciliation and a fresh sign-in; check rather
 > than assume.
-
+>
 > **Assigning both the admin and user roles re-enables self-deletion.** The
 > two roles' permissions add up, so an administrator who also holds
 > `dpdp-consent-user` receives `account:self:delete` and can delete their own
@@ -238,28 +240,58 @@ See the [Role Management Guide](role-guide.md).
 
 ## 7. Configure periodical consent expiration
 
-The Identity Server already treats a consent as expired the moment its
-`expiryTime` passes — any API call that reads the consent reflects this
-automatically. This job only adds the missing **history record** for that
-transition; it never changes the consent itself.
+Identity Server resolves an eligible `ACTIVE` or `PENDING` consent as
+`EXPIRED` when its `expiryTime` passes. The accelerator's reconciler records
+that transition in status audit and, when enabled, snapshot history. It also
+invokes the consent-expired lifecycle callback, which publishes `consent.expire`
+when lifecycle publishing is enabled. It does not rewrite the underlying
+consent's stored state.
 
-Configure it under `[dpdp_accelerator.consent_expiry]` in `deployment.toml`:
+Keep `consent_history.enabled = true`: the current consent listener uses this
+setting to enable its callbacks, including expiry tracking. Snapshot storage
+can be disabled separately. To record expiry and publish notifications, merge
+these settings into the corresponding tables in `deployment.toml`:
 
 ```toml
+[dpdp_accelerator.consent_history]
+enabled = true
+snapshot_enabled = true
+
 [dpdp_accelerator.consent_expiry]
 enabled = true
 cron_value = "0 0 0 * * ?"
 batch_size = 100
+
+[dpdp_accelerator.event_notifications.lifecycle_events]
+publishing_enabled = true
 ```
+
+The settings within `[dpdp_accelerator.consent_expiry]` are:
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | Turns the scheduled job on or off. |
+| `enabled` | `true` | Enables the scheduled job and due-expiry reconciliation invoked by consent callbacks. |
 | `cron_value` | `"0 0 0 * * ?"` | Quartz cron expression for how often the job checks for newly-expired consents. The default runs once daily at midnight. |
 | `batch_size` | `100` | Maximum number of expired consents recorded per run, so a large backlog drains gradually instead of in one long transaction. |
 
 Edit these in `<IS_HOME>/repository/conf/deployment.toml` and restart the
 server for the change to take effect.
+
+Expiry notifications are not guaranteed at the exact expiry timestamp: the
+scheduled job handles up to `batch_size` tracked due records per run, and
+eligible consent callbacks can also reconcile a due record. Disabling expiry
+reconciliation does not make an expired consent valid; it stops this
+accelerator's expiry recording and callback path. Enabling it does not bulk
+backfill older consents that have no expiry-tracker entry.
+
+To verify this in an isolated test environment, create a consent with a future
+`expiryTime` while tracking is enabled, and register an active subscription to
+`consent.expire` with matching group and purpose filters. For a short test only,
+use `cron_value = "0 * * * * ?"` (every minute), restart, and allow the expiry
+time and next scheduled run to pass. Check the consent status audit, the
+`consent.expire` event, delivery history, and the receiver's durable inbox.
+Restore the intended schedule afterwards. A consent read returning `EXPIRED`
+alone does not prove that a notification was published or delivered.
 
 ### Clustering requirements
 
@@ -395,6 +427,10 @@ For the user workflow—creating topics and subscriptions, preparing a webhook,
 publishing events, and viewing delivery history—see
 [`event-notification-guide.md`](event-notification-guide.md).
 
+The following example uses production-oriented callback restrictions. Merge
+these keys into existing tables instead of creating duplicate TOML tables.
+Restart Identity Server after changing these runtime settings.
+
 ```toml
 [dpdp_accelerator.event_notifications]
 system_topics_auto_create_enabled = true
@@ -416,8 +452,8 @@ request_hmac_validation_enabled = false
 thread_pool_size = 4
 base_backoff_seconds = 5
 max_retries = 5
-allow_http_callback_url = true
-allowed_callback_ports = "-1,80,443,8443"
+allow_http_callback_url = false
+allowed_callback_ports = "-1,443,8443"
 allow_private_network_callback_targets = false
 delivery_worker_batch_size = 50
 delivery_worker_poll_seconds = 5
@@ -438,6 +474,34 @@ publication are independent settings: a topic can exist while automatic
 publication is disabled. The `user.data.change` and `user.account.delete`
 publishers also require the `dpdpUserLifecycleEventHandler` subscription shown
 in the [Event Notification Guide](event-notification-guide.md#enabling-userdatachange--useraccountdelete).
+
+Consent update/revoke callbacks and new expiry tracking also require
+`[dpdp_accelerator.consent_history] enabled = true` in the current
+implementation. `snapshot_enabled = false` only disables full snapshots; it
+does not disable those callbacks. Expiry notifications additionally require
+the [expiry configuration](#7-configure-periodical-consent-expiration).
+There is no single global Event Notification enable switch: topic creation,
+lifecycle publishing, payload signing, and receiver access are separate controls.
+
+### Local development callback settings
+
+The shipped template allows HTTP and ports `80` and `8443`; the production
+example above deliberately restricts HTTP. For a disposable LAN receiver only,
+override these keys in the existing webhook table:
+
+```toml
+[dpdp_accelerator.event_notifications.webhook]
+allow_http_callback_url = true
+allowed_callback_ports = "-1,80,443,8443"
+allow_private_network_callback_targets = true
+```
+
+Use the receiver machine's reachable LAN address, for example
+`http://<receiver-lan-ip>:8443/dpdp/events`. `localhost`, loopback, wildcard,
+and multicast callback addresses are rejected even with this override. Open
+only the required network path from Identity Server to the receiver. Restore
+the production restrictions after testing; do not expose the sample's plain
+HTTP port directly to the Internet.
 
 These are server-wide runtime settings. Subscription `sharedSecret` values
 remain per-subscription data and are not placed in `dpdp-accelerator.xml`.

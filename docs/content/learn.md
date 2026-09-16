@@ -42,6 +42,91 @@ the catalog definition.
 
 **Try it:** Follow [Flow 1 in the Tryout Flows guide](tryout-flows.md#flow-1-define-a-purpose-and-its-data-element).
 
+### Choose mandatory and optional elements
+
+The `mandatory` flag belongs to an **element's association with a purpose
+version**, rather than to the reusable Element itself. In the portal, set the
+**Mandatory** option when associating an element with a purpose. In the Purpose
+API request, set `mandatory` explicitly on each entry in `elements`.
+
+| Association | When to use it | Example |
+|---|---|---|
+| `mandatory: true` | The purpose cannot be fulfilled without this data. Explain that requirement in the collection experience. | A delivery address for prescription delivery. |
+| `mandatory: false` | The purpose can proceed without this data. Let the person leave it unselected. | An additional contact number for delivery updates. |
+
+For example, this fragment of a purpose creation request associates two
+previously created elements:
+
+```json
+{
+  "name": "prescription-delivery",
+  "version": "1.0",
+  "elements": [
+    { "id": "<delivery-address-element-id>", "mandatory": true },
+    { "id": "<contact-number-element-id>", "mandatory": false }
+  ]
+}
+```
+
+Keep unrelated optional activities, such as marketing, in a separate purpose.
+A mandatory element within a delivery purpose does not make the person agree
+to marketing or make consent automatic.
+
+### Record the selected elements
+
+The consent request identifies the purpose and the elements the person agreed
+to. For a delivery consent without the optional phone number, the `purposes`
+fragment is:
+
+```json
+{
+  "purposes": [
+    {
+      "id": "<prescription-delivery-purpose-id>",
+      "elements": [{ "id": "<delivery-address-element-id>" }]
+    }
+  ]
+}
+```
+
+If the person also agrees to the optional phone number, include its element ID
+in the same array. This is part of the consent request, not a complete request;
+the application must also provide the subject, service, and other required
+fields described in the [Tryout Flows](tryout-flows.md#flow-2-review-authorize-revoke-and-audit-a-consent).
+
+The consent response records the selected elements and the purpose's
+`versionId`. Its consented-element objects do **not** repeat `mandatory` or
+provide a per-element approval boolean. Read the associated purpose version to
+recover the mandatory/optional definitions; do not substitute the latest
+version when reviewing an older consent.
+
+### Check consent state and permitted data separately
+
+`GET /api/identity/consent-mgt/v2.0/consents/{consentId}/validate` returns the
+consent's current state, including an expiry check. For example:
+
+```json
+{ "state": "ACTIVE" }
+```
+
+This endpoint does not evaluate mandatory-element coverage or return a
+separate validation result for optional elements. Both association types use
+the same consent-state check:
+
+| Situation | What `/validate` establishes | Application responsibility |
+|---|---|---|
+| Active, unexpired consent with the mandatory address selected | Returns `ACTIVE`. | Check that the selected elements cover the delivery operation. |
+| Active, unexpired consent without the optional phone number | Can still return `ACTIVE`. | Do not process the unselected phone number under this consent. |
+| A required element is absent from the record being evaluated | State validation alone does not establish completeness. | Compare selected elements with that purpose version and stop the dependent operation if a required element is missing. |
+| Consent is pending, rejected, revoked, or expired | Returns the corresponding state. | Do not treat it as active permission to process data. |
+
+Before processing, check the consent state, subject and service, purpose
+version, and selected element IDs. Enforce required selections in the
+collection application and enforce permitted data again in the consuming
+service. Keep optional choices separate and preserve the version used for the
+decision. See the [Consent Management v2 API](https://is.docs.wso2.com/en/latest/apis/use-the-consent-management-rest-apis/)
+for the request and response contract.
+
 ## Story 2: Give consent with a clear choice
 
 Priya books a consultation in CarePulse. The application presents separate

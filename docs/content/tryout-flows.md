@@ -640,6 +640,15 @@ separate event instead of representing the original action.
 
 #### Prepare a webhook
 
+Before registering a subscription, follow the
+[sample listener startup steps](event-notification-guide.md#run-the-sample-listener)
+with `EXPECTED_TOPIC=user.data.change` and the same tenant/group as this tryout.
+Enable lifecycle publishing and the user-lifecycle event handler in the
+[runtime configuration](configuration-guide.md#9-configure-event-notifications).
+Use HTTPS, or the explicitly documented isolated LAN overrides. These steps
+give you a verified, durable inbox instead of an endpoint that merely logs
+requests and returns success.
+
 Use a disposable receiver that is reachable from Identity Server. The same
 callback URL must:
 
@@ -725,6 +734,10 @@ The response deliberately omits `sharedSecret`. Retain the value supplied in
 the request. After a successful challenge exchange, fetching the subscription
 shows `status` as `active` (displayed as `ACTIVE` in the portal).
 
+If using the sample listener, now set `EXPECTED_SUBSCRIPTION_ID` to the created
+ID and restart the listener using the same shared secret and inbox database.
+Its initial verification-only mode deliberately does not accept events.
+
 #### Trigger and inspect the event
 
 1. In the tenant Console, update a non-sensitive profile claim on the
@@ -733,7 +746,13 @@ shows `status` as `active` (displayed as `ACTIVE` in the portal).
 3. Find the new `user.data.change` event and open it.
 4. Inspect its payload and subscription-specific delivery records.
 5. Open the subscription details to inspect its event and delivery history.
-6. Confirm that the receiver obtained a signed webhook delivery.
+6. Confirm that the receiver obtained a signed webhook delivery and that its
+   verified envelope was committed to the inbox. Use the sample's `--list`
+   command to inspect the accepted delivery ID.
+7. Confirm the portal delivery state is `delivered`. This proves HTTP
+   acceptance only; the sample does not perform a business operation or submit
+   completion evidence. Implement those in the downstream worker as explained
+   in [receiver responsibilities](event-notification-guide.md#acceptance-retries-and-processing-responsibilities).
 
 The DPDP lifecycle publisher constructs the following payload and passes it to
 the Event Notification service. It includes claim URIs but never the changed
