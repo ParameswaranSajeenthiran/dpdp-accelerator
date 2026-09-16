@@ -170,8 +170,9 @@ this and every other tenant lifecycle hook follows.
 Runs against a **real, persistent, shared** IS — nothing is mocked, and the environment never
 resets. Consequences that shape every test: assert by unique marker or server-issued ID, never by
 empty lists or row counts. Personas log in **once per run**, cached across workers in
-`fixtures/auth.fixtures.ts`. Tests delete Elements/Purposes they create but not Consents — the
-product has no delete-by-id for them, so they accumulate.
+`fixtures/auth.fixtures.ts`. Nothing a test creates is deleted afterward — Elements, Purposes, and
+Consents all accumulate in the shared environment for good. Leaving them behind is fine as long as
+it doesn't affect another test run; don't add cleanup/teardown code for it.
 
 **Before writing or changing a test there, read `dpdp-integration-test-suite/AGENTS.md`.** It
 carries the rules that aren't guessable: the crossed directory/test-ID numbering, sourcing locators

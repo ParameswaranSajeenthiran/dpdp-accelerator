@@ -17,12 +17,7 @@
  */
 
 import type { Page } from '@playwright/test'
-import {
-  test,
-  expect,
-  loginAsConsentAdmin,
-  type ConsentCleanupTracker,
-} from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { PurposeDetailPage } from '../../pages/PurposeDetailPage'
 import { PurposeFormDialog } from '../../pages/PurposeFormDialog'
 import { PurposeListPage } from '../../pages/PurposeListPage'
@@ -38,7 +33,7 @@ import { uniquePurposeName } from '../../utils/testData'
  */
 
 /** Creates a purpose with a single "v1" version (its only version, so also its latest). */
-async function createPurposeWithV1(page: Page, tracker: ConsentCleanupTracker): Promise<string> {
+async function createPurposeWithV1(page: Page): Promise<string> {
   const listPage = new PurposeListPage(page)
   await listPage.goto()
   await listPage.openCreateDialog()
@@ -50,17 +45,15 @@ async function createPurposeWithV1(page: Page, tracker: ConsentCleanupTracker): 
   if (!match) {
     throw new Error(`Could not read a purpose id out of the detail URL: ${page.url()}`)
   }
-  tracker.trackPurpose(match[1])
   return match[1]
 }
 
 test.describe('Admin managing Purpose versions (UI)', () => {
   test('03.05.01 - Adding a new version does not change which version is latest unless "Set as latest" is checked', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const purposeId = await createPurposeWithV1(consentAdminPage, consentCleanupTracker)
+    const purposeId = await createPurposeWithV1(consentAdminPage)
 
     const detailPage = new PurposeDetailPage(consentAdminPage)
     await detailPage.goto(purposeId)
@@ -79,10 +72,9 @@ test.describe('Admin managing Purpose versions (UI)', () => {
 
   test('03.05.02 - Adding a version with a name that already exists shows the duplicate-version validation error and blocks submission', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const purposeId = await createPurposeWithV1(consentAdminPage, consentCleanupTracker)
+    const purposeId = await createPurposeWithV1(consentAdminPage)
 
     const detailPage = new PurposeDetailPage(consentAdminPage)
     await detailPage.goto(purposeId)
@@ -106,10 +98,9 @@ test.describe('Admin managing Purpose versions (UI)', () => {
 
   test('03.05.03 - Setting a version as latest moves the "Latest" label to it, and its own delete action becomes enabled', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const purposeId = await createPurposeWithV1(consentAdminPage, consentCleanupTracker)
+    const purposeId = await createPurposeWithV1(consentAdminPage)
 
     const detailPage = new PurposeDetailPage(consentAdminPage)
     await detailPage.goto(purposeId)
@@ -140,10 +131,9 @@ test.describe('Admin managing Purpose versions (UI)', () => {
 
   test('03.05.04 - Deleting a non-latest version removes it from the version history', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
-    const purposeId = await createPurposeWithV1(consentAdminPage, consentCleanupTracker)
+    const purposeId = await createPurposeWithV1(consentAdminPage)
 
     const detailPage = new PurposeDetailPage(consentAdminPage)
     await detailPage.goto(purposeId)

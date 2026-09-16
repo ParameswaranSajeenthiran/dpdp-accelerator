@@ -212,16 +212,6 @@ export class ConsentApiClient {
     })
   }
 
-  /** 409 when still referenced by a Purpose - callers sweeping in bulk should tolerate that. */
-  async deleteElement(elementId: string): Promise<APIResponse> {
-    return this.request.delete(consentElementsApiUrl(`/${elementId}`, this.tenantDomain), { headers: this.headers() })
-  }
-
-  /** 409 when still referenced by a Consent - callers sweeping in bulk should tolerate that. */
-  async deletePurpose(purposeId: string): Promise<APIResponse> {
-    return this.request.delete(consentPurposesApiUrl(`/${purposeId}`, this.tenantDomain), { headers: this.headers() })
-  }
-
   async createConsent(body: CreateConsentBody): Promise<APIResponse> {
     return this.request.post(adminConsentsApiUrl('', this.tenantDomain), {
       headers: this.headers({ 'Content-Type': 'application/json' }),

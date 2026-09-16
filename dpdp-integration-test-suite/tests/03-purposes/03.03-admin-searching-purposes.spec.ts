@@ -29,7 +29,6 @@ import { uniqueMarker, uniquePurposeName } from '../../utils/testData'
 test.describe('Admin searching the Purposes list (UI)', () => {
   test('03.03.01 - Searching by a partial name still finds the matching purpose', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const purposeName = uniquePurposeName()
@@ -41,10 +40,6 @@ test.describe('Admin searching the Purposes list (UI)', () => {
     await dialog.fill({ name: purposeName, type: 'Policy', version: 'v1' })
     await dialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeMatch = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())
-    if (purposeMatch) {
-      consentCleanupTracker.trackPurpose(purposeMatch[1])
-    }
 
     // Only the timestamp segment of the generated `purpose-<timestamp>-<random>` name - proves
     // the search matches on a substring (the API filter is `name co "..."`), not an exact
@@ -58,7 +53,6 @@ test.describe('Admin searching the Purposes list (UI)', () => {
 
   test('03.03.02 - Filtering by an exact type finds only purposes of that type', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // A unique type value, not a realistic one like 'Loyalty' - the shared environment likely
@@ -74,10 +68,6 @@ test.describe('Admin searching the Purposes list (UI)', () => {
     await dialog.fill({ name: purposeName, type: uniqueType, version: 'v1' })
     await dialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeMatch = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())
-    if (purposeMatch) {
-      consentCleanupTracker.trackPurpose(purposeMatch[1])
-    }
 
     await listPage.goto()
     await listPage.search({ type: uniqueType })
@@ -87,7 +77,6 @@ test.describe('Admin searching the Purposes list (UI)', () => {
 
   test('03.03.03 - Resetting the search clears both filters and shows the unfiltered list again', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Seeded so there's a guaranteed row to reappear once the filters are cleared.
@@ -98,10 +87,6 @@ test.describe('Admin searching the Purposes list (UI)', () => {
     await dialog.fill({ name: uniquePurposeName(), type: 'Policy', version: 'v1' })
     await dialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeMatch = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())
-    if (purposeMatch) {
-      consentCleanupTracker.trackPurpose(purposeMatch[1])
-    }
 
     await listPage.goto()
     await listPage.search({ name: `no-such-purpose-${Date.now().toString()}` })

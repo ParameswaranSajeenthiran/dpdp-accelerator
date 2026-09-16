@@ -32,7 +32,6 @@ import { randomPurposeProfile, uniqueElementName, uniquePurposeName } from '../.
 test.describe('Admin viewing the Purposes list (UI)', () => {
   test('03.02.01 - The rows-per-page control accepts a new page size without erroring', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Seeded so the list is guaranteed non-empty regardless of what earlier runs left behind.
@@ -43,10 +42,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
     await dialog.fill({ name: uniquePurposeName(), type: 'Policy', version: 'v1' })
     await dialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeMatch = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())
-    if (purposeMatch) {
-      consentCleanupTracker.trackPurpose(purposeMatch[1])
-    }
 
     await listPage.goto()
     await expect(listPage.previousPageButton).toBeDisabled()
@@ -70,7 +65,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
   test('03.02.03 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
@@ -84,7 +78,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
         version: 'v1',
       })
       expect(response.status()).toBe(201)
-      consentCleanupTracker.trackPurpose(((await response.json()) as { id: string }).id)
     }
 
     const listPage = new PurposeListPage(consentAdminPage)
@@ -98,7 +91,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
 
   test("03.02.04 - A newly created purpose's detail page shows its type, latest version, description, elements, and properties correctly", async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const elementName = uniqueElementName()
@@ -109,11 +101,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
     await elementDialog.fill({ name: elementName })
     await elementDialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
-    const elementId = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
-    if (!elementId) {
-      throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
-    }
-    consentCleanupTracker.trackElement(elementId)
 
     const profile = randomPurposeProfile()
     const version = 'v1'
@@ -136,7 +123,6 @@ test.describe('Admin viewing the Purposes list (UI)', () => {
     if (!purposeId) {
       throw new Error(`Could not read a purpose id out of the detail URL: ${consentAdminPage.url()}`)
     }
-    consentCleanupTracker.trackPurpose(purposeId)
 
     // A fresh navigation, not just the post-submit redirect - proves the server actually
     // persisted every field, not just that the create form's own optimistic state looked right.

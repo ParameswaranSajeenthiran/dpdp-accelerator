@@ -41,12 +41,10 @@ test.describe('User viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )
@@ -107,12 +105,10 @@ test.describe('User viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )
@@ -142,12 +138,10 @@ test.describe('User viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )
@@ -217,7 +211,6 @@ test.describe('User viewing Consent History (UI)', () => {
     request,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
     // for the parent, and target.personas.user (this file's usual subject) stands in for the child.
@@ -232,7 +225,6 @@ test.describe('User viewing Consent History (UI)', () => {
     // subjectId (child) and authorizations[].userId (parent) not matching.
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
       undefined,

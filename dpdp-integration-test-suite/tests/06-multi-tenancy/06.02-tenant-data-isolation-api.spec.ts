@@ -30,7 +30,6 @@ test.describe('Tenant data isolation (API)', () => {
   test('06.02.01 - A Purpose created in a tenant is invisible from the super tenant, and vice versa', async ({
     tenant,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const tenantPurposeName = uniquePurposeName()
     const superTenantPurposeName = uniquePurposeName()
@@ -48,8 +47,6 @@ test.describe('Tenant data isolation (API)', () => {
       version: 'v1',
     })
     expect(superTenantCreate.ok()).toBeTruthy()
-    const superTenantPurposeId = (await superTenantCreate.json()).id as string
-    consentCleanupTracker.trackPurpose(superTenantPurposeId)
 
     // Not visible from carbon.super. Field is capitalized ("Purposes") in the consent-mgt v2
     // API's own list response - confirmed live against a real server, not guessed.

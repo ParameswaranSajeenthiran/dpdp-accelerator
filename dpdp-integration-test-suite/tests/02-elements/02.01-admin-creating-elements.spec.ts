@@ -23,14 +23,11 @@ import { ElementListPage } from '../../pages/ElementListPage'
 import { uniqueElementName } from '../../utils/testData'
 
 /**
- * The "Add Element" form: the happy path plus its validation rules. Elements created here are
- * registered with `consentCleanupTracker` so they're deleted again once the test finishes - see
- * fixtures/auth.fixtures.ts's ConsentCleanupTracker.
+ * The "Add Element" form: the happy path plus its validation rules.
  */
 test.describe('Admin creating Elements (UI)', () => {
   test('02.01.01 - Creating an element with a name, display name, description, and properties succeeds', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const elementName = uniqueElementName()
@@ -46,11 +43,6 @@ test.describe('Admin creating Elements (UI)', () => {
     await dialog.submit()
 
     await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
-    const elementId = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
-    if (!elementId) {
-      throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
-    }
-    consentCleanupTracker.trackElement(elementId)
 
     const detailPage = new ElementDetailPage(consentAdminPage)
     await expect(detailPage.nameValue(elementName)).toBeVisible()
@@ -79,7 +71,6 @@ test.describe('Admin creating Elements (UI)', () => {
 
   test('02.01.03 - Creating an element with a name that already exists shows the duplicate-name message', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const elementName = uniqueElementName()
@@ -91,10 +82,6 @@ test.describe('Admin creating Elements (UI)', () => {
     await firstDialog.fill({ name: elementName })
     await firstDialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
-    const match = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())
-    if (match) {
-      consentCleanupTracker.trackElement(match[1])
-    }
 
     await listPage.goto()
     await listPage.openCreateDialog()

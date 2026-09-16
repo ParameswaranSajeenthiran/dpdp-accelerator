@@ -46,8 +46,6 @@ test.describe('Admin deleting Purposes (UI)', () => {
     if (!purposeId) {
       throw new Error(`Could not read a purpose id out of the detail URL: ${consentAdminPage.url()}`)
     }
-    // Not tracked with consentCleanupTracker: the delete below is the thing under test.
-
     const detailPage = new PurposeDetailPage(consentAdminPage)
     await detailPage.deleteButton.click()
     const deleteDialog = new PurposeDeleteDialog(consentAdminPage)
@@ -66,7 +64,6 @@ test.describe('Admin deleting Purposes (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // seedConsent creates its own Purpose (and Element) - that Purpose is what this test needs
@@ -74,7 +71,6 @@ test.describe('Admin deleting Purposes (UI)', () => {
     // it can't be seeded any other way.
     const { purposeName } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )

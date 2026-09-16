@@ -16,8 +16,7 @@
  * under the License.
  */
 
-import type { Page } from '@playwright/test'
-import { test, expect, loginAsConsentAdmin, type ConsentCleanupTracker } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ElementDetailPage } from '../../pages/ElementDetailPage'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
@@ -29,32 +28,19 @@ import { randomElementProfile, uniqueElementName } from '../../utils/testData'
  * page. Elements seeded here only exist to give the list rows to page through - see
  * tests/02-elements/02.01-admin-creating-elements.spec.ts for creation-form validation.
  */
-
-/** Creates an element through the UI, tracks it for cleanup, and returns its id. */
-async function createElementViaUi(page: Page, tracker: ConsentCleanupTracker): Promise<string> {
-  const listPage = new ElementListPage(page)
-  await listPage.goto()
-  await listPage.openCreateDialog()
-  const dialog = new ElementFormDialog(page)
-  await dialog.fill({ name: uniqueElementName() })
-  await dialog.submit()
-  await expect(page).toHaveURL(/\/elements\/[^/]+$/)
-  const match = /\/elements\/([^/]+)$/.exec(page.url())
-  if (!match) {
-    throw new Error(`Could not read an element id out of the detail URL: ${page.url()}`)
-  }
-  tracker.trackElement(match[1])
-  return match[1]
-}
-
 test.describe('Admin viewing the Elements list (UI)', () => {
   test('02.02.01 - The list renders and its rows-per-page control accepts a new page size without erroring', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Seeded so the list is guaranteed non-empty regardless of what earlier runs left behind.
-    await createElementViaUi(consentAdminPage, consentCleanupTracker)
+    const listPageSetup = new ElementListPage(consentAdminPage)
+    await listPageSetup.goto()
+    await listPageSetup.openCreateDialog()
+    const setupDialog = new ElementFormDialog(consentAdminPage)
+    await setupDialog.fill({ name: uniqueElementName() })
+    await setupDialog.submit()
+    await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
 
     const listPage = new ElementListPage(consentAdminPage)
     await listPage.goto()
@@ -69,7 +55,6 @@ test.describe('Admin viewing the Elements list (UI)', () => {
   test('02.02.02 - The rows-per-page control caps the number of rendered rows at the selected size', async ({
     browser,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
@@ -79,7 +64,6 @@ test.describe('Admin viewing the Elements list (UI)', () => {
     for (let i = 0; i < seedCount; i += 1) {
       const response = await consentAdminConsentApi.createElement({ name: uniqueElementName() })
       expect(response.status()).toBe(201)
-      consentCleanupTracker.trackElement(((await response.json()) as { id: string }).id)
     }
 
     const listPage = new ElementListPage(consentAdminPage)
@@ -105,7 +89,6 @@ test.describe('Admin viewing the Elements list (UI)', () => {
 
   test("02.02.04 - A newly created element's detail page shows its display name, description, and properties correctly", async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const profile = randomElementProfile()
@@ -125,7 +108,6 @@ test.describe('Admin viewing the Elements list (UI)', () => {
     if (!elementId) {
       throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
     }
-    consentCleanupTracker.trackElement(elementId)
 
     // A fresh navigation, not just the post-submit redirect - proves the server actually
     // persisted every field, not just that the create form's own optimistic state looked right.

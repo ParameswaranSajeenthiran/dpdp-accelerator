@@ -153,14 +153,13 @@ test.skip(!hasSecondUser(), 'personas.user2 is not configured')
 Fixtures are requested by destructuring the test callback's first argument:
 
 ```ts
-test('...', async ({ browser, consentAdminConsentApi, consentCleanupTracker }) => { ... })
+test('...', async ({ browser, consentAdminConsentApi }) => { ... })
 ```
 
 - `userConsentApi` / `consentAdminConsentApi` — `ConsentApiClient` bound to that persona's headers.
 - `userComplaintApi` / `officerComplaintApi` — `ComplaintApiClient`, self-service and `:any` surfaces.
 - `userEventApi` / `consentAdminEventApi` — `EventNotificationApiClient`; the user holds no
   `notifications:*` scope, which is what makes it useful for proving a 403.
-- `consentCleanupTracker` — register created records for teardown (below).
 
 To prove a scope boundary, construct a client yourself with the *wrong* persona's headers and call
 a privileged method — that's the intended way to assert a token is rejected.
@@ -219,16 +218,11 @@ lazily *on open*, so its heading — which is what the page object's `dialog` lo
 appears while the request is still in flight. Gating on the heading and then snapshotting the entry
 list yields an empty array under load. Gate on the newest entry instead.
 
-**Track what you create.** `consentCleanupTracker.trackElement(id)` / `.trackPurpose(id)` deletes
-them when the test finishes. Read the id out of the detail URL after a create-form redirect:
-
-```ts
-await expect(page).toHaveURL(/\/elements\/[^/]+$/)
-const id = /\/elements\/([^/]+)$/.exec(page.url())?.[1]
-```
-
-**Consents and complaints cannot be cleaned up** — the product has no delete-by-id for either, so
-every seeded record is permanent. Seed the minimum you need.
+**Nothing you create needs to be cleaned up.** Elements, Purposes, Consents, and complaints all
+accumulate permanently in this shared environment — leaving them behind is fine as long as it
+doesn't affect another test run, which the unique-marker/server-issued-id rule above already
+guarantees. Don't add teardown code for records a test creates. Seed the minimum you need anyway,
+since every record is permanent.
 
 **Assume parallel execution.** `fullyParallel: true`, and locally capped at 2 workers rather than
 Playwright's own CPU-based default (see `playwright.config.ts` — the higher default measurably

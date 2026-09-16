@@ -38,8 +38,10 @@ consequences shape every scenario below — see [`AGENTS.md`](AGENTS.md) for the
    row is present or absent, by unique marker or server-issued id.
 2. **Personas log in at most once per run**, cached to `.auth/` and shared across workers — IS
    allows one active session per account.
-3. **Consents and complaints are never cleaned up** — neither has a delete-by-id — so they
-   accumulate permanently. Elements and Purposes are tracked and deleted.
+3. **Nothing a test creates is cleaned up afterward** — Elements, Purposes, Consents, and
+   complaints all accumulate permanently in the shared environment. That's fine as long as
+   leftover data never affects another test run, which the unique-marker/server-issued-id
+   assertions above already guarantee.
 
 **Personas:** `user` (plain `internal_login`; `CONSENTS_*_SELF` and `COMPLAINTS_*_SELF` only),
 `consent-admin` (`dpdp-consent-admin`; every `internal_consent_mgt_*`, `:any` complaint and

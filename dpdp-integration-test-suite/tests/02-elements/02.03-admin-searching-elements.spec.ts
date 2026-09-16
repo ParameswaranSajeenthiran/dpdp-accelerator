@@ -17,7 +17,7 @@
  */
 
 import type { Page } from '@playwright/test'
-import { test, expect, loginAsConsentAdmin, type ConsentCleanupTracker } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ElementFormDialog } from '../../pages/ElementFormDialog'
 import { ElementListPage } from '../../pages/ElementListPage'
 import { uniqueElementName } from '../../utils/testData'
@@ -27,8 +27,7 @@ import { uniqueElementName } from '../../utils/testData'
  * tests/02-elements/02.01-admin-creating-elements.spec.ts for the actual creation flow.
  */
 
-/** Creates an element through the UI, tracks it for cleanup, and returns its id. */
-async function createElementViaUi(page: Page, tracker: ConsentCleanupTracker): Promise<string> {
+async function createElementViaUi(page: Page): Promise<void> {
   const listPage = new ElementListPage(page)
   await listPage.goto()
   await listPage.openCreateDialog()
@@ -36,18 +35,11 @@ async function createElementViaUi(page: Page, tracker: ConsentCleanupTracker): P
   await dialog.fill({ name: uniqueElementName() })
   await dialog.submit()
   await expect(page).toHaveURL(/\/elements\/[^/]+$/)
-  const match = /\/elements\/([^/]+)$/.exec(page.url())
-  if (!match) {
-    throw new Error(`Could not read an element id out of the detail URL: ${page.url()}`)
-  }
-  tracker.trackElement(match[1])
-  return match[1]
 }
 
 test.describe('Admin searching the Elements list (UI)', () => {
   test('02.03.01 - Searching by a partial name still finds the matching element', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const elementName = uniqueElementName()
@@ -59,10 +51,6 @@ test.describe('Admin searching the Elements list (UI)', () => {
     await dialog.fill({ name: elementName })
     await dialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/elements\/[^/]+$/)
-    const match = /\/elements\/([^/]+)$/.exec(consentAdminPage.url())
-    if (match) {
-      consentCleanupTracker.trackElement(match[1])
-    }
 
     // Only the timestamp segment of the generated `element-<timestamp>-<random>` name - proves
     // the search matches on a substring (the API filter is `name co "..."`), not just an exact
@@ -76,11 +64,10 @@ test.describe('Admin searching the Elements list (UI)', () => {
 
   test('02.03.02 - Resetting the search clears the filter and shows the unfiltered list again', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Seeded so there's a guaranteed row to reappear once the filter is cleared.
-    await createElementViaUi(consentAdminPage, consentCleanupTracker)
+    await createElementViaUi(consentAdminPage)
 
     const listPage = new ElementListPage(consentAdminPage)
     await listPage.goto()

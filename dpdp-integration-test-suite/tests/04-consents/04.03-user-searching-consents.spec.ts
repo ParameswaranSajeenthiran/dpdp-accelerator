@@ -31,7 +31,6 @@ test.describe('User searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     // Both seeded under the same unique service id and narrowed to it first, so the state
@@ -40,14 +39,12 @@ test.describe('User searching Consents (UI)', () => {
     const serviceId = randomServiceId()
     const pending = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
       serviceId,
     )
     const active = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       serviceId,
@@ -77,13 +74,11 @@ test.describe('User searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const serviceId = randomServiceId()
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       serviceId,
@@ -111,12 +106,10 @@ test.describe('User searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { serviceId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )

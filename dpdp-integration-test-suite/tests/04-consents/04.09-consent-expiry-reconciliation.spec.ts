@@ -61,12 +61,10 @@ test.describe('Consent expiry reconciliation (API)', () => {
   test('04.09.01 - A consent whose expiry time has not yet passed has no EXPIRE entry in its history', async ({
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const futureExpiry = Date.now() + 24 * 60 * 60 * 1000
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       undefined,
@@ -82,7 +80,6 @@ test.describe('Consent expiry reconciliation (API)', () => {
   test('04.09.02 - Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry', async ({
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     // A full minute in the past so the reconciler's own now-vs-expiryTime comparison (evaluated at
     // revoke time below, not at seed time) is unambiguously due regardless of the gap between this
@@ -90,7 +87,6 @@ test.describe('Consent expiry reconciliation (API)', () => {
     const pastExpiry = Date.now() - 60_000
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       undefined,
@@ -121,7 +117,6 @@ test.describe('Consent expiry reconciliation (API)', () => {
   test('04.09.03 - The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp', async ({
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const pollTimeout = consentExpirySchedulerPollTimeoutMs()
     test.skip(
@@ -139,7 +134,6 @@ test.describe('Consent expiry reconciliation (API)', () => {
     // it also becoming due first.
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       undefined,

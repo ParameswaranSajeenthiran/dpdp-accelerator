@@ -40,16 +40,6 @@ import { resolveTarget, type Target } from '../utils/targets'
  * persona, instead of each one logging in for itself.
  */
 
-/**
- * A place for a test to register the id of an Element or Purpose it created through the UI, so
- * it gets deleted again once the test finishes - without this, every regression run only adds
- * data.
- */
-export interface ConsentCleanupTracker {
-  trackElement: (id: string) => void
-  trackPurpose: (id: string) => void
-}
-
 interface Fixtures {
   // The current run's resolved target (multi-tenant per-run tenant, or the super tenant) - the
   // one place a test needs an actual persona username/password rather than a ready-made,
@@ -59,7 +49,6 @@ interface Fixtures {
   target: Target
   userConsentApi: ConsentApiClient
   consentAdminConsentApi: ConsentApiClient
-  consentCleanupTracker: ConsentCleanupTracker
   // "Officer" here is any dpdp-consent-admin holder (see AGENTS.md's
   // Personas section) - reuses the same consent-admin persona/login as consentAdminConsentApi,
   // just wrapped in the complaint client instead of the consent one.
@@ -543,21 +532,6 @@ export const test = base.extend<Fixtures>({
     )
   },
 
-  consentCleanupTracker: async ({ consentAdminConsentApi }, use) => {
-    const elementIds: string[] = []
-    const purposeIds: string[] = []
-    await use({
-      trackElement: (id) => elementIds.push(id),
-      trackPurpose: (id) => purposeIds.push(id),
-    })
-    // Sequential cleanup, not perf-sensitive.
-    for (const id of purposeIds) {
-      await consentAdminConsentApi.deletePurpose(id).catch(() => undefined)
-    }
-    for (const id of elementIds) {
-      await consentAdminConsentApi.deleteElement(id).catch(() => undefined)
-    }
-  },
 })
 
 export { expect } from '@playwright/test'

@@ -35,12 +35,10 @@ test.describe('Admin viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
@@ -84,13 +82,11 @@ test.describe('Admin viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )
@@ -128,13 +124,11 @@ test.describe('Admin viewing Consent History (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )

@@ -39,12 +39,10 @@ test.describe('User viewing Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { consentId, purposeName, elementDisplayName, serviceId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
@@ -76,7 +74,6 @@ test.describe('User viewing Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     test.skip(!hasSecondUser(), 'personas.user2 is not configured')
     // hasSecondUser() already confirmed this is set - the skip above guards it.
@@ -87,7 +84,6 @@ test.describe('User viewing Consents (UI)', () => {
 
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
@@ -108,7 +104,6 @@ test.describe('User viewing Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     // One more than the smallest page size, so there's guaranteed to be a next page regardless
@@ -116,7 +111,7 @@ test.describe('User viewing Consents (UI)', () => {
     // forever (AGENTS.md), so this is never seeding into a genuinely empty list.
     const seedCount = 6
     for (let i = 0; i < seedCount; i += 1) {
-      await seedConsent(consentAdminConsentApi, consentCleanupTracker, target.personas.user.username, 'ACTIVE')
+      await seedConsent(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
     }
 
     const listPage = new MyConsentPage(userPage)
@@ -132,12 +127,10 @@ test.describe('User viewing Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const userPage = await loginAsUser(browser)
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
     )

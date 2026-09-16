@@ -49,8 +49,6 @@ test.describe('Admin deleting Elements (UI)', () => {
     if (!elementId) {
       throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
     }
-    // Not tracked with consentCleanupTracker: the delete below is the thing under test, so
-    // there's nothing left to clean up once it succeeds.
 
     const detailPage = new ElementDetailPage(consentAdminPage)
     await detailPage.deleteButton.click()
@@ -68,7 +66,6 @@ test.describe('Admin deleting Elements (UI)', () => {
 
   test('02.04.02 - An element still referenced by a purpose cannot be deleted', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const elementName = uniqueElementName()
@@ -84,7 +81,6 @@ test.describe('Admin deleting Elements (UI)', () => {
     if (!elementId) {
       throw new Error(`Could not read an element id out of the detail URL: ${consentAdminPage.url()}`)
     }
-    consentCleanupTracker.trackElement(elementId)
 
     const purposeListPage = new PurposeListPage(consentAdminPage)
     await purposeListPage.goto()
@@ -96,11 +92,6 @@ test.describe('Admin deleting Elements (UI)', () => {
     await purposeDialog.addElementByName(elementName, false)
     await purposeDialog.submit()
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeId = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())?.[1]
-    if (!purposeId) {
-      throw new Error(`Could not read a purpose id out of the detail URL: ${consentAdminPage.url()}`)
-    }
-    consentCleanupTracker.trackPurpose(purposeId)
 
     const detailPage = new ElementDetailPage(consentAdminPage)
     await detailPage.goto(elementId)

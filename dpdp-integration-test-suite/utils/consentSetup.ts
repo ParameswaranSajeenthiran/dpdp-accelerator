@@ -18,7 +18,6 @@
 
 import { expect } from '@playwright/test'
 import type { AuthorizationEntry, ConsentApiClient } from '../clients/ConsentApiClient'
-import type { ConsentCleanupTracker } from '../fixtures/auth.fixtures'
 import { randomElementProfile, randomPurposeProfile, randomServiceId } from './testData'
 
 export interface SeededConsent {
@@ -42,13 +41,12 @@ export interface SeededConsent {
  * `state: 'PENDING'` supplies `authorizations` instead of `state` - the consent-mgt v2 API sets
  * PENDING automatically when authorizations are present and rejects an explicit PENDING state.
  *
- * The Element and Purpose created are registered with `tracker` (see fixtures/auth.fixtures.ts)
- * so they're deleted again once the calling test finishes - this helper's whole point is
- * disposable, test-specific setup, never the persistent realistic demo dataset.
+ * The Element, Purpose, and Consent created are never deleted - same as every other Consent in
+ * this suite (there's no delete-by-id for Consents at all), they accumulate in the shared
+ * environment for good.
  */
 export async function seedConsent(
   adminApi: ConsentApiClient,
-  tracker: ConsentCleanupTracker,
   subjectId: string,
   state: 'ACTIVE' | 'REJECTED' | 'PENDING',
   serviceId: string = randomServiceId(),
@@ -74,7 +72,6 @@ export async function seedConsent(
   })
   expect(elementResponse.status()).toBe(201)
   const elementId = ((await elementResponse.json()) as { id: string }).id
-  tracker.trackElement(elementId)
 
   const purpose = randomPurposeProfile()
   const purposeName = purpose.name
@@ -86,7 +83,6 @@ export async function seedConsent(
   })
   expect(purposeResponse.status()).toBe(201)
   const purposeId = ((await purposeResponse.json()) as { id: string }).id
-  tracker.trackPurpose(purposeId)
 
   const consentResponse = await adminApi.createConsent({
     subjectId,

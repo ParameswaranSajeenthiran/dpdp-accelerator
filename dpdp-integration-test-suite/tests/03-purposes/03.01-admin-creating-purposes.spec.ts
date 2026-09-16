@@ -22,16 +22,11 @@ import { PurposeListPage } from '../../pages/PurposeListPage'
 import { uniquePurposeName } from '../../utils/testData'
 
 /**
- * The "Add Purpose" form's edge cases and validation rules. The happy-path creation flow is not
- * duplicated here: every consent test drives this same form as setup via `seedConsent`
- * (utils/consentSetup.ts), so a passing 04-consents run already proves it. Purposes/Elements
- * created here are registered with `consentCleanupTracker` so they're deleted again once the test
- * finishes - see fixtures/auth.fixtures.ts's ConsentCleanupTracker.
+ * The "Add Purpose" form: the happy path plus its validation rules.
  */
 test.describe('Admin creating Purposes (UI)', () => {
   test('03.01.01 - A purpose with no elements and no properties shows the catalog empty-state messages', async ({
     browser,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const listPage = new PurposeListPage(consentAdminPage)
@@ -43,10 +38,6 @@ test.describe('Admin creating Purposes (UI)', () => {
     await dialog.submit()
 
     await expect(consentAdminPage).toHaveURL(/\/purposes\/[^/]+$/)
-    const purposeMatch = /\/purposes\/([^/]+)$/.exec(consentAdminPage.url())
-    if (purposeMatch) {
-      consentCleanupTracker.trackPurpose(purposeMatch[1])
-    }
     await expect(consentAdminPage.getByText('No custom properties.')).toBeVisible()
     await expect(
       consentAdminPage.getByText('No elements are configured for this version.'),

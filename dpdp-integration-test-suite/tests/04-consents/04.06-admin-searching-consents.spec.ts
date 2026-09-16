@@ -33,18 +33,15 @@ test.describe('Admin searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const first = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
     const second = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
     )
@@ -63,13 +60,11 @@ test.describe('Admin searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     const serviceId = randomServiceId()
     const { consentId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       serviceId,
@@ -92,7 +87,6 @@ test.describe('Admin searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Unlike the Consent ID filter (which disables the state filter - see the test above), the
@@ -103,14 +97,12 @@ test.describe('Admin searching Consents (UI)', () => {
     const serviceId = randomServiceId()
     const pending = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
       serviceId,
     )
     const active = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'ACTIVE',
       serviceId,
@@ -165,7 +157,6 @@ test.describe('Admin searching Consents (UI)', () => {
     browser,
     target,
     consentAdminConsentApi,
-    consentCleanupTracker,
   }) => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
     // for the authorizer, same as tests/04-consents/04.07-user-viewing-consent-history.spec.ts's
@@ -181,7 +172,6 @@ test.describe('Admin searching Consents (UI)', () => {
     // don't match - see the identical rationale in 04.07's delegated-consent test.
     const { consentId, serviceId } = await seedConsent(
       consentAdminConsentApi,
-      consentCleanupTracker,
       target.personas.user.username,
       'PENDING',
       undefined,
