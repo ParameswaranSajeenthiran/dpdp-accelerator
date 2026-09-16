@@ -514,3 +514,20 @@ on a live deployment without a rebuild).
 
 - Never commit or push without being explicitly asked, even after a large multi-file change.
 - Keep comments short and explain *why*, not *what* — this repo trims verbose javadoc on sight.
+
+### Code comments
+
+- Do not add comments that describe the change you made, the fix you applied, or why you edited
+  something. That belongs in the chat response or commit message, not the code.
+- Do not add comments that restate what the code visibly does (e.g. `// increment counter`,
+  `// return the result`).
+- Do not add comments marking edited regions (`// Added`, `// Fixed`, `// Updated to handle X`,
+  `// Changed from Y`).
+- Do not leave TODO/NOTE comments about the task you were given.
+- Do not add explanatory docblocks to functions you only modified. Leave existing comments
+  untouched unless they are now wrong.
+- Only write a comment when a future reader would need it to understand the code: a non-obvious
+  invariant, a workaround for a specific bug/quirk (with the reason), a subtle ordering or
+  concurrency requirement, or a public API contract.
+- Before finishing, review your diff and delete any comment that only makes sense to someone who
+  knows what the task was.
