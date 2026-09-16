@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { type Locator, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import { submitFilterValue } from '../utils/filterCommit'
 import { ConsentRegistryTable } from './ConsentRegistryTable'
 
@@ -92,6 +92,28 @@ export class AdminConsentPage extends ConsentRegistryTable {
     await this.page.getByRole('option', { name: relation, exact: true }).click()
   }
 
+  /**
+   * filterByUserAndRelation, additionally narrowed to one consent's own serviceId. A relation
+   * filter alone identifies a set - potentially a large and ever-growing one, since consents are
+   * never deleted (AGENTS.md) - not a single consent, so a test looking for one specific
+   * newly-seeded consent needs the same unique-marker narrowing every other search in this suite
+   * already uses. Without it, that consent silently falls off the default page-1/oldest-first
+   * window once this persona has accumulated more than a page's worth of prior consents in this
+   * relation - not a timing race, a guaranteed eventual failure as the shared list grows.
+   */
+  async filterByUserRelationAndService(
+    userId: string,
+    relation: 'Any' | 'Subject' | 'Authorizer',
+    serviceId: string,
+  ): Promise<void> {
+    await this.openAdvancedFilters()
+    await this.page.getByLabel('User', { exact: true }).fill(userId)
+    await this.page.getByLabel('Service').fill(serviceId)
+    await this.page.getByRole('button', { name: 'Apply' }).click()
+    await this.relationFilter.click()
+    await this.page.getByRole('option', { name: relation, exact: true }).click()
+  }
+
   get stateFilter(): Locator {
     // getByLabel('State') also matches an unrelated tooltip whose aria-label contains "state" as
     // a substring ("Remove the Consent ID filter to use the state filter."), so this goes
@@ -110,6 +132,17 @@ export class AdminConsentPage extends ConsentRegistryTable {
 
   async clearAllFilters(): Promise<void> {
     await this.page.getByRole('button', { name: 'Clear all' }).click()
+    // Clearing changes the URL, and AdminConsentFilters remounts on that URL change
+    // (`key={searchParams.toString()}` in AdminConsentRegistryPage.tsx) - a fill() that lands in
+    // the gap before that remount finishes gets silently wiped when the remount arrives and
+    // re-initialises the field from the (still-empty, at that instant) filters. Confirmed live:
+    // filling User immediately after Clear all intermittently lost the typed value this way.
+    // Waiting for the URL to actually reflect the cleared filters first narrows that window, but
+    // the URL updates on React Router's own state change a tick before the remount it triggers
+    // actually finishes rendering - so also wait for the remounted field to visibly show empty,
+    // which is the one signal that's true only once the new instance has actually mounted.
+    await this.page.waitForURL((url) => new URL(url.toString()).search === '')
+    await expect(this.page.getByLabel('User', { exact: true })).toHaveValue('')
   }
 
   /**

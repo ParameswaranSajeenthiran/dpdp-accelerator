@@ -184,7 +184,7 @@ test.describe('Admin searching Consents (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // subjectId (target.personas.user) and authorizations[].userId (authorizer) deliberately
     // don't match - see the identical rationale in 04.07's delegated-consent test.
-    const { consentId } = await seedConsent(
+    const { consentId, serviceId } = await seedConsent(
       consentAdminPage,
       consentAdminConsentApi,
       consentCleanupTracker,
@@ -197,7 +197,13 @@ test.describe('Admin searching Consents (UI)', () => {
 
     const registryPage = new AdminConsentPage(consentAdminPage)
     await registryPage.goto()
-    await registryPage.filterByUserAndRelation(authorizer.username, 'Authorizer')
+    // Also narrowed to this consent's own serviceId - the authorizer persona is shared and never
+    // cleaned up (AGENTS.md), so relation+user alone identifies a set that keeps growing across
+    // every run that has ever used it, not this one consent. Without the extra narrowing, this
+    // consent falls off the default page-1/oldest-first window once that set outgrows one page -
+    // a guaranteed eventual failure, not a timing flake. See filterByUserRelationAndService's
+    // own doc comment.
+    await registryPage.filterByUserRelationAndService(authorizer.username, 'Authorizer', serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toBeVisible()
 
     await registryPage.clearAllFilters()
