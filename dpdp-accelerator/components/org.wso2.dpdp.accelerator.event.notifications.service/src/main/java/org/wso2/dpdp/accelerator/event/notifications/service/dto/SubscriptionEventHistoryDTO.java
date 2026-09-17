@@ -151,4 +151,5 @@ public class SubscriptionEventHistoryDTO {
     public void setManualRetryAvailable(boolean manualRetryAvailable) {
         this.manualRetryAvailable = manualRetryAvailable;
     }
+    
 }
