@@ -57,6 +57,17 @@ on:
         required: false
         type: boolean
         default: false
+      projects:
+        description: >-
+          Space-separated Playwright project names to run (see dpdp-integration-test-suite/
+          playwright.config.ts). Empty runs every project, `multi-tenant` and `super-tenant`
+          included - what a release gate or scheduled run wants. pr-e2e.yml passes
+          `multi-tenant` alone to keep the label-gated PR path fast; super-tenant's own
+          coverage (unqualified-root routing, tenant-provisioning skip) still runs nightly -
+          see nightly-e2e.yml.
+        required: false
+        type: string
+        default: ''
     secrets:
       SOLUTIONS_BOT_EMAIL:
         required: false
@@ -485,7 +496,7 @@ jobs:
           password = os.environ['PASSWORD']
           config = {
               'personas': {
-                  name: {'password': password} for name in ('user', 'user2', 'consentAdmin')
+                  name: {'password': password} for name in ('user', 'user2', 'consentAdmin', 'dpo')
               },
               'webhook': {
                   'receiverHost': os.environ['WEBHOOK_HOST'] or None,
@@ -570,7 +581,14 @@ jobs:
       # itself only declares html.
       - name: Run Playwright
         working-directory: dpdp-integration-test-suite
-        run: ./run-e2e.sh --reporter=github,html
+        env:
+          PROJECTS: ${{ inputs.projects }}
+        run: |
+          project_args=()
+          for p in ${PROJECTS}; do
+            project_args+=(--project="${p}")
+          done
+          ./run-e2e.sh --reporter=github,html "${project_args[@]}"
 
       - name: Upload Playwright report
         if: always()

@@ -89,10 +89,6 @@ function spaClient(): AsgardeoSPAClient {
   return instance
 }
 
-export function isAuthEnabled(): boolean {
-  return import.meta.env.VITE_AUTH_ENABLED === 'true'
-}
-
 async function readDeploymentConfig(): Promise<DeploymentConfig> {
   const fallback: DeploymentConfig = {
     clientID: DEFAULT_CLIENT_ID,
@@ -242,9 +238,6 @@ export function takeReturnPath(): string | undefined {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  if (!isAuthEnabled()) {
-    return true
-  }
   await initAuth()
   return (await spaClient().isAuthenticated()) ?? false
 }
@@ -258,9 +251,6 @@ export async function isAuthenticated(): Promise<boolean> {
  * redirect never waits on something that is not coming.
  */
 export async function ensureSignedIn(): Promise<boolean> {
-  if (!isAuthEnabled()) {
-    return true
-  }
   await initAuth()
   const client = spaClient()
   if (await client.isAuthenticated()) {
@@ -294,9 +284,6 @@ export async function ensureSignedIn(): Promise<boolean> {
 
 /** Starts a fresh sign-in, discarding any half-finished session. */
 export async function login(): Promise<void> {
-  if (!isAuthEnabled()) {
-    return
-  }
   await initAuth()
   rememberReturnPath()
   await spaClient().signIn()
@@ -304,9 +291,6 @@ export async function login(): Promise<void> {
 
 /** Ends the Identity Server session; token revocation is done server-side. */
 export async function logout(): Promise<void> {
-  if (!isAuthEnabled()) {
-    return
-  }
   await initAuth()
   await spaClient().signOut()
 }
@@ -318,9 +302,6 @@ export async function logout(): Promise<void> {
  * session without navigating anywhere.
  */
 export async function clearLocalSession(): Promise<void> {
-  if (!isAuthEnabled()) {
-    return
-  }
   await initAuth()
   try {
     await spaClient().revokeAccessToken()
@@ -337,9 +318,6 @@ export async function getBasicUser(): Promise<BasicUserInfo | undefined> {
 
 /** Claims from the ID token, used for the profile menu. */
 export async function getUserProfile(): Promise<UserProfile | undefined> {
-  if (!isAuthEnabled()) {
-    return undefined
-  }
   await initAuth()
   return (await spaClient().getDecodedIDToken()) as UserProfile | undefined
 }

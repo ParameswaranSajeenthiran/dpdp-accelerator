@@ -3,29 +3,26 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+/** Renders the documentation title and introduction. */
 function Hero() {
   const { siteConfig } = useDocusaurusContext();
   return (
     <header style={{ padding: '4rem 0', textAlign: 'center' }}>
       <h1>{siteConfig.title}</h1>
       <p style={{ fontSize: '1.25rem' }}>{siteConfig.tagline}</p>
-      <div style={{ marginTop: '2rem' }}>
-        <Link className="button button--primary button--lg" to="/docs/setup-guide">
-          Get started
-        </Link>
-      </div>
     </header>
   );
 }
 
 const guides = [
-  { title: 'Setup', description: 'Install the accelerator and start the Identity Server.', to: '/docs/setup-guide' },
-  { title: 'Configuration', description: 'Register the Consent Portal application and assign roles.', to: '/docs/configuration-guide' },
-  { title: 'Event Notifications', description: 'Create topics, publish events, and manage subscriptions.', to: '/docs/event-notification-guide' },
-  { title: 'Localization', description: 'Fix wording and localize Purposes/Elements.', to: '/docs/localization-guide' },
-  { title: 'Release', description: 'Cut a release with the Release builder workflow.', to: '/docs/release-guide' },
+  { title: 'Introduction', description: 'Understand the DPDP Accelerator and its capabilities.', to: '/docs/introduction' },
+  { title: 'Getting Started', description: 'Install the accelerator and open the Consent Portal.', to: '/docs/quickstart' },
+  { title: 'Install and Setup', description: 'Prepare databases and configure portal roles and runtime features.', to: '/docs/setup-guide' },
+  { title: 'Learn and Tryout', description: 'Explore real stories and follow feature walkthroughs.', to: '/docs/learn' },
+  { title: 'Developer Guide', description: 'Explore roles, Event Notifications, grievances, and localization.', to: '/docs/developer-guide' },
 ];
 
+/** Links a guide category to its documentation entry point. */
 function GuideCard({ title, description, to }) {
   return (
     <Link
@@ -45,6 +42,7 @@ function GuideCard({ title, description, to }) {
   );
 }
 
+/** Renders the documentation landing page and its guide categories. */
 export default function Home() {
   return (
     <Layout title="Home" description="Documentation for the WSO2 DPDP Accelerator">

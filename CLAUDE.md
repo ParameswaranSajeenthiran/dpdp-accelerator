@@ -45,6 +45,13 @@ Identity Server from scratch and runs Playwright against it only once a maintain
 secrets in scope. `pr-e2e-gate.yml` strips that label on every new push and publishes the
 `E2E (label-gated)` commit status, so the label can never carry over to unreviewed code.
 
+`pr-e2e.yml` runs only the `multi-tenant` Playwright project - `super-tenant`'s own coverage
+(unqualified-root routing, the tenant-provisioning-skip path) isn't exercised on every PR. Instead
+`nightly-e2e.yml` runs every project (`e2e.yml`'s own default when its `projects` input is empty)
+against the default branch nightly, so a super-tenant-only regression surfaces within a day rather
+than going unnoticed until the Saturday weekly jobs or a release gate. `release-builder.yml`
+likewise passes no `projects` override, so a release is still gated on every project.
+
 The Identity Server under test comes from the `updates2.0` S3 bucket (`IS_PACK_S3_URI`) with U2
 updates applied. The published GitHub release zip is *not* U2-updatable — don't reintroduce that
 path. `e2e.yml` still accepts `is_source: master`, which `weekly-e2e-is-master.yml` runs on a
@@ -163,8 +170,9 @@ this and every other tenant lifecycle hook follows.
 Runs against a **real, persistent, shared** IS — nothing is mocked, and the environment never
 resets. Consequences that shape every test: assert by unique marker or server-issued ID, never by
 empty lists or row counts. Personas log in **once per run**, cached across workers in
-`fixtures/auth.fixtures.ts`. Tests delete Elements/Purposes they create but not Consents — the
-product has no delete-by-id for them, so they accumulate.
+`fixtures/auth.fixtures.ts`. Nothing a test creates is deleted afterward — Elements, Purposes, and
+Consents all accumulate in the shared environment for good. Leaving them behind is fine as long as
+it doesn't affect another test run; don't add cleanup/teardown code for it.
 
 **Before writing or changing a test there, read `dpdp-integration-test-suite/AGENTS.md`.** It
 carries the rules that aren't guessable: the crossed directory/test-ID numbering, sourcing locators
@@ -507,3 +515,20 @@ on a live deployment without a rebuild).
 
 - Never commit or push without being explicitly asked, even after a large multi-file change.
 - Keep comments short and explain *why*, not *what* — this repo trims verbose javadoc on sight.
+
+### Code comments
+
+- Do not add comments that describe the change you made, the fix you applied, or why you edited
+  something. That belongs in the chat response or commit message, not the code.
+- Do not add comments that restate what the code visibly does (e.g. `// increment counter`,
+  `// return the result`).
+- Do not add comments marking edited regions (`// Added`, `// Fixed`, `// Updated to handle X`,
+  `// Changed from Y`).
+- Do not leave TODO/NOTE comments about the task you were given.
+- Do not add explanatory docblocks to functions you only modified. Leave existing comments
+  untouched unless they are now wrong.
+- Only write a comment when a future reader would need it to understand the code: a non-obvious
+  invariant, a workaround for a specific bug/quirk (with the reason), a subtle ordering or
+  concurrency requirement, or a public API contract.
+- Before finishing, review your diff and delete any comment that only makes sense to someone who
+  knows what the task was.

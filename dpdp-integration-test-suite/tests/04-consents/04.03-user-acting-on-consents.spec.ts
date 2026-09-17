@@ -1,0 +1,154 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import { test, expect, loginAsUser } from '../../fixtures/auth.fixtures'
+import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
+import { MyConsentPage } from '../../pages/MyConsentPage'
+import { seedConsentViaApi } from '../../utils/consentSetup'
+
+/**
+ * Approve/reject/revoke, from both the list and the detail page, plus the terminal-state guard
+ * (a Rejected consent offers none of these actions). Only Consent creation goes through the
+ * admin API (see utils/consentSetup.ts - it has no create UI at all); the Element and Purpose
+ * each seeded consent needs are also created via the admin API, since none of these tests are
+ * exercising the create-Element/create-Purpose forms - only `consentAdminConsentApi` is needed
+ * for seeding, so there's no admin browser session to log in or close here.
+ * `internal_login` alone (granted to every signed-in user, no role needed) is enough for both
+ * consent scopes here, so the existing user persona needs no extra role for any of this.
+ */
+test.describe('User acting on Consents (UI)', () => {
+  test('04.03.01 - Approving a Pending consent from the list moves it to Active', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const { consentId, serviceId } = await seedConsentViaApi(
+      consentAdminConsentApi,
+      target.personas.user.username,
+      'PENDING',
+    )
+
+    const registryPage = new MyConsentPage(userPage)
+    await registryPage.goto()
+    // Filtered to this test's own unique service id - see the identical comment on the revoke
+    // test below.
+    await registryPage.searchByService(serviceId)
+    await expect(registryPage.rowByConsentId(consentId)).toContainText('Pending')
+
+    await registryPage.approveFromList(consentId)
+    await userPage.getByRole('button', { name: 'Approve Consent' }).click()
+
+    await expect(registryPage.rowByConsentId(consentId)).toContainText('Active')
+    await userPage.context().close()
+  })
+
+  test('04.03.02 - Rejecting a Pending consent from its detail page moves it to Rejected', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const { consentId } = await seedConsentViaApi(
+      consentAdminConsentApi,
+      target.personas.user.username,
+      'PENDING',
+    )
+
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.goto(consentId)
+    await detailPage.openActionDialog('reject')
+    await expect(detailPage.dialogTitle('reject')).toBeVisible()
+    await detailPage.confirmAction('reject')
+
+    // .first(): the metadata card's state chip and the authorizations table's own state chip
+    // both render the literal state text once the sole authorizer (this same user)
+    // is also moved to Rejected.
+    await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
+    await userPage.context().close()
+  })
+
+  test('04.03.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const { consentId, serviceId } = await seedConsentViaApi(
+      consentAdminConsentApi,
+      target.personas.user.username,
+      'ACTIVE',
+    )
+
+    const registryPage = new MyConsentPage(userPage)
+    await registryPage.goto()
+    // Filtered to this test's own unique service id: the unfiltered list is sorted and paged,
+    // and a persistent environment can easily push a freshly created row off the first page.
+    await registryPage.searchByService(serviceId)
+    await registryPage.revokeFromList(consentId)
+    await userPage.getByRole('button', { name: 'Revoke Consent' }).click()
+
+    await expect(registryPage.rowByConsentId(consentId)).toContainText('Revoked')
+    await expect(
+      registryPage.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }),
+    ).toHaveCount(0)
+    await userPage.context().close()
+  })
+
+  test('04.03.04 - Approving from the detail page works the same way as from the list', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const { consentId } = await seedConsentViaApi(
+      consentAdminConsentApi,
+      target.personas.user.username,
+      'PENDING',
+    )
+
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.goto(consentId)
+    await detailPage.openActionDialog('approve')
+    await detailPage.confirmAction('approve')
+
+    await expect(userPage.getByText('Active', { exact: true }).first()).toBeVisible()
+    await userPage.context().close()
+  })
+
+  test('04.03.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
+    browser,
+    target,
+    consentAdminConsentApi,
+  }) => {
+    const userPage = await loginAsUser(browser)
+    const { consentId } = await seedConsentViaApi(
+      consentAdminConsentApi,
+      target.personas.user.username,
+      'REJECTED',
+    )
+
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.goto(consentId)
+    await expect(detailPage.purposesSection).toBeVisible()
+    await expect(userPage.getByRole('button', { name: 'Approve', exact: true })).toBeVisible()
+    await expect(userPage.getByRole('button', { name: 'Reject', exact: true })).toHaveCount(0)
+    await expect(userPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
+    await userPage.context().close()
+  })
+})

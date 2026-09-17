@@ -154,7 +154,7 @@
         "title": "Confirm Revocation",
         "message": "Are you sure you want to revoke consent?",
         "note": "This action revokes both mandatory and optional consents granted for all associated purposes.",
-        "confirm": "Revoke Consents"
+        "confirm": "Revoke Consent"
       }
     },
     "status": {
@@ -217,7 +217,7 @@
         "updated": "Consent updated",
         "approved": "Approved",
         "rejected": "Rejected",
-        "authorizeRevoked": "Revoked by reviewer",
+        "authorizeRevoked": "Revoked",
         "revoked": "Revoked",
         "deleted": "Deleted",
         "expired": "Expired",

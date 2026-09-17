@@ -28,11 +28,30 @@ import { type Locator, type Page } from '@playwright/test'
  */
 export abstract class ConsentRegistryTable {
   readonly table: Locator
+  readonly rowsPerPageSelect: Locator
+  readonly previousPageButton: Locator
+  readonly nextPageButton: Locator
 
   // Protected rather than private: every subclass drives its own filter controls and its own
   // goto() off the same page handle.
   protected constructor(protected readonly page: Page) {
     this.table = page.getByRole('table', { name: 'Consent registry table' })
+    // Cursor pagination (CursorPaginationFooter.tsx) - no numbered pages, no exact total, just
+    // Previous/Next and a rows-per-page choice of 5/10/25. Same combobox pattern as
+    // pages/TopicsPage.ts, which uses this identical component.
+    this.rowsPerPageSelect = page.getByRole('combobox', { name: 'Rows per page' })
+    this.previousPageButton = page.getByRole('button', { name: 'Previous' })
+    this.nextPageButton = page.getByRole('button', { name: 'Next' })
+  }
+
+  async setRowsPerPage(count: 5 | 10 | 25): Promise<void> {
+    await this.rowsPerPageSelect.click()
+    await this.page.getByRole('option', { name: String(count), exact: true }).click()
+  }
+
+  /** Data rows only - scoped to tbody so the header row is never counted as a result. */
+  get rows(): Locator {
+    return this.table.locator('tbody').getByRole('row')
   }
 
   abstract goto(): Promise<void>

@@ -416,6 +416,9 @@ statutory_due_period_days = 90
 attachment_max_size_bytes = 10485760
 # Maximum number of files a single complaint attachment upload request may carry (see AttachmentPolicy).
 attachment_max_files_per_upload = 5
+# Complaint-related emails (creation, comments, acknowledgements) are off by default. Set true to
+# enable them - requires [output_adapter.email] SMTP settings above to actually be configured.
+email_notifications_enabled = false
 
 # Event Notification Framework runtime settings.
 [dpdp_accelerator.event_notifications]
@@ -478,7 +481,7 @@ snapshot_enabled = true
 # reports EXPIRED on read once expiryTime passes; this only fills in the missing history
 # record for when that happened). cron_value is a standard Quartz cron expression; the
 # default runs once daily at midnight. In a clustered deployment, see the "Clustering
-# requirements" section of docs/configuration-guide.md before relying on this in production.
+# requirements" section of docs/content/configuration-guide.md before relying on this in production.
 [dpdp_accelerator.consent_expiry]
 enabled = true
 cron_value = "0 0 0 * * ?"

@@ -16,14 +16,14 @@
  * under the License.
  */
 
-import { type Browser, type Locator, type Page, type Request, request as playwrightRequest } from '@playwright/test'
+import { type Browser, type Page, type Request, request as playwrightRequest } from '@playwright/test'
 import { ConsentApiClient } from '../clients/ConsentApiClient'
 import { EventNotificationApiClient } from '../clients/EventNotificationApiClient'
-import { ConsoleAddUserWizard } from '../pages/ConsoleAddUserWizard'
 import { ConsoleRoleAssignment } from '../pages/ConsoleRoleAssignment'
 import { ConsoleRootOrganizationWizard } from '../pages/ConsoleRootOrganizationWizard'
 import { LoginPage } from '../pages/LoginPage'
 import { authHeadersFromPersonaState, type PersonaAuthState } from '../utils/authStorage'
+import { fillLoginForm, loginToConsole } from '../utils/consoleSessions'
 import { consoleRootOrganizationsUrl, env, tenantConsoleUrl, tenantPortalUrl, type Persona } from '../utils/env'
 import { uniqueMarker, uniqueTenantDomain } from '../utils/testData'
 // Extends auth.fixtures's own `test`, not raw @playwright/test - tests/05-multi-tenancy needs
@@ -33,9 +33,9 @@ import { uniqueMarker, uniqueTenantDomain } from '../utils/testData'
 import { test as base } from './auth.fixtures'
 
 /**
- * Everything tests/05-multi-tenancy needs about the one throwaway tenant this worker created:
- * its domain, its two personas (see the `tenant` fixture below for what each is for), and a
- * ready-made API client bound to the owner's auth, tenant-qualified.
+ * Everything tests/09-event-notifications needs about the one throwaway tenant this worker
+ * created: its domain, its owner persona, and ready-made API clients bound to the owner's auth,
+ * tenant-qualified.
  */
 export interface TenantContext {
   domain: string
@@ -45,12 +45,9 @@ export interface TenantContext {
    * application role (confirmed live: without the explicit assignment below, the owner's sidebar
    * has no admin items at all). */
   owner: Persona
-  /** Created via the owner's own Console "Add User" wizard and assigned dpdp-consent-user
-   * (no permissions) - the tenant-local equivalent of the super tenant's plain `user` persona. */
-  consentUser: Persona
   ownerConsentApi: ConsentApiClient
-  // Tenant-qualified the same way ownerConsentApi is - tests/08-event-notifications' tenant
-  // isolation file (05.10) uses this directly rather than re-deriving tenant-scoped headers of
+  // Tenant-qualified the same way ownerConsentApi is - tests/09-event-notifications' tenant
+  // isolation file (09.11) uses this directly rather than re-deriving tenant-scoped headers of
   // its own.
   ownerEventApi: EventNotificationApiClient
 }
@@ -58,81 +55,12 @@ export interface TenantContext {
 // `tenant`/`tenantB` are worker-scoped (see the `test.extend` call below), which Playwright's
 // fixture typing requires declaring as the *second* type parameter, separate from any per-test
 // fixtures - there are none needed here, hence the empty first type argument. `tenantB` exists
-// only for tests/08-event-notifications/08.11-tenant-isolation-api.spec.ts, which needs two
+// only for tests/09-event-notifications/09.11-tenant-isolation-api.spec.ts, which needs two
 // distinct tenants live at once (proving tenant A's data never leaks into tenant B's view and
 // vice versa) - every other multi-tenancy test in this suite only ever needed one.
 interface WorkerFixtures {
   tenant: TenantContext
   tenantB: TenantContext
-}
-
-/**
- * Waits for a Console/portal login form to appear and fills it in. Deliberately not a call into
- * fixtures/auth.fixtures.ts's ensureSignedIn: that function is tightly coupled to the super
- * tenant's own portal base URL and to a cross-worker `.auth/` login cache, neither of which
- * applies here - every tenant this fixture creates belongs to exactly one worker for the
- * whole run, so there is nothing to cache and no other worker to race against.
- */
-async function fillLoginForm(page: Page, persona: Persona): Promise<void> {
-  const loginPage = new LoginPage(page)
-  await loginPage.signIn(persona)
-  if (await loginPage.errorMessage.isVisible({ timeout: 5_000 }).catch(() => false)) {
-    const message = (await loginPage.errorMessage.textContent())?.trim()
-    throw new Error(`Sign-in failed for persona "${persona.username}": ${message ?? 'Login failed.'}`)
-  }
-}
-
-/**
- * Logs into a Console URL as `persona`, in a fresh context. `consoleUrl` is a full absolute URL
- * (the super tenant's root-organizations page, or a specific tenant's own `/console`) - both are
- * different apps than the portal this suite's baseURL points at, so page.goto() here always
- * takes an absolute URL rather than relying on playwright.config.ts's baseURL.
- */
-async function loginToConsole(
-  browser: Browser,
-  consoleUrl: string,
-  persona: Persona,
-  ready?: (page: Page) => Locator,
-): Promise<Page> {
-  let lastError: unknown
-
-  // Retried as a whole, with a brand-new context each attempt, because the Console's own token
-  // exchange sometimes fails server-side in a way the SPA never recovers from: IS logs
-  // "IdentityOAuth2Exception: Token binding reference cannot be retrieved from the token binder:
-  // cookie" for client CONSOLE, and the page then sits on its bootstrap spinner indefinitely -
-  // no error, no timeout of its own. Only a fresh cookie jar and a fresh authorize round clear
-  // it, so reloading the same context is not enough.
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const context = await browser.newContext({ ignoreHTTPSErrors: env.ignoreHttpsErrors })
-    const page = await context.newPage()
-
-    try {
-      await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' })
-      await page.locator('#usernameUserInput').waitFor({ state: 'visible', timeout: 20_000 })
-      await fillLoginForm(page, persona)
-      // Deliberately not checking for a specific post-login element (e.g. the sidebar's
-      // "Applications" link): confirmed empirically that the super tenant's Root Organizations page
-      // renders with no sidebar at all (a different layout than a tenant's own Console shell), so no
-      // single element is common to every page this function is asked to land on. The login form
-      // disappearing, generically, is what every successful login has in common. A caller that DOES
-      // know what it is about to interact with passes `ready`, which is what turns the hang above
-      // into a retry instead of a fixture timeout.
-      await page.locator('#usernameUserInput').waitFor({ state: 'hidden', timeout: 30_000 })
-      await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => undefined)
-      if (ready) {
-        await ready(page).waitFor({ state: 'visible', timeout: 30_000 })
-      }
-      return page
-    } catch (error) {
-      lastError = error
-      await context.close()
-    }
-  }
-
-  throw new Error(
-    `Console at ${consoleUrl} never became usable for "${persona.username}" after 3 attempts: ` +
-      `${lastError instanceof Error ? lastError.message : String(lastError)}`,
-  )
 }
 
 /**
@@ -203,23 +131,20 @@ async function loginToTenantPortal(
 interface CreatedTenant {
   domain: string
   owner: Persona
-  consentUser: Persona
   authState: PersonaAuthState
 }
 
 /**
- * The full create-tenant-then-create-second-user-then-assign-role setup, factored out so both
- * the `tenant` and `tenantB` fixtures below can share it - tests/08-event-notifications'
- * tenant-isolation file needs two live tenants at once, everything else in this suite needs one.
- * Returns the owner's captured auth state rather than building API clients itself, so the
- * caller (see the `tenant`/`tenantB` fixtures below) owns and disposes the `APIRequestContext`
- * those clients are bound to.
+ * The full create-tenant-then-assign-role setup, factored out so both the `tenant` and `tenantB`
+ * fixtures below can share it - tests/09-event-notifications' tenant-isolation file needs two
+ * live tenants at once, everything else in this suite needs one. Returns the owner's captured
+ * auth state rather than building API clients itself, so the caller (see the `tenant`/`tenantB`
+ * fixtures below) owns and disposes the `APIRequestContext` those clients are bound to.
  */
 async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const domain = uniqueTenantDomain()
   // Email-shaped: the accelerator enforces an email-address username.
   const owner: Persona = { username: `${uniqueMarker('tenant-owner')}@dpdp.test`, password: 'TenantOwner@2026!' }
-  const consentUser: Persona = { username: `${uniqueMarker('tenant-user')}@dpdp.test`, password: 'TenantUser@2026!' }
 
   // Step 1: super admin creates the tenant + owner through Console's "New Root Organization"
   // wizard. Confirmed live this is the only tenant-creation path whose password field works
@@ -250,52 +175,31 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
 
   // Step 2: the tenant owner logs into their OWN Console (never the super admin - confirmed
   // live that `admin` cannot log into a secondary tenant's Console at all, since classic
-  // tenants have fully independent user stores) and creates the second, lower-privilege user.
-  // Confirmed live to succeed here even though the identical `POST .../scim2/Users` call
-  // 401s when replayed directly via curl - see ConsoleAddUserWizard for the full story; this
+  // tenants have fully independent user stores) and is assigned dpdp-consent-admin. Role
+  // MEMBERSHIP is never auto-provisioned, only the roles themselves - true for the super tenant
+  // too (see scripts/provision-test-users.sh and docs/content/configuration-guide.md's "Recovering a
+  // broken tenant" section) and confirmed live here: the freshly created owner has no admin
+  // sidebar items at all until this assignment. Being the tenant's owner only grants
+  // Console/IS-level administration, not this custom application role - the two are unrelated.
+  // Confirmed live to succeed here even though the identical `PATCH .../scim2/v2/Roles/{id}` call
+  // 401s when replayed directly via curl - see ConsoleRoleAssignment for the full story; this
   // suite never calls SCIM2 directly as a result.
-  // No `ready` locator passed here, unlike step 1: this login has never been observed hanging on
-  // the CONSOLE token-binding failure loginToConsole describes, and any locator picked for it
-  // would be a guess. If this step ever times out on a blank spinner, that is the same bug -
-  // pass the first element the wizard below touches (ConsoleAddUserWizard's addUserButton).
   const ownerConsolePage = await loginToConsole(browser, tenantConsoleUrl(domain), owner)
-  await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/users`, { waitUntil: 'domcontentloaded' })
-  const addUserWizard = new ConsoleAddUserWizard(ownerConsolePage)
-  await addUserWizard.createUser({
-    username: consentUser.username,
-    email: consentUser.username,
-    firstName: 'Tenant',
-    lastName: 'User',
-    password: consentUser.password,
-  })
-
-  // Role MEMBERSHIP is never auto-provisioned, only the roles themselves - true for the
-  // super tenant too (see scripts/provision-test-users.sh and docs/configuration-guide.md's
-  // "Recovering a broken tenant" section) and confirmed live here: the freshly created owner
-  // has no admin sidebar items at all until explicitly assigned dpdp-consent-admin. Being the
-  // tenant's owner only grants Console/IS-level administration, not this custom application
-  // role - the two are unrelated.
   const roleAssignment = new ConsoleRoleAssignment(ownerConsolePage)
   await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/roles`, { waitUntil: 'domcontentloaded' })
   await roleAssignment.openRoleByName('dpdp-consent-admin')
   await roleAssignment.openUsersTab()
   await roleAssignment.assignUser(owner.username)
-
-  await ownerConsolePage.goto(`${tenantConsoleUrl(domain)}/roles`, { waitUntil: 'domcontentloaded' })
-  await roleAssignment.openRoleByName('dpdp-consent-user')
-  await roleAssignment.openUsersTab()
-  await roleAssignment.assignUser(consentUser.username)
   await ownerConsolePage.context().close()
 
   // Step 3: log the owner into their own tenant-qualified portal for real, the same way
   // fixtures/auth.fixtures.ts does for the super tenant, and keep the resulting auth state
-  // around as ready-made, tenant-qualified API clients - tests/05-multi-tenancy and
-  // tests/08-event-notifications use these to seed/verify records without needing their own
-  // login for every API call.
+  // around as ready-made, tenant-qualified API clients - tests/09-event-notifications uses
+  // these to seed/verify records without needing their own login for every API call.
   const { page: ownerPortalPage, authState } = await loginToTenantPortal(browser, domain, owner)
   await ownerPortalPage.context().close()
 
-  return { domain, owner, consentUser, authState }
+  return { domain, owner, authState }
 }
 
 // Worker-scoped: one throwaway tenant per worker for the whole run, not per test - createTenant's
@@ -309,7 +213,6 @@ async function toTenantContext(created: CreatedTenant): Promise<{ context: Tenan
     context: {
       domain: created.domain,
       owner: created.owner,
-      consentUser: created.consentUser,
       ownerConsentApi: new ConsentApiClient(apiContext, headers, created.domain),
       ownerEventApi: new EventNotificationApiClient(apiContext, headers, created.domain),
     },
@@ -326,12 +229,12 @@ export const test = base.extend<object, WorkerFixtures>({
     },
     // This setup chains three separate browser logins plus several UI wizards - the default
     // fixture timeout (tied to a single test's own timeout, 30s) is nowhere near enough. 120s was
-    // enough when 05.10 ran on its own but not with the full suite in flight: the Console login
+    // enough when 09.11 ran on its own but not with the full suite in flight: the Console login
     // alone budgets 80s of waits, and the worker that owns this fixture also pays for tenantB.
     { scope: 'worker', timeout: 240_000 },
   ],
 
-  // Only tests/08-event-notifications/08.11-tenant-isolation-api.spec.ts requests this fixture
+  // Only tests/09-event-notifications/09.11-tenant-isolation-api.spec.ts requests this fixture
   // (Playwright only runs a worker fixture's setup when some test in that worker actually uses
   // it), so no other spec pays createTenant's cost twice.
   tenantB: [
@@ -360,7 +263,7 @@ export async function loginAsTenantOwner(browser: Browser, tenant: TenantContext
 
 /**
  * Same login as loginAsTenantOwner, but also returns the owner's own bearer token - needed only
- * by tests/08-event-notifications/08.05-event-notifications-authorization.spec.ts's wrong-tenant-token check,
+ * by tests/09-event-notifications/09.05-event-notifications-authorization.spec.ts's wrong-tenant-token check,
  * which replays a genuinely valid token for tenant A against tenant B's API base URL. Every other
  * caller just needs the signed-in Page (loginAsTenantOwner above) or the ready-made
  * `ownerEventApi`/`ownerConsentApi` on TenantContext, both already tenant-qualified to the
@@ -374,10 +277,4 @@ export async function loginAsTenantOwnerWithToken(
 ): Promise<{ page: Page; bearerToken: string }> {
   const { page, authState } = await loginToTenantPortal(browser, tenant.domain, tenant.owner)
   return { page, bearerToken: authState.bearerToken }
-}
-
-/** Signed-in `Page` for the tenant's second, lower-privilege user - see `TenantContext.consentUser`. */
-export async function loginAsTenantConsentUser(browser: Browser, tenant: TenantContext): Promise<Page> {
-  const { page } = await loginToTenantPortal(browser, tenant.domain, tenant.consentUser)
-  return page
 }

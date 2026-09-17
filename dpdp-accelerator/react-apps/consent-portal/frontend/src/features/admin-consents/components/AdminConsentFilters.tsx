@@ -84,8 +84,24 @@ export default function AdminConsentFilters({
     onFilterChange(normalized)
   }
 
+  // Only the Advanced-filters panel's own fields, deliberately excluding userId/consentId/relation
+  // - those apply outside this panel's own open/cancel lifecycle (immediately, or via Enter), so
+  // resetting the whole draft here would silently discard whatever a user had already typed into
+  // them just because they opened or closed this unrelated panel.
+  const resetAdvancedDraft = (): void => {
+    setDraft((current) => ({
+      ...current,
+      serviceId: filters.serviceId,
+      purposeId: filters.purposeId,
+      propertyKey: filters.propertyKey,
+      propertyValue: filters.propertyValue,
+      createdAfter: filters.createdAfter,
+      createdBefore: filters.createdBefore,
+    }))
+  }
+
   const cancelAdvancedChanges = (): void => {
-    setDraft(filters)
+    resetAdvancedDraft()
     setFiltersAnchor(null)
   }
 
@@ -123,7 +139,7 @@ export default function AdminConsentFilters({
                 whiteSpace: 'nowrap',
               }}
               onClick={(event) => {
-                setDraft(filters)
+                resetAdvancedDraft()
                 setFiltersAnchor(event.currentTarget)
               }}
             >
@@ -253,6 +269,14 @@ export default function AdminConsentFilters({
               maxWidth: 'calc(100vw - 32px)',
               mt: 1,
               p: 2.5,
+              // Confirmed live (Chrome devtools): this Popover's own invisible backdrop renders
+              // with a computed z-index of -1, yet still wins hit-testing over this paper -
+              // clicks anywhere on the panel's own controls (User field, Relation/State selects)
+              // land on the backdrop instead, silently doing nothing. An explicit, unambiguous
+              // z-index above the backdrop's stacking layer fixes it without touching the
+              // backdrop's own click-away-to-close behavior.
+              position: 'relative',
+              zIndex: 1,
             },
           },
         }}

@@ -189,7 +189,7 @@ async function openConsoleSession(): Promise<{ browser: Browser; request: APIReq
 let session: { request: APIRequestContext; token: string } | undefined
 
 async function managementApi(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH',
   apiPath: string,
   body?: unknown,
 ): Promise<{ status: number; location: string | null; json: unknown }> {
@@ -205,7 +205,12 @@ async function managementApi(
     ...(body === undefined ? {} : { data: body }),
     timeout: 30_000,
   }
-  const response = method === 'GET' ? await session.request.get(url, options) : await session.request.post(url, options)
+  const response =
+    method === 'GET'
+      ? await session.request.get(url, options)
+      : method === 'PATCH'
+        ? await session.request.patch(url, options)
+        : await session.request.post(url, options)
 
   const text = await response.text()
   let json: unknown = undefined
@@ -263,23 +268,42 @@ async function createApplication(): Promise<string> {
   return id
 }
 
-/** Authorizes the SCIM2 resources the provisioning script needs. Safe to re-run. */
+/**
+ * Authorizes the SCIM2 resources the provisioning script needs. Safe to re-run, and reconciles
+ * the scope SET, not just the resource: this app is shared with
+ * tests/01-provisioning/01.02-user-provisioning.spec.ts, which authorizes the same resources for a
+ * narrower scope list (utils/scimProvisioning.ts's superTenantScimSurface). Whichever ran first
+ * wins the resource; only adding the missing scopes here gets both callers what they need. Mirrors
+ * utils/managementApi.ts's authorizeApiResource.
+ */
 async function authorizeApis(applicationId: string): Promise<void> {
   const { json } = await managementApi('GET', `/applications/${applicationId}/authorized-apis`)
-  const existing = (json as { id: string; identifier?: string }[] | undefined) ?? []
+  const existing = (json as { id: string; authorizedScopes?: { name: string }[] }[] | undefined) ?? []
 
   for (const api of PROVISIONING_APIS) {
     const id = await apiResourceId(api.identifier)
-    if (existing.some((authorized) => authorized.id === id)) {
+    const authorized = existing.find((entry) => entry.id === id)
+    if (!authorized) {
+      await managementApi('POST', `/applications/${applicationId}/authorized-apis`, {
+        id,
+        policyIdentifier: API_POLICY,
+        scopes: api.scopes,
+      })
+      console.log(`  ${api.identifier}: authorized (${api.scopes.join(', ')})`)
+      continue
+    }
+
+    const granted = new Set((authorized.authorizedScopes ?? []).map((scope) => scope.name))
+    const missing = api.scopes.filter((scope) => !granted.has(scope))
+    if (missing.length === 0) {
       console.log(`  ${api.identifier}: already authorized`)
       continue
     }
-    await managementApi('POST', `/applications/${applicationId}/authorized-apis`, {
-      id,
-      policyIdentifier: API_POLICY,
-      scopes: api.scopes,
+    await managementApi('PATCH', `/applications/${applicationId}/authorized-apis/${id}`, {
+      addedScopes: missing,
+      removedScopes: [],
     })
-    console.log(`  ${api.identifier}: authorized (${api.scopes.join(', ')})`)
+    console.log(`  ${api.identifier}: already authorized, added missing scope(s) (${missing.join(', ')})`)
   }
 }
 
