@@ -83,8 +83,8 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
 
-    // Complements 08.05.02 (resolved complaints hidden by default) - the same status filter that
-    // hides them by default is what surfaces them again once selected explicitly.
+    // The default (status=All) queue view hides resolved complaints; the same status filter is
+    // what surfaces them again once "Resolved" is selected explicitly.
     await expect(queuePage.table).toBeVisible()
     await expect(queuePage.rowByReferenceId(seeded.referenceId)).not.toBeVisible()
     await queuePage.filterByStatus('Resolved')
