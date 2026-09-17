@@ -434,15 +434,49 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
     }
 
-    public String getConsentExpiryCronValue() {
-
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_CRON_VALUE)
-                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_CRON_VALUE);
-    }
-
     public int getConsentExpiryBatchSize() {
 
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_BATCH_SIZE)
-                .map(Integer::parseInt).orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE);
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_BATCH_SIZE,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE);
+    }
+
+    public String getConsentExpiryScheduleMode() {
+
+        if (getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_CRON_VALUE).isPresent()) {
+            throw new IllegalArgumentException("ConsentExpiry.CronValue is no longer supported. "
+                    + "Migrate consent_expiry.cron_value to schedule_mode and daily_time or interval_seconds.");
+        }
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_SCHEDULE_MODE)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_SCHEDULE_MODE);
+    }
+
+    public String getConsentExpiryDailyTime() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_DAILY_TIME)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_DAILY_TIME);
+    }
+
+    public String getConsentExpiryTimezone() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_TIMEZONE)
+                .orElse(java.time.ZoneId.systemDefault().getId());
+    }
+
+    public int getConsentExpiryIntervalSeconds() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_INTERVAL_SECONDS)
+                .map(Integer::parseInt).orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_INTERVAL_SECONDS);
+    }
+
+    public int getConsentExpiryMaxBatchesPerRun() {
+
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_MAX_BATCHES_PER_RUN,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_BATCHES_PER_RUN);
+    }
+
+    public int getConsentExpiryMaxRunSeconds() {
+
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_MAX_RUN_SECONDS,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_RUN_SECONDS);
     }
 }

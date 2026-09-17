@@ -79,20 +79,6 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     }
 
     @Override
-    public boolean claimDueExpiry(Connection connection, String consentId, long nowMillis)
-            throws ConsentExpiryDataAccessException {
-
-        try (PreparedStatement statement = connection.prepareStatement(queries.getClaimDueExpiryQuery())) {
-            statement.setString(1, consentId);
-            statement.setLong(2, nowMillis);
-            return statement.executeUpdate() == 1;
-        } catch (SQLException e) {
-            throw new ConsentExpiryDataAccessException(
-                    "Error while claiming the expiry tracker row for consent: " + consentId, e);
-        }
-    }
-
-    @Override
     public List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize)
             throws ConsentExpiryDataAccessException {
 
@@ -119,4 +105,77 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
         record.setExpiryTime(resultSet.getLong(ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME));
         return record;
     }
+
+    @Override
+    public boolean claimDueExpiry(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
+            throws ConsentExpiryDataAccessException {
+
+        try (PreparedStatement statement = connection.prepareStatement(queries.getClaimObservedExpiryQuery())) {
+            statement.setString(1, candidate.getConsentId());
+            statement.setString(2, candidate.getOrgId());
+            statement.setLong(3, candidate.getExpiryTime());
+            statement.setLong(4, nowMillis);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new ConsentExpiryDataAccessException("Error claiming the observed expiry deadline.", e);
+        }
+    }
+
+    @Override
+    public ConsentExpiryRecord findExpiry(Connection connection, String orgId, String consentId)
+            throws ConsentExpiryDataAccessException {
+
+        try (PreparedStatement statement = connection.prepareStatement(queries.getFindExpiryQuery())) {
+            statement.setString(1, orgId);
+            statement.setString(2, consentId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapRecord(resultSet) : null;
+            }
+        } catch (SQLException e) {
+            throw new ConsentExpiryDataAccessException("Error reading the expiry tracker row.", e);
+        }
+    }
+
+    @Override
+    public List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize,
+            ConsentExpiryRecord cursor) throws ConsentExpiryDataAccessException {
+
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException("Consent expiry batch size must be positive.");
+        }
+        if (cursor == null) {
+            return findDueExpiries(connection, nowMillis, batchSize);
+        }
+        List<ConsentExpiryRecord> records = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(queries.getFindDueExpiriesAfterQuery())) {
+            statement.setLong(1, nowMillis);
+            statement.setLong(2, cursor.getExpiryTime());
+            statement.setLong(3, cursor.getExpiryTime());
+            statement.setString(4, cursor.getConsentId());
+            statement.setInt(5, batchSize);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    records.add(mapRecord(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new ConsentExpiryDataAccessException("Error reading the next expiry tracker page.", e);
+        }
+        return records;
+    }
+    @Override
+    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
+            throws ConsentExpiryDataAccessException {
+
+        try (PreparedStatement statement = connection.prepareStatement(queries.getReconcileExpiryQuery())) {
+            statement.setLong(1, expiryTimeMillis);
+            statement.setString(2, candidate.getConsentId());
+            statement.setString(3, candidate.getOrgId());
+            statement.setLong(4, candidate.getExpiryTime());
+            return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new ConsentExpiryDataAccessException("Error reconciling the observed expiry deadline.", e);
+        }
+    }
+
 }

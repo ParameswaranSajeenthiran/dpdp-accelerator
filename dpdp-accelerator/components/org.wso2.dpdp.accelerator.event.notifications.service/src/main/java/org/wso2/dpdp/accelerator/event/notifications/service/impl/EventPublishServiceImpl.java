@@ -390,6 +390,36 @@ public class EventPublishServiceImpl implements EventPublishService {
     @Override
     public EventDTO publishEvent(String orgId, String groupId, String topicName, List<String> purposes,
             Map<String, Object> payload) {
+
+        String payloadJson = validateAndSerializeEvent(orgId, groupId, topicName, payload);
+        try {
+            return DatabaseUtils.executeInTransaction(connection ->
+                    persistEvent(connection, orgId, groupId, topicName, purposes, payloadJson));
+        } catch (EventNotificationException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            LOG.error("Event publication transaction failed.", e);
+            throw new EventNotificationException(
+                    EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
+                    EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
+                    EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG, 500);
+        }
+    }
+
+    @Override
+    public EventDTO publishEvent(Connection connection, String orgId, String groupId, String topicName,
+            List<String> purposes, Map<String, Object> payload) {
+
+        if (connection == null) {
+            throw new IllegalArgumentException("Connection cannot be null for transactional event publication.");
+        }
+        String payloadJson = validateAndSerializeEvent(orgId, groupId, topicName, payload);
+        return persistEvent(connection, orgId, groupId, topicName, purposes, payloadJson);
+    }
+
+    private String validateAndSerializeEvent(String orgId, String groupId, String topicName,
+            Map<String, Object> payload) {
+
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
@@ -420,9 +450,8 @@ public class EventPublishServiceImpl implements EventPublishService {
                     422);
         }
 
-        String payloadJson;
         try {
-            payloadJson = objectMapper.writeValueAsString(payload);
+            return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             LOG.error("Failed to serialize event payload: " + LogSanitizer.sanitize(e.getMessage()), e);
             throw new EventNotificationException(
@@ -431,31 +460,33 @@ public class EventPublishServiceImpl implements EventPublishService {
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
                     500);
         }
+    }
+
+    private EventDTO persistEvent(Connection conn, String orgId, String groupId, String topicName,
+            List<String> purposes, String payloadJson) {
 
         String eventId = UUID.randomUUID().toString();
         Timestamp now = new Timestamp(System.currentTimeMillis());
 
         try {
-            return DatabaseUtils.executeInTransaction(conn -> {
-                Topic topic = resolveActiveTopic(conn, orgId, topicName);
-                Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
+            Topic topic = resolveActiveTopic(conn, orgId, topicName);
+            Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
-                if (!eventDAO.addEvent(conn, event)) {
-                    throw new EventNotificationException(
-                            EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
-                            EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                            String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
-                                    topic.getName()),
-                            400);
-                }
-                if (purposes != null && !purposes.isEmpty()) {
-                    eventDAO.addEventPurposes(conn, eventId, purposes);
-                }
-                fanOutEvent(conn, event, purposes);
+            if (!eventDAO.addEvent(conn, event)) {
+                throw new EventNotificationException(
+                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                        EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
+                        String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
+                                topic.getName()),
+                        400);
+            }
+            if (purposes != null && !purposes.isEmpty()) {
+                eventDAO.addEventPurposes(conn, eventId, purposes);
+            }
+            fanOutEvent(conn, event, purposes);
 
-                return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
-                        purposes, now, now);
-            });
+            return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
+                    purposes, now, now);
         } catch (EventNotificationException e) {
             throw e;
         } catch (RuntimeException e) {

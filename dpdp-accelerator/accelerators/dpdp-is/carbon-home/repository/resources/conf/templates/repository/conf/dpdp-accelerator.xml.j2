@@ -224,13 +224,29 @@
         {% endif %}
         {% if dpdp_accelerator.consent_expiry.cron_value is defined %}
         <CronValue>{{dpdp_accelerator.consent_expiry.cron_value}}</CronValue>
-        {% else %}
-        <CronValue>0 0 0 * * ?</CronValue>
         {% endif %}
         {% if dpdp_accelerator.consent_expiry.batch_size is defined %}
         <BatchSize>{{dpdp_accelerator.consent_expiry.batch_size}}</BatchSize>
         {% else %}
         <BatchSize>100</BatchSize>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.schedule_mode is defined %}
+        <ScheduleMode>{{dpdp_accelerator.consent_expiry.schedule_mode}}</ScheduleMode>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.daily_time is defined %}
+        <DailyTime>{{dpdp_accelerator.consent_expiry.daily_time}}</DailyTime>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.timezone is defined %}
+        <Timezone>{{dpdp_accelerator.consent_expiry.timezone}}</Timezone>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.interval_seconds is defined %}
+        <IntervalSeconds>{{dpdp_accelerator.consent_expiry.interval_seconds}}</IntervalSeconds>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.max_batches_per_run is defined %}
+        <MaxBatchesPerRun>{{dpdp_accelerator.consent_expiry.max_batches_per_run}}</MaxBatchesPerRun>
+        {% endif %}
+        {% if dpdp_accelerator.consent_expiry.max_run_seconds is defined %}
+        <MaxRunSeconds>{{dpdp_accelerator.consent_expiry.max_run_seconds}}</MaxRunSeconds>
         {% endif %}
     </ConsentExpiry>
 </DPDPAccelerator>

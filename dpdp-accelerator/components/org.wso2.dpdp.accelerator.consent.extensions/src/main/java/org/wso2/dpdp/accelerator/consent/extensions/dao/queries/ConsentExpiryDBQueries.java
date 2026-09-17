@@ -45,19 +45,50 @@ public class ConsentExpiryDBQueries {
                 + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ?";
     }
 
-    public String getClaimDueExpiryQuery() {
-
-        return "DELETE FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
-                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
-                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ?";
-    }
-
     public String getFindDueExpiriesQuery() {
 
         return "SELECT " + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + ", "
                 + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME
                 + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
                 + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ? ORDER BY "
-                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " ASC LIMIT ?";
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " ASC, "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " ASC LIMIT ?";
     }
+
+    public String getClaimObservedExpiryQuery() {
+
+        return "DELETE FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ?";
+    }
+
+    public String getFindExpiryQuery() {
+
+        return "SELECT " + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + ", "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME
+                + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ?";
+    }
+
+    public String getFindDueExpiriesAfterQuery() {
+
+        String expiry = ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME;
+        String consent = ConsentExpiryDAOConstants.COLUMN_CONSENT_ID;
+        return "SELECT " + consent + ", " + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + expiry
+                + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE " + expiry
+                + " <= ? AND (" + expiry + " > ? OR (" + expiry + " = ? AND " + consent + " > ?))"
+                + " ORDER BY " + expiry + " ASC, " + consent + " ASC LIMIT ?";
+    }
+    public String getReconcileExpiryQuery() {
+
+        return "UPDATE " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " SET "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ? WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ?";
+    }
+
 }

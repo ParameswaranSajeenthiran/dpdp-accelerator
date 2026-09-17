@@ -25,6 +25,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
@@ -169,4 +170,8 @@ public interface EventPublishService {
      * @return paginated list of subscriber deliveries.
      */
     PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit, int offset);
+
+    /** Persists an event and its deliveries in the caller's transaction without completing it. */
+    EventDTO publishEvent(Connection connection, String orgId, String groupId, String topicName,
+            List<String> purposes, Map<String, Object> payload);
 }

@@ -99,7 +99,17 @@ public interface DPDPConfigurationService {
 
     boolean isConsentExpiryEnabled();
 
-    String getConsentExpiryCronValue();
-
     int getConsentExpiryBatchSize();
+
+    String getConsentExpiryScheduleMode();
+
+    String getConsentExpiryDailyTime();
+
+    String getConsentExpiryTimezone();
+
+    int getConsentExpiryIntervalSeconds();
+
+    int getConsentExpiryMaxBatchesPerRun();
+
+    int getConsentExpiryMaxRunSeconds();
 }

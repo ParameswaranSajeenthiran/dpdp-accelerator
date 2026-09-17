@@ -476,13 +476,15 @@ worker_shutdown_timeout_seconds = 5
 enabled = true
 snapshot_enabled = true
 
-# Periodically records an EXPIRE history row for consents whose expiry time has passed -
-# audit only, this never changes a consent's live status (the Identity Server already
-# reports EXPIRED on read once expiryTime passes; this only fills in the missing history
-# record for when that happened). cron_value is a standard Quartz cron expression; the
-# default runs once daily at midnight. In a clustered deployment, see the "Clustering
-# requirements" section of docs/content/configuration-guide.md before relying on this in production.
+# Record due consent expiries in successive batches within each scheduled firing.
+# Daily mode defaults to midnight in the server timezone. Use interval mode with
+# interval_seconds for a fixed delay after each completed firing. See the configuration guide.
 [dpdp_accelerator.consent_expiry]
 enabled = true
-cron_value = "0 0 0 * * ?"
+schedule_mode = "interval"
+interval_seconds = 10
+# timezone = "Asia/Colombo"
+# interval_seconds = 300
 batch_size = 100
+max_batches_per_run = 1000
+max_run_seconds = 300

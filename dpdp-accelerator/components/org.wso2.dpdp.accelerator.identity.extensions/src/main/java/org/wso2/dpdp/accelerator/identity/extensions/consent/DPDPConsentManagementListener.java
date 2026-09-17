@@ -47,7 +47,7 @@ import java.util.List;
  *
  * <p>Also maintains {@code DPDP_CONSENT_EXPIRY_TRACKER} and, on every {@code pre*} hook, checks
  * whether this consent already lapsed before the scheduled
- * {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJob} caught
+ * {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobScheduler} caught
  * it - see {@link DPDPConsentExpiryReconciler}.
  *
  * <p>A capture or notification failure must never block the consent mutation, so every hook
@@ -340,8 +340,13 @@ public class DPDPConsentManagementListener extends AbstractConsentManagementList
             return;
         }
         try {
-            DPDPIdentityExtensionDataHolder.getInstance().getConsentExpiryService()
-                    .trackExpiry(tenantDomain, consentId, expiryTime.getTime());
+            // The source database may store less precision than the request timestamp.
+            Receipt persistedReceipt = DPDPIdentityExtensionDataHolder.getInstance().getPrivilegedConsentManager()
+                    .getReceiptWithExtendedSchema(consentId);
+            if (persistedReceipt.getExpiryTime() != null) {
+                DPDPIdentityExtensionDataHolder.getInstance().getConsentExpiryService()
+                        .trackExpiry(tenantDomain, consentId, persistedReceipt.getExpiryTime().getTime());
+            }
         } catch (Exception e) {
             LOG.error("Error tracking expiry for consent: " + LogSanitizer.sanitize(consentId), e);
         }
