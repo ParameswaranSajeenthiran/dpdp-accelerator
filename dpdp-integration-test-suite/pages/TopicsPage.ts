@@ -49,7 +49,7 @@ export class TopicsPage {
     // exact: true - Playwright's default substring/case-insensitive accessible-name match makes
     // this collide with every row's "Deregister topic" button ("Deregister topic" contains
     // "register Topic" as a substring), which only ever surfaces once the table has rows, i.e.
-    // never on a truly empty environment - see 08.01.01's regression history.
+    // never on a truly empty environment - see 09.01.01's regression history.
     this.registerButton = page.getByRole('button', { name: 'Register Topic', exact: true })
     this.table = page.getByRole('table', { name: 'Topics management table' })
     this.searchInput = page.getByPlaceholder('Search by topic name, ID, or description')

@@ -18,18 +18,16 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchCurrentUser } from '../features/auth/api/currentUserApi'
-import { CONSENT_HISTORY_SCOPES, IS_SCOPES } from '../utils/scopes'
+import { IS_SCOPES } from '../utils/scopes'
 
 const authMocks = vi.hoisted(() => ({
   getBasicUser: vi.fn(),
-  isAuthEnabled: vi.fn<() => boolean>(),
   loadDeploymentConfig: vi.fn(),
 }))
 
 vi.mock('../utils/authClient', () => authMocks)
 
 beforeEach(() => {
-  authMocks.isAuthEnabled.mockReturnValue(true)
   authMocks.loadDeploymentConfig.mockResolvedValue({
     clientID: 'DPDP_CONSENT_PORTAL',
     hideSelfConsentsForAdmins: true,
@@ -104,17 +102,5 @@ describe('current-user API', () => {
     authMocks.getBasicUser.mockResolvedValue({ sub: '  ', username: '', allowedScopes: '' })
 
     await expect(fetchCurrentUser()).rejects.toThrow('the authenticated session has no subject')
-  })
-
-  it('returns a fully scoped development user when authentication is disabled', async () => {
-    authMocks.isAuthEnabled.mockReturnValue(false)
-
-    await expect(fetchCurrentUser()).resolves.toEqual({
-      userId: 'anonymous',
-      organizationId: 'carbon.super',
-      hideSelfConsentsForAdmins: true,
-      scopes: [...Object.values(IS_SCOPES), ...Object.values(CONSENT_HISTORY_SCOPES)],
-    })
-    expect(authMocks.getBasicUser).not.toHaveBeenCalled()
   })
 })

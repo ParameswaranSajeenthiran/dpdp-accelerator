@@ -16,11 +16,7 @@
  * under the License.
  */
 
-// Importing env.ts sets process.env.NODE_TLS_REJECT_UNAUTHORIZED as a side effect when
-// IGNORE_HTTPS_ERRORS is true (see that file's own comment on why it lives there, not here) -
-// needed before the plain fetch() calls below, since the shipped Identity Server certificate is
-// self-signed.
-import { env } from './utils/env'
+import { config, trimTrailingSlash } from './utils/config'
 
 /**
  * Runs once before the whole suite, in Playwright's own separate globalSetup process. This only
@@ -46,6 +42,8 @@ async function checkReachable(url: string, label: string): Promise<void> {
 export default async function globalSetup(): Promise<void> {
   // WSO2 IS's own JWKS endpoint - reachability here is a direct precondition for every login and
   // every raw API call this suite makes, since access tokens are JWTs validated against it.
-  await checkReachable(`${env.identityServerBaseUrl}/oauth2/jwks`, 'Identity Server')
-  await checkReachable(`${env.portalBaseUrl}/`, 'Consent portal')
+  const isBaseUrl = trimTrailingSlash(config.identityServer.baseUrl)
+  const portalBaseUrl = trimTrailingSlash(config.identityServer.portalBaseUrl)
+  await checkReachable(`${isBaseUrl}/oauth2/jwks`, 'Identity Server')
+  await checkReachable(`${portalBaseUrl}/`, 'Consent portal')
 }

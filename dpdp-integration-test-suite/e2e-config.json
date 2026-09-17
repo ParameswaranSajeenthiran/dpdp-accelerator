@@ -11,21 +11,26 @@
   "provisioningClient": null,
   "personas": {
     "user": {
-      "username": "dpdp-ci-user@dpdp.test",
+      "username": "dpdp-user-1@dpdp.test",
       "password": null
     },
     "user2": {
-      "username": "dpdp-ci-user-2@dpdp.test",
+      "username": "dpdp-user-2@dpdp.test",
       "password": null
     },
     "consentAdmin": {
-      "username": "dpdp-ci-admin@dpdp.test",
+      "username": "dpdp-admin@dpdp.test",
+      "password": null
+    },
+    "dpo": {
+      "username": "dpdp-dpo@dpdp.test",
       "password": null
     }
   },
   "personaRoles": {
     "user": "dpdp-consent-user",
-    "consentAdmin": "dpdp-consent-admin"
+    "consentAdmin": "dpdp-consent-admin",
+    "dpo": "dpdp-consent-dpo"
   },
   "webhook": {
     "receiverHost": null,

@@ -1,0 +1,79 @@
+/*
+ * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ *
+ * WSO2 LLC. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import { test, expect, request as playwrightRequest } from '@playwright/test'
+import { readRunState, writeRunState } from '../../utils/runState'
+import { isBaseUrl } from '../../utils/serverConfig'
+import { secondaryTenantScimSurface } from '../../utils/scimProvisioning'
+import { bootstrapProvisioningToken, provisionPersonas } from '../../utils/tenantProvisioning'
+
+// Deliberately does not import utils/env.ts - see this plan's top-level note. This is the file
+// that CREATES what env.ts's persona fields require, so it cannot depend on them already existing.
+
+// Only the per-run tenant's own persona provisioning - see 01.03-super-tenant-user-provisioning
+// for the super tenant's, kept in its own file precisely so the "super-tenant" project's own
+// setup dependency never has to depend on "tenant-setup" (see playwright.config.ts).
+test.describe('Test-account provisioning', () => {
+  test("01.02.01 - Provisions the per-run tenant's four personas and assigns their roles", async () => {
+    const { tenant } = readRunState()
+    if (!tenant) {
+      throw new Error('No tenant in .e2e-run-state.json - the tenant-creation test must run first.')
+    }
+
+    const consoleUrl = `${isBaseUrl}/t/${tenant.domain}/console`
+    const managementApiBase = `${isBaseUrl}/t/${tenant.domain}/api/server/v1`
+    const tokenUrl = `${isBaseUrl}/t/${tenant.domain}/oauth2/token`
+    const surface = secondaryTenantScimSurface(tenant.domain)
+
+    const { token, clientId, clientSecret } = await bootstrapProvisioningToken(
+      consoleUrl,
+      managementApiBase,
+      tokenUrl,
+      tenant.owner,
+      surface,
+    )
+
+    const apiContext = await playwrightRequest.newContext({ ignoreHTTPSErrors: true })
+    try {
+      const personas = await provisionPersonas(
+        apiContext,
+        surface,
+        token,
+        {
+          consentAdmin: 'dpdp-admin@dpdp.test',
+          user: 'dpdp-user-1@dpdp.test',
+          user2: 'dpdp-user-2@dpdp.test',
+          dpo: 'dpdp-dpo@dpdp.test',
+        },
+        { consentAdmin: 'dpdp-consent-admin', user: 'dpdp-consent-user', dpo: 'dpdp-consent-dpo' },
+        tenant.personas ?? {},
+      )
+      // Persisted so utils/throwawayUser.ts (tests/07-account) can mint further on-demand SCIM
+      // tokens for this same tenant later in the run, without repeating this whole browser-driven
+      // bootstrap for every throwaway account it needs.
+      writeRunState({ tenant: { ...tenant, personas, provisioningClient: { clientId, clientSecret } } })
+
+      expect(personas.consentAdmin.username).toBeTruthy()
+      expect(personas.user.username).toBeTruthy()
+      expect(personas.user2.username).toBeTruthy()
+      expect(personas.dpo.username).toBeTruthy()
+    } finally {
+      await apiContext.dispose()
+    }
+  })
+})

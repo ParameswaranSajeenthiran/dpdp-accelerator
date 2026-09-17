@@ -50,7 +50,7 @@ Import `test` and `expect` **from `../../fixtures/auth.fixtures`**, never from `
 directly — the fixtures are only available on the extended `test`. Specs needing a throwaway tenant
 import from `../../fixtures/tenant.fixtures` instead, which itself extends `auth.fixtures`'s `test`
 (so `consentAdminConsentApi` etc. are still available there too). `tests/05-multi-tenancy/` and
-three files in `tests/08-event-notifications/` do this today.
+three files in `tests/09-event-notifications/` do this today.
 
 ## Numbering and layout
 
@@ -65,7 +65,7 @@ reference to anything external.
 | **R4 · Test** | `test('<NN>.<MM>.<KK> - <observable behaviour>')`. `KK` sequential from `01`, **flat across any nesting**, in declaration order. |
 | **R5 · Sequential** | Every level is dense — no gaps. A deletion renumbers the survivors after it, **and their cross-references**. |
 | **R6 · API-only files** | A filename ending `-api.spec.ts` means the file **drives no browser at all**. A test that needs a browser for setup is not an `-api` file even if it asserts only on API responses (`03.09` is exactly this case). |
-| **R7 · Cross-cutting** | `04-authorization` and `05-multi-tenancy` hold only tests of a *global mechanism* or tests spanning features. A single feature's own guard lives in that feature's area as `<NN>.<MM>-<feature>-authorization.spec.ts` (see `07.08`, `08.05`). |
+| **R7 · Cross-cutting** | `04-authorization` and `05-multi-tenancy` hold only tests of a *global mechanism* or tests spanning features. A single feature's own guard lives in that feature's area as `<NN>.<MM>-<feature>-authorization.spec.ts` (see `08.08`, `09.05`). |
 | **R8 · Area exclusivity** | Every filename and every test ID under `tests/<NN>-*/` begins with `<NN>`. No exceptions. |
 
 `npm run verify:ids` enforces all of the above, plus that every ID mentioned in a comment resolves
@@ -75,16 +75,16 @@ to a real test and every referenced path exists.
 files, with `KK` continuing across a nested describe boundary rather than restarting:
 
 ```
-08.01-admin-managing-topics.spec.ts            UI
+09.01-admin-managing-topics.spec.ts            UI
   Admin managing Topics
     Registering
-      08.01.01 … 08.01.04
+      09.01.01 … 09.01.04
     Deregistering
-      08.01.05                                 ← continues the sequence across the group
+      09.01.05                                 ← continues the sequence across the group
 
-08.06-topic-lifecycle-api.spec.ts              API — no browser anywhere in the file
+09.06-topic-lifecycle-api.spec.ts              API — no browser anywhere in the file
   Topic lifecycle rules
-      08.06.01 … 08.06.03
+      09.06.01 … 09.06.03
 ```
 
 The describe chain is already printed in Playwright's report line, so the group does not need to
@@ -93,9 +93,9 @@ appear in the number.
 ### Selecting tests
 
 ```sh
-npx playwright test --grep "03\.06\.04"        # one test — ESCAPE THE DOTS or they are wildcards
-npx playwright test --grep "03\.06\."          # one file
-npx playwright test tests/03-consents          # one area, by path
+npx playwright test --grep "04\.06\.04"        # one test — ESCAPE THE DOTS or they are wildcards
+npx playwright test --grep "04\.06\."          # one file
+npx playwright test tests/04-consents          # one area, by path
 ```
 
 `--grep` matches the file path as well as the describe and test titles, which is why an ID prefix
@@ -153,14 +153,13 @@ test.skip(!hasSecondUser(), 'personas.user2 is not configured')
 Fixtures are requested by destructuring the test callback's first argument:
 
 ```ts
-test('...', async ({ browser, consentAdminConsentApi, consentCleanupTracker }) => { ... })
+test('...', async ({ browser, consentAdminConsentApi }) => { ... })
 ```
 
 - `userConsentApi` / `consentAdminConsentApi` — `ConsentApiClient` bound to that persona's headers.
 - `userComplaintApi` / `officerComplaintApi` — `ComplaintApiClient`, self-service and `:any` surfaces.
 - `userEventApi` / `consentAdminEventApi` — `EventNotificationApiClient`; the user holds no
   `notifications:*` scope, which is what makes it useful for proving a 403.
-- `consentCleanupTracker` — register created records for teardown (below).
 
 To prove a scope boundary, construct a client yourself with the *wrong* persona's headers and call
 a privileged method — that's the intended way to assert a token is rejected.
@@ -173,26 +172,28 @@ off the SPA's first authenticated request) and is bound to the `atbv` cookie by 
 ## Multi-tenancy
 
 ```ts
-const page = await loginAsTenantOwner(browser, tenant)         // holds every internal_consent_mgt_* scope
-const page = await loginAsTenantConsentUser(browser, tenant)   // holds dpdp-consent-user (no permissions)
+const page = await loginAsTenantOwner(browser, tenant)   // holds every internal_consent_mgt_* scope
 ```
 
 `tenant` (worker-scoped, from `fixtures/tenant.fixtures.ts`) creates one throwaway tenant per
-worker — a unique domain every run, an owner, and a second `dpdp-consent-user` account with its
-role already assigned — entirely by driving the real Console UI in a browser, the same way an
-actual admin would. There's no teardown call: a fresh domain every run means nothing to collide
-with, and there's no real tenant delete on this product without enabling a `carbon.xml` flag this
-accelerator doesn't set. `tenantB` gives a second, independent tenant for isolation tests.
+worker — a unique domain every run and an owner with its role already assigned — entirely by
+driving the real Console UI in a browser, the same way an actual admin would. There's no teardown
+call: a fresh domain every run means nothing to collide with, and there's no real tenant delete on
+this product without enabling a `carbon.xml` flag this accelerator doesn't set. `tenantB` gives a
+second, independent tenant for isolation tests - currently only
+`tests/09-event-notifications/09.11-tenant-isolation-api.spec.ts` needs two live at once.
+`tests/06-multi-tenancy` reuses this run's own per-run tenant and the super tenant instead of
+creating its own - see that file's own docblock.
 
 **Do not add a `TenantScimClient` or call SCIM2 against a secondary tenant directly.** Confirmed
 live, repeatedly: Basic-auth and Bearer-token SCIM2 calls against `/t/<tenant>/scim2/...` both
 401 for any tenant other than `carbon.super`, regardless of whose credentials — a real IS 7.3.0
 product limitation (see the WSO2 IAM community discussion "Invalid tenant domain of user error
 when use scim2 API"), not something fixable from this codebase. What *does* work is driving the
-same operations through Console's own UI, which is why tenant creation, second-user creation and
-role assignment all go through `ConsoleRootOrganizationWizard`, `ConsoleAddUserWizard` and
-`ConsoleRoleAssignment` in `pages/`. If you need a tenant-side Console operation this suite doesn't
-have yet, add another page object in that style rather than reaching for SCIM2.
+same operations through Console's own UI, which is why tenant creation and role assignment go
+through `ConsoleRootOrganizationWizard` and `ConsoleRoleAssignment` in `pages/`. If you need a
+tenant-side Console operation this suite doesn't have yet, add another page object in that style
+rather than reaching for SCIM2.
 
 Tenant creation has no REST shortcut worth using either: `POST /api/server/v1/tenants`'s
 `owners[].password` doesn't become usable for login without a separate follow-up call, while
@@ -219,27 +220,28 @@ lazily *on open*, so its heading — which is what the page object's `dialog` lo
 appears while the request is still in flight. Gating on the heading and then snapshotting the entry
 list yields an empty array under load. Gate on the newest entry instead.
 
-**Track what you create.** `consentCleanupTracker.trackElement(id)` / `.trackPurpose(id)` deletes
-them when the test finishes. Read the id out of the detail URL after a create-form redirect:
+**Nothing you create needs to be cleaned up.** Elements, Purposes, Consents, and complaints all
+accumulate permanently in this shared environment — leaving them behind is fine as long as it
+doesn't affect another test run, which the unique-marker/server-issued-id rule above already
+guarantees. Don't add teardown code for records a test creates. Seed the minimum you need anyway,
+since every record is permanent.
 
-```ts
-await expect(page).toHaveURL(/\/elements\/[^/]+$/)
-const id = /\/elements\/([^/]+)$/.exec(page.url())?.[1]
-```
+**Assume parallel execution.** `fullyParallel: true`, and locally capped at 2 workers rather than
+Playwright's own CPU-based default (see `playwright.config.ts` — the higher default measurably
+caused resource-contention flakiness on top of WSO2 IS and MySQL sharing the same machine). Your
+test must not depend on ordering, on another test's data, or on being alone. If you genuinely need
+ordered steps, use `test.describe.serial` and say why in a comment.
 
-**Consents and complaints cannot be cleaned up** — the product has no delete-by-id for either, so
-every seeded record is permanent. Seed the minimum you need.
-
-**Assume parallel execution.** `fullyParallel: true` and no `workers` override. Your test must not
-depend on ordering, on another test's data, or on being alone. If you genuinely need ordered steps,
-use `test.describe.serial` and say why in a comment.
-
-**Use the seed helpers** rather than hand-rolling setup: `seedConsent` (`utils/consentSetup.ts`),
-`seedComplaint` / `moveComplaintToStatus` (`utils/complaintSetup.ts`), `seedActiveTopic` /
-`seedPollSubscription` / `publishMarkedEvent` (`utils/eventNotificationSetup.ts`). Consent creation
-is the only step with no create UI, so it goes through the admin API; the Element and Purpose it
-needs are created through the real admin forms. Note `state: 'PENDING'` is expressed by supplying
-`authorizations` — the v2 API sets PENDING itself and rejects an explicit `PENDING`.
+**Use the seed helpers** rather than hand-rolling setup: `seedConsentViaApi` (`utils/consentSetup.ts`),
+`seedComplaintViaApi` / `moveComplaintToStatusViaApi` (`utils/complaintSetup.ts`), `seedActiveTopicViaApi` /
+`seedPollSubscriptionViaApi` / `publishMarkedEventViaApi` (`utils/eventNotificationSetup.ts`). `seedConsentViaApi`
+creates its Element, Purpose, and Consent all through the admin API, not the UI forms — none of
+its callers are testing the create-Element/create-Purpose flow itself (that's
+`02-elements/02.01-*` and `03-purposes/03.01-*`), so there's no value in re-driving those forms
+just to get fixture data. Note `state: 'PENDING'` is expressed by supplying `authorizations` — the
+v2 API sets PENDING itself and rejects an explicit `PENDING`. The same principle applies anywhere
+else you seed data purely as setup: prefer the admin API over the UI unless the test is actually
+exercising that creation flow.
 
 ## Page objects
 
@@ -304,7 +306,7 @@ the page object, don't assume.
 
 ## Webhook-dependent tests
 
-`tests/08-event-notifications/08.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
+`tests/09-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
 process can actually reach, and skips itself otherwise. To run it:
 
 1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which

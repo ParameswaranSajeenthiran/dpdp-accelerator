@@ -33,7 +33,7 @@ export interface SeededComplaint {
  * ComplaintSubmitDialog every time. Unlike seedConsent, there's no cleanup tracker: complaints have
  * no delete-by-id endpoint at all (see AGENTS.md).
  */
-export async function seedComplaint(
+export async function seedComplaintViaApi(
   api: ComplaintApiClient,
   category: ComplaintCategory = 'OTHER',
   labelSuffix = 'ui-seed',
@@ -68,14 +68,14 @@ export async function seedComplaint(
  * note here keeps every status-only transition this suite creates well-formed for the app as it
  * actually behaves today, without altering accelerator/frontend source.
  */
-export async function moveComplaintToStatus(
+export async function moveComplaintToStatusViaApi(
   officerApi: ComplaintApiClient,
   complaintId: string,
   toStatus: ComplaintStatus,
   note: string = `Automated test setup: transitioned to ${toStatus}.`,
 ): Promise<void> {
   if (toStatus === 'AWAITING_INTERNAL_REVIEW') {
-    await moveComplaintToStatus(officerApi, complaintId, 'WAITING_ON_CLIENT')
+    await moveComplaintToStatusViaApi(officerApi, complaintId, 'WAITING_ON_CLIENT')
   }
   const response = await officerApi.updateStatus(complaintId, { toStatus, note })
   if (!response.ok()) {

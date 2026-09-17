@@ -32,7 +32,7 @@ export interface Persona {
  * how the configuration is stored.
  */
 
-function persona(which: 'user' | 'user2' | 'consentAdmin'): Persona {
+function persona(which: 'user' | 'user2' | 'consentAdmin' | 'dpo'): Persona {
   const configured = config.personas[which]
   return {
     username: requireConfigured(configured.username, `personas.${which}.username`),
@@ -64,6 +64,11 @@ export const env = {
   // scope, so this single persona both drives the admin consent registry UI and creates
   // Purposes/Elements/Consents via the API as test setup for the UI layer.
   consentAdmin: persona('consentAdmin'),
+
+  // Holds only the complaints:read:any/write:any scopes - see
+  // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE. Provisioned on every tenant automatically;
+  // no test used it before this persona existed.
+  dpo: persona('dpo'),
 
   /**
    * Optional: a second user account, used only by ownership-isolation tests that
@@ -130,24 +135,33 @@ export function tenantPortalUrl(tenantDomain: string): string {
   return `${env.identityServerBaseUrl}/t/${tenantDomain}/consent-portal`
 }
 
-/** SCIM2 user management, used for the throwaway account the deletion test creates. */
-export function scim2UsersUrl(path: string): string {
-  return `${env.identityServerBaseUrl}/scim2/Users${path}`
+/**
+ * Classic (non-org) SCIM2 user management, used for the throwaway account the deletion test
+ * creates - specifically for the request that must land on the same SCIM surface the portal's own
+ * self-delete uses (`/scim2/Me`), not the org-admin surface utils/scimProvisioning.ts's
+ * secondaryTenantScimSurface manages tenant personas through. See utils/throwawayUser.ts.
+ */
+export function scim2UsersUrl(path: string, tenantDomain?: string): string {
+  return `${env.identityServerBaseUrl}${tenantSegment(tenantDomain)}/scim2/Users${path}`
 }
 
 // The accelerator's own complaint-server webapp (org.wso2.dpdp.accelerator.complaint.mgt.endpoint,
-// finalName "api#dpdp#complaints#v1") - unlike consent-mgt, this is NOT an IS-native API, so there
-// is no tenant-qualification concern to mirror from consentPurposesApiUrl et al.
+// finalName "api#dpdp#complaints#v1") is not an IS-native API, but it IS deployed through the same
+// per-tenant webapp routing every other accelerator webapp gets (confirmed live: a tenant-qualified
+// path 401s just like the unqualified one, rather than 404ing) - so it needs the same tenantSegment
+// treatment as eventNotificationsApiUrl below. A caller under the multi-tenant profile that skipped
+// the segment would silently hit the super tenant's complaint store with a tenant-scoped token,
+// which the server correctly rejects as unauthorized.
 const COMPLAINT_SERVER_BASE = '/api/dpdp/complaints/v1'
 
 /** Officer/admin surface: `/complaints/*`, requiring a portal:complaints:* (non-self) scope. */
-export function complaintsApiUrl(path: string): string {
-  return `${env.identityServerBaseUrl}${COMPLAINT_SERVER_BASE}/complaints${path}`
+export function complaintsApiUrl(path: string, tenantDomain?: string): string {
+  return `${env.identityServerBaseUrl}${tenantSegment(tenantDomain)}${COMPLAINT_SERVER_BASE}/complaints${path}`
 }
 
 /** Data Principal self-service surface: `/me/complaints/*`, requiring portal:complaints:*:self. */
-export function meComplaintsApiUrl(path: string): string {
-  return `${env.identityServerBaseUrl}${COMPLAINT_SERVER_BASE}/me/complaints${path}`
+export function meComplaintsApiUrl(path: string, tenantDomain?: string): string {
+  return `${env.identityServerBaseUrl}${tenantSegment(tenantDomain)}${COMPLAINT_SERVER_BASE}/me/complaints${path}`
 }
 
 // The accelerator's own event-notification webapp (org.wso2.dpdp.accelerator.event.notifications.endpoint,
@@ -193,4 +207,4 @@ export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: bo
   return receiverHost ? { host: receiverHost, allowPrivateNetwork } : undefined
 }
 
-export type PersonaName = 'user' | 'user-2' | 'consent-admin'
+export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'

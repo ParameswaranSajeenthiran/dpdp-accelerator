@@ -45,7 +45,7 @@ import useAuthorization from './features/auth/useAuthorization'
 import firstAuthorizedPath from './features/auth/authorizationRoutes'
 import NoAccessPage from './features/auth/NoAccessPage'
 import useCurrentUserQuery from './features/auth/hooks/useCurrentUserQuery'
-import { ensureSignedIn, isAuthEnabled, takeReturnPath } from './utils/authClient'
+import { ensureSignedIn, takeReturnPath } from './utils/authClient'
 import { REQUIRED_SCOPES, type ScopeRequirement } from './utils/scopes'
 import { APIError } from './utils/apiClient'
 
@@ -126,11 +126,7 @@ function AuthenticationGate({
   }
 
   if (currentUserQuery.isError || !currentUserQuery.data) {
-    if (
-      isAuthEnabled() &&
-      currentUserQuery.error instanceof APIError &&
-      currentUserQuery.error.status === 401
-    ) {
+    if (currentUserQuery.error instanceof APIError && currentUserQuery.error.status === 401) {
       return null
     }
     return (

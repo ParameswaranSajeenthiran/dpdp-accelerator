@@ -12,8 +12,6 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
 - [Running the tests](#running-the-tests)
 - [Project structure](#project-structure)
 - [Test areas](#test-areas)
-- [Operating principles](#operating-principles)
-- [Known limitations](#known-limitations)
 - [Further reading](#further-reading)
 
 ## Prerequisites
@@ -33,7 +31,7 @@ real OAuth2 logins and a real consent-management database. Nothing here is mocke
      administrator: `tests/04-authorization` asserts this account holds only `internal_login`.
    - **Consent Admin** — assigned `dpdp-consent-admin` (see `../docs/content/configuration-guide.md`,
      "Grant administration access"). Drives the admin UI and seeds Purposes/Elements/Consents via
-     the API for `tests/01-elements`, `tests/02-purposes` and `tests/03-consents`.
+     the API for `tests/02-elements`, `tests/03-purposes` and `tests/04-consents`.
    - **Second User** — optional, a distinct plain account. Without it the ownership-isolation
      tests skip themselves.
 
@@ -112,11 +110,11 @@ The override file only names what it changes; it is merged into the defaults key
 | `identityServer.portalBaseUrl` | `…/consent-portal` | Where the consent-portal WAR is served from; the URL real users hit. |
 | `identityServer.ignoreHttpsErrors` | `true` | The shipped certificate is self-signed. Set `false` only against a properly trusted one. |
 | `superAdmin.username` / `.password` | `admin@wso2.com` / `wso2123` | The Console account the one-time bootstrap signs in as, and the account `tests/05-multi-tenancy` creates a throwaway organization with. Must match what this deployment actually has. |
-| `personas.user.*` | `dpdp-ci-user@dpdp.test` | The low-privilege persona. Deliberately not an administrator: `tests/04-authorization` asserts it holds only `internal_login`. |
-| `personas.user2.*` | `dpdp-ci-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
-| `personas.consentAdmin.*` | `dpdp-ci-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
+| `personas.user.*` | `dpdp-user-1@dpdp.test` | The low-privilege persona. Deliberately not an administrator: `tests/04-authorization` asserts it holds only `internal_login`. |
+| `personas.user2.*` | `dpdp-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
+| `personas.consentAdmin.*` | `dpdp-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
 | `personaRoles.user` / `.consentAdmin` | `dpdp-consent-user` / `dpdp-consent-admin` | The roles provisioning assigns. The accelerator creates the roles themselves; it never assigns membership. |
-| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/08-event-notifications/README.md`. |
+| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/09-event-notifications/README.md`. |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
 | `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after shortening `[dpdp_accelerator.consent_expiry] cron_value` on the server and restarting it. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. |
 
@@ -132,11 +130,19 @@ applies the `Action/trigger-e2e` label after reviewing the diff, and the label i
 every new push. It performs the same steps as the setup above, so a change that breaks local setup
 breaks CI too.
 
+PR runs exercise only the `multi-tenant` project - `super-tenant` differs mainly in the frontend's
+unqualified-root routing (`basePath.ts`) and skipping tenant creation, not in re-testing already
+covered features, and running both sequentially in the same job roughly doubled the runtime.
+`.github/workflows/nightly-e2e.yml` runs every project once a day instead, so a super-tenant-only
+regression surfaces within a day rather than only at the next weekly or release run. Both
+`weekly-e2e-is-master.yml`/`weekly-e2e-is-latest-u2.yml` and the release gate also run every
+project, unconditionally.
+
 ## Running the tests
 
 ```sh
 ./run-e2e.sh                       # everything
-./run-e2e.sh tests/03-consents     # one area
+./run-e2e.sh tests/04-consents     # one area
 npm run report                     # open the last HTML report
 ```
 
@@ -156,14 +162,14 @@ Equivalent npm scripts:
 | Command | Runs |
 | --- | --- |
 | `npm test` | the full suite |
-| `npm run test:elements` | `tests/01-elements` |
-| `npm run test:purposes` | `tests/02-purposes` |
-| `npm run test:consents` | `tests/03-consents` |
-| `npm run test:authorization` | `tests/04-authorization` |
-| `npm run test:multi-tenancy` | `tests/05-multi-tenancy` |
-| `npm run test:account` | `tests/06-account` |
-| `npm run test:complaints` | `tests/07-complaints` |
-| `npm run test:event-notifications` | `tests/08-event-notifications` |
+| `npm run test:elements` | `tests/02-elements` |
+| `npm run test:purposes` | `tests/03-purposes` |
+| `npm run test:consents` | `tests/04-consents` |
+| `npm run test:authorization` | `tests/05-authorization` |
+| `npm run test:multi-tenancy` | `tests/06-multi-tenancy` |
+| `npm run test:account` | `tests/07-account` |
+| `npm run test:complaints` | `tests/08-complaints` |
+| `npm run test:event-notifications` | `tests/09-event-notifications` |
 | `npm run test:ui` | any of the above, in Playwright's [UI mode](https://playwright.dev/docs/test-ui-mode) |
 | `npm run report` | opens the last HTML report |
 
@@ -183,7 +189,7 @@ the browser actually did.
 ```sh
 npm run test:ui                              # everything, in UI mode
 ./run-e2e.sh --ui                            # same, via run-e2e.sh
-npx playwright test tests/03-consents --ui   # one category, in UI mode
+npx playwright test tests/04-consents --ui   # one category, in UI mode
 ```
 
 ## Project structure
@@ -206,19 +212,20 @@ ID, what it drives and what it asserts, plus known gaps, the product bugs the te
 and the measured flake profile. Open that when you need to know what is covered, plan a change, or
 work out what a CI failure was checking. This table is only the map of what each directory owns.
 
-Test IDs are derived from location — `<area>.<file>.<test>`, so `03.06.04` is the fourth test in
-`tests/03-consents/03.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
+Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is the fourth test in
+`tests/04-consents/04.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
 
 | Directory | Tests | Covers |
 | --- | --- | --- |
-| `01-elements/` | 9 | Element catalog: admin creating, viewing and searching Elements |
-| `02-purposes/` | 9 | Purpose catalog: admin creating, viewing and searching Purposes |
-| `03-consents/` | 33 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
-| `04-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
-| `05-multi-tenancy/` | 3 | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
-| `06-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
-| `07-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
-| `08-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `01-provisioning/` | 3 | Per-run setup: creates the throwaway tenant, provisions its personas and the super tenant's |
+| `02-elements/` | 12 | Element catalog: admin creating, viewing, searching, and deleting Elements |
+| `03-purposes/` | 18 | Purpose catalog: admin creating, viewing, searching, deleting Purposes, and managing versions |
+| `04-consents/` | 37 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
+| `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
+| `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
+| `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
+| `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
+| `09-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 
@@ -230,37 +237,3 @@ A filename ending `-api.spec.ts` drives no browser at all.
 | [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md) | Every test, known gaps, product bugs, known flakiness |
 | [Quickstart](../docs/content/quickstart.md) | Installing and starting the Identity Server |
 | [Configuration Guide](../docs/content/configuration-guide.md) | Portal application and role configuration |
-
-| Directory | Covers |
-| --- | --- |
-| `01-elements/` | Element catalog: admin creating, viewing, and searching Elements |
-| `02-purposes/` | Purpose catalog: admin creating, viewing, and searching Purposes |
-| `03-consents/` | Consent records: User and admin registries (view/search/act) |
-| `04-authorization/` | Route-level access control and sidebar visibility per persona's scopes, including who is offered self-service account deletion |
-| `05-multi-tenancy/` | Tenant provisioning, data isolation and user/role assignment, driven through the real Console UI |
-| `06-account/` | Self-service account deletion end to end. Destructive and irreversible, so each test creates and signs in as its own throwaway user rather than any shared persona, and removes it again afterwards |
-
-## Operating principles
-
-A handful of things shape how every test here is written, driven by running against a real,
-persistent, shared environment rather than a disposable one:
-
-- **The environment never resets.** Data from every prior run is still there. Tests assert by
-  unique marker or server-issued ID, never by "the list is empty" or exact row counts.
-- **Tests run in parallel by default** (Playwright's `fullyParallel: true`) — no extra setup
-  needed to make a full run fast.
-- **Personas log in once per run, not once per test.** IS allows only one active session per
-  account; `fixtures/auth.fixtures.ts` caches each persona's login across every worker so
-  concurrent tests don't invalidate each other's sessions.
-- **Tests clean up their own setup data — except Consents and complaints.** Elements/Purposes
-  created as setup are deleted when the test finishes; Consents and complaints are left in
-  place, since neither supports delete-by-ID cleanup.
-- **Every spec is independent.** Nothing in the suite uses `test.describe.serial` — every test can
-  run in any order, on any worker, without coordination.
-
-## Known limitations
-
-- **Session concurrency is capped by IS itself**, not this suite — scaling truly concurrent
-  logins for the same persona means provisioning additional test accounts, not a config change.
-- **Consents and complaints created as test setup are never deleted** and accumulate in the shared environment
-  over time (see [Operating principles](#operating-principles)).
