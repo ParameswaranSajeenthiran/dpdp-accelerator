@@ -19,7 +19,7 @@
 import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { ComplaintCaseDetailPage } from '../../pages/ComplaintCaseDetailPage'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
-import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
+import { seedComplaintViaApi } from '../../utils/complaintSetup'
 
 /**
  * A Complaint Officer viewing the org-wide queue and one case's detail -
