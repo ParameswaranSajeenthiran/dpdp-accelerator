@@ -43,6 +43,8 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ADMIN_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.USER_ROLE;
 
 public class DPDPConsentPortalAppProvisioningUtilTest {
 
@@ -162,8 +164,8 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         when(applicationManagementService.getApplicationExcludingFileBasedSPs(
                 DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME, TENANT_DOMAIN)).thenReturn(serviceProvider);
 
-        List<RoleV2> roles = Arrays.asList(new RoleV2("role-admin-1234", "dpdp-consent-admin"),
-                new RoleV2("role-user-1234", "dpdp-consent-user"));
+        List<RoleV2> roles = Arrays.asList(new RoleV2("role-admin-1234", ADMIN_ROLE),
+                new RoleV2("role-user-1234", USER_ROLE));
 
         DPDPConsentPortalAppProvisioningUtil.associateOrganizationRoles(TENANT_DOMAIN, "admin", roles);
 
@@ -172,7 +174,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
         AssociatedRolesConfig associatedRolesConfig = spCaptor.getValue().getAssociatedRolesConfig();
         assertEquals(associatedRolesConfig.getAllowedAudience(), "ORGANIZATION");
         assertEquals(associatedRolesConfig.getRoles().length, 2);
-        assertEquals(associatedRolesConfig.getRoles()[0].getName(), "dpdp-consent-admin");
-        assertEquals(associatedRolesConfig.getRoles()[1].getName(), "dpdp-consent-user");
+        assertEquals(associatedRolesConfig.getRoles()[0].getName(), ADMIN_ROLE);
+        assertEquals(associatedRolesConfig.getRoles()[1].getName(), USER_ROLE);
     }
 }

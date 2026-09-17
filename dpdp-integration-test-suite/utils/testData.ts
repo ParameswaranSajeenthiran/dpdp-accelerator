@@ -16,17 +16,30 @@
  * under the License.
  */
 
+import { randomBytes } from 'node:crypto'
+
 // This suite runs against a real, persistent environment (no per-test tenant reset), so every
 // scenario that creates a record stamps a unique marker into its name and asserts by that
 // marker or by the server-issued ID - never by "the list is empty" or "there's exactly one
 // record", both of which would be false against an environment with prior runs' data still in it.
 export function uniqueMarker(label: string): string {
-  return `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  // Math.random() here flowed into usernames used to sign in (e.g. a tenant owner's), which
+  // CodeQL's js/insecure-randomness rule flags regardless of this being a disambiguating suffix
+  // rather than an actual secret - randomBytes costs nothing extra since generatePassword below
+  // already pulls it in, and it closes the finding outright rather than arguing it's a false
+  // positive.
+  return `${label}-${Date.now()}-${randomBytes(4).toString('hex')}`
 }
 
-// Catalog-management/lifecycle tests create real Purposes/Elements/Consents through the admin API as setup for
-// what the UI is actually being tested on (see tests/plan.md notes on why
-// Purpose/Element authoring itself has no UI to drive) - unique names keep those records
+/** A policy-compliant random password, in the same shape scripts/setup-local.sh generates. */
+export function generatePassword(): string {
+  const random = randomBytes(18).toString('base64').replace(/[^A-Za-z0-9]/g, '')
+  return `${random}Aa1!`
+}
+
+// Catalog-management/lifecycle tests create real Purposes/Elements/Consents as setup for what the
+// UI is actually being tested on - Purposes and Elements through their real admin forms, Consents
+// through the admin API since consent creation has no UI at all. Unique names keep those records
 // distinguishable from whatever prior runs left in the shared environment.
 export function uniquePurposeName(): string {
   return uniqueMarker('purpose')
@@ -48,7 +61,7 @@ export function uniqueTenantDomain(): string {
   return `${uniqueMarker('dpdp-e2e')}.com`
 }
 
-// Realistic-looking labels for tests/03-consents/ - picked per-call and stamped with
+// Realistic-looking labels for tests/04-consents/ - picked per-call and stamped with
 // uniqueMarker so records made by this suite's disposable, per-test setup (created and torn down
 // via seedConsent) never collide with each other or with anything else left in this shared
 // environment.

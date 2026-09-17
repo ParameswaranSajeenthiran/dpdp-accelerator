@@ -26,7 +26,6 @@ import {
 
 const authMocks = vi.hoisted(() => ({
   httpRequest: vi.fn(),
-  isAuthEnabled: vi.fn<() => boolean>(),
   login: vi.fn<() => Promise<void>>(),
 }))
 
@@ -54,7 +53,6 @@ function requestConfig(index = 0): {
 
 beforeEach(() => {
   vi.stubEnv('VITE_IS_BASE_URL', 'http://api.example/')
-  authMocks.isAuthEnabled.mockReturnValue(true)
   authMocks.login.mockResolvedValue()
 })
 
@@ -135,19 +133,6 @@ describe('authenticated API client', () => {
 
     expect(authMocks.httpRequest).toHaveBeenCalledOnce()
     expect(authMocks.login).toHaveBeenCalledOnce()
-  })
-
-  it('does not start login for a 401 when authentication is disabled', async () => {
-    authMocks.isAuthEnabled.mockReturnValue(false)
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({}), { status: 401 })),
-    )
-
-    await expect(apiRequest('/consents')).rejects.toMatchObject({ status: 401 })
-
-    expect(authMocks.login).not.toHaveBeenCalled()
-    expect(authMocks.httpRequest).not.toHaveBeenCalled()
   })
 
   it('accepts an empty body for a no-content request', async () => {

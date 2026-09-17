@@ -23,9 +23,8 @@ import type { AuthHeaders } from '../utils/authStorage'
 /**
  * Ground truth for these shapes is the actual Java source under
  * dpdp-accelerator/{components,internal-webapps}/org.wso2.dpdp.accelerator.complaint.mgt.*, not
- * complaint-server-API.yaml alone - the two have drifted in a couple of places (see
- * tests/06-complaints-api/README.md, "Spec-vs-implementation drift found while writing this
- * suite"). Types below match what the server actually does.
+ * complaint-server-API.yaml alone - the two have drifted in a couple of places. Types below match
+ * what the server actually does.
  */
 export type ComplaintCategory =
   | 'DATA_BREACH'
@@ -86,6 +85,7 @@ export class ComplaintApiClient {
   constructor(
     private readonly request: APIRequestContext,
     private readonly auth: AuthHeaders,
+    private readonly tenantDomain?: string,
   ) {}
 
   private headers(extra?: Record<string, string>): Record<string, string> {
@@ -99,7 +99,9 @@ export class ComplaintApiClient {
   private toFormData(files: UploadFile[], extra?: Record<string, string>): FormData {
     const form = new FormData()
     for (const file of files) {
-      form.append('file', new Blob([file.buffer], { type: file.mimeType }), file.name)
+      // Copy into a plain Uint8Array: Node's Buffer is backed by ArrayBufferLike, which
+      // BlobPart does not accept.
+      form.append('file', new Blob([new Uint8Array(file.buffer)], { type: file.mimeType }), file.name)
     }
     if (extra) {
       for (const [key, value] of Object.entries(extra)) {
@@ -123,26 +125,26 @@ export class ComplaintApiClient {
   // --------------------------------------------------------------------- Me (Data Principal)
 
   async createMyComplaint(body: { subjectCategory: ComplaintCategory; description: string }): Promise<APIResponse> {
-    return this.request.post(meComplaintsApiUrl(''), { headers: this.jsonHeaders(), data: body })
+    return this.request.post(meComplaintsApiUrl('', this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
   async listMyComplaints(params: MeComplaintListParams = {}): Promise<APIResponse> {
-    return this.request.get(meComplaintsApiUrl(''), {
+    return this.request.get(meComplaintsApiUrl('', this.tenantDomain), {
       headers: this.headers(),
       params: this.queryParams(params),
     })
   }
 
   async getMyComplaint(complaintId: string): Promise<APIResponse> {
-    return this.request.get(meComplaintsApiUrl(`/${complaintId}`), { headers: this.headers() })
+    return this.request.get(meComplaintsApiUrl(`/${complaintId}`, this.tenantDomain), { headers: this.headers() })
   }
 
   async getMyCategories(): Promise<APIResponse> {
-    return this.request.get(meComplaintsApiUrl('/categories'), { headers: this.headers() })
+    return this.request.get(meComplaintsApiUrl('/categories', this.tenantDomain), { headers: this.headers() })
   }
 
   async getMyTimeline(complaintId: string, params: TimelineParams = {}): Promise<APIResponse> {
-    return this.request.get(meComplaintsApiUrl(`/${complaintId}/timeline`), {
+    return this.request.get(meComplaintsApiUrl(`/${complaintId}/timeline`, this.tenantDomain), {
       headers: this.headers(),
       params: this.queryParams(params),
     })
@@ -150,12 +152,12 @@ export class ComplaintApiClient {
 
   /** actorRole is implicitly USER, isPublic implicitly true - a Data Principal can never post an internal note. */
   async addMyComment(complaintId: string, body: { message: string; toStatus?: ComplaintStatus }): Promise<APIResponse> {
-    return this.request.post(meComplaintsApiUrl(`/${complaintId}/comments`), { headers: this.jsonHeaders(), data: body })
+    return this.request.post(meComplaintsApiUrl(`/${complaintId}/comments`, this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
   /** No `note` field exists on this request at all - see MeComplaintStatusUpdateRequest in the spec. */
   async updateMyStatus(complaintId: string, toStatus: ComplaintStatus): Promise<APIResponse> {
-    return this.request.post(meComplaintsApiUrl(`/${complaintId}/status`), {
+    return this.request.post(meComplaintsApiUrl(`/${complaintId}/status`, this.tenantDomain), {
       headers: this.jsonHeaders(),
       data: { toStatus },
     })
@@ -163,14 +165,14 @@ export class ComplaintApiClient {
 
   /** Uploads always land isPublic=true - there is no isPublic parameter on this endpoint. */
   async uploadMyAttachments(complaintId: string, files: UploadFile[]): Promise<APIResponse> {
-    return this.request.post(meComplaintsApiUrl(`/${complaintId}/attachments`), {
+    return this.request.post(meComplaintsApiUrl(`/${complaintId}/attachments`, this.tenantDomain), {
       headers: this.headers(),
       multipart: this.toFormData(files),
     })
   }
 
   async downloadMyAttachment(complaintId: string, attachmentId: string): Promise<APIResponse> {
-    return this.request.get(meComplaintsApiUrl(`/${complaintId}/attachments/${attachmentId}`), {
+    return this.request.get(meComplaintsApiUrl(`/${complaintId}/attachments/${attachmentId}`, this.tenantDomain), {
       headers: this.headers(),
     })
   }
@@ -183,26 +185,26 @@ export class ComplaintApiClient {
     subjectCategory: ComplaintCategory
     description: string
   }): Promise<APIResponse> {
-    return this.request.post(complaintsApiUrl(''), { headers: this.jsonHeaders(), data: body })
+    return this.request.post(complaintsApiUrl('', this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
   async listComplaints(params: ComplaintListParams = {}): Promise<APIResponse> {
-    return this.request.get(complaintsApiUrl(''), {
+    return this.request.get(complaintsApiUrl('', this.tenantDomain), {
       headers: this.headers(),
       params: this.queryParams(params),
     })
   }
 
   async getComplaint(complaintId: string): Promise<APIResponse> {
-    return this.request.get(complaintsApiUrl(`/${complaintId}`), { headers: this.headers() })
+    return this.request.get(complaintsApiUrl(`/${complaintId}`, this.tenantDomain), { headers: this.headers() })
   }
 
   async getCategories(): Promise<APIResponse> {
-    return this.request.get(complaintsApiUrl('/categories'), { headers: this.headers() })
+    return this.request.get(complaintsApiUrl('/categories', this.tenantDomain), { headers: this.headers() })
   }
 
   async getTimeline(complaintId: string, params: TimelineParams = {}): Promise<APIResponse> {
-    return this.request.get(complaintsApiUrl(`/${complaintId}/timeline`), {
+    return this.request.get(complaintsApiUrl(`/${complaintId}/timeline`, this.tenantDomain), {
       headers: this.headers(),
       params: this.queryParams(params),
     })
@@ -213,17 +215,17 @@ export class ComplaintApiClient {
     complaintId: string,
     body: { message: string; isPublic: boolean; toStatus?: ComplaintStatus },
   ): Promise<APIResponse> {
-    return this.request.post(complaintsApiUrl(`/${complaintId}/comments`), { headers: this.jsonHeaders(), data: body })
+    return this.request.post(complaintsApiUrl(`/${complaintId}/comments`, this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
   /** Status-only transition, no comment. `note` is required by the server when toStatus is RESOLVED. */
   async updateStatus(complaintId: string, body: { toStatus: ComplaintStatus; note?: string }): Promise<APIResponse> {
-    return this.request.post(complaintsApiUrl(`/${complaintId}/status`), { headers: this.jsonHeaders(), data: body })
+    return this.request.post(complaintsApiUrl(`/${complaintId}/status`, this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
   /** isPublic defaults to true server-side when omitted. */
   async uploadAttachments(complaintId: string, files: UploadFile[], isPublic?: boolean): Promise<APIResponse> {
-    return this.request.post(complaintsApiUrl(`/${complaintId}/attachments`), {
+    return this.request.post(complaintsApiUrl(`/${complaintId}/attachments`, this.tenantDomain), {
       headers: this.headers(),
       multipart: this.toFormData(files, isPublic === undefined ? undefined : { isPublic: String(isPublic) }),
     })
@@ -231,7 +233,7 @@ export class ComplaintApiClient {
 
   /** Officers can download regardless of isPublic - unlike downloadMyAttachment. */
   async downloadAttachment(complaintId: string, attachmentId: string): Promise<APIResponse> {
-    return this.request.get(complaintsApiUrl(`/${complaintId}/attachments/${attachmentId}`), {
+    return this.request.get(complaintsApiUrl(`/${complaintId}/attachments/${attachmentId}`, this.tenantDomain), {
       headers: this.headers(),
     })
   }

@@ -151,7 +151,7 @@
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.component.annotations;version="${osgi.service.component.imp.pkg.version.range}",
                             org.apache.commons.logging;version="${commons.logging.imp.pkg.version.range}",
-                            org.apache.axiom.*;version="0",
+                            org.apache.axiom.*;version="${axiom.imp.pkg.version.range}",
                             org.wso2.carbon.utils;version="${carbon.kernel.version}",
                             org.wso2.securevault;version="${securevault.version}",
                             org.wso2.securevault.commons;version="${securevault.version}",

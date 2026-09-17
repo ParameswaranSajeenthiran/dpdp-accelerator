@@ -40,6 +40,16 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_PORTAL_AUTO_PROVISIONING_ENABLED = "ConsentPortal.AutoProvisioningEnabled";
     public static final String CONSENT_PORTAL_CLIENT_ID = "ConsentPortal.ClientId";
 
+    // identity.extensions provisions these three roles per tenant; other bundles resolve them by
+    // name (e.g. complaint.mgt.service's officer distribution list). A drift between the two sides
+    // fails silently - the lookup just finds nothing - so the names live here, not per-module.
+    public static final String ADMIN_ROLE = "dpdp-consent-admin";
+    public static final String USER_ROLE = "dpdp-consent-user";
+    public static final String DPO_ROLE = "dpdp-consent-dpo";
+    // Roles are created with this audience, so every lookup must pass the same one or
+    // RoleManagementService throws INVALID_AUDIENCE.
+    public static final String ROLE_AUDIENCE = "organization";
+
     public static final String CONSENT_API_INVOKER_AUTO_PROVISIONING_ENABLED =
             "ConsentApiInvoker.AutoProvisioningEnabled";
     public static final String CONSENT_API_INVOKER_CLIENT_ID = "ConsentApiInvoker.ClientId";
@@ -52,6 +62,9 @@ public final class DPDPCommonConstants {
 
     public static final String COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = "Complaints.AttachmentMaxFilesPerUpload";
     public static final int DEFAULT_COMPLAINTS_ATTACHMENT_MAX_FILES_PER_UPLOAD = 5;
+
+    public static final String COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED = "Complaints.EmailNotificationsEnabled";
+    public static final boolean DEFAULT_COMPLAINTS_EMAIL_NOTIFICATIONS_ENABLED = false;
 
     public static final String EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = "EventNotifications.ThreadPoolSize";
     public static final String EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = "EventNotifications.BaseBackoffSeconds";

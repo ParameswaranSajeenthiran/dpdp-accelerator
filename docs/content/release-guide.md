@@ -100,8 +100,12 @@ prepare ─┬─ e2e ──┐
 - **prepare** — resolves and validates the version, rejects an existing tag, and refuses a
   non-prerelease off `main`. Everything downstream reads its outputs rather than
   re-deriving them.
-- **e2e** — the same suite that gates a PR, via the reusable
-  [`e2e.yml`](https://github.com/wso2/dpdp-accelerator/blob/main/.github/workflows/e2e.yml). Skippable with `run_e2e: off`.
+- **e2e** — the same reusable
+  [`e2e.yml`](https://github.com/wso2/dpdp-accelerator/blob/main/.github/workflows/e2e.yml) that
+  gates a PR, but broader: it passes no `projects` override, so every Playwright project runs
+  (`multi-tenant` and `super-tenant`), where a PR's own gate runs `multi-tenant` alone for speed
+  — see `dpdp-integration-test-suite/README.md`'s Continuous integration section. Skippable with
+  `run_e2e: off`.
 - **build** — `versions:set`, then `mvn clean install`, then asserts the zip exists at the
   exact expected path. That assertion is also what proves `versions:set` reached every
   module.

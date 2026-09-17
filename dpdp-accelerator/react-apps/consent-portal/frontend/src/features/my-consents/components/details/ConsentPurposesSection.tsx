@@ -90,7 +90,6 @@ function ConsentPurposesSection({ purposes }: ConsentPurposesSectionProps): Reac
                 <Typography variant="body2" fontWeight={600}>
                   {purpose.name}
                 </Typography>
-                <Chip size="small" variant="outlined" label={purpose.type} />
                 <Chip size="small" color="primary" label={purpose.version} />
                 <Chip
                   size="small"
@@ -102,6 +101,9 @@ function ConsentPurposesSection({ purposes }: ConsentPurposesSectionProps): Reac
               </Stack>
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0 }}>
+              <Box sx={{ p: 2 }}>
+                <Chip size="small" variant="outlined" label={purpose.type} />
+              </Box>
               <TableContainer>
                 <Table
                   size="small"
