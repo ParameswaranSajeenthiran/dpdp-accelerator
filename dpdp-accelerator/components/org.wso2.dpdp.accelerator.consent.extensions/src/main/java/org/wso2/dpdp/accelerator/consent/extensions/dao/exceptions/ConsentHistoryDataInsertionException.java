@@ -19,9 +19,8 @@
 package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
 /**
- * Thrown when a status-audit or history snapshot row could not be written. Checked - callers
- * decide whether a capture failure is fatal (the consent listener swallows it so the mutation
- * still succeeds; the endpoint turns it into a 500), so the compiler should make them choose.
+ * Thrown when a consent history row could not be written. Checked - callers decide whether a
+ * capture failure is fatal, so the compiler should make them choose.
  */
 public class ConsentHistoryDataInsertionException extends Exception {
 

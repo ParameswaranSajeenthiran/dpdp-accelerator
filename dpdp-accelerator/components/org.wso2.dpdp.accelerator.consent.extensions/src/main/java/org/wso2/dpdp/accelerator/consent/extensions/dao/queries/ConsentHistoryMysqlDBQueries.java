@@ -19,11 +19,9 @@
 package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
 /**
- * MySQL dialect query provider for consent history. No query text differs from the ANSI/H2
- * baseline today (see {@code consent-history/h2.sql} vs {@code consent-history/mysql.sql} - the
- * DML is identical, only the DDL diverges), so this class overrides nothing; it exists as the
- * override point {@link ConsentHistoryQueryFactory} routes to for a future MySQL-specific quirk.
- * Mirrors {@code ComplaintMysqlDBQueries}.
+ * MySQL dialect query provider for consent history. No query text diverges from the ANSI baseline
+ * today, so this class overrides nothing; it exists as the override point
+ * {@link ConsentHistoryQueryFactory} routes to for a future MySQL-specific quirk.
  */
 public class ConsentHistoryMysqlDBQueries extends ConsentHistoryCommonDBQueries {
 }

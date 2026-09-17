@@ -19,8 +19,8 @@
 package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
 /**
- * Thrown when status-audit or history snapshot rows could not be read. Checked, for the same
- * reason as {@link ConsentHistoryDataInsertionException}.
+ * Thrown when consent history rows could not be read. Checked, for the same reason as
+ * {@link ConsentHistoryDataInsertionException}.
  */
 public class ConsentHistoryDataRetrievalException extends Exception {
 

@@ -27,11 +27,10 @@ import java.sql.Connection;
 import java.util.List;
 
 /**
- * Every method takes the {@link Connection} as its first parameter - this DAO never opens or
- * manages its own connection, the service layer owns the transaction. Failures are reported as
- * checked {@code ConsentHistoryData*Exception}s so a caller cannot drop a capture failure by
- * omission; see those classes for why this layer differs from the Event Notification/Complaint
- * DAOs.
+ * Persistence operations for consent history. Every method takes the {@link Connection} as its
+ * first parameter - this DAO never opens or manages its own connection, the service layer owns
+ * the transaction. Failures are reported as checked exceptions so a caller cannot drop a capture
+ * failure by omission.
  */
 public interface ConsentHistoryDAO {
 

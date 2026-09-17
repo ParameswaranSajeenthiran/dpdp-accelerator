@@ -21,12 +21,10 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 
 /**
- * ANSI-baseline SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. Dialect-
- * specific subclasses (see {@link ConsentHistoryMysqlDBQueries}) override only the queries that
- * actually diverge; {@link ConsentHistoryQueryFactory} resolves which one to use per connection.
- * Instance methods (not {@code static final} constants) are what make that override possible
- * without touching callers - mirrors
- * {@code ComplaintCommonDBQueries}/{@code EventNotificationCommonDBQueries}.
+ * ANSI-baseline SQL for the consent history tables. Dialect-specific subclasses override only the
+ * queries that actually diverge; {@link ConsentHistoryQueryFactory} resolves which one to use per
+ * connection. Instance methods (not {@code static final} constants) are what make that override
+ * possible without touching callers.
  */
 public class ConsentHistoryCommonDBQueries {
 

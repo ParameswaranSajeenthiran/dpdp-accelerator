@@ -25,10 +25,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Factory resolving DB-dialect specific query providers for the consent history feature. Mirrors
- * {@code ComplaintQueryFactory}/{@code EventNotificationQueryFactory} - only {@code mysql} has a
- * dedicated provider today since the feature only ships {@code h2.sql}/{@code mysql.sql}; every
- * other dialect (including H2) falls back to the ANSI baseline.
+ * Resolves the DB-dialect specific query provider for the consent history feature. Only
+ * {@code mysql} has a dedicated provider today; every other dialect falls back to the ANSI
+ * baseline.
  */
 public class ConsentHistoryQueryFactory {
 
