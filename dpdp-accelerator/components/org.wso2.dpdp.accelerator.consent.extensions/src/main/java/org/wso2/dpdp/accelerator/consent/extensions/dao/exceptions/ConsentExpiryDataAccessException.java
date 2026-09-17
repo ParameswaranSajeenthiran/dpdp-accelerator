@@ -24,7 +24,7 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
  * simple internal bookkeeping with a single caller, {@code ConsentExpiryServiceImpl}, that
  * doesn't need to distinguish failure modes.
  */
-public class ConsentExpiryDataAccessException extends Exception {
+public class ConsentExpiryDataAccessException extends RuntimeException {
 
     public ConsentExpiryDataAccessException(String message, Throwable cause) {
 
