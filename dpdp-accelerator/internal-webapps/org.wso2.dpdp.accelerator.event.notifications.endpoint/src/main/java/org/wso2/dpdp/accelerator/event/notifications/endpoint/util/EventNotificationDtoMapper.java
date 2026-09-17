@@ -219,6 +219,8 @@ public final class EventNotificationDtoMapper {
         target.setCompletionEvidence(source.getCompletionEvidence());
         target.setDeliveryMode(source.getDeliveryMode() == null ? null : DeliveryMode.fromValue(source.getDeliveryMode()));
         target.setHistory(map(source.getHistory(), EventNotificationDtoMapper::toApi));
+        target.setManualRetryUsed(source.isManualRetryUsed());
+        target.setManualRetryAvailable(source.isManualRetryAvailable());
         return target;
     }
 

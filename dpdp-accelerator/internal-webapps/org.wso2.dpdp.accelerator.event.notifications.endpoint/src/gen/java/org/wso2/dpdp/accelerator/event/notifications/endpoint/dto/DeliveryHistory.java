@@ -54,6 +54,14 @@ public class DeliveryHistory  {
   @ApiModelProperty(required = true, value = "")
 
   private List<DeliveryAttempt> history;
+
+  @ApiModelProperty(required = true, value = "")
+
+  private Boolean manualRetryUsed = false;
+
+  @ApiModelProperty(required = true, value = "")
+
+  private Boolean manualRetryAvailable = false;
  /**
    * Get deliveryId
    * @return deliveryId
@@ -239,6 +247,42 @@ public class DeliveryHistory  {
     return this;
   }
 
+ /**
+   * Get manualRetryUsed
+   * @return manualRetryUsed
+  **/
+  @JsonProperty("manualRetryUsed")
+  public Boolean getManualRetryUsed() {
+    return manualRetryUsed;
+  }
+
+  public void setManualRetryUsed(Boolean manualRetryUsed) {
+    this.manualRetryUsed = manualRetryUsed;
+  }
+
+  public DeliveryHistory manualRetryUsed(Boolean manualRetryUsed) {
+    this.manualRetryUsed = manualRetryUsed;
+    return this;
+  }
+
+ /**
+   * Get manualRetryAvailable
+   * @return manualRetryAvailable
+  **/
+  @JsonProperty("manualRetryAvailable")
+  public Boolean getManualRetryAvailable() {
+    return manualRetryAvailable;
+  }
+
+  public void setManualRetryAvailable(Boolean manualRetryAvailable) {
+    this.manualRetryAvailable = manualRetryAvailable;
+  }
+
+  public DeliveryHistory manualRetryAvailable(Boolean manualRetryAvailable) {
+    this.manualRetryAvailable = manualRetryAvailable;
+    return this;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -257,12 +301,14 @@ public class DeliveryHistory  {
         Objects.equals(this.nextRetryAt, deliveryHistory.nextRetryAt) &&
         Objects.equals(this.completionStatus, deliveryHistory.completionStatus) &&
         Objects.equals(this.completionEvidence, deliveryHistory.completionEvidence) &&
-        Objects.equals(this.history, deliveryHistory.history);
+        Objects.equals(this.history, deliveryHistory.history) &&
+        Objects.equals(this.manualRetryUsed, deliveryHistory.manualRetryUsed) &&
+        Objects.equals(this.manualRetryAvailable, deliveryHistory.manualRetryAvailable);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(deliveryId, eventId, topic, deliveryMode, currentStatus, occurredAt, nextRetryAt, completionStatus, completionEvidence, history);
+    return Objects.hash(deliveryId, eventId, topic, deliveryMode, currentStatus, occurredAt, nextRetryAt, completionStatus, completionEvidence, history, manualRetryUsed, manualRetryAvailable);
   }
 
   @Override
@@ -280,6 +326,8 @@ public class DeliveryHistory  {
     sb.append("    completionStatus: ").append(toIndentedString(completionStatus)).append("\n");
     sb.append("    completionEvidence: ").append(toIndentedString(completionEvidence)).append("\n");
     sb.append("    history: ").append(toIndentedString(history)).append("\n");
+    sb.append("    manualRetryUsed: ").append(toIndentedString(manualRetryUsed)).append("\n");
+    sb.append("    manualRetryAvailable: ").append(toIndentedString(manualRetryAvailable)).append("\n");
     sb.append("}");
     return sb.toString();
   }

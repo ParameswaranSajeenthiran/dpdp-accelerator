@@ -32,13 +32,10 @@ tenant/group context and ignore caller-supplied metadata on creation.
 
 Generation maps URI properties to strings so the service remains responsible for
 URL validation. Automatic bean validation is disabled to retain existing service
-validation and error codes. Enum deserializers preserve the common enum parsers'
-case handling, whitespace handling, aliases, and exception causes.
-
-`src/main/openapi-templates/enumOuterClass.mustache` is the pinned generator's CXF
-enum template with support added for `x-class-extra-annotation`. This attaches
-the compatibility deserializers without editing generated enums. Review this
-template whenever upgrading the generator.
+validation and error codes. Subscription request enums accept only the exact
+lowercase values declared in the specification.
+Case variants, surrounding whitespace, blank strings, and Java enum-name aliases
+are rejected with HTTP 400. Models use the generator's standard CXF templates.
 
 Polling and completion requests remain raw strings through the endpoint and
 handler because their signatures depend on the original body. Their generated
@@ -48,7 +45,7 @@ signature verification. Polling responses are mapped normally.
 ## Verification
 
 The TestNG suite includes mapper JSON comparisons against the previous service DTO
-representation, nested fields, legacy request fields, enum aliases, error codes,
+representation, nested fields, legacy request fields, strict enum values, error codes,
 secret suppression, and exact signed-body forwarding. Maven verification enforces
 the existing coverage threshold for handwritten code; generated DTOs are excluded.
 Inspect the resulting WAR for generated classes and runtime dependencies before

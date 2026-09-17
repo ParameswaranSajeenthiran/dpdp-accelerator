@@ -5,9 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Gets or Sets SubscriptionStatus
+ * Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
  */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.wso2.dpdp.accelerator.event.notifications.endpoint.util.RequestEnumDeserializers.Status.class)
 public enum SubscriptionStatus {
   
   ACTIVE("active"),

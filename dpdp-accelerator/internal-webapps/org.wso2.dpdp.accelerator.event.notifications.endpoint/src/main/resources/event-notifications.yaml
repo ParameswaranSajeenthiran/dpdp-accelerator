@@ -298,8 +298,16 @@ paths:
       parameters:
         - name: status
           in: query
+          description: >-
+            Filter by subscription status (active, pending, stale, or deleted).
+            Surrounding whitespace is trimmed and matching is case-insensitive.
+            Omit this parameter, pass a blank value, or use all to disable the status filter.
+            Other values are used as filters and may return no matches.
+            This normalization applies only to the query parameter; subscription creation
+            requires exact lowercase enum values.
           schema:
-            $ref: "#/components/schemas/SubscriptionStatus"
+            type: string
+          example: active
         - name: purposes
           in: query
           description: Comma-separated purposes
@@ -1213,6 +1221,8 @@ components:
                 occurredAt: 1787651970000
                 completionStatus: completed
                 completionEvidence: https://processor.example/evidence/receipt.pdf
+                manualRetryUsed: false
+                manualRetryAvailable: false
                 history:
                   - attempt: 1
                     status: delivered
@@ -1227,6 +1237,8 @@ components:
                 currentStatus: acknowledged
                 occurredAt: 1787651970000
                 completionStatus: acknowledged
+                manualRetryUsed: false
+                manualRetryAvailable: false
                 history:
                   - attempt: 1
                     status: acknowledged
@@ -1286,7 +1298,7 @@ components:
           enum: [system, user]
     PurposeFilterMode:
       type: string
-      x-class-extra-annotation: '@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.wso2.dpdp.accelerator.event.notifications.endpoint.util.RequestEnumDeserializers.FilterMode.class)'
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [all, all_except, specific]
     Filter:
       type: object
@@ -1300,7 +1312,7 @@ components:
             type: string
     DeliveryMode:
       type: string
-      x-class-extra-annotation: '@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.wso2.dpdp.accelerator.event.notifications.endpoint.util.RequestEnumDeserializers.Delivery.class)'
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [webhook, poll]
     DeliveryConfigRequest:
       type: object
@@ -1331,7 +1343,7 @@ components:
           description: Always null in service responses.
     SubscriptionStatus:
       type: string
-      x-class-extra-annotation: '@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.wso2.dpdp.accelerator.event.notifications.endpoint.util.RequestEnumDeserializers.Status.class)'
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [active, pending, stale, deleted]
     SubscriptionCreateRequest:
       type: object
@@ -1524,14 +1536,16 @@ components:
         completionEvidence:
           type: string
           nullable: true
-        manualRetryUsed:
-          type: boolean
-        manualRetryAvailable:
-          type: boolean
         history:
           type: array
           items:
             $ref: "#/components/schemas/DeliveryAttempt"
+        manualRetryUsed:
+          type: boolean
+          default: false
+        manualRetryAvailable:
+          type: boolean
+          default: false
     PollSetError:
       type: object
       required: [err, description]

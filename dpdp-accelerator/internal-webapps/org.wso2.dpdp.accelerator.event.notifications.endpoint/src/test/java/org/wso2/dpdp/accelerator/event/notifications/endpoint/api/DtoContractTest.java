@@ -64,8 +64,8 @@ public class DtoContractTest {
 
     @Test
     public void subscriptionsPreserveNestedFieldsAndSuppressSecrets() throws Exception {
-        String body = "{\"topic\":\"topic\",\"filter\":{\"type\":\" EXCEPT \",\"purposes\":[\"p\"]},"
-                + "\"delivery\":{\"mode\":\" WEBHOOK \",\"callbackUrl\":\"https://receiver.example/callback\","
+        String body = "{\"topic\":\"topic\",\"filter\":{\"type\":\"all_except\",\"purposes\":[\"p\"]},"
+                + "\"delivery\":{\"mode\":\"webhook\",\"callbackUrl\":\"https://receiver.example/callback\","
                 + "\"sharedSecret\":\"secret\"}}";
         SubscriptionDTO oldRequest = json.readValue(body, SubscriptionDTO.class);
         SubscriptionDTO mapped = EventNotificationDtoMapper.toService(
@@ -114,6 +114,10 @@ public class DtoContractTest {
         history.setCompletionEvidence("https://receiver.example/evidence");
         history.setHistory(Arrays.asList(new SubscriptionDeliveryAttemptDTO(1, "FAILED", 123L, 503, "unavailable"),
                 new SubscriptionDeliveryAttemptDTO(2, "DELIVERED", 234L, 200, null)));
+        history.setManualRetryUsed(true);
+        equivalent(history, EventNotificationDtoMapper.toApi(history));
+        history.setManualRetryUsed(false);
+        history.setManualRetryAvailable(true);
         equivalent(history, EventNotificationDtoMapper.toApi(history));
         equivalent(new SubscriptionEventHistoryDTO(), EventNotificationDtoMapper.toApi(new SubscriptionEventHistoryDTO()));
         equivalent(new EventPollingResponseDTO(false, Collections.emptyMap()),
@@ -140,19 +144,35 @@ public class DtoContractTest {
     }
 
     @Test
-    public void legacyMetadataAndEnumAliasesStillParse() throws Exception {
+    public void legacyMetadataAndCanonicalEnumsStillParse() throws Exception {
         String topic = "{\"name\":\"t\",\"topicId\":\"ignored\",\"status\":\"ignored\",\"initiatedBy\":\"ignored\"}";
         equivalent(json.readValue(topic, TopicDTO.class),
                 EventNotificationDtoMapper.toService(json.readValue(topic, TopicCreateRequest.class)));
         String subscription = "{\"topic\":\"t\",\"subscriptionId\":\"ignored\",\"orgId\":\"ignored\","
-                + "\"groupId\":\"ignored\",\"status\":\" ACTIVE \",\"createdAt\":1,\"updatedAt\":2,"
+                + "\"groupId\":\"ignored\",\"status\":\"active\",\"createdAt\":1,\"updatedAt\":2,"
                 + "\"alreadyExists\":true,\"message\":\"ignored\"}";
         equivalent(json.readValue(subscription, SubscriptionDTO.class),
                 EventNotificationDtoMapper.toService(json.readValue(subscription, SubscriptionCreateRequest.class)));
-        for (String mode : Arrays.asList("poll", " POLL ", "", " ")) {
-            String body = "{\"delivery\":{\"mode\":\"" + mode + "\"},\"filter\":{\"type\":\" \"}}";
-            equivalent(json.readValue(body, SubscriptionDTO.class),
-                    EventNotificationDtoMapper.toService(json.readValue(body, SubscriptionCreateRequest.class)));
+        for (String mode : Arrays.asList("webhook", "poll")) {
+            for (String filter : Arrays.asList("all", "specific", "all_except")) {
+                String body = "{\"delivery\":{\"mode\":\"" + mode
+                        + "\"},\"filter\":{\"type\":\"" + filter + "\"}}";
+                equivalent(json.readValue(body, SubscriptionDTO.class),
+                        EventNotificationDtoMapper.toService(json.readValue(body, SubscriptionCreateRequest.class)));
+            }
+        }
+    }
+
+    @Test
+    public void subscriptionEnumsRejectNonCanonicalValues() throws Exception {
+        for (String value : Arrays.asList("WEBHOOK", " webhook ", " WEBHOOK ", "POLL", " poll ", "", " ", "WEBHOOOK")) {
+            error("{\"delivery\":{\"mode\":\"" + value + "\"}}", SubscriptionCreateRequest.class);
+        }
+        for (String value : Arrays.asList("ALL", "SPECIFIC", "ALL_EXCEPT", "EXCEPT", "except", " all_except ", "", " ")) {
+            error("{\"filter\":{\"type\":\"" + value + "\"}}", SubscriptionCreateRequest.class);
+        }
+        for (String value : Arrays.asList("ACTIVE", " active ", "PENDING", "STALE", "DELETED", "", " ")) {
+            error("{\"status\":\"" + value + "\"}", SubscriptionCreateRequest.class);
         }
     }
 

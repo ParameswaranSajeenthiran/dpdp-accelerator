@@ -137,7 +137,6 @@
                             <skip>${dpdp.dto.codegen.skip}</skip>
                             <inputSpec>${project.basedir}/src/main/resources/event-notifications.yaml</inputSpec>
                             <generatorName>jaxrs-cxf</generatorName>
-                            <templateDirectory>${project.basedir}/src/main/openapi-templates</templateDirectory>
                             <generateApis>false</generateApis>
                             <generateApiTests>false</generateApiTests>
                             <generateApiDocumentation>false</generateApiDocumentation>
