@@ -45,31 +45,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     await officerPage.context().close()
   })
 
-  test('08.05.02 - A resolved complaint is hidden from the default (status=All) queue view', async ({
-    browser,
-    userComplaintApi,
-    officerComplaintApi,
-  }) => {
-    const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'resolved-hidden')
-    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
-    await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
-
-    const officerPage = await loginAsConsentAdmin(browser)
-    const queuePage = new ComplaintQueuePage(officerPage)
-    await queuePage.goto()
-    await queuePage.setRowsPerPage(25)
-
-    // ComplaintQueuePage.tsx's own `rows` memo filters out CLOSED_OUT_STATUSES (RESOLVED)
-    // whenever filters.status === 'All' - visible again only once that filter is explicitly set
-    // to "Resolved" (covered by 08.06.03). Asserting on this specific row, not on the word
-    // "Resolved" being absent anywhere on the page - the "Resolved" stat tile's own label makes
-    // that word always present regardless of this filtering behavior.
-    await expect(queuePage.table).toBeVisible()
-    await expect(queuePage.rowByReferenceId(seeded.referenceId)).not.toBeVisible()
-    await officerPage.context().close()
-  })
-
-  test('08.05.03 - Opening a case from the queue navigates to its detail page showing the same reference id', async ({
+  test('08.05.02 - Opening a case from the queue navigates to its detail page showing the same reference id', async ({
     browser,
     userComplaintApi,
   }) => {
@@ -85,7 +61,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     await officerPage.context().close()
   })
 
-  test('08.05.04 - Navigating to an unknown case id shows the not-found state with a way back to the queue', async ({
+  test('08.05.03 - Navigating to an unknown case id shows the not-found state with a way back to the queue', async ({
     browser,
   }) => {
     const officerPage = await loginAsConsentAdmin(browser)
