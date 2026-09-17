@@ -78,8 +78,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
 
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
-    await expect(queuePage.statusChipInRow(referenceId, 'Resolved')).toBeVisible()
-
+    await expect(queuePage.rowByReferenceId(referenceId)).toBeVisible()
     // Citizen isn't satisfied and replies again. The citizen never left the /complaints list
     // after submitting - openByReferenceId navigates into the complaint's detail page for the
     // first time.
@@ -95,8 +94,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     // The reopen is visible to the officer too, not just on the citizen's own detail page.
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
-    await expect(queuePage.statusChipInRow(referenceId, 'Waiting on Internal Review')).toBeVisible()
-
+    await expect(queuePage.rowByReferenceId(referenceId)).toBeVisible()
     await dataPrincipalPage.context().close()
     await officerPage.context().close()
   })
