@@ -25,6 +25,8 @@ export class PurposeDetailPage {
   readonly propertiesTable: Locator
   readonly loadFailedMessage: Locator
   readonly backButton: Locator
+  readonly deleteButton: Locator
+  readonly addVersionButton: Locator
 
   constructor(private readonly page: Page) {
     this.elementsTable = page
@@ -41,6 +43,14 @@ export class PurposeDetailPage {
       .getByRole('table')
     this.loadFailedMessage = page.getByText('Unable to load purposes right now.')
     this.backButton = page.getByRole('button', { name: 'Back to purposes' })
+    // Only rendered for a persona holding PURPOSES_WRITE - see the identical `canWrite` gate in
+    // ElementDetailsPage.tsx. "Delete", not "Delete Purpose" - that text belongs to the
+    // confirmation dialog, see PurposeDeleteDialog. `.first()`: every Purpose has at least one
+    // version, whose own row-level delete icon button shares this same accessible name ("Delete",
+    // via its aria-label rather than visible text) - this one is the page header's button, always
+    // rendered before the version table in DOM order.
+    this.deleteButton = page.getByRole('button', { name: 'Delete', exact: true }).first()
+    this.addVersionButton = page.getByRole('button', { name: 'Add Version' })
   }
 
   async goto(purposeId: string): Promise<void> {
@@ -60,6 +70,28 @@ export class PurposeDetailPage {
     return this.versionsTable.getByRole('row', { name: new RegExp(version) })
   }
 
+  /** Data rows only - scoped to tbody so the header row is never counted as a version. */
+  get versionRows(): Locator {
+    return this.versionsTable.locator('tbody').getByRole('row')
+  }
+
+  /**
+   * A version row's own "Set as latest" star button. Only rendered for a NOT-yet-latest version
+   * (the current latest has nothing to set itself to) - scoped to `row` so this can't collide
+   * with another version's identically-labelled button elsewhere in the table.
+   */
+  setLatestButton(row: Locator): Locator {
+    return row.getByRole('button', { name: 'Set as latest' })
+  }
+
+  /**
+   * A version row's own delete icon button. Disabled (not hidden) while that version is the
+   * current latest - see PurposeVersionDeleteDialog and versionDelete.latestBlocked.
+   */
+  versionDeleteButton(row: Locator): Locator {
+    return row.getByRole('button', { name: 'Delete', exact: true })
+  }
+
   /** A property row, matched by its key. */
   propertyRow(key: string): Locator {
     return this.propertiesTable.getByRole('row', { name: new RegExp(key) })
@@ -77,5 +109,21 @@ export class PurposeDetailPage {
   /** The Purpose ID shown (and copyable) in the card header above the name/type/version/description fields. */
   purposeIdValue(id: string): Locator {
     return this.page.getByText(id, { exact: true })
+  }
+
+  /**
+   * A DetailGrid field's rendered value, found via its label (e.g. "Type", "Latest version",
+   * "Description" - see PurposeDetailsPage.tsx's `fields` array). Scoped to the first card on the
+   * page (the overview details card, always rendered before Elements/Properties/Version history) -
+   * unlike ElementDetailPage's identical pattern, "Description" here is not unique: the Elements
+   * and Version history tables below both have their own "Description" column header, which
+   * would otherwise resolve to more than one following-sibling and fail strict mode.
+   */
+  fieldValue(label: string): Locator {
+    return this.page
+      .locator('.MuiCard-root')
+      .first()
+      .getByText(label, { exact: true })
+      .locator('xpath=following-sibling::*[1]')
   }
 }

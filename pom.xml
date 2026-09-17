@@ -609,6 +609,7 @@
         <jackson.jaxrs.version>2.21.2</jackson.jaxrs.version>
         <swagger.annotations.version>1.6.16</swagger.annotations.version>
         <axiom.version>1.2.11-wso2v16</axiom.version>
+        <axiom.imp.pkg.version.range>[1.2.11, 2.0.0)</axiom.imp.pkg.version.range>
         <securevault.version>1.2.0</securevault.version>
         <commons.logging.version>1.2</commons.logging.version>
         <osgi.service.component.annotations.version>1.4.0</osgi.service.component.annotations.version>

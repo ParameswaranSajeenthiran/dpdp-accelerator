@@ -60,6 +60,7 @@ public class TopicAndSubscriptionEndpointTest {
         when(subscriptionHandler.deleteSubscription("org-1", "sub-1")).thenReturn(subscription);
         when(subscriptionHandler.retryVerification("org-1", "sub-1")).thenReturn(subscription);
         when(subscriptionHandler.getSubscriptionEventHistory("org-1", "sub-1", "delivery-1")).thenReturn(history);
+        when(subscriptionHandler.retryDelivery("org-1", "sub-1", "delivery-1")).thenReturn(history);
 
         assertEquals(subscriptionEndpoint.createSubscription(new org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest().topic(subscription.getTopic())).getStatus(), 201);
         assertJsonEquals(subscriptionEndpoint.listSubscriptions("active", "marketing", "search", 20, 0, "createdAt").getEntity(), page);
@@ -67,6 +68,7 @@ public class TopicAndSubscriptionEndpointTest {
         assertJsonEquals(subscriptionEndpoint.deleteSubscription("sub-1").getEntity(), subscription);
         assertJsonEquals(subscriptionEndpoint.retryVerification("sub-1").getEntity(), subscription);
         assertJsonEquals(subscriptionEndpoint.getSubscriptionEventHistory("sub-1", "delivery-1").getEntity(), history);
+        assertEquals(subscriptionEndpoint.retryDelivery("sub-1", "delivery-1").getStatus(), 202);
     }
     private static void assertJsonEquals(Object actual, Object expected) {
         com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();

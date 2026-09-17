@@ -34,6 +34,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.EmailValidator;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
@@ -49,6 +50,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.DPO_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ROLE_AUDIENCE;
 
 /**
  * {@link NotificationClient} implementation routing through WSO2 IS's native email notification
@@ -99,12 +103,9 @@ public class EmailNotificationClient implements NotificationClient {
     // depended on directly here, since the actor role already crosses into ComplaintEvent as a
     // plain string.
     private static final String ACTOR_ROLE_COMPLAINT_OFFICER = "COMPLAINT_OFFICER";
-    // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME /
-    // DPDPConsentPortalRoleProvisioningUtil.ADMIN_ROLE - duplicated rather than depended on, same
-    // as every other constant in this class.
+    // Mirrors identity.extensions' DPDPConsentPortalAppProvisioningUtil.APPLICATION_NAME -
+    // duplicated rather than depended on, same as every other constant in this class.
     private static final String APPLICATION_NAME = "DPDP Consent Portal";
-    private static final String ADMIN_ROLE = "dpdp-consent-admin";
-    private static final String ROLE_AUDIENCE = "organization";
 
     // Mirrors the portal frontend's own status labels exactly (complaintDisplay.ts's
     // STATUS_LABEL_KEYS + public/i18n/en/common.json's complaints.status.* strings) rather than a
@@ -139,13 +140,15 @@ public class EmailNotificationClient implements NotificationClient {
     private final Supplier<ApplicationManagementService> applicationManagementServiceSupplier;
     private final Supplier<RoleManagementService> roleManagementServiceSupplier;
     private final Supplier<OrganizationManager> organizationManagerSupplier;
+    private final Supplier<DPDPConfigurationService> configurationServiceSupplier;
 
     public EmailNotificationClient() {
         this(() -> ComplaintServiceDataHolder.getInstance().getIdentityEventService(),
                 () -> ComplaintServiceDataHolder.getInstance().getRealmService(),
                 () -> ComplaintServiceDataHolder.getInstance().getApplicationManagementService(),
                 () -> ComplaintServiceDataHolder.getInstance().getRoleManagementService(),
-                () -> ComplaintServiceDataHolder.getInstance().getOrganizationManager());
+                () -> ComplaintServiceDataHolder.getInstance().getOrganizationManager(),
+                () -> ComplaintServiceDataHolder.getInstance().getConfigurationService());
     }
 
     /** Overload for tests injecting 4 suppliers. */
@@ -154,7 +157,7 @@ public class EmailNotificationClient implements NotificationClient {
             Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
             Supplier<RoleManagementService> roleManagementServiceSupplier) {
         this(eventServiceSupplier, realmServiceSupplier, applicationManagementServiceSupplier,
-                roleManagementServiceSupplier, () -> null);
+                roleManagementServiceSupplier, () -> null, () -> null);
     }
 
     /** Test seam - lets a test inject mock suppliers instead of a real OSGi lookup. */
@@ -163,15 +166,43 @@ public class EmailNotificationClient implements NotificationClient {
             Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
             Supplier<RoleManagementService> roleManagementServiceSupplier,
             Supplier<OrganizationManager> organizationManagerSupplier) {
+        this(eventServiceSupplier, realmServiceSupplier, applicationManagementServiceSupplier,
+                roleManagementServiceSupplier, organizationManagerSupplier, () -> null);
+    }
+
+    /** Test seam - lets a test inject mock suppliers instead of a real OSGi lookup. */
+    EmailNotificationClient(Supplier<IdentityEventService> eventServiceSupplier,
+            Supplier<RealmService> realmServiceSupplier,
+            Supplier<ApplicationManagementService> applicationManagementServiceSupplier,
+            Supplier<RoleManagementService> roleManagementServiceSupplier,
+            Supplier<OrganizationManager> organizationManagerSupplier,
+            Supplier<DPDPConfigurationService> configurationServiceSupplier) {
         this.eventServiceSupplier = eventServiceSupplier;
         this.realmServiceSupplier = realmServiceSupplier;
         this.applicationManagementServiceSupplier = applicationManagementServiceSupplier;
         this.roleManagementServiceSupplier = roleManagementServiceSupplier;
         this.organizationManagerSupplier = organizationManagerSupplier;
+        this.configurationServiceSupplier = configurationServiceSupplier;
+    }
+
+    /**
+     * {@code Complaints.EmailNotificationsEnabled} defaults to {@code false} (opt-in), so an
+     * unresolvable configuration service fails closed - the same stance
+     * {@code DPDPConfigurationServiceImpl} takes for its own missing config parser. Unlike the
+     * core IS collaborators in this class (where a null is a plain wiring bug), reading this one
+     * optimistically would mean a transient OSGi hiccup sends mail nobody opted into.
+     */
+    private boolean emailNotificationsEnabled() {
+        DPDPConfigurationService configurationService = configurationServiceSupplier.get();
+        return configurationService != null && configurationService.isComplaintsEmailNotificationsEnabled();
     }
 
     @Override
     public void notifyComplaintCreated(Complaint complaint) {
+        if (!emailNotificationsEnabled()) {
+            LOG.debug("Complaint email notifications are disabled; complaint-created notification not sent.");
+            return;
+        }
         try {
             List<Recipient> officers = resolveOfficers(complaint.getOrgId());
             if (officers.isEmpty()) {
@@ -195,6 +226,10 @@ public class EmailNotificationClient implements NotificationClient {
 
     @Override
     public void notifyCommentAdded(Complaint complaint, ComplaintEvent event) {
+        if (!emailNotificationsEnabled()) {
+            LOG.debug("Complaint email notifications are disabled; comment-added notification not sent.");
+            return;
+        }
         try {
             boolean notifyingCreator = ACTOR_ROLE_COMPLAINT_OFFICER.equals(event.getActorRole());
             List<Recipient> recipients = notifyingCreator
@@ -282,7 +317,7 @@ public class EmailNotificationClient implements NotificationClient {
     }
 
     /**
-     * Resolves every member of {@code dpdp-consent-admin} for the given tenant that has a
+     * Resolves every member of {@code dpdp-consent-dpo} for the given tenant that has a
      * resolvable email address. Members without one are skipped (logged), not fatal to the batch.
      */
     private List<Recipient> resolveOfficers(String tenantDomain) {
@@ -326,13 +361,18 @@ public class EmailNotificationClient implements NotificationClient {
             // this same constraint), so this can never be derived from organizationManager's mere
             // presence, only from which branch above actually resolved the ID.
             String audience = resolvedAsOrganization ? ROLE_AUDIENCE : "application";
-            if (!roleManagementService.isExistingRoleName(ADMIN_ROLE, audience, organizationId, tenantDomain)) {
-                LOG.debug("Role '" + ADMIN_ROLE + "' does not exist for tenant '" + LogSanitizer.sanitize(tenantDomain)
+            if (!roleManagementService.isExistingRoleName(DPO_ROLE, audience, organizationId, tenantDomain)) {
+                LOG.debug("Role '" + DPO_ROLE + "' does not exist for tenant '" + LogSanitizer.sanitize(tenantDomain)
                         + "'; cannot resolve complaint officers to notify.");
                 return recipients;
             }
-            String roleId = roleManagementService.getRoleIdByName(ADMIN_ROLE, audience, organizationId,
+            String roleId = roleManagementService.getRoleIdByName(DPO_ROLE, audience, organizationId,
                     tenantDomain);
+            if (roleId == null || roleId.isEmpty()) {
+                LOG.debug("Role '" + DPO_ROLE + "' resolved no role ID for tenant '"
+                        + LogSanitizer.sanitize(tenantDomain) + "'; cannot resolve complaint officers to notify.");
+                return recipients;
+            }
             List<UserBasicInfo> members = roleManagementService.getUserListOfRole(roleId, tenantDomain);
             for (UserBasicInfo member : members) {
                 resolveEmail(userStoreManager, member.getName())

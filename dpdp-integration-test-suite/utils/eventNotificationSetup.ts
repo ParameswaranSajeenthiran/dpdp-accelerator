@@ -32,7 +32,7 @@ import { uniqueMarker } from './testData'
  * utils/consentSetup.ts), since this environment never resets and topic names must be unique per
  * org (EN-4090 on collision).
  */
-export async function seedActiveTopic(api: EventNotificationApiClient, label = 'topic'): Promise<TopicRecord> {
+export async function seedActiveTopicViaApi(api: EventNotificationApiClient, label = 'topic'): Promise<TopicRecord> {
   const response = await api.createTopic({ name: uniqueMarker(label) })
   expect(response.status(), await response.text()).toBe(201)
   return (await response.json()) as TopicRecord
@@ -43,7 +43,7 @@ export async function seedActiveTopic(api: EventNotificationApiClient, label = '
  * round trip) - the right default for any test that only cares about event/fan-out/authorization
  * behavior, not the webhook transport itself. Webhook-specific tests build their own
  * SubscriptionCreateRequest directly against a WebhookReceiver instead (see
- * tests/08-event-notifications/README.md).
+ * AGENTS.md).
  *
  * There is deliberately no `groupId` parameter here: confirmed live, `SubscriptionHandler
  * .createSubscription` (`internal-webapps/.../endpoint/handler/SubscriptionHandler.java`) never
@@ -53,10 +53,10 @@ export async function seedActiveTopic(api: EventNotificationApiClient, label = '
  * `orgId: example.com`), so this is a genuine product bug, not documented behavior - see
  * README's "A likely bug found while writing this suite". Every subscription this helper creates
  * therefore always lands in the org's own group; read the *returned* `groupId` back rather than
- * assuming a value you pass takes effect, and pass that same value as `publishMarkedEvent`'s
+ * assuming a value you pass takes effect, and pass that same value as `publishMarkedEventViaApi`'s
  * `groupId` argument to get a matching delivery.
  */
-export async function seedPollSubscription(
+export async function seedPollSubscriptionViaApi(
   api: EventNotificationApiClient,
   topic: string,
   filter: FilterConfig = { type: 'all' },
@@ -73,10 +73,10 @@ export async function seedPollSubscription(
 /**
  * Publishes an event with a unique marker in its payload, so a search/lookup test can find
  * exactly this event and no other. `groupId` must be the *returned* `groupId` of whatever
- * subscription(s) this event is meant to match (see seedPollSubscription's comment on why a
+ * subscription(s) this event is meant to match (see seedPollSubscriptionViaApi's comment on why a
  * caller-chosen groupId at subscription-creation time is currently silently ignored server-side).
  */
-export async function publishMarkedEvent(
+export async function publishMarkedEventViaApi(
   api: EventNotificationApiClient,
   groupId: string,
   topic: string,

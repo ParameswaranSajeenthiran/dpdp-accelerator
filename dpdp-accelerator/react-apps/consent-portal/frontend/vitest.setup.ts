@@ -23,7 +23,7 @@
 import '@testing-library/jest-dom/vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { beforeEach, vi } from 'vitest'
+import { vi } from 'vitest'
 import type { BackendModule, ReadCallback } from 'i18next'
 
 /**
@@ -89,7 +89,3 @@ if (typeof URL.createObjectURL !== 'function') {
   URL.createObjectURL = () => 'blob:test'
   URL.revokeObjectURL = () => {}
 }
-
-beforeEach(() => {
-  vi.stubEnv('VITE_AUTH_ENABLED', 'true')
-})

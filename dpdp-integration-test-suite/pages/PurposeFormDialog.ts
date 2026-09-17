@@ -64,11 +64,13 @@ export class PurposeFormDialog {
 
   /**
    * Selects whichever elements the picker lists first (one per entry in `mandatoryFlags`,
-   * in order) and toggles each one's Mandatory checkbox accordingly - deliberately not
-   * searching for specific just-created elements by name. The picker only fetches its first
-   * 200 elements (oldest first, see PurposeElementPicker.tsx), so a freshly created one is not
-   * guaranteed to be among them once the shared environment has accumulated more than that -
-   * the same class of gap as the catalog lists' own pagination (see tests/plan.md).
+   * in order) and toggles each one's Mandatory checkbox accordingly - use this when the test
+   * doesn't care which specific elements end up on the purpose, only that some do. The picker's
+   * unfiltered page is capped at 100 (see PurposeElementPicker.tsx), oldest first, so a freshly
+   * created element is not guaranteed to be among them once the shared environment has
+   * accumulated more than that - if the test needs one SPECIFIC element (e.g. one it just
+   * created), use addElementByName instead, which searches server-side rather than relying on
+   * the unfiltered page.
    * Returns the selected elements' label text, in selection order, for the caller to assert
    * against. A single-element purpose is just `addElements([true])`.
    */
@@ -89,6 +91,25 @@ export class PurposeFormDialog {
       }
     }
     return labels
+  }
+
+  /**
+   * Selects one SPECIFIC element by its exact rendered label (its `displayName`, or its `name`
+   * if it has none - see PurposeElementPicker's `getOptionLabel`). Typing into the picker
+   * searches server-side (`buildElementNameFilter`, debounced 300ms), so - unlike addElements -
+   * this reliably finds an element regardless of how many others exist or how recently it was
+   * created.
+   */
+  async addElementByName(label: string, mandatory: boolean): Promise<void> {
+    await this.elementsPicker.click()
+    await this.elementsPicker.fill(label)
+    const option = this.page.getByRole('option', { name: label, exact: true })
+    await option.waitFor({ state: 'visible' })
+    await option.click()
+    if (mandatory) {
+      // The just-added selection's checkbox is always last, regardless of how many preceded it.
+      await this.root.getByRole('checkbox').last().check()
+    }
   }
 
   async addProperty(key: string, value: string): Promise<void> {

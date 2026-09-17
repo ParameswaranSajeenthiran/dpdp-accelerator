@@ -109,7 +109,6 @@
                         -->
                         <VITE_IS_BASE_URL></VITE_IS_BASE_URL>
                         <VITE_BASE_PATH>${portal.context.path}/</VITE_BASE_PATH>
-                        <VITE_AUTH_ENABLED>true</VITE_AUTH_ENABLED>
                         <!-- Sandbox npm caches inside the module to keep CI builds hermetic. -->
                         <NPM_CONFIG_PREFIX>${basedir}/frontend/npm</NPM_CONFIG_PREFIX>
                         <NPM_CONFIG_CACHE>${basedir}/frontend/npm/cache</NPM_CONFIG_CACHE>

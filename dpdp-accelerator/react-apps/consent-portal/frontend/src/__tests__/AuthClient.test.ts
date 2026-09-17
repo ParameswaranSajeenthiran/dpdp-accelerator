@@ -51,7 +51,6 @@ function respondNotFound(): void {
 }
 
 beforeEach(() => {
-  vi.stubEnv('VITE_AUTH_ENABLED', 'true')
   sdk.initialize.mockResolvedValue(true)
   sdk.isAuthenticated.mockResolvedValue(false)
   sdk.signIn.mockResolvedValue(undefined)
@@ -269,18 +268,5 @@ describe('session helpers', () => {
     const { getUserProfile } = await loadAuthClient()
 
     await expect(getUserProfile()).resolves.toEqual({ username: 'alice' })
-  })
-
-  it('does nothing when authentication is switched off', async () => {
-    vi.stubEnv('VITE_AUTH_ENABLED', 'false')
-    const { ensureSignedIn, logout, isAuthenticated } = await loadAuthClient()
-
-    await expect(ensureSignedIn()).resolves.toBe(true)
-    await expect(isAuthenticated()).resolves.toBe(true)
-    await logout()
-
-    expect(sdk.initialize).not.toHaveBeenCalled()
-    expect(sdk.signIn).not.toHaveBeenCalled()
-    expect(sdk.signOut).not.toHaveBeenCalled()
   })
 })

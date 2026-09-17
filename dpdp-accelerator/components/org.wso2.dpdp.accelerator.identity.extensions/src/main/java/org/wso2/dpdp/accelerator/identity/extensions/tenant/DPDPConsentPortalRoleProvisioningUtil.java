@@ -34,6 +34,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ADMIN_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.DPO_ROLE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.ROLE_AUDIENCE;
+import static org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants.USER_ROLE;
+
 /**
  * Creates the DPDP Consent Portal admin, user and DPO roles at the organization level, making
  * them manageable from the tenant's User Management > Roles screen.
@@ -41,10 +46,6 @@ import java.util.Set;
 public final class DPDPConsentPortalRoleProvisioningUtil {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentPortalRoleProvisioningUtil.class);
-    public static final String ADMIN_ROLE = "dpdp-consent-admin";
-    static final String USER_ROLE = "dpdp-consent-user";
-    public static final String DPO_ROLE = "dpdp-consent-dpo";
-    static final String ROLE_AUDIENCE = "organization";
 
     private DPDPConsentPortalRoleProvisioningUtil() {
 
@@ -92,8 +93,13 @@ public final class DPDPConsentPortalRoleProvisioningUtil {
         if (roleManagementService.isExistingRoleName(roleName, ROLE_AUDIENCE, organizationId, tenantDomain)) {
             String roleId = roleManagementService.getRoleIdByName(roleName, ROLE_AUDIENCE, organizationId,
                     tenantDomain);
-            reconcilePermissions(roleManagementService, roleId, roleName, desiredPermissions, tenantDomain);
-            return new RoleV2(roleId, roleName);
+            // Existed a moment ago but resolves no ID - deleted in between, or a stale
+            // audience/organization pairing. Recreate rather than NPE in reconcilePermissions.
+            if (roleId != null && !roleId.isEmpty()) {
+                reconcilePermissions(roleManagementService, roleId, roleName, desiredPermissions, tenantDomain);
+                return new RoleV2(roleId, roleName);
+            }
+            LOG.debug("Role '" + roleName + "' resolved no role ID for tenant: " + tenantDomain + "; recreating it.");
         }
         RoleBasicInfo roleBasicInfo = roleManagementService.addRole(roleName, Collections.emptyList(),
                 Collections.emptyList(), desiredPermissions, ROLE_AUDIENCE, organizationId, tenantDomain);
