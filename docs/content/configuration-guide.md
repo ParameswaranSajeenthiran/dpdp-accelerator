@@ -2,7 +2,6 @@
 title: Configuring the Consent Portal application
 sidebar_position: 2
 ---
-
 # Configuring the Consent Portal application
 
 Complete this after installing the accelerator and starting the Identity
@@ -216,7 +215,6 @@ Make sure the primary email address is valid and accessible. Notifications
 sent to the user will be delivered to the configured primary email address.
 
 ## 6. Configure complaint management
-
 Complaint deadlines and upload limits are configured in `deployment.toml`:
 
 ```toml
