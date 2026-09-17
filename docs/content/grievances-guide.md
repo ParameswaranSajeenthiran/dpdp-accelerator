@@ -78,7 +78,24 @@ DOCX, PNG, or JPEG and must stay within the configured size limit. An upload
 request can contain up to the configured number of files. Restart Identity
 Server after changing these server-side limits.
 
-## 4. Submit and track a grievance in the portal
+## 4. Customize complaint notification emails
+
+`ComplaintCreated`, `ComplaintCommentAdded`, and `ComplaintAcknowledged` are standard IS
+notification templates — edit them in Console under **Email Templates**, per tenant.
+
+Placeholders: `{{reference-id}}`, `{{message-excerpt}}`, `{{data-principal-name}}`,
+`{{actor-name}}`, `{{category-label}}`, `{{priority-label}}`, `{{status-label}}`,
+`{{sla-label}}`, `{{action-url}}`, `{{recipient-role-label}}`, `{{headline-html}}`,
+`{{footer-text}}`, `{{action-badge-html}}`, `{{logo-url}}`.
+
+A template is written once, on first provisioning, and never rewritten — a Console edit is
+permanent. The bundled default comes from
+`<IS_HOME>/repository/conf/email/email-dpdp-config.xml` (edit it for new tenants, no rebuild
+needed), but only affects tenants provisioned after the edit. The file is read once and cached
+for the server's lifetime — **restart the server after editing it**, or new tenants keep
+getting the old default until you do.
+
+## 5. Submit and track a grievance in the portal
 
 **Portal:** Sign in as a user with `dpdp-consent-user`, open **My Complaints**,
 and select **Submit New Complaint**.
@@ -122,7 +139,7 @@ Use `GET /me/complaints/<complaint-id>/timeline` to retrieve the public
 activity and the attachments associated with each timeline entry. Internal
 officer notes are never returned on this surface.
 
-## 5. Handle a grievance in Complaint Management
+## 6. Handle a grievance in Complaint Management
 
 **Portal:** Sign in as a DPO or administrator and open **Complaint Management**.
 
@@ -154,7 +171,7 @@ Set `isPublic` to `false` for an internal note. Management attachments may be
 marked public or internal with the multipart `isPublic` field. Only public
 entries and attachments are visible to the Data Principal.
 
-## 6. Follow the permitted status lifecycle
+## 7. Follow the permitted status lifecycle
 
 The service validates every requested transition:
 
@@ -184,7 +201,7 @@ curl -X POST \
 An attempt to skip a required transition returns the complaint error response
 with HTTP `409`.
 
-## 7. Protect tenant and personal data
+## 8. Protect tenant and personal data
 
 - Use a token issued for the same tenant as the URL.
 - Use `me` endpoints for user-driven actions so identity is resolved server-side.
@@ -197,7 +214,7 @@ self-service timeline filters out internal entries. A caller who does not own a
 complaint receives no confirmation that another user's complaint ID exists on
 the self-service surface.
 
-## 8. Troubleshoot common problems
+## 9. Troubleshoot common problems
 
 | Symptom | Check |
 |---|---|
