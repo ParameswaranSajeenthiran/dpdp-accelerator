@@ -25,10 +25,10 @@ import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/co
  * priority filter, and a free-text search box, unlike the Data Principal's list (status filter
  * only, see 08.03-data-principal-searching-complaints.spec.ts).
  *
- * The search box (ComplaintQueuePage.tsx's `rows` memo) filters client-side over whatever page
- * the server already returned for the current status/priority filters and pagination, not via a
- * fresh server query - so every test below sets rowsPerPage to its max (25) first, to maximize the
- * odds this test's own freshly-created complaint is actually present in the page being searched.
+ * Status, priority, and search all filter server-side (ComplaintQueuePage.tsx passes them to
+ * useManagedComplaintListQuery), so a match is found whatever page it lives on. Every test below
+ * still sets rowsPerPage to its max (25) first: the default sort is UPDATED_TIME DESC, so a test's
+ * own freshly-created complaint is reliably on the first page of an unsearched queue.
  */
 test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
   test('08.06.01 - Filtering by status shows a matching complaint and hides a non-matching one', async ({
@@ -69,7 +69,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     await officerPage.context().close()
   })
 
-  test('08.06.03 - Explicitly filtering by "Resolved" status reveals an otherwise-hidden resolved complaint', async ({
+  test('08.06.03 - A resolved complaint shows in the default queue view and when filtering by "Resolved"', async ({
     browser,
     userComplaintApi,
     officerComplaintApi,
@@ -83,10 +83,11 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
 
-    // The default (status=All) queue view hides resolved complaints; the same status filter is
-    // what surfaces them again once "Resolved" is selected explicitly.
+    // Regression cover for the queue having once dropped resolved complaints from the default
+    // (status=All) view: "All" means every status, and selecting "Resolved" narrows to them.
+    // The default sort is UPDATED_TIME DESC, so this just-resolved complaint heads page one.
     await expect(queuePage.table).toBeVisible()
-    await expect(queuePage.rowByReferenceId(seeded.referenceId)).not.toBeVisible()
+    await expect(queuePage.rowByReferenceId(seeded.referenceId)).toBeVisible()
     await queuePage.filterByStatus('Resolved')
     await expect(queuePage.rowByReferenceId(seeded.referenceId)).toBeVisible()
     await officerPage.context().close()

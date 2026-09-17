@@ -387,8 +387,8 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | --- | --- | --- |
 | `08.06.01` | Filtering by status shows a matching complaint and hides a non-matching one |  |
 | `08.06.02` | Filtering by priority shows a matching complaint and hides a non-matching one | DATA_BREACH auto-maps to Critical priority. |
-| `08.06.03` | Explicitly filtering by "Resolved" status reveals an otherwise-hidden resolved complaint | Asserted on the specific row, since the "Resolved" stat tile always puts that word on the page. |
-| `08.06.04` | Searching by reference id narrows the queue to that complaint | All tests here set rows-per-page to 25 first - the search box filters client-side over the already-fetched page. |
+| `08.06.03` | A resolved complaint shows in the default queue view and when filtering by "Resolved" | Regression cover for the queue once dropping resolved complaints from the default (status=All) view. Asserted on the specific row, since the "Resolved" stat tile always puts that word on the page. |
+| `08.06.04` | Searching by reference id narrows the queue to that complaint | Search is server-side; all tests here still set rows-per-page to 25 first so an unsearched queue reliably shows the test's own complaint. |
 | `08.06.05` | Searching by the Data Principal's name narrows the queue to that principal's complaints |  |
 
 ### `08.07-officer-replying-in-thread.spec.ts`
