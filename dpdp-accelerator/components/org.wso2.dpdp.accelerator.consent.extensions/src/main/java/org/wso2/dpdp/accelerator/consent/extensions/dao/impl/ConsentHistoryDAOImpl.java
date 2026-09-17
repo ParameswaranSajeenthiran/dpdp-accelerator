@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDBColumns;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
@@ -64,7 +64,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     }
 
     @Override
-    public void insertHistorySnapshot(Connection connection, ConsentHistoryRecord record) {
+    public void insertHistorySnapshot(Connection connection, ConsentHistoryRecord record) throws
+            ConsentHistoryDataInsertionException {
 
         try (PreparedStatement statement = connection
                 .prepareStatement(ConsentHistoryQueryFactory.getQueryProvider(connection)
@@ -158,7 +159,7 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
             statement.setString(1, consentId);
             statement.setString(2, orgId);
             try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? resultSet.getInt(ConsentHistoryDBColumns.COLUMN_TOTAL_COUNT) : 0;
+                return resultSet.next() ? resultSet.getInt(ConsentHistoryDAOConstants.COLUMN_TOTAL_COUNT) : 0;
             }
         } catch (SQLException e) {
             LOG.error("Error while counting history rows for consent: " + LogSanitizer.sanitize(consentId), e);
@@ -170,27 +171,27 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     private ConsentStatusAuditRecord mapStatusAuditRecord(ResultSet resultSet) throws SQLException {
 
         ConsentStatusAuditRecord record = new ConsentStatusAuditRecord();
-        record.setAuditId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_AUDIT_ID));
-        record.setConsentId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_CONSENT_ID));
-        record.setOrgId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ORG_ID));
-        record.setPreviousStatus(resultSet.getString(ConsentHistoryDBColumns.COLUMN_PREVIOUS_STATUS));
-        record.setCurrentStatus(resultSet.getString(ConsentHistoryDBColumns.COLUMN_CURRENT_STATUS));
-        record.setActionType(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ACTION_TYPE));
-        record.setActionBy(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ACTION_BY));
-        record.setActionTime(resultSet.getLong(ConsentHistoryDBColumns.COLUMN_ACTION_TIME));
+        record.setAuditId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_AUDIT_ID));
+        record.setConsentId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_CONSENT_ID));
+        record.setOrgId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ORG_ID));
+        record.setPreviousStatus(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_PREVIOUS_STATUS));
+        record.setCurrentStatus(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_CURRENT_STATUS));
+        record.setActionType(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE));
+        record.setActionBy(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ACTION_BY));
+        record.setActionTime(resultSet.getLong(ConsentHistoryDAOConstants.COLUMN_ACTION_TIME));
         return record;
     }
 
     private ConsentHistoryRecord mapHistoryRecord(ResultSet resultSet) throws SQLException {
 
         ConsentHistoryRecord record = new ConsentHistoryRecord();
-        record.setHistoryId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_HISTORY_ID));
-        record.setConsentId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_CONSENT_ID));
-        record.setOrgId(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ORG_ID));
-        record.setActionType(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ACTION_TYPE));
-        record.setSnapshot(resultSet.getString(ConsentHistoryDBColumns.COLUMN_SNAPSHOT));
-        record.setActionBy(resultSet.getString(ConsentHistoryDBColumns.COLUMN_ACTION_BY));
-        record.setActionTime(resultSet.getLong(ConsentHistoryDBColumns.COLUMN_ACTION_TIME));
+        record.setHistoryId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_HISTORY_ID));
+        record.setConsentId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_CONSENT_ID));
+        record.setOrgId(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ORG_ID));
+        record.setActionType(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE));
+        record.setSnapshot(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_SNAPSHOT));
+        record.setActionBy(resultSet.getString(ConsentHistoryDAOConstants.COLUMN_ACTION_BY));
+        record.setActionTime(resultSet.getLong(ConsentHistoryDAOConstants.COLUMN_ACTION_TIME));
         return record;
     }
 }

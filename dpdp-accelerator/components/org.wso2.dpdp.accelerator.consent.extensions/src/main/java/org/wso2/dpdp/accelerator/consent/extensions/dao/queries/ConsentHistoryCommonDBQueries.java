@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDBColumns;
 
 /**
  * ANSI-baseline SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. Dialect-
@@ -34,59 +33,63 @@ public class ConsentHistoryCommonDBQueries {
     public String getInsertStatusAuditQuery() {
 
         return "INSERT INTO " + ConsentHistoryDAOConstants.STATUS_AUDIT_TABLE + " ("
-                + ConsentHistoryDBColumns.COLUMN_AUDIT_ID + ", " + ConsentHistoryDBColumns.COLUMN_CONSENT_ID
-                + ", " + ConsentHistoryDBColumns.COLUMN_ORG_ID + ", "
-                + ConsentHistoryDBColumns.COLUMN_PREVIOUS_STATUS + ", "
-                + ConsentHistoryDBColumns.COLUMN_CURRENT_STATUS + ", "
-                + ConsentHistoryDBColumns.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_BY
-                + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_TIME + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                + ConsentHistoryDAOConstants.COLUMN_AUDIT_ID + ", " + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ORG_ID + ", "
+                + ConsentHistoryDAOConstants.COLUMN_PREVIOUS_STATUS + ", "
+                + ConsentHistoryDAOConstants.COLUMN_CURRENT_STATUS + ", "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_BY
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     public String getInsertHistorySnapshotQuery() {
 
         return "INSERT INTO " + ConsentHistoryDAOConstants.HISTORY_TABLE + " ("
-                + ConsentHistoryDBColumns.COLUMN_HISTORY_ID + ", " + ConsentHistoryDBColumns.COLUMN_CONSENT_ID
-                + ", " + ConsentHistoryDBColumns.COLUMN_ORG_ID + ", "
-                + ConsentHistoryDBColumns.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDBColumns.COLUMN_SNAPSHOT
-                + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_BY + ", "
-                + ConsentHistoryDBColumns.COLUMN_ACTION_TIME + ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + ConsentHistoryDAOConstants.COLUMN_HISTORY_ID + ", " + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ORG_ID + ", "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDAOConstants.COLUMN_SNAPSHOT
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_BY + ", "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME + ") VALUES (?, ?, ?, ?, ?, ?, ?)";
     }
 
     public String getStatusAuditHistoryQuery() {
 
-        return "SELECT " + ConsentHistoryDBColumns.COLUMN_AUDIT_ID + ", "
-                + ConsentHistoryDBColumns.COLUMN_CONSENT_ID + ", " + ConsentHistoryDBColumns.COLUMN_ORG_ID
-                + ", " + ConsentHistoryDBColumns.COLUMN_PREVIOUS_STATUS + ", "
-                + ConsentHistoryDBColumns.COLUMN_CURRENT_STATUS + ", "
-                + ConsentHistoryDBColumns.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_BY
-                + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_TIME + " FROM "
-                + ConsentHistoryDAOConstants.STATUS_AUDIT_TABLE + " WHERE " + ConsentHistoryDBColumns.COLUMN_CONSENT_ID
-                + " = ? AND " + ConsentHistoryDBColumns.COLUMN_ORG_ID + " = ? ORDER BY "
-                + ConsentHistoryDBColumns.COLUMN_ACTION_TIME + " DESC LIMIT ? OFFSET ?";
+        return "SELECT " + ConsentHistoryDAOConstants.COLUMN_AUDIT_ID + ", "
+                + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID + ", " + ConsentHistoryDAOConstants.COLUMN_ORG_ID
+                + ", " + ConsentHistoryDAOConstants.COLUMN_PREVIOUS_STATUS + ", "
+                + ConsentHistoryDAOConstants.COLUMN_CURRENT_STATUS + ", "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_BY
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME + " FROM "
+                + ConsentHistoryDAOConstants.STATUS_AUDIT_TABLE + " WHERE "
+                + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID
+                + " = ? AND " + ConsentHistoryDAOConstants.COLUMN_ORG_ID + " = ? ORDER BY "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME + " DESC LIMIT ? OFFSET ?";
     }
 
     public String getStatusAuditHistoryCountQuery() {
 
-        return "SELECT COUNT(*) AS " + ConsentHistoryDBColumns.COLUMN_TOTAL_COUNT + " FROM "
-                + ConsentHistoryDAOConstants.STATUS_AUDIT_TABLE + " WHERE " + ConsentHistoryDBColumns.COLUMN_CONSENT_ID
-                + " = ? AND " + ConsentHistoryDBColumns.COLUMN_ORG_ID + " = ?";
+        return "SELECT COUNT(*) AS " + ConsentHistoryDAOConstants.COLUMN_TOTAL_COUNT + " FROM "
+                + ConsentHistoryDAOConstants.STATUS_AUDIT_TABLE + " WHERE "
+                + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID
+                + " = ? AND " + ConsentHistoryDAOConstants.COLUMN_ORG_ID + " = ?";
     }
 
     public String getConsentHistoryQuery() {
 
-        return "SELECT " + ConsentHistoryDBColumns.COLUMN_HISTORY_ID + ", "
-                + ConsentHistoryDBColumns.COLUMN_CONSENT_ID + ", " + ConsentHistoryDBColumns.COLUMN_ORG_ID
-                + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_TYPE + ", " + ConsentHistoryDBColumns.COLUMN_SNAPSHOT
-                + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_BY + ", " + ConsentHistoryDBColumns.COLUMN_ACTION_TIME
+        return "SELECT " + ConsentHistoryDAOConstants.COLUMN_HISTORY_ID + ", "
+                + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID + ", " + ConsentHistoryDAOConstants.COLUMN_ORG_ID
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_TYPE + ", "
+                + ConsentHistoryDAOConstants.COLUMN_SNAPSHOT
+                + ", " + ConsentHistoryDAOConstants.COLUMN_ACTION_BY + ", "
+                + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME
                 + " FROM " + ConsentHistoryDAOConstants.HISTORY_TABLE + " WHERE "
-                + ConsentHistoryDBColumns.COLUMN_CONSENT_ID + " = ? AND " + ConsentHistoryDBColumns.COLUMN_ORG_ID
-                + " = ? ORDER BY " + ConsentHistoryDBColumns.COLUMN_ACTION_TIME + " DESC LIMIT ? OFFSET ?";
+                + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID + " = ? AND " + ConsentHistoryDAOConstants.COLUMN_ORG_ID
+                + " = ? ORDER BY " + ConsentHistoryDAOConstants.COLUMN_ACTION_TIME + " DESC LIMIT ? OFFSET ?";
     }
 
     public String getConsentHistoryCountQuery() {
 
-        return "SELECT COUNT(*) AS " + ConsentHistoryDBColumns.COLUMN_TOTAL_COUNT + " FROM "
-                + ConsentHistoryDAOConstants.HISTORY_TABLE + " WHERE " + ConsentHistoryDBColumns.COLUMN_CONSENT_ID
-                + " = ? AND " + ConsentHistoryDBColumns.COLUMN_ORG_ID + " = ?";
+        return "SELECT COUNT(*) AS " + ConsentHistoryDAOConstants.COLUMN_TOTAL_COUNT + " FROM "
+                + ConsentHistoryDAOConstants.HISTORY_TABLE + " WHERE " + ConsentHistoryDAOConstants.COLUMN_CONSENT_ID
+                + " = ? AND " + ConsentHistoryDAOConstants.COLUMN_ORG_ID + " = ?";
     }
 }

@@ -19,11 +19,11 @@
 package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
 /**
- * Thrown when a status-audit or history snapshot row could not be written. Unchecked, matching
- * the Event Notification/Complaint DAO layers' {@code *DataAccessException}/{@code *DAOException}
- * convention, so DAO interfaces stay free of {@code throws} clauses.
+ * Thrown when a status-audit or history snapshot row could not be written. Checked - callers
+ * decide whether a capture failure is fatal (the consent listener swallows it so the mutation
+ * still succeeds; the endpoint turns it into a 500), so the compiler should make them choose.
  */
-public class ConsentHistoryDataInsertionException extends RuntimeException {
+public class ConsentHistoryDataInsertionException extends Exception {
 
     public ConsentHistoryDataInsertionException(String message, Throwable cause) {
 
