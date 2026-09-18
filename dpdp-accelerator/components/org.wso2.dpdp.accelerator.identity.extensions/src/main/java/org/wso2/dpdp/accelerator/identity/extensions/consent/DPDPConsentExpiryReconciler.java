@@ -151,7 +151,7 @@ public final class DPDPConsentExpiryReconciler {
         if ("end of scan".equals(stopReason)) {
             LOG.info(summary);
         } else {
-            LOG.warn(summary);
+            LOG.error(summary);
         }
     }
 
