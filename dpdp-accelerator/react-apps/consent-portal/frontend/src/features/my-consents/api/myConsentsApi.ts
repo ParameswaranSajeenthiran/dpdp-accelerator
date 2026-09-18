@@ -19,7 +19,9 @@
 import type {
   ConsentDetail,
   ConsentListQueryParams,
+  ConsentRelation,
   ConsentSearchResponse,
+  ConsentState,
   ConsentSummary,
 } from '../../../types/consent'
 import { APIError, apiRequest, apiRequestOptionalContent } from '../../../utils/apiClient'
@@ -77,6 +79,24 @@ export async function fetchMyConsents(
       limit,
     },
   }
+}
+
+/**
+ * The signed in user's consents, unpaged and unshaped - no `attributes` expansion, since a
+ * caller only wants the raw array (e.g. its length as a dashboard count), not row detail.
+ *
+ * Unlike `fetchMyConsents`, this never over-fetches - a caller that wants to know whether more
+ * than `limit` consents exist should ask for `limit + 1` itself and check the array length.
+ */
+export async function fetchMyConsentsRaw(params: {
+  limit: number
+  state?: ConsentState
+  relation?: ConsentRelation
+}): Promise<ConsentSummary[]> {
+  return apiRequest<ConsentSummary[]>(SELF_CONSENTS, {
+    method: 'GET',
+    query: { limit: params.limit, state: params.state, relation: params.relation },
+  })
 }
 
 export async function fetchMyConsentByID(consentID: string): Promise<ConsentDetail> {

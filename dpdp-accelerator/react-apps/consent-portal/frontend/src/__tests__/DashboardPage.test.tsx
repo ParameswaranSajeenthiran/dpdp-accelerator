@@ -27,12 +27,17 @@ import i18n from '../i18n/i18n'
 import { REQUIRED_SCOPES, type ScopeRequirement } from '../utils/scopes'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
 
-const myConsentsApi = vi.hoisted(() => ({ fetchMyConsents: vi.fn() }))
+const myConsentsApi = vi.hoisted(() => ({
+  fetchMyConsentsRaw: vi.fn(),
+  fetchMyConsents: vi.fn(),
+}))
 const adminConsentsApi = vi.hoisted(() => ({ fetchAdminConsents: vi.fn() }))
-const complaintsApi = vi.hoisted(() => ({ listMyComplaints: vi.fn() }))
+const catalogApi = vi.hoisted(() => ({ fetchPurposes: vi.fn(), fetchElements: vi.fn() }))
+const complaintsApi = vi.hoisted(() => ({ fetchMyComplaintsTotal: vi.fn() }))
 
 vi.mock('../features/my-consents/api/myConsentsApi', () => myConsentsApi)
 vi.mock('../features/admin-consents/api/adminConsentsApi', () => adminConsentsApi)
+vi.mock('../features/catalog/api/catalogApi', () => catalogApi)
 vi.mock('../features/complaints/api/complaintsApi', () => complaintsApi)
 
 afterEach(() => {
@@ -59,103 +64,131 @@ function renderDashboard(scopes: ScopeRequirement[]): void {
   )
 }
 
+function rawConsents(count: number): unknown[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `c-${String(index)}`,
+    subjectId: 'user-1',
+    serviceId: 'svc',
+    state: 'ACTIVE',
+    timestamp: index,
+  }))
+}
+
 describe('DashboardPage', () => {
-  it('shows a regular user their own consent and complaint stats, not a tenant-wide view', async () => {
+  it('shows a regular user their own consent, relation, and complaint counts', async () => {
+    // Total (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
+    // own distinct number so assertions can't accidentally match the wrong tile.
+    myConsentsApi.fetchMyConsentsRaw.mockImplementation(
+      (params: { state?: string; relation?: string }): Promise<unknown[]> => {
+        if (params.relation === 'SUBJECT') return Promise.resolve(rawConsents(40))
+        if (params.relation === 'AUTHORIZER') return Promise.resolve(rawConsents(41))
+        if (params.state === 'PENDING') return Promise.resolve(rawConsents(3))
+        if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(35))
+        if (params.state === 'REJECTED') return Promise.resolve(rawConsents(36))
+        if (params.state === 'REVOKED') return Promise.resolve(rawConsents(37))
+        if (params.state === 'EXPIRED') return Promise.resolve(rawConsents(38))
+        return Promise.resolve(rawConsents(101)) // total, unfiltered
+      },
+    )
     myConsentsApi.fetchMyConsents.mockResolvedValue({
-      data: [
-        { id: 'c1', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
-        { id: 'c2', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 2 },
-        { id: 'c3', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 3 },
-      ],
-      metadata: { total: 3, offset: 0, count: 3, limit: 100 },
+      data: [{ id: 'p1', subjectId: 'user-1', serviceId: 'svc', state: 'PENDING', timestamp: 1 }],
+      metadata: { total: 1, offset: 0, count: 1, limit: 100 },
     })
-    complaintsApi.listMyComplaints.mockResolvedValue({
-      data: [
-        { id: 'k1', status: 'OPEN' },
-        { id: 'k2', status: 'IN_PROGRESS' },
-        { id: 'k3', status: 'RESOLVED' },
-      ],
-      metadata: { total: 3, offset: 0, count: 3, limit: 100 },
-    })
+    complaintsApi.fetchMyComplaintsTotal.mockImplementation((status?: string) =>
+      Promise.resolve(
+        {
+          undefined: 60,
+          OPEN: 61,
+          IN_PROGRESS: 62,
+          WAITING_ON_CLIENT: 63,
+          AWAITING_INTERNAL_REVIEW: 64,
+          RESOLVED: 65,
+        }[String(status)] ?? 0,
+      ),
+    )
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
-    expect(await screen.findByText('Your complaints')).toBeInTheDocument()
-    expect(screen.getByText('Active consents')).toBeInTheDocument()
-    expect(screen.getByText('Needs your attention')).toBeInTheDocument()
-    expect(screen.getByText('Open complaints')).toBeInTheDocument()
-    expect(screen.getByText('Resolved complaints')).toBeInTheDocument()
-    // Three active consents, two complaints not yet resolved (OPEN + IN_PROGRESS), one resolved.
+    expect(screen.getByText('Consents by status')).toBeInTheDocument()
+    expect(await screen.findByText('100+')).toBeInTheDocument() // total
+    // The pending count appears twice: the status tile and the "Needs your attention" badge.
     await waitFor(() => {
-      expect(screen.getByText('3')).toBeInTheDocument()
-      expect(screen.getByText('2')).toBeInTheDocument()
-      expect(screen.getByText('1')).toBeInTheDocument()
+      expect(screen.getAllByText('3')).toHaveLength(2)
     })
+    expect(screen.getByText('Consents by relation')).toBeInTheDocument()
+    expect(screen.getByText('My own consents')).toBeInTheDocument()
+    expect(screen.getByText('Consents managed by me')).toBeInTheDocument()
+    expect(screen.getByText('Needs your attention')).toBeInTheDocument()
+    expect(screen.getByText('Complaints')).toBeInTheDocument()
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
+    expect(catalogApi.fetchPurposes).not.toHaveBeenCalled()
+    expect(catalogApi.fetchElements).not.toHaveBeenCalled()
   })
 
-  it('shows an admin the exact tenant-wide totals, not a count of the paged sample', async () => {
-    // The unfiltered sample backing the purposes/services breakdowns deliberately disagrees
-    // with the per-state totals below - a real tenant can hold far more consents than that
-    // sample ever pages through, so the stat tiles must come from an exhaustive per-state
-    // count instead.
-    function consentsOfState(state: string, count: number) {
-      return Array.from({ length: count }, (_, index) => ({
-        id: `${state}-${String(index)}`,
-        subjectId: 'user-1',
-        serviceId: 'svc',
-        state,
-        timestamp: index,
-      }))
-    }
+  it('shows an admin exact tenant-wide consent, purposes, and elements counts', async () => {
     adminConsentsApi.fetchAdminConsents.mockImplementation(
       (params: { state?: string }): Promise<unknown> => {
-        if (params.state === 'ACTIVE') {
+        if (params.state === undefined) {
+          // Total: a full page with a next link still available - "100+".
           return Promise.resolve({
-            totalResults: 42,
-            links: [],
-            Consents: consentsOfState('ACTIVE', 42),
+            totalResults: 100,
+            links: [{ rel: 'next', href: 'https://x?after=Mg==' }],
+            Consents: rawConsents(100),
           })
         }
-        if (params.state === 'PENDING') {
-          return Promise.resolve({
-            totalResults: 7,
-            links: [],
-            Consents: consentsOfState('PENDING', 7),
-          })
+        const counts: Record<string, number> = {
+          ACTIVE: 29,
+          PENDING: 6,
+          REJECTED: 0,
+          REVOKED: 0,
+          EXPIRED: 0,
         }
-        return Promise.resolve({
-          totalResults: 1,
-          links: [],
-          Consents: [
-            { id: 'c1', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
-          ],
-        })
+        const count = counts[params.state] ?? 0
+        return Promise.resolve({ totalResults: count, links: [], Consents: rawConsents(count) })
       },
     )
+    catalogApi.fetchPurposes.mockResolvedValue({
+      totalResults: 8,
+      links: [],
+      Purposes: Array.from({ length: 8 }, (_, index) => ({ id: `p-${String(index)}` })),
+    })
+    catalogApi.fetchElements.mockResolvedValue({
+      totalResults: 12,
+      links: [],
+      Elements: Array.from({ length: 12 }, (_, index) => ({ id: `e-${String(index)}` })),
+    })
 
-    renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_ANY])
+    renderDashboard([
+      REQUIRED_SCOPES.CONSENTS_READ_ANY,
+      REQUIRED_SCOPES.PURPOSES_READ,
+      REQUIRED_SCOPES.ELEMENTS_READ,
+    ])
 
-    expect(await screen.findByText('42')).toBeInTheDocument()
-    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(await screen.findByText('100+')).toBeInTheDocument()
+    expect(screen.getByText('29')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('8')).toBeInTheDocument()
+    })
+    expect(screen.getByText('12')).toBeInTheDocument()
     expect(
       screen.getByText('An overview of consent activity across all users.'),
     ).toBeInTheDocument()
+    expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
-    expect(screen.queryByText('Your complaints')).not.toBeInTheDocument()
-    // A pending consent is waiting on the data subject, not the admin - nothing here is
-    // actually "needing review" from an admin, so the section is dropped for that view.
+    expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
-    expect(screen.queryByText('You have no pending consents to review.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Consents by relation')).not.toBeInTheDocument()
   })
 
-  it('shows a DPO-only session no consent or complaint widgets, since both would duplicate other pages', () => {
+  it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {
     renderDashboard([REQUIRED_SCOPES.COMPLAINTS_READ_ANY])
 
-    expect(screen.queryByText('Active consents')).not.toBeInTheDocument()
-    expect(screen.queryByText('Your complaints')).not.toBeInTheDocument()
-    expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
+    expect(screen.queryByText('Consents by status')).not.toBeInTheDocument()
+    expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
+    expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
-    expect(complaintsApi.listMyComplaints).not.toHaveBeenCalled()
+    expect(catalogApi.fetchPurposes).not.toHaveBeenCalled()
+    expect(catalogApi.fetchElements).not.toHaveBeenCalled()
+    expect(complaintsApi.fetchMyComplaintsTotal).not.toHaveBeenCalled()
   })
 })

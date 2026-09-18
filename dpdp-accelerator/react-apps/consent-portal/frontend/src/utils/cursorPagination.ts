@@ -56,3 +56,41 @@ export function getNextCursor(links: CursorLink[] | undefined): string | undefin
 export function getPreviousCursor(links: CursorLink[] | undefined): string | undefined {
   return getCursorFromLinks(links, 'previous')
 }
+
+/** A count that may be exact, or a floor when the underlying page came up against a cap. */
+export interface PageCount {
+  count: number
+  /** True when `count` is a floor (display as e.g. "100+"), not the exact total. */
+  isAtLeast: boolean
+}
+
+/**
+ * A count derived from one page of a cursor-paginated endpoint.
+ *
+ * These endpoints (WSO2 IS's consent-mgt v2.0 family: admin consents, purposes, elements)
+ * report a `totalResults`-style field that turns out to just equal the page size, not a real
+ * grand total (confirmed against a live server). The only signal that's actually trustworthy is
+ * whether a `next` link is offered: if the page came back short of `limit`, that's the exact
+ * count; if the page is full AND there's a `next` link, there are more than `limit` matches.
+ */
+export function pageCountFromCursor(
+  itemCount: number,
+  links: CursorLink[] | undefined,
+  limit: number,
+): PageCount {
+  const hasNext = Boolean(getNextCursor(links))
+  return { count: itemCount, isAtLeast: itemCount >= limit && hasNext }
+}
+
+/**
+ * A count derived from over-fetching a plain (non-cursor) array endpoint by one.
+ *
+ * Some endpoints (the self-service consent list) return a bare array with no pagination
+ * metadata at all - not even an unreliable one. Ask for `limit + 1` and pass the array's actual
+ * length here: getting back more than `limit` items is the only signal that more exist.
+ */
+export function pageCountFromOverfetch(itemCount: number, limit: number): PageCount {
+  return itemCount > limit
+    ? { count: limit, isAtLeast: true }
+    : { count: itemCount, isAtLeast: false }
+}
