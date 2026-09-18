@@ -51,6 +51,9 @@ import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
 import { normalizeConsentState } from '../my-consents/utils/statusChip'
 import useDashboardConsentsQuery from './hooks/useDashboardConsentsQuery'
 import useDashboardTenantConsentsQuery from './hooks/useDashboardTenantConsentsQuery'
+import useDashboardTenantConsentCountsQuery, {
+  type StateCount,
+} from './hooks/useDashboardTenantConsentCountsQuery'
 import useDashboardMyComplaintsQuery from './hooks/useDashboardMyComplaintsQuery'
 
 const ATTENTION_ITEM_LIMIT = 5
@@ -139,6 +142,12 @@ function summarizeMyComplaints(complaints: ComplaintRecordAPI[]): MyComplaintsSu
   return { openCount: complaints.length - resolved.length, resolvedCount: resolved.length }
 }
 
+/** "20,000+" when the count hit its safety ceiling rather than an exact total - see StateCount. */
+function formatStateCount(stateCount: StateCount | undefined): string {
+  if (!stateCount) return '0'
+  return `${stateCount.count.toLocaleString()}${stateCount.isAtLeast ? '+' : ''}`
+}
+
 function DashboardPage(): React.JSX.Element {
   const { t } = useTranslation('common')
   const { hasScope } = useAuthorization()
@@ -155,6 +164,12 @@ function DashboardPage(): React.JSX.Element {
   const selfConsentsQuery = useDashboardConsentsQuery(!isTenantConsentView && showConsentSection)
   const tenantConsentsQuery = useDashboardTenantConsentsQuery(isTenantConsentView)
   const consentsQuery = isTenantConsentView ? tenantConsentsQuery : selfConsentsQuery
+
+  // A tenant can have far more consents than the paged sample above ever fetches, so the two
+  // stat tiles come from an exhaustive per-state count instead of counting the sample - only
+  // the purposes/services breakdowns below still rely on that sample, since there is no
+  // aggregate endpoint to get those exactly.
+  const tenantCountsQuery = useDashboardTenantConsentCountsQuery(isTenantConsentView)
 
   const myComplaintsQuery = useDashboardMyComplaintsQuery(showMyComplaints)
   const myComplaintsSummary = useMemo<MyComplaintsSummary>(
@@ -203,6 +218,15 @@ function DashboardPage(): React.JSX.Element {
   const maximumPurposeCount = data.purposes[0]?.count ?? 1
   const maximumServiceCount = data.services[0]?.count ?? 1
 
+  const activeCount = isTenantConsentView
+    ? formatStateCount(tenantCountsQuery.data?.active)
+    : String(data.activeCount)
+  const pendingCount = isTenantConsentView
+    ? formatStateCount(tenantCountsQuery.data?.pending)
+    : String(data.pendingCount)
+  const countsLoading = isTenantConsentView ? tenantCountsQuery.isLoading : consentsQuery.isLoading
+  const countsError = isTenantConsentView ? tenantCountsQuery.isError : consentsQuery.isError
+
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
@@ -216,7 +240,7 @@ function DashboardPage(): React.JSX.Element {
           </Typography>
         </Stack>
 
-        {showConsentSection && consentsQuery.isError ? (
+        {showConsentSection && (countsError || consentsQuery.isError) ? (
           <Alert severity="error">{t('dashboard.loadFailed')}</Alert>
         ) : null}
 
@@ -236,11 +260,11 @@ function DashboardPage(): React.JSX.Element {
                       <Typography variant="body2" color="text.secondary" fontWeight={600}>
                         {t('dashboard.active')}
                       </Typography>
-                      {consentsQuery.isLoading ? (
+                      {countsLoading ? (
                         <Skeleton width={64} height={48} />
                       ) : (
                         <Typography variant="h3" fontWeight={700}>
-                          {data.activeCount}
+                          {activeCount}
                         </Typography>
                       )}
                     </Stack>
@@ -265,11 +289,11 @@ function DashboardPage(): React.JSX.Element {
                       <Typography variant="body2" color="text.secondary" fontWeight={600}>
                         {t('dashboard.pending')}
                       </Typography>
-                      {consentsQuery.isLoading ? (
+                      {countsLoading ? (
                         <Skeleton width={64} height={48} />
                       ) : (
                         <Typography variant="h3" fontWeight={700}>
-                          {data.pendingCount}
+                          {pendingCount}
                         </Typography>
                       )}
                     </Stack>

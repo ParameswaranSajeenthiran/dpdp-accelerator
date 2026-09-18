@@ -94,18 +94,50 @@ describe('DashboardPage', () => {
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
   })
 
-  it('shows an admin tenant-wide consent stats instead of a personal view', async () => {
-    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
-      totalResults: 1,
-      links: [],
-      Consents: [
-        { id: 'c1', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
-      ],
-    })
+  it('shows an admin the exact tenant-wide totals, not a count of the paged sample', async () => {
+    // The unfiltered sample backing the purposes/services breakdowns deliberately disagrees
+    // with the per-state totals below - a real tenant can hold far more consents than that
+    // sample ever pages through, so the stat tiles must come from an exhaustive per-state
+    // count instead.
+    function consentsOfState(state: string, count: number) {
+      return Array.from({ length: count }, (_, index) => ({
+        id: `${state}-${String(index)}`,
+        subjectId: 'user-1',
+        serviceId: 'svc',
+        state,
+        timestamp: index,
+      }))
+    }
+    adminConsentsApi.fetchAdminConsents.mockImplementation(
+      (params: { state?: string }): Promise<unknown> => {
+        if (params.state === 'ACTIVE') {
+          return Promise.resolve({
+            totalResults: 42,
+            links: [],
+            Consents: consentsOfState('ACTIVE', 42),
+          })
+        }
+        if (params.state === 'PENDING') {
+          return Promise.resolve({
+            totalResults: 7,
+            links: [],
+            Consents: consentsOfState('PENDING', 7),
+          })
+        }
+        return Promise.resolve({
+          totalResults: 1,
+          links: [],
+          Consents: [
+            { id: 'c1', subjectId: 'user-1', serviceId: 'svc', state: 'ACTIVE', timestamp: 1 },
+          ],
+        })
+      },
+    )
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_ANY])
 
-    expect(await screen.findByText('1')).toBeInTheDocument()
+    expect(await screen.findByText('42')).toBeInTheDocument()
+    expect(screen.getByText('7')).toBeInTheDocument()
     expect(
       screen.getByText('An overview of consent activity across all users.'),
     ).toBeInTheDocument()
