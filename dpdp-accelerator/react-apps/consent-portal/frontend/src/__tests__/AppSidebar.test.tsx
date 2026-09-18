@@ -129,8 +129,43 @@ describe('AppSidebar', () => {
     expect(screen.getByText('All Consents')).toBeInTheDocument()
     expect(screen.queryByText('Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('My Consents')).not.toBeInTheDocument()
-    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+    expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('/administration/consents')).toBeInTheDocument()
+  })
+
+  it('hides the dashboard for a DPO-only session and shows it for a dual-role DPO', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/complaint-management']}>
+            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.COMPLAINTS_READ_ANY]}>
+              <AppSidebar collapsed={false} />
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+    expect(screen.getByText('Complaints')).toBeInTheDocument()
+  })
+
+  it('shows the dashboard for a session with both DPO and self-service complaint scopes', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/dashboard']}>
+            <TestAuthorizationProvider
+              scopes={[REQUIRED_SCOPES.COMPLAINTS_READ_ANY, REQUIRED_SCOPES.COMPLAINTS_READ_SELF]}
+            >
+              <AppSidebar collapsed={false} />
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    expect(screen.getByText('Dashboard')).toBeInTheDocument()
   })
 
   it('hides self-service consents for admins when hideSelfConsentsForAdmins is true', () => {

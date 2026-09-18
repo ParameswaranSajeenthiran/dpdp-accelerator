@@ -17,43 +17,45 @@
  */
 
 import { type UseQueryResult, useQuery } from '@tanstack/react-query'
+import { fetchAdminConsents } from '../../admin-consents/api/adminConsentsApi'
 import type { ConsentSummary } from '../../../types/consent'
-import { fetchMyConsents } from '../../my-consents/api/myConsentsApi'
+import { getNextCursor } from '../../../utils/cursorPagination'
 
 const DASHBOARD_PAGE_SIZE = 100
 const DASHBOARD_MAX_PAGES = 20
 
 /**
- * Walks the self-service pages until a short page arrives.
+ * Walks the admin listing's cursor pages until `links` carries no `next`.
  *
- * `metadata.total` only counts the records seen so far, so a full page is the
- * only reliable signal that more consents may exist.
+ * Mirrors useDashboardConsentsQuery's self-service paging, capped the same
+ * way, since the v2.0 admin API has no aggregate-stats endpoint of its own.
  */
 async function fetchConsentPage(
-  offset: number,
+  cursor: string | undefined,
   collected: ConsentSummary[],
   remainingPages: number,
 ): Promise<ConsentSummary[]> {
-  const response = await fetchMyConsents({ limit: DASHBOARD_PAGE_SIZE, offset })
-  const consents = [...collected, ...response.data]
+  const response = await fetchAdminConsents({ limit: DASHBOARD_PAGE_SIZE, after: cursor })
+  const consents = [...collected, ...response.Consents]
+  const nextCursor = getNextCursor(response.links)
 
-  if (response.data.length < DASHBOARD_PAGE_SIZE || remainingPages <= 1) {
+  if (!nextCursor || remainingPages <= 1) {
     return consents
   }
 
-  return fetchConsentPage(offset + response.data.length, consents, remainingPages - 1)
+  return fetchConsentPage(nextCursor, consents, remainingPages - 1)
 }
 
-async function fetchAllMyConsents(): Promise<ConsentSummary[]> {
-  return fetchConsentPage(0, [], DASHBOARD_MAX_PAGES)
+async function fetchAllTenantConsents(): Promise<ConsentSummary[]> {
+  return fetchConsentPage(undefined, [], DASHBOARD_MAX_PAGES)
 }
 
-export default function useDashboardConsentsQuery(
+export default function useDashboardTenantConsentsQuery(
   enabled: boolean,
 ): UseQueryResult<ConsentSummary[]> {
   return useQuery({
-    queryKey: ['consents', 'dashboard'],
-    queryFn: fetchAllMyConsents,
+    queryKey: ['consents', 'dashboard', 'tenant'],
+    queryFn: fetchAllTenantConsents,
     enabled,
   })
 }

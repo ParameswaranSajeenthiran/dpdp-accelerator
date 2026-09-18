@@ -28,20 +28,34 @@ import {
   LinearProgress,
   Skeleton,
   Stack,
+  StatCard,
   Typography,
 } from '@wso2/oxygen-ui'
-import { ArrowRight, ChartPie, Clock3, ShieldCheck } from '@wso2/oxygen-ui-icons-react'
+import {
+  ArrowRight,
+  ChartPie,
+  CheckCircle2,
+  Clock3,
+  Inbox,
+  ShieldCheck,
+} from '@wso2/oxygen-ui-icons-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import useAuthorization from '../auth/useAuthorization'
 import type { ConsentSummary } from '../../types/consent'
+import type { ComplaintRecordAPI } from '../../types/complaint'
 import { formatEpochTimestamp } from '../../utils/dateTime'
+import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
 import { normalizeConsentState } from '../my-consents/utils/statusChip'
 import useDashboardConsentsQuery from './hooks/useDashboardConsentsQuery'
+import useDashboardTenantConsentsQuery from './hooks/useDashboardTenantConsentsQuery'
+import useDashboardMyComplaintsQuery from './hooks/useDashboardMyComplaintsQuery'
 
 const ATTENTION_ITEM_LIMIT = 5
 const PURPOSE_ITEM_LIMIT = 5
+const SERVICE_ITEM_LIMIT = 5
 
 interface LabelledCount {
   id: string
@@ -55,6 +69,11 @@ interface DashboardData {
   pending: ConsentSummary[]
   purposes: LabelledCount[]
   services: LabelledCount[]
+}
+
+interface MyComplaintsSummary {
+  openCount: number
+  resolvedCount: number
 }
 
 function summarizePurposes(consent: ConsentSummary): string {
@@ -115,9 +134,33 @@ function toSortedCounts(counts: Map<string, LabelledCount>): LabelledCount[] {
   )
 }
 
+function summarizeMyComplaints(complaints: ComplaintRecordAPI[]): MyComplaintsSummary {
+  const resolved = complaints.filter((complaint) => complaint.status === 'RESOLVED')
+  return { openCount: complaints.length - resolved.length, resolvedCount: resolved.length }
+}
+
 function DashboardPage(): React.JSX.Element {
   const { t } = useTranslation('common')
-  const consentsQuery = useDashboardConsentsQuery()
+  const { hasScope } = useAuthorization()
+
+  // Admin is assumed to have no consents of his own to report -- the tenant-wide view replaces
+  // the self-service one entirely rather than sitting alongside it.
+  const isTenantConsentView = hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
+  const showMyComplaints = hasScope(REQUIRED_SCOPES.COMPLAINTS_READ_SELF)
+
+  // A DPO's token also carries internal_login (see isDpoOnlyProfile), so without this check a
+  // direct visit to /dashboard would render the self-consents view empty instead of hiding it.
+  const showConsentSection = isTenantConsentView || !isDpoOnlyProfile(hasScope)
+
+  const selfConsentsQuery = useDashboardConsentsQuery(!isTenantConsentView && showConsentSection)
+  const tenantConsentsQuery = useDashboardTenantConsentsQuery(isTenantConsentView)
+  const consentsQuery = isTenantConsentView ? tenantConsentsQuery : selfConsentsQuery
+
+  const myComplaintsQuery = useDashboardMyComplaintsQuery(showMyComplaints)
+  const myComplaintsSummary = useMemo<MyComplaintsSummary>(
+    () => summarizeMyComplaints(myComplaintsQuery.data ?? []),
+    [myComplaintsQuery.data],
+  )
 
   const data = useMemo<DashboardData>(() => {
     const consents = consentsQuery.data ?? []
@@ -153,7 +196,7 @@ function DashboardPage(): React.JSX.Element {
         .sort((left, right) => right.timestamp - left.timestamp)
         .slice(0, ATTENTION_ITEM_LIMIT),
       purposes: toSortedCounts(purposeCounts).slice(0, PURPOSE_ITEM_LIMIT),
-      services: toSortedCounts(serviceCounts),
+      services: toSortedCounts(serviceCounts).slice(0, SERVICE_ITEM_LIMIT),
     }
   }, [consentsQuery.data])
 
@@ -169,199 +212,275 @@ function DashboardPage(): React.JSX.Element {
             {t('dashboard.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('dashboard.subtitle')}
+            {t(isTenantConsentView ? 'dashboard.subtitleAdmin' : 'dashboard.subtitle')}
           </Typography>
         </Stack>
 
-        {consentsQuery.isError ? <Alert severity="error">{t('dashboard.loadFailed')}</Alert> : null}
+        {showConsentSection && consentsQuery.isError ? (
+          <Alert severity="error">{t('dashboard.loadFailed')}</Alert>
+        ) : null}
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                    {t('dashboard.active')}
-                  </Typography>
-                  {consentsQuery.isLoading ? (
-                    <Skeleton width={64} height={48} />
-                  ) : (
-                    <Typography variant="h3" fontWeight={700}>
-                      {data.activeCount}
-                    </Typography>
+        {showConsentSection ? (
+          <>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                gap: 2,
+              }}
+            >
+              <Card sx={{ boxShadow: 1 }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                        {t('dashboard.active')}
+                      </Typography>
+                      {consentsQuery.isLoading ? (
+                        <Skeleton width={64} height={48} />
+                      ) : (
+                        <Typography variant="h3" fontWeight={700}>
+                          {data.activeCount}
+                        </Typography>
+                      )}
+                    </Stack>
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        p: 1.25,
+                        borderRadius: 2,
+                        bgcolor: 'action.hover',
+                      }}
+                    >
+                      <ShieldCheck size={25} />
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card sx={{ boxShadow: 1 }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                        {t('dashboard.pending')}
+                      </Typography>
+                      {consentsQuery.isLoading ? (
+                        <Skeleton width={64} height={48} />
+                      ) : (
+                        <Typography variant="h3" fontWeight={700}>
+                          {data.pendingCount}
+                        </Typography>
+                      )}
+                    </Stack>
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        p: 1.25,
+                        borderRadius: 2,
+                        bgcolor: 'action.hover',
+                      }}
+                    >
+                      <Clock3 size={25} />
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
+
+            {isTenantConsentView ? null : (
+              <>
+                <Typography variant="h6" fontWeight={700}>
+                  {t('dashboard.attention')}
+                </Typography>
+
+                <Card sx={{ boxShadow: 1 }}>
+                  <CardHeader
+                    avatar={<Clock3 size={20} />}
+                    title={
+                      <Typography fontWeight={600}>{t('dashboard.pendingConsents')}</Typography>
+                    }
+                    action={<Chip size="small" label={data.pendingCount} />}
+                  />
+                  <Divider />
+                  <CardContent>
+                    {consentsQuery.isLoading ? (
+                      <Stack spacing={1}>
+                        <Skeleton height={40} />
+                        <Skeleton height={40} />
+                        <Skeleton height={40} />
+                      </Stack>
+                    ) : null}
+                    {!consentsQuery.isLoading && data.pending.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {t('dashboard.noPending')}
+                      </Typography>
+                    ) : null}
+                    {data.pending.map((consent) => (
+                      <PendingConsentRow key={consent.id} consent={consent} />
+                    ))}
+                    {data.pendingCount > 0 ? (
+                      <Button
+                        component={RouterLink}
+                        to="/consents?view=pending&state=PENDING"
+                        size="small"
+                        endIcon={<ArrowRight size={15} />}
+                        sx={{ mt: 1 }}
+                      >
+                        {t('dashboard.viewPending')}
+                      </Button>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' },
+                gap: 2,
+              }}
+            >
+              <Card sx={{ boxShadow: 1 }}>
+                <CardHeader
+                  title={<Typography fontWeight={600}>{t('dashboard.commonPurposes')}</Typography>}
+                  subheader={t(
+                    isTenantConsentView
+                      ? 'dashboard.commonPurposesSubtitleAdmin'
+                      : 'dashboard.commonPurposesSubtitle',
                   )}
-                </Stack>
-                <Box
-                  sx={{ display: 'inline-flex', p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
-                >
-                  <ShieldCheck size={25} />
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                    {t('dashboard.pending')}
-                  </Typography>
+                />
+                <Divider />
+                <CardContent>
                   {consentsQuery.isLoading ? (
-                    <Skeleton width={64} height={48} />
-                  ) : (
-                    <Typography variant="h3" fontWeight={700}>
-                      {data.pendingCount}
+                    <Stack spacing={2}>
+                      <Skeleton height={32} />
+                      <Skeleton height={32} />
+                      <Skeleton height={32} />
+                    </Stack>
+                  ) : null}
+                  {!consentsQuery.isLoading && data.purposes.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {t('dashboard.noPurposes')}
                     </Typography>
+                  ) : null}
+                  <Stack spacing={2}>
+                    {data.purposes.map((purpose, index) => (
+                      <Stack key={purpose.id} spacing={0.75}>
+                        <Stack direction="row" justifyContent="space-between" spacing={2}>
+                          <Typography variant="body2" fontWeight={600} noWrap>
+                            {String(index + 1)}. {purpose.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {t('dashboard.consentCount', { count: purpose.count })}
+                          </Typography>
+                        </Stack>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(purpose.count / maximumPurposeCount) * 100}
+                          sx={{ height: 6, borderRadius: 3 }}
+                        />
+                      </Stack>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card sx={{ boxShadow: 1 }}>
+                <CardHeader
+                  avatar={<ChartPie size={20} />}
+                  title={
+                    <Typography fontWeight={600}>{t('dashboard.serviceBreakdown')}</Typography>
+                  }
+                  subheader={t(
+                    isTenantConsentView
+                      ? 'dashboard.serviceBreakdownSubtitleAdmin'
+                      : 'dashboard.serviceBreakdownSubtitle',
                   )}
-                </Stack>
-                <Box
-                  sx={{ display: 'inline-flex', p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
-                >
-                  <Clock3 size={25} />
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
+                />
+                <Divider />
+                <CardContent>
+                  {consentsQuery.isLoading ? (
+                    <Stack spacing={2}>
+                      <Skeleton height={32} />
+                      <Skeleton height={32} />
+                      <Skeleton height={32} />
+                    </Stack>
+                  ) : null}
+                  {!consentsQuery.isLoading && data.services.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {t('dashboard.noServices')}
+                    </Typography>
+                  ) : null}
+                  <Stack spacing={2}>
+                    {data.services.map((service) => (
+                      <Stack key={service.id} spacing={0.75}>
+                        <Stack direction="row" justifyContent="space-between" spacing={2}>
+                          <Typography variant="body2" fontWeight={600} noWrap>
+                            {service.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {t('dashboard.consentCount', { count: service.count })}
+                          </Typography>
+                        </Stack>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(service.count / maximumServiceCount) * 100}
+                          sx={{ height: 6, borderRadius: 3 }}
+                        />
+                      </Stack>
+                    ))}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
+          </>
+        ) : null}
 
-        <Typography variant="h6" fontWeight={700}>
-          {t('dashboard.attention')}
-        </Typography>
+        {showMyComplaints ? (
+          <Stack spacing={2}>
+            <Typography variant="h6" fontWeight={700}>
+              {t('dashboard.complaintsTitle')}
+            </Typography>
 
-        <Card sx={{ boxShadow: 1 }}>
-          <CardHeader
-            avatar={<Clock3 size={20} />}
-            title={<Typography fontWeight={600}>{t('dashboard.pendingConsents')}</Typography>}
-            action={<Chip size="small" label={data.pendingCount} />}
-          />
-          <Divider />
-          <CardContent>
-            {consentsQuery.isLoading ? (
-              <Stack spacing={1}>
-                <Skeleton height={40} />
-                <Skeleton height={40} />
-                <Skeleton height={40} />
-              </Stack>
+            {myComplaintsQuery.isError ? (
+              <Alert severity="error">{t('dashboard.complaintsLoadFailed')}</Alert>
             ) : null}
-            {!consentsQuery.isLoading && data.pending.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {t('dashboard.noPending')}
-              </Typography>
-            ) : null}
-            {data.pending.map((consent) => (
-              <PendingConsentRow key={consent.id} consent={consent} />
-            ))}
-            {data.pendingCount > 0 ? (
+
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                gap: 2,
+              }}
+            >
+              <StatCard
+                value={myComplaintsSummary.openCount}
+                label={t('dashboard.complaintsOpen')}
+                icon={<Inbox size={22} />}
+                iconColor="info"
+              />
+              <StatCard
+                value={myComplaintsSummary.resolvedCount}
+                label={t('dashboard.complaintsResolved')}
+                icon={<CheckCircle2 size={22} />}
+                iconColor="success"
+              />
+            </Box>
+
+            <Box>
               <Button
                 component={RouterLink}
-                to="/consents?view=pending&state=PENDING"
+                to="/complaints"
                 size="small"
                 endIcon={<ArrowRight size={15} />}
-                sx={{ mt: 1 }}
               >
-                {t('dashboard.viewPending')}
+                {t('dashboard.viewComplaints')}
               </Button>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
-          <Card sx={{ boxShadow: 1 }}>
-            <CardHeader
-              title={<Typography fontWeight={600}>{t('dashboard.commonPurposes')}</Typography>}
-              subheader={t('dashboard.commonPurposesSubtitle')}
-            />
-            <Divider />
-            <CardContent>
-              {consentsQuery.isLoading ? (
-                <Stack spacing={2}>
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                </Stack>
-              ) : null}
-              {!consentsQuery.isLoading && data.purposes.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t('dashboard.noPurposes')}
-                </Typography>
-              ) : null}
-              <Stack spacing={2}>
-                {data.purposes.map((purpose, index) => (
-                  <Stack key={purpose.id} spacing={0.75}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" fontWeight={600} noWrap>
-                        {String(index + 1)}. {purpose.label}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('dashboard.consentCount', { count: purpose.count })}
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(purpose.count / maximumPurposeCount) * 100}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Stack>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ boxShadow: 1 }}>
-            <CardHeader
-              avatar={<ChartPie size={20} />}
-              title={<Typography fontWeight={600}>{t('dashboard.serviceBreakdown')}</Typography>}
-              subheader={t('dashboard.serviceBreakdownSubtitle')}
-            />
-            <Divider />
-            <CardContent>
-              {consentsQuery.isLoading ? (
-                <Stack spacing={2}>
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                </Stack>
-              ) : null}
-              {!consentsQuery.isLoading && data.services.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t('dashboard.noServices')}
-                </Typography>
-              ) : null}
-              <Stack spacing={2}>
-                {data.services.map((service) => (
-                  <Stack key={service.id} spacing={0.75}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" fontWeight={600} noWrap>
-                        {service.label}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('dashboard.consentCount', { count: service.count })}
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(service.count / maximumServiceCount) * 100}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Stack>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
+            </Box>
+          </Stack>
+        ) : null}
       </Stack>
     </Box>
   )

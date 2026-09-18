@@ -33,7 +33,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useAuthorization from '../../../features/auth/useAuthorization'
-import { REQUIRED_SCOPES, type ScopeRequirement } from '../../../utils/scopes'
+import { REQUIRED_SCOPES, isDpoOnlyProfile, type ScopeRequirement } from '../../../utils/scopes'
 
 interface AppSidebarProps {
   collapsed: boolean
@@ -194,14 +194,25 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
   const location = useLocation()
-  const { currentUser, hasScope } = useAuthorization()
+  const { currentUser, hasScope, hasAnyScope } = useAuthorization()
 
   // An admin's own consents are still reachable directly by URL -- this only
   // declutters the sidebar, it is not an access control boundary.
   const hideSelfConsents =
     currentUser.hideSelfConsentsForAdmins && hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
 
-  const dashboardItems = DASHBOARD_ITEMS.filter((item) => hasScope(item.requiredScope))
+  // The Dashboard has a section for each of these scopes (see DashboardPage) - a session with
+  // none of them (e.g. someone with only PURPOSES_READ) has nothing to see there. A DPO trivially
+  // holds CONSENTS_READ_SELF too (internal_login is granted to every signed-in user regardless of
+  // role), so that alone can't be used to spot one; isDpoOnlyProfile carves that profile back out
+  // since their real content is one click away on Complaints, not duplicated on the Dashboard.
+  const dashboardVisible =
+    hasAnyScope([
+      REQUIRED_SCOPES.CONSENTS_READ_SELF,
+      REQUIRED_SCOPES.CONSENTS_READ_ANY,
+      REQUIRED_SCOPES.COMPLAINTS_READ_SELF,
+    ]) && !isDpoOnlyProfile(hasScope)
+  const dashboardItems = dashboardVisible ? DASHBOARD_ITEMS : []
   const consentItems = hideSelfConsents
     ? []
     : CONSENT_ITEMS.filter((item) => hasScope(item.requiredScope))
