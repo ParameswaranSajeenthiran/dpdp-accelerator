@@ -298,8 +298,16 @@ paths:
       parameters:
         - name: status
           in: query
+          description: >-
+            Filter by subscription status (active, pending, stale, or deleted).
+            Surrounding whitespace is trimmed and matching is case-insensitive.
+            Omit this parameter, pass a blank value, or use all to disable the status filter.
+            Other values are used as filters and may return no matches.
+            This normalization applies only to the query parameter; subscription creation
+            requires exact lowercase enum values.
           schema:
-            $ref: "#/components/schemas/SubscriptionStatus"
+            type: string
+          example: active
         - name: purposes
           in: query
           description: Comma-separated purposes
@@ -1213,6 +1221,8 @@ components:
                 occurredAt: 1787651970000
                 completionStatus: completed
                 completionEvidence: https://processor.example/evidence/receipt.pdf
+                manualRetryUsed: false
+                manualRetryAvailable: false
                 history:
                   - attempt: 1
                     status: delivered
@@ -1227,6 +1237,8 @@ components:
                 currentStatus: acknowledged
                 occurredAt: 1787651970000
                 completionStatus: acknowledged
+                manualRetryUsed: false
+                manualRetryAvailable: false
                 history:
                   - attempt: 1
                     status: acknowledged
@@ -1234,6 +1246,7 @@ components:
   schemas:
     Error:
       type: object
+      x-class-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)'
       required: [code, message]
       properties:
         code:
@@ -1250,6 +1263,18 @@ components:
       type: object
       required: [name]
       properties:
+        topicId:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        status:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        initiatedBy:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
         name:
           type: string
           maxLength: 225
@@ -1257,20 +1282,23 @@ components:
           type: string
           maxLength: 255
     Topic:
-      allOf:
-        - $ref: "#/components/schemas/TopicCreateRequest"
-        - type: object
-          required: [topicId, status, initiatedBy]
-          properties:
-            topicId:
-              type: string
-            status:
-              $ref: "#/components/schemas/TopicStatus"
-            initiatedBy:
-              type: string
-              enum: [system, user]
+      type: object
+      required: [name, topicId, status, initiatedBy]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        topicId:
+          type: string
+        status:
+          $ref: "#/components/schemas/TopicStatus"
+        initiatedBy:
+          type: string
+          enum: [system, user]
     PurposeFilterMode:
       type: string
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [all, all_except, specific]
     Filter:
       type: object
@@ -1284,6 +1312,7 @@ components:
             type: string
     DeliveryMode:
       type: string
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [webhook, poll]
     DeliveryConfigRequest:
       type: object
@@ -1314,11 +1343,44 @@ components:
           description: Always null in service responses.
     SubscriptionStatus:
       type: string
+      description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.
       enum: [active, pending, stale, deleted]
     SubscriptionCreateRequest:
       type: object
       required: [topic, delivery]
       properties:
+        subscriptionId:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        orgId:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; tenant context determines the organization.
+        groupId:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; the handler derives the group from tenant context.
+        status:
+          $ref: "#/components/schemas/SubscriptionStatus"
+        createdAt:
+          type: integer
+          format: int64
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        updatedAt:
+          type: integer
+          format: int64
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        alreadyExists:
+          type: boolean
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
+        message:
+          type: string
+          deprecated: true
+          description: Accepted for compatibility; ignored on creation.
         topic:
           type: string
         filter:
@@ -1474,14 +1536,16 @@ components:
         completionEvidence:
           type: string
           nullable: true
-        manualRetryUsed:
-          type: boolean
-        manualRetryAvailable:
-          type: boolean
         history:
           type: array
           items:
             $ref: "#/components/schemas/DeliveryAttempt"
+        manualRetryUsed:
+          type: boolean
+          default: false
+        manualRetryAvailable:
+          type: boolean
+          default: false
     PollSetError:
       type: object
       required: [err, description]
