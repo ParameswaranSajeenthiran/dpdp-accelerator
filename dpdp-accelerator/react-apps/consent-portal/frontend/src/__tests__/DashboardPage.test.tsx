@@ -75,13 +75,11 @@ function rawConsents(count: number): unknown[] {
 }
 
 describe('DashboardPage', () => {
-  it('shows a regular user their own consent, relation, and complaint counts', async () => {
+  it('shows a regular user their own consent and complaint counts', async () => {
     // Total (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
     // own distinct number so assertions can't accidentally match the wrong tile.
     myConsentsApi.fetchMyConsentsRaw.mockImplementation(
-      (params: { state?: string; relation?: string }): Promise<unknown[]> => {
-        if (params.relation === 'SUBJECT') return Promise.resolve(rawConsents(40))
-        if (params.relation === 'AUTHORIZER') return Promise.resolve(rawConsents(41))
+      (params: { state?: string }): Promise<unknown[]> => {
         if (params.state === 'PENDING') return Promise.resolve(rawConsents(3))
         if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(35))
         if (params.state === 'REJECTED') return Promise.resolve(rawConsents(36))
@@ -115,9 +113,6 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(screen.getAllByText('3')).toHaveLength(2)
     })
-    expect(screen.getByText('Consents by relation')).toBeInTheDocument()
-    expect(screen.getByText('My own consents')).toBeInTheDocument()
-    expect(screen.getByText('Consents managed by me')).toBeInTheDocument()
     expect(screen.getByText('Needs your attention')).toBeInTheDocument()
     expect(screen.getByText('Complaints')).toBeInTheDocument()
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
@@ -177,7 +172,6 @@ describe('DashboardPage', () => {
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
     expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
-    expect(screen.queryByText('Consents by relation')).not.toBeInTheDocument()
   })
 
   it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {

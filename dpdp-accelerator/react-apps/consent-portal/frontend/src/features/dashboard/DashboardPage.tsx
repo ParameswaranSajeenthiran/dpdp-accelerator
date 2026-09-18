@@ -42,7 +42,6 @@ import {
   RefreshCw,
   ShieldCheck,
   Target,
-  User,
   UserCheck,
   XCircle,
 } from '@wso2/oxygen-ui-icons-react'
@@ -58,7 +57,6 @@ import type { PageCount } from '../../utils/cursorPagination'
 import useDashboardSelfConsentStateCountsQuery from './hooks/useDashboardSelfConsentStateCountsQuery'
 import useDashboardTenantConsentStateCountsQuery from './hooks/useDashboardTenantConsentStateCountsQuery'
 import type { ConsentStateCounts } from './hooks/consentStateCounts'
-import useDashboardConsentRelationCountsQuery from './hooks/useDashboardConsentRelationCountsQuery'
 import useDashboardPurposesCountQuery, {
   useDashboardElementsCountQuery,
 } from './hooks/useDashboardCatalogCountsQuery'
@@ -201,8 +199,6 @@ function DashboardPage(): React.JSX.Element {
   const tenantStateCountsQuery = useDashboardTenantConsentStateCountsQuery(isTenantConsentView)
   const stateCountsQuery = isTenantConsentView ? tenantStateCountsQuery : selfStateCountsQuery
 
-  const relationCountsQuery = useDashboardConsentRelationCountsQuery(showSelfConsentDetail)
-
   const showPurposesCount = isTenantConsentView && hasScope(REQUIRED_SCOPES.PURPOSES_READ)
   const showElementsCount = isTenantConsentView && hasScope(REQUIRED_SCOPES.ELEMENTS_READ)
   const purposesCountQuery = useDashboardPurposesCountQuery(showPurposesCount)
@@ -247,42 +243,6 @@ function DashboardPage(): React.JSX.Element {
               isLoading={stateCountsQuery.isLoading}
               t={t}
             />
-
-            {showSelfConsentDetail ? (
-              <>
-                <Typography variant="h6" fontWeight={700}>
-                  {t('dashboard.consentsByRelation')}
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                    gap: 2,
-                  }}
-                >
-                  <StatCard
-                    value={
-                      relationCountsQuery.isLoading
-                        ? '-'
-                        : formatPageCount(relationCountsQuery.data?.subject)
-                    }
-                    label={t('dashboard.myOwnConsents')}
-                    icon={<User size={22} />}
-                    iconColor="primary"
-                  />
-                  <StatCard
-                    value={
-                      relationCountsQuery.isLoading
-                        ? '-'
-                        : formatPageCount(relationCountsQuery.data?.authorizer)
-                    }
-                    label={t('dashboard.consentsManagedByMe')}
-                    icon={<UserCheck size={22} />}
-                    iconColor="secondary"
-                  />
-                </Box>
-              </>
-            ) : null}
 
             {showPurposesCount || showElementsCount ? (
               <>
