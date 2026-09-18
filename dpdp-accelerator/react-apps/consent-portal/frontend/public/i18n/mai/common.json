@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "डैशबोर्ड",
     "subtitle": "अहाँक सहमति गतिविधि आ आगामी कार्रवाईक एक विवरण।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "सभ उपयोगकर्तासभक बीच सहमति गतिविधक एकटा अवलोकन।",
     "loadFailed": "अखनि अहाँक डैशबोर्ड लोड करै मे असमर्थ।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "पद अनुसार सहमति",
     "totalConsents": "कुल सहमति",
     "attention": "अहाँक ध्यानक आवश्यकता अछि",
     "pendingConsents": "लंबित सहमति सभ",
     "noPending": "समीक्षा लेल कोनहु लंबित सहमति नहि अछि।",
     "viewPending": "सभ लंबित सहमति देखू",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "शिकायत",
     "totalComplaints": "कुल शिकायत",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "सब शिकायत देखू"
   },
   "adminConsents": {
     "title": "सहमति सभ",

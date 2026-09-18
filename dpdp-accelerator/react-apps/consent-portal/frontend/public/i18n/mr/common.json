@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "डॅशबोर्ड",
     "subtitle": "तुमच्या संमती क्रियाकलाप आणि आगामी कृतींचा आढावा.",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "सर्व वापरकर्त्यांमधील संमती (consent) क्रियाकलापांचा आढावा.",
     "loadFailed": "सध्या तुमचा डॅशबोर्ड लोड करण्यात अक्षम.",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "दर्जा नुसार संमती",
     "totalConsents": "संपूर्ण संमती",
     "attention": "कृती आवश्यक",
     "pendingConsents": "प्रलंबित संमती",
     "noPending": "पुनरावलोकन करण्यासाठी कोणतीही प्रलंबित संमती नाही.",
     "viewPending": "सर्व प्रलंबित संमती पहा",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "तक्रारी",
     "totalComplaints": "एकूण तक्रारी",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "सर्व तक्रारी पहा"
   },
   "adminConsents": {
     "title": "संमती",

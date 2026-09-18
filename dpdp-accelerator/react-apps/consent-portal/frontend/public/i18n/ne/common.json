@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ड्यासबोर्ड",
     "subtitle": "तपाईंको सहमति गतिविधि र आगामी कार्यहरूको अवलोकन।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "सबै प्रयोगकर्ताहरूमा सहमति क्रियाकलापको सिंहावलोकन।",
     "loadFailed": "अहिले तपाईंको ड्यासबोर्ड लोड गर्न सकिएन।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "पद अनुसार सहमतिहरू",
     "totalConsents": "सम्पूर्ण सहमतिहरू",
     "attention": "तपाईंको ध्यान आवश्यक छ",
     "pendingConsents": "पेन्डिङ सहमतिहरू",
     "noPending": "तपाईंसँग समीक्षार्थ कुनै पेन्डिङ सहमति छैन।",
     "viewPending": "सबै पेन्डिङ सहमतिहरू हेर्नुहोस्",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "उजुरीहरू",
     "totalComplaints": "कुल गुनासोहरू",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "सबै गुनासोहरू हेर्नुहोस्"
   },
   "adminConsents": {
     "title": "सहमतिहरू",

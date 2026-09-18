@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ᱰᱮᱥᱵᱳᱨᱰ",
     "subtitle": "ᱟᱢᱟᱜ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱠᱟᱹᱢᱤ ᱟᱨ ᱦᱤᱡᱩᱜ ᱠᱟᱱ ᱠᱟᱹᱢᱤ ᱨᱮᱱᱟᱜ ᱥᱟᱢᱟᱝ।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "ᱡᱚᱛᱚ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ᱠᱚ ᱢᱩᱫᱽᱨᱮ ᱨᱟᱹᱡᱤ ᱠᱟᱹᱢᱤ ᱨᱮᱭᱟᱜ ᱢᱤᱫᱴᱟᱝ ᱧᱮᱞ ᱥᱟᱢᱴᱟᱣ ᱾",
     "loadFailed": "ᱱᱤᱛᱚᱜ ᱟᱢᱟᱜ ᱰᱮᱥᱵᱳᱨᱰ ᱞᱳᱰ ᱵᱟᱝ ᱦᱩᱭ ᱞᱮᱱᱟ।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "ᱦᱟᱞᱚᱛ ᱞᱮᱠᱟᱛᱮ ᱨᱟᱹᱡᱤ ᱾",
     "totalConsents": "ᱯᱩᱨᱟᱹ ᱨᱟᱹᱡᱤ ᱠᱚ ᱾",
     "attention": "ᱟᱢᱟᱜ ᱫᱷᱟᱭᱟᱱ ᱞᱟᱹᱠᱛᱤᱭᱟ",
     "pendingConsents": "ᱵᱟᱹᱠᱤ ᱛᱟᱦᱮᱸᱠᱟᱱ ᱥᱟᱹᱢᱟᱹᱛᱤ",
     "noPending": "ᱟᱢ ᱴᱷᱮᱱ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱡᱟᱦᱟᱸᱱᱟᱜ ᱵᱟᱹᱠᱤ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱵᱟᱹᱱᱩᱜᱼᱟ।",
     "viewPending": "ᱡᱚᱛᱚ ᱵᱟᱹᱠᱤ ᱥᱟᱹᱢᱟᱹᱛᱤ ᱧᱮᱞ ᱢᱮ",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "ᱞᱟᱹᱞᱤᱥ ᱠᱚ",
     "totalComplaints": "ᱜᱩᱴ ᱞᱟᱹᱞᱤᱥ ᱠᱚ",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "ᱥᱟᱱᱟᱢ ᱞᱟᱹᱞᱤᱥ ᱧᱮᱞᱢᱮ ᱾"
   },
   "adminConsents": {
     "title": "ᱥᱟᱹᱢᱟᱹᱛᱤ",

@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ڊيش بورڊ",
     "subtitle": "توهان جي رضامندي جي سرگرمي ۽ ايندڙ عملن جو جائزو.",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "सभिनी इस्तेमाल कंदड़नि में सहमति जी सरगर्मीअ जो हिकु जायज़ो।",
     "loadFailed": "هن وقت توهان جو ڊيش بورڊ لوڊ ڪرڻ ۾ ناڪام.",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "दर्जे जे मुताबिक़ रज़ामंदीऊं",
     "totalConsents": "मजमूई रज़ामंदीऊं",
     "attention": "توهان جي توجه جي ضرورت آهي",
     "pendingConsents": "زير التوا رضامنديون",
     "noPending": "توهان وٽ جائزو وٺڻ لاءِ ڪا به زير التوا رضامندي ناهي.",
     "viewPending": "سڀ زير التوا رضامنديون ڏسو",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "शिकाइतूं",
     "totalComplaints": "कुल शिकायतूं",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "सभिनी शिकायतूं ॾिसो"
   },
   "adminConsents": {
     "title": "رضامنديون",

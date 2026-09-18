@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "नियन्त्रणपट्टिका",
     "subtitle": "भवतः सहमति-गतेः आगामि-कार्याणां च अवलोकनम्।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "सर्वेषु उपयोक्तृषु सहमति-क्रियाकलापस्य सिंहावलोकनम्।",
     "loadFailed": "इदानीं भवतः नियन्त्रणपट्टिकां भारयितुम् असमर्थः।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "पदानुसारं सम्मतीः",
     "totalConsents": "सम्पूर्णानि अनुमत्यानि",
     "attention": "भवतः ध्यानम् आवश्यकम्",
     "pendingConsents": "लम्बमानाः सहमतयः",
     "noPending": "समीक्षार्थं कापि लम्बमाना सहमतिः नास्ति।",
     "viewPending": "सर्वाः लम्बमानाः सहमतयः पश्यन्तु",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "आरोपः",
     "totalComplaints": "सम्पूर्णाः परिदेवनाः",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "सर्वाः परिवादनानि पश्यतु।"
   },
   "adminConsents": {
     "title": "सहमतयः",

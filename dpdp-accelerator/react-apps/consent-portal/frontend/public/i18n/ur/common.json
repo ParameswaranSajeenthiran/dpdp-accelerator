@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ڈیش بورڈ",
     "subtitle": "آپ کی رضامندی کی سرگرمی اور آنے والے اقدامات کا خلاصہ۔",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "تمام صارفین میں رضامندی کی سرگرمی کا ایک جائزہ۔",
     "loadFailed": "اس وقت آپ کا ڈیش بورڈ لوڈ کرنے میں ناکامی ہوئی۔",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "حیثیت کے لحاظ سے رضامندیاں",
     "totalConsents": "مکمل رضامندیاں",
     "attention": "آپ کی توجہ درکار ہے",
     "pendingConsents": "زیر التواء رضامندیاں",
     "noPending": "جائزہ لینے کے لیے کوئی زیر التواء رضامندی نہیں ہے۔",
     "viewPending": "تمام زیر التواء رضامندیاں دیکھیں",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "شکایات",
     "totalComplaints": "کل شکایات",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "تمام شکایات دیکھیں"
   },
   "adminConsents": {
     "title": "رضامندیاں",

@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ড্যাসবোর্ড",
     "subtitle": "নহাৎকী য়ানবা থৌওং অমসুং তুংগী থবকশিংগী আপডেৎ।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "ꯁꯤꯖꯤꯟꯅꯔꯤꯕ ꯄꯨꯝꯅꯃꯛꯀꯤ ꯃꯅꯨꯡꯗ ꯌꯥꯅꯕꯒꯤ ꯊꯕꯛ ꯊꯧꯔꯝꯒꯤ ꯑꯣꯏꯕ ꯑꯄꯨꯟꯕ ꯃꯑꯣꯡ ꯑꯃ꯫",
     "loadFailed": "হৌজিক ড্যাসবোর্ড লোড তৌবা ঙমদ্রে।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "ꯊꯥꯛꯀꯤ ꯃꯇꯨꯡ ꯏꯟꯅ ꯌꯥꯅꯕꯁꯤꯡ",
     "totalConsents": "ꯑꯄꯨꯟꯕ ꯌꯥꯊꯪꯁꯤꯡ",
     "attention": "নহাৎকী নানবা মথৌ তাই",
     "pendingConsents": "ঙাইরিবা য়ানবা",
     "noPending": "নহাৎকী য়েংশিনগদবা ঙাইরিবা য়ানবা লৈত্রে।",
     "viewPending": "ঙাইরিবা য়ানবা পুম্নমক য়েংবিয়ু",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "ꯋꯥꯀꯠꯁꯤꯡ",
     "totalComplaints": "ꯑꯄꯥꯝꯕ ꯄꯨꯝꯅꯃꯛ",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "ꯋꯥꯀꯠ ꯄꯨꯝꯅꯃꯛ ꯌꯦꯡꯕꯤꯌꯨ"
   },
   "adminConsents": {
     "title": "য়ানবা কেন্দ্র",

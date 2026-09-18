@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ഡാഷ്‌ബോർഡ്",
     "subtitle": "നിങ്ങളുടെ സമ്മത പ്രവർത്തനങ്ങളുടെയും വരാനിരിക്കുന്ന നടപടികളുടെയും ഒരു അവലോകനം.",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "എല്ലാ ഉപയോക്താക്കളിലുമുള്ള സമ്മത പ്രവർത്തനങ്ങളുടെ ഒരു അവലോകനം.",
     "loadFailed": "ഇപ്പോൾ നിങ്ങളുടെ ഡാഷ്‌ബോർഡ് ലോഡുചെയ്യാൻ കഴിഞ്ഞില്ല.",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "സ്ഥാനമനുസരിച്ചുള്ള സമ്മതങ്ങൾ",
     "totalConsents": "സമ്പൂർണ്ണ സമ്മതങ്ങൾ",
     "attention": "നിങ്ങളുടെ ശ്രദ്ധ ആവശ്യമാണ്",
     "pendingConsents": "തീർപ്പുകൽപ്പിക്കാത്ത സമ്മതങ്ങൾ",
     "noPending": "പരിശോധിക്കാൻ നിങ്ങൾക്ക് തീർപ്പുകൽപ്പിക്കാത്ത സമ്മതങ്ങളൊന്നുമില്ല.",
     "viewPending": "തീർപ്പുകൽപ്പിക്കാത്ത എല്ലാ സമ്മതങ്ങളും കാണുക",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "പരാതികൾ",
     "totalComplaints": "ആകെ പരാതികൾ",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "എല്ലാ പരാതികളും കാണുക"
   },
   "adminConsents": {
     "title": "സമ്മതങ്ങൾ",

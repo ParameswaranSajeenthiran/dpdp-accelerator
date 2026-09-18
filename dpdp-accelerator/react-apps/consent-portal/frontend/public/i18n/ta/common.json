@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "முகப்புப்பலகை",
     "subtitle": "உங்கள் சம்மதச் செயல்பாடுகள் மற்றும் வரவிருக்கும் நடவடிக்கைகளின் சுருக்கம்.",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "அனைத்து பயனர்களிடமும் சம்மத செயல்பாட்டின் கண்ணோட்டம்.",
     "loadFailed": "தற்போது உங்கள் முகப்புப்பலகையை ஏற்ற முடியவில்லை.",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "சமூக அந்தஸ்துப்படி சம்மதங்கள்",
     "totalConsents": "மொத்த சம்மதங்கள்",
     "attention": "உங்கள் கவனம் தேவை",
     "pendingConsents": "நிலுவையிலுள்ள சம்மதங்கள்",
     "noPending": "மதிப்பாய்வு செய்ய நிலுவையில் சம்மதங்கள் எதுவுமில்லை.",
     "viewPending": "நிலுவையிலுள்ள அனைத்து சம்மதங்களையும் பார்",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "புகார்கள்",
     "totalComplaints": "மொத்த புகார்கள்",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "எல்லா புகார்களையும் காண்க"
   },
   "adminConsents": {
     "title": "சம்மதங்கள்",

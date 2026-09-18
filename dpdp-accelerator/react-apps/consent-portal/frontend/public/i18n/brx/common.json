@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ड्यासबोर्ड",
     "subtitle": "नोंथांनि गनायथि हाबाफारि आरो फैगौ मावथांनि बेजाय।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "गासैबो बाहायगिरिफोरनि गेजेराव गनायथि हाबाफारिनि मोनसे नोजोर।",
     "loadFailed": "दा नोंथांनि ड्यासबोर्डखौ लोड खालामनो हायाखै।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "थाखोनि गनायथिनायफोर",
     "totalConsents": "गासै गनायथिफोर",
     "attention": "नोंथांनि गोसो होनाय गोनां",
     "pendingConsents": "नेनानाव थानाय गनायथिफोर",
     "noPending": "बिजिरनो थाखाय जेबो नेनानाव थानाय गनायथि गैया।",
     "viewPending": "गासै नेनानाव थानाय गनायथिफोरखौ नाय",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "गाज्रि मोनदांथि",
     "totalComplaints": "गासै अजदफोर",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "गासैबो अजदफोरखौ नाय।"
   },
   "adminConsents": {
     "title": "गनायथिफोर",

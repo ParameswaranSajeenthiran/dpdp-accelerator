@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ڈیش بورڈ",
     "subtitle": "تُہنٛزِ رضامندی سرگرمی تہٕ اِقداماتن ہُند اَکھ خُلاصہٕ۔",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "تمام استعمال کرن والین منٛز رضامندی ہنٛز سرگرمی ہنٛد اکھ جائزہٕ۔",
     "loadFailed": "تُہُند ڈیش بورڈ لوڈ گَچھنَس مَنٛز آئِیہِ ناکامی۔",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "حیثیتہٕ مُطٲبِق رضامندی",
     "totalConsents": "کُل رضامندی",
     "attention": "تُہنٛزِ تَوَجُہٕ چھیہِ ضَرورَت",
     "pendingConsents": "مُعَلَّق رضامندیہِ",
     "noPending": "تُہندِس حِسابَس مَنٛز چھنہٕ کانہہ مُعَلَّق رضامندی۔",
     "viewPending": "ساری مُعَلَّق رضامندیہِ وُچھیو",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "شکایتہٕ",
     "totalComplaints": "کُل شِکایتہٕ",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "تمام شِکایتہٕ وُچھِو۔"
   },
   "adminConsents": {
     "title": "رضامندیہِ",

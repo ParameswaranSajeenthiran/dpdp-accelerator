@@ -51,18 +51,18 @@
   "dashboard": {
     "title": "ড্যাশবোর্ড",
     "subtitle": "আপনার সম্মতি কার্যকলাপ এবং আসন্ন পদক্ষেপগুলির একটি ওভারভিউ।",
-    "subtitleAdmin": "An overview of consent activity across all users.",
+    "subtitleAdmin": "সমস্ত ব্যবহারকারীর মধ্যে সম্মতি কার্যকলাপের একটি সংক্ষিপ্ত বিবরণ।",
     "loadFailed": "এই মুহূর্তে আপনার ড্যাশবোর্ড লোড করা যাচ্ছে না।",
-    "consentsByStatus": "Consents by status",
+    "consentsByStatus": "পদমর্যাদা অনুযায়ী সম্মতি",
     "totalConsents": "সম্পূর্ণ সম্মতি।",
     "attention": "আপনার মনোযোগ প্রয়োজন",
     "pendingConsents": "বিবেচনাধীন সম্মতিসমূহ",
     "noPending": "পর্যালোচনা করার মতো আপনার কোনো বিবেচনাধীন সম্মতি নেই।",
     "viewPending": "সমস্ত বিবেচনাধীন সম্মতি দেখুন",
-    "complaintsTitle": "Complaints",
+    "complaintsTitle": "অভিযোগ",
     "totalComplaints": "মোট অভিযোগ",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
-    "viewComplaints": "View all complaints"
+    "viewComplaints": "সমস্ত অভিযোগ দেখুন"
   },
   "adminConsents": {
     "title": "সম্মতিসমূহ",
