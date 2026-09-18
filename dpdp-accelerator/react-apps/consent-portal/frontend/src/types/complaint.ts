@@ -48,15 +48,16 @@ export const COMPLAINT_PRIORITIES: ComplaintPriorityAPI[] = ['CRITICAL', 'HIGH',
 // the DAO/service layer (DAOConstants, mysql.sql's CHK_COMPLAINT_STATUS) and this frontend both
 // predate that spec revision and consistently use WAITING_ON_CLIENT instead. Kept as-is rather
 // than renamed across the DB/enum layer for this pass - see the integration notes for this gap.
-export const COMPLAINT_STATUSES = [
+export type ComplaintStatus =
+  'OPEN' | 'IN_PROGRESS' | 'WAITING_ON_CLIENT' | 'AWAITING_INTERNAL_REVIEW' | 'RESOLVED'
+
+export const COMPLAINT_STATUSES: ComplaintStatus[] = [
   'OPEN',
   'IN_PROGRESS',
   'WAITING_ON_CLIENT',
   'AWAITING_INTERNAL_REVIEW',
   'RESOLVED',
-] as const
-
-export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number]
+]
 
 export type ComplaintActorRoleAPI = 'USER' | 'COMPLAINT_OFFICER' | 'SYSTEM'
 export type ComplaintActorRole = 'DataPrincipal' | 'ComplaintOfficer' | 'System'
@@ -138,6 +139,8 @@ export interface ComplaintListQueryParamsAPI {
   status?: ComplaintStatus
   priority?: ComplaintPriorityAPI
   userId?: string
+  /** Case-insensitive substring match against referenceId or userName/userId - unlike userId, this is a partial match. */
+  search?: string
   limit?: number
   offset?: number
   sort?: string
