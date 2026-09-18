@@ -236,7 +236,7 @@ class ComplaintHandlerTest {
 
     @Test
     void getOwnComplaintFiltersToPublicAttachmentsOnly() {
-        when(complaintService.requireOwnedComplaint(ORG_ID, "c1", "user1"))
+        when(complaintService.getOwnedComplaint(ORG_ID, "c1", "user1"))
                 .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
                 .thenReturn(List.of(attachmentBean("a1", true), attachmentBean("a2", false)));
@@ -264,7 +264,7 @@ class ComplaintHandlerTest {
 
     @Test
     void updateOwnStatusVerifiesOwnershipAndForcesUserRole() {
-        when(complaintService.requireOwnedComplaint(ORG_ID, "c1", "user1"))
+        when(complaintService.getOwnedComplaint(ORG_ID, "c1", "user1"))
                 .thenReturn(sampleComplaint("c1", "user1", "OPEN"));
         MeComplaintStatusUpdateRequestDTO request = new MeComplaintStatusUpdateRequestDTO();
         request.setToStatus("RESOLVED");
@@ -275,7 +275,7 @@ class ComplaintHandlerTest {
                 handler.updateOwnStatus(ORG_ID, "c1", "user1", "User One", request);
 
         assertEquals("RESOLVED", response.getToStatus());
-        verify(complaintService).requireOwnedComplaint(ORG_ID, "c1", "user1");
+        verify(complaintService).getOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
 }
