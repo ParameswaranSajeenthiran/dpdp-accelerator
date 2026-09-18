@@ -44,7 +44,11 @@ describe('AppSidebar', () => {
         <I18nextProvider i18n={i18n}>
           <MemoryRouter initialEntries={['/consents']}>
             <TestAuthorizationProvider
-              scopes={Object.values(REQUIRED_SCOPES)}
+              scopes={Object.values(REQUIRED_SCOPES).filter(
+                (scope) =>
+                  scope !== REQUIRED_SCOPES.COMPLAINTS_READ_ANY &&
+                  scope !== REQUIRED_SCOPES.COMPLAINTS_WRITE_ANY,
+              )}
               hideSelfConsentsForAdmins={false}
             >
               <Routes>
@@ -154,6 +158,33 @@ describe('AppSidebar', () => {
     expect(screen.queryByText('My Pending Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Consents')).not.toBeInTheDocument()
   })
+
+  it.each([
+    ['read:any only (the provisioned DPO role)', [REQUIRED_SCOPES.COMPLAINTS_READ_ANY]],
+    ['write:any only', [REQUIRED_SCOPES.COMPLAINTS_WRITE_ANY]],
+  ])(
+    'hides self-service consents for a complaint officer with %s, even when hideSelfConsentsForAdmins is false',
+    (_label, complaintScopes) => {
+      render(
+        <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+          <I18nextProvider i18n={i18n}>
+            <MemoryRouter initialEntries={['/complaint-management']}>
+              <TestAuthorizationProvider
+                scopes={[REQUIRED_SCOPES.CONSENTS_READ_SELF, ...complaintScopes]}
+                hideSelfConsentsForAdmins={false}
+              >
+                <AppSidebar collapsed={false} />
+              </TestAuthorizationProvider>
+            </MemoryRouter>
+          </I18nextProvider>
+        </OxygenUIThemeProvider>,
+      )
+
+      expect(screen.getByText('Dashboard')).toBeInTheDocument()
+      expect(screen.queryByText('My Consents')).not.toBeInTheDocument()
+      expect(screen.queryByText('My Pending Consents')).not.toBeInTheDocument()
+    },
+  )
 
   it('still shows self-service consents for a non-admin even when hideSelfConsentsForAdmins is true', () => {
     render(
