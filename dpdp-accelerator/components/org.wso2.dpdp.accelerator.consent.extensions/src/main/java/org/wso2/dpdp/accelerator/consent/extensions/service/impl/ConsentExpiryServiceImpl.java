@@ -98,42 +98,41 @@ public class ConsentExpiryServiceImpl implements ConsentExpiryService {
         }
     }
 
+
     @Override
-    public boolean claimExpiryIfDue(String orgId, String consentId, long nowMillis)
+    public boolean claimExpiryIfDue(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
             throws ConsentExpiryDataAccessException {
+
+        return consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, nowMillis);
+    }
+
+    @Override
+    public ConsentExpiryRecord findExpiry(String orgId, String consentId) throws ConsentExpiryDataAccessException {
 
         Connection connection = connectionSupplier.get();
         try {
-            try {
-                boolean claimed = consentExpiryTrackerDAO.claimDueExpiry(connection, consentId, nowMillis);
-                commitAction.accept(connection);
-                return claimed;
-            } catch (ConsentExpiryDataAccessException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
+            return consentExpiryTrackerDAO.findExpiry(connection, orgId, consentId);
         } finally {
             DatabaseUtils.closeConnection(connection);
         }
     }
 
     @Override
-    public List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize)
+    public List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize, ConsentExpiryRecord cursor)
             throws ConsentExpiryDataAccessException {
 
         Connection connection = connectionSupplier.get();
         try {
-            try {
-                List<ConsentExpiryRecord> records = consentExpiryTrackerDAO.findDueExpiries(connection, nowMillis,
-                        batchSize);
-                commitAction.accept(connection);
-                return records;
-            } catch (ConsentExpiryDataAccessException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
+            return consentExpiryTrackerDAO.findDueExpiries(connection, nowMillis, batchSize, cursor);
         } finally {
             DatabaseUtils.closeConnection(connection);
         }
     }
+    @Override
+    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
+            throws ConsentExpiryDataAccessException {
+
+        return consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, expiryTimeMillis);
+    }
+
 }

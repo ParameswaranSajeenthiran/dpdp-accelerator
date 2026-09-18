@@ -20,68 +20,138 @@ package org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.impl.StdSchedulerFactory;
-import org.wso2.carbon.utils.CarbonUtils;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 
-import java.io.File;
-import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-/**
- * Initializes and holds the {@link Scheduler} instance for the consent expiry job. Mirrors the
- * WSO2 Financial Services accelerator's {@code PeriodicalConsentJobScheduler}: if
- * {@code quartz.properties} exists in the carbon config directory, it is used - typically to turn
- * on {@code org.quartz.jobStore.isClustered = true} against a shared JDBC job store so exactly
- * one node in a cluster runs each scheduled firing. Absent that file, Quartz's own zero-config
- * default applies - an in-memory, single-node scheduler, which is all a non-clustered install
- * needs.
- */
-public final class ConsentExpiryJobScheduler {
+/** Lifecycle-managed timer; database claims coordinate the work across IS instances. */
+public final class ConsentExpiryJobScheduler implements AutoCloseable {
 
-    private static final String QUARTZ_PROPERTY_FILE = "quartz.properties";
     private static final Log LOG = LogFactory.getLog(ConsentExpiryJobScheduler.class);
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 30;
 
-    private static volatile ConsentExpiryJobScheduler instance;
-    private static volatile Scheduler scheduler;
+    private final DPDPConfigurationService configuration;
+    private final Runnable sweep;
+    private final ScheduledExecutorService executor;
+    private final Clock clock;
+    private boolean started;
+    private volatile boolean closed;
+    private String mode;
+    private LocalTime dailyTime;
+    private ZoneId zone;
+    private int intervalSeconds;
 
-    private ConsentExpiryJobScheduler() {
+    public ConsentExpiryJobScheduler(DPDPConfigurationService configuration, Runnable sweep) {
 
-        initScheduler();
+        this(configuration, sweep, Executors.newSingleThreadScheduledExecutor(task -> {
+            Thread thread = new Thread(task, "consent-expiry-scheduler");
+            thread.setDaemon(true);
+            return thread;
+        }), Clock.systemUTC());
     }
 
-    public static ConsentExpiryJobScheduler getInstance() {
+    ConsentExpiryJobScheduler(DPDPConfigurationService configuration, Runnable sweep,
+            ScheduledExecutorService executor, Clock clock) {
 
-        if (instance == null) {
-            synchronized (ConsentExpiryJobScheduler.class) {
-                if (instance == null) {
-                    instance = new ConsentExpiryJobScheduler();
-                }
-            }
+        this.configuration = configuration;
+        this.sweep = sweep;
+        this.executor = executor;
+        this.clock = clock;
+    }
+
+    public synchronized void start() {
+
+        if (started || closed || !configuration.isConsentExpiryEnabled()) {
+            return;
         }
-        return instance;
+        mode = configuration.getConsentExpiryScheduleMode();
+        if (!"daily".equals(mode) && !"interval".equals(mode)) {
+            throw new IllegalArgumentException("Consent expiry schedule_mode must be daily or interval.");
+        }
+        dailyTime = LocalTime.parse(configuration.getConsentExpiryDailyTime());
+        zone = ZoneId.of(configuration.getConsentExpiryTimezone());
+        intervalSeconds = configuration.getConsentExpiryIntervalSeconds();
+        if ("interval".equals(mode) && intervalSeconds <= 0) {
+            throw new IllegalArgumentException("Consent expiry interval_seconds must be positive in interval mode.");
+        }
+        if (configuration.getConsentExpiryBatchSize() <= 0 || configuration.getConsentExpiryMaxBatchesPerRun() <= 0
+                || configuration.getConsentExpiryMaxRunSeconds() <= 0) {
+            throw new IllegalArgumentException("Consent expiry batch size and run limits must be positive.");
+        }
+        started = true;
+        if ("interval".equals(mode)) {
+            executor.scheduleWithFixedDelay(this::runSafely, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+        } else {
+            scheduleDaily(null);
+        }
+        LOG.info("Consent expiry scheduler started in " + mode + " mode.");
     }
 
-    private void initScheduler() {
+    private void runSafely() {
 
+        if (closed) {
+            return;
+        }
         try {
-            String quartzConfigFile = Paths.get(CarbonUtils.getCarbonConfigDirPath()).toString() + File.separator
-                    + QUARTZ_PROPERTY_FILE;
-            if (new File(quartzConfigFile).exists()) {
-                StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
-                schedulerFactory.initialize(quartzConfigFile);
-                scheduler = schedulerFactory.getScheduler();
-            } else {
-                scheduler = StdSchedulerFactory.getDefaultScheduler();
-            }
-            scheduler.start();
-        } catch (SchedulerException e) {
-            LOG.error("Error while initializing the consent expiry job scheduler.", e);
+            sweep.run();
+        } catch (Exception e) {
+            LOG.error("Consent expiry firing failed; future firings remain scheduled.", e);
         }
     }
 
-    public Scheduler getScheduler() {
+    private synchronized void scheduleDaily(LocalDate lastScheduledDate) {
 
-        return scheduler;
+        if (closed) {
+            return;
+        }
+        ZonedDateTime now = clock.instant().atZone(zone);
+        ZonedDateTime next = nextDaily(now, dailyTime, lastScheduledDate);
+        long delay = Math.max(0, Duration.between(now.toInstant(), next.toInstant()).toMillis());
+        executor.schedule(() -> {
+            try {
+                runSafely();
+            } finally {
+                scheduleDaily(next.toLocalDate());
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+
+    /** atZone shifts DST gaps forward and chooses the earlier offset during overlaps. */
+    static ZonedDateTime nextDaily(ZonedDateTime now, LocalTime time, LocalDate lastScheduledDate) {
+
+        LocalDate date = now.toLocalDate();
+        if (lastScheduledDate != null && !date.isAfter(lastScheduledDate)) {
+            date = lastScheduledDate.plusDays(1);
+        }
+        ZonedDateTime next = date.atTime(time).atZone(now.getZone());
+        if (!next.isAfter(now)) {
+            next = date.plusDays(1).atTime(time).atZone(now.getZone());
+        }
+        return next;
+    }
+
+    @Override
+    public void close() {
+
+        synchronized (this) {
+            closed = true;
+        }
+        // Interrupt the sweep between candidates; each in-progress transaction still owns its cleanup.
+        executor.shutdownNow();
+        try {
+            if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                LOG.warn("Consent expiry scheduler did not terminate within the shutdown timeout.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

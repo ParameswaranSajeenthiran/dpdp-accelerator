@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.consent.extensions.service;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
 
+import java.sql.Connection;
 import java.util.List;
 
 /**
@@ -42,15 +43,18 @@ public interface ConsentExpiryService {
 
     void untrackExpiry(String orgId, String consentId) throws ConsentExpiryDataAccessException;
 
-    /**
-     * Atomically claims a due tracker row for this consent - deletes it only if it exists and its
-     * expiry time has passed. Returns whether this call won the claim; {@code false} means
-     * nothing was due, or another caller (another node, or the scheduled job) already claimed it.
-     */
-    boolean claimExpiryIfDue(String orgId, String consentId, long nowMillis) throws ConsentExpiryDataAccessException;
+    /** Claims the observed deadline using the caller's transaction; never commits or closes it. */
+    boolean claimExpiryIfDue(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
+            throws ConsentExpiryDataAccessException;
 
-    /**
-     * Batch of tracker rows whose expiry time is already due, oldest first.
-     */
-    List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize) throws ConsentExpiryDataAccessException;
+    /** Returns the tracked deadline for a listener invocation, or null when no row exists. */
+    ConsentExpiryRecord findExpiry(String orgId, String consentId) throws ConsentExpiryDataAccessException;
+
+    /** Fetches a page strictly after the supplied cursor; null starts a new scan. */
+    List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize, ConsentExpiryRecord cursor)
+            throws ConsentExpiryDataAccessException;
+
+    /** Updates only the observed tracker deadline, without owning the caller's transaction. */
+    boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
+            throws ConsentExpiryDataAccessException;
 }

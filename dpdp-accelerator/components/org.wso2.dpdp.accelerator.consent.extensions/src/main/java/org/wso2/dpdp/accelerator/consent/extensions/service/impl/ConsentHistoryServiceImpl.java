@@ -85,20 +85,11 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
             return;
         }
 
-        ConsentStatusAuditRecord record = new ConsentStatusAuditRecord();
-        record.setAuditId(UUID.randomUUID().toString());
-        record.setConsentId(consentId);
-        record.setOrgId(resolveOrgId(tenantDomain));
-        record.setPreviousStatus(previousStatus);
-        record.setCurrentStatus(currentStatus);
-        record.setActionType(actionType.name());
-        record.setActionBy(actionBy);
-        record.setActionTime(System.currentTimeMillis());
-
         Connection connection = connectionSupplier.get();
         try {
             try {
-                consentHistoryDAO.insertStatusAudit(connection, record);
+                recordStatusAudit(connection, tenantDomain, consentId, previousStatus, currentStatus, actionType,
+                        actionBy);
                 commitAction.accept(connection);
                 LOG.debug("Recorded a '" + actionType + "' status-audit row for consent: " + consentId);
             } catch (ConsentHistoryDataInsertionException e) {
@@ -119,19 +110,10 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
             return;
         }
 
-        ConsentHistoryRecord record = new ConsentHistoryRecord();
-        record.setHistoryId(UUID.randomUUID().toString());
-        record.setConsentId(consentId);
-        record.setOrgId(resolveOrgId(tenantDomain));
-        record.setActionType(actionType.name());
-        record.setSnapshot(snapshotJson);
-        record.setActionBy(actionBy);
-        record.setActionTime(System.currentTimeMillis());
-
         Connection connection = connectionSupplier.get();
         try {
             try {
-                consentHistoryDAO.insertHistorySnapshot(connection, record);
+                recordHistorySnapshot(connection, tenantDomain, consentId, actionType, snapshotJson, actionBy);
                 commitAction.accept(connection);
                 LOG.debug("Recorded a '" + actionType + "' history snapshot for consent: " + consentId);
             } catch (ConsentHistoryDataInsertionException e) {
@@ -185,6 +167,64 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
         } finally {
             DatabaseUtils.closeConnection(connection);
         }
+    }
+
+    @Override
+    public void recordStatusAudit(Connection connection, String tenantDomain, String consentId, String previousStatus,
+            String currentStatus, ActionType actionType, String actionBy) throws ConsentHistoryDataInsertionException {
+
+        // A status-audit row means "the status changed here" - previousStatus and currentStatus
+        // being equal (e.g. an UPDATE, which never touches lifecycle status; or one authorizer's
+        // approval when others are still pending) isn't a transition, so there is nothing to
+        // record. DPDP_CONSENT_HISTORY already captures every action regardless, with full detail,
+        // so nothing is lost by skipping a no-op row here.
+        if (Objects.equals(previousStatus, currentStatus)) {
+            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: " + consentId
+                    + " - status did not change (" + currentStatus + ").");
+            return;
+        }
+
+        ConsentStatusAuditRecord record = new ConsentStatusAuditRecord();
+        record.setAuditId(UUID.randomUUID().toString());
+        record.setConsentId(consentId);
+        record.setOrgId(resolveOrgId(tenantDomain));
+        record.setPreviousStatus(previousStatus);
+        record.setCurrentStatus(currentStatus);
+        record.setActionType(actionType.name());
+        record.setActionBy(actionBy);
+        record.setActionTime(System.currentTimeMillis());
+
+        consentHistoryDAO.insertStatusAudit(connection, record);
+    }
+
+    @Override
+    public void recordHistorySnapshot(Connection connection, String tenantDomain, String consentId,
+            ActionType actionType, String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException {
+
+        if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
+            LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
+            return;
+        }
+
+        ConsentHistoryRecord record = new ConsentHistoryRecord();
+        record.setHistoryId(UUID.randomUUID().toString());
+        record.setConsentId(consentId);
+        record.setOrgId(resolveOrgId(tenantDomain));
+        record.setActionType(actionType.name());
+        record.setSnapshot(snapshotJson);
+        record.setActionBy(actionBy);
+        record.setActionTime(System.currentTimeMillis());
+
+        consentHistoryDAO.insertHistorySnapshot(connection, record);
+    }
+
+    @Override
+    public String getLastKnownStatus(Connection connection, String tenantDomain, String consentId)
+            throws ConsentHistoryDataRetrievalException {
+
+        List<ConsentStatusAuditRecord> records = consentHistoryDAO.getStatusAuditHistory(connection,
+                resolveOrgId(tenantDomain), consentId, 1, 0);
+        return records.isEmpty() ? null : records.get(0).getCurrentStatus();
     }
 
     private String resolveOrgId(String tenantDomain) {

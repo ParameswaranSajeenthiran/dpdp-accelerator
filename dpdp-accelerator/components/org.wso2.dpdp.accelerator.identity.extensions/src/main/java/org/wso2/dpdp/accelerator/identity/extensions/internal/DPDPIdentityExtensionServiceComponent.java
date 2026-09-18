@@ -49,8 +49,9 @@ import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.service.TopicService;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentExpiryReconciler;
 import org.wso2.dpdp.accelerator.identity.extensions.consent.DPDPConsentManagementListener;
-import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobActivator;
+import org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJobScheduler;
 import org.wso2.dpdp.accelerator.identity.extensions.tenant.DPDPIdentityExtensionTenantMgtListener;
 import org.wso2.dpdp.accelerator.identity.extensions.user.DPDPUserLifecycleEventHandler;
 
@@ -74,6 +75,10 @@ public class DPDPIdentityExtensionServiceComponent {
     private ServiceRegistration<TenantMgtListener> tenantMgtListenerRegistration;
     private ServiceRegistration<ServerStartupObserver> serverStartupObserverRegistration;
 
+    private ServiceRegistration<ConsentManagementListener> consentManagementListenerRegistration;
+    private ServiceRegistration<AbstractEventHandler> userLifecycleHandlerRegistration;
+    private ConsentExpiryJobScheduler consentExpiryScheduler;
+
     @Activate
     protected void activate(ComponentContext context) {
 
@@ -82,11 +87,20 @@ public class DPDPIdentityExtensionServiceComponent {
                 new DPDPIdentityExtensionTenantMgtListener(), null);
         serverStartupObserverRegistration = bundleContext.registerService(ServerStartupObserver.class,
                 new DPDPServerStartupObserver(), null);
-        bundleContext.registerService(ConsentManagementListener.class.getName(), new DPDPConsentManagementListener(),
-                null);
-        bundleContext.registerService(AbstractEventHandler.class.getName(), new DPDPUserLifecycleEventHandler(),
-                null);
-        new ConsentExpiryJobActivator().activate();
+        consentManagementListenerRegistration = bundleContext.registerService(ConsentManagementListener.class,
+                new DPDPConsentManagementListener(), null);
+        userLifecycleHandlerRegistration = bundleContext.registerService(AbstractEventHandler.class,
+                new DPDPUserLifecycleEventHandler(), null);
+        consentExpiryScheduler = new ConsentExpiryJobScheduler(
+                DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService(),
+                () -> DPDPConsentExpiryReconciler.expireDueConsents(DPDPIdentityExtensionDataHolder.getInstance()
+                        .getConfigurationService().getConsentExpiryBatchSize()));
+        try {
+            consentExpiryScheduler.start();
+        } catch (RuntimeException e) {
+            deactivate(context);
+            throw e;
+        }
         LOG.debug("DPDP Identity Extensions component activated; tenant management, consent management "
                 + "listeners and server startup observer registered.");
 
@@ -105,6 +119,19 @@ public class DPDPIdentityExtensionServiceComponent {
     @Deactivate
     protected void deactivate(ComponentContext context) {
 
+        if (consentExpiryScheduler != null) {
+            consentExpiryScheduler.close();
+            consentExpiryScheduler = null;
+        }
+
+        if (consentManagementListenerRegistration != null) {
+            consentManagementListenerRegistration.unregister();
+            consentManagementListenerRegistration = null;
+        }
+        if (userLifecycleHandlerRegistration != null) {
+            userLifecycleHandlerRegistration.unregister();
+            userLifecycleHandlerRegistration = null;
+        }
         if (tenantMgtListenerRegistration != null) {
             tenantMgtListenerRegistration.unregister();
             tenantMgtListenerRegistration = null;

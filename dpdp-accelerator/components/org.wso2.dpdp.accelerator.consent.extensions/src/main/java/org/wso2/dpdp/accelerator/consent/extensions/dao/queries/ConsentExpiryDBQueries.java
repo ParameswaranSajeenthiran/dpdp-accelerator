@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentExpiryDAOConstants;
 
 /**
- * SQL for {@code DPDP_CONSENT_EXPIRY_TRACKER}. h2 and mysql DML is identical, so one class serves
- * both dialects, mirroring {@link org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryDBQueries}.
+ * Baseline SQL for {@code DPDP_CONSENT_EXPIRY_TRACKER}. H2 and MySQL use this provider; dialect
+ * subclasses override pagination where required.
  */
 public class ConsentExpiryDBQueries {
 
@@ -45,19 +45,60 @@ public class ConsentExpiryDBQueries {
                 + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ?";
     }
 
-    public String getClaimDueExpiryQuery() {
+    public String getFindDueExpiriesQuery() {
 
-        return "DELETE FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
-                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
-                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ?";
+        return getFindDueExpiriesQuery(" LIMIT ?");
     }
 
-    public String getFindDueExpiriesQuery() {
+    protected String getFindDueExpiriesQuery(String paginationClause) {
 
         return "SELECT " + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + ", "
                 + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME
                 + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
                 + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ? ORDER BY "
-                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " ASC LIMIT ?";
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " ASC, "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " ASC" + paginationClause;
     }
+
+    public String getClaimObservedExpiryQuery() {
+
+        return "DELETE FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " <= ?";
+    }
+
+    public String getFindExpiryQuery() {
+
+        return "SELECT " + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + ", "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME
+                + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ?";
+    }
+
+    public String getFindDueExpiriesAfterQuery() {
+
+        return getFindDueExpiriesAfterQuery(" LIMIT ?");
+    }
+
+    protected String getFindDueExpiriesAfterQuery(String paginationClause) {
+
+        String expiry = ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME;
+        String consent = ConsentExpiryDAOConstants.COLUMN_CONSENT_ID;
+        return "SELECT " + consent + ", " + ConsentExpiryDAOConstants.COLUMN_ORG_ID + ", " + expiry
+                + " FROM " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " WHERE " + expiry
+                + " <= ? AND (" + expiry + " > ? OR (" + expiry + " = ? AND " + consent + " > ?))"
+                + " ORDER BY " + expiry + " ASC, " + consent + " ASC" + paginationClause;
+    }
+    public String getReconcileExpiryQuery() {
+
+        return "UPDATE " + ConsentExpiryDAOConstants.EXPIRY_TRACKER_TABLE + " SET "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ? WHERE "
+                + ConsentExpiryDAOConstants.COLUMN_CONSENT_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_ORG_ID + " = ? AND "
+                + ConsentExpiryDAOConstants.COLUMN_EXPIRY_TIME + " = ?";
+    }
+
 }

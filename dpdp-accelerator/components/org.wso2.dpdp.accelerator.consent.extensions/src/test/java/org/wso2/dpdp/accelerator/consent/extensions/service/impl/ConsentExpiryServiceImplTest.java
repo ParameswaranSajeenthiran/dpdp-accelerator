@@ -29,16 +29,21 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryReco
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertSame;
+import static org.testng.Assert.expectThrows;
 
 public class ConsentExpiryServiceImplTest {
 
@@ -74,35 +79,7 @@ public class ConsentExpiryServiceImplTest {
         verify(consentExpiryTrackerDAO).deleteExpiry(any(Connection.class), eq(CONSENT_ID));
     }
 
-    @Test
-    public void claimExpiryIfDueReturnsTrueWhenDaoClaims() throws Exception {
 
-        when(consentExpiryTrackerDAO.claimDueExpiry(any(Connection.class), eq(CONSENT_ID), eq(10_000L)))
-                .thenReturn(true);
-
-        assertTrue(consentExpiryService.claimExpiryIfDue(ORG_ID, CONSENT_ID, 10_000L));
-    }
-
-    @Test
-    public void claimExpiryIfDueReturnsFalseWhenDaoDoesNotClaim() throws Exception {
-
-        when(consentExpiryTrackerDAO.claimDueExpiry(any(Connection.class), eq(CONSENT_ID), eq(10_000L)))
-                .thenReturn(false);
-
-        assertFalse(consentExpiryService.claimExpiryIfDue(ORG_ID, CONSENT_ID, 10_000L));
-    }
-
-    @Test
-    public void findDueExpiriesReturnsDaoResult() throws Exception {
-
-        List<ConsentExpiryRecord> records = Collections.singletonList(new ConsentExpiryRecord());
-        when(consentExpiryTrackerDAO.findDueExpiries(any(Connection.class), eq(10_000L), eq(100)))
-                .thenReturn(records);
-
-        List<ConsentExpiryRecord> result = consentExpiryService.findDueExpiries(10_000L, 100);
-
-        assertEquals(result, records);
-    }
 
     @Test(expectedExceptions = ConsentExpiryDataAccessException.class)
     public void trackExpiryRollsBackAndRethrowsOnDaoFailure() throws Exception {
@@ -113,4 +90,59 @@ public class ConsentExpiryServiceImplTest {
 
         consentExpiryService.trackExpiry(ORG_ID, CONSENT_ID, 5000L);
     }
+    @Test
+    public void callerOwnedOperationsDoNotCommitOrCloseTheConnection() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        ConsentExpiryRecord candidate = new ConsentExpiryRecord();
+        when(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 1000)).thenReturn(true);
+        when(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 2000)).thenReturn(true);
+        assertTrue(consentExpiryService.claimExpiryIfDue(connection, candidate, 1000));
+        assertTrue(consentExpiryService.reconcileExpiry(connection, candidate, 2000));
+        verifyNoInteractions(connection);
+        ConsentExpiryDataAccessException failure = new ConsentExpiryDataAccessException("failed", null);
+        when(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 2000)).thenThrow(failure);
+        assertSame(expectThrows(ConsentExpiryDataAccessException.class,
+                () -> consentExpiryService.reconcileExpiry(connection, candidate, 2000)), failure);
+        verifyNoInteractions(connection);
+    }
+
+    @Test
+    public void lookupAndCursorFetchCloseTheirConnectionsEvenOnFailure() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        ConsentExpiryServiceImpl service = new ConsentExpiryServiceImpl(consentExpiryTrackerDAO, () -> connection,
+                c -> { }, c -> { });
+        ConsentExpiryRecord candidate = new ConsentExpiryRecord();
+        when(consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID)).thenReturn(candidate);
+        assertSame(service.findExpiry(ORG_ID, CONSENT_ID), candidate);
+        List<ConsentExpiryRecord> page = Collections.singletonList(candidate);
+        when(consentExpiryTrackerDAO.findDueExpiries(connection, 1000, 10, candidate)).thenReturn(page);
+        assertEquals(service.findDueExpiries(1000, 10, candidate), page);
+        ConsentExpiryDataAccessException failure = new ConsentExpiryDataAccessException("failed", null);
+        when(consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID)).thenThrow(failure);
+        when(consentExpiryTrackerDAO.findDueExpiries(connection, 1000, 10, candidate)).thenThrow(failure);
+        expectThrows(ConsentExpiryDataAccessException.class,
+                () -> service.findExpiry(ORG_ID, CONSENT_ID));
+        expectThrows(ConsentExpiryDataAccessException.class,
+                () -> service.findDueExpiries(1000, 10, candidate));
+        verify(connection, times(4)).close();
+        verify(connection, never()).commit();
+    }
+
+    @Test
+    public void standaloneFailuresRollbackAndCloseWithoutCommit() throws Exception {
+
+        Connection connection = mock(Connection.class);
+        AtomicInteger rollbacks = new AtomicInteger();
+        ConsentExpiryServiceImpl service = new ConsentExpiryServiceImpl(consentExpiryTrackerDAO, () -> connection,
+                c -> { throw new AssertionError("must not commit"); }, c -> rollbacks.incrementAndGet());
+        ConsentExpiryDataAccessException failure = new ConsentExpiryDataAccessException("failed", null);
+        doThrow(failure).when(consentExpiryTrackerDAO).deleteExpiry(connection, CONSENT_ID);
+        expectThrows(ConsentExpiryDataAccessException.class,
+                () -> service.untrackExpiry(ORG_ID, CONSENT_ID));
+        assertEquals(rollbacks.get(), 1);
+        verify(connection).close();
+    }
+
 }
