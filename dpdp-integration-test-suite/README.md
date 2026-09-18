@@ -224,7 +224,7 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 | `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
 | `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
 | `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
-| `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
+| `08-complaints/` | 43 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
 | `09-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
 
 A filename ending `-api.spec.ts` drives no browser at all.

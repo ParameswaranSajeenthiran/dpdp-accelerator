@@ -60,8 +60,10 @@ public interface ComplaintDAO {
             throws SQLException;
 
     /**
-     * Lists complaints for an org with optional status/priority/userId filters, sorting, and
-     * limit/offset pagination.
+     * Lists complaints for an org with optional status/priority/userId filters, a free-text
+     * search, sorting, and limit/offset pagination. search is a case-insensitive substring match
+     * against REFERENCE_ID, USER_NAME, or USER_ID (unlike userId, which is exact) - see
+     * ComplaintQueryBuilder.
      *
      * <p>totalOut is an out-param: Java has no multi-return, so the caller passes {@code new
      * int[1]} and, after the call, {@code totalOut[0]} holds the total row count matching the
@@ -69,8 +71,8 @@ public interface ComplaintDAO {
      * metadata (e.g. total pages) alongside the page of results actually returned. Pass
      * {@code null} or a zero-length array to skip the count query.
      */
-    List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
-            int offset, String sort, int[] totalOut);
+    List<Complaint> listComplaints(String orgId, String status, String priority, String userId, String search,
+            int limit, int offset, String sort, int[] totalOut);
 
     /**
      * Org-wide counts for the officer/admin queue's summary tiles - open (OPEN/IN_PROGRESS

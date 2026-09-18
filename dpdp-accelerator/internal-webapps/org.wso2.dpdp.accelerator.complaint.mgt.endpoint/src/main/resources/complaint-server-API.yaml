@@ -541,6 +541,15 @@ paths:
           description: Exact match — filter to a specific Data Principal
           schema:
             type: string
+        - name: search
+          in: query
+          required: false
+          description: >
+            Case-insensitive substring match against referenceId or the Data
+            Principal's userName/userId - unlike userId, this is a partial
+            match. Used by the officer/admin queue's search box.
+          schema:
+            type: string
         - name: limit
           in: query
           required: false

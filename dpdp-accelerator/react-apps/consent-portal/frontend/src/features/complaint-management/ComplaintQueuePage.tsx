@@ -18,11 +18,10 @@
 
 import { Box, Stack, StatCard, Typography } from '@wso2/oxygen-ui'
 import { AlertTriangle, CheckCircle2, Clock3, Inbox } from '@wso2/oxygen-ui-icons-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import type { ComplaintStatus } from '../../types/complaint'
 import { COMPLAINT_QUEUE_ROWS_PER_PAGE_OPTIONS } from '../complaints/constants'
 import {
   useManagedComplaintListQuery,
@@ -38,8 +37,6 @@ const DEFAULT_FILTERS: ComplaintQueueFiltersState = {
   search: '',
 }
 
-const CLOSED_OUT_STATUSES: ComplaintStatus[] = ['RESOLVED']
-
 const DEFAULT_PAGE = 0
 const DEFAULT_ROWS_PER_PAGE = 10
 
@@ -49,6 +46,14 @@ function ComplaintQueuePage(): React.JSX.Element {
   const [filters, setFilters] = useState<ComplaintQueueFiltersState>(DEFAULT_FILTERS)
   const [page, setPage] = useState(DEFAULT_PAGE)
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE)
+
+  // Debounced so free typing in the search box doesn't fire a request (and a LIKE-driven table
+  // scan) on every keystroke - only once typing settles for 300ms.
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search)
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedSearch(filters.search), 300)
+    return () => clearTimeout(handle)
+  }, [filters.search])
 
   // Server-computed and always unfiltered - the tiles summarize the whole queue regardless of
   // whatever filter is currently applied to the paginated table beside them.
@@ -63,32 +68,15 @@ function ComplaintQueuePage(): React.JSX.Element {
   const listQuery = useManagedComplaintListQuery({
     status: filters.status === 'All' ? undefined : filters.status,
     priority: filters.priority === 'All' ? undefined : filters.priority,
+    search: debouncedSearch.trim() || undefined,
     limit: rowsPerPage,
     offset: page * rowsPerPage,
   })
-  const pageComplaints = useMemo(() => listQuery.data?.rows ?? [], [listQuery.data])
+  // Status, priority, and search are all filtered server-side now, so "All"/empty here really
+  // means every matching complaint, resolved ones included - the pager's total matches what the
+  // table shows, and Previous/Next are driven by the server's offset and total.
+  const rows = listQuery.data?.rows ?? []
   const total = listQuery.data?.total ?? 0
-
-  const rows = useMemo(() => {
-    const search = filters.search.trim().toLowerCase()
-
-    // Both narrowings below apply only within the current, already server-paginated
-    // page - hiding resolved complaints by default and the reference/name search can
-    // each make a page render fewer than rowsPerPage rows. Previous/Next stay correct
-    // regardless, since they're driven by the server's offset and total, not by what's
-    // left standing here.
-    return pageComplaints.filter((complaint) => {
-      if (filters.status === 'All' && CLOSED_OUT_STATUSES.includes(complaint.status)) {
-        return false
-      }
-
-      return !(
-        search &&
-        !complaint.referenceId.toLowerCase().includes(search) &&
-        !complaint.dataPrincipalName.toLowerCase().includes(search)
-      )
-    })
-  }, [pageComplaints, filters])
 
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
