@@ -198,7 +198,7 @@ describe('AppSidebar', () => {
     ['read:any only (the provisioned DPO role)', [REQUIRED_SCOPES.COMPLAINTS_READ_ANY]],
     ['write:any only', [REQUIRED_SCOPES.COMPLAINTS_WRITE_ANY]],
   ])(
-    'hides self-service consents for a complaint officer with %s, even when hideSelfConsentsForAdmins is false',
+    'hides self-service consents AND the dashboard for a complaint officer with %s, even when hideSelfConsentsForAdmins is false',
     (_label, complaintScopes) => {
       render(
         <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
@@ -215,7 +215,9 @@ describe('AppSidebar', () => {
         </OxygenUIThemeProvider>,
       )
 
-      expect(screen.getByText('Dashboard')).toBeInTheDocument()
+      // A complaint officer with no consent-admin or self-complaint scope has nothing
+      // non-duplicate on the Dashboard either - see isDpoOnlyProfile.
+      expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
       expect(screen.queryByText('My Consents')).not.toBeInTheDocument()
       expect(screen.queryByText('My Pending Consents')).not.toBeInTheDocument()
     },
