@@ -61,7 +61,7 @@
     "viewPending": "सर्व प्रलंबित संमती पहा",
     "complaintsTitle": "तक्रारी",
     "totalComplaints": "एकूण तक्रारी",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "तुमच्या तक्रारी आत्ता लोड करता येत नाहीयेत.",
     "viewComplaints": "सर्व तक्रारी पहा"
   },
   "adminConsents": {

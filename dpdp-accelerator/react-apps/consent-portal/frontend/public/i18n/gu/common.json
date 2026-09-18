@@ -61,7 +61,7 @@
     "viewPending": "તમામ પેન્ડિંગ સંમતિઓ જુઓ",
     "complaintsTitle": "ફરિયાદો",
     "totalComplaints": "કુલ ફરિયાદો",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "હમણાં તમારી ફરિયાદો લોડ કરવામાં અસમર્થ.",
     "viewComplaints": "બધી ફરિયાદો જુઓ"
   },
   "adminConsents": {

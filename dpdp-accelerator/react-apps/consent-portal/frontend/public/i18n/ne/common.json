@@ -61,7 +61,7 @@
     "viewPending": "सबै पेन्डिङ सहमतिहरू हेर्नुहोस्",
     "complaintsTitle": "उजुरीहरू",
     "totalComplaints": "कुल गुनासोहरू",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "अहिले तपाईँको गुनासो लोड गर्न असमर्थ छु।",
     "viewComplaints": "सबै गुनासोहरू हेर्नुहोस्"
   },
   "adminConsents": {

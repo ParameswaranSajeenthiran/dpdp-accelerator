@@ -61,7 +61,7 @@
     "viewPending": "நிலுவையிலுள்ள அனைத்து சம்மதங்களையும் பார்",
     "complaintsTitle": "புகார்கள்",
     "totalComplaints": "மொத்த புகார்கள்",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "உங்களுடைய புகார்களை இப்போது ஏற்ற முடியவில்லை.",
     "viewComplaints": "எல்லா புகார்களையும் காண்க"
   },
   "adminConsents": {

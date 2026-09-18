@@ -61,7 +61,7 @@
     "viewPending": "सर्वाः लम्बमानाः सहमतयः पश्यन्तु",
     "complaintsTitle": "आरोपः",
     "totalComplaints": "सम्पूर्णाः परिदेवनाः",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "भवत्याः परिवादान् इदानीं आरोपयितुं न शक्नोमि।",
     "viewComplaints": "सर्वाः परिवादनानि पश्यतु।"
   },
   "adminConsents": {

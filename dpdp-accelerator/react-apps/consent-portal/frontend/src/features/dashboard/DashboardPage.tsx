@@ -61,7 +61,9 @@ import useDashboardPurposesCountQuery, {
   useDashboardElementsCountQuery,
 } from './hooks/useDashboardCatalogCountsQuery'
 import useDashboardPendingConsentsQuery from './hooks/useDashboardPendingConsentsQuery'
-import useDashboardMyComplaintCountsQuery from './hooks/useDashboardMyComplaintCountsQuery'
+import useDashboardMyComplaintCountsQuery, {
+  type ComplaintStateCounts,
+} from './hooks/useDashboardMyComplaintCountsQuery'
 
 const ATTENTION_ITEM_LIMIT = 5
 
@@ -121,6 +123,15 @@ function PendingConsentRow({ consent }: { consent: ConsentSummary }): React.JSX.
 function formatPageCount(pageCount: PageCount | undefined): string {
   if (!pageCount) return '-'
   return pageCount.isAtLeast ? `${String(pageCount.count)}+` : String(pageCount.count)
+}
+
+/** "-" while loading, on error, or with no data yet - a real 0 only once the count is known. */
+function formatComplaintCount(
+  query: { isLoading: boolean; isError: boolean; data?: ComplaintStateCounts },
+  select: (data: ComplaintStateCounts) => number,
+): string {
+  if (query.isLoading || query.isError || !query.data) return '-'
+  return String(select(query.data))
 }
 
 interface ConsentStateCardsProps {
@@ -215,7 +226,12 @@ function DashboardPage(): React.JSX.Element {
 
   const complaintCountsQuery = useDashboardMyComplaintCountsQuery(showMyComplaints)
 
-  const consentSectionError = showConsentSection && stateCountsQuery.isError
+  const consentSectionError =
+    showConsentSection &&
+    (stateCountsQuery.isError ||
+      (showSelfConsentDetail && pendingConsentsQuery.isError) ||
+      (showPurposesCount && purposesCountQuery.isError) ||
+      (showElementsCount && elementsCountQuery.isError))
   const complaintSectionError = showMyComplaints && complaintCountsQuery.isError
 
   return (
@@ -309,7 +325,9 @@ function DashboardPage(): React.JSX.Element {
                         <Skeleton height={40} />
                       </Stack>
                     ) : null}
-                    {!pendingConsentsQuery.isLoading && pendingConsents.length === 0 ? (
+                    {!pendingConsentsQuery.isLoading &&
+                    !pendingConsentsQuery.isError &&
+                    pendingConsents.length === 0 ? (
                       <Typography variant="body2" color="text.secondary">
                         {t('dashboard.noPending')}
                       </Typography>
@@ -353,55 +371,40 @@ function DashboardPage(): React.JSX.Element {
               }}
             >
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading ? '-' : (complaintCountsQuery.data?.total ?? 0)
-                }
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.total)}
                 label={t('dashboard.totalComplaints')}
                 icon={<Layers size={22} />}
                 iconColor="primary"
               />
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading ? '-' : (complaintCountsQuery.data?.open ?? 0)
-                }
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.open)}
                 label={t('complaints.status.open')}
                 icon={<Inbox size={22} />}
                 iconColor="info"
               />
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading
-                    ? '-'
-                    : (complaintCountsQuery.data?.inProgress ?? 0)
-                }
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.inProgress)}
                 label={t('complaints.status.investigation')}
                 icon={<RefreshCw size={22} />}
                 iconColor="warning"
               />
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading
-                    ? '-'
-                    : (complaintCountsQuery.data?.waitingOnClient ?? 0)
-                }
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.waitingOnClient)}
                 label={t('complaints.status.awaitingInfo')}
                 icon={<UserCheck size={22} />}
                 iconColor="error"
               />
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading
-                    ? '-'
-                    : (complaintCountsQuery.data?.waitingOnInternalReview ?? 0)
-                }
+                value={formatComplaintCount(
+                  complaintCountsQuery,
+                  (data) => data.waitingOnInternalReview,
+                )}
                 label={t('complaints.status.waitingOnDpo')}
                 icon={<Clock3 size={22} />}
                 iconColor="warning"
               />
               <StatCard
-                value={
-                  complaintCountsQuery.isLoading ? '-' : (complaintCountsQuery.data?.resolved ?? 0)
-                }
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.resolved)}
                 label={t('complaints.status.resolved')}
                 icon={<CheckCircle2 size={22} />}
                 iconColor="success"

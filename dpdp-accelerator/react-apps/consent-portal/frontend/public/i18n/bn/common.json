@@ -61,7 +61,7 @@
     "viewPending": "সমস্ত বিবেচনাধীন সম্মতি দেখুন",
     "complaintsTitle": "অভিযোগ",
     "totalComplaints": "মোট অভিযোগ",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "এই মুহূর্তে আপনার অভিযোগগুলি লোড করা যাচ্ছে না।",
     "viewComplaints": "সমস্ত অভিযোগ দেখুন"
   },
   "adminConsents": {

@@ -61,7 +61,7 @@
     "viewPending": "ਸਾਰੀਆਂ ਬਕਾਇਆ ਸਹਿਮਤੀਆਂ ਵੇਖੋ",
     "complaintsTitle": "ਸ਼ਿਕਾਇਤਾਂ",
     "totalComplaints": "ਕੁੱਲ ਸ਼ਿਕਾਇਤਾਂ",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "ਇਸ ਵੇਲੇ ਤੁਹਾਡੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਲੋਡ ਕਰਨ ਵਿੱਚ ਅਸਮਰੱਥ ਹਾਂ।",
     "viewComplaints": "ਸਾਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਵੇਖੋ"
   },
   "adminConsents": {

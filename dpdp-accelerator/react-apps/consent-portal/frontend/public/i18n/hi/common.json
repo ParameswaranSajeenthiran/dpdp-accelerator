@@ -61,7 +61,7 @@
     "viewPending": "सभी लंबित सहमतियां देखें",
     "complaintsTitle": "शिकायतें",
     "totalComplaints": "कुल शिकायतें",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "आपकी शिकायतें अभी लोड नहीं हो पा रही हैं।",
     "viewComplaints": "सभी शिकायतें देखें"
   },
   "adminConsents": {

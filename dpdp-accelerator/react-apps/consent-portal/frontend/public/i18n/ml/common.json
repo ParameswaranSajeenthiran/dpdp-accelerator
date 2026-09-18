@@ -61,7 +61,7 @@
     "viewPending": "തീർപ്പുകൽപ്പിക്കാത്ത എല്ലാ സമ്മതങ്ങളും കാണുക",
     "complaintsTitle": "പരാതികൾ",
     "totalComplaints": "ആകെ പരാതികൾ",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "നിങ്ങളുടെ പരാതികൾ ഇപ്പോൾ ലോഡ് ചെയ്യാൻ കഴിയില്ല.",
     "viewComplaints": "എല്ലാ പരാതികളും കാണുക"
   },
   "adminConsents": {

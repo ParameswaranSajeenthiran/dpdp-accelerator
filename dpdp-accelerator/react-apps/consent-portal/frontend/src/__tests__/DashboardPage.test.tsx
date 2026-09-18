@@ -174,6 +174,36 @@ describe('DashboardPage', () => {
     expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
   })
 
+  it('shows an error, not a false "no pending consents" empty state, when that fetch fails', async () => {
+    myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
+    // The pending-list fetch (fetchMyConsents, not fetchMyConsentsRaw) fails independently of
+    // the state-count queries, which still succeed.
+    myConsentsApi.fetchMyConsents.mockRejectedValue(new Error('network error'))
+    complaintsApi.fetchMyComplaintsTotal.mockResolvedValue(0)
+
+    renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF])
+
+    expect(await screen.findByText('Unable to load your dashboard right now.')).toBeInTheDocument()
+    expect(screen.queryByText('You have no pending consents to review.')).not.toBeInTheDocument()
+  })
+
+  it('shows "-", not a false 0, for complaint counts when that fetch fails', async () => {
+    myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
+    myConsentsApi.fetchMyConsents.mockResolvedValue({
+      data: [],
+      metadata: { total: 0, offset: 0, count: 0, limit: 100 },
+    })
+    complaintsApi.fetchMyComplaintsTotal.mockRejectedValue(new Error('network error'))
+
+    renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
+
+    expect(await screen.findByText('Unable to load your complaints right now.')).toBeInTheDocument()
+    expect(screen.getByText('Total complaints')).toBeInTheDocument()
+    // Six complaint tiles - all "-", never a false "0" implying a real (empty) count.
+    expect(screen.queryAllByText('0')).toHaveLength(0)
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(6)
+  })
+
   it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {
     renderDashboard([REQUIRED_SCOPES.COMPLAINTS_READ_ANY])
 

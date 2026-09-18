@@ -61,7 +61,7 @@
     "viewPending": "সকলো বাকী থকা সন্মতি চাওক",
     "complaintsTitle": "অভিযোগসমূহ",
     "totalComplaints": "মুঠ অভিযোগ",
-    "complaintsLoadFailed": "Unable to load your complaints right now.",
+    "complaintsLoadFailed": "আপোনাৰ অভিযোগবোৰ এতিয়াই লোড কৰিব পৰা হোৱা নাই।",
     "viewComplaints": "সকলো অভিযোগ চাওক"
   },
   "adminConsents": {
