@@ -18,6 +18,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  fetchMyComplaintsTotal,
   uploadManagedComplaintAttachments,
   uploadMyComplaintAttachments,
 } from '../features/complaints/api/complaintsApi'
@@ -48,6 +49,37 @@ function sentFormData(): FormData {
   }
   return call[0].data
 }
+
+describe('fetchMyComplaintsTotal', () => {
+  it('reads metadata.total, trusting it as a real count unlike the consent-mgt API', async () => {
+    respondWith(
+      { data: [{ id: 'c1' }], metadata: { total: 4200, offset: 0, count: 1, limit: 1 } },
+      200,
+    )
+
+    await expect(fetchMyComplaintsTotal('OPEN')).resolves.toBe(4200)
+
+    const request = transport.httpRequest.mock.calls[0]?.[0] as { url: string }
+    const url = new URL(request.url)
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      limit: '1',
+      offset: '0',
+      status: 'OPEN',
+    })
+  })
+
+  it('omits the status filter when asking for the overall total', async () => {
+    respondWith({ data: [], metadata: { total: 12, offset: 0, count: 0, limit: 1 } }, 200)
+
+    await expect(fetchMyComplaintsTotal()).resolves.toBe(12)
+
+    const request = transport.httpRequest.mock.calls[0]?.[0] as { url: string }
+    expect(Object.fromEntries(new URL(request.url).searchParams)).toEqual({
+      limit: '1',
+      offset: '0',
+    })
+  })
+})
 
 describe('complaintsApi attachment uploads', () => {
   it('uploadManagedComplaintAttachments appends every file under repeated "file" fields', async () => {

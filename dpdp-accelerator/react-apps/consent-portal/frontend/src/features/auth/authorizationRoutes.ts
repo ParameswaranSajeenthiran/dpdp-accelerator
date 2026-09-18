@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { REQUIRED_SCOPES, type ScopeRequirement } from '../../utils/scopes'
+import { REQUIRED_SCOPES, isDpoOnlyProfile, type ScopeRequirement } from '../../utils/scopes'
 
 const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; requirement: ScopeRequirement }> = [
   { path: '/dashboard', requirement: REQUIRED_SCOPES.CONSENTS_READ_SELF },
@@ -34,7 +34,17 @@ const AUTHORIZED_DESTINATIONS: ReadonlyArray<{ path: string; requirement: ScopeR
 /** The first landing page the session's scopes actually allow. */
 export default function firstAuthorizedPath(scopes: readonly string[]): string | undefined {
   const granted = new Set(scopes)
-  return AUTHORIZED_DESTINATIONS.find(({ requirement }) =>
-    requirement.some((scope) => granted.has(scope)),
+  const hasScope = (requirement: ScopeRequirement): boolean =>
+    requirement.some((scope) => granted.has(scope))
+
+  // A DPO's token carries internal_login like everyone else's, so CONSENTS_READ_SELF alone would
+  // still route them to the Dashboard - which hides itself from a DPO precisely because it has
+  // nothing non-duplicate to show them (see isDpoOnlyProfile, AppSidebar, DashboardPage). Landing
+  // them there anyway on sign-in, only to have no link back to it, would be worse than skipping
+  // it here in favor of Complaints further down this list.
+  const isDpoOnly = isDpoOnlyProfile(hasScope)
+
+  return AUTHORIZED_DESTINATIONS.find(
+    ({ path, requirement }) => !(isDpoOnly && path === '/dashboard') && hasScope(requirement),
   )?.path
 }

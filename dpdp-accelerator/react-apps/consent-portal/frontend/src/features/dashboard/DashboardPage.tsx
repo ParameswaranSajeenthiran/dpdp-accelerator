@@ -25,37 +25,47 @@ import {
   CardHeader,
   Chip,
   Divider,
-  LinearProgress,
   Skeleton,
   Stack,
+  StatCard,
   Typography,
 } from '@wso2/oxygen-ui'
-import { ArrowRight, ChartPie, Clock3, ShieldCheck } from '@wso2/oxygen-ui-icons-react'
+import {
+  ArrowRight,
+  Ban,
+  Blocks,
+  CheckCircle2,
+  Clock3,
+  Hourglass,
+  Inbox,
+  Layers,
+  RefreshCw,
+  ShieldCheck,
+  Target,
+  UserCheck,
+  XCircle,
+} from '@wso2/oxygen-ui-icons-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import useAuthorization from '../auth/useAuthorization'
 import type { ConsentSummary } from '../../types/consent'
 import { formatEpochTimestamp } from '../../utils/dateTime'
-import { normalizeConsentState } from '../my-consents/utils/statusChip'
-import useDashboardConsentsQuery from './hooks/useDashboardConsentsQuery'
+import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
+import type { PageCount } from '../../utils/cursorPagination'
+import useDashboardSelfConsentStateCountsQuery from './hooks/useDashboardSelfConsentStateCountsQuery'
+import useDashboardTenantConsentStateCountsQuery from './hooks/useDashboardTenantConsentStateCountsQuery'
+import type { ConsentStateCounts } from './hooks/consentStateCounts'
+import useDashboardPurposesCountQuery, {
+  useDashboardElementsCountQuery,
+} from './hooks/useDashboardCatalogCountsQuery'
+import useDashboardPendingConsentsQuery from './hooks/useDashboardPendingConsentsQuery'
+import useDashboardMyComplaintCountsQuery, {
+  type ComplaintStateCounts,
+} from './hooks/useDashboardMyComplaintCountsQuery'
 
 const ATTENTION_ITEM_LIMIT = 5
-const PURPOSE_ITEM_LIMIT = 5
-
-interface LabelledCount {
-  id: string
-  label: string
-  count: number
-}
-
-interface DashboardData {
-  activeCount: number
-  pendingCount: number
-  pending: ConsentSummary[]
-  purposes: LabelledCount[]
-  services: LabelledCount[]
-}
 
 function summarizePurposes(consent: ConsentSummary): string {
   const labels = (consent.purposes ?? []).map((purpose) => purpose.name)
@@ -109,56 +119,120 @@ function PendingConsentRow({ consent }: { consent: ConsentSummary }): React.JSX.
   )
 }
 
-function toSortedCounts(counts: Map<string, LabelledCount>): LabelledCount[] {
-  return [...counts.values()].sort(
-    (left, right) => right.count - left.count || left.label.localeCompare(right.label),
+/** "42" when exact, "100+" when the count hit its cap - see PageCount. */
+function formatPageCount(pageCount: PageCount | undefined): string {
+  if (!pageCount) return '-'
+  return pageCount.isAtLeast ? `${String(pageCount.count)}+` : String(pageCount.count)
+}
+
+/** "-" while loading, on error, or with no data yet - a real 0 only once the count is known. */
+function formatComplaintCount(
+  query: { isLoading: boolean; isError: boolean; data?: ComplaintStateCounts },
+  select: (data: ComplaintStateCounts) => number,
+): string {
+  if (query.isLoading || query.isError || !query.data) return '-'
+  return String(select(query.data))
+}
+
+interface ConsentStateCardsProps {
+  counts: ConsentStateCounts | undefined
+  isLoading: boolean
+  t: (key: string) => string
+}
+
+function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): React.JSX.Element {
+  const value = (pageCount: PageCount | undefined): string =>
+    isLoading ? '-' : formatPageCount(pageCount)
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+        gap: 2,
+      }}
+    >
+      <StatCard
+        value={value(counts?.total)}
+        label={t('dashboard.totalConsents')}
+        icon={<Layers size={22} />}
+        iconColor="primary"
+      />
+      <StatCard
+        value={value(counts?.pending)}
+        label={t('consentRegistry.status.pending')}
+        icon={<Clock3 size={22} />}
+        iconColor="warning"
+      />
+      <StatCard
+        value={value(counts?.active)}
+        label={t('consentRegistry.status.active')}
+        icon={<ShieldCheck size={22} />}
+        iconColor="success"
+      />
+      <StatCard
+        value={value(counts?.rejected)}
+        label={t('consentRegistry.status.rejected')}
+        icon={<XCircle size={22} />}
+        iconColor="error"
+      />
+      <StatCard
+        value={value(counts?.revoked)}
+        label={t('consentRegistry.status.revoked')}
+        icon={<Ban size={22} />}
+        iconColor="error"
+      />
+      <StatCard
+        value={value(counts?.expired)}
+        label={t('consentRegistry.status.expired')}
+        icon={<Hourglass size={22} />}
+        iconColor="secondary"
+      />
+    </Box>
   )
 }
 
 function DashboardPage(): React.JSX.Element {
   const { t } = useTranslation('common')
-  const consentsQuery = useDashboardConsentsQuery()
+  const { hasScope } = useAuthorization()
 
-  const data = useMemo<DashboardData>(() => {
-    const consents = consentsQuery.data ?? []
-    const active = consents.filter((consent) => normalizeConsentState(consent.state) === 'ACTIVE')
-    const pending = consents.filter((consent) => normalizeConsentState(consent.state) === 'PENDING')
+  // Admin is assumed to have no consents of his own to report -- the tenant-wide view replaces
+  // the self-service one entirely rather than sitting alongside it.
+  const isTenantConsentView = hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
+  const showMyComplaints = hasScope(REQUIRED_SCOPES.COMPLAINTS_READ_SELF)
 
-    const purposeCounts = new Map<string, LabelledCount>()
-    active.forEach((consent) => {
-      ;(consent.purposes ?? []).forEach((purpose) => {
-        const existing = purposeCounts.get(purpose.id)
-        purposeCounts.set(purpose.id, {
-          id: purpose.id,
-          label: purpose.name,
-          count: (existing?.count ?? 0) + 1,
-        })
-      })
-    })
+  // A DPO's token also carries internal_login (see isDpoOnlyProfile), so without this check a
+  // direct visit to /dashboard would render the self-consents view empty instead of hiding it.
+  const showConsentSection = isTenantConsentView || !isDpoOnlyProfile(hasScope)
+  const showSelfConsentDetail = showConsentSection && !isTenantConsentView
 
-    const serviceCounts = new Map<string, LabelledCount>()
-    consents.forEach((consent) => {
-      const existing = serviceCounts.get(consent.serviceId)
-      serviceCounts.set(consent.serviceId, {
-        id: consent.serviceId,
-        label: consent.serviceId,
-        count: (existing?.count ?? 0) + 1,
-      })
-    })
+  const selfStateCountsQuery = useDashboardSelfConsentStateCountsQuery(showSelfConsentDetail)
+  const tenantStateCountsQuery = useDashboardTenantConsentStateCountsQuery(isTenantConsentView)
+  const stateCountsQuery = isTenantConsentView ? tenantStateCountsQuery : selfStateCountsQuery
 
-    return {
-      activeCount: active.length,
-      pendingCount: pending.length,
-      pending: [...pending]
+  const showPurposesCount = isTenantConsentView && hasScope(REQUIRED_SCOPES.PURPOSES_READ)
+  const showElementsCount = isTenantConsentView && hasScope(REQUIRED_SCOPES.ELEMENTS_READ)
+  const purposesCountQuery = useDashboardPurposesCountQuery(showPurposesCount)
+  const elementsCountQuery = useDashboardElementsCountQuery(showElementsCount)
+
+  const pendingConsentsQuery = useDashboardPendingConsentsQuery(showSelfConsentDetail)
+  const pendingConsents = useMemo(
+    () =>
+      [...(pendingConsentsQuery.data ?? [])]
         .sort((left, right) => right.timestamp - left.timestamp)
         .slice(0, ATTENTION_ITEM_LIMIT),
-      purposes: toSortedCounts(purposeCounts).slice(0, PURPOSE_ITEM_LIMIT),
-      services: toSortedCounts(serviceCounts),
-    }
-  }, [consentsQuery.data])
+    [pendingConsentsQuery.data],
+  )
 
-  const maximumPurposeCount = data.purposes[0]?.count ?? 1
-  const maximumServiceCount = data.services[0]?.count ?? 1
+  const complaintCountsQuery = useDashboardMyComplaintCountsQuery(showMyComplaints)
+
+  const consentSectionError =
+    showConsentSection &&
+    (stateCountsQuery.isError ||
+      (showSelfConsentDetail && pendingConsentsQuery.isError) ||
+      (showPurposesCount && purposesCountQuery.isError) ||
+      (showElementsCount && elementsCountQuery.isError))
+  const complaintSectionError = showMyComplaints && complaintCountsQuery.isError
 
   return (
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
@@ -169,199 +243,186 @@ function DashboardPage(): React.JSX.Element {
             {t('dashboard.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('dashboard.subtitle')}
+            {t(isTenantConsentView ? 'dashboard.subtitleAdmin' : 'dashboard.subtitle')}
           </Typography>
         </Stack>
 
-        {consentsQuery.isError ? <Alert severity="error">{t('dashboard.loadFailed')}</Alert> : null}
+        {consentSectionError ? <Alert severity="error">{t('dashboard.loadFailed')}</Alert> : null}
 
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                    {t('dashboard.active')}
-                  </Typography>
-                  {consentsQuery.isLoading ? (
-                    <Skeleton width={64} height={48} />
-                  ) : (
-                    <Typography variant="h3" fontWeight={700}>
-                      {data.activeCount}
-                    </Typography>
-                  )}
-                </Stack>
+        {showConsentSection ? (
+          <>
+            <Typography variant="h6" fontWeight={700}>
+              {t('dashboard.consentsByStatus')}
+            </Typography>
+            <ConsentStateCards
+              counts={stateCountsQuery.data}
+              isLoading={stateCountsQuery.isLoading}
+              t={t}
+            />
+
+            {showPurposesCount || showElementsCount ? (
+              <>
+                <Typography variant="h6" fontWeight={700}>
+                  {t('sidebar.catalog')}
+                </Typography>
                 <Box
-                  sx={{ display: 'inline-flex', p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+                    gap: 2,
+                  }}
                 >
-                  <ShieldCheck size={25} />
+                  {showPurposesCount ? (
+                    <StatCard
+                      value={
+                        purposesCountQuery.isLoading
+                          ? '-'
+                          : formatPageCount(purposesCountQuery.data)
+                      }
+                      label={t('sidebar.purposes')}
+                      icon={<Target size={22} />}
+                      iconColor="primary"
+                    />
+                  ) : null}
+                  {showElementsCount ? (
+                    <StatCard
+                      value={
+                        elementsCountQuery.isLoading
+                          ? '-'
+                          : formatPageCount(elementsCountQuery.data)
+                      }
+                      label={t('sidebar.elements')}
+                      icon={<Blocks size={22} />}
+                      iconColor="secondary"
+                    />
+                  ) : null}
                 </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Stack spacing={0.5}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                    {t('dashboard.pending')}
-                  </Typography>
-                  {consentsQuery.isLoading ? (
-                    <Skeleton width={64} height={48} />
-                  ) : (
-                    <Typography variant="h3" fontWeight={700}>
-                      {data.pendingCount}
-                    </Typography>
-                  )}
-                </Stack>
-                <Box
-                  sx={{ display: 'inline-flex', p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
-                >
-                  <Clock3 size={25} />
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
-
-        <Typography variant="h6" fontWeight={700}>
-          {t('dashboard.attention')}
-        </Typography>
-
-        <Card sx={{ boxShadow: 1 }}>
-          <CardHeader
-            avatar={<Clock3 size={20} />}
-            title={<Typography fontWeight={600}>{t('dashboard.pendingConsents')}</Typography>}
-            action={<Chip size="small" label={data.pendingCount} />}
-          />
-          <Divider />
-          <CardContent>
-            {consentsQuery.isLoading ? (
-              <Stack spacing={1}>
-                <Skeleton height={40} />
-                <Skeleton height={40} />
-                <Skeleton height={40} />
-              </Stack>
+              </>
             ) : null}
-            {!consentsQuery.isLoading && data.pending.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {t('dashboard.noPending')}
-              </Typography>
+
+            {showSelfConsentDetail ? (
+              <>
+                <Typography variant="h6" fontWeight={700}>
+                  {t('dashboard.attention')}
+                </Typography>
+
+                <Card sx={{ boxShadow: 1 }}>
+                  <CardHeader
+                    avatar={<Clock3 size={20} />}
+                    title={
+                      <Typography fontWeight={600}>{t('dashboard.pendingConsents')}</Typography>
+                    }
+                    action={
+                      <Chip size="small" label={formatPageCount(stateCountsQuery.data?.pending)} />
+                    }
+                  />
+                  <Divider />
+                  <CardContent>
+                    {pendingConsentsQuery.isLoading ? (
+                      <Stack spacing={1}>
+                        <Skeleton height={40} />
+                        <Skeleton height={40} />
+                        <Skeleton height={40} />
+                      </Stack>
+                    ) : null}
+                    {!pendingConsentsQuery.isLoading &&
+                    !pendingConsentsQuery.isError &&
+                    pendingConsents.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {t('dashboard.noPending')}
+                      </Typography>
+                    ) : null}
+                    {pendingConsents.map((consent) => (
+                      <PendingConsentRow key={consent.id} consent={consent} />
+                    ))}
+                    {pendingConsents.length > 0 ? (
+                      <Button
+                        component={RouterLink}
+                        to="/consents?view=pending&state=PENDING"
+                        size="small"
+                        endIcon={<ArrowRight size={15} />}
+                        sx={{ mt: 1 }}
+                      >
+                        {t('dashboard.viewPending')}
+                      </Button>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </>
             ) : null}
-            {data.pending.map((consent) => (
-              <PendingConsentRow key={consent.id} consent={consent} />
-            ))}
-            {data.pendingCount > 0 ? (
+          </>
+        ) : null}
+
+        {showMyComplaints ? (
+          <Stack spacing={2}>
+            <Typography variant="h6" fontWeight={700}>
+              {t('dashboard.complaintsTitle')}
+            </Typography>
+
+            {complaintSectionError ? (
+              <Alert severity="error">{t('dashboard.complaintsLoadFailed')}</Alert>
+            ) : null}
+
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+                gap: 2,
+              }}
+            >
+              <StatCard
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.total)}
+                label={t('dashboard.totalComplaints')}
+                icon={<Layers size={22} />}
+                iconColor="primary"
+              />
+              <StatCard
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.open)}
+                label={t('complaints.status.open')}
+                icon={<Inbox size={22} />}
+                iconColor="info"
+              />
+              <StatCard
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.inProgress)}
+                label={t('complaints.status.investigation')}
+                icon={<RefreshCw size={22} />}
+                iconColor="warning"
+              />
+              <StatCard
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.waitingOnClient)}
+                label={t('complaints.status.awaitingInfo')}
+                icon={<UserCheck size={22} />}
+                iconColor="error"
+              />
+              <StatCard
+                value={formatComplaintCount(
+                  complaintCountsQuery,
+                  (data) => data.waitingOnInternalReview,
+                )}
+                label={t('complaints.status.waitingOnDpo')}
+                icon={<Clock3 size={22} />}
+                iconColor="warning"
+              />
+              <StatCard
+                value={formatComplaintCount(complaintCountsQuery, (data) => data.resolved)}
+                label={t('complaints.status.resolved')}
+                icon={<CheckCircle2 size={22} />}
+                iconColor="success"
+              />
+            </Box>
+
+            <Box>
               <Button
                 component={RouterLink}
-                to="/consents?view=pending&state=PENDING"
+                to="/complaints"
                 size="small"
                 endIcon={<ArrowRight size={15} />}
-                sx={{ mt: 1 }}
               >
-                {t('dashboard.viewPending')}
+                {t('dashboard.viewComplaints')}
               </Button>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' },
-            gap: 2,
-          }}
-        >
-          <Card sx={{ boxShadow: 1 }}>
-            <CardHeader
-              title={<Typography fontWeight={600}>{t('dashboard.commonPurposes')}</Typography>}
-              subheader={t('dashboard.commonPurposesSubtitle')}
-            />
-            <Divider />
-            <CardContent>
-              {consentsQuery.isLoading ? (
-                <Stack spacing={2}>
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                </Stack>
-              ) : null}
-              {!consentsQuery.isLoading && data.purposes.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t('dashboard.noPurposes')}
-                </Typography>
-              ) : null}
-              <Stack spacing={2}>
-                {data.purposes.map((purpose, index) => (
-                  <Stack key={purpose.id} spacing={0.75}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" fontWeight={600} noWrap>
-                        {String(index + 1)}. {purpose.label}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('dashboard.consentCount', { count: purpose.count })}
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(purpose.count / maximumPurposeCount) * 100}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Stack>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ boxShadow: 1 }}>
-            <CardHeader
-              avatar={<ChartPie size={20} />}
-              title={<Typography fontWeight={600}>{t('dashboard.serviceBreakdown')}</Typography>}
-              subheader={t('dashboard.serviceBreakdownSubtitle')}
-            />
-            <Divider />
-            <CardContent>
-              {consentsQuery.isLoading ? (
-                <Stack spacing={2}>
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                  <Skeleton height={32} />
-                </Stack>
-              ) : null}
-              {!consentsQuery.isLoading && data.services.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t('dashboard.noServices')}
-                </Typography>
-              ) : null}
-              <Stack spacing={2}>
-                {data.services.map((service) => (
-                  <Stack key={service.id} spacing={0.75}>
-                    <Stack direction="row" justifyContent="space-between" spacing={2}>
-                      <Typography variant="body2" fontWeight={600} noWrap>
-                        {service.label}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {t('dashboard.consentCount', { count: service.count })}
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(service.count / maximumServiceCount) * 100}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Stack>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
+            </Box>
+          </Stack>
+        ) : null}
       </Stack>
     </Box>
   )
