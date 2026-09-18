@@ -148,7 +148,7 @@ public final class ConsentExpiryJobScheduler implements AutoCloseable {
         executor.shutdownNow();
         try {
             if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                LOG.warn("Consent expiry scheduler did not terminate within the shutdown timeout.");
+                LOG.error("Consent expiry scheduler did not terminate within the shutdown timeout.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
