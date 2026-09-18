@@ -127,12 +127,10 @@ function ComplaintDetailPage(): React.JSX.Element {
         </Typography>
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
           <ComplaintStatusChip status={complaint.status} viewerRole="DataPrincipal" />
-          {complaint.status !== 'RESOLVED' ? (
-            <ComplaintSlaIndicator
-              statutoryDueDate={complaint.statutoryDueDate}
-              status={complaint.status}
-            />
-          ) : null}
+          <ComplaintSlaIndicator
+            statutoryDueDate={complaint.statutoryDueDate}
+            status={complaint.status}
+          />
         </Stack>
       </Stack>
 
