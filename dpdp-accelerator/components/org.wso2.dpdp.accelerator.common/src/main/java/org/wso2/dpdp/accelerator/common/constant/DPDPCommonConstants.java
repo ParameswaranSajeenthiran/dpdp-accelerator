@@ -141,8 +141,19 @@ public final class DPDPCommonConstants {
     public static final String CONSENT_EXPIRY_ENABLED = "ConsentExpiry.Enabled";
     public static final String CONSENT_EXPIRY_CRON_VALUE = "ConsentExpiry.CronValue";
     public static final String CONSENT_EXPIRY_BATCH_SIZE = "ConsentExpiry.BatchSize";
-    public static final String DEFAULT_CONSENT_EXPIRY_CRON_VALUE = "0 0 0 * * ?";
     public static final int DEFAULT_CONSENT_EXPIRY_BATCH_SIZE = 100;
+
+    public static final String CONSENT_EXPIRY_SCHEDULE_MODE = "ConsentExpiry.ScheduleMode";
+    public static final String DEFAULT_CONSENT_EXPIRY_SCHEDULE_MODE = "daily";
+    public static final String CONSENT_EXPIRY_DAILY_TIME = "ConsentExpiry.DailyTime";
+    public static final String DEFAULT_CONSENT_EXPIRY_DAILY_TIME = "00:00";
+    public static final String CONSENT_EXPIRY_TIMEZONE = "ConsentExpiry.Timezone";
+    public static final String CONSENT_EXPIRY_INTERVAL_SECONDS = "ConsentExpiry.IntervalSeconds";
+    public static final int DEFAULT_CONSENT_EXPIRY_INTERVAL_SECONDS = 0;
+    public static final String CONSENT_EXPIRY_MAX_BATCHES_PER_RUN = "ConsentExpiry.MaxBatchesPerRun";
+    public static final int DEFAULT_CONSENT_EXPIRY_MAX_BATCHES_PER_RUN = 1000;
+    public static final String CONSENT_EXPIRY_MAX_RUN_SECONDS = "ConsentExpiry.MaxRunSeconds";
+    public static final int DEFAULT_CONSENT_EXPIRY_MAX_RUN_SECONDS = 300;
 
     private DPDPCommonConstants() {
 

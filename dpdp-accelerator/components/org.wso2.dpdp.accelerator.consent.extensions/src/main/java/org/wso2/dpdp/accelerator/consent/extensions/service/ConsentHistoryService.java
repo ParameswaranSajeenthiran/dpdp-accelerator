@@ -25,6 +25,8 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAudi
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
+import java.sql.Connection;
+
 /**
  * Every method takes {@code tenantDomain} explicitly - callers (the consent listener, the
  * endpoint webapp) resolve it themselves; this service never resolves it on its own.
@@ -44,5 +46,17 @@ public interface ConsentHistoryService {
             int offset) throws ConsentHistoryDataRetrievalException;
 
     PagedResult<ConsentHistoryRecord> getConsentHistory(String tenantDomain, String consentId, int limit, int offset)
+            throws ConsentHistoryDataRetrievalException;
+
+    /** Participates in the caller's transaction without committing or closing its connection. */
+    void recordStatusAudit(Connection connection, String tenantDomain, String consentId, String previousStatus,
+            String currentStatus, ActionType actionType, String actionBy) throws ConsentHistoryDataInsertionException;
+
+    /** Participates in the caller's transaction; preserves the snapshot configuration gate. */
+    void recordHistorySnapshot(Connection connection, String tenantDomain, String consentId, ActionType actionType,
+            String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException;
+
+    /** Reads the latest recorded status on the caller's connection; null if no audit exists. */
+    String getLastKnownStatus(Connection connection, String tenantDomain, String consentId)
             throws ConsentHistoryDataRetrievalException;
 }

@@ -179,7 +179,6 @@ public class DPDPConfigParserTest {
 
         DPDPConfigParser parser = DPDPConfigParser.getInstance();
         assertTrue(parser.isConsentExpiryEnabled());
-        assertEquals(parser.getConsentExpiryCronValue(), "0 0 0 * * ?");
         assertEquals(parser.getConsentExpiryBatchSize(), 100);
     }
 
@@ -215,7 +214,6 @@ public class DPDPConfigParserTest {
 
         DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
         assertTrue(service.isConsentExpiryEnabled());
-        assertEquals(service.getConsentExpiryCronValue(), "0 0 0 * * ?");
         assertEquals(service.getConsentExpiryBatchSize(), 100);
     }
 
@@ -370,6 +368,51 @@ public class DPDPConfigParserTest {
             values.put("EventNotifications.PendingSubscriptionRecoveryIntervalSeconds", "0");
             expectThrows(IllegalStateException.class,
                     service::getEventNotificationPendingSubscriptionRecoveryIntervalSeconds);
+        } finally {
+            values.clear();
+            values.putAll(backup);
+        }
+    }
+
+    @Test
+    public void consentExpiryDefaultsOverridesAndLegacyMigration() throws Exception {
+
+        DPDPConfigParser parser = DPDPConfigParser.getInstance();
+        Field field = DPDPConfigParser.class.getDeclaredField("configuration");
+        field.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> values = (Map<String, Object>) field.get(parser);
+        Map<String, Object> backup = new HashMap<>(values);
+        try {
+            values.clear();
+            for (DPDPConfigurationService service : Arrays.asList(new DPDPConfigurationServiceImpl(),
+                    new DPDPConfigurationServiceImpl(false))) {
+                assertEquals(service.getConsentExpiryScheduleMode(), "daily");
+                assertEquals(service.getConsentExpiryDailyTime(), "00:00");
+                assertEquals(service.getConsentExpiryTimezone(), java.time.ZoneId.systemDefault().getId());
+                assertEquals(service.getConsentExpiryIntervalSeconds(), 0);
+                assertEquals(service.getConsentExpiryMaxBatchesPerRun(), 1000);
+                assertEquals(service.getConsentExpiryMaxRunSeconds(), 300);
+            }
+            values.put("ConsentExpiry.ScheduleMode", "interval");
+            values.put("ConsentExpiry.DailyTime", "03:15");
+            values.put("ConsentExpiry.Timezone", "Asia/Colombo");
+            values.put("ConsentExpiry.IntervalSeconds", "60");
+            values.put("ConsentExpiry.MaxBatchesPerRun", "50");
+            values.put("ConsentExpiry.MaxRunSeconds", "90");
+            DPDPConfigurationService service = new DPDPConfigurationServiceImpl();
+            assertEquals(service.getConsentExpiryScheduleMode(), "interval");
+            assertEquals(service.getConsentExpiryDailyTime(), "03:15");
+            assertEquals(service.getConsentExpiryTimezone(), "Asia/Colombo");
+            assertEquals(service.getConsentExpiryIntervalSeconds(), 60);
+            assertEquals(service.getConsentExpiryMaxBatchesPerRun(), 50);
+            assertEquals(service.getConsentExpiryMaxRunSeconds(), 90);
+            values.put("ConsentExpiry.MaxRunSeconds", "0");
+            expectThrows(IllegalStateException.class, service::getConsentExpiryMaxRunSeconds);
+            values.put("ConsentExpiry.BatchSize", "0");
+            expectThrows(IllegalStateException.class, service::getConsentExpiryBatchSize);
+            values.put("ConsentExpiry.CronValue", "0 0 0 * * ?");
+            expectThrows(IllegalArgumentException.class, service::getConsentExpiryScheduleMode);
         } finally {
             values.clear();
             values.putAll(backup);

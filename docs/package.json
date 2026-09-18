@@ -41,6 +41,7 @@
     "webpackbar": "7.0.0",
     "undici": "5.28.5",
     "cheerio": "1.0.0-rc.12",
-    "serialize-javascript": "7.1.1"
+    "serialize-javascript": "7.1.1",
+    "image-size": "2.0.4"
   }
 }

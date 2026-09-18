@@ -2,6 +2,7 @@
 title: Configuring the Consent Portal application
 sidebar_position: 2
 ---
+
 # Configuring the Consent Portal application
 
 Complete this after installing the accelerator and starting the Identity
@@ -20,9 +21,10 @@ client id `DPDP_CONSENT_PORTAL`.
 
 ## 1. Applications and roles are provisioned automatically
 
-The moment a tenant exists — including the super tenant, on first server
-startup — the accelerator registers **DPDP Consent Portal** in it directly,
-with no operator step and no REST call involved:
+For supported tenants — including the super tenant on server startup — the
+accelerator registers **DPDP Consent Portal** directly,
+with no operator step and no REST call involved. Organization tenants are skipped
+by the tenant listener. New applications receive these settings:
 
 | Setting | Value | Why |
 |---|---|---|
@@ -83,7 +85,7 @@ client_id = "DPDP_CONSENT_PORTAL"
 
 | Setting | Default | Change it if... |
 |---|---|---|
-| `auto_provisioning_enabled` | `true` | You want to manage the application and its roles by hand instead. Set to `false`. This only turns off the automatic *creation* of the application and roles — it does not disable the portal or sign-in. |
+| `auto_provisioning_enabled` | `true` | You want to manage the application and its roles by hand instead. Set to `false`. This turns off automatic creation and reconciliation of the application and roles — it does not disable the portal or sign-in. |
 | `client_id` | `DPDP_CONSENT_PORTAL` | You're changing it, you **must** also update `clientID` in the deployed portal's own `deployment.config.json` — the two have to match or sign-in breaks. |
 
 When `auto_provisioning_enabled` is `false`, the listener skips creation and
@@ -132,15 +134,16 @@ installation. Restart the server for the change to take effect.
 If a tenant's provisioned application or roles get deleted or corrupted,
 restore them without a server restart:
 
-1. In the Console, delete the **DPDP Consent Portal** application for that
-   tenant (Roles are left alone even if the application is gone — deleting
-   them too is optional, but harmless, since provisioning recreates whatever
-   it doesn't find).
-2. Update any property of the tenant (Console → **Tenant Management** → the
-   tenant → **Update**).
+1. Confirm that Consent Portal auto-provisioning is enabled.
+2. Update a property of the tenant (Console → **Tenant Management** → the
+   tenant → **Update**) to reconcile missing applications, API authorizations,
+   and role permissions.
 
-Saving the update re-runs provisioning for that tenant, recreating the
-application and any missing role.
+Existing applications have their API authorization and roles reconciled;
+provisioning does not reset their OAuth settings. If those settings are damaged,
+restore them through application management, or recreate the application and
+then repeat tenant reconciliation. Preserve existing roles and user assignments;
+recreating a deleted role does not restore its former user assignments.
 
 The same tenant update also reconciles the Consent API Invoker when its
 provisioning setting is enabled. It is how a tenant provisioned by an older version of the
@@ -178,7 +181,8 @@ what is *beyond* that.
 > two roles' permissions add up, so an administrator who also holds
 > `dpdp-consent-user` receives `account:self:delete` and can delete their own
 > account. Keep administrators out of `dpdp-consent-user` if that matters —
-> they lose nothing else by not holding it.
+> that role also grants self-service complaint permissions, so review the user's
+> other required permissions before changing their assignments.
 
 ## 5. Configure email notifications
 
@@ -238,17 +242,15 @@ See the [Role Management Guide](role-guide.md).
 
 ## 7. Configure periodical consent expiration
 
-Identity Server resolves an eligible `ACTIVE` or `PENDING` consent as
-`EXPIRED` when its `expiryTime` passes. The accelerator's reconciler records
-that transition in status audit and, when enabled, snapshot history. It also
-invokes the consent-expired lifecycle callback, which publishes `consent.expire`
-when lifecycle publishing is enabled. It does not rewrite the underlying
-consent's stored state.
+Identity Server reports an `ACTIVE` or `PENDING` consent as `EXPIRED` when its
+`expiryTime` passes. The accelerator reconciles that transition into an audit record, an enabled history
+snapshot, and an enabled lifecycle event. It does not change the source consent.
+An API response showing `EXPIRED` alone does not prove that reconciliation or
+notification delivery has completed.
 
-Keep `consent_history.enabled = true`: the current consent listener uses this
-setting to enable its callbacks, including expiry tracking. Snapshot storage
-can be disabled separately. To record expiry and publish notifications, merge
-these settings into the corresponding tables in `deployment.toml`:
+Merge these settings into existing TOML sections; do not define the same section
+twice. Keep consent history enabled so the consent-management listener maintains
+the expiry tracker.
 
 ```toml
 [dpdp_accelerator.consent_history]
@@ -257,8 +259,12 @@ snapshot_enabled = true
 
 [dpdp_accelerator.consent_expiry]
 enabled = true
-cron_value = "0 0 0 * * ?"
+schedule_mode = "daily"
+daily_time = "00:00"
+# timezone = "Asia/Colombo"
 batch_size = 100
+max_batches_per_run = 1000
+max_run_seconds = 300
 
 [dpdp_accelerator.event_notifications.lifecycle_events]
 publishing_enabled = true
@@ -268,58 +274,72 @@ The settings within `[dpdp_accelerator.consent_expiry]` are:
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | Enables the scheduled job and due-expiry reconciliation invoked by consent callbacks. |
-| `cron_value` | `"0 0 0 * * ?"` | Quartz cron expression for how often the job checks for newly-expired consents. The default runs once daily at midnight. |
-| `batch_size` | `100` | Maximum number of expired consents recorded per run, so a large backlog drains gradually instead of in one long transaction. |
+| `enabled` | `true` | Enables scheduled and listener-triggered expiry reconciliation. Tracker bookkeeping continues while expiry is disabled, provided consent history keeps the listener enabled. |
+| `schedule_mode` | `"daily"` | `daily` or `interval`. |
+| `daily_time` | `"00:00"` | Local daily execution time, for example `"00:00"` or `"09:30"`. |
+| `timezone` | Server timezone | Java timezone ID for daily scheduling. Configure the same zone across instances. |
+| `interval_seconds` | Required in interval mode | Positive delay after a firing finishes, and before the first interval firing. |
+| `batch_size` | `100` | Maximum candidates fetched in each SQL query, not a limit on the entire firing. |
+| `max_batches_per_run` | `1000` | Maximum fetch iterations within a firing. |
+| `max_run_seconds` | `300` | Elapsed-time budget, checked before fetches and between candidates. |
 
-Edit these in `<IS_HOME>/repository/conf/deployment.toml` and restart the
-server for the change to take effect.
+For interval scheduling, set `schedule_mode = "interval"` and, for example,
+`interval_seconds = 300`. Each instance uses one scheduler thread and runs at
+most one scheduled sweep at a time. The expiry scheduler thread count is not configurable.
+Daily time and timezone settings must remain valid even in interval mode, since
+the scheduler validates them at startup.
 
-Expiry notifications are not guaranteed at the exact expiry timestamp: the
-scheduled job handles up to `batch_size` tracked due records per run, and
-eligible consent callbacks can also reconcile a due record. Disabling expiry
-reconciliation does not make an expired consent valid; it stops this
-accelerator's expiry recording and callback path. Enabling it does not bulk
-backfill older consents that have no expiry-tracker entry.
+Daily mode schedules the next future occurrence on startup, without replaying
+missed firings. During daylight-saving transitions, a nonexistent daily time moves
+forward through the gap and a repeated local time runs once. An unfinished backlog
+remains eligible at the next firing.
 
-To verify this in an isolated test environment, create a consent with a future
-`expiryTime` while tracking is enabled, and register an active subscription to
-`consent.expire` with matching group and purpose filters. For a short test only,
-use `cron_value = "0 * * * * ?"` (every minute), restart, and allow the expiry
-time and next scheduled run to pass. Check the consent status audit, the
-`consent.expire` event, delivery history, and the receiver's durable inbox.
-Restore the intended schedule afterwards. A consent read returning `EXPIRED`
-alone does not prove that a notification was published or delivered.
+A firing captures a due cutoff, fetches a batch, processes each consent in its own
+transaction, and fetches successive pages until a page contains fewer than
+`batch_size` rows or a safety limit is reached. Exactly full pages require a final
+empty fetch. Ordering by expiry time and consent ID allows the scan to advance
+past failures without repeatedly selecting the same records. Failed records remain
+pending for a later firing. Concurrent changes may also defer a record to a later
+firing. A short page is the end of that scan, not proof that all failed or
+concurrently changed due records have been processed.
 
-### Clustering requirements
+The elapsed-time limit is a soft budget: an in-progress consent finishes its
+commit or rollback before the worker checks the limit and leaves remaining work
+for a later firing. It does not interrupt an already blocked database or source
+consent call. Configure bounded datasource acquisition, database lock, and JDBC
+query/network timeouts for the deployment. The sweep logs the number fetched,
+completed, skipped, and failed, and whether it stopped at the end of the scan or
+at a limit. Repeated limit warnings indicate that the schedule or limits need
+adjustment. Configuration changes require a server restart.
 
-By default, with no extra setup, the job runs correctly on a single server.
-**In a cluster, this default is not safe as-is**: without further
-configuration, every node runs its own independent, in-memory copy of the
-job, so it fires once *per node* instead of once for the whole cluster on
-each scheduled tick.
+### Transactions and multiple instances
 
-To run this job correctly across a cluster:
+All instances use the shared `WSO2DPDP_DB`. No additional scheduler tables or tracker status column are required. The conditional tracker DELETE matches the
+consent, tenant, observed deadline, and due cutoff. Its row lock is held until the
+audit and enabled snapshot have been persisted on the same connection, together
+with the event, purposes, and matching webhook/poll delivery rows when lifecycle
+publication is enabled. One commit makes those writes and the deletion permanent; failure rolls them back together. Competing instances
+may fetch the same candidates, but only a successful claimant processes each
+tracked deadline. Lock timeouts and deadlocks leave an attempt for a later firing.
 
-1. Copy the sample `repository/conf/samples/quartz.properties` shipped with
-   the accelerator to `<IS_HOME>/repository/conf/quartz.properties` on
-   **every** node in the cluster. Unlike a hand-written Quartz config, this
-   sample does not need to be edited per node — it uses
-   `org.quartz.scheduler.instanceId = AUTO`, so each node identifies itself
-   automatically.
-2. Create Quartz's own clustering tables (`QRTZ_*`) in the accelerator's
-   `WSO2DPDP_DB` database, once, using the DDL scripts published by the
-   Quartz project itself for version 2.3.x
-   (`https://github.com/quartz-scheduler/quartz/tree/quartz-2.3.x/quartz-core/src/main/resources/org/quartz/impl/jdbcjobstore`)
-   — pick the script matching your database (H2, MySQL, PostgreSQL, etc.).
-   These tables are not created automatically; apply them the same way you
-   would apply any other third-party schema.
-3. Restart every node.
+Event delivery happens after commit through the existing notification workers;
+HTTP delivery is outside the transaction and can be retried. This does not provide
+exactly-once HTTP delivery or a shared transaction with the separate IS consent
+store. Existing pre-mutation listener hooks remain, but the tracker guard alone
+does not eliminate every concurrent consent-renewal race.
 
-With this in place, Quartz coordinates through the shared database so that
-exactly one node executes the job on each scheduled tick, no matter how many
-nodes are running. To confirm it's working, check the logs after a
-scheduled run — only one node should log the job firing, not all of them.
+### Persisted expiry precision and existing tracker rows
+
+Tracker writes use the expiry read back from the saved consent, so the tracker
+matches the source database's timestamp precision. If an existing tracker has a
+different deadline, reconciliation conditionally updates it only when its tenant,
+consent ID, and old deadline still match. That attempt is counted as skipped;
+a subsequent fetch can process the corrected row. A repaired deadline earlier
+than the scan cursor is picked up on the next firing.
+
+If the saved consent deadline is in the future, the repaired tracker remains
+pending until it is due. The repair does not recreate a deleted tracker or
+overwrite one whose deadline another worker has already changed.
 
 ## 8. Self-service account deletion
 
@@ -356,11 +376,11 @@ application for it, and grants it through the `dpdp-consent-user` role only.
 `internal_user_mgt_delete` is never granted to portal users, so
 `DELETE /scim2/Users/{id}` stays administrator-only.
 
-**The scope check on the token is the enforcement.** An administrator's token
-does not carry `account:self:delete`, so the server answers their
-`DELETE /scim2/Me` with a 403 whether it arrives from the portal, curl, or
-anywhere else. The portal hiding the menu item for them is a convenience on
-top of that, not the control itself.
+**The scope check on the token is the enforcement.** The admin role alone does
+not grant `account:self:delete`. An otherwise valid token lacking that scope
+cannot call `DELETE /scim2/Me`, whether from the portal or another client.
+An administrator granted the scope through another role can use the endpoint;
+hiding the portal menu is not the server-side control.
 
 ### With an approval workflow on Delete User
 
@@ -392,9 +412,9 @@ endpoint for "my pending requests". A user who tries again simply gets the
 
 ### What this does and does not cover
 
-- It prevents administrators deleting **their own** account *through the
-  portal*, which is what would otherwise risk leaving a tenant with no
-  administrator. It does not restrict Identity Server administration: anyone
+- With the default role grants, users holding only the portal admin role cannot
+  delete **their own** account through the portal. It does not restrict Identity
+  Server administration: anyone
   holding `internal_user_mgt_delete` can still delete any account, their own
   included, via `/scim2/Users/{id}` and the Console. That is unchanged and
   intended.
@@ -417,9 +437,9 @@ the token never carries, and the menu item stays hidden.
 Event Notification Framework runtime settings are configured in the same
 `deployment.toml` file under `[dpdp_accelerator.event_notifications]` and its
 payload-signing, lifecycle-event, polling, and webhook sub-tables. The
-accelerator provisions these values into `dpdp-accelerator.xml`; the ENF
-configuration component then maps them to the typed ENF configuration parser
-before the delivery services activate.
+configuration mapper renders these values into `dpdp-accelerator.xml` using the
+accelerator template. `DPDPConfigParser` reads that XML, and the shared
+`DPDPConfigurationService` supplies the settings to the notification services.
 
 For the user workflow—creating topics and subscriptions, preparing a webhook,
 publishing events, and viewing delivery history—see

@@ -383,11 +383,12 @@ environments through the Event Notification settings described in
 
 The [Node.js sample](pathname:///examples/webhook-listener.mjs) verifies raw-body HMAC and
 RS256 JWS, checks configured routing claims, and commits accepted events to a
-SQLite inbox before returning `202`. It uses Node.js 24 or later and built-in
-modules, with no npm dependencies. From a repository checkout, its path is
-`docs/static/examples/webhook-listener.mjs`. If downloading it from this page,
-save it as `webhook-listener.mjs` and replace that repository path with
-`./webhook-listener.mjs` in the commands below.
+SQLite inbox before returning `202`. Its callback contract is available as an
+[OpenAPI 3.0 definition](pathname:///examples/webhook-listener.openapi.yaml).
+It uses Node.js 24 or later and built-in modules, with no npm dependencies.
+From a repository checkout, its path is `docs/static/examples/webhook-listener.mjs`.
+If downloading it from this page, save it as `webhook-listener.mjs` and replace
+that repository path with `./webhook-listener.mjs` in the commands below.
 
 1. Obtain the tenant's expected issuer and JWKS URL from trusted server
    configuration. Download the JWKS using certificate validation, for example

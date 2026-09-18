@@ -196,10 +196,17 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
   const location = useLocation()
   const { currentUser, hasScope, hasAnyScope } = useAuthorization()
 
-  // An admin's own consents are still reachable directly by URL -- this only
+  // Anyone acting on other people's complaints -- the DPO role, or any user holding
+  // either "any" complaint scope -- never gets the self-service consent entries. That
+  // is unconditional: unlike the consent admin below, it is not a deployment choice.
+  const isComplaintOfficer =
+    hasScope(REQUIRED_SCOPES.COMPLAINTS_READ_ANY) || hasScope(REQUIRED_SCOPES.COMPLAINTS_WRITE_ANY)
+
+  // A consent admin's own consents are still reachable directly by URL -- this only
   // declutters the sidebar, it is not an access control boundary.
   const hideSelfConsents =
-    currentUser.hideSelfConsentsForAdmins && hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY)
+    isComplaintOfficer ||
+    (currentUser.hideSelfConsentsForAdmins && hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY))
 
   // The Dashboard has a section for each of these scopes (see DashboardPage) - a session with
   // none of them (e.g. someone with only PURPOSES_READ) has nothing to see there. A DPO trivially

@@ -36,7 +36,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdate
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.util.PriorityMapper;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,8 +100,8 @@ public class ComplaintHandler {
     }
 
     public ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
-            Integer limit, Integer offset, String sort) {
-        return listComplaints(orgId, status, priority, userId, limit, offset, sort, false);
+            String search, Integer limit, Integer offset, String sort) {
+        return listComplaints(orgId, status, priority, userId, search, limit, offset, sort, false);
     }
 
     public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
@@ -109,7 +109,7 @@ public class ComplaintHandler {
     }
 
     public CategoryListResponseDTO getCategories() {
-        Map<String, String> categoryPriorities = new TreeMap<>(PriorityMapper.getCategoryPriorities());
+        Map<String, String> categoryPriorities = new TreeMap<>(ComplaintServiceUtil.getCategoryPriorities());
         List<ComplaintCategoryDTO> beanList = new ArrayList<>();
         for (Map.Entry<String, String> entry : categoryPriorities.entrySet()) {
             beanList.add(new ComplaintCategoryDTO(entry.getKey(), entry.getValue()));
@@ -136,7 +136,7 @@ public class ComplaintHandler {
     }
 
     public ComplaintRecordDTO getOwnComplaint(String orgId, String complaintId, String ownerUserId) {
-        Complaint complaint = complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
+        Complaint complaint = complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
         List<ComplaintAttachmentResponseDTO> attachments =
                 complaintAttachmentService.listAttachmentsForComplaint(orgId, complaintId);
         return ComplaintRecordDTO.from(complaint, publicOnly(attachments));
@@ -144,12 +144,14 @@ public class ComplaintHandler {
 
     public ComplaintListResponseDTO listOwnComplaints(String orgId, String ownerUserId, String status,
             Integer limit, Integer offset, String sort) {
-        return listComplaints(orgId, status, null, ownerUserId, limit, offset, sort, true);
+        // No free-text search here - a Data Principal's own list is already scoped to a single
+        // userId, so there's nothing for search to narrow down further.
+        return listComplaints(orgId, status, null, ownerUserId, null, limit, offset, sort, true);
     }
 
     public ComplaintStatusUpdateResponseDTO updateOwnStatus(String orgId, String complaintId, String ownerUserId,
             String ownerUserName, MeComplaintStatusUpdateRequestDTO request) {
-        complaintService.requireOwnedComplaint(orgId, complaintId, ownerUserId);
+        complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
         String toStatus = request != null ? request.getToStatus() : null;
         return complaintEventService.updateStatus(orgId, complaintId, ownerUserId, ownerUserName, "USER", toStatus,
                 null);
@@ -158,13 +160,13 @@ public class ComplaintHandler {
     // ---- shared ----
 
     private ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
-            Integer limit, Integer offset, String sort, boolean restrictToPublicAttachments) {
+            String search, Integer limit, Integer offset, String sort, boolean restrictToPublicAttachments) {
         int lim = limit != null && limit > 0 ? Math.min(limit, 100) : 10;
         int off = offset != null && offset >= 0 ? offset : 0;
         int[] totalOut = new int[]{0};
 
-        List<Complaint> list = complaintService.listComplaints(orgId, status, priority, userId, lim, off, sort,
-                totalOut);
+        List<Complaint> list = complaintService.listComplaints(orgId, status, priority, userId, search, lim, off,
+                sort, totalOut);
 
         List<ComplaintRecordDTO> beanList = new ArrayList<>();
         for (Complaint complaint : list) {

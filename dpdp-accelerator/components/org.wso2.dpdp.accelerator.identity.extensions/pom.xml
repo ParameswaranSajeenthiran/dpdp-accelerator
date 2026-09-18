@@ -106,10 +106,6 @@
             <artifactId>org.wso2.dpdp.accelerator.consent.extensions</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
-            <artifactId>quartz</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
@@ -140,9 +136,33 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>${project.basedir}/../../accelerators/dpdp-is/carbon-home/dbscripts/dpdp-accelerator</directory>
+                <includes>
+                    <include>consent-history/h2.sql</include>
+                    <include>consent-history/mysql.sql</include>
+                    <include>event-notification/h2.sql</include>
+                    <include>event-notification/mysql.sql</include>
+                </includes>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -168,9 +188,6 @@
                         <exclude>**/*DataHolder.class</exclude>
                         <exclude>**/*TenantMgtListener.class</exclude>
                         <exclude>**/*ConsentManagementListener.class</exclude>
-                        <exclude>**/*ConsentExpiryReconciler.class</exclude>
-                        <!-- Needs a live Quartz Scheduler and/or the carbon config directory. -->
-                        <exclude>**/scheduler/*.class</exclude>
                         <exclude>**/*StartupObserver.class</exclude>
                     </excludes>
                 </configuration>
@@ -273,7 +290,6 @@
                             org.wso2.carbon.consent.mgt.core.listener;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             org.wso2.carbon.consent.mgt.core.model;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
                             org.wso2.carbon.consent.mgt.core.exception;version="${carbon.consent.mgt.core.imp.pkg.version.range}",
-                            !org.quartz.*,
                             org.wso2.carbon.identity.governance;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.service.notification;version="${carbon.identity.governance.version}",
                             org.wso2.carbon.identity.governance.model;version="${carbon.identity.governance.version}",
@@ -283,10 +299,6 @@
                             org.wso2.carbon.identity.event.handler;version="${carbon.identity.event.version}",
                             *
                         </Import-Package>
-                        <!-- Quartz sits on Carbon's shared classpath, not an OSGi bundle, so nothing
-                             exports org.quartz for a static Import-Package to resolve against.
-                             `!org.quartz.*` stops bnd auto-adding an unresolvable entry from our
-                             own `import org.quartz.Job`; DynamicImport-Package resolves it instead. -->
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <_dsannotations>*</_dsannotations>
                     </instructions>

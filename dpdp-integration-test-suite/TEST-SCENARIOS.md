@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 174 across 46 spec files in 9 areas |
+| **Tests** | 173 across 46 spec files in 9 areas |
 | **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
 | **Skipped when unconfigured** | `04.01.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -329,7 +329,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 **Not covered:** the list's true empty state - the shared `user` persona always has history.
 
-**44 tests, 9 spec files.**
+**43 tests, 9 spec files.**
 
 ### `08.01-data-principal-creating-complaints.spec.ts`
 
@@ -378,9 +378,8 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | ID | Scenario | Notes |
 | --- | --- | --- |
 | `08.05.01` | The queue table shows reference id, user, category, priority, status, SLA and updated columns |  |
-| `08.05.02` | A resolved complaint is hidden from the default (status=All) queue view | Asserted on the specific row, since the "Resolved" stat tile always puts that word on the page. |
-| `08.05.03` | Opening a case from the queue navigates to its detail page showing the same reference id |  |
-| `08.05.04` | Navigating to an unknown case id shows the not-found state with a way back to the queue |  |
+| `08.05.02` | Opening a case from the queue navigates to its detail page showing the same reference id |  |
+| `08.05.03` | Navigating to an unknown case id shows the not-found state with a way back to the queue |  |
 
 ### `08.06-officer-searching-complaints.spec.ts`
 
@@ -388,8 +387,8 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | --- | --- | --- |
 | `08.06.01` | Filtering by status shows a matching complaint and hides a non-matching one |  |
 | `08.06.02` | Filtering by priority shows a matching complaint and hides a non-matching one | DATA_BREACH auto-maps to Critical priority. |
-| `08.06.03` | Explicitly filtering by "Resolved" status reveals an otherwise-hidden resolved complaint | Complements 08.05.02: the same filter that hides resolved complaints surfaces them when selected explicitly. |
-| `08.06.04` | Searching by reference id narrows the queue to that complaint | All tests here set rows-per-page to 25 first - the search box filters client-side over the already-fetched page. |
+| `08.06.03` | A resolved complaint shows in the default queue view and when filtering by "Resolved" | Regression cover for the queue once dropping resolved complaints from the default (status=All) view. Asserted on the specific row, since the "Resolved" stat tile always puts that word on the page. |
+| `08.06.04` | Searching by reference id narrows the queue to that complaint | Search is server-side; all tests here still set rows-per-page to 25 first so an unsearched queue reliably shows the test's own complaint. |
 | `08.06.05` | Searching by the Data Principal's name narrows the queue to that principal's complaints |  |
 
 ### `08.07-officer-replying-in-thread.spec.ts`

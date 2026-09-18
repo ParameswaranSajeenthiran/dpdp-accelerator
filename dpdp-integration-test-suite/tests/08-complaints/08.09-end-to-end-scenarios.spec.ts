@@ -36,13 +36,10 @@ test.describe('Real-world complaint scenarios (UI)', () => {
   test('08.09.01 - A citizen replying to a Resolved complaint posts the message and reopens it', async ({
     browser,
   }) => {
-    // ComplaintDetailPage.tsx's onSend only attaches a toStatus when the complaint is currently
-    // WAITING_ON_CLIENT (see the file header comment in 05.04) - RESOLVED isn't handled, even
-    // though StatusTransitionValidator.java's own backend rule explicitly allows and documents
-    // RESOLVED -> AWAITING_INTERNAL_REVIEW as how a citizen reopens a resolved complaint. As the
-    // frontend behaves today, replying to a resolved complaint posts the message but leaves the
-    // complaint RESOLVED and hidden from the officer's default queue - this test asserts that
-    // actual, current behavior rather than the reopen flow the backend alone would support.
+    // ComplaintDetailPage.tsx's onSend attaches toStatus AWAITING_INTERNAL_REVIEW for both
+    // WAITING_ON_CLIENT and RESOLVED, matching StatusTransitionValidator.java's backend rule that
+    // RESOLVED -> AWAITING_INTERNAL_REVIEW is how a citizen reopens a resolved complaint - the
+    // officer has no manual transition out of RESOLVED, so a citizen reply is the only path.
     // Several full-page navigations/reloads happen below, each forcing a silent OIDC re-auth
     // round trip - the default 30s test timeout is too
     // tight once that compounds across this test's many sequential steps.
@@ -79,11 +76,9 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     await caseDetailPage.sendAndConfirmResolve(`Believed resolved: ${uniqueMarker('reopen-resolve')}.`)
     await expect(caseDetailPage.resolvedLockedBanner).toBeVisible()
 
-    // Resolved complaints are hidden from the officer's default queue view.
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
-    await expect(queuePage.rowByReferenceId(referenceId)).not.toBeVisible()
-
+    await expect(queuePage.rowByReferenceId(referenceId)).toBeVisible()
     // Citizen isn't satisfied and replies again. The citizen never left the /complaints list
     // after submitting - openByReferenceId navigates into the complaint's detail page for the
     // first time.
@@ -96,10 +91,10 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     await expect(dataPrincipalPage.getByText(reopenMessage)).toBeVisible()
     await expect(detailPage.chipWithLabel('Waiting on Internal Review')).toBeVisible()
 
+    // The reopen is visible to the officer too, not just on the citizen's own detail page.
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
     await expect(queuePage.rowByReferenceId(referenceId)).toBeVisible()
-
     await dataPrincipalPage.context().close()
     await officerPage.context().close()
   })

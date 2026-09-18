@@ -39,14 +39,19 @@ public interface ConsentExpiryTrackerDAO {
 
     void deleteExpiry(Connection connection, String consentId) throws ConsentExpiryDataAccessException;
 
-    /**
-     * Atomically claims a due tracker row: deletes it only if it exists and its expiry time has
-     * passed. Returns whether this call won the claim (exactly one row deleted) - {@code false}
-     * means nothing was due, or another caller already claimed it first.
-     */
-    boolean claimDueExpiry(Connection connection, String consentId, long nowMillis)
+    List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize)
             throws ConsentExpiryDataAccessException;
 
-    List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize)
+    boolean claimDueExpiry(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
+            throws ConsentExpiryDataAccessException;
+
+    ConsentExpiryRecord findExpiry(Connection connection, String orgId, String consentId)
+            throws ConsentExpiryDataAccessException;
+
+    List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize,
+            ConsentExpiryRecord cursor) throws ConsentExpiryDataAccessException;
+
+    /** Updates only the observed tracker deadline, without owning the caller's transaction. */
+    boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
             throws ConsentExpiryDataAccessException;
 }

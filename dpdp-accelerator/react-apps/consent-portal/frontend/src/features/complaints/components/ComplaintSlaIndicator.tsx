@@ -20,11 +20,7 @@ import { Box, Stack, Tooltip, Typography } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintStatus } from '../../../types/complaint'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
-import {
-  getComplaintSlaDaysRemaining,
-  getComplaintSlaState,
-  getComplaintStatusLabelKey,
-} from '../utils/complaintDisplay'
+import { getComplaintSlaDaysRemaining, getComplaintSlaState } from '../utils/complaintDisplay'
 
 interface ComplaintSlaIndicatorProps {
   statutoryDueDate: number
@@ -47,16 +43,20 @@ const SLA_DOT_COLOR = {
 function ComplaintSlaIndicator({
   statutoryDueDate,
   status,
-}: ComplaintSlaIndicatorProps): React.JSX.Element {
+}: ComplaintSlaIndicatorProps): React.JSX.Element | null {
   const { t } = useTranslation('common')
   const slaState = getComplaintSlaState(statutoryDueDate, status)
   const daysRemaining = getComplaintSlaDaysRemaining(statutoryDueDate)
 
+  // A resolved complaint already carries a "Resolved" status chip wherever this renders, so a
+  // second one here would just read as "Resolved Resolved".
+  if (status === 'RESOLVED') {
+    return null
+  }
+
   let label: string
 
-  if (status === 'RESOLVED') {
-    label = t(`complaints.status.${getComplaintStatusLabelKey(status)}`)
-  } else if (daysRemaining < 0) {
+  if (daysRemaining < 0) {
     const overdueDays = Math.abs(daysRemaining)
     label = t(
       overdueDays === 1 ? 'complaints.sla.overdueSingular' : 'complaints.sla.overduePlural',

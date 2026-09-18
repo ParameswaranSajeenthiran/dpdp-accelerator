@@ -20,37 +20,18 @@ package org.wso2.dpdp.accelerator.identity.extensions.consent;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
-import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
-import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
-import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants;
-import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
-import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
+import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.identity.extensions.internal.DPDPIdentityExtensionDataHolder;
-import org.wso2.dpdp.accelerator.identity.extensions.util.DPDPLifecycleEventUtil;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
-/**
- * Detects and records a consent's {@code EXPIRE} transition - called both from
- * {@link DPDPConsentManagementListener}'s {@code pre*} hooks (a consent already lapsed being touched
- * again before the scheduled job catches it) and from the periodic
- * {@link org.wso2.dpdp.accelerator.identity.extensions.consent.scheduler.ConsentExpiryJob}. Both
- * paths funnel through {@link #expireConsentIfDue}, so the "claim, then record" logic exists in
- * exactly one place.
- *
- * <p>{@code carbon-consent-management} never persists {@code EXPIRED} - every read path resolves
- * it dynamically from {@code expiryTime}, so the receipt fetched here already reports
- * {@code EXPIRED} rather than the real prior status. The prior status is therefore read back from
- * this accelerator's own {@code DPDP_CONSENT_STATUS_AUDIT} - the most recent status-audit row's
- * {@code currentStatus} is exactly what a real CREATE/UPDATE/AUTHORIZE action last recorded,
- * before the consent lapsed.
- */
+/** Reconciles due consents from listener hooks and bounded, cursor-based scheduled sweeps. */
 public final class DPDPConsentExpiryReconciler {
 
     private static final Log LOG = LogFactory.getLog(DPDPConsentExpiryReconciler.class);
@@ -59,85 +40,124 @@ public final class DPDPConsentExpiryReconciler {
 
     }
 
-    /**
-     * Claims and records this consent's expiry if its tracked expiry time has passed. A no-op if
-     * nothing is due, if it was already claimed by another caller, or if consent expiry handling
-     * is disabled.
-     */
     public static void expireConsentIfDue(String orgId, String consentId) {
 
-        if (!DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService().isConsentExpiryEnabled()) {
+        DPDPIdentityExtensionDataHolder holder = DPDPIdentityExtensionDataHolder.getInstance();
+        if (!holder.getConfigurationService().isConsentExpiryEnabled()) {
             return;
         }
         try {
-            boolean claimed = DPDPIdentityExtensionDataHolder.getInstance().getConsentExpiryService()
-                    .claimExpiryIfDue(orgId, consentId, System.currentTimeMillis());
-            if (!claimed) {
-                return;
-            }
-            recordExpiry(orgId, consentId);
+            ConsentExpiryRecord candidate = holder.getConsentExpiryService().findExpiry(orgId, consentId);
+            processingService(holder).process(candidate, System.currentTimeMillis());
         } catch (Exception e) {
             LOG.error("Error expiring consent: " + LogSanitizer.sanitize(consentId), e);
         }
     }
 
-    /**
-     * Batch driver for the scheduled job: finds every tracker row already due and expires each,
-     * one tenant flow per consent since they can belong to different tenants.
-     */
     public static void expireDueConsents(int batchSize) {
 
-        if (!DPDPIdentityExtensionDataHolder.getInstance().getConfigurationService().isConsentExpiryEnabled()) {
+        DPDPIdentityExtensionDataHolder holder = DPDPIdentityExtensionDataHolder.getInstance();
+        DPDPConfigurationService configuration = holder.getConfigurationService();
+        if (!configuration.isConsentExpiryEnabled()) {
             return;
         }
-        try {
-            List<ConsentExpiryRecord> dueExpiries = DPDPIdentityExtensionDataHolder.getInstance()
-                    .getConsentExpiryService().findDueExpiries(System.currentTimeMillis(), batchSize);
-            if (!dueExpiries.isEmpty()) {
-                LOG.info("Consent expiry job found " + dueExpiries.size() + " due consent(s) to expire.");
-            } else {
-                LOG.debug("Consent expiry job found no due consents.");
+        ConsentExpiryProcessingService processing = processingService(holder);
+        sweep(holder.getConsentExpiryService(), (candidate, cutoff) -> {
+            PrivilegedCarbonContext.startTenantFlow();
+            try {
+                PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(candidate.getOrgId());
+                return processing.process(candidate, cutoff);
+            } finally {
+                PrivilegedCarbonContext.endTenantFlow();
             }
-            for (ConsentExpiryRecord dueExpiry : dueExpiries) {
-                PrivilegedCarbonContext.startTenantFlow();
-                try {
-                    PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain(dueExpiry.getOrgId());
-                    expireConsentIfDue(dueExpiry.getOrgId(), dueExpiry.getConsentId());
-                } finally {
-                    PrivilegedCarbonContext.endTenantFlow();
+        }, batchSize, configuration.getConsentExpiryMaxBatchesPerRun(), configuration.getConsentExpiryMaxRunSeconds(),
+                System.currentTimeMillis(), System::nanoTime);
+    }
+
+    private static ConsentExpiryProcessingService processingService(DPDPIdentityExtensionDataHolder holder) {
+
+        return new ConsentExpiryProcessingService(holder.getConsentExpiryService(), holder.getConsentHistoryService(),
+                holder.getPrivilegedConsentManager(), holder.getConfigurationService(),
+                holder::getLifecycleEventListener);
+    }
+
+    /** Test seam keeps tenant setup at the boundary and time deterministic without a live IS instance. */
+    static void sweep(ConsentExpiryService expiry, CandidateProcessor processor, int batchSize, int maxBatches,
+            int maxSeconds, long cutoff, LongSupplier nanoTime) {
+
+        if (batchSize <= 0 || maxBatches <= 0 || maxSeconds <= 0) {
+            throw new IllegalArgumentException("Consent expiry batch size and run limits must be positive.");
+        }
+        long start = nanoTime.getAsLong();
+        long budget = TimeUnit.SECONDS.toNanos(maxSeconds);
+        ConsentExpiryRecord cursor = null;
+        int batches = 0;
+        long fetched = 0;
+        long completed = 0;
+        long skipped = 0;
+        long failed = 0;
+        String stopReason = "batch limit";
+        try {
+            scan:
+            while (batches < maxBatches) {
+                if (Thread.currentThread().isInterrupted()) {
+                    stopReason = "shutdown";
+                    break;
+                }
+                if (nanoTime.getAsLong() - start >= budget) {
+                    stopReason = "elapsed-time limit";
+                    break;
+                }
+                List<ConsentExpiryRecord> candidates = expiry.findDueExpiries(cutoff, batchSize, cursor);
+                batches++;
+                fetched += candidates.size();
+                for (ConsentExpiryRecord candidate : candidates) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        stopReason = "shutdown";
+                        break scan;
+                    }
+                    if (nanoTime.getAsLong() - start >= budget) {
+                        stopReason = "elapsed-time limit";
+                        break scan;
+                    }
+                    try {
+                        if (processor.process(candidate, cutoff)) {
+                            completed++;
+                        } else {
+                            skipped++;
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        stopReason = "shutdown";
+                        break scan;
+                    } catch (Exception e) {
+                        failed++;
+                        LOG.error("Error expiring consent: " + LogSanitizer.sanitize(candidate.getConsentId()), e);
+                    }
+                    // Advance even after failure: leave the restored tracker for a later firing.
+                    cursor = candidate;
+                }
+                if (candidates.size() < batchSize) {
+                    stopReason = "end of scan";
+                    break;
                 }
             }
         } catch (Exception e) {
-            LOG.error("Error while processing due consent expiries.", e);
+            stopReason = "fetch failure";
+            LOG.error("Error fetching due consent expiries.", e);
+        }
+        String summary = "Consent expiry sweep: batches=" + batches + ", fetched=" + fetched + ", completed="
+                + completed + ", skipped=" + skipped + ", failed=" + failed + ", stopped=" + stopReason + ".";
+        if ("end of scan".equals(stopReason)) {
+            LOG.info(summary);
+        } else {
+            LOG.error(summary);
         }
     }
 
-    private static void recordExpiry(String orgId, String consentId) throws Exception {
+    @FunctionalInterface
+    interface CandidateProcessor {
 
-        ConsentHistoryService consentHistoryService = DPDPIdentityExtensionDataHolder.getInstance()
-                .getConsentHistoryService();
-        String previousStatus = getLastKnownStatus(orgId, consentId, consentHistoryService);
-
-        consentHistoryService.recordStatusAudit(orgId, consentId, previousStatus, "EXPIRED", ActionType.EXPIRE,
-                ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
-
-        PrivilegedConsentManager consentManager = DPDPIdentityExtensionDataHolder.getInstance()
-                .getPrivilegedConsentManager();
-        Receipt receipt = consentManager.getReceiptWithExtendedSchema(consentId);
-        List<ConsentAuthorization> authorizations = consentManager.getConsentAuthorizations(consentId);
-        String snapshotJson = DPDPConsentSnapshotBuilder.buildSnapshotJson(receipt, authorizations);
-        consentHistoryService.recordHistorySnapshot(orgId, consentId, ActionType.EXPIRE, snapshotJson,
-                ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
-
-        DPDPLifecycleEventUtil.notify(l -> l.onConsentExpired(orgId, consentId, previousStatus,
-                DPDPConsentSnapshotBuilder.resolvePurposes(receipt)));
-    }
-
-    private static String getLastKnownStatus(String orgId, String consentId,
-            ConsentHistoryService consentHistoryService) throws Exception {
-
-        PagedResult<ConsentStatusAuditRecord> latest = consentHistoryService.getStatusAuditHistory(orgId, consentId,
-                1, 0);
-        return latest.getRecords().isEmpty() ? null : latest.getRecords().get(0).getCurrentStatus();
+        boolean process(ConsentExpiryRecord candidate, long cutoff) throws Exception;
     }
 }

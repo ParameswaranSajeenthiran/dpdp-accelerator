@@ -83,6 +83,10 @@ export class ComplaintQueuePage {
     return this.table.getByRole('row', { name: new RegExp(referenceId) })
   }
 
+  statusChipInRow(referenceId: string, label: ComplaintStatusLabel): Locator {
+    return this.rowByReferenceId(referenceId).getByText(label, { exact: true })
+  }
+
   get rows(): Locator {
     return this.table.locator('tbody').getByRole('row')
   }

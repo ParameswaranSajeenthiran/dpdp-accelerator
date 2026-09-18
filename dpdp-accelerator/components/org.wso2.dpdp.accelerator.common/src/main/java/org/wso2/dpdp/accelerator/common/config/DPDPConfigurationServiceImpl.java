@@ -299,16 +299,51 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
-    public String getConsentExpiryCronValue() {
-
-        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_CRON_VALUE
-                : configParser.getConsentExpiryCronValue();
-    }
-
-    @Override
     public int getConsentExpiryBatchSize() {
 
         return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE
                 : configParser.getConsentExpiryBatchSize();
+    }
+
+    @Override
+    public String getConsentExpiryScheduleMode() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_SCHEDULE_MODE
+                : configParser.getConsentExpiryScheduleMode();
+    }
+
+    @Override
+    public String getConsentExpiryDailyTime() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_DAILY_TIME
+                : configParser.getConsentExpiryDailyTime();
+    }
+
+    @Override
+    public String getConsentExpiryTimezone() {
+
+        return configParser == null ? java.time.ZoneId.systemDefault().getId()
+                : configParser.getConsentExpiryTimezone();
+    }
+
+    @Override
+    public int getConsentExpiryIntervalSeconds() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_INTERVAL_SECONDS
+                : configParser.getConsentExpiryIntervalSeconds();
+    }
+
+    @Override
+    public int getConsentExpiryMaxBatchesPerRun() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_BATCHES_PER_RUN
+                : configParser.getConsentExpiryMaxBatchesPerRun();
+    }
+
+    @Override
+    public int getConsentExpiryMaxRunSeconds() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_RUN_SECONDS
+                : configParser.getConsentExpiryMaxRunSeconds();
     }
 }

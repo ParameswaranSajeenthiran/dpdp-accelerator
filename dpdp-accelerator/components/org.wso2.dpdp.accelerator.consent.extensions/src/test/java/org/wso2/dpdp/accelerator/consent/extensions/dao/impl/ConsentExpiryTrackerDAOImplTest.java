@@ -23,6 +23,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentExpiryTrackerDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,10 +31,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /**
  * Exercises the real SQL against an in-memory H2 database - a plain interface/impl mock would
@@ -99,23 +107,6 @@ public class ConsentExpiryTrackerDAOImplTest {
         assertTrue(due.isEmpty());
     }
 
-    @Test
-    public void claimDueExpirySucceedsOnlyWhenExpiryTimeHasPassed() throws Exception {
-
-        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 5000L);
-
-        assertFalse(consentExpiryTrackerDAO.claimDueExpiry(connection, CONSENT_ID, 4000L));
-        assertTrue(consentExpiryTrackerDAO.claimDueExpiry(connection, CONSENT_ID, 5000L));
-    }
-
-    @Test
-    public void claimDueExpiryIsAtomicAndOnlyEverClaimsOnce() throws Exception {
-
-        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 5000L);
-
-        assertTrue(consentExpiryTrackerDAO.claimDueExpiry(connection, CONSENT_ID, 10_000L));
-        assertFalse(consentExpiryTrackerDAO.claimDueExpiry(connection, CONSENT_ID, 10_000L));
-    }
 
     @Test
     public void findDueExpiriesOnlyReturnsRowsAtOrBeforeNowOrderedOldestFirst() throws Exception {
@@ -141,5 +132,116 @@ public class ConsentExpiryTrackerDAOImplTest {
 
         assertEquals(due.size(), 1);
         assertEquals(due.get(0).getConsentId(), "consent-1");
+    }
+
+    @Test
+    public void cursorDoesNotSkipEqualDeadlinesAfterEarlierRowsAreDeleted() throws Exception {
+
+        for (String id : new String[] { "a", "b", "c", "d", "e" }) {
+            consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, id, 1000);
+        }
+        List<ConsentExpiryRecord> first = consentExpiryTrackerDAO.findDueExpiries(connection, 2000, 2, null);
+        assertEquals(first.get(0).getConsentId(), "a");
+        assertEquals(first.get(1).getConsentId(), "b");
+        assertTrue(consentExpiryTrackerDAO.claimDueExpiry(connection, first.get(0), 2000));
+        // b represents a failed/rolled-back candidate; pagination must advance past it.
+        List<ConsentExpiryRecord> second = consentExpiryTrackerDAO.findDueExpiries(connection, 2000, 2, first.get(1));
+        assertEquals(second.get(0).getConsentId(), "c");
+        assertEquals(second.get(1).getConsentId(), "d");
+        assertEquals(consentExpiryTrackerDAO.findDueExpiries(connection, 2000, 2, second.get(1)).size(), 1);
+    }
+
+    @Test
+    public void observedClaimChecksTenantDeadlineAndCutoff() throws Exception {
+
+        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 1000);
+        ConsentExpiryRecord candidate = consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID);
+        candidate.setOrgId("another-tenant");
+        assertFalse(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 2000));
+        candidate.setOrgId(ORG_ID);
+        assertFalse(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 999));
+        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 1500);
+        assertFalse(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 2000));
+        candidate.setExpiryTime(1500);
+        assertTrue(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 2000));
+    }
+
+    @Test
+    public void twoConnectionsOnlyOneWinsAfterCommit() throws Exception {
+
+        concurrentClaim(false);
+    }
+
+    @Test
+    public void twoConnectionsRollbackAllowsWaitingClaim() throws Exception {
+
+        concurrentClaim(true);
+    }
+
+    @Test
+    public void reconciliationChecksTenantAndObservedDeadlineAndCanRollback() throws Exception {
+
+        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 1498);
+        ConsentExpiryRecord candidate = consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID);
+        candidate.setOrgId("another-tenant");
+        assertFalse(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 1000));
+        candidate.setOrgId(ORG_ID);
+        connection.setAutoCommit(false);
+        assertTrue(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 1000));
+        assertFalse(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 3000));
+        connection.rollback();
+        assertEquals(consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID).getExpiryTime(), 1498L);
+        assertTrue(consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 1000));
+        connection.commit();
+        assertEquals(consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID).getExpiryTime(), 1000L);
+    }
+
+    @Test
+    public void sqlFailuresAreWrappedAndInvalidPageSizeIsRejected() throws Exception {
+
+        ConsentExpiryRecord candidate = new ConsentExpiryRecord();
+        expectThrows(IllegalArgumentException.class,
+                () -> consentExpiryTrackerDAO.findDueExpiries(connection, 1000, 0, candidate));
+        connection.close();
+        Class<ConsentExpiryDataAccessException> type = ConsentExpiryDataAccessException.class;
+        assertTrue(expectThrows(type, () -> consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, 1000))
+                .getCause() instanceof SQLException);
+        expectThrows(type, () -> consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID));
+        expectThrows(type, () -> consentExpiryTrackerDAO.findDueExpiries(connection, 1000, 10, candidate));
+        expectThrows(type, () -> consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 1000));
+        expectThrows(type, () -> consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 1000));
+        expectThrows(type, () -> consentExpiryTrackerDAO.deleteExpiry(connection, CONSENT_ID));
+        expectThrows(type, () -> consentExpiryTrackerDAO.findDueExpiries(connection, 1000, 10));
+    }
+
+    private void concurrentClaim(boolean rollback) throws Exception {
+
+        consentExpiryTrackerDAO.upsertExpiry(connection, ORG_ID, CONSENT_ID, 1000);
+        ConsentExpiryRecord candidate = consentExpiryTrackerDAO.findExpiry(connection, ORG_ID, CONSENT_ID);
+        connection.setAutoCommit(false);
+        assertTrue(consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, 2000));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CountDownLatch started = new CountDownLatch(1);
+        try (Connection competitor = DriverManager.getConnection(connection.getMetaData().getURL())) {
+            competitor.setAutoCommit(false);
+            Future<Boolean> claim = executor.submit(() -> {
+                started.countDown();
+                boolean won = consentExpiryTrackerDAO.claimDueExpiry(competitor, candidate, 2000);
+                competitor.commit();
+                return won;
+            });
+            assertTrue(started.await(5, TimeUnit.SECONDS));
+            expectThrows(TimeoutException.class,
+                    () -> claim.get(100, TimeUnit.MILLISECONDS));
+            if (rollback) {
+                connection.rollback();
+            } else {
+                connection.commit();
+            }
+            assertEquals(claim.get(5, TimeUnit.SECONDS).booleanValue(), rollback);
+        } finally {
+            connection.rollback();
+            executor.shutdownNow();
+        }
     }
 }
