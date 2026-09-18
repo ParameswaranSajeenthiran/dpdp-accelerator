@@ -77,14 +77,16 @@ public interface ComplaintDAO {
     boolean updateStatus(Connection conn, String complaintId, String orgId, String newStatus, long updatedTime);
 
     /**
-     * Lists complaints for an org with optional status/priority/userId filters, sorting, and
-     * limit/offset pagination.
+     * Lists complaints for an org with optional status/priority/userId filters, a free-text
+     * search, sorting, and limit/offset pagination.
      *
      * @param conn     caller-owned connection this read runs against
      * @param orgId    tenant/organization to list complaints for
      * @param status   optional status filter
      * @param priority optional priority filter
      * @param userId   optional Data Principal filter
+     * @param search   optional case-insensitive substring match against REFERENCE_ID, USER_NAME
+     *                 or USER_ID, unlike userId which is exact - see ComplaintQueryBuilder
      * @param limit    maximum number of rows to return
      * @param offset   number of matching rows to skip
      * @param sort     sort order
@@ -97,7 +99,7 @@ public interface ComplaintDAO {
      * @return the page of complaints matching the filters
      */
     List<Complaint> listComplaints(Connection conn, String orgId, String status, String priority, String userId,
-            int limit, int offset, String sort, int[] totalOut);
+            String search, int limit, int offset, String sort, int[] totalOut);
 
     /**
      * Computes org-wide counts for the officer/admin queue's summary tiles. The following

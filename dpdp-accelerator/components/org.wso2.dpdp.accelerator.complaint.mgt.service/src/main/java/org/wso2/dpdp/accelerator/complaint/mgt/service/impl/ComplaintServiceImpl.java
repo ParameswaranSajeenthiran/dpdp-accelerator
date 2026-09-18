@@ -216,8 +216,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
-            int offset, String sort, int[] totalOut) {
+    public List<Complaint> listComplaints(String orgId, String status, String priority, String userId,
+            String search, int limit, int offset, String sort, int[] totalOut) {
         // A typo'd/unrecognized filter value must surface as a 400, not silently return an empty
         // page indistinguishable from "no matches" - see complaint-server-API.yaml.
         if (status != null && !status.trim().isEmpty() && !ComplaintStatus.isValid(status)) {
@@ -229,7 +229,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                     String.format(ComplaintServiceConstants.INVALID_PRIORITY_FILTER_ERROR, priority));
         }
         return DatabaseUtils.executeInTransaction(conn -> complaintDAO.listComplaints(conn, orgId, status, priority,
-                userId, limit, offset, sort, totalOut));
+                userId, search, limit, offset, sort, totalOut));
     }
 
     @Override

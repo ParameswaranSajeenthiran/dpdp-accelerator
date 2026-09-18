@@ -177,11 +177,50 @@ class ComplaintDAOImplTest {
 
         int[] totalOut = new int[1];
         List<Complaint> results =
-                listComplaints("org1", "OPEN", null, null, 10, 0, null, totalOut);
+                listComplaints("org1", "OPEN", null, null, null, 10, 0, null, totalOut);
 
         assertEquals(2, totalOut[0]);
         assertEquals(2, results.size());
         assertTrue(results.stream().allMatch(c -> "org1".equals(c.getOrgId()) && "OPEN".equals(c.getStatus())));
+    }
+
+    @Test
+    void listComplaintsSearchMatchesReferenceIdCaseInsensitively() {
+        // sampleComplaint gives c1 referenceId "CMP-2026-c1" and userName "user1-name" - see helper above.
+        addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+        addComplaint(sampleComplaint("c2", "org1", "OPEN", "HIGH", "user2", 200L, 200L));
+
+        int[] totalOut = new int[1];
+        List<Complaint> results = listComplaints("org1", null, null, null, "2026-C1", 10, 0, null, totalOut);
+
+        assertEquals(1, totalOut[0]);
+        assertEquals("c1", results.get(0).getComplaintId());
+    }
+
+    @Test
+    void listComplaintsSearchMatchesUserNameAndUserId() {
+        addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+        addComplaint(sampleComplaint("c2", "org1", "OPEN", "HIGH", "user2", 200L, 200L));
+
+        int[] totalOut = new int[1];
+        // Matches c1's USER_NAME ("user1-name") and, independently, c2 would match on USER_ID
+        // ("user2") even without a distinct display name - both fields are searched.
+        List<Complaint> results = listComplaints("org1", null, null, null, "user1-name", 10, 0, null, totalOut);
+
+        assertEquals(1, totalOut[0]);
+        assertEquals("c1", results.get(0).getComplaintId());
+    }
+
+    @Test
+    void listComplaintsSearchTreatsLikeWildcardsLiterally() {
+        addComplaint(sampleComplaint("c1", "org1", "OPEN", "HIGH", "user1", 100L, 100L));
+
+        int[] totalOut = new int[1];
+        // "%" and "_" must be escaped, or this would match every row instead of none.
+        List<Complaint> results = listComplaints("org1", null, null, null, "%_%", 10, 0, null, totalOut);
+
+        assertEquals(0, totalOut[0]);
+        assertTrue(results.isEmpty());
     }
 
     @Test
@@ -191,8 +230,8 @@ class ComplaintDAOImplTest {
         }
 
         int[] totalOut = new int[1];
-        List<Complaint> page1 = listComplaints("org1", null, null, null, 2, 0, "updatedTime", totalOut);
-        List<Complaint> page2 = listComplaints("org1", null, null, null, 2, 2, "updatedTime", totalOut);
+        List<Complaint> page1 = listComplaints("org1", null, null, null, null, 2, 0, "updatedTime", totalOut);
+        List<Complaint> page2 = listComplaints("org1", null, null, null, null, 2, 2, "updatedTime", totalOut);
 
         assertEquals(5, totalOut[0]);
         assertEquals(2, page1.size());
@@ -209,7 +248,7 @@ class ComplaintDAOImplTest {
         addComplaint(sampleComplaint("c3", "org1", "OPEN", "HIGH", "user1", 200L, 200L));
 
         int[] totalOut = new int[1];
-        List<Complaint> results = listComplaints("org1", null, null, null, 10, 0, "-updatedTime", totalOut);
+        List<Complaint> results = listComplaints("org1", null, null, null, null, 10, 0, "-updatedTime", totalOut);
 
         assertEquals("c2", results.get(0).getComplaintId());
         assertEquals("c3", results.get(1).getComplaintId());
@@ -222,7 +261,7 @@ class ComplaintDAOImplTest {
         addComplaint(sampleComplaint("c2", "org1", "OPEN", "HIGH", "user1", 300L, 300L));
 
         int[] totalOut = new int[1];
-        List<Complaint> results = listComplaints("org1", null, null, null, 10, 0, null, totalOut);
+        List<Complaint> results = listComplaints("org1", null, null, null, null, 10, 0, null, totalOut);
 
         assertEquals("c2", results.get(0).getComplaintId());
         assertEquals("c1", results.get(1).getComplaintId());
@@ -297,10 +336,10 @@ class ComplaintDAOImplTest {
         return DatabaseUtils.executeInTransaction(conn -> dao.updateStatus(conn, complaintId, orgId, newStatus, updatedTime));
     }
 
-    private List<Complaint> listComplaints(String orgId, String status, String priority, String userId, int limit,
-            int offset, String sort, int[] totalOut) {
-        return DatabaseUtils.executeInTransaction(conn -> dao.listComplaints(conn, orgId, status, priority, userId, limit, offset,
-                sort, totalOut));
+    private List<Complaint> listComplaints(String orgId, String status, String priority, String userId,
+            String search, int limit, int offset, String sort, int[] totalOut) {
+        return DatabaseUtils.executeInTransaction(conn -> dao.listComplaints(conn, orgId, status, priority, userId,
+                search, limit, offset, sort, totalOut));
     }
 
     private ComplaintQueueStats getQueueStats(String orgId, long now) {

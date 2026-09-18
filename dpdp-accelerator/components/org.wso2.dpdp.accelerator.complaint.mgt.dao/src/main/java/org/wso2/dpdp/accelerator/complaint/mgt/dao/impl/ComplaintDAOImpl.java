@@ -132,7 +132,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
 
     @Override
     public List<Complaint> listComplaints(Connection conn, String orgId, String status, String priority,
-            String userId, int limit, int offset, String sort, int[] totalOut) {
+            String userId, String search, int limit, int offset, String sort, int[] totalOut) {
         List<Complaint> complaints = new ArrayList<>();
 
         try {
@@ -140,6 +140,7 @@ public class ComplaintDAOImpl implements ComplaintDAO {
                     .setStatus(status)
                     .setPriority(priority)
                     .setUserId(userId)
+                    .setSearch(search)
                     .setSort(sort);
             QueryResult countQuery = builder.buildCountQuery();
             QueryResult selectQuery = builder.buildSelectQuery(limit, offset);
