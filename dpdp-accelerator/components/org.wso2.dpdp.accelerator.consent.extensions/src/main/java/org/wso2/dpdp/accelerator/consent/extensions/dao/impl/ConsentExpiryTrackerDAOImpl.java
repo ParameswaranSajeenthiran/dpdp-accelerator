@@ -23,6 +23,7 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentExpiryD
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentExpiryDBQueries;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentExpiryQueryFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,28 +34,18 @@ import java.util.List;
 
 public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
 
-    private final ConsentExpiryDBQueries queries;
-
-    public ConsentExpiryTrackerDAOImpl() {
-
-        this(new ConsentExpiryDBQueries());
-    }
-
-    ConsentExpiryTrackerDAOImpl(ConsentExpiryDBQueries queries) {
-
-        this.queries = queries;
-    }
-
     @Override
     public void upsertExpiry(Connection connection, String orgId, String consentId, long expiryTime)
             throws ConsentExpiryDataAccessException {
 
         try {
-            try (PreparedStatement delete = connection.prepareStatement(queries.getUpsertExpiryDeleteQuery())) {
+            try (PreparedStatement delete = connection.prepareStatement(
+                    getQueries(connection).getUpsertExpiryDeleteQuery())) {
                 delete.setString(1, consentId);
                 delete.executeUpdate();
             }
-            try (PreparedStatement insert = connection.prepareStatement(queries.getUpsertExpiryInsertQuery())) {
+            try (PreparedStatement insert = connection.prepareStatement(
+                    getQueries(connection).getUpsertExpiryInsertQuery())) {
                 insert.setString(1, consentId);
                 insert.setString(2, orgId);
                 insert.setLong(3, expiryTime);
@@ -69,7 +60,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     @Override
     public void deleteExpiry(Connection connection, String consentId) throws ConsentExpiryDataAccessException {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getDeleteExpiryQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getDeleteExpiryQuery())) {
             statement.setString(1, consentId);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -83,7 +75,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
             throws ConsentExpiryDataAccessException {
 
         List<ConsentExpiryRecord> records = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(queries.getFindDueExpiriesQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getFindDueExpiriesQuery())) {
             statement.setLong(1, nowMillis);
             statement.setInt(2, batchSize);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -110,7 +103,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     public boolean claimDueExpiry(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
             throws ConsentExpiryDataAccessException {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getClaimObservedExpiryQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getClaimObservedExpiryQuery())) {
             statement.setString(1, candidate.getConsentId());
             statement.setString(2, candidate.getOrgId());
             statement.setLong(3, candidate.getExpiryTime());
@@ -125,7 +119,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     public ConsentExpiryRecord findExpiry(Connection connection, String orgId, String consentId)
             throws ConsentExpiryDataAccessException {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getFindExpiryQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getFindExpiryQuery())) {
             statement.setString(1, orgId);
             statement.setString(2, consentId);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -147,7 +142,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
             return findDueExpiries(connection, nowMillis, batchSize);
         }
         List<ConsentExpiryRecord> records = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(queries.getFindDueExpiriesAfterQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getFindDueExpiriesAfterQuery())) {
             statement.setLong(1, nowMillis);
             statement.setLong(2, cursor.getExpiryTime());
             statement.setLong(3, cursor.getExpiryTime());
@@ -167,7 +163,8 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
             throws ConsentExpiryDataAccessException {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getReconcileExpiryQuery())) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                getQueries(connection).getReconcileExpiryQuery())) {
             statement.setLong(1, expiryTimeMillis);
             statement.setString(2, candidate.getConsentId());
             statement.setString(3, candidate.getOrgId());
@@ -176,6 +173,11 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
         } catch (SQLException e) {
             throw new ConsentExpiryDataAccessException("Error reconciling the observed expiry deadline.", e);
         }
+    }
+
+    private ConsentExpiryDBQueries getQueries(Connection connection) {
+
+        return ConsentExpiryQueryFactory.getQueryProvider(connection);
     }
 
 }

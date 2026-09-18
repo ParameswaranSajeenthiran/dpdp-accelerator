@@ -476,13 +476,11 @@ worker_shutdown_timeout_seconds = 5
 enabled = true
 snapshot_enabled = true
 
-# Record due consent expiries in successive batches within each scheduled firing.
-# Daily mode defaults to midnight in the server timezone. Use interval mode with
-# interval_seconds for a fixed delay after each completed firing. See the configuration guide.
+# Runs due-expiry sweeps daily at daily_time; set schedule_mode = "interval" and interval_seconds for fixed-delay sweeps.
 [dpdp_accelerator.consent_expiry]
 enabled = true
-schedule_mode = "interval"
-interval_seconds = 10
+schedule_mode = "daily"
+daily_time = "00:00"
 # timezone = "Asia/Colombo"
 # interval_seconds = 300
 batch_size = 100
