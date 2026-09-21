@@ -114,7 +114,7 @@ The override file only names what it changes; it is merged into the defaults key
 | `personas.user2.*` | `dpdp-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
 | `personas.consentAdmin.*` | `dpdp-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
 | `personaRoles.user` / `.consentAdmin` | `dpdp-consent-user` / `dpdp-consent-admin` | The roles provisioning assigns. The accelerator creates the roles themselves; it never assigns membership. |
-| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/09-event-notifications/README.md`. |
+| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
 | `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after shortening `[dpdp_accelerator.consent_expiry] cron_value` on the server and restarting it. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. |
 
@@ -137,6 +137,13 @@ covered features, and running both sequentially in the same job roughly doubled 
 regression surfaces within a day rather than only at the next weekly or release run. Both
 `weekly-e2e-is-master.yml`/`weekly-e2e-is-latest-u2.yml` and the release gate also run every
 project, unconditionally.
+
+`.github/workflows/e2e.yml` (the reusable job every one of the above calls) also resolves the
+runner's own private IP as `WEBHOOK_RECEIVER_HOST` and runs
+`scripts/enable-webhook-callbacks.sh` against the deployed `deployment.toml`, so
+`tests/09-event-notifications`'s real webhook-delivery tests run in every one of these workflows
+too - see [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests", for what that script changes and
+why.
 
 ## Running the tests
 

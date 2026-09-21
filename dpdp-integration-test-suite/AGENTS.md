@@ -307,18 +307,42 @@ the page object, don't assume.
 ## Webhook-dependent tests
 
 `tests/09-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
-process can actually reach, and skips itself otherwise. To run it:
+process can actually reach, and skips itself otherwise (its file-level `beforeEach` gates on
+`webhookTestsEnabled()`). `EventNotificationUrlValidator` rejects loopback callback URLs
+unconditionally, no config flag overrides it, so this can never be exercised by pointing a
+callback at `localhost`/`127.0.0.1` (see `utils/webhookReceiver.ts`'s own doc comment). It needs a
+real, externally-reachable address instead - which address depends on where the test runner and
+the Identity Server actually are relative to each other:
 
-1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which
-   `EventNotificationUrlValidator` rejects unconditionally regardless of any config flag.
-2. If that address is RFC1918/site-local (it normally will be), the running deployment's
+**Local dev (test runner and IS on your own machine):**
+
+1. Set `webhook.receiverHost` in `e2e-config.local.json` to this machine's **LAN IP** — found via
+   `ifconfig`/`ipconfig`, never `localhost`/`127.0.0.1`.
+2. That address is RFC1918/site-local, so the *deployed* `deployment.toml`'s
    `[dpdp_accelerator.event_notifications.webhook]` table needs
-   `allow_private_network_callback_targets = true` — it does **not** by default — and then set
-   `WEBHOOK_RECEIVER_ALLOW_PRIVATE_NETWORK=true`.
+   `allow_private_network_callback_targets = true` — it is `false` by default — and the server
+   restarted after the change. Then set `webhook.allowPrivateNetwork` to `true` in
+   `e2e-config.local.json` too (there are no environment-variable fallbacks in this suite - see
+   `utils/config.ts`).
+3. Widen `allowed_callback_ports` in that same deployed `deployment.toml` table if your receiver
+   lands on a port outside the default `-1,80,443,8443` allow-list - `utils/webhookReceiver.ts`'s
+   own `ALLOWED_CALLBACK_PORTS` tries `8443`-`8455` in turn, so widening to that range covers it.
 
 A machine whose LAN IP changes mid-session breaks webhook verification regardless of the tests
-being correct. All three tests in that file are also skipped in code for runtime reasons — see
-[`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
+being correct.
+
+**CI:** none of the above is manual. `.github/workflows/e2e.yml` resolves the runner's own private
+IP as `WEBHOOK_RECEIVER_HOST` (the test runner and IS share one runner there, so that address
+plays the same role a LAN IP does locally) and runs `scripts/enable-webhook-callbacks.sh` against
+the deployed `deployment.toml` - the same two settings as steps 2-3 above, applied programmatically
+- right after `bin/configure.sh` and before the server starts. Since `e2e.yml` is the one reusable
+job every E2E workflow calls, this applies everywhere: label-gated PR runs, nightly, weekly, and
+the release gate.
+
+Three tests in `09.10-webhook-delivery-api.spec.ts` stay `test.skip()`'d in source regardless of
+any of this, for reasons unrelated to receiver reachability (two are genuinely slow - up to ~90s
+and ~11 minutes - and one needs a stuck `in_flight` delivery state this suite has no way to force
+from outside the process) - see [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
 
 ## Auth-fixture internals you must not undo
 

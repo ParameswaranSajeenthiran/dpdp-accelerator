@@ -449,14 +449,16 @@ jobs:
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
 
-      # The workflow this job was lifted from has an "Enable private-network webhook
-      # callbacks" step here, calling
-      # dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh. That script is
-      # not in the repository, so the step is omitted rather than carried as a guaranteed
-      # failure. Nothing is lost today: it flips allow_private_network_callback_targets for
-      # tests/08-event-notifications, whose webhook specs are test.skip'd in source and also
-      # gated on WEBHOOK_RECEIVER_HOST, which nothing here sets. Re-add it at this point in the
-      # sequence - after configure.sh, before the server starts - once the script lands.
+      # Widens the DEPLOYED deployment.toml only (never the committed template - see the script's
+      # own comment) so a real webhook round trip can run: the Identity Server and this suite's
+      # WebhookReceiver share this one runner, and the receiver is only reachable at the runner's
+      # own private IP, never at loopback (EventNotificationUrlValidator rejects that
+      # unconditionally - see AGENTS.md, "Webhook-dependent tests"). Must run after configure.sh
+      # (which writes deployment.toml) and before the server starts (deployment.toml is read at
+      # startup only).
+      - name: Enable private-network webhook callbacks
+        run: |
+          bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh "$IS_HOME"
 
       - name: Start the Identity Server
         run: |
@@ -480,6 +482,21 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+
+      # The Identity Server and this suite's WebhookReceiver both run on this one runner, so
+      # "reachable over the network" (utils/webhookReceiver.ts) means the runner's own primary,
+      # non-loopback IP - the same private address the runner itself uses for outbound traffic,
+      # not a real LAN. `hostname -I` lists every address the runner's network interfaces carry;
+      # the first is always that primary one.
+      - name: Resolve the runner's webhook-reachable IP
+        run: |
+          host=$(hostname -I | awk '{print $1}')
+          if [ -z "${host}" ]; then
+            echo "::error::Could not resolve a non-loopback IP for this runner via 'hostname -I'"
+            exit 1
+          fi
+          echo "WEBHOOK_RECEIVER_HOST=${host}" >> "$GITHUB_ENV"
+          echo "Resolved webhook receiver host: ${host}"
 
       # The suite's one configuration file: e2e-config.json holds every default, and this local
       # override supplies only what is generated per run. Written before provisioning, which now
@@ -574,8 +591,9 @@ jobs:
       - name: Provision test users
         run: bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
-      # tests/08-event-notifications' real webhook-delivery tests run via WEBHOOK_RECEIVER_HOST -
-      # no secret needed, see "Enable private-network webhook callbacks..." above.
+      # tests/09-event-notifications' real webhook-delivery tests now run too, via the resolved
+      # WEBHOOK_RECEIVER_HOST and the "Enable private-network webhook callbacks" step above -
+      # no secret needed, both are derived from the runner itself.
       # npm ci and the browser install are already done, so run-e2e.sh skips both and
       # just execs playwright. The github reporter adds inline annotations; the config
       # itself only declares html.
