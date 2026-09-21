@@ -449,13 +449,7 @@ jobs:
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
 
-      # Widens the DEPLOYED deployment.toml only (never the committed template - see the script's
-      # own comment) so a real webhook round trip can run: the Identity Server and this suite's
-      # WebhookReceiver share this one runner, and the receiver is only reachable at the runner's
-      # own private IP, never at loopback (EventNotificationUrlValidator rejects that
-      # unconditionally - see AGENTS.md, "Webhook-dependent tests"). Must run after configure.sh
-      # (which writes deployment.toml) and before the server starts (deployment.toml is read at
-      # startup only).
+      # Must run after configure.sh (writes deployment.toml) and before the server starts.
       - name: Enable private-network webhook callbacks
         run: |
           bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh "$IS_HOME"
@@ -483,11 +477,7 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      # The Identity Server and this suite's WebhookReceiver both run on this one runner, so
-      # "reachable over the network" (utils/webhookReceiver.ts) means the runner's own primary,
-      # non-loopback IP - the same private address the runner itself uses for outbound traffic,
-      # not a real LAN. `hostname -I` lists every address the runner's network interfaces carry;
-      # the first is always that primary one.
+      # IS and WebhookReceiver share this runner; the receiver needs the runner's own non-loopback IP.
       - name: Resolve the runner's webhook-reachable IP
         run: |
           host=$(hostname -I | awk '{print $1}')
@@ -591,9 +581,6 @@ jobs:
       - name: Provision test users
         run: bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
-      # tests/09-event-notifications' real webhook-delivery tests now run too, via the resolved
-      # WEBHOOK_RECEIVER_HOST and the "Enable private-network webhook callbacks" step above -
-      # no secret needed, both are derived from the runner itself.
       # npm ci and the browser install are already done, so run-e2e.sh skips both and
       # just execs playwright. The github reporter adds inline annotations; the config
       # itself only declares html.

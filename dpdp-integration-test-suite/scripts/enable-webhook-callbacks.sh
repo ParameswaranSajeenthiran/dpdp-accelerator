@@ -15,23 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Widens the DEPLOYED deployment.toml (never the committed template - its strict defaults are the
-# intentional shipped posture for every real install) so a real webhook round trip can run in CI,
-# where the Identity Server and the test suite's WebhookReceiver share one machine and the
-# receiver is only reachable at that machine's own private (non-loopback) IP:
-#
-#   1. allow_private_network_callback_targets: false -> true - RFC1918/link-local/IPv6-ULA targets
-#      only. Loopback/wildcard/multicast stay rejected unconditionally regardless of this flag -
-#      see EventNotificationUrlValidator - so this cannot be used to reach the server's own
-#      loopback-bound services.
-#   2. allowed_callback_ports: widened to include 8444-8455, matching WebhookReceiver's own
-#      ALLOWED_CALLBACK_PORTS (utils/webhookReceiver.ts) - several candidate ports, not just one,
-#      so more than one webhook.receiverHost-mode test can run concurrently.
+# Widens the DEPLOYED deployment.toml only (never the committed template) so a real webhook round
+# trip can run in CI: allows private-network callback targets (loopback stays rejected regardless -
+# see EventNotificationUrlValidator) and widens allowed_callback_ports to match
+# WebhookReceiver's ALLOWED_CALLBACK_PORTS.
 #
 # Usage: ./enable-webhook-callbacks.sh <IS_HOME>
-#
-# Run after bin/configure.sh (which writes deployment.toml) and before the server starts -
-# deployment.toml is read at startup only.
+# Run after bin/configure.sh, before the server starts.
 
 set -euo pipefail
 
