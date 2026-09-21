@@ -63,7 +63,7 @@ test.describe('Webhook delivery', () => {
     const response = await consentAdminEventApi.createSubscription({
       topic: topic.name,
       filter: { type: 'all' },
-      delivery: { mode: 'WEBHOOK', callbackUrl: started.url, sharedSecret: secret },
+      delivery: { mode: 'webhook', callbackUrl: started.url, sharedSecret: secret },
     })
     expect(response.status(), await response.text()).toBe(201)
     const subscription = await response.json()
