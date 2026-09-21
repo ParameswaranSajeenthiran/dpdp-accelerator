@@ -24,9 +24,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 
 /**
  * Shared business logic behind both /me/complaints/{id}/comments (Data Principal, always
@@ -62,7 +62,7 @@ public class ComplaintCommentHandler {
         String message = request != null ? request.getMessage() : null;
         Boolean requestedIsPublic = request != null ? request.isPublic() : null;
         if (requestedIsPublic == null) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.IS_PUBLIC_REQUIRED_ERROR);
         }
         boolean isPublic = requestedIsPublic;

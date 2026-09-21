@@ -37,7 +37,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDo
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import javax.activation.DataHandler;
@@ -180,7 +180,7 @@ class ComplaintAttachmentHandlerTest {
             parts.add(mock(Attachment.class));
         }
 
-        ComplaintException ex = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", parts, true, "officer1", "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());
@@ -204,7 +204,7 @@ class ComplaintAttachmentHandlerTest {
         when(filePart.getContentType()).thenReturn(MediaType.valueOf("application/pdf"));
         when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"big.pdf\""));
 
-        ComplaintException ex = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
                 () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                         "Officer One"));
 

@@ -16,26 +16,25 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;
+package org.wso2.dpdp.accelerator.consent.extensions.service.exception;
 
 import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 
-/**
- * Wraps a {@link java.sql.SQLException} raised by the persistence layer. Unchecked so DAO
- * interfaces stay free of throws clauses; it propagates through the service layer to the
- * endpoint's generic exception mapper rather than being mistaken for a "not found" result.
- */
-public class ComplaintDAOException extends DPDPException {
+/** Thrown by the consent.extensions service layer after catching and translating a DAO failure. */
+public class ConsentExtensionsServiceException extends DPDPException {
 
-    private static final String ERROR_CODE = "CO-DAO-001";
+    private static final String ERROR_CODE = "CX-SVC-001";
     private static final int HTTP_STATUS = 500;
 
-    public ComplaintDAOException(String message, Throwable cause) {
-        this(ERROR_CODE, message, HTTP_STATUS, cause);
+    public ConsentExtensionsServiceException(String message, Throwable cause) {
+
+        super(ERROR_CODE, message, message, HTTP_STATUS, cause);
     }
 
-    /** Lets a subtype (e.g. {@link DuplicateReferenceIdException}) report its own code/status. */
-    protected ComplaintDAOException(String errorCode, String message, int httpStatus, Throwable cause) {
+    /** Lets a caller with its own public-facing error code attach it directly, rather than the
+     * generic default - e.g. a REST resource's own documented error code. */
+    public ConsentExtensionsServiceException(String errorCode, String message, int httpStatus, Throwable cause) {
+
         super(errorCode, message, message, httpStatus, cause);
     }
 }

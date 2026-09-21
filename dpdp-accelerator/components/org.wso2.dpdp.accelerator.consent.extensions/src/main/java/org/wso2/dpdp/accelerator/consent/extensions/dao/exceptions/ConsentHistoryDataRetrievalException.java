@@ -21,10 +21,13 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 /**
  * Thrown when status-audit or history snapshot rows could not be read.
  */
-public class ConsentHistoryDataRetrievalException extends Exception {
+public class ConsentHistoryDataRetrievalException extends ConsentExtensionsDaoException {
+
+    private static final String ERROR_CODE = "CX-DAO-002";
+    private static final int HTTP_STATUS = 500;
 
     public ConsentHistoryDataRetrievalException(String message, Throwable cause) {
 
-        super(message, cause);
+        super(ERROR_CODE, message, HTTP_STATUS, cause);
     }
 }

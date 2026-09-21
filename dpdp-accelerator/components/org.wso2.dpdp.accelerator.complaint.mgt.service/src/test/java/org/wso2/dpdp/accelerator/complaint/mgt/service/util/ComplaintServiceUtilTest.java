@@ -29,7 +29,7 @@ import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.sql.Connection;
@@ -116,9 +116,9 @@ class ComplaintServiceUtilTest {
 
     @Test
     void getComplaintThrows404WhenIdOrOrgIsBlank() {
-        ComplaintException ex1 = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex1 = expectThrows(ComplaintServiceException.class,
                 () -> ComplaintServiceUtil.getComplaint(conn, complaintDAO, "org1", " "));
-        ComplaintException ex2 = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex2 = expectThrows(ComplaintServiceException.class,
                 () -> ComplaintServiceUtil.getComplaint(conn, complaintDAO, " ", "c1"));
 
         assertEquals("CO-4040", ex1.getCode());
@@ -130,7 +130,7 @@ class ComplaintServiceUtilTest {
     void getComplaintThrows404WhenDaoReturnsEmpty() {
         when(complaintDAO.getComplaintById(eq(conn), eq("c1"), eq("org1"))).thenReturn(Optional.empty());
 
-        ComplaintException ex = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
                 () -> ComplaintServiceUtil.getComplaint(conn, complaintDAO, "org1", "c1"));
 
         assertEquals("CO-4040", ex.getCode());
@@ -151,7 +151,7 @@ class ComplaintServiceUtilTest {
         Complaint complaint = openComplaint("c1", "org1", "user1");
         when(complaintDAO.getComplaintById(eq(conn), eq("c1"), eq("org1"))).thenReturn(Optional.of(complaint));
 
-        ComplaintException ex = expectThrows(ComplaintException.class,
+        ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
                 () -> ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, "org1", "c1", "someoneElse"));
 
         assertEquals("CO-4040", ex.getCode());

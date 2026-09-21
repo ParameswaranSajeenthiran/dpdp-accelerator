@@ -23,155 +23,133 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExtensionsDaoException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.impl.ConsentHistoryDAOImpl;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionDataHolder;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.sql.Connection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ConsentHistoryServiceImpl implements ConsentHistoryService {
 
     private static final Log LOG = LogFactory.getLog(ConsentHistoryServiceImpl.class);
 
+    /** Matches ConsentHistoryErrorCodes.SERVER_ERROR in the endpoint module - duplicated by value
+     * rather than imported, since this module can't depend on its own consumer's error codes. */
+    private static final String SERVER_ERROR_CODE = "CH-00004";
+
     private final ConsentHistoryDAO consentHistoryDAO;
-    private final Supplier<Connection> connectionSupplier;
-    private final Consumer<Connection> commitAction;
-    private final Consumer<Connection> rollbackAction;
 
     public ConsentHistoryServiceImpl() {
 
-        this(new ConsentHistoryDAOImpl(), DatabaseUtils::getDBConnection, DatabaseUtils::commitTransaction,
-                DatabaseUtils::rollbackTransaction);
+        this(new ConsentHistoryDAOImpl());
     }
 
-    /**
-     * Lets tests substitute a fake {@link Connection} and no-op commit/rollback, without going
-     * through the real, JNDI-backed {@link DatabaseUtils} - the DAO is mocked in those tests
-     * anyway, so the connection object itself is never actually used for I/O.
-     */
-    ConsentHistoryServiceImpl(ConsentHistoryDAO consentHistoryDAO, Supplier<Connection> connectionSupplier,
-            Consumer<Connection> commitAction, Consumer<Connection> rollbackAction) {
+    /** Lets tests substitute a mocked DAO while still running through a real transaction. */
+    ConsentHistoryServiceImpl(ConsentHistoryDAO consentHistoryDAO) {
 
         this.consentHistoryDAO = consentHistoryDAO;
-        this.connectionSupplier = connectionSupplier;
-        this.commitAction = commitAction;
-        this.rollbackAction = rollbackAction;
     }
 
     @Override
     public void recordStatusAudit(String tenantDomain, String consentId, String previousStatus,
-            String currentStatus, ActionType actionType, String actionBy)
-            throws ConsentHistoryDataInsertionException {
+            String currentStatus, ActionType actionType, String actionBy) {
 
-        // A status-audit row means "the status changed here" - previousStatus and currentStatus
-        // being equal (e.g. an UPDATE, which never touches lifecycle status; or one authorizer's
-        // approval when others are still pending) isn't a transition, so there is nothing to
-        // record. DPDP_CONSENT_HISTORY already captures every action regardless, with full detail,
-        // so nothing is lost by skipping a no-op row here.
+        // Checked before executeInTransaction so a call that has nothing to record doesn't take a
+        // connection from the pool. A status-audit row means "the status changed here" -
+        // previousStatus and currentStatus being equal (e.g. an UPDATE, which never touches
+        // lifecycle status; or one authorizer's approval when others are still pending) isn't a
+        // transition, so there is nothing to record. DPDP_CONSENT_HISTORY already captures every
+        // action regardless, with full detail, so nothing is lost by skipping a no-op row here.
         if (Objects.equals(previousStatus, currentStatus)) {
             LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: " + consentId
                     + " - status did not change (" + currentStatus + ").");
             return;
         }
 
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            DatabaseUtils.executeInTransaction(connection -> {
                 recordStatusAudit(connection, tenantDomain, consentId, previousStatus, currentStatus, actionType,
                         actionBy);
-                commitAction.accept(connection);
                 LOG.debug("Recorded a '" + actionType + "' status-audit row for consent: " + consentId);
-            } catch (ConsentHistoryDataInsertionException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+                return null;
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to record a status-audit entry for consent: " + consentId, e);
         }
     }
 
     @Override
     public void recordHistorySnapshot(String tenantDomain, String consentId, ActionType actionType,
-            String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException {
+            String snapshotJson, String actionBy) {
 
         if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
             LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
             return;
         }
 
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            DatabaseUtils.executeInTransaction(connection -> {
                 recordHistorySnapshot(connection, tenantDomain, consentId, actionType, snapshotJson, actionBy);
-                commitAction.accept(connection);
                 LOG.debug("Recorded a '" + actionType + "' history snapshot for consent: " + consentId);
-            } catch (ConsentHistoryDataInsertionException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+                return null;
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to record a history snapshot for consent: " + consentId, e);
         }
     }
 
     @Override
     public PagedResult<ConsentStatusAuditRecord> getStatusAuditHistory(String tenantDomain, String consentId,
-            int limit, int offset) throws ConsentHistoryDataRetrievalException {
+            int limit, int offset) {
 
         String orgId = resolveOrgId(tenantDomain);
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            return DatabaseUtils.executeInTransaction(connection -> {
                 List<ConsentStatusAuditRecord> records = consentHistoryDAO.getStatusAuditHistory(connection, orgId,
                         consentId, limit, offset);
                 int totalCount = consentHistoryDAO.getStatusAuditHistoryCount(connection, orgId, consentId);
-                commitAction.accept(connection);
                 return new PagedResult<>(records, totalCount);
-            } catch (ConsentHistoryDataRetrievalException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            LOG.error("Error retrieving status-audit history for consent: " + consentId, e);
+            throw new ConsentExtensionsServiceException(SERVER_ERROR_CODE,
+                    "Could not retrieve the status-audit history.", 500, e);
         }
     }
 
     @Override
     public PagedResult<ConsentHistoryRecord> getConsentHistory(String tenantDomain, String consentId, int limit,
-            int offset) throws ConsentHistoryDataRetrievalException {
+            int offset) {
 
         String orgId = resolveOrgId(tenantDomain);
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            return DatabaseUtils.executeInTransaction(connection -> {
                 List<ConsentHistoryRecord> records = consentHistoryDAO.getConsentHistory(connection, orgId,
                         consentId, limit, offset);
                 int totalCount = consentHistoryDAO.getConsentHistoryCount(connection, orgId, consentId);
-                commitAction.accept(connection);
                 return new PagedResult<>(records, totalCount);
-            } catch (ConsentHistoryDataRetrievalException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            LOG.error("Error retrieving history for consent: " + consentId, e);
+            throw new ConsentExtensionsServiceException(SERVER_ERROR_CODE, "Could not retrieve the history.", 500,
+                    e);
         }
     }
 
     @Override
-    public void recordStatusAudit(Connection connection, String tenantDomain, String consentId, String previousStatus,
-            String currentStatus, ActionType actionType, String actionBy) throws ConsentHistoryDataInsertionException {
+    public void recordStatusAudit(Connection connection, String tenantDomain, String consentId,
+            String previousStatus, String currentStatus, ActionType actionType, String actionBy) {
 
         // A status-audit row means "the status changed here" - previousStatus and currentStatus
         // being equal (e.g. an UPDATE, which never touches lifecycle status; or one authorizer's
@@ -194,12 +172,17 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
         record.setActionBy(actionBy);
         record.setActionTime(System.currentTimeMillis());
 
-        consentHistoryDAO.insertStatusAudit(connection, record);
+        try {
+            consentHistoryDAO.insertStatusAudit(connection, record);
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to record a status-audit entry for consent: " + consentId, e);
+        }
     }
 
     @Override
     public void recordHistorySnapshot(Connection connection, String tenantDomain, String consentId,
-            ActionType actionType, String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException {
+            ActionType actionType, String snapshotJson, String actionBy) {
 
         if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
             LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
@@ -215,16 +198,25 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
         record.setActionBy(actionBy);
         record.setActionTime(System.currentTimeMillis());
 
-        consentHistoryDAO.insertHistorySnapshot(connection, record);
+        try {
+            consentHistoryDAO.insertHistorySnapshot(connection, record);
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to record a history snapshot for consent: " + consentId, e);
+        }
     }
 
     @Override
-    public String getLastKnownStatus(Connection connection, String tenantDomain, String consentId)
-            throws ConsentHistoryDataRetrievalException {
+    public String getLastKnownStatus(Connection connection, String tenantDomain, String consentId) {
 
-        List<ConsentStatusAuditRecord> records = consentHistoryDAO.getStatusAuditHistory(connection,
-                resolveOrgId(tenantDomain), consentId, 1, 0);
-        return records.isEmpty() ? null : records.get(0).getCurrentStatus();
+        try {
+            List<ConsentStatusAuditRecord> records = consentHistoryDAO.getStatusAuditHistory(connection,
+                    resolveOrgId(tenantDomain), consentId, 1, 0);
+            return records.isEmpty() ? null : records.get(0).getCurrentStatus();
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to look up the last known status for consent: " + consentId, e);
+        }
     }
 
     private String resolveOrgId(String tenantDomain) {

@@ -19,9 +19,9 @@
 package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
@@ -72,7 +72,7 @@ public class EventDAOImpl implements EventDAO {
                                 event != null ? event.getEventId() : "null"),
                         e);
             }
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_EVENT,
                             event != null ? event.getEventId() : "null"),
                     e);
@@ -89,14 +89,14 @@ public class EventDAOImpl implements EventDAO {
             ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Event event = mapEvent(rs);
+                    Event event = mapEvent(rs, false);
                     event.setPurposes(getEventPurposes(conn, eventId));
                     return Optional.of(event);
                 }
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_BY_ID, eventId), e);
         }
     }
@@ -123,7 +123,7 @@ public class EventDAOImpl implements EventDAO {
                 throw new EventNotificationDuplicateResourceException(
                         String.format(EventNotificationCommonConstants.ERROR_ADDING_EVENT_PURPOSES, eventId), e);
             }
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_EVENT_PURPOSES, eventId), e);
         }
     }
@@ -143,7 +143,7 @@ public class EventDAOImpl implements EventDAO {
             }
             return purposes;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_EVENT_PURPOSES, eventId), e);
         }
     }
@@ -159,7 +159,7 @@ public class EventDAOImpl implements EventDAO {
                 return rs.next();
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_HAS_ACTIVE_EVENTS_FOR_TOPIC, topicId), e);
         }
     }
@@ -208,7 +208,7 @@ public class EventDAOImpl implements EventDAO {
 
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        events.add(mapEvent(rs));
+                        events.add(mapEvent(rs, true));
                     }
                 }
             }
@@ -223,12 +223,17 @@ public class EventDAOImpl implements EventDAO {
 
             return new PaginatedDAOResult<>(events, total);
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_EVENTS, orgId), e);
         }
     }
 
-    private Event mapEvent(ResultSet rs) throws SQLException {
+    /**
+     * {@code includeTopicAndCount} must match whether the caller's own query actually selects
+     * {@code TOPIC_NAME}/{@code DELIVERIES_COUNT} - the caller always knows this statically, so
+     * this is a plain parameter rather than something probed at runtime via a caught exception.
+     */
+    private Event mapEvent(ResultSet rs, boolean includeTopicAndCount) throws SQLException {
         Event event = new Event(
                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                 rs.getString(EventNotificationDBColumns.ORG_ID),
@@ -236,15 +241,9 @@ public class EventDAOImpl implements EventDAO {
                 rs.getString(EventNotificationDBColumns.TOPIC_ID),
                 rs.getString(EventNotificationDBColumns.PAYLOAD),
                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT));
-        try {
+        if (includeTopicAndCount) {
             event.setTopic(rs.getString(EventNotificationDBColumns.TOPIC_NAME));
-        } catch (SQLException ignored) {
-            // Column may not be present in all query projections
-        }
-        try {
             event.setDeliveriesCount(rs.getInt(EventNotificationDBColumns.DELIVERIES_COUNT));
-        } catch (SQLException ignored) {
-            // Column may not be present in all query projections
         }
         return event;
     }

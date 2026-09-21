@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.common.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
 import java.sql.Connection;
@@ -97,7 +97,7 @@ public final class DatabaseUtils {
      * <p>The connection is acquired with autocommit disabled, passed to {@code work}, and then:
      * <ul>
      *   <li>committed if {@code work} returns normally — commit failures are rethrown as a
-     *       {@link DPDPCommonRuntimeException} so callers cannot silently receive a false
+     *       {@link DPDPException} so callers cannot silently receive a false
      *       "success" when the data was never actually persisted;</li>
      *   <li>rolled back (best-effort) if the work or commit does not complete successfully.</li>
      * </ul>
@@ -106,8 +106,8 @@ public final class DatabaseUtils {
      * @param <T>  return type of the transactional unit of work
      * @param work lambda that receives the open, non-autocommit {@link Connection}
      * @return the value returned by {@code work}
-     * @throws DPDPCommonRuntimeException if the JDBC commit fails
-     * @throws RuntimeException           re-thrown unchanged from {@code work}
+     * @throws DPDPException     if the JDBC commit fails
+     * @throws RuntimeException  re-thrown unchanged from {@code work}
      */
     public static <T> T executeInTransaction(Function<Connection, T> work) {
 
@@ -119,8 +119,9 @@ public final class DatabaseUtils {
             try {
                 conn.commit();
             } catch (SQLException commitEx) {
-                throw new DPDPCommonRuntimeException(
-                        "Transaction commit failed — data may not have been persisted.", commitEx);
+                throw new DPDPException("COMMON-001",
+                        "Transaction commit failed — data may not have been persisted.",
+                        "Transaction commit failed — data may not have been persisted.", 500, commitEx);
             }
             committed = true;
             return result;

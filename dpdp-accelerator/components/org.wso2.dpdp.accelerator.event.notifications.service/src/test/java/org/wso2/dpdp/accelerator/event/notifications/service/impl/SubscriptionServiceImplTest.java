@@ -36,9 +36,9 @@ import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
@@ -137,7 +137,7 @@ public class SubscriptionServiceImplTest {
         assertEquals(result.getStatus(), SubscriptionStatus.ACTIVE);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateSubscriptionMissingTopic() {
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
@@ -170,14 +170,14 @@ public class SubscriptionServiceImplTest {
         assertEquals(result.getGroupId(), "org1");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateSubscriptionNullOrgId() {
         FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
         subscriptionService.createSubscription(null, "group1", "topic1", filter, delivery);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateSpecificSubscriptionMissingPurposes() {
         Topic topic = new Topic("t1", "org1", "topic1", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic1"))).thenReturn(Optional.of(topic));
@@ -187,7 +187,7 @@ public class SubscriptionServiceImplTest {
         subscriptionService.createSubscription("org1", "group1", "topic1", filter, delivery);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateExceptSubscriptionMissingPurposes() {
         Topic topic = new Topic("t1", "org1", "topic1", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("topic1"))).thenReturn(Optional.of(topic));
@@ -211,7 +211,7 @@ public class SubscriptionServiceImplTest {
         assertEquals(result.getStatus(), SubscriptionStatus.ACTIVE);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateSubscriptionTopicDeregisteredUnderLockReturns409() throws Exception {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));
@@ -264,7 +264,7 @@ public class SubscriptionServiceImplTest {
         verify(subscriptionDAO).deleteSubscriptionAtomic(any(Connection.class), eq("sub1"), eq("org1"), eq("ACTIVE"));
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateWebhookSubscriptionInvalidCallbackUrl() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));
@@ -292,7 +292,7 @@ public class SubscriptionServiceImplTest {
         assertNotNull(result);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateWebhookSubscriptionRejectsPrivateNetworkTargetByDefault() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));
@@ -329,14 +329,14 @@ public class SubscriptionServiceImplTest {
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
                 "https://93.184.216.34:443/callback", " ");
 
-        EventNotificationException exception = expectThrows(EventNotificationException.class,
+        EventNotificationServiceException exception = expectThrows(EventNotificationServiceException.class,
                 () -> subscriptionService.createSubscription("org1", "group1", "user-consent", filter, delivery));
         assertEquals(exception.getStatusCode(), 400);
         assertEquals(exception.getDescription(), EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG);
         verify(subscriptionDAO, never()).addSubscription(any(Connection.class), any(Subscription.class));
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testRetryVerificationForPendingSubscriptionWithoutCallbackUrl() {
         Subscription sub = new Subscription("sub1", "org1", "group1", "t1", "ALL", Collections.emptyList(), "WEBHOOK", null, "secret", "PENDING", new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("sub1"), eq("org1"))).thenReturn(Optional.of(sub));
@@ -364,7 +364,7 @@ public class SubscriptionServiceImplTest {
         assertEquals(result.getStatus(), SubscriptionStatus.PENDING);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateWebhookSubscriptionSameCallbackFailsWithConflict() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));
@@ -381,7 +381,7 @@ public class SubscriptionServiceImplTest {
         subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreatePollSubscriptionWhenWebhookExistsFailsWithConflict() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));
@@ -398,7 +398,7 @@ public class SubscriptionServiceImplTest {
         subscriptionService.createSubscription("org1", "user-consent", filter, delivery);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateWebhookSubscriptionWhenPollExistsFailsWithConflict() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(topic));

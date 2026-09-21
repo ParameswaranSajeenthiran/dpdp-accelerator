@@ -29,7 +29,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.expectThrows;
@@ -78,7 +78,7 @@ class ComplaintCommentHandlerTest {
     void addCommentThrowsWhenRequestIsNull() {
         // isPublic is a required field per the spec - a null request (or a request missing
         // isPublic) must be rejected, not silently treated as isPublic=false (an internal note).
-        expectThrows(ComplaintException.class,
+        expectThrows(ComplaintServiceException.class,
                 () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", null));
 
         verifyNoInteractions(complaintEventService);
@@ -89,7 +89,7 @@ class ComplaintCommentHandlerTest {
         ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
         request.setMessage("hello");
 
-        expectThrows(ComplaintException.class,
+        expectThrows(ComplaintServiceException.class,
                 () -> handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request));
 
         verifyNoInteractions(complaintEventService);

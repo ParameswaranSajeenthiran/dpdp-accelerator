@@ -18,8 +18,6 @@
 
 package org.wso2.dpdp.accelerator.consent.extensions.service;
 
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
@@ -29,34 +27,35 @@ import java.sql.Connection;
 
 /**
  * Every method takes {@code tenantDomain} explicitly - callers (the consent listener, the
- * endpoint webapp) resolve it themselves; this service never resolves it on its own.
+ * endpoint webapp) resolve it themselves; this service never resolves it on its own. Every method
+ * throws only the unchecked
+ * {@link org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException}
+ * or {@link org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException}.
  */
 public interface ConsentHistoryService {
 
     void recordStatusAudit(String tenantDomain, String consentId, String previousStatus, String currentStatus,
-            ActionType actionType, String actionBy) throws ConsentHistoryDataInsertionException;
+            ActionType actionType, String actionBy);
 
     /**
      * No-ops if snapshot recording is disabled in config.
      */
     void recordHistorySnapshot(String tenantDomain, String consentId, ActionType actionType, String snapshotJson,
-            String actionBy) throws ConsentHistoryDataInsertionException;
+            String actionBy);
 
     PagedResult<ConsentStatusAuditRecord> getStatusAuditHistory(String tenantDomain, String consentId, int limit,
-            int offset) throws ConsentHistoryDataRetrievalException;
+            int offset);
 
-    PagedResult<ConsentHistoryRecord> getConsentHistory(String tenantDomain, String consentId, int limit, int offset)
-            throws ConsentHistoryDataRetrievalException;
+    PagedResult<ConsentHistoryRecord> getConsentHistory(String tenantDomain, String consentId, int limit, int offset);
 
     /** Participates in the caller's transaction without committing or closing its connection. */
     void recordStatusAudit(Connection connection, String tenantDomain, String consentId, String previousStatus,
-            String currentStatus, ActionType actionType, String actionBy) throws ConsentHistoryDataInsertionException;
+            String currentStatus, ActionType actionType, String actionBy);
 
     /** Participates in the caller's transaction; preserves the snapshot configuration gate. */
     void recordHistorySnapshot(Connection connection, String tenantDomain, String consentId, ActionType actionType,
-            String snapshotJson, String actionBy) throws ConsentHistoryDataInsertionException;
+            String snapshotJson, String actionBy);
 
     /** Reads the latest recorded status on the caller's connection; null if no audit exists. */
-    String getLastKnownStatus(Connection connection, String tenantDomain, String consentId)
-            throws ConsentHistoryDataRetrievalException;
+    String getLastKnownStatus(Connection connection, String tenantDomain, String consentId);
 }

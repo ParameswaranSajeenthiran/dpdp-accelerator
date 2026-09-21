@@ -16,30 +16,21 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.event.notifications.service.exception;
+package org.wso2.dpdp.accelerator.event.notifications.common.exception.service;
 
-public class EventNotificationException extends RuntimeException {
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 
-    private final String code;
-    private final String description;
-    private final int statusCode;
+public class EventNotificationServiceException extends DPDPException {
 
-    public EventNotificationException(String code, String message, String description, int statusCode) {
-        super(message);
-        this.code = code;
-        this.description = description;
-        this.statusCode = statusCode;
+    public EventNotificationServiceException(String code, String message, String description, int statusCode) {
+        super(code, message, description, statusCode);
     }
 
     public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
+        return getErrorCode();
     }
 
     public int getStatusCode() {
-        return statusCode;
+        return getHttpStatus();
     }
 }

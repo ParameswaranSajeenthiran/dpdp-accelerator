@@ -22,9 +22,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintPriority;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.sql.Connection;
@@ -114,7 +114,7 @@ public final class ComplaintServiceUtil {
     }
 
     /**
-     * Fetches core complaint fields, throwing a 404 ComplaintException if it doesn't exist for
+     * Fetches core complaint fields, throwing a 404 ComplaintServiceException if it doesn't exist for
      * this org. Used by every service (events, attachments, the complaint service itself) that
      * needs to confirm a complaint exists/belongs to the org before acting on it, without
      * duplicating that existence check in every DAO.
@@ -124,25 +124,25 @@ public final class ComplaintServiceUtil {
      * @param orgId       tenant/organization the complaint belongs to
      * @param complaintId complaint to fetch
      * @return the complaint
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org
      */
     public static Complaint getComplaint(Connection conn, ComplaintDAO complaintDAO, String orgId,
             String complaintId) {
         if (complaintId == null || complaintId.trim().isEmpty() || orgId == null || orgId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
         }
         Optional<Complaint> complaintOpt = complaintDAO.getComplaintById(conn, complaintId.trim(), orgId.trim());
         if (complaintOpt.isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
         }
         return complaintOpt.get();
     }
 
     /**
-     * Same as {@link #getComplaint}, but additionally raises a 404 ComplaintException (not a 403 -
+     * Same as {@link #getComplaint}, but additionally raises a 404 ComplaintServiceException (not a 403 -
      * see complaint-server-API.yaml, which is explicit that /me/* must not confirm a complaint's
      * existence to a caller who doesn't own it) if the complaint's userId does not match
      * ownerUserId. Used by every /me/* code path that acts on a single complaintId.
@@ -153,14 +153,14 @@ public final class ComplaintServiceUtil {
      * @param complaintId complaint to fetch
      * @param ownerUserId Data Principal expected to own the complaint
      * @return the complaint
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId
      */
     public static Complaint getOwnedComplaint(Connection conn, ComplaintDAO complaintDAO, String orgId,
             String complaintId, String ownerUserId) {
         Complaint complaint = getComplaint(conn, complaintDAO, orgId, complaintId);
         if (!complaint.getUserId().equals(ownerUserId)) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
         }
         return complaint;

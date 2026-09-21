@@ -15,7 +15,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterM
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.DeliveryDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.EventDAOImpl;
 import org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl;

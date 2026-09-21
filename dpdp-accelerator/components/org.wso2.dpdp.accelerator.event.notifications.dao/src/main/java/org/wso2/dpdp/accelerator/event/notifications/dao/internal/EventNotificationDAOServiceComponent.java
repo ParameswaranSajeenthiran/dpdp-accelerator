@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPStartupException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -83,11 +83,11 @@ public class EventNotificationDAOServiceComponent implements EventNotificationDA
         try {
             int timeoutSeconds = configurationService.getJdbcConnectionVerificationTimeoutSeconds();
             if (!connection.isValid(timeoutSeconds)) {
-                throw new DPDPCommonRuntimeException("The DPDP database connection is not active.");
+                throw new DPDPStartupException("The DPDP database connection is not active.");
             }
             LOG.debug("Verified the DPDP database connection is active.");
         } catch (SQLException e) {
-            throw new DPDPCommonRuntimeException("Error while verifying the DPDP database connection.", e);
+            throw new DPDPStartupException("Error while verifying the DPDP database connection.", e);
         } finally {
             DatabaseUtils.closeConnection(connection);
         }

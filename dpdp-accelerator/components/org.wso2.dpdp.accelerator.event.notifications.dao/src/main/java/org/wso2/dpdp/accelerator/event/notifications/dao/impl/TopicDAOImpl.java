@@ -21,10 +21,10 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
@@ -69,7 +69,7 @@ public class TopicDAOImpl implements TopicDAO {
                 throw new EventNotificationDuplicateResourceException(
                         String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS, topic.getName()), e);
             }
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, topic.getName()), e);
         }
 
@@ -86,7 +86,7 @@ public class TopicDAOImpl implements TopicDAO {
                 throw new EventNotificationDuplicateResourceException(
                         String.format(EventNotificationCommonConstants.ERROR_TOPIC_ALREADY_EXISTS, topic.getName()), e);
             }
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_TOPIC, topic.getName()), e);
         }
     }
@@ -106,7 +106,7 @@ public class TopicDAOImpl implements TopicDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ID, topicId), e);
         }
     }
@@ -126,7 +126,7 @@ public class TopicDAOImpl implements TopicDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
                     e);
         }
@@ -145,7 +145,7 @@ public class TopicDAOImpl implements TopicDAO {
                 return rs.next() ? Optional.of(mapTopic(rs)) : Optional.empty();
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_TOPIC_BY_ORG_AND_NAME, orgId, name),
                     e);
         }
@@ -161,7 +161,7 @@ public class TopicDAOImpl implements TopicDAO {
             ps.setString(3, orgId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_TOPIC_STATUS, topicId), e);
         }
     }
@@ -209,7 +209,7 @@ public class TopicDAOImpl implements TopicDAO {
 
             return updated > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_DEREGISTERING_TOPIC, topicId), e);
         }
     }
@@ -261,7 +261,7 @@ public class TopicDAOImpl implements TopicDAO {
             }
             return new PaginatedDAOResult<>(topics, total);
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
         }
     }

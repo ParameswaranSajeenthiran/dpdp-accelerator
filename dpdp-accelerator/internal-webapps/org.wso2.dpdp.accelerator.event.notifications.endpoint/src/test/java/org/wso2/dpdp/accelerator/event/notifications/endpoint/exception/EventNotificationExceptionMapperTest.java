@@ -22,7 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -47,7 +47,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void testToResponseNotFoundException() {
-        EventNotificationException ex = new EventNotificationException("EN-4040", "Resource not found", "Topic ID not found.", 404);
+        EventNotificationServiceException ex = new EventNotificationServiceException("EN-4040", "Resource not found", "Topic ID not found.", 404);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);
@@ -64,7 +64,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void testToResponseConflictException() {
-        EventNotificationException ex = new EventNotificationException("EN-4090", "Topic already exists", "Topic name conflict.", 409);
+        EventNotificationServiceException ex = new EventNotificationServiceException("EN-4090", "Topic already exists", "Topic name conflict.", 409);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);
@@ -79,7 +79,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void testToResponseValidationException() {
-        EventNotificationException ex = new EventNotificationException("EN-4001", "Malformed request", "Org ID required.", 400);
+        EventNotificationServiceException ex = new EventNotificationServiceException("EN-4001", "Malformed request", "Org ID required.", 400);
         Response response = mapper.toResponse(ex);
 
         assertNotNull(response);
@@ -88,7 +88,7 @@ public class EventNotificationExceptionMapperTest {
 
     @Test
     public void mapsWrappedServiceAndWebApplicationExceptions() {
-        EventNotificationException service = new EventNotificationException("EN-5000", "failure", "details", 500);
+        EventNotificationServiceException service = new EventNotificationServiceException("EN-5000", "failure", "details", 500);
         assertEquals(mapper.toResponse(new RuntimeException(new RuntimeException(service))).getStatus(), 500);
         assertEquals(mapper.toResponse(new WebApplicationException(Response.status(418).build())).getStatus(), 418);
     }

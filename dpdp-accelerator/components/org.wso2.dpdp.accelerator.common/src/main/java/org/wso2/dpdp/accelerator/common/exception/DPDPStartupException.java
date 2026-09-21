@@ -1,13 +1,13 @@
-/**
+/*
  * Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
- * <p>
+ *
  * WSO2 LLC. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,22 +16,23 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.event.notifications.common.exception;
+package org.wso2.dpdp.accelerator.common.exception;
 
 /**
- * Thrown when an operation targets a resource whose state does not permit it
- * (e.g. creating a subscription against a deregistered topic).
- *
- * <p>Distinct from {@link EventNotificationDuplicateResourceException}, which
- * signals a uniqueness conflict, and from generic data access errors.</p>
+ * Thrown for a failure that happens once, at OSGi bundle activation, and never reaches an API
+ * request - {@code dpdp-accelerator.xml} failing to parse, or a bundle's own startup DB
+ * connectivity check failing. No {@code errorCode}/{@code httpStatus} shape, unlike
+ * {@link DPDPException}, since there's no response to attach one to.
  */
-public class EventNotificationInvalidStateException extends EventNotificationDataAccessException {
+public class DPDPStartupException extends RuntimeException {
 
-    public EventNotificationInvalidStateException(String message) {
+    public DPDPStartupException(String message) {
+
         super(message);
     }
 
-    public EventNotificationInvalidStateException(String message, Throwable cause) {
+    public DPDPStartupException(String message, Throwable cause) {
+
         super(message, cause);
     }
 }
