@@ -55,7 +55,7 @@ test.describe('Webhook delivery', () => {
   async function registerVerifiedWebhookSubscription(
     consentAdminEventApi: import('../../clients/EventNotificationApiClient').EventNotificationApiClient,
     label: string,
-  ): Promise<{ receiver: WebhookReceiver; secret: string; topicName: string; subscriptionId: string }> {
+  ): Promise<{ receiver: WebhookReceiver; secret: string; topicName: string; subscriptionId: string; groupId: string }> {
     const topic = await seedActiveTopicViaApi(consentAdminEventApi, label)
     const receiver = new WebhookReceiver()
     const started = await receiver.start()
@@ -74,7 +74,17 @@ test.describe('Webhook delivery', () => {
       })
       .toBe('active')
 
-    return { receiver, secret, topicName: topic.name, subscriptionId: subscription.subscriptionId }
+    // SubscriptionHandler.createSubscription silently forces groupId to the caller's own org id
+    // regardless of what's requested (see seedPollSubscriptionViaApi's comment in
+    // utils/eventNotificationSetup.ts) - read it back rather than assuming 'carbon.super', which
+    // is wrong under the multi-tenant project.
+    return {
+      receiver,
+      secret,
+      topicName: topic.name,
+      subscriptionId: subscription.subscriptionId,
+      groupId: subscription.groupId,
+    }
   }
 
   /**
@@ -129,7 +139,7 @@ test.describe('Webhook delivery', () => {
     const postCountPollTimeoutMs = Math.max(15_000, delayToThirdAttemptMs * 3)
     test.setTimeout(postCountPollTimeoutMs + 90_000)
 
-    const { receiver, topicName, subscriptionId } = await registerVerifiedWebhookSubscription(
+    const { receiver, topicName, subscriptionId, groupId } = await registerVerifiedWebhookSubscription(
       consentAdminEventApi,
       '08-02-01-topic',
     )
@@ -143,7 +153,7 @@ test.describe('Webhook delivery', () => {
         return { status: postCount < 3 ? 500 : 204 }
       })
 
-      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicName)
 
       await expect.poll(() => postCount, { timeout: postCountPollTimeoutMs }).toBeGreaterThanOrEqual(3)
 
@@ -191,13 +201,13 @@ test.describe('Webhook delivery', () => {
     const pollTimeoutMs = exhaustionDelayMs * 5 + 30_000
     test.setTimeout(pollTimeoutMs + 30_000)
 
-    const { receiver, topicName, subscriptionId } = await registerVerifiedWebhookSubscription(
+    const { receiver, topicName, subscriptionId, groupId } = await registerVerifiedWebhookSubscription(
       consentAdminEventApi,
       '08-02-02-topic',
     )
     try {
       receiver.respondWith((request) => (request.method === 'POST' ? { status: 503 } : { status: 204 }))
-      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicName)
 
       const delivery = await findDeliveryForEvent(consentAdminEventApi, subscriptionId, event.eventId)
 
