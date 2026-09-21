@@ -28,12 +28,21 @@ const topicsApi = vi.hoisted(() => ({
   fetchTopics: vi.fn(),
 }))
 
+const catalogApi = vi.hoisted(() => ({
+  fetchPurposes: vi.fn(),
+  buildPurposeFilter: vi.fn((name: string, _type: string) =>
+    name ? `name co "${name}"` : undefined,
+  ),
+}))
+
 vi.mock('../features/events/api/topicsApi', () => topicsApi)
+vi.mock('../features/catalog/api/catalogApi', () => catalogApi)
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
 })
+
 
 describe('SubscriptionRegisterDialog', () => {
   it('validates name and required fields before registering', async () => {
@@ -198,7 +207,7 @@ describe('SubscriptionRegisterDialog', () => {
       fireEvent.click(await screen.findByRole('option', { name: topic }))
 
       expect(screen.queryByLabelText('Consent Purpose Filter Mode')).not.toBeInTheDocument()
-      expect(screen.queryByLabelText('Consent Purposes (comma-separated)')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/Consent Purposes/)).not.toBeInTheDocument()
 
       fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
         target: { value: 'https://receiver.example/callback' },
@@ -227,6 +236,14 @@ describe('SubscriptionRegisterDialog', () => {
         },
       ],
       total: 1,
+    })
+    catalogApi.fetchPurposes.mockResolvedValue({
+      totalResults: 2,
+      links: [],
+      Purposes: [
+        { id: 'p-1', name: 'MARKETING', type: 'CONSENT' },
+        { id: 'p-2', name: 'ANALYTICS', type: 'CONSENT' },
+      ],
     })
     const onSubmit = vi.fn()
 
@@ -265,16 +282,20 @@ describe('SubscriptionRegisterDialog', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Consent Purpose Filter Mode/i }))
     fireEvent.click(await screen.findByRole('option', { name: 'Specific Purposes' }))
 
-    // Enter purposes
-    fireEvent.change(screen.getByLabelText(/Consent Purposes \(comma-separated\)/), {
-      target: { value: 'MARKETING, ANALYTICS' },
-    })
+    // Select purposes from picker
+    const pickerInput = await screen.findByLabelText(/Consent Purposes/)
+    expect(pickerInput).toBeInTheDocument()
+    fireEvent.change(pickerInput, { target: { value: 'MARKETING' } })
+    fireEvent.click(await screen.findByRole('option', { name: /MARKETING/ }))
+    fireEvent.change(pickerInput, { target: { value: 'ANALYTICS' } })
+    fireEvent.click(await screen.findByRole('option', { name: /ANALYTICS/ }))
 
     // Switch delivery mode to Poll
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Delivery Mode/i }))
     fireEvent.click(await screen.findByRole('option', { name: 'Poll' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    const submitButton = screen.getByRole('button', { name: 'Register Subscription' })
+    fireEvent.submit(submitButton.closest('form')!)
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit).toHaveBeenCalledWith(
@@ -298,6 +319,11 @@ describe('SubscriptionRegisterDialog', () => {
         },
       ],
       total: 1,
+    })
+    catalogApi.fetchPurposes.mockResolvedValue({
+      totalResults: 1,
+      links: [],
+      Purposes: [{ id: 'p-1', name: 'ORDER_FULFILLMENT', type: 'CONSENT' }],
     })
     const onSubmit = vi.fn()
 
@@ -337,16 +363,18 @@ describe('SubscriptionRegisterDialog', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Consent Purpose Filter Mode/i }))
     fireEvent.click(await screen.findByRole('option', { name: 'Specific Purposes' }))
 
-    // Enter purposes
-    fireEvent.change(screen.getByLabelText(/Consent Purposes \(comma-separated\)/), {
-      target: { value: 'ORDER_FULFILLMENT' },
-    })
+    // Select purpose from picker
+    const pickerInput = await screen.findByLabelText(/Consent Purposes/)
+    expect(pickerInput).toBeInTheDocument()
+    fireEvent.change(pickerInput, { target: { value: 'ORDER_FULFILLMENT' } })
+    fireEvent.click(await screen.findByRole('option', { name: /ORDER_FULFILLMENT/ }))
 
     fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
       target: { value: 'https://orders.example/callback' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    const submitButton = screen.getByRole('button', { name: 'Register Subscription' })
+    fireEvent.submit(submitButton.closest('form')!)
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit).toHaveBeenCalledWith(

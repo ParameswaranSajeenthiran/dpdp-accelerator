@@ -713,9 +713,9 @@
       "multiTopicFilter": "वापरप्याच्या जीवनचक्राचे विशय आस्पावताना सगळो उद्देश फिल्टर वेंचून काडात.",
       "topicRequired": "विशय गरजेचो आसा.",
       "filterModeLabel": "उद्देश फिल्टर मोड",
-      "purposesLabel": "उद्देशां (स्वल्पविरामान वेगळीं केल्लीं)",
-      "purposesPlaceholder": "देखीक: मार्केटिंग, ॲनालिटिक्स",
-      "purposesHelper": "फिल्टर करपाक संमतीच्या उद्देशांची स्वल्पविराम-वेगळा केल्ली वळेरी",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशेषां वा सगळ्यांक वगळून फिल्टर करतना उद्देशांची गरज आसता",
       "deliveryModeLabel": "वितरण पद्दत",
       "callbackUrlLabel": "वेबहुक परतावप URL",
@@ -726,7 +726,10 @@
       "secretHelper": "वेबहुक पेलोड वा पोल विनंती प्रमाणित करपाक वापरतात",
       "generateSecret": "नवी गुप्त तयार करप",
       "registering": "नोंदणी करतना...",
-      "registerSubmit": "सबस्क्रिप्शन नोंद करात"
+      "registerSubmit": "सबस्क्रिप्शन नोंद करात",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यकेंतली सदस्यता काडून उडोवपाक खात्री करप",

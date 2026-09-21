@@ -54,7 +54,6 @@ export default function EventFilters({
   const isFiltered =
     (filters.status && filters.status !== 'All') ||
     (filters.topic && filters.topic !== 'All') ||
-    Boolean(filters.groupId) ||
     Boolean(filters.subscriptionId) ||
     Boolean(filters.search)
 
@@ -63,7 +62,6 @@ export default function EventFilters({
     onFilterChange({
       status,
       topic,
-      groupId: filters.groupId,
       subscriptionId: subscriptionId.trim(),
       search: search.trim(),
     })
@@ -74,7 +72,6 @@ export default function EventFilters({
     onFilterChange({
       status: nextStatus,
       topic,
-      groupId: filters.groupId,
       subscriptionId: subscriptionId.trim(),
       search: search.trim(),
     })
@@ -85,7 +82,6 @@ export default function EventFilters({
     onFilterChange({
       status,
       topic: nextTopic,
-      groupId: filters.groupId,
       subscriptionId: subscriptionId.trim(),
       search: search.trim(),
     })

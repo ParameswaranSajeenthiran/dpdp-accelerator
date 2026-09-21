@@ -37,7 +37,6 @@ import {
   RefreshCw,
   Tag,
   Trash2,
-  Users,
 } from '@wso2/oxygen-ui-icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -214,11 +213,6 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                   icon: <Tag size={16} />,
                   label: t('subscriptions.table.subscriptionId'),
                   value: <CopyableText value={sub.subscriptionId} monospace />,
-                },
-                {
-                  icon: <Users size={16} />,
-                  label: t('subscriptions.table.groupId'),
-                  value: sub.groupId ? <CopyableText value={sub.groupId} monospace /> : '-',
                 },
                 {
                   icon: <Globe size={16} />,

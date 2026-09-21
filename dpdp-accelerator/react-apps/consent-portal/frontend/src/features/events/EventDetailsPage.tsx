@@ -46,7 +46,6 @@ import {
   Code2,
   Copy,
   Eye,
-  FolderTree,
   Layers,
   Tag,
   Users,
@@ -148,17 +147,6 @@ export default function EventDetailsPage(): React.JSX.Element {
       icon: <Tag size={16} />,
       label: t('events.table.eventId'),
       value: <CopyableText value={event.eventId} monospace />,
-    },
-    {
-      icon: <FolderTree size={16} />,
-      label: t('events.table.groupId', 'Group ID'),
-      value: event.groupId ? (
-        <Chip size="small" variant="outlined" label={event.groupId} />
-      ) : (
-        <Typography variant="body2" color="text.secondary">
-          -
-        </Typography>
-      ),
     },
     {
       icon: <Layers size={16} />,

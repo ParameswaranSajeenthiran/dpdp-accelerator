@@ -41,7 +41,6 @@ function toListParams(
     search: filters.search.trim() || undefined,
     status: filters.status && filters.status !== 'All' ? filters.status : undefined,
     topic: filters.topic && filters.topic !== 'All' ? filters.topic : undefined,
-    groupId: filters.groupId.trim() || undefined,
     subscriptionId: filters.subscriptionId.trim() || undefined,
     limit: rowsPerPage,
     offset: page * rowsPerPage,

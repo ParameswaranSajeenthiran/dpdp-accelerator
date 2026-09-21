@@ -43,7 +43,7 @@ vi.mock('i18next-http-backend', () => ({
     // i18next's BackendModule interface requires instance methods here; this
     // implementation genuinely needs no instance state.
     // eslint-disable-next-line class-methods-use-this
-    init = (): void => {}
+    init = (): void => { }
 
     // eslint-disable-next-line class-methods-use-this
     read = (language: string, namespace: string, callback: ReadCallback): void => {
@@ -69,13 +69,13 @@ if (typeof globalThis.Worker === 'undefined') {
 
     public onerror: ((this: AbstractWorker, event: ErrorEvent) => unknown) | null = null
 
-    public postMessage(): void {}
+    public postMessage(): void { }
 
-    public terminate(): void {}
+    public terminate(): void { }
 
-    public addEventListener(): void {}
+    public addEventListener(): void { }
 
-    public removeEventListener(): void {}
+    public removeEventListener(): void { }
 
     public dispatchEvent(): boolean {
       return false
@@ -87,5 +87,46 @@ if (typeof globalThis.Worker === 'undefined') {
 
 if (typeof URL.createObjectURL !== 'function') {
   URL.createObjectURL = () => 'blob:test'
-  URL.revokeObjectURL = () => {}
+  URL.revokeObjectURL = () => { }
+}
+
+/*
+ * jsdom implements neither pointer capture nor scrollIntoView, but MUI/Oxygen
+ * UI's Select calls them while handling the pointer events a real open/select
+ * interaction produces. Without these, that handling throws mid-event and the
+ * Select's internal value never updates, even though the option node is
+ * findable and "clickable" in the test. Stub them as no-ops so the real
+ * interaction can complete; tests still drive the Select with userEvent.
+ */
+if (typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = (): boolean => false
+}
+if (typeof Element.prototype.setPointerCapture !== 'function') {
+  Element.prototype.setPointerCapture = (): void => { }
+}
+if (typeof Element.prototype.releasePointerCapture !== 'function') {
+  Element.prototype.releasePointerCapture = (): void => { }
+}
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = (): void => { }
+}
+
+/*
+ * jsdom does not implement ResizeObserver, which Popper/floating-ui (used to
+ * position the Select's popup and other overlays) relies on. Stub it out so
+ * mounting those overlays does not throw.
+ */
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverStub implements ResizeObserver {
+    // eslint-disable-next-line class-methods-use-this
+    observe(): void { }
+
+    // eslint-disable-next-line class-methods-use-this
+    unobserve(): void { }
+
+    // eslint-disable-next-line class-methods-use-this
+    disconnect(): void { }
+  }
+
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
 }
