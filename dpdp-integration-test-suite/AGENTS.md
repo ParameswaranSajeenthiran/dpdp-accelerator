@@ -142,11 +142,9 @@ persona with no fixture (only `user-2` qualifies).
 "Officer" in the complaint tests is not a separate persona — it is any `dpdp-consent-admin` holder,
 so `loginAsConsentAdmin` doubles as the complaint officer and the event-notification admin.
 
-A second user account is optional. Tests needing two distinct real users must guard themselves:
-
-```ts
-test.skip(!hasSecondUser(), 'personas.user2 is not configured')
-```
+A second user account (`personas.user2`) is required, same as `personas.user` - it is provisioned
+unconditionally alongside it. Tests needing two distinct real users just read
+`target.personas.user2` directly; there is no skip guard to add.
 
 ### API access
 

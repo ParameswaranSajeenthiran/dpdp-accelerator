@@ -182,7 +182,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | --- | --- | --- |
 | `04.01.01` | The detail page renders subject, service, and purpose/element structure | Subject, service id, "Not applicable", and the element row under its expanded purpose. |
 | `04.01.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
-| `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation. Skips unless `personas.user2` is configured. |
+| `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation - requires `personas.user2`. |
 | `04.01.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
 | `04.01.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
 
@@ -240,7 +240,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | `04.07.01` | Approving a Pending consent records CREATE then AUTHORIZE_APPROVE, oldest-first in the table and newest-first in the dialog | CREATE (admin) then AUTHORIZE_APPROVE (user); oldest-first in the lifecycle table, newest-first in the dialog; initial-snapshot chip on CREATE; a real diff tag on APPROVE. |
 | `04.07.02` | Rejecting a Pending consent records AUTHORIZE_REJECT with a diffed authorization |  |
 | `04.07.03` | A full self-service lifecycle (created, approved, then revoked) is captured in order end to end | All three entries in strict order in both views; the revoke entry renders a real diff. |
-| `04.07.04` | A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject | The child's own history attributes the approval to the **parent**. Skips unless `personas.user2` is configured. |
+| `04.07.04` | A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject | The child's own history attributes the approval to the **parent**. Requires `personas.user2`. |
 
 ### `04.08-admin-viewing-consent-history.spec.ts`
 

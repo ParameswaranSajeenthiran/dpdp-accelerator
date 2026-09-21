@@ -70,15 +70,11 @@ export const env = {
   // no test used it before this persona existed.
   dpo: persona('dpo'),
 
-  /**
-   * Optional: a second user account, used only by ownership-isolation tests that
-   * need two distinct real users. Those tests skip themselves when this isn't configured,
-   * since a real environment can't fabricate extra user accounts the way a stubbed IdP could.
-   */
-  secondUser: (): Persona | undefined => {
-    const { username, password } = config.personas.user2
-    return username && password ? { username, password } : undefined
-  },
+  // A second, distinct real user account - required, same as `user` above, so
+  // ownership-isolation tests always run rather than silently skipping themselves when it's
+  // left unconfigured. Provisioned unconditionally alongside `user` by
+  // scripts/provision-test-users.sh.
+  user2: persona('user2'),
 
   /**
    * The super-tenant admin. Used by scripts/bootstrap-provisioning-app.ts for its one-time
@@ -187,7 +183,7 @@ export function consentHistoryApiUrl(path: string, tenantDomain?: string): strin
  * (rather than triggering DPDPConsentExpiryReconciler via a mutation) needs the operator to have
  * both shortened [dpdp_accelerator.consent_expiry].cron_value in deployment.toml and restarted the
  * server, then set this to a timeout comfortably larger than that interval. Undefined means "not
- * configured" - that test skips itself, mirroring hasSecondUser()/webhookReceiverConfig() above.
+ * configured" - that test skips itself, mirroring webhookReceiverConfig() below.
  */
 export function consentExpirySchedulerPollTimeoutMs(): number | undefined {
   return config.consentExpiry.schedulerPollTimeoutMs ?? undefined
@@ -199,8 +195,8 @@ export function consentExpirySchedulerPollTimeoutMs(): number | undefined {
  * against - EventNotificationUrlValidator rejects loopback/127.0.0.1 unconditionally (see
  * AGENTS.md, "Webhook-dependent tests"), so a receiver bound to
  * this machine's own loopback interface can never pass callback-URL validation no matter what
- * deployment.toml says. Tests that need this skip themselves (mirroring hasSecondUser()) unless
- * both a receiver host and confirmation that the deployment allows it are explicitly configured.
+ * deployment.toml says. Tests that need this skip themselves unless both a receiver host and
+ * confirmation that the deployment allows it are explicitly configured.
  */
 export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: boolean } | undefined {
   const { receiverHost, allowPrivateNetwork } = config.webhook
