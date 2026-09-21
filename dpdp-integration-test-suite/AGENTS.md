@@ -318,8 +318,15 @@ runs `scripts/enable-webhook-callbacks.sh` to apply the same `deployment.toml` c
 `configure.sh` and before the server starts. Applies to every E2E workflow since they all call this
 one reusable job.
 
-Three tests inside that file stay `test.skip()`'d regardless (two too slow for routine runs, one
-unreproducible black-box) - see [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
+**Retry-timing tests** (`09.10.01`/`09.10.02`) additionally need `base_backoff_seconds`/
+`max_retries` shortened on the deployment - the real defaults make them take up to ~90s/~11min.
+Set `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` in suite config to whatever the
+deployment was actually set to; the tests compute their own timeout budgets from these rather than
+assuming a value, so they can't silently drift out of sync with the server. CI does this
+automatically too (same script, same values, passed to both sides).
+
+One test stays `test.skip()`'d regardless - unreproducible black-box (no hook to force a stuck
+`in_flight` delivery) - see [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
 
 ## Auth-fixture internals you must not undo
 

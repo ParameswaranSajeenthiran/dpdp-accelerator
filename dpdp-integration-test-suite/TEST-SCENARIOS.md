@@ -11,8 +11,8 @@ in CI was actually checking.
 | | |
 |---|---|
 | **Tests** | 173 across 46 spec files in 9 areas |
-| **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
-| **Skipped when unconfigured** | `04.01.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
+| **Skipped in code** | 2 — `09.08.08`, `09.10.03` |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
@@ -520,12 +520,14 @@ Query and delivery-scoping rules on the read endpoints.
 
 ### `09.10-webhook-delivery-api.spec.ts` · API-only
 
-Every test needs a network-reachable receiver (`webhook.receiverHost`) **and** all three are additionally skipped in code. See "Known gaps".
+Every test needs a network-reachable receiver (`webhook.receiverHost`). `09.10.01`/`09.10.02` also
+need `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` configured to keep their real
+elapsed time reasonable; `09.10.03` is unconditionally skipped in code. See "Known gaps".
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped in code.** Real, working coverage (~29s standalone), skipped only because 5s x3 backoff makes it slow. |
-| `09.10.02` | Persistent receiver failure transitions the delivery to failed | **Skipped in code.** Retry exhaustion genuinely takes ~11 minutes (5+15+45+135+405s). |
+| `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped unless `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` are set** - real elapsed time scales with those values. |
+| `09.10.02` | Persistent receiver failure transitions the delivery to failed | Same opt-in as `09.10.01` - exhausts every retry, so scales with `maxRetriesOverride` too. |
 | `09.10.03` | A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch | **Not implemented** - a stuck in-flight delivery is unreachable from outside the process. |
 
 ### `09.11-tenant-isolation-api.spec.ts` · API-only
@@ -593,16 +595,12 @@ Worth recording because they were product observations, not test scaffolding:
 
 ## No webhook happy-path coverage
 
-`09.10-webhook-delivery-api.spec.ts` has **no runnable tests**. The three core success-path tests
-(payload envelope and integrity headers, HMAC signature verification, 2xx-marks-delivered) were
-deleted — they were unreliable on a machine whose LAN IP changes mid-session. The three that
-remain are all skipped in code (`test.skip(title, fn)`, unconditional) for reasons unrelated to
-`webhook.receiverHost` - the file's own `beforeEach` still gates on it too, but that gate is moot
-today, since all three are already permanently skipped before it would ever matter:
-
-- `09.10.01` — real, working coverage (~29s standalone); skipped only for being slow.
-- `09.10.02` — retry exhaustion genuinely takes ~11 minutes (5+15+45+135+405s backoff).
-- `09.10.03` — not implemented; see below.
+`09.10-webhook-delivery-api.spec.ts`'s three core success-path tests (payload envelope and
+integrity headers, HMAC signature verification, 2xx-marks-delivered) were deleted — they were
+unreliable on a machine whose LAN IP changes mid-session. `09.10.01`/`09.10.02` cover retry and
+retry-exhaustion behavior instead, opt-in via `webhook.baseBackoffSecondsOverride`/
+`maxRetriesOverride` (see AGENTS.md, "Webhook-dependent tests") since the real product defaults
+make them take minutes. `09.10.03` is not implemented; see below.
 
 ## Smaller gaps
 

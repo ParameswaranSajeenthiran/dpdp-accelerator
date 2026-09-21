@@ -16,16 +16,19 @@
 # under the License.
 
 # Widens the DEPLOYED deployment.toml only (never the committed template) so a real webhook round
-# trip can run in CI: allows private-network callback targets (loopback stays rejected regardless -
-# see EventNotificationUrlValidator) and widens allowed_callback_ports to match
-# WebhookReceiver's ALLOWED_CALLBACK_PORTS.
+# trip can run in CI, and shortens retry timing so the normally-slow retry-exhaustion tests
+# (09.10.01/09.10.02) finish quickly - see AGENTS.md, "Webhook-dependent tests".
 #
-# Usage: ./enable-webhook-callbacks.sh <IS_HOME>
+# Usage: ./enable-webhook-callbacks.sh <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>
+# The caller must set utils/config.ts's webhook.baseBackoffSecondsOverride/maxRetriesOverride to
+# these same two values, so the retry tests compute correct timeout budgets.
 # Run after bin/configure.sh, before the server starts.
 
 set -euo pipefail
 
-IS_HOME=${1:?Usage: $0 <IS_HOME>}
+IS_HOME=${1:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
+BASE_BACKOFF_SECONDS=${2:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
+MAX_RETRIES=${3:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
 DEPLOYMENT_TOML="${IS_HOME}/repository/conf/deployment.toml"
 
 if [ ! -f "${DEPLOYMENT_TOML}" ]; then
@@ -33,22 +36,29 @@ if [ ! -f "${DEPLOYMENT_TOML}" ]; then
   exit 1
 fi
 
-OLD_PRIVATE_NETWORK_LINE='allow_private_network_callback_targets = false'
-NEW_PRIVATE_NETWORK_LINE='allow_private_network_callback_targets = true'
-if ! grep -qF "${OLD_PRIVATE_NETWORK_LINE}" "${DEPLOYMENT_TOML}"; then
-  echo "::error::Expected line not found in ${DEPLOYMENT_TOML}: ${OLD_PRIVATE_NETWORK_LINE}" \
-       "- has the accelerator's deployment.toml template changed?" >&2
-  exit 1
-fi
-sed -i "s/^${OLD_PRIVATE_NETWORK_LINE}\$/${NEW_PRIVATE_NETWORK_LINE}/" "${DEPLOYMENT_TOML}"
+# Fails loudly if the accelerator's deployment.toml template ever changes this line, rather than
+# silently leaving the setting unchanged.
+replace_line() {
+  local old="$1" new="$2"
+  if ! grep -qF "${old}" "${DEPLOYMENT_TOML}"; then
+    echo "::error::Expected line not found in ${DEPLOYMENT_TOML}: ${old}" \
+         "- has the accelerator's deployment.toml template changed?" >&2
+    exit 1
+  fi
+  sed -i "s/^${old}\$/${new}/" "${DEPLOYMENT_TOML}"
+}
 
-OLD_PORTS_LINE='allowed_callback_ports = "-1,80,443,8443"'
-NEW_PORTS_LINE='allowed_callback_ports = "-1,80,443,8443,8444,8445,8446,8447,8448,8449,8450,8451,8452,8453,8454,8455"'
-if ! grep -qF "${OLD_PORTS_LINE}" "${DEPLOYMENT_TOML}"; then
-  echo "::error::Expected line not found in ${DEPLOYMENT_TOML}: ${OLD_PORTS_LINE}" \
-       "- has the accelerator's deployment.toml template changed?" >&2
-  exit 1
-fi
-sed -i "s/^${OLD_PORTS_LINE}\$/${NEW_PORTS_LINE}/" "${DEPLOYMENT_TOML}"
+replace_line 'allow_private_network_callback_targets = false' \
+             'allow_private_network_callback_targets = true'
 
-echo "Enabled private-network webhook callbacks and widened allowed_callback_ports in ${DEPLOYMENT_TOML}"
+replace_line 'allowed_callback_ports = "-1,80,443,8443"' \
+             'allowed_callback_ports = "-1,80,443,8443,8444,8445,8446,8447,8448,8449,8450,8451,8452,8453,8454,8455"'
+
+# delivery_worker_poll_seconds also drops to 1 regardless of BASE_BACKOFF_SECONDS - left at its
+# 5s default it would dominate a shorter backoff and make retry timing poll-interval-jitter-bound
+# instead of backoff-bound.
+replace_line 'base_backoff_seconds = 5' "base_backoff_seconds = ${BASE_BACKOFF_SECONDS}"
+replace_line 'max_retries = 5' "max_retries = ${MAX_RETRIES}"
+replace_line 'delivery_worker_poll_seconds = 5' 'delivery_worker_poll_seconds = 1'
+
+echo "Enabled private-network webhook callbacks and shortened retry timing in ${DEPLOYMENT_TOML}"

@@ -99,6 +99,10 @@ jobs:
       IS_ADMIN_PASSWORD: wso2123
       IS_SOURCE: ${{ inputs.is_source }}
       DB_TYPE: ${{ inputs.db_type }}
+      # Shortened retry timing for tests/09.10's retry-exhaustion tests - see
+      # scripts/enable-webhook-callbacks.sh and utils/config.ts's webhook.*Override fields.
+      WEBHOOK_BASE_BACKOFF_SECONDS: '1'
+      WEBHOOK_MAX_RETRIES: '3'
     steps:
       # pull_request_target checks out the TARGET branch by default, which would
       # silently test the wrong code. Callers therefore pass an explicit ref:
@@ -452,7 +456,8 @@ jobs:
       # Must run after configure.sh (writes deployment.toml) and before the server starts.
       - name: Enable private-network webhook callbacks
         run: |
-          bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh "$IS_HOME"
+          bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh \
+            "$IS_HOME" "$WEBHOOK_BASE_BACKOFF_SECONDS" "$WEBHOOK_MAX_RETRIES"
 
       - name: Start the Identity Server
         run: |
@@ -508,6 +513,9 @@ jobs:
               'webhook': {
                   'receiverHost': os.environ['WEBHOOK_HOST'] or None,
                   'allowPrivateNetwork': True,
+                  # Must match the values enable-webhook-callbacks.sh applied to deployment.toml.
+                  'baseBackoffSecondsOverride': int(os.environ['WEBHOOK_BASE_BACKOFF_SECONDS']),
+                  'maxRetriesOverride': int(os.environ['WEBHOOK_MAX_RETRIES']),
               },
           }
           with open('e2e-config.local.json', 'w') as handle:

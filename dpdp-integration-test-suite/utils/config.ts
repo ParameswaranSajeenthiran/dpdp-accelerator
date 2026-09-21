@@ -72,6 +72,14 @@ export interface E2EConfig {
   webhook: {
     receiverHost: string | null
     allowPrivateNetwork: boolean
+    /**
+     * Both null unless the deployment's own base_backoff_seconds/max_retries were deliberately
+     * shortened for faster retry tests - see AGENTS.md, "Webhook-dependent tests". The retry
+     * tests derive their own timeout budgets from these rather than assuming the deployment's
+     * defaults, so they can't silently drift out of sync with an actually-configured server.
+     */
+    baseBackoffSecondsOverride: number | null
+    maxRetriesOverride: number | null
   }
   consentExpiry: {
     schedulerPollTimeoutMs: number | null

@@ -203,4 +203,17 @@ export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: bo
   return receiverHost ? { host: receiverHost, allowPrivateNetwork } : undefined
 }
 
+/**
+ * Opt-in (see AGENTS.md, "Webhook-dependent tests"): the retry-exhaustion tests take minutes at
+ * the deployment's real base_backoff_seconds/max_retries defaults, so they need both shortened on
+ * the server and reported here - undefined means "not configured", and those tests skip
+ * themselves rather than assume a value the deployment might not actually have.
+ */
+export function webhookBackoffOverride(): { baseBackoffSeconds: number; maxRetries: number } | undefined {
+  const { baseBackoffSecondsOverride, maxRetriesOverride } = config.webhook
+  return baseBackoffSecondsOverride && maxRetriesOverride
+    ? { baseBackoffSeconds: baseBackoffSecondsOverride, maxRetries: maxRetriesOverride }
+    : undefined
+}
+
 export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'
