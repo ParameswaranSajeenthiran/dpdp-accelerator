@@ -307,12 +307,15 @@ the page object, don't assume.
 `tests/09-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
 process can actually reach, and skips itself otherwise. To run it:
 
-1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which
-   `EventNotificationUrlValidator` rejects unconditionally regardless of any config flag.
+1. Set `webhook.receiverHost` in `e2e-config.local.json` to this machine's **LAN IP** — never
+   `localhost`/`127.0.0.1`, which `EventNotificationUrlValidator` rejects unconditionally
+   regardless of any config flag.
 2. If that address is RFC1918/site-local (it normally will be), the running deployment's
    `[dpdp_accelerator.event_notifications.webhook]` table needs
-   `allow_private_network_callback_targets = true` — it does **not** by default — and then set
-   `WEBHOOK_RECEIVER_ALLOW_PRIVATE_NETWORK=true`.
+   `allow_private_network_callback_targets = true` — it does **not** by default, and the server
+   must be restarted after the change — and then set `webhook.allowPrivateNetwork` to `true` in
+   `e2e-config.local.json` (there are no environment-variable fallbacks in this suite - see
+   utils/config.ts).
 
 A machine whose LAN IP changes mid-session breaks webhook verification regardless of the tests
 being correct. All three tests in that file are also skipped in code for runtime reasons — see
