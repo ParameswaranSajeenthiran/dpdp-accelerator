@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.common.util;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.common.exception.DPDPException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 import org.wso2.dpdp.accelerator.common.test.CarbonTestEnvironment;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -55,7 +55,7 @@ public class DPDPTenantContextTest {
         PrivilegedCarbonContext.startTenantFlow();
         try {
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("");
-            expectThrows(DPDPException.class,
+            expectThrows(DPDPSystemException.class,
                     DPDPTenantContext::getOrganizationId);
         } finally {
             PrivilegedCarbonContext.endTenantFlow();

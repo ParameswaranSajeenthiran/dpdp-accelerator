@@ -262,10 +262,16 @@ touching this chain, in order:
   `org.wso2.carbon.consent.mgt.core.exception.ConsentManagementException`, etc.).
 - `DPDPException` carries `errorCode`/`description`/`httpStatus`, set at the exact point it's
   thrown, not attached later by whatever catches it.
-- `org.wso2.dpdp.accelerator.common.exception.DPDPStartupException` is separate and plain (no
-  code/status) — reserved for failures that happen once, at OSGi bundle activation, and never
-  reach an API request (`DPDPConfigParser`, the `*DAOServiceComponent` startup DB checks). Anything
-  that could plausibly surface through a live request uses `DPDPException` instead.
+- `org.wso2.dpdp.accelerator.common.exception.DPDPSystemException` is deliberately plain (message +
+  cause only, no `errorCode`/`httpStatus`) rather than extending `DPDPException` — for a
+  system-level failure, not a business one: `dpdp-accelerator.xml` failing to parse
+  (`DPDPConfigParser`), a bundle's own startup DB connectivity check failing
+  (`*DAOServiceComponent`), a JDBC commit/connection failure (`DatabaseUtils`/
+  `JDBCPersistenceManager`), or a missing Carbon tenant context (`DPDPTenantContext`). None of these
+  get a code/status because no `ExceptionMapper` reads one off a generic `DPDPException` base —
+  only its own module's specific `*ServiceException` subtype — so attaching a shape here would just
+  be unused structure; it falls through to whichever REST layer's mapper is on the call stack (if
+  any), which returns its own fixed generic-failure response either way.
 - Per module, a `<Module>DaoException` (e.g. `ComplaintDAOException`, `EventNotificationDaoException`,
   `ConsentExtensionsDaoException`) extends `DPDPException` and lives with the DAO layer; a
   `<Module>ServiceException` (e.g. `ComplaintServiceException`, `EventNotificationServiceException`,

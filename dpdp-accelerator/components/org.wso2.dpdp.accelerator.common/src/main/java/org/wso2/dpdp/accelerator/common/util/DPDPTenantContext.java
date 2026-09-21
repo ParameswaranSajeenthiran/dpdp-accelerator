@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.common.util;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.common.exception.DPDPException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 
 /**
  * Resolves the current DPDP organization from the Carbon tenant context.
@@ -33,14 +33,13 @@ public final class DPDPTenantContext {
      * Returns the tenant domain associated with the current request.
      *
      * @return the current tenant domain, used as the DPDP organization identifier
-     * @throws DPDPException if no tenant context is available
+     * @throws DPDPSystemException if no tenant context is available
      */
     public static String getOrganizationId() {
 
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         if (tenantDomain == null || tenantDomain.trim().isEmpty()) {
-            throw new DPDPException("COMMON-003", "Tenant domain is not available in the Carbon context.",
-                    "Tenant domain is not available in the Carbon context.", 500);
+            throw new DPDPSystemException("Tenant domain is not available in the Carbon context.");
         }
         return tenantDomain.trim();
     }

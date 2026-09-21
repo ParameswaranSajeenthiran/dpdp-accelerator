@@ -21,8 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
-import org.wso2.dpdp.accelerator.common.exception.DPDPException;
-import org.wso2.dpdp.accelerator.common.exception.DPDPStartupException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
@@ -78,7 +77,7 @@ public final class JDBCPersistenceManager {
                 }
                 LOG.debug("Resolved the shared DPDP datasource: " + dataSourceName);
             } catch (Exception e) {
-                throw new DPDPStartupException("Unable to resolve the shared DPDP datasource ["
+                throw new DPDPSystemException("Unable to resolve the shared DPDP datasource ["
                         + dataSourceName + "]", e);
             }
         }
@@ -103,8 +102,7 @@ public final class JDBCPersistenceManager {
                     e.addSuppressed(closeException);
                 }
             }
-            throw new DPDPException("COMMON-002", "Error while obtaining a DPDP DB connection.",
-                    "Error while obtaining a DPDP DB connection.", 500, e);
+            throw new DPDPSystemException("Error while obtaining a DPDP DB connection.", e);
         }
     }
 
