@@ -36,7 +36,8 @@ export class PurposeFormDialog {
     this.title = this.root.getByRole('heading', { name: 'Add Purpose' })
     // Required fields render their label as "<Name> *" (MUI's asterisk indicator is part of the
     // <label>'s text content, which is what Playwright's getByLabel matches against, even
-    // though the asterisk span itself is aria-hidden) - confirmed empirically, not guessed.
+    // though the asterisk span itself is aria-hidden) - this is the observable
+    // behavior, not a guess.
     this.nameField = this.root.getByLabel('Name *', { exact: true })
     this.typeField = this.root.getByLabel('Type *', { exact: true })
     this.versionField = this.root.getByLabel('Version *', { exact: true })

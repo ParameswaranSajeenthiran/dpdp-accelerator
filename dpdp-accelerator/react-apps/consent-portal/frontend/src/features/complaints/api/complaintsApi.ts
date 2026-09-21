@@ -75,7 +75,7 @@ export async function listMyComplaints(
  * Unlike the Identity Server's consent-mgt `totalResults` (which is just the page size, not a
  * real total - see pageCountFromCursor in utils/cursorPagination.ts), this endpoint's
  * `metadata.total` is a genuine `COUNT(*)` run against the same filter as the list query,
- * independent of `limit`/`offset` - confirmed against ComplaintDAOImpl's paired count/select
+ * independent of `limit`/`offset` - matching ComplaintDAOImpl's paired count/select
  * queries. A single `limit=1` call is therefore enough, no "100+" approximation needed.
  */
 export async function fetchMyComplaintsTotal(status?: ComplaintStatus): Promise<number> {

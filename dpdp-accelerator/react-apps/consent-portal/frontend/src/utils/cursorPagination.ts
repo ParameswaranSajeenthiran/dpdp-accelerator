@@ -69,7 +69,7 @@ export interface PageCount {
  *
  * These endpoints (WSO2 IS's consent-mgt v2.0 family: admin consents, purposes, elements)
  * report a `totalResults`-style field that turns out to just equal the page size, not a real
- * grand total (confirmed against a live server). The only signal that's actually trustworthy is
+ * grand total. The only signal that's actually trustworthy is
  * whether a `next` link is offered: if the page came back short of `limit`, that's the exact
  * count; if the page is full AND there's a `next` link, there are more than `limit` matches.
  */

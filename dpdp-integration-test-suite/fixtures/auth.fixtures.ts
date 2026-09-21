@@ -471,7 +471,8 @@ export async function loginAsThrowawayUser(
   const page = await context.newPage()
   // "./", never "/" - a leading slash REPLACES baseURL's path (see the long note in
   // pageForPersonaState below), which under a tenant-qualified baseURL lands on the IS root
-  // instead of the tenant portal. Confirmed live: this broke 07.01's account-deletion flow under
+  // instead of the tenant portal. Without "./" a leading slash replaces baseURL's path and
+  // lands on the IS root instead of the tenant portal, breaking flows like 07.01 under
   // the multi-tenant profile.
   await page.goto('./', { waitUntil: 'networkidle' })
   const authenticatedRequest = await ensureSignedIn(page, persona)
@@ -511,7 +512,7 @@ export const test = base.extend<Fixtures>({
   },
 
   // The complaint-server webapp isn't IS-native, but it IS deployed through the same per-tenant
-  // webapp routing every other accelerator webapp gets (confirmed live: a tenant-qualified path
+  // webapp routing every other accelerator webapp gets (a tenant-qualified path
   // 401s just like the unqualified one, rather than 404ing) - so ComplaintApiClient needs
   // target.tenantDomain the same way ConsentApiClient/EventNotificationApiClient above do.
   userComplaintApi: async ({ browser, request }, use) => {

@@ -62,8 +62,8 @@ export class AdminConsentPage extends ConsentRegistryTable {
   }
 
   get relationFilter(): Locator {
-    // getByLabel, not getByRole('combobox', ...) like stateFilter above - confirmed live this
-    // Select's rendered role="combobox" isn't recognised as such by Chromium's own accessibility
+    // getByLabel, not getByRole('combobox', ...) like stateFilter above - the Select's
+    // rendered role="combobox" isn't recognised as such by Chromium's own accessibility
     // tree (missing aria-controls, most likely), so a role query resolves to nothing even though
     // the label association is otherwise identical. getByLabel resolves it correctly regardless.
     return this.page.getByLabel('Relation', { exact: true })
@@ -135,8 +135,8 @@ export class AdminConsentPage extends ConsentRegistryTable {
     // Clearing changes the URL, and AdminConsentFilters remounts on that URL change
     // (`key={searchParams.toString()}` in AdminConsentRegistryPage.tsx) - a fill() that lands in
     // the gap before that remount finishes gets silently wiped when the remount arrives and
-    // re-initialises the field from the (still-empty, at that instant) filters. Confirmed live:
-    // filling User immediately after Clear all intermittently lost the typed value this way.
+    // re-initialises the field from the (still-empty, at that instant) filters. This is a known
+    // timing issue where filling User immediately after Clear all intermittently lost the typed value.
     // Waiting for the URL to actually reflect the cleared filters first narrows that window, but
     // the URL updates on React Router's own state change a tick before the remount it triggers
     // actually finishes rendering - so also wait for the remounted field to visibly show empty,

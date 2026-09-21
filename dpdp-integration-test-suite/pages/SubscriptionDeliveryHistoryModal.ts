@@ -53,8 +53,8 @@ export class SubscriptionDeliveryHistoryModal extends DeliveryAttemptsTable {
   constructor(page: Page) {
     super(page.getByRole('dialog'))
     // exact: true - the dialog's own MuiDialogTitle heading and a nested section heading inside
-    // it both render this exact text, so an unscoped substring match resolves to both (confirmed
-    // live via a strict-mode violation) - this locator must pick just the outer dialog title.
+    // it both render this exact text, so an unscoped substring match resolves to both -
+    // this locator must pick just the outer dialog title.
     this.title = this.root.getByRole('heading', { name: 'Delivery Attempts Chronology', exact: true }).first()
   }
 }

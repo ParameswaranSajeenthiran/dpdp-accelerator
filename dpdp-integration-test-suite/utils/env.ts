@@ -93,7 +93,7 @@ export const env = {
 // consents live under the User Consent Management API (org.wso2.carbon.identity.rest.api.user.consent.v1,
 // unversioned base); admin consents/purposes/elements live under consent-mgt v2
 // (org.wso2.carbon.identity.api.server.consent.management.v2, see clients/ConsentApiClient.ts for the
-// full contract). `tenantDomain` prefixes `/t/<tenant>` - confirmed live (see
+// full contract). `tenantDomain` prefixes `/t/<tenant>` - as per routing rules.
 // fixtures/tenant.fixtures.ts) that a real OAuth2 bearer token reaches both surfaces fine
 // tenant-qualified; omit it (or pass undefined) for the super-tenant paths every other test uses.
 function tenantSegment(tenantDomain?: string): string {
@@ -143,7 +143,7 @@ export function scim2UsersUrl(path: string, tenantDomain?: string): string {
 
 // The accelerator's own complaint-server webapp (org.wso2.dpdp.accelerator.complaint.mgt.endpoint,
 // finalName "api#dpdp#complaints#v1") is not an IS-native API, but it IS deployed through the same
-// per-tenant webapp routing every other accelerator webapp gets (confirmed live: a tenant-qualified
+// per-tenant webapp routing every other accelerator webapp gets (a tenant-qualified
 // path 401s just like the unqualified one, rather than 404ing) - so it needs the same tenantSegment
 // treatment as eventNotificationsApiUrl below. A caller under the multi-tenant profile that skipped
 // the segment would silently hit the super tenant's complaint store with a tenant-scoped token,

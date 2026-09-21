@@ -627,7 +627,7 @@
         <carbon.identity.governance.imp.pkg.version.range>[1.8.0, 2.0.0)</carbon.identity.governance.imp.pkg.version.range>
         <!-- 2.9.10 is the first published version with the listener/hook APIs we need. IS 7.3.0
              actually ships an unpublished 2.9.0.3 hotfix (not on Nexus, so we can't compile
-             against it) - decompiled and confirmed API-identical to 2.9.10, so the Import-Package
+             against it) - decompiled and found to be API-identical to 2.9.10, so the Import-Package
              range below is floored at 2.9.0.3, not 2.9.10, or bundle resolution fails on a real
              IS 7.3.0 install. -->
         <carbon.consent.mgt.core.version>2.9.10</carbon.consent.mgt.core.version>

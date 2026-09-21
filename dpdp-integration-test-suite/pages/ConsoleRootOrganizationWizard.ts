@@ -30,13 +30,13 @@ export interface NewTenantFields {
 /**
  * The "Create a Root Organization" dialog, opened from the super tenant's Console at
  * `/t/carbon.super/console/root/organizations` via its "New Root Organization" button. A "root
- * organization" here IS a classic WSO2 IS tenant, confirmed live: the list page it's opened from
+ * organization" here IS a classic WSO2 IS tenant: the list page it's opened from
  * is backed by `GET /api/server/v1/tenants` (the Tenant Management REST API), the exact same
  * tenants `provision-test-users.sh` and this suite's own admin persona already operate in.
  *
  * Deliberately not the raw Tenant Management REST API (`POST /api/server/v1/tenants`), even
  * though that also works: that endpoint's `owners[].password` does not actually become usable
- * for login until a separate follow-up call - confirmed live - while this dialog's password
+ * for login until a separate follow-up call, while this dialog's password
  * field works immediately. See docs/plan discussion for the full comparison; this dialog is the
  * only tenant-creation path this suite uses.
  */
@@ -57,7 +57,7 @@ export class ConsoleRootOrganizationWizard {
     this.newRootOrganizationButton = page.getByRole('button', { name: 'New Root Organization' })
     this.root = page.getByRole('dialog').filter({ hasText: 'Create a Root Organization' })
     // Placeholders carry a typographic right single-quote ('), not an ASCII apostrophe -
-    // confirmed empirically; a straight-quote locator silently matches nothing.
+    // a straight-quote locator silently matches nothing.
     this.domainField = this.root.getByPlaceholder('Enter organization handle (domain)')
     this.firstNameField = this.root.getByPlaceholder('Enter the admin’s first name.')
     this.lastNameField = this.root.getByPlaceholder('Enter the admin’s last name.')

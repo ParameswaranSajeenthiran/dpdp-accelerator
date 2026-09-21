@@ -183,8 +183,8 @@ second, independent tenant for isolation tests - currently only
 `tests/06-multi-tenancy` reuses this run's own per-run tenant and the super tenant instead of
 creating its own - see that file's own docblock.
 
-**Do not add a `TenantScimClient` or call SCIM2 against a secondary tenant directly.** Confirmed
-live, repeatedly: Basic-auth and Bearer-token SCIM2 calls against `/t/<tenant>/scim2/...` both
+**Do not add a `TenantScimClient` or call SCIM2 against a secondary tenant directly.**
+Basic-auth and Bearer-token SCIM2 calls against `/t/<tenant>/scim2/...` both
 401 for any tenant other than `carbon.super`, regardless of whose credentials — a real IS 7.3.0
 product limitation (see the WSO2 IAM community discussion "Invalid tenant domain of user error
 when use scim2 API"), not something fixable from this codebase. What *does* work is driving the

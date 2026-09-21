@@ -22,8 +22,8 @@ import { submitFilterValue } from '../utils/filterCommit'
 export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50] as const
 
 /**
- * EventsPage.tsx at /events. There is NO publish-event UI anywhere in this feature (confirmed
- * across the whole `features/events/` tree, and `events.actions.publish`/`events.dialog.publish*`
+ * EventsPage.tsx at /events. There is NO publish-event UI anywhere in this feature (verified
+ * across the whole `features/events/` tree; `events.actions.publish`/`events.dialog.publish*`
  * in common.json are dead i18n keys with no component reference) - publishing only happens
  * through EventNotificationApiClient.publishEvent. eventId cells render through CopyableText
  * (truncated visible text, full value on the inner span's aria-label - see TopicsPage.ts's

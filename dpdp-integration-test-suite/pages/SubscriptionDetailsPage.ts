@@ -64,7 +64,7 @@ export class SubscriptionDetailsPage {
    * DetailGrid.tsx: a label Typography followed immediately by its value Typography, both
    * children of the same Stack. `.and(':not(th)')` excludes the embedded delivery-events
    * table's own column headers, which can render the exact same label text (e.g. "Topic") as
-   * this page's config DetailGrid - confirmed live, an unscoped match resolves to both.
+   * this page's config DetailGrid - an unscoped match resolves to both.
    */
   fieldValue(label: string): Locator {
     return this.page

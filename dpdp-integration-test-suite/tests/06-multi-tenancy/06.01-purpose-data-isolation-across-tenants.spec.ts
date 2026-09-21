@@ -73,7 +73,7 @@ test.describe('Purpose data isolation across tenants (API)', () => {
     expect(superTenantCreate.ok()).toBeTruthy()
 
     // Not visible from carbon.super. Field is capitalized ("Purposes") in the consent-mgt v2
-    // API's own list response - confirmed live against a real server, not guessed.
+    // API's own list response.
     const foundInSuperTenant = await superTenantConsentApi.findPurposeByName(tenantPurposeName)
     expect(foundInSuperTenant.ok()).toBeTruthy()
     expect((await foundInSuperTenant.json()).totalResults).toBe(0)
