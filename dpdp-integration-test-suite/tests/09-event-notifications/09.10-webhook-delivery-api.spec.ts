@@ -242,12 +242,18 @@ test.describe('Webhook delivery', () => {
   test.skip(
     '09.10.03 - A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch',
     () => {
-      // Reproducing a genuinely "stuck" in_flight delivery (a worker that crashed mid-dispatch)
-      // isn't achievable from outside the process - there is no test-only hook to force a delivery
-      // into in_flight and abandon it, and this suite has no direct DB-write fixture the way the
-      // DAO-level Java unit tests do (stuck_inflight_threshold_seconds/pending_subscription_recovery_*
-      // are real background-worker timers, not something a black-box HTTP/UI test can force). See
-      // TEST-SCENARIOS.md, "What this suite cannot verify".
+      // Not implemented yet, but NOT provably unreachable either - unlike 09.08.08.
+      // claim/reclaim/complete are all optimistic on STATUS (EventNotificationCommonDBQueries'
+      // getClaim*/getUpdateWebhookDeliveryStatusQuery), keyed only on elapsed time
+      // (stuck_inflight_threshold_seconds), not on whether the original worker is actually still
+      // alive. The webhook HTTP call itself has a fixed, non-configurable 5s timeout
+      // (WEBHOOK_HTTP_TIMEOUT_SECONDS), which IS shorter than stuck_inflight_threshold_seconds
+      // (10s default) but doesn't have to be: a receiver that holds its response open longer than
+      // a shortened threshold, but under 5s, should make the reclaim pass fire on a still-live
+      // delivery - real concurrent dispatch, real optimistic-concurrency check, no DB writes or
+      // test-only hook required. Left unimplemented because the safe timing window is narrow and
+      // likely flaky under real CI jitter - see TEST-SCENARIOS.md, "What this suite cannot
+      // verify" for the fuller writeup and the honest caveat.
     },
   )
 })

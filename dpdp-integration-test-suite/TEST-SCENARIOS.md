@@ -528,7 +528,7 @@ elapsed time reasonable; `09.10.03` is unconditionally skipped in code. See "Kno
 | --- | --- | --- |
 | `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped unless `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` are set** - real elapsed time scales with those values. |
 | `09.10.02` | Persistent receiver failure transitions the delivery to failed | Same opt-in as `09.10.01` - exhausts every retry, so scales with `maxRetriesOverride` too. |
-| `09.10.03` | A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch | **Not implemented** - a stuck in-flight delivery is unreachable from outside the process. |
+| `09.10.03` | A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch | **Not implemented** - reachable in principle via a slow-responding receiver, but the safe timing window is narrow and likely flaky. See "What this suite cannot verify". |
 
 ### `09.11-tenant-isolation-api.spec.ts` · API-only
 
@@ -600,7 +600,8 @@ integrity headers, HMAC signature verification, 2xx-marks-delivered) were delete
 unreliable on a machine whose LAN IP changes mid-session. `09.10.01`/`09.10.02` cover retry and
 retry-exhaustion behavior instead, opt-in via `webhook.baseBackoffSecondsOverride`/
 `maxRetriesOverride` (see AGENTS.md, "Webhook-dependent tests") since the real product defaults
-make them take minutes. `09.10.03` is not implemented; see below.
+make them take minutes - CI sets both automatically, so these two run on every E2E workflow.
+`09.10.03` is not implemented; see "What this suite cannot verify" below.
 
 ## Smaller gaps
 
@@ -613,15 +614,24 @@ make them take minutes. `09.10.03` is not implemented; see below.
 
 ## What this suite cannot verify
 
-Two behaviours are unreachable from a black-box HTTP/UI test, and the corresponding tests are
-permanently skipped rather than deleted so the gap stays visible:
+One behaviour is genuinely unreachable from a black-box HTTP/UI test, and the test is permanently
+skipped rather than deleted so the gap stays visible:
 
 - **`09.08.08` — fan-out persistence rollback.** Forcing a `DELIVERY` insert to fail mid-transaction
   would mean shipping production code whose only purpose is to be exploitable by a test.
-- **`09.10.03` — stale in-flight delivery reclamation.** Reproducing a worker that crashed
-  mid-dispatch needs either a test-only hook or direct DB writes; `stuck_inflight_threshold_seconds`
-  and the pending-subscription recovery timers are real background workers, not something an
-  external test can force.
+
+**`09.10.03` — stale in-flight delivery reclamation — is NOT in the same category, despite still
+being skipped.** `claim`/`reclaim`/`complete` (`EventNotificationCommonDBQueries.java`'s
+`getClaimWebhookDeliveryQuery`/`getClaimStuckWebhookDeliveryQuery`/
+`getUpdateWebhookDeliveryStatusQuery`) are all optimistic on `STATUS`, keyed only on elapsed time
+(`stuck_inflight_threshold_seconds`) - not on whether the original worker is actually still alive.
+The webhook HTTP call itself has a fixed, non-configurable 5s timeout
+(`WEBHOOK_HTTP_TIMEOUT_SECONDS`). A `WebhookReceiver` that holds its response open longer than a
+shortened `stuck_inflight_threshold_seconds` but under that 5s ceiling should make the reclaim pass
+fire on a still-live delivery - genuine concurrent dispatch, exercising the real optimistic-
+concurrency guard, with no DB writes or test-only hook needed. Left unimplemented because the safe
+timing window is narrow (has to clear meaningfully below 5s) and likely flaky under real CI runner
+jitter - a tuning problem, not a "cannot be done" one. Revisit if this gap is worth the flake risk.
 
 ---
 
