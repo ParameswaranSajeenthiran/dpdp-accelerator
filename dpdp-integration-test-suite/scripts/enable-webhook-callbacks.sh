@@ -16,19 +16,24 @@
 # under the License.
 
 # Widens the DEPLOYED deployment.toml only (never the committed template) so a real webhook round
-# trip can run in CI, and shortens retry timing so the normally-slow retry-exhaustion tests
-# (09.10.01/09.10.02) finish quickly - see AGENTS.md, "Webhook-dependent tests".
+# trip can run in CI, shortens retry timing so the normally-slow retry-exhaustion tests
+# (09.10.01/09.10.02) finish quickly, and shortens the stuck-in-flight reclaim threshold for
+# 09.10.03 - see AGENTS.md, "Webhook-dependent tests".
 #
-# Usage: ./enable-webhook-callbacks.sh <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>
-# The caller must set utils/config.ts's webhook.baseBackoffSecondsOverride/maxRetriesOverride to
-# these same two values, so the retry tests compute correct timeout budgets.
+# Usage: ./enable-webhook-callbacks.sh <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES> \
+#          <STUCK_INFLIGHT_THRESHOLD_SECONDS>
+# The caller must set utils/config.ts's webhook.baseBackoffSecondsOverride/maxRetriesOverride/
+# stuckInFlightThresholdSecondsOverride to these same values, so the tests compute correct
+# timeout budgets.
 # Run after bin/configure.sh, before the server starts.
 
 set -euo pipefail
 
-IS_HOME=${1:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
-BASE_BACKOFF_SECONDS=${2:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
-MAX_RETRIES=${3:?Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES>}
+USAGE="Usage: $0 <IS_HOME> <BASE_BACKOFF_SECONDS> <MAX_RETRIES> <STUCK_INFLIGHT_THRESHOLD_SECONDS>"
+IS_HOME=${1:?${USAGE}}
+BASE_BACKOFF_SECONDS=${2:?${USAGE}}
+MAX_RETRIES=${3:?${USAGE}}
+STUCK_INFLIGHT_THRESHOLD_SECONDS=${4:?${USAGE}}
 DEPLOYMENT_TOML="${IS_HOME}/repository/conf/deployment.toml"
 
 if [ ! -f "${DEPLOYMENT_TOML}" ]; then
@@ -61,4 +66,9 @@ replace_line 'base_backoff_seconds = 5' "base_backoff_seconds = ${BASE_BACKOFF_S
 replace_line 'max_retries = 5' "max_retries = ${MAX_RETRIES}"
 replace_line 'delivery_worker_poll_seconds = 5' 'delivery_worker_poll_seconds = 1'
 
-echo "Enabled private-network webhook callbacks and shortened retry timing in ${DEPLOYMENT_TOML}"
+# Must stay well below WEBHOOK_HTTP_TIMEOUT_SECONDS (5s, hardcoded, not configurable) - 09.10.03
+# needs a real window where a delivery is genuinely still pending past this threshold.
+replace_line 'stuck_inflight_threshold_seconds = 10' \
+             "stuck_inflight_threshold_seconds = ${STUCK_INFLIGHT_THRESHOLD_SECONDS}"
+
+echo "Enabled private-network webhook callbacks and shortened retry/reclaim timing in ${DEPLOYMENT_TOML}"

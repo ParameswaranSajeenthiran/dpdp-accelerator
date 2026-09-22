@@ -216,4 +216,13 @@ export function webhookBackoffOverride(): { baseBackoffSeconds: number; maxRetri
     : undefined
 }
 
+/**
+ * Opt-in, separate from webhookBackoffOverride() above since it exercises a different mechanism
+ * (stuck-in-flight reclamation, not retry backoff) with its own, higher flakiness risk - see
+ * 09.10.03's own comment. Undefined means "not configured", and that test skips itself.
+ */
+export function webhookStuckInFlightThresholdSecondsOverride(): number | undefined {
+  return config.webhook.stuckInFlightThresholdSecondsOverride ?? undefined
+}
+
 export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'

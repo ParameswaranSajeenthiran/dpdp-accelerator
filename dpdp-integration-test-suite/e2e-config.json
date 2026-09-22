@@ -36,7 +36,8 @@
     "receiverHost": null,
     "allowPrivateNetwork": false,
     "baseBackoffSecondsOverride": null,
-    "maxRetriesOverride": null
+    "maxRetriesOverride": null,
+    "stuckInFlightThresholdSecondsOverride": null
   },
   "consentExpiry": {
     "schedulerPollTimeoutMs": null

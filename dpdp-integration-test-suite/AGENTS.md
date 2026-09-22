@@ -325,8 +325,17 @@ deployment was actually set to; the tests compute their own timeout budgets from
 assuming a value, so they can't silently drift out of sync with the server. CI does this
 automatically too (same script, same values, passed to both sides).
 
-One test stays `test.skip()`'d regardless - unreproducible black-box (no hook to force a stuck
-`in_flight` delivery) - see [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
+**Stuck-in-flight reclamation** (`09.10.03`) needs `stuck_inflight_threshold_seconds` shortened the
+same way, kept below the webhook delivery call's fixed 5s timeout - set
+`webhook.stuckInFlightThresholdSecondsOverride` to match. Its own `WebhookReceiver.respondWith()`
+handler holds a response open past that threshold so the reclaim pass fires on a still-live
+delivery - real concurrent dispatch, no test-only hook. This is the most timing-sensitive test in
+the suite; CI sets it too, in `pr-e2e.yml`, but move it to `nightly-e2e.yml` if it proves flaky
+there rather than let it destabilize the PR path.
+
+One test stays `test.skip()`'d regardless - `09.08.08`, genuinely unreproducible black-box (would
+need a test-only hook to force a mid-transaction DB failure) - see
+[`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "What this suite cannot verify".
 
 ## Auth-fixture internals you must not undo
 
