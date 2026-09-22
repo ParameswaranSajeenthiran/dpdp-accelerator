@@ -51,8 +51,7 @@ public interface ComplaintService {
 
     /**
      * Same as {@link #createComplaint(String, String, String, String, String)}, for the
-     * officer-assisted intake path (POST /complaints). The following functionality is contained in
-     * this method.
+     * officer-assisted intake path (POST /complaints).
      *
      * <p>1. Creates the complaint, same as the citizen self-service path.
      * <p>2. Records a CREATE audit event on the new complaint's timeline, atomically with the

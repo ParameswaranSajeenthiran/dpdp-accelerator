@@ -60,11 +60,8 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         validateActor(actorUserId, actorRole);
         long now = System.currentTimeMillis();
 
-        // The existence check, the upload event, and every attachment it anchors must all share
-        // one transaction - otherwise the complaint could change (or, if a delete path is ever
-        // added, disappear) between the check and the write, or a failure partway through a
-        // multi-file upload could leave some attachments stored against an event that was never
-        // actually committed.
+        // The existence check, upload event, and attachments must share one transaction to prevent
+        // inconsistencies if the complaint changes or a partial upload occurs.
         List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
             ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             return performUpload(conn, orgId, complaintId, files, isPublic, actorUserId, actorUserName, actorRole,
@@ -80,9 +77,8 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         validateActor(ownerUserId, ComplaintActorRole.USER.name());
         long now = System.currentTimeMillis();
 
-        // Same reasoning as uploadComplaintAttachments - the ownership check and the writes it
-        // gates must share one transaction, not two sequential connections with the ownership
-        // check's result no longer guaranteed true by the time the write runs.
+        // Ownership check and writes must share one transaction to ensure the ownership
+        // is still valid when the write occurs.
         List<ComplaintAttachment> stored = DatabaseUtils.executeInTransaction(conn -> {
             ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return performUpload(conn, orgId, complaintId, files, true, ownerUserId, ownerUserName,
@@ -114,8 +110,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     @Override
     public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
-        // The ownership check and the attachment fetch share one transaction - same reasoning as
-        // uploadOwnComplaintAttachments.
+        // Ownership check and attachment fetch share one transaction to ensure consistency.
         Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(conn -> {
             ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId);
@@ -128,8 +123,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
-        // SYSTEM is deliberately excluded - only ever written by the server itself, the same
-        // restriction ComplaintEventServiceImpl#addComment applies to caller-supplied actor roles.
+        // SYSTEM role is excluded - only written by the server itself.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -140,9 +134,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     private String recordUploadEvent(Connection conn, String orgId, String complaintId, boolean isPublic,
             String actorUserId, String actorUserName, String actorRole, long now) {
         String complaintEventId = UUID.randomUUID().toString();
-        // No comment text - this event exists purely to anchor the uploaded attachments on the
-        // timeline; the attachments themselves (via ComplaintAttachment#complaintEventId) are what
-        // the UI renders under it.
+        // This event anchors the uploaded attachments on the timeline.
         ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId, actorUserName,
                 actorRole, isPublic, null, null, null, now);
 

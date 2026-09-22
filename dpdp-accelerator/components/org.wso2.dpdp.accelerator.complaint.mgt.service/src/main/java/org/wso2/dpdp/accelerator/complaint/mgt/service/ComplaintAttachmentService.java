@@ -30,8 +30,7 @@ import java.util.List;
 public interface ComplaintAttachmentService {
 
     /**
-     * Uploads and binds one or more files to the complaint. The following functionality is
-     * contained in this method.
+     * Uploads and binds one or more files to the complaint.
      *
      * <p>1. Validates the file list against the configured attachment policy (count, size,
      * content type).

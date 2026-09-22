@@ -44,11 +44,7 @@ final class DeliveryHistoryMapper {
     private DeliveryHistoryMapper() {
     }
 
-    /**
-     * Maps persisted delivery state to the history response shared by event and subscription APIs.
-     * <p>
-     * Note: The caller owns the lifecycle of {@code conn}; this method does not commit or close it.
-     */
+    /** Maps delivery state to the shared history response; the caller owns {@code conn}. */
     static SubscriptionEventHistoryDTO map(Connection conn, String orgId, String deliveryId,
             SubscriptionDeliverySummary summary, DeliveryDAO deliveryDAO, DeliveryAckDAO deliveryAckDAO,
             int maxRetries) {

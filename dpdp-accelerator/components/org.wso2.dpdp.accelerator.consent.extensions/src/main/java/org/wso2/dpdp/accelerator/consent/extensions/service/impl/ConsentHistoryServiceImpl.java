@@ -156,11 +156,7 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
     public void recordStatusAudit(Connection connection, String tenantDomain, String consentId,
             String previousStatus, String currentStatus, ActionType actionType, String actionBy) {
 
-        // A status-audit row means "the status changed here" - previousStatus and currentStatus
-        // being equal (e.g. an UPDATE, which never touches lifecycle status; or one authorizer's
-        // approval when others are still pending) isn't a transition, so there is nothing to
-        // record. DPDP_CONSENT_HISTORY already captures every action regardless, with full detail,
-        // so nothing is lost by skipping a no-op row here.
+        // Skip status-audit if status did not change; DPDP_CONSENT_HISTORY already captures all actions.
         if (Objects.equals(previousStatus, currentStatus)) {
             LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: "
                     + LogSanitizer.sanitize(consentId) + " - status did not change ("

@@ -51,7 +51,7 @@ public interface ComplaintEventService {
 
     /**
      * Adds a COMMENT (isPublic=true) or an officer-internal note (isPublic=false) to the
-     * complaint's timeline. The following functionality is contained in this method.
+     * complaint's timeline.
      *
      * <p>1. Validates the actor is allowed to set the requested isPublic value - only a
      * COMPLAINT_OFFICER actor may set isPublic=false.

@@ -295,13 +295,7 @@ public class WebhookDeliveryWorker implements Runnable {
         return sharedSecret != null && !sharedSecret.trim().isEmpty();
     }
 
-    /**
-     * Best-effort flip to {@code failed} for a delivery whose claim succeeded but
-     * whose task
-     * could not be hydrated. We deliberately skip an audit row here — the operator
-     * can see
-     * the FAILED status and the reason in the worker logs.
-     */
+    /** Marks an unhydratable claimed delivery as failed; the reason is logged. */
     private void markUnrecoverable(WebhookDelivery delivery, String reason) {
         LOG.debug("Marking webhook delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
                 + "] unrecoverable: " + LogSanitizer.sanitize(reason));
