@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, getPersonaState, hasSecondUser, loginAsUser } from '../../fixtures/auth.fixtures'
+import { test, expect, getPersonaState, loginAsUser } from '../../fixtures/auth.fixtures'
 import { ConsentApiClient } from '../../clients/ConsentApiClient'
 import { ConsentDetailPage } from '../../pages/ConsentDetailPage'
 import { ConsentFullHistoryDialogPage } from '../../pages/ConsentFullHistoryDialogPage'
@@ -214,11 +214,7 @@ test.describe('User viewing Consent History (UI)', () => {
   }) => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
     // for the parent, and target.personas.user (this file's usual subject) stands in for the child.
-    test.skip(!hasSecondUser(), 'personas.user2 is not configured')
     const parent = target.personas.user2
-    if (!parent) {
-      throw new Error('Unreachable: hasSecondUser() already checked this above.')
-    }
 
     // authorizations lists only the parent, never the child - carbon-consent-mgt-core's model has
     // no separate "subject" field on an authorization; delegation is expressed purely by the

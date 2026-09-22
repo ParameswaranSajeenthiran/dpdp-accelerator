@@ -72,11 +72,7 @@ export function resolveTarget(projectName: string): Target {
       personas: {
         consentAdmin: env.consentAdmin,
         user: env.user,
-        user2: requirePersona(
-          env.secondUser(),
-          'super-tenant user2',
-          'e2e-config.json (or e2e-config.local.json)',
-        ),
+        user2: env.user2,
         dpo: env.dpo,
       },
     }

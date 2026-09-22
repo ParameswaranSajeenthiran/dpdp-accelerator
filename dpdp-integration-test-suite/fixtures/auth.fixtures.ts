@@ -547,29 +547,14 @@ export const test = base.extend<Fixtures>({
 export { expect } from '@playwright/test'
 
 /**
- * Ownership-isolation tests need a second, distinct real user account, which a real
- * environment can't fabricate on demand the way a stubbed IdP could. Those tests call this to
- * decide whether to run at all, and skip themselves with a clear reason when it's false. The
- * actual login-success check for this persona happens lazily on first use inside
- * `getPersonaState`, the same way every other persona's fixture implicitly relies on its own
- * login succeeding.
- */
-export function hasSecondUser(): boolean {
-  const target = resolveTarget(test.info().project.name)
-  return Boolean(target.personas.user2)
-}
-
-/**
  * The complaint ownership-isolation tests need a second real user's ComplaintApiClient, and there
- * is no always-on fixture for it. The `| undefined` in the return type is kept only for signature
- * compatibility with the pre-provisioning-redesign world: `user2` is now provisioned
- * unconditionally for both targets, so by the time any test calls this the persona always exists -
- * and resolving it throws rather than coming back undefined if it somehow doesn't.
+ * is no always-on fixture for it. `user2` is required, same as every other persona (see
+ * utils/env.ts), so this always resolves rather than coming back undefined.
  */
 export async function getSecondUserComplaintApi(
   browser: Browser,
   request: APIRequestContext,
-): Promise<ComplaintApiClient | undefined> {
+): Promise<ComplaintApiClient> {
   const target = resolveTarget(test.info().project.name)
   const personaState = await getPersonaState(browser, 'user-2', target.personas.user2)
   return new ComplaintApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain)

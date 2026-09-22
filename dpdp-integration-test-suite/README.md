@@ -111,12 +111,13 @@ The override file only names what it changes; it is merged into the defaults key
 | `identityServer.ignoreHttpsErrors` | `true` | The shipped certificate is self-signed. Set `false` only against a properly trusted one. |
 | `superAdmin.username` / `.password` | `admin@wso2.com` / `wso2123` | The Console account the one-time bootstrap signs in as, and the account `tests/05-multi-tenancy` creates a throwaway organization with. Must match what this deployment actually has. |
 | `personas.user.*` | `dpdp-user-1@dpdp.test` | The low-privilege persona. Deliberately not an administrator: `tests/04-authorization` asserts it holds only `internal_login`. |
-| `personas.user2.*` | `dpdp-user-2@dpdp.test` | A second distinct user. Ownership-isolation tests skip themselves when its password is unset. |
+| `personas.user2.*` | `dpdp-user-2@dpdp.test` | A second distinct user, required just like `personas.user` - ownership-isolation tests fail loudly, rather than skipping, if its password is unset. |
 | `personas.consentAdmin.*` | `dpdp-admin@dpdp.test` | Holds `dpdp-consent-admin`, which grants every `internal_consent_mgt_*` scope - this one persona drives the admin registry UI and seeds Purposes/Elements/Consents via the API. |
 | `personaRoles.user` / `.consentAdmin` | `dpdp-consent-user` / `dpdp-consent-admin` | The roles provisioning assigns. The accelerator creates the roles themselves; it never assigns membership. |
-| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See `tests/09-event-notifications/README.md`. |
+| `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
-| `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after shortening `[dpdp_accelerator.consent_expiry] cron_value` on the server and restarting it. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. |
+| `webhook.baseBackoffSecondsOverride` / `.maxRetriesOverride` | `null` | Set to whatever the deployment's `base_backoff_seconds`/`max_retries` were shortened to - opt-in for the two retry-timing tests in `09.10-webhook-delivery-api.spec.ts`, which take minutes at the real defaults. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
+| `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after switching the deployment's `[dpdp_accelerator.consent_expiry]` to `schedule_mode = "interval"` with a short `interval_seconds` and restarting the server. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. CI does this automatically - see `scripts/enable-fast-consent-expiry.sh`. |
 
 The passwords the personas need are not committed - `setup-local.sh` generates one and writes it
 into `e2e-config.local.json`, which is also where the accounts themselves get it from, so the two
@@ -137,6 +138,13 @@ covered features, and running both sequentially in the same job roughly doubled 
 regression surfaces within a day rather than only at the next weekly or release run. Both
 `weekly-e2e-is-master.yml`/`weekly-e2e-is-latest-u2.yml` and the release gate also run every
 project, unconditionally.
+
+`.github/workflows/e2e.yml` (the reusable job every one of the above calls) also resolves the
+runner's own private IP as `WEBHOOK_RECEIVER_HOST` and runs
+`scripts/enable-webhook-callbacks.sh` against the deployed `deployment.toml`, so
+`tests/09-event-notifications`'s real webhook-delivery tests run in every one of these workflows
+too - see [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests", for what that script changes and
+why.
 
 ## Running the tests
 
@@ -225,7 +233,7 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 | `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
 | `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
 | `08-complaints/` | 43 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
-| `09-event-notifications/` | 46 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `09-event-notifications/` | 44 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 

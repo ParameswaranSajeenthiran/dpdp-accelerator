@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, hasSecondUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
 import { AdminConsentPage } from '../../pages/AdminConsentPage'
 import { seedConsentViaApi } from '../../utils/consentSetup'
 import { randomServiceId } from '../../utils/testData'
@@ -161,11 +161,7 @@ test.describe('Admin searching Consents (UI)', () => {
     // No dedicated "parent"/"child" persona exists - the second, generic user account stands in
     // for the authorizer, same as tests/04-consents/04.07-user-viewing-consent-history.spec.ts's
     // delegated-consent case.
-    test.skip(!hasSecondUser(), 'personas.user2 is not configured')
     const authorizer = target.personas.user2
-    if (!authorizer) {
-      throw new Error('Unreachable: hasSecondUser() already checked this above.')
-    }
 
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // subjectId (target.personas.user) and authorizations[].userId (authorizer) deliberately
