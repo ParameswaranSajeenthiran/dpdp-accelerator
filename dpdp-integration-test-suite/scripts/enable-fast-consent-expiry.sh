@@ -31,6 +31,14 @@ IS_HOME=${1:?Usage: $0 <IS_HOME> <INTERVAL_SECONDS>}
 INTERVAL_SECONDS=${2:?Usage: $0 <IS_HOME> <INTERVAL_SECONDS>}
 DEPLOYMENT_TOML="${IS_HOME}/repository/conf/deployment.toml"
 
+# Gets interpolated directly into a bare TOML value below, and ConsentExpiryJobScheduler.start()
+# itself rejects interval_seconds <= 0 in interval mode - reject anything else here too, rather
+# than write invalid TOML and fail confusingly at server start.
+if ! [[ "${INTERVAL_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "::error::INTERVAL_SECONDS must be a positive integer, got '${INTERVAL_SECONDS}'" >&2
+  exit 1
+fi
+
 if [ ! -f "${DEPLOYMENT_TOML}" ]; then
   echo "::error::${DEPLOYMENT_TOML} does not exist - run bin/configure.sh first." >&2
   exit 1

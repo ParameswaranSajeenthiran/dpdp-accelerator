@@ -133,6 +133,23 @@ export function requireConfigured<T>(value: T | null | undefined, key: string): 
 }
 
 /**
+ * Validates a configured numeric override, naming the exact key when it's malformed. `null`
+ * passes through unchanged - callers use that to mean "not configured", distinct from an invalid
+ * value someone actually typed in. Rejects non-integers and negatives so a typo (or a stray
+ * decimal/negative from hand-editing e2e-config.local.json) fails loudly here rather than
+ * silently producing a nonsensical timeout budget downstream.
+ */
+export function validateNonNegativeIntOverride(value: number | null, key: string): number | null {
+  if (value === null) {
+    return null
+  }
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`"${key}" must be a non-negative integer, got ${JSON.stringify(value)}.`)
+  }
+  return value
+}
+
+/**
  * Merges a patch into e2e-config.local.json, preserving whatever else is already in it, and
  * updates the in-memory config to match. Owner-only on disk: the file carries real credentials.
  */

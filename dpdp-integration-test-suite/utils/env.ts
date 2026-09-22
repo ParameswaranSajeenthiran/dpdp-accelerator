@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { config, requireConfigured, trimTrailingSlash } from './config'
+import { config, requireConfigured, trimTrailingSlash, validateNonNegativeIntOverride } from './config'
 
 export interface Persona {
   username: string
@@ -211,10 +211,15 @@ export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: bo
  * themselves rather than assume a value the deployment might not actually have.
  */
 export function webhookBackoffOverride(): { baseBackoffSeconds: number; maxRetries: number } | undefined {
-  const { baseBackoffSecondsOverride, maxRetriesOverride } = config.webhook
-  return baseBackoffSecondsOverride && maxRetriesOverride
-    ? { baseBackoffSeconds: baseBackoffSecondsOverride, maxRetries: maxRetriesOverride }
-    : undefined
+  const baseBackoffSeconds = validateNonNegativeIntOverride(
+    config.webhook.baseBackoffSecondsOverride,
+    'webhook.baseBackoffSecondsOverride',
+  )
+  const maxRetries = validateNonNegativeIntOverride(config.webhook.maxRetriesOverride, 'webhook.maxRetriesOverride')
+  // Both-or-neither by design: a lone value (the other left null) isn't a usable override, so
+  // this reads as "not configured" rather than an error - unlike an invalid value, which
+  // validateNonNegativeIntOverride already rejected above.
+  return baseBackoffSeconds !== null && maxRetries !== null ? { baseBackoffSeconds, maxRetries } : undefined
 }
 
 export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'

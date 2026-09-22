@@ -32,6 +32,18 @@ BASE_BACKOFF_SECONDS=${2:?${USAGE}}
 MAX_RETRIES=${3:?${USAGE}}
 DEPLOYMENT_TOML="${IS_HOME}/repository/conf/deployment.toml"
 
+# Both get interpolated directly into bare TOML values below - reject anything but a plain
+# non-negative integer now, rather than write invalid TOML and fail confusingly at server start.
+require_non_negative_int() {
+  local value="$1" name="$2"
+  if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
+    echo "::error::${name} must be a non-negative integer, got '${value}'" >&2
+    exit 1
+  fi
+}
+require_non_negative_int "${BASE_BACKOFF_SECONDS}" "BASE_BACKOFF_SECONDS"
+require_non_negative_int "${MAX_RETRIES}" "MAX_RETRIES"
+
 if [ ! -f "${DEPLOYMENT_TOML}" ]; then
   echo "::error::${DEPLOYMENT_TOML} does not exist - run bin/configure.sh first." >&2
   exit 1
