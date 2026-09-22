@@ -124,8 +124,9 @@ test.describe('Consent expiry reconciliation (API)', () => {
     test.skip(
       !pollTimeout,
       'consentExpiry.schedulerPollTimeoutMs is not configured - see README.md. Requires ' +
-        "shortening deployment.toml's [dpdp_accelerator.consent_expiry].cron_value and restarting " +
-        'the server, so this is opt-in rather than run by default.',
+        "switching deployment.toml's [dpdp_accelerator.consent_expiry] to schedule_mode = " +
+        '"interval" with a short interval_seconds and restarting the server, so this is opt-in ' +
+        'rather than run by default.',
     )
     // Playwright's own default test timeout (30s) is shorter than any sane poll window for a
     // scheduler test - extend it to comfortably cover the poll plus setup/teardown.

@@ -181,9 +181,10 @@ export function consentHistoryApiUrl(path: string, tenantDomain?: string): strin
  * Opt-in only (see README.md, "Configuration"): the real ConsentExpiryJob's default daily cron makes waiting on
  * it impractical for an automated run, so the one test that actually waits on the live scheduler
  * (rather than triggering DPDPConsentExpiryReconciler via a mutation) needs the operator to have
- * both shortened [dpdp_accelerator.consent_expiry].cron_value in deployment.toml and restarted the
- * server, then set this to a timeout comfortably larger than that interval. Undefined means "not
- * configured" - that test skips itself, mirroring webhookReceiverConfig() below.
+ * switched [dpdp_accelerator.consent_expiry] to schedule_mode = "interval" with a short
+ * interval_seconds in deployment.toml and restarted the server, then set this to a timeout
+ * comfortably larger than that interval. Undefined means "not configured" - that test skips
+ * itself, mirroring webhookReceiverConfig() below.
  */
 export function consentExpirySchedulerPollTimeoutMs(): number | undefined {
   return config.consentExpiry.schedulerPollTimeoutMs ?? undefined
