@@ -542,6 +542,10 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
+        <!-- Used by every module's Import-Package for a sibling DPDP module's package, instead of
+             project.version, so patching one module alone can't break another untouched one. -->
+        <dpdp.accelerator.version>1.0.0</dpdp.accelerator.version>
+
         <servlet.api.version>4.0.1</servlet.api.version>
         <javax.ws.rs.api.version>2.1.1</javax.ws.rs.api.version>
         <javax.validation.api.version>2.0.1.Final</javax.validation.api.version>
@@ -571,6 +575,14 @@
         <carbon.identity.organization.mgt.service.version>1.5.2</carbon.identity.organization.mgt.service.version>
         <carbon.identity.event.version>7.10.156</carbon.identity.event.version>
         <carbon.identity.governance.version>1.8.107</carbon.identity.governance.version>
+        <!-- Bounded Import-Package ranges for the Carbon/Identity properties above, grouped by
+             release train, so an incompatible future version fails fast instead of resolving. -->
+        <carbon.kernel.imp.pkg.version.range>[4.12.0, 5.0.0)</carbon.kernel.imp.pkg.version.range>
+        <carbon.tenant.common.imp.pkg.version.range>[4.14.0, 5.0.0)</carbon.tenant.common.imp.pkg.version.range>
+        <carbon.identity.imp.pkg.version.range>[7.10.0, 8.0.0)</carbon.identity.imp.pkg.version.range>
+        <carbon.identity.oauth.imp.pkg.version.range>[7.4.0, 8.0.0)</carbon.identity.oauth.imp.pkg.version.range>
+        <carbon.identity.organization.mgt.service.imp.pkg.version.range>[1.5.0, 2.0.0)</carbon.identity.organization.mgt.service.imp.pkg.version.range>
+        <carbon.identity.governance.imp.pkg.version.range>[1.8.0, 2.0.0)</carbon.identity.governance.imp.pkg.version.range>
         <!-- 2.9.10 is the first published version with the listener/hook APIs we need. IS 7.3.0
              actually ships an unpublished 2.9.0.3 hotfix (not on Nexus, so we can't compile
              against it) - decompiled and confirmed API-identical to 2.9.10, so the Import-Package

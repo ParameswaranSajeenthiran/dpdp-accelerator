@@ -150,9 +150,9 @@
                             org.wso2.dpdp.accelerator.consent.extensions.service.models;version="${project.version}",
                         </Export-Package>
                         <Import-Package>
-                            org.wso2.dpdp.accelerator.common.exception;version="${project.version}",
-                            org.wso2.dpdp.accelerator.common.persistence;version="${project.version}",
-                            org.wso2.dpdp.accelerator.common.util;version="${project.version}",
+                            org.wso2.dpdp.accelerator.common.exception;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.common.persistence;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.common.util;version="${dpdp.accelerator.version}",
                             org.osgi.framework;version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component;version="${osgi.service.component.imp.pkg.version.range}",
                             org.osgi.service.component.annotations;version="${osgi.service.component.imp.pkg.version.range}",
