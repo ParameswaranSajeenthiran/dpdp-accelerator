@@ -80,13 +80,6 @@ export interface E2EConfig {
      */
     baseBackoffSecondsOverride: number | null
     maxRetriesOverride: number | null
-    /**
-     * Null unless the deployment's stuck_inflight_threshold_seconds was deliberately shortened
-     * for 09.10.03 (stale in-flight delivery reclamation) - separate from the two above since it
-     * exercises a different mechanism and carries a real flakiness risk (see that test's own
-     * comment), so it can be disabled independently without touching 09.10.01/09.10.02.
-     */
-    stuckInFlightThresholdSecondsOverride: number | null
   }
   consentExpiry: {
     schedulerPollTimeoutMs: number | null

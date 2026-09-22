@@ -67,7 +67,7 @@ const ALLOWED_CALLBACK_PORTS = [8443, 8444, 8445, 8446, 8447, 8448, 8449, 8450, 
 
 export class WebhookReceiver {
   private server?: http.Server
-  private handler: (request: CapturedRequest) => ReceiverResponse | Promise<ReceiverResponse> = defaultHandler
+  private handler: (request: CapturedRequest) => ReceiverResponse = defaultHandler
   readonly requests: CapturedRequest[] = []
 
   private async listen(port: number): Promise<void> {
@@ -103,23 +103,18 @@ export class WebhookReceiver {
       const chunks: Buffer[] = []
       req.on('data', (chunk: Buffer) => chunks.push(chunk))
       req.on('end', () => {
-        void (async () => {
-          const captured: CapturedRequest = {
-            method: req.method ?? 'GET',
-            url: req.url ?? '/',
-            headers: req.headers,
-            rawBody: Buffer.concat(chunks),
-            receivedAt: Date.now(),
-          }
-          this.requests.push(captured)
+        const captured: CapturedRequest = {
+          method: req.method ?? 'GET',
+          url: req.url ?? '/',
+          headers: req.headers,
+          rawBody: Buffer.concat(chunks),
+          receivedAt: Date.now(),
+        }
+        this.requests.push(captured)
 
-          // Awaited so a handler can deliberately hold the connection open (e.g. to keep a
-          // delivery genuinely in_flight past a shortened stuck_inflight_threshold_seconds -
-          // see 09.10.03) before finally responding.
-          const response = await this.handler(captured)
-          res.writeHead(response.status, response.headers)
-          res.end(response.body)
-        })()
+        const response = this.handler(captured)
+        res.writeHead(response.status, response.headers)
+        res.end(response.body)
       })
     })
 
@@ -165,7 +160,7 @@ export class WebhookReceiver {
   }
 
   /** Overrides how every subsequent request is answered, until changed again. Default: echoes `hub.challenge` on GET, 204 on everything else. */
-  respondWith(handler: (request: CapturedRequest) => ReceiverResponse | Promise<ReceiverResponse>): void {
+  respondWith(handler: (request: CapturedRequest) => ReceiverResponse): void {
     this.handler = handler
   }
 

@@ -117,7 +117,6 @@ The override file only names what it changes; it is merged into the defaults key
 | `webhook.receiverHost` | `null` | A host the Identity Server can actually reach over the network. Loopback is rejected outright by `EventNotificationUrlValidator`, so webhook tests skip themselves while this is unset. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
 | `webhook.allowPrivateNetwork` | `false` | Set `true` only once the deployment's `[dpdp_accelerator.event_notifications.webhook] allow_private_network_callback_targets` is also true - required whenever `receiverHost` is an RFC1918 address. |
 | `webhook.baseBackoffSecondsOverride` / `.maxRetriesOverride` | `null` | Set to whatever the deployment's `base_backoff_seconds`/`max_retries` were shortened to - opt-in for the two retry-timing tests in `09.10-webhook-delivery-api.spec.ts`, which take minutes at the real defaults. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
-| `webhook.stuckInFlightThresholdSecondsOverride` | `null` | Set to whatever the deployment's `stuck_inflight_threshold_seconds` was shortened to - opt-in for `09.10.03`, kept separate from the two above since it's the most flake-prone test in the suite. See [`AGENTS.md`](AGENTS.md), "Webhook-dependent tests". |
 | `consentExpiry.schedulerPollTimeoutMs` | `null` | Opt-in. The real `ConsentExpiryJob` defaults to a daily cron, far too slow to wait on; set this only after switching the deployment's `[dpdp_accelerator.consent_expiry]` to `schedule_mode = "interval"` with a short `interval_seconds` and restarting the server. Unset skips that one test; every other consent-expiry test triggers reconciliation via a mutation and runs regardless. CI does this automatically - see `scripts/enable-fast-consent-expiry.sh`. |
 
 The passwords the personas need are not committed - `setup-local.sh` generates one and writes it
@@ -234,7 +233,7 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 | `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
 | `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
 | `08-complaints/` | 43 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
-| `09-event-notifications/` | 45 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `09-event-notifications/` | 44 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 

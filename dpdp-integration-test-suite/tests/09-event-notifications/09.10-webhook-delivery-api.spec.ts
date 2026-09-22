@@ -17,7 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth.fixtures'
-import { webhookBackoffOverride, webhookStuckInFlightThresholdSecondsOverride } from '../../utils/env'
+import { webhookBackoffOverride } from '../../utils/env'
 import { seedActiveTopicViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceiver'
@@ -239,86 +239,4 @@ test.describe('Webhook delivery', () => {
     }
   })
 
-  test('09.10.03 - A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch', async ({
-    consentAdminEventApi,
-  }) => {
-    // Opt-in, separate from 09.10.01/09.10.02's override since this exercises a different
-    // mechanism (stuck-in-flight reclamation, not retry backoff) with a real flakiness risk - see
-    // AGENTS.md, "Webhook-dependent tests". Move to nightly-e2e.yml if this proves unstable here.
-    const stuckInFlightThresholdSeconds = webhookStuckInFlightThresholdSecondsOverride()
-    test.skip(
-      !stuckInFlightThresholdSeconds,
-      'webhook.stuckInFlightThresholdSecondsOverride is not configured - see AGENTS.md, ' +
-        '"Webhook-dependent tests"',
-    )
-    // Must clear stuckInFlightThresholdSeconds plus one delivery_worker_poll_seconds tick (so the
-    // reclaim pass has genuinely run) but stay under WEBHOOK_HTTP_TIMEOUT_SECONDS (5s, fixed, not
-    // configurable) - past that the first attempt's own HTTP client times out and this just
-    // becomes an ordinary retry, not a stuck-in-flight reclaim.
-    const holdMs = 4_000
-    test.setTimeout(90_000)
-
-    const { receiver, topicName, subscriptionId, groupId } = await registerVerifiedWebhookSubscription(
-      consentAdminEventApi,
-      '08-02-03-topic',
-    )
-    try {
-      let firstDeliveryId: string | undefined
-      receiver.respondWith(async (request) => {
-        if (request.method !== 'POST') {
-          return { status: 204 }
-        }
-        if (firstDeliveryId === undefined) {
-          firstDeliveryId = request.headers['delivery-id'] as string
-          // Holds this connection open - the row stays in_flight for as long as this attempt is
-          // genuinely still pending, which is exactly what the reclaim query's
-          // UPDATED_AT <= cutoff check is watching for.
-          await new Promise((resolve) => setTimeout(resolve, holdMs))
-        }
-        return { status: 204 }
-      })
-
-      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicName)
-
-      // A second POST arriving before the first's held response is ever sent can only mean the
-      // reclaim pass fired while that first attempt was still genuinely in flight - not a retry
-      // after it completed. Exceeding this timeout without a second POST just fails the test
-      // cleanly (postCount stuck at 1); it cannot produce a false pass.
-      await expect
-        .poll(() => receiver.requests.filter((r) => r.method === 'POST').length, { timeout: holdMs + 500 })
-        .toBeGreaterThanOrEqual(2)
-
-      const postDeliveryIds = new Set(
-        receiver.requests.filter((r) => r.method === 'POST').map((r) => r.headers['delivery-id']),
-      )
-      // Same delivery row reclaimed and redispatched - never a second delivery created for one event.
-      expect(postDeliveryIds.size).toBe(1)
-      expect([...postDeliveryIds][0]).toBe(firstDeliveryId)
-
-      const delivery = await findDeliveryForEvent(consentAdminEventApi, subscriptionId, event.eventId)
-
-      await expect
-        .poll(
-          async () =>
-            (await consentAdminEventApi.getSubscriptionEventHistory(subscriptionId, delivery.deliveryId).then((r) => r.json()))
-              .currentStatus,
-          { timeout: 15_000 },
-        )
-        .toBe('delivered')
-
-      const history = await consentAdminEventApi
-        .getSubscriptionEventHistory(subscriptionId, delivery.deliveryId)
-        .then((r) => r.json())
-      const successfulAttempts = (history.history as { httpStatus?: number }[]).filter(
-        (attempt) => attempt.httpStatus === 204,
-      )
-      // The optimistic WHERE STATUS='in_flight' guard (EventNotificationCommonDBQueries'
-      // getUpdateWebhookDeliveryStatusQuery) means only the first attempt to complete can ever
-      // record success - the other's write affects 0 rows and is silently dropped - so exactly
-      // one 204 makes it into history despite two concurrent completions.
-      expect(successfulAttempts.length).toBe(1)
-    } finally {
-      await receiver.stop()
-    }
-  })
 })

@@ -103,9 +103,6 @@ jobs:
       # scripts/enable-webhook-callbacks.sh and utils/config.ts's webhook.*Override fields.
       WEBHOOK_BASE_BACKOFF_SECONDS: '1'
       WEBHOOK_MAX_RETRIES: '3'
-      # For 09.10.03 - must stay well below the delivery HTTP call's fixed 5s timeout. Flake-prone;
-      # move 09.10.03 to nightly-e2e.yml instead if this proves unstable on the PR path.
-      WEBHOOK_STUCK_INFLIGHT_THRESHOLD_SECONDS: '1'
       # Shortened ConsentExpiryJob cycle for 04.09.03 - see
       # scripts/enable-fast-consent-expiry.sh and utils/env.ts's consentExpirySchedulerPollTimeoutMs.
       CONSENT_EXPIRY_INTERVAL_SECONDS: '10'
@@ -463,8 +460,7 @@ jobs:
       - name: Enable private-network webhook callbacks
         run: |
           bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh \
-            "$IS_HOME" "$WEBHOOK_BASE_BACKOFF_SECONDS" "$WEBHOOK_MAX_RETRIES" \
-            "$WEBHOOK_STUCK_INFLIGHT_THRESHOLD_SECONDS"
+            "$IS_HOME" "$WEBHOOK_BASE_BACKOFF_SECONDS" "$WEBHOOK_MAX_RETRIES"
 
       - name: Speed up consent expiry reconciliation
         run: |
@@ -528,7 +524,6 @@ jobs:
                   # Must match the values enable-webhook-callbacks.sh applied to deployment.toml.
                   'baseBackoffSecondsOverride': int(os.environ['WEBHOOK_BASE_BACKOFF_SECONDS']),
                   'maxRetriesOverride': int(os.environ['WEBHOOK_MAX_RETRIES']),
-                  'stuckInFlightThresholdSecondsOverride': int(os.environ['WEBHOOK_STUCK_INFLIGHT_THRESHOLD_SECONDS']),
               },
               'consentExpiry': {
                   # Generous margin over enable-fast-consent-expiry.sh's interval, in ms.

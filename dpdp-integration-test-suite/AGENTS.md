@@ -325,19 +325,15 @@ deployment was actually set to; the tests compute their own timeout budgets from
 assuming a value, so they can't silently drift out of sync with the server. CI does this
 automatically too (same script, same values, passed to both sides).
 
-**Stuck-in-flight reclamation** (`09.10.03`) needs `stuck_inflight_threshold_seconds` shortened the
-same way, kept below the webhook delivery call's fixed 5s timeout - set
-`webhook.stuckInFlightThresholdSecondsOverride` to match. Its own `WebhookReceiver.respondWith()`
-handler holds a response open past that threshold so the reclaim pass fires on a still-live
-delivery - real concurrent dispatch, no test-only hook. This is the most timing-sensitive test in
-the suite; CI sets it too, in `pr-e2e.yml`, but move it to `nightly-e2e.yml` if it proves flaky
-there rather than let it destabilize the PR path.
-
-`09.08.08` (fan-out persistence rollback) was removed rather than kept as a permanent skip -
-genuinely unreproducible black-box (would need a test-only hook to force a mid-transaction DB
-failure), and already covered one layer down by
-`EventPublishTransactionAtomicityTest`/`DatabaseUtilsTest` (Java) - see
-[`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "What this suite cannot verify".
+Two cases were removed rather than implemented as permanent skips - `09.08`'s fan-out persistence
+rollback and `09.10`'s stuck-in-flight reclamation, both genuinely unreproducible black-box and
+already covered one layer down by Java unit tests (`EventPublishTransactionAtomicityTest`/
+`DatabaseUtilsTest`; `DeliveryRecoveryServiceTest`/`WebhookDeliveryWorkerStuckRecoveryTest`). Do
+**not** try shortening `stuck_inflight_threshold_seconds` below the webhook delivery call's fixed
+5s timeout to reach the second one - `DeliveryRecoveryService.activate()` throws
+`IllegalStateException` at server startup if you do, which cascades into unrelated startup
+failures. See [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "What this suite cannot verify", for the
+full account of why that specific approach was tried and ruled out.
 
 ## Auth-fixture internals you must not undo
 

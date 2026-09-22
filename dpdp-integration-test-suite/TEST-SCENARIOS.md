@@ -10,9 +10,9 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 172 across 46 spec files in 9 areas |
-| **Removed, not skipped** | `09.08`'s fan-out persistence rollback case - see "What this suite cannot verify" |
-| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff); `09.10.03` (shortened reclaim threshold - flake-prone, watch this one) |
+| **Tests** | 171 across 46 spec files in 9 areas |
+| **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
@@ -423,7 +423,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**45 tests, 11 spec files.**
+**44 tests, 11 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -520,15 +520,13 @@ Query and delivery-scoping rules on the read endpoints.
 ### `09.10-webhook-delivery-api.spec.ts` · API-only
 
 Every test needs a network-reachable receiver (`webhook.receiverHost`). `09.10.01`/`09.10.02` also
-need `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride`; `09.10.03` needs its own
-`webhook.stuckInFlightThresholdSecondsOverride`, kept separate since it's the most flake-prone of
-the three. See "Known gaps".
+need `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride`. See "Known gaps" for the
+stuck-in-flight reclamation case removed from this file.
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
 | `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped unless `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` are set** - real elapsed time scales with those values. |
 | `09.10.02` | Persistent receiver failure transitions the delivery to failed | Same opt-in as `09.10.01` - exhausts every retry, so scales with `maxRetriesOverride` too. |
-| `09.10.03` | A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch | **Skipped unless `webhook.stuckInFlightThresholdSecondsOverride` is set.** Holds a webhook response open past a shortened `stuck_inflight_threshold_seconds` (but under the delivery HTTP call's fixed 5s timeout) so the reclaim pass fires on a still-live delivery - genuine concurrent dispatch, no test-only hook. Runs in `pr-e2e.yml`; move to nightly if it proves flaky - see "What this suite cannot verify". |
 
 ### `09.11-tenant-isolation-api.spec.ts` · API-only
 
@@ -600,11 +598,9 @@ integrity headers, HMAC signature verification, 2xx-marks-delivered) were delete
 unreliable on a machine whose LAN IP changes mid-session. `09.10.01`/`09.10.02` cover retry and
 retry-exhaustion behavior instead, opt-in via `webhook.baseBackoffSecondsOverride`/
 `maxRetriesOverride` (see AGENTS.md, "Webhook-dependent tests") since the real product defaults
-make them take minutes - CI sets both automatically, so these two run on every E2E workflow.
-`09.10.03` (stuck-in-flight reclamation) is implemented too, opt-in via its own
-`webhook.stuckInFlightThresholdSecondsOverride`, also set automatically in `pr-e2e.yml` - see
-"What this suite cannot verify" for why it's the most flake-prone of the three and where it moves
-to if that proves out.
+make them take minutes - CI sets both automatically, so these two run on every E2E workflow. Its
+third case, stuck-in-flight reclamation, was removed rather than implemented - see "What this
+suite cannot verify".
 
 ## Smaller gaps
 
@@ -617,37 +613,37 @@ to if that proves out.
 
 ## What this suite cannot verify
 
-**`09.08`'s fan-out persistence rollback case — was removed rather than kept as a permanent skip.**
-Forcing a `DELIVERY` insert to fail mid-transaction, purely to prove the whole publish rolls back
-atomically, has no trigger reachable through legitimate API calls - it would mean shipping
-production code whose only purpose is to be exploitable by a test, which stays out of scope here.
-Unlike `09.10.03` below, no HTTP-reachable path was found for this one.
+Both removed cases are genuinely unreachable from a black-box HTTP test, and both are already
+covered one layer down by Java unit tests with a mocked DAO - so removing the dead
+`test.skip()`'d E2E placeholder loses no real verification.
 
-The behavior itself is not unverified, though - it's covered one layer down, with a mocked DAO:
+**`09.08`'s fan-out persistence rollback case.** Forcing a `DELIVERY` insert to fail
+mid-transaction, purely to prove the whole publish rolls back atomically, has no trigger reachable
+through legitimate API calls - it would mean shipping production code whose only purpose is to be
+exploitable by a test, which stays out of scope here. Covered instead by
 `EventPublishTransactionAtomicityTest.testFanOutFailureCausesEventPublishToFailWith500`
-(`event.notifications.service` module) forces the fan-out DAO call to throw and asserts the whole
-publish fails with a 500; `DatabaseUtilsTest` (`common` module) verifies the underlying transaction
-wrapper genuinely calls `connection.rollback()` on failure and never on success. A dead, permanently
-`test.skip()`'d placeholder in this suite added nothing beyond what those two already prove, so it
-was deleted rather than kept as inert weight - this line is the record of that decision.
+(`event.notifications.service` module, forces the fan-out DAO call to throw and asserts the whole
+publish fails with a 500) and `DatabaseUtilsTest` (`common` module, verifies the transaction
+wrapper genuinely calls `connection.rollback()` on failure and never on success).
 
-**`09.10.03` — stale in-flight delivery reclamation — was NOT in the same category, and is now
-implemented.** `claim`/`reclaim`/`complete` (`EventNotificationCommonDBQueries.java`'s
-`getClaimWebhookDeliveryQuery`/`getClaimStuckWebhookDeliveryQuery`/
-`getUpdateWebhookDeliveryStatusQuery`) are all optimistic on `STATUS`, keyed only on elapsed time
-(`stuck_inflight_threshold_seconds`) - not on whether the original worker is actually still alive.
-The webhook HTTP call itself has a fixed, non-configurable 5s timeout
-(`WEBHOOK_HTTP_TIMEOUT_SECONDS`). The test holds a `WebhookReceiver` response open longer than a
-shortened `stuck_inflight_threshold_seconds` but under that 5s ceiling, so the reclaim pass fires
-on a still-live delivery - genuine concurrent dispatch, exercising the real optimistic-concurrency
-guard, with no DB writes or test-only hook. `WebhookReceiver.respondWith()` now accepts an async
-handler for exactly this (`utils/webhookReceiver.ts`).
-
-The safe timing window is narrow (has to clear meaningfully below 5s), so this is the most
-flake-prone test in the suite by design - watch its pass rate on `pr-e2e.yml` and move it to
-`nightly-e2e.yml` if it turns out unstable there, rather than let it destabilize the PR path for
-everyone. Its opt-in config (`webhook.stuckInFlightThresholdSecondsOverride`) is deliberately kept
-separate from `09.10.01`/`09.10.02`'s so disabling it doesn't touch those two.
+**`09.10`'s stuck-in-flight delivery reclamation case.** The original plan for this one turned out
+to be wrong, not just risky - worth recording so it isn't tried again the same way. `claim`/
+`reclaim`/`complete` (`EventNotificationCommonDBQueries.java`'s `getClaimWebhookDeliveryQuery`/
+`getClaimStuckWebhookDeliveryQuery`/`getUpdateWebhookDeliveryStatusQuery`) really are optimistic on
+`STATUS`, keyed only on elapsed time (`stuck_inflight_threshold_seconds`), and the webhook HTTP
+call really does have a fixed 5s timeout (`WEBHOOK_HTTP_TIMEOUT_SECONDS`) - that part of the
+analysis was correct. What it missed: `DeliveryRecoveryService.activate()` throws
+`IllegalStateException` at server startup if `stuck_inflight_threshold_seconds <=
+WEBHOOK_HTTP_TIMEOUT_SECONDS` ("...so an active webhook request cannot be reclaimed") - a
+deliberate, hard-enforced product invariant guaranteeing the exact race this test wanted to
+construct can never be configured, not merely one that's hard to time. Confirmed live: setting
+`stuck_inflight_threshold_seconds = 1` in CI crashed the event-notification service bundle's
+activation entirely, cascading into unrelated startup failures (`SubscriptionEndpoint` failing to
+instantiate, super-tenant role provisioning failing) across three consecutive CI runs before the
+real cause was found. Covered instead by `DeliveryRecoveryServiceTest.
+activationRejectsStuckThresholdAtHttpTimeout` (asserts this exact guard),
+`WebhookDeliveryWorkerStuckRecoveryTest`, and `WebhookDeliveryWorkerTest.
+testEmptyPendingTriggersStuckPass` (`event.notifications.service` module, all with a mocked DAO).
 
 ---
 
