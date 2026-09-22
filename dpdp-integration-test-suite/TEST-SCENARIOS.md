@@ -10,8 +10,8 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 173 across 46 spec files in 9 areas |
-| **Skipped in code** | 1 — `09.08.08` |
+| **Tests** | 172 across 46 spec files in 9 areas |
+| **Removed, not skipped** | `09.08`'s fan-out persistence rollback case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff); `09.10.03` (shortened reclaim threshold - flake-prone, watch this one) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
@@ -423,7 +423,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**46 tests, 11 spec files.**
+**45 tests, 11 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -507,7 +507,6 @@ Register conflicts, re-verification, and delete guards.
 | `09.08.05` | An ALL-filter subscription receives every event regardless of purposes | No/one/many purposes, exactly one delivery each. |
 | `09.08.06` | SPECIFIC purpose matching is case-insensitive and requires overlap | Overlapping purposes deliver; unrelated ones do not. |
 | `09.08.07` | ALL_EXCEPT matches only when the event carries a purpose outside the exclusion set |  |
-| `09.08.08` | A fan-out persistence failure rolls back the event and its purposes | **Permanently skipped** - would require shipping a test-only hook in production code. |
 
 ### `09.09-event-queries-api.spec.ts` · API-only
 
@@ -618,11 +617,19 @@ to if that proves out.
 
 ## What this suite cannot verify
 
-One behaviour is genuinely unreachable from a black-box HTTP/UI test, and the test is permanently
-skipped rather than deleted so the gap stays visible:
+**`09.08`'s fan-out persistence rollback case — was removed rather than kept as a permanent skip.**
+Forcing a `DELIVERY` insert to fail mid-transaction, purely to prove the whole publish rolls back
+atomically, has no trigger reachable through legitimate API calls - it would mean shipping
+production code whose only purpose is to be exploitable by a test, which stays out of scope here.
+Unlike `09.10.03` below, no HTTP-reachable path was found for this one.
 
-- **`09.08.08` — fan-out persistence rollback.** Forcing a `DELIVERY` insert to fail mid-transaction
-  would mean shipping production code whose only purpose is to be exploitable by a test.
+The behavior itself is not unverified, though - it's covered one layer down, with a mocked DAO:
+`EventPublishTransactionAtomicityTest.testFanOutFailureCausesEventPublishToFailWith500`
+(`event.notifications.service` module) forces the fan-out DAO call to throw and asserts the whole
+publish fails with a 500; `DatabaseUtilsTest` (`common` module) verifies the underlying transaction
+wrapper genuinely calls `connection.rollback()` on failure and never on success. A dead, permanently
+`test.skip()`'d placeholder in this suite added nothing beyond what those two already prove, so it
+was deleted rather than kept as inert weight - this line is the record of that decision.
 
 **`09.10.03` — stale in-flight delivery reclamation — was NOT in the same category, and is now
 implemented.** `claim`/`reclaim`/`complete` (`EventNotificationCommonDBQueries.java`'s

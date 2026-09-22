@@ -333,8 +333,10 @@ delivery - real concurrent dispatch, no test-only hook. This is the most timing-
 the suite; CI sets it too, in `pr-e2e.yml`, but move it to `nightly-e2e.yml` if it proves flaky
 there rather than let it destabilize the PR path.
 
-One test stays `test.skip()`'d regardless - `09.08.08`, genuinely unreproducible black-box (would
-need a test-only hook to force a mid-transaction DB failure) - see
+`09.08.08` (fan-out persistence rollback) was removed rather than kept as a permanent skip -
+genuinely unreproducible black-box (would need a test-only hook to force a mid-transaction DB
+failure), and already covered one layer down by
+`EventPublishTransactionAtomicityTest`/`DatabaseUtilsTest` (Java) - see
 [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "What this suite cannot verify".
 
 ## Auth-fixture internals you must not undo
