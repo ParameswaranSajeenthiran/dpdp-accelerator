@@ -258,7 +258,7 @@ Exercises `DPDPConsentExpiryReconciler`. Asserts only on API responses, but stil
 | --- | --- | --- |
 | `04.09.01` | A consent whose expiry time has not yet passed has no EXPIRE entry in its history | Negative control: no EXPIRE entry for a future expiry. |
 | `04.09.02` | Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry | EXPIRE written with `actionBy=SYSTEM`, `currentStatus=EXPIRED`, in both status-audit and history. The revoke's own 409 is deliberately not asserted. |
-| `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs a shortened cron and a server restart). |
+| `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs `schedule_mode = "interval"` and a server restart) - CI sets this automatically. |
 
 ## `05-authorization/` — Route guards and sidebar visibility
 
