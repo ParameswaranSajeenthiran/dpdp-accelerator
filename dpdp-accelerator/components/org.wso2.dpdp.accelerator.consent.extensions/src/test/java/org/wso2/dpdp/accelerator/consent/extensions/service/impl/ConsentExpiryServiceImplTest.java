@@ -136,7 +136,9 @@ public class ConsentExpiryServiceImplTest {
         Connection connection = mock(Connection.class);
         AtomicInteger rollbacks = new AtomicInteger();
         ConsentExpiryServiceImpl service = new ConsentExpiryServiceImpl(consentExpiryTrackerDAO, () -> connection,
-                c -> { throw new AssertionError("must not commit"); }, c -> rollbacks.incrementAndGet());
+                c -> {
+                    throw new AssertionError("must not commit");
+                }, c -> rollbacks.incrementAndGet());
         ConsentExpiryDataAccessException failure = new ConsentExpiryDataAccessException("failed", null);
         doThrow(failure).when(consentExpiryTrackerDAO).deleteExpiry(connection, CONSENT_ID);
         expectThrows(ConsentExpiryDataAccessException.class,

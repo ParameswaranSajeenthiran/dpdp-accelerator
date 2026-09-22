@@ -23,6 +23,8 @@ import java.util.List;
 /**
  * A page of records plus the total row count across all pages, for {@code limit}/{@code offset}
  * pagination.
+ *
+ * @param <T> the record type held by this page
  */
 public class PagedResult<T> {
 

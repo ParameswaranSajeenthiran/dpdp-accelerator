@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Builds the JSON snapshot stored in {@code DPDP_CONSENT_HISTORY}
+ * Builds the JSON snapshot stored in {@code DPDP_CONSENT_HISTORY}.
  */
 public final class DPDPConsentSnapshotBuilder {
 

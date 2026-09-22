@@ -11,7 +11,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEve
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
-import javax.ws.rs.core.Response;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;

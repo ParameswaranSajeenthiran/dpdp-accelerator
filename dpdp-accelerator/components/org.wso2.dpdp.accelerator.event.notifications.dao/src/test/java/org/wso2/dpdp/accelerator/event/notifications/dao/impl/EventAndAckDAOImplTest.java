@@ -48,7 +48,9 @@ public class EventAndAckDAOImplTest {
 
     @AfterMethod
     public void tearDown() throws Exception {
-        if (connection != null) connection.close();
+        if (connection != null) {
+            connection.close();
+        }
         setManagerDataSource(null);
     }
 

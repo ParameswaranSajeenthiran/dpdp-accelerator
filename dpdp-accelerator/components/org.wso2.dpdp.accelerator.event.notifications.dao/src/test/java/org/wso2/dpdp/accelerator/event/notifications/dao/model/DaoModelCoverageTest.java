@@ -29,7 +29,9 @@ public class DaoModelCoverageTest {
 
     private void invokeAccessors(Object instance) throws Exception {
         for (Method method : instance.getClass().getMethods()) {
-            if (method.getDeclaringClass() == Object.class) continue;
+            if (method.getDeclaringClass() == Object.class) {
+                continue;
+            }
             if (method.getName().startsWith("set") && method.getParameterCount() == 1) {
                 method.invoke(instance, value(method.getParameterTypes()[0]));
             } else if ((method.getName().startsWith("get") || method.getName().startsWith("is"))
@@ -41,17 +43,31 @@ public class DaoModelCoverageTest {
 
     private Object[] arguments(Class<?>[] types) {
         Object[] values = new Object[types.length];
-        for (int i = 0; i < types.length; i++) values[i] = value(types[i]);
+        for (int i = 0; i < types.length; i++) {
+            values[i] = value(types[i]);
+        }
         return values;
     }
 
     private Object value(Class<?> type) {
-        if (type == String.class) return "value";
-        if (type == int.class || type == Integer.class) return 1;
-        if (type == long.class || type == Long.class) return 1L;
-        if (type == boolean.class || type == Boolean.class) return true;
-        if (type == Timestamp.class) return new Timestamp(1L);
-        if (java.util.List.class.isAssignableFrom(type)) return Collections.singletonList("value");
+        if (type == String.class) {
+            return "value";
+        }
+        if (type == int.class || type == Integer.class) {
+            return 1;
+        }
+        if (type == long.class || type == Long.class) {
+            return 1L;
+        }
+        if (type == boolean.class || type == Boolean.class) {
+            return true;
+        }
+        if (type == Timestamp.class) {
+            return new Timestamp(1L);
+        }
+        if (java.util.List.class.isAssignableFrom(type)) {
+            return Collections.singletonList("value");
+        }
         return null;
     }
 }

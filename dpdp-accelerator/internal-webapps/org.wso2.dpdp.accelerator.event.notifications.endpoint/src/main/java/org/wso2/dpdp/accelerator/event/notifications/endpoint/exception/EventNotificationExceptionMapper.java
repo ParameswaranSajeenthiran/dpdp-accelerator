@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 @Provider
 public class EventNotificationExceptionMapper implements ExceptionMapper<Throwable> {
 
-    private static final Log log = LogFactory.getLog(EventNotificationExceptionMapper.class);
+    private static final Log LOG = LogFactory.getLog(EventNotificationExceptionMapper.class);
 
     @Override
     public Response toResponse(Throwable exception) {
@@ -68,13 +68,13 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
         }
 
         if (rootCause instanceof IllegalArgumentException) {
-            log.debug("Invalid request argument: " + LogSanitizer.sanitize(rootCause.getMessage()));
+            LOG.debug("Invalid request argument: " + LogSanitizer.sanitize(rootCause.getMessage()));
             return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
                     EventNotificationEndpointErrorCodes.INVALID_REQUEST_PARAMETER,
                     "Invalid request parameter", rootCause.getMessage());
         }
 
-        log.error("Unhandled exception in Event Notification endpoint", exception);
+        LOG.error("Unhandled exception in Event Notification endpoint", exception);
         return buildResponse(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 EventNotificationEndpointErrorCodes.INTERNAL_SERVER_ERROR,
                 "Internal server error", "An unexpected error occurred.");
@@ -82,10 +82,10 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
 
     private Response handleEventNotificationException(EventNotificationException ex) {
         if (ex.getStatusCode() >= 500) {
-            log.error("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
+            LOG.error("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
                     + LogSanitizer.sanitize(ex.getMessage()), ex);
         } else {
-            log.debug("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
+            LOG.debug("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
                     + LogSanitizer.sanitize(ex.getMessage()));
         }
         return buildResponse(ex.getStatusCode(), ex.getCode(), ex.getMessage(), ex.getDescription());
@@ -93,7 +93,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
 
     private Response handleWebApplicationException(WebApplicationException wae) {
         int status = wae.getResponse().getStatus();
-        log.debug("JAX-RS exception [" + status + "]: " + LogSanitizer.sanitize(wae.getMessage()));
+        LOG.debug("JAX-RS exception [" + status + "]: " + LogSanitizer.sanitize(wae.getMessage()));
         return buildResponse(status, EventNotificationEndpointErrorCodes.forHttpStatus(status),
                 wae.getMessage() != null ? wae.getMessage() : Response.Status.fromStatusCode(status).getReasonPhrase(), null);
     }
@@ -104,7 +104,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
                 .reduce((a, b) -> a + "; " + b)
                 .orElse(cve.getMessage());
 
-        log.debug("Validation failure: " + LogSanitizer.sanitize(detail));
+        LOG.debug("Validation failure: " + LogSanitizer.sanitize(detail));
         return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
                 EventNotificationEndpointErrorCodes.VALIDATION_FAILURE,
                 "Request failed validation", detail);
@@ -117,7 +117,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
             detail = "Unrecognized field '" + upe.getPropertyName() + "' in request payload.";
         }
 
-        log.debug("Malformed request payload: " + LogSanitizer.sanitize(detail));
+        LOG.debug("Malformed request payload: " + LogSanitizer.sanitize(detail));
         return buildResponse(Response.Status.BAD_REQUEST.getStatusCode(),
                 EventNotificationEndpointErrorCodes.MALFORMED_REQUEST,
                 "Malformed request payload", detail);
