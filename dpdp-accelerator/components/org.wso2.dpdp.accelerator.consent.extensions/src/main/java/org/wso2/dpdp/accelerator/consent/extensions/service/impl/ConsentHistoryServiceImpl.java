@@ -21,6 +21,7 @@ package org.wso2.dpdp.accelerator.consent.extensions.service.impl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExtensionsDaoException;
@@ -70,8 +71,9 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
         // transition, so there is nothing to record. DPDP_CONSENT_HISTORY already captures every
         // action regardless, with full detail, so nothing is lost by skipping a no-op row here.
         if (Objects.equals(previousStatus, currentStatus)) {
-            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: " + consentId
-                    + " - status did not change (" + currentStatus + ").");
+            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: "
+                    + LogSanitizer.sanitize(consentId) + " - status did not change ("
+                    + LogSanitizer.sanitize(currentStatus) + ").");
             return;
         }
 
@@ -79,7 +81,8 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
             DatabaseUtils.executeInTransaction(connection -> {
                 recordStatusAudit(connection, tenantDomain, consentId, previousStatus, currentStatus, actionType,
                         actionBy);
-                LOG.debug("Recorded a '" + actionType + "' status-audit row for consent: " + consentId);
+                LOG.debug("Recorded a '" + actionType + "' status-audit row for consent: "
+                        + LogSanitizer.sanitize(consentId));
                 return null;
             });
         } catch (ConsentExtensionsDaoException e) {
@@ -93,14 +96,16 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
             String snapshotJson, String actionBy) {
 
         if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
-            LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
+            LOG.debug("Consent history snapshot recording is disabled; skipping consent: "
+                    + LogSanitizer.sanitize(consentId));
             return;
         }
 
         try {
             DatabaseUtils.executeInTransaction(connection -> {
                 recordHistorySnapshot(connection, tenantDomain, consentId, actionType, snapshotJson, actionBy);
-                LOG.debug("Recorded a '" + actionType + "' history snapshot for consent: " + consentId);
+                LOG.debug("Recorded a '" + actionType + "' history snapshot for consent: "
+                        + LogSanitizer.sanitize(consentId));
                 return null;
             });
         } catch (ConsentExtensionsDaoException e) {
@@ -122,7 +127,7 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
                 return new PagedResult<>(records, totalCount);
             });
         } catch (ConsentExtensionsDaoException e) {
-            LOG.error("Error retrieving status-audit history for consent: " + consentId, e);
+            LOG.error("Error retrieving status-audit history for consent: " + LogSanitizer.sanitize(consentId), e);
             throw new ConsentExtensionsServiceException(SERVER_ERROR_CODE,
                     "Could not retrieve the status-audit history.", 500, e);
         }
@@ -141,7 +146,7 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
                 return new PagedResult<>(records, totalCount);
             });
         } catch (ConsentExtensionsDaoException e) {
-            LOG.error("Error retrieving history for consent: " + consentId, e);
+            LOG.error("Error retrieving history for consent: " + LogSanitizer.sanitize(consentId), e);
             throw new ConsentExtensionsServiceException(SERVER_ERROR_CODE, "Could not retrieve the history.", 500,
                     e);
         }
@@ -157,8 +162,9 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
         // record. DPDP_CONSENT_HISTORY already captures every action regardless, with full detail,
         // so nothing is lost by skipping a no-op row here.
         if (Objects.equals(previousStatus, currentStatus)) {
-            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: " + consentId
-                    + " - status did not change (" + currentStatus + ").");
+            LOG.debug("Skipping a '" + actionType + "' status-audit row for consent: "
+                    + LogSanitizer.sanitize(consentId) + " - status did not change ("
+                    + LogSanitizer.sanitize(currentStatus) + ").");
             return;
         }
 
@@ -185,7 +191,8 @@ public class ConsentHistoryServiceImpl implements ConsentHistoryService {
             ActionType actionType, String snapshotJson, String actionBy) {
 
         if (!DPDPConsentExtensionDataHolder.getInstance().getConfigurationService().isConsentHistorySnapshotEnabled()) {
-            LOG.debug("Consent history snapshot recording is disabled; skipping consent: " + consentId);
+            LOG.debug("Consent history snapshot recording is disabled; skipping consent: "
+                    + LogSanitizer.sanitize(consentId));
             return;
         }
 

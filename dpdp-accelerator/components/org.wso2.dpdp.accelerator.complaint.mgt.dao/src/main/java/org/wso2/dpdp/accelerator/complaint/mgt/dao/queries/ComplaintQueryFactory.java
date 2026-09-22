@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.queries;
 
+import org.wso2.dpdp.accelerator.common.persistence.DBDialectConstants;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
@@ -39,9 +41,9 @@ public class ComplaintQueryFactory {
 
     public static ComplaintCommonDBQueries getQueryProvider(String dbType) {
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : "default";
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_DEFAULT;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("mysql")) {
+            if (k.contains(DBDialectConstants.DB_TYPE_MYSQL)) {
                 return new ComplaintMysqlDBQueries();
             }
             return new ComplaintCommonDBQueries();
@@ -63,6 +65,6 @@ public class ComplaintQueryFactory {
     }
 
     public static ComplaintCommonDBQueries getQueryProvider() {
-        return getQueryProvider("default");
+        return getQueryProvider(DBDialectConstants.DB_TYPE_DEFAULT);
     }
 }

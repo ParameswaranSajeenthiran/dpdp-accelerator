@@ -27,30 +27,30 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Resolves the consent-expiry query provider for the connected database dialect.
+ * Resolves the consent-history query provider for the connected database dialect. Only
+ * {@code mysql} has a dedicated provider today; every other dialect falls back to the ANSI
+ * baseline, mirroring {@link ConsentExpiryQueryFactory}.
  */
-public class ConsentExpiryQueryFactory {
+public class ConsentHistoryQueryFactory {
 
-    private static final Map<String, ConsentExpiryDBQueries> PROVIDER_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, ConsentHistoryCommonDBQueries> PROVIDER_MAP = new ConcurrentHashMap<>();
 
-    private ConsentExpiryQueryFactory() {
+    private ConsentHistoryQueryFactory() {
     }
 
-    public static ConsentExpiryDBQueries getQueryProvider(String dbType) {
+    public static ConsentHistoryCommonDBQueries getQueryProvider(String dbType) {
 
         String key = (dbType != null && !dbType.trim().isEmpty())
                 ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_DEFAULT;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("oracle")) {
-                return new ConsentExpiryOracleDBQueries();
-            } else if (k.contains("sql server") || k.contains("mssql")) {
-                return new ConsentExpirySqlServerDBQueries();
+            if (k.contains(DBDialectConstants.DB_TYPE_MYSQL)) {
+                return new ConsentHistoryMysqlDBQueries();
             }
-            return new ConsentExpiryDBQueries();
+            return new ConsentHistoryCommonDBQueries();
         });
     }
 
-    public static ConsentExpiryDBQueries getQueryProvider(Connection connection) {
+    public static ConsentHistoryCommonDBQueries getQueryProvider(Connection connection) {
 
         if (connection != null) {
             try {
@@ -65,7 +65,7 @@ public class ConsentExpiryQueryFactory {
         return getQueryProvider();
     }
 
-    public static ConsentExpiryDBQueries getQueryProvider() {
+    public static ConsentHistoryCommonDBQueries getQueryProvider() {
 
         return getQueryProvider(DBDialectConstants.DB_TYPE_DEFAULT);
     }

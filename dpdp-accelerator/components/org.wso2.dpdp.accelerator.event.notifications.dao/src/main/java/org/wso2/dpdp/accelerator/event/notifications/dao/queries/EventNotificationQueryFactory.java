@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
+import org.wso2.dpdp.accelerator.common.persistence.DBDialectConstants;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
@@ -36,13 +38,13 @@ public class EventNotificationQueryFactory {
 
     public static EventNotificationCommonDBQueries getQueryProvider(String dbType) {
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : "default";
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_DEFAULT;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("postgres")) {
+            if (k.contains(DBDialectConstants.DB_TYPE_POSTGRES)) {
                 return new EventNotificationPostgresDBQueries();
-            } else if (k.contains("mysql")) {
+            } else if (k.contains(DBDialectConstants.DB_TYPE_MYSQL)) {
                 return new EventNotificationMysqlDBQueries();
-            } else if (k.contains("sqlite")) {
+            } else if (k.contains(DBDialectConstants.DB_TYPE_SQLITE)) {
                 return new EventNotificationSqliteDBQueries();
             }
             return new EventNotificationCommonDBQueries();
@@ -64,6 +66,6 @@ public class EventNotificationQueryFactory {
     }
 
     public static EventNotificationCommonDBQueries getQueryProvider() {
-        return getQueryProvider("default");
+        return getQueryProvider(DBDialectConstants.DB_TYPE_DEFAULT);
     }
 }
