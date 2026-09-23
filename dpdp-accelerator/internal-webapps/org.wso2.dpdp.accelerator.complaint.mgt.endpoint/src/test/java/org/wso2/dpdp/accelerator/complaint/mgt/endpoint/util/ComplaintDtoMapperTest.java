@@ -82,11 +82,11 @@ public class ComplaintDtoMapperTest {
     }
 
     @Test
-    public void createResponseKeepsItsFieldsAndLeavesUserNameNull() throws Exception {
+    public void createResponseCarriesUserName() throws Exception {
         assertJson(ComplaintDtoMapper.toCreateResponse(complaint()),
                 "{\"id\":\"c1\",\"referenceId\":\"CMP-0001\",\"subjectCategory\":\"DATA_BREACH\","
                         + "\"priority\":\"CRITICAL\",\"status\":\"WAITING_ON_CLIENT\",\"userId\":\"user1\","
-                        + "\"userName\":null,\"description\":\"leak\",\"submittedAt\":1,\"updatedAt\":2,"
+                        + "\"userName\":\"User One\",\"description\":\"leak\",\"submittedAt\":1,\"updatedAt\":2,"
                         + "\"statutoryDueDate\":3}");
     }
 
@@ -143,7 +143,7 @@ public class ComplaintDtoMapperTest {
         ComplaintAttachment download = attachment("a1", true);
         download.setFileData(new byte[]{1, 2, 3, (byte) 0xff});
         assertJson(ComplaintDtoMapper.toDownload(download), "{\"attachmentId\":\"a1\",\"fileName\":\"evidence.pdf\","
-                + "\"contentType\":\"application/pdf\",\"uploadedTime\":null,\"content\":\"AQID/w==\"}");
+                + "\"contentType\":\"application/pdf\",\"uploadedTime\":1712345678901,\"content\":\"AQID/w==\"}");
         download.setFileData(null);
         assertNull(ComplaintDtoMapper.toDownload(download).getContent());
     }

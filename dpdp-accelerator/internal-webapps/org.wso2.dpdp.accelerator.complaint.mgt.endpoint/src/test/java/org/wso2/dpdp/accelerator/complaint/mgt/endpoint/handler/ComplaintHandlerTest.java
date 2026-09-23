@@ -33,7 +33,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCategory;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCategoryInfo;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
@@ -88,7 +88,7 @@ class ComplaintHandlerTest {
 
     @Test
     void createComplaintPassesRequestFieldsThroughToService() {
-        CmComplaintCreateRequest request = new CmComplaintCreateRequest();
+        ComplaintCreateRequest request = new ComplaintCreateRequest();
         request.setUserId("user1");
         request.setSubjectCategory(ComplaintCategory.DATA_BREACH);
         request.setDescription("desc");

@@ -27,7 +27,7 @@ import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
@@ -73,7 +73,7 @@ class ComplaintEndpointTest {
 
     @Test
     void createComplaintReturns201WithHandlerResponse() {
-        CmComplaintCreateRequest request = new CmComplaintCreateRequest();
+        ComplaintCreateRequest request = new ComplaintCreateRequest();
         ComplaintCreateResponse handlerResponse = new ComplaintCreateResponse();
         when(complaintHandler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);

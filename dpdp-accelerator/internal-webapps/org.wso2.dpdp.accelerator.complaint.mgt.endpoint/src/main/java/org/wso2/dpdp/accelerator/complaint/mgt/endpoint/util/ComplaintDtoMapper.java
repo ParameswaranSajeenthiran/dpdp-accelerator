@@ -60,8 +60,6 @@ public final class ComplaintDtoMapper {
         if (source == null) {
             return null;
         }
-        // userName is deliberately not copied: the create response has never carried it, even
-        // though the spec declares it.
         return new ComplaintCreateResponse()
                 .id(source.getComplaintId())
                 .referenceId(source.getReferenceId())
@@ -69,6 +67,7 @@ public final class ComplaintDtoMapper {
                 .priority(priority(source.getPriority()))
                 .status(status(source.getStatus()))
                 .userId(source.getUserId())
+                .userName(source.getUserName())
                 .description(source.getDescription())
                 .submittedAt(source.getCreatedTime())
                 .updatedAt(source.getUpdatedTime())
@@ -189,12 +188,11 @@ public final class ComplaintDtoMapper {
         if (source == null) {
             return null;
         }
-        // uploadedTime is deliberately not copied: the download response has never carried it,
-        // even though the spec declares it.
         return new ComplaintAttachmentDownloadResponse()
                 .attachmentId(source.getAttachmentId())
                 .fileName(source.getFileName())
                 .contentType(source.getContentType())
+                .uploadedTime(source.getCreatedTime())
                 .content(source.getFileData() == null ? null
                         : Base64.getEncoder().encodeToString(source.getFileData()));
     }

@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
@@ -67,7 +67,7 @@ public class ComplaintEndpoint {
     }
 
     @POST
-    public Response createComplaint(CmComplaintCreateRequest request) {
+    public Response createComplaint(ComplaintCreateRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         ComplaintCreateResponse response = complaintHandler.createComplaint(currentOrgId(),
                 callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);

@@ -27,9 +27,7 @@ the generated response models from the returned DAO models with
 `ComplaintDtoMapper`. The service and DAO modules never depend on the generated
 models.
 
-`ComplaintDtoMapperTest` pins every response's JSON. Two nullable fields the spec
-declares but nothing populates yet serialize as `null`:
-`ComplaintCreateResponse.userName` and `ComplaintAttachmentDownloadResponse.uploadedTime`.
+`ComplaintDtoMapperTest` pins every response's JSON.
 
 Generation maps `format: uuid` to `String`, so IDs stay opaque, and `format: byte`
 to `String`, so attachment content passes through as the service's base64 string.

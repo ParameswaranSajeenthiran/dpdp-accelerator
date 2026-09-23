@@ -30,6 +30,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorC
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -37,6 +38,7 @@ import javax.ws.rs.ext.Provider;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -62,7 +64,8 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
             return build(fromJsonException(jsonException));
         }
         if (exception instanceof WebApplicationException) {
-            int status = ((WebApplicationException) exception).getResponse().getStatus();
+            Response original = ((WebApplicationException) exception).getResponse();
+            int status = original.getStatus();
             if (status < 500) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("JAX-RS exception [" + status + "]: "
@@ -70,7 +73,10 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                 }
                 Response.Status reason = Response.Status.fromStatusCode(status);
                 String message = reason != null ? reason.getReasonPhrase() : String.valueOf(status);
-                return build(new ComplaintException(errorCodeFor(status).getCode(), message, message, status));
+                Response.ResponseBuilder builder =
+                        builder(new ComplaintException(errorCodeFor(status).getCode(), message, message, status));
+                copyHeaders(original, builder);
+                return builder.build();
             }
         }
 
@@ -148,7 +154,27 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
         return null;
     }
 
+    /**
+     * Keeps headers the framework attached to its own error response - e.g. the Allow header CXF
+     * sets on a 405 - but not the ones describing the original body, which is replaced here.
+     */
+    private static void copyHeaders(Response original, Response.ResponseBuilder target) {
+        for (Map.Entry<String, List<Object>> header : original.getHeaders().entrySet()) {
+            if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(header.getKey())
+                    || HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(header.getKey())) {
+                continue;
+            }
+            for (Object value : header.getValue()) {
+                target.header(header.getKey(), value);
+            }
+        }
+    }
+
     private static Response build(ComplaintException exception) {
+        return builder(exception).build();
+    }
+
+    private static Response.ResponseBuilder builder(ComplaintException exception) {
         ErrorEnvelope envelope = new ErrorEnvelope()
                 .code(exception.getCode())
                 .message(exception.getMessage())
@@ -156,7 +182,6 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                 .traceId(UUID.randomUUID().toString());
         return Response.status(exception.getStatusCode())
                 .type(MediaType.APPLICATION_JSON)
-                .entity(envelope)
-                .build();
+                .entity(envelope);
     }
 }

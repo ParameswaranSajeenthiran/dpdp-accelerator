@@ -110,7 +110,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId);
         });
-        return requireAccessibleAttachment(attachmentOpt, attachmentId, true);
+        return validateAndGetAttachment(attachmentOpt, attachmentId, true);
     }
 
     private void validateActor(String actorUserId, String actorRole) {
@@ -155,10 +155,10 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             String attachmentId, boolean restrictToPublicOnly) {
         Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(
                 conn -> attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId));
-        return requireAccessibleAttachment(attachmentOpt, attachmentId, restrictToPublicOnly);
+        return validateAndGetAttachment(attachmentOpt, attachmentId, restrictToPublicOnly);
     }
 
-    private ComplaintAttachment requireAccessibleAttachment(Optional<ComplaintAttachment> attachmentOpt,
+    private ComplaintAttachment validateAndGetAttachment(Optional<ComplaintAttachment> attachmentOpt,
             String attachmentId, boolean restrictToPublicOnly) {
         if (attachmentOpt.isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.ATTACHMENT_NOT_FOUND,

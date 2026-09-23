@@ -26,6 +26,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRe
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -140,6 +141,19 @@ class ComplaintExceptionMapperTest {
         ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
         assertEquals("CO-4040", envelope.getCode());
         assertEquals("Not Found", envelope.getMessage());
+    }
+
+    @Test
+    void keepsTheAllowHeaderOfA405ButReplacesItsBody() {
+        Response original = Response.status(405).header("Allow", "GET").header("Allow", "POST")
+                .type(MediaType.TEXT_PLAIN).entity("not allowed").build();
+
+        Response response = mapper.toResponse(new NotAllowedException(original));
+
+        assertEquals(405, response.getStatus());
+        assertEquals(java.util.Arrays.asList("GET", "POST"), response.getHeaders().get("Allow"));
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
     }
 
     private static Exception readFailure(String body, Class<?> type) {

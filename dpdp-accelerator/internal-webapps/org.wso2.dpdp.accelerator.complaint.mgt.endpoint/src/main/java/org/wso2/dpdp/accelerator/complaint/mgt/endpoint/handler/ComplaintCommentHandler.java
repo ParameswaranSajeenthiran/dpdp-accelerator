@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
@@ -59,7 +59,7 @@ public class ComplaintCommentHandler {
     }
 
     public ComplaintCommentCreateResponse addComment(String orgId, String complaintId, String actorUserId,
-            String actorUserName, String actorRole, CmComplaintMessageRequest request) {
+            String actorUserName, String actorRole, ComplaintMessageRequest request) {
         String message = request != null ? request.getMessage() : null;
         Boolean requestedIsPublic = request != null ? request.getIsPublic() : null;
         if (requestedIsPublic == null) {

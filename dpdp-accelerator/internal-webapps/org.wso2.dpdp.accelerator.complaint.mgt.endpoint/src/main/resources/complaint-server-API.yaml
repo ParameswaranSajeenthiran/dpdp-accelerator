@@ -513,7 +513,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CmComplaintCreateRequest'
+              $ref: '#/components/schemas/ComplaintCreateRequest'
             example:
               userId: "65fa2b1c9e"
               subjectCategory: "DATA_BREACH"
@@ -899,7 +899,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CmComplaintMessageRequest'
+              $ref: '#/components/schemas/ComplaintMessageRequest'
             example:
               message: "Confirmed and resolved — thanks for the details."
               isPublic: true
@@ -1456,7 +1456,7 @@ components:
           $ref: '#/components/schemas/ComplaintStatus'
 
     # ---- Complaint Management (Officer/Admin) request schemas ----
-    CmComplaintCreateRequest:
+    ComplaintCreateRequest:
       type: object
       description: >
         Pure-JSON body for POST /complaints (officer-assisted intake).
@@ -1475,7 +1475,7 @@ components:
         description:
           type: string
           maxLength: 5000
-    CmComplaintMessageRequest:
+    ComplaintMessageRequest:
       type: object
       description: >
         Pure-JSON body for POST /complaints/{complaintId}/comments. No
@@ -1515,7 +1515,7 @@ components:
 
     ComplaintAttachmentDownloadResponse:
       type: object
-      required: [attachmentId, fileName, contentType, content]
+      required: [attachmentId, fileName, contentType, uploadedTime, content]
       properties:
         attachmentId:
           type: string

@@ -22,7 +22,7 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
@@ -78,7 +78,7 @@ public class ComplaintHandler {
     // ---- Officer/admin (/complaints/*) ----
 
     public ComplaintCreateResponse createComplaint(String orgId, String actorUserId, String actorRole,
-            CmComplaintCreateRequest request) {
+            ComplaintCreateRequest request) {
         String userId = request != null ? request.getUserId() : null;
         String subjectCategory = request != null ? ComplaintDtoMapper.value(request.getSubjectCategory()) : null;
         String description = request != null ? request.getDescription() : null;

@@ -27,7 +27,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
@@ -59,7 +59,7 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentPassesResolvedIdentityAndRequestFieldsThroughToEventService() {
-        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
+        ComplaintMessageRequest request = new ComplaintMessageRequest();
         request.setMessage("hello");
         request.setIsPublic(true);
         request.setToStatus(ComplaintStatus.IN_PROGRESS);
@@ -87,7 +87,7 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentThrowsWhenIsPublicIsMissingFromRequest() {
-        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
+        ComplaintMessageRequest request = new ComplaintMessageRequest();
         request.setMessage("hello");
 
         expectThrows(ComplaintException.class,
@@ -98,7 +98,7 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentHonorsExplicitIsPublicFalse() {
-        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
+        ComplaintMessageRequest request = new ComplaintMessageRequest();
         request.setMessage("internal note");
         request.setIsPublic(false);
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",

@@ -47,7 +47,7 @@ public interface ComplaintAttachmentService {
      *                      {@code ComplaintEventService#addComment}
      * @param actorUserName display name of actorUserId
      * @param actorRole     resolved, authenticated caller's role
-     * @return the newly created attachments, without file content
+     * @return the newly created attachments
      * @throws ComplaintException thrown if the request fails validation against the attachment
      *                            policy
      */
@@ -65,7 +65,7 @@ public interface ComplaintAttachmentService {
      * @param ownerUserId   Data Principal expected to own the complaint
      * @param ownerUserName display name of ownerUserId
      * @param files         files to upload
-     * @return the newly created attachments, without file content
+     * @return the newly created attachments
      * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId, or if the request fails
      *                            validation against the attachment policy

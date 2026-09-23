@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
 import javax.ws.rs.Consumes;
@@ -58,7 +58,7 @@ public class ComplaintCommentEndpoint {
     @POST
     public Response addComplaintMessage(
             @PathParam("complaintId") String complaintId,
-            CmComplaintMessageRequest request) {
+            ComplaintMessageRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         ComplaintCommentCreateResponse response = commentHandler.addComment(callerOrgId, complaintId,
