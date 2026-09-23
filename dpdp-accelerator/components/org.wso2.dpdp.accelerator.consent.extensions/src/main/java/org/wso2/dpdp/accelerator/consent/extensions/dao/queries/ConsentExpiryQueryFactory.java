@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
+import org.wso2.dpdp.accelerator.common.persistence.DBDialectConstants;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
@@ -37,12 +39,15 @@ public class ConsentExpiryQueryFactory {
     public static ConsentExpiryDBQueries getQueryProvider(String dbType) {
 
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : "default";
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_H2;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("oracle")) {
+            if (k.contains(DBDialectConstants.DB_TYPE_ORACLE)) {
                 return new ConsentExpiryOracleDBQueries();
-            } else if (k.contains("sql server") || k.contains("mssql")) {
+            } else if (k.contains(DBDialectConstants.DB_TYPE_SQL_SERVER)
+                    || k.contains(DBDialectConstants.DB_TYPE_MSSQL)) {
                 return new ConsentExpirySqlServerDBQueries();
+            } else if (k.contains(DBDialectConstants.DB_TYPE_H2)) {
+                return new ConsentExpiryH2DBQueries();
             }
             return new ConsentExpiryDBQueries();
         });
@@ -65,6 +70,6 @@ public class ConsentExpiryQueryFactory {
 
     public static ConsentExpiryDBQueries getQueryProvider() {
 
-        return getQueryProvider("default");
+        return getQueryProvider(DBDialectConstants.DB_TYPE_H2);
     }
 }

@@ -16,22 +16,22 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.event.notifications.common.exception;
+package org.wso2.dpdp.accelerator.event.notifications.common.exception.dao;
 
 /**
- * Thrown when an operation targets a resource whose state does not permit it
- * (e.g. creating a subscription against a deregistered topic).
- *
- * <p>Distinct from {@link EventNotificationDuplicateResourceException}, which
- * signals a uniqueness conflict, and from generic data access errors.</p>
+ * Data access exception thrown when a database unique constraint or duplicate
+ * resource violation occurs.
  */
-public class EventNotificationInvalidStateException extends EventNotificationDataAccessException {
+public class EventNotificationDuplicateResourceException extends EventNotificationDaoException {
 
-    public EventNotificationInvalidStateException(String message) {
-        super(message);
+    private static final String ERROR_CODE = "EN-DAO-003";
+    private static final int HTTP_STATUS = 409;
+
+    public EventNotificationDuplicateResourceException(String message) {
+        super(ERROR_CODE, message, HTTP_STATUS);
     }
 
-    public EventNotificationInvalidStateException(String message, Throwable cause) {
-        super(message, cause);
+    public EventNotificationDuplicateResourceException(String message, Throwable cause) {
+        super(ERROR_CODE, message, HTTP_STATUS, cause);
     }
 }

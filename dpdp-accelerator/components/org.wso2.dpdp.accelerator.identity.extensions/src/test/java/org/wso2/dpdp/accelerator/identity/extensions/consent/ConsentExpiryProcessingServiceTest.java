@@ -37,6 +37,7 @@ import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryReco
 import org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionDataHolder;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.extensions.service.impl.ConsentExpiryServiceImpl;
 import org.wso2.dpdp.accelerator.consent.extensions.service.impl.ConsentHistoryServiceImpl;
 import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
@@ -78,6 +79,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -377,7 +379,7 @@ public class ConsentExpiryProcessingServiceTest {
     }
 
     @Test
-    public void failedCommitRollsBackAndCheckedDaoFailurePreservesCause() throws Exception {
+    public void failedCommitRollsBackAndDaoFailurePropagatesDirectly() throws Exception {
 
         DataSource failingSource = mock(DataSource.class);
         when(failingSource.getConnection()).thenAnswer(invocation -> {
@@ -390,13 +392,13 @@ public class ConsentExpiryProcessingServiceTest {
         assertEquals(count("DPDP_CONSENT_EXPIRY_TRACKER"), 1);
         assertPersisted(0);
         staticField("dataSource").set(null, dataSource);
-        ConsentHistoryDataRetrievalException failure =
-                new ConsentHistoryDataRetrievalException(
-                        "Audit lookup failed", new SQLException("DB failure"));
+        ConsentExtensionsServiceException failure =
+                new ConsentExtensionsServiceException("Audit lookup failed",
+                        new ConsentHistoryDataRetrievalException("Audit lookup failed", new SQLException("DB failure")));
         doThrow(failure).when(history).getLastKnownStatus(any(Connection.class),
                 anyString(), anyString());
         RuntimeException actual = expectThrows(RuntimeException.class, () -> processing.process(candidate, 2000));
-        assertEquals(actual.getCause(), failure);
+        assertSame(actual, failure);
         assertEquals(count("DPDP_CONSENT_EXPIRY_TRACKER"), 1);
         assertPersisted(0);
     }

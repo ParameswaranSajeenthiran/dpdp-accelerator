@@ -54,28 +54,28 @@ public class TopicServiceBranchesTest {
         field.set(null, instance);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void createTopicFalseAddIsRejected() {
         when(dao.getTopicByOrgAndName(any(Connection.class), eq("org"), eq("topic"))).thenReturn(Optional.empty());
         when(dao.addTopic(any(Connection.class), any(Topic.class))).thenReturn(false);
         service.createTopic("org", "topic", null);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deleteSystemTopicIsRejected() {
         Topic topic = new Topic("t", "org", "system", null, "active", Initiator.SYSTEM.getValue());
         when(dao.getTopicById(any(Connection.class), eq("t"), eq("org"))).thenReturn(Optional.of(topic));
         service.deleteTopic("org", "t");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deleteDeregisteredTopicIsRejected() {
         Topic topic = new Topic("t", "org", "topic", null, "deregistered", Initiator.USER.getValue());
         when(dao.getTopicById(any(Connection.class), eq("t"), eq("org"))).thenReturn(Optional.of(topic));
         service.deleteTopic("org", "t");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deleteFalseUpdateIsRejected() {
         Topic topic = new Topic("t", "org", "topic", null, "active", Initiator.USER.getValue());
         when(dao.getTopicById(any(Connection.class), eq("t"), eq("org"))).thenReturn(Optional.of(topic));

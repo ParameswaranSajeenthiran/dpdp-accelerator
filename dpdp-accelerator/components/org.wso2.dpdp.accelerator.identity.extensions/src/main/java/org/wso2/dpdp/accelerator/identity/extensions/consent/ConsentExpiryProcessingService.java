@@ -22,11 +22,7 @@ import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.consent.mgt.core.exception.ConsentManagementException;
 import org.wso2.carbon.consent.mgt.core.model.Receipt;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentHistoryService;
@@ -72,13 +68,8 @@ public class ConsentExpiryProcessingService {
         if (receipt.getExpiryTime().getTime() != candidate.getExpiryTime()) {
             // Use the persisted deadline, including its database precision. Never overwrite a tracker
             // changed since this candidate was fetched. A later sweep processes the corrected row.
-            DatabaseUtils.executeInTransaction(connection -> {
-                try {
-                    return expiryService.reconcileExpiry(connection, candidate, receipt.getExpiryTime().getTime());
-                } catch (ConsentExpiryDataAccessException e) {
-                    throw new DPDPCommonRuntimeException("Consent expiry reconciliation failed.", e);
-                }
-            });
+            DatabaseUtils.executeInTransaction(connection ->
+                    expiryService.reconcileExpiry(connection, candidate, receipt.getExpiryTime().getTime()));
             return false;
         }
         if (!"EXPIRED".equals(receipt.getState())) {
@@ -94,25 +85,20 @@ public class ConsentExpiryProcessingService {
             throw new IllegalStateException("Consent expiry event publication is enabled but its publisher is absent.");
         }
         return DatabaseUtils.executeInTransaction(connection -> {
-            try {
-                if (!expiryService.claimExpiryIfDue(connection, candidate, cutoff)) {
-                    return false;
-                }
-                String previousStatus = historyService.getLastKnownStatus(connection, orgId, consentId);
-                historyService.recordStatusAudit(connection, orgId, consentId, previousStatus, "EXPIRED",
-                        ActionType.EXPIRE, ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
-                if (snapshotEnabled) {
-                    historyService.recordHistorySnapshot(connection, orgId, consentId, ActionType.EXPIRE, snapshot,
-                            ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
-                }
-                if (publicationEnabled) {
-                    publisher.onConsentExpired(connection, orgId, consentId, previousStatus, purposes);
-                }
-                return true;
-            } catch (ConsentExpiryDataAccessException | ConsentHistoryDataInsertionException
-                    | ConsentHistoryDataRetrievalException e) {
-                throw new DPDPCommonRuntimeException("Consent expiry persistence failed.", e);
+            if (!expiryService.claimExpiryIfDue(connection, candidate, cutoff)) {
+                return false;
             }
+            String previousStatus = historyService.getLastKnownStatus(connection, orgId, consentId);
+            historyService.recordStatusAudit(connection, orgId, consentId, previousStatus, "EXPIRED",
+                    ActionType.EXPIRE, ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
+            if (snapshotEnabled) {
+                historyService.recordHistorySnapshot(connection, orgId, consentId, ActionType.EXPIRE, snapshot,
+                        ConsentHistoryServiceConstants.SYSTEM_ACTOR_EXPIRY);
+            }
+            if (publicationEnabled) {
+                publisher.onConsentExpired(connection, orgId, consentId, previousStatus, purposes);
+            }
+            return true;
         });
     }
 }

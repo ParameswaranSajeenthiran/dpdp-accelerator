@@ -28,7 +28,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -113,7 +113,7 @@ public class TopicConcurrencyAndHistoryTest {
         try {
             topicService.createTopic(orgId, topicName, "Duplicate topic test");
             fail("Expected 409 conflict exception");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 409);
         }
     }

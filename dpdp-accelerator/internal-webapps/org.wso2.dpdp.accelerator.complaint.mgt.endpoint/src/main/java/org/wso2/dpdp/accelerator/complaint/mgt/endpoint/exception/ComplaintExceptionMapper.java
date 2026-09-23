@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.error.ComplaintEndpointErrorCodes;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -37,8 +37,8 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable exception) {
-        if (exception instanceof ComplaintException) {
-            ComplaintException coEx = (ComplaintException) exception;
+        if (exception instanceof ComplaintServiceException) {
+            ComplaintServiceException coEx = (ComplaintServiceException) exception;
             ErrorEnvelope envelope = new ErrorEnvelope(
                     coEx.getCode(),
                     coEx.getMessage(),
@@ -54,7 +54,7 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
         LOG.error("Unhandled exception in Complaint API: " + LogSanitizer.sanitize(exception.getMessage()), exception);
 
         ErrorEnvelope envelope = new ErrorEnvelope(
-                ComplaintErrorCode.INTERNAL_ERROR.getCode(),
+                ComplaintEndpointErrorCodes.INTERNAL_ERROR,
                 "Internal error",
                 "An unexpected error occurred while processing the request.",
                 UUID.randomUUID().toString()

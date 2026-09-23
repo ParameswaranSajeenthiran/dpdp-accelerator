@@ -26,9 +26,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDo
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import javax.ws.rs.core.MediaType;
@@ -110,7 +110,7 @@ public class ComplaintAttachmentHandler {
         // before the count is ever checked.
         int maxFiles = ComplaintServiceUtil.getAttachmentMaxFilesPerUpload();
         if (fileParts.size() > maxFiles) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, fileParts.size()));
         }
 
@@ -125,7 +125,7 @@ public class ComplaintAttachmentHandler {
                 byte[] data = readAllBytes(in, fileName);
                 files.add(new UploadedFile(fileName, contentType, data));
             } catch (IOException e) {
-                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         ComplaintServiceConstants.FILE_READ_FAILED_ERROR);
             }
         }
@@ -146,7 +146,7 @@ public class ComplaintAttachmentHandler {
         while ((read = in.read(chunk)) != -1) {
             total += read;
             if (total > maxSize) {
-                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         String.format(ComplaintServiceConstants.FILE_SIZE_EXCEEDED_ERROR, fileName, maxSize));
             }
             buffer.write(chunk, 0, read);

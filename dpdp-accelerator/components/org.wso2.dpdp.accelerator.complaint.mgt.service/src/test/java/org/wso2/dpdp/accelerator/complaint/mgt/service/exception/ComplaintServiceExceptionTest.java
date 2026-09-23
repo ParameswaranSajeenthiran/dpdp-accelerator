@@ -20,13 +20,16 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service.exception;
 
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 
-class ComplaintExceptionTest {
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
+class ComplaintServiceExceptionTest {
 
     @Test
     void exposesCodeMessageDescriptionAndStatusCode() {
-        ComplaintException exception = new ComplaintException("CO-4040", "Complaint not found",
+        ComplaintServiceException exception = new ComplaintServiceException("CO-4040", "Complaint not found",
                 "No complaint exists with the given ID for this organization.", 404);
 
         assertEquals("CO-4040", exception.getCode());
@@ -36,9 +39,10 @@ class ComplaintExceptionTest {
     }
 
     @Test
-    void isARuntimeException() {
-        ComplaintException exception = new ComplaintException("CO-5000", "Internal error", "desc", 500);
+    void isAnUncheckedDpdpServiceException() {
+        ComplaintServiceException exception = new ComplaintServiceException("CO-5000", "Internal error", "desc", 500);
 
-        assertEquals(RuntimeException.class, exception.getClass().getSuperclass());
+        assertEquals(DPDPException.class, exception.getClass().getSuperclass());
+        assertTrue(exception instanceof RuntimeException);
     }
 }

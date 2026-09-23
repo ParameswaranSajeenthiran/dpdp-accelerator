@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointErrorCodes;
 
@@ -45,14 +45,14 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
     @Override
     public Response toResponse(Throwable exception) {
 
-        if (exception instanceof EventNotificationException) {
-            return handleEventNotificationException((EventNotificationException) exception);
+        if (exception instanceof EventNotificationServiceException) {
+            return handleEventNotificationException((EventNotificationServiceException) exception);
         }
 
         Throwable rootCause = unwrap(exception);
 
-        if (rootCause instanceof EventNotificationException) {
-            return handleEventNotificationException((EventNotificationException) rootCause);
+        if (rootCause instanceof EventNotificationServiceException) {
+            return handleEventNotificationException((EventNotificationServiceException) rootCause);
         }
 
         if (rootCause instanceof WebApplicationException) {
@@ -80,7 +80,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
                 "Internal server error", "An unexpected error occurred.");
     }
 
-    private Response handleEventNotificationException(EventNotificationException ex) {
+    private Response handleEventNotificationException(EventNotificationServiceException ex) {
         if (ex.getStatusCode() >= 500) {
             log.error("Service error [" + LogSanitizer.sanitize(ex.getCode()) + "]: "
                     + LogSanitizer.sanitize(ex.getMessage()), ex);
@@ -140,7 +140,7 @@ public class EventNotificationExceptionMapper implements ExceptionMapper<Throwab
             if (!visited.add(current)) {
                 break; // Cycle detected
             }
-            if (current instanceof EventNotificationException) {
+            if (current instanceof EventNotificationServiceException) {
                 return current;
             }
             if (current.getCause() == null || current.getCause() == current) {

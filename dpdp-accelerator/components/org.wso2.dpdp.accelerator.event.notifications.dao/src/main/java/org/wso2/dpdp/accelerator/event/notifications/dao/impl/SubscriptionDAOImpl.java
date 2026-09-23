@@ -25,10 +25,10 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.CallbackUrlCanonicalizer;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -180,7 +180,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     throw new EventNotificationDuplicateResourceException(
                             EventNotificationCommonConstants.ERROR_DUPLICATE_SUBSCRIPTION, e);
                 }
-                throw new EventNotificationDataAccessException(
+                throw new EventNotificationDaoException(
                         String.format(EventNotificationCommonConstants.ERROR_ADDING_SUBSCRIPTION,
                                 subscription.getSubscriptionId()), e);
             }
@@ -200,7 +200,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTION_BY_ID, subscriptionId),
                     e);
         }
@@ -220,7 +220,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return getSubscriptionById(conn, subscriptionId, orgId);
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS,
                             subscriptionId), e);
         }
@@ -234,7 +234,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             ps.setString(3, orgId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS, subscriptionId),
                     e);
         }
@@ -254,7 +254,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             ps.setString(4, expectedStatus);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS, subscriptionId),
                     e);
         }
@@ -275,7 +275,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 return false;
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_DELETING_SUBSCRIPTION, subscriptionId),
                     e);
         }
@@ -288,7 +288,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             ps.setString(5, subscriptionId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_DELETING_SUBSCRIPTION, subscriptionId),
                     e);
         }
@@ -355,7 +355,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
             return new PaginatedDAOResult<>(subscriptions, total);
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_SUBSCRIPTIONS, orgId), e);
         }
     }
@@ -398,7 +398,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
                             topicId),
                     e);
@@ -421,7 +421,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return purposes;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_SUBSCRIPTION_ID,
                             subscriptionId),
                     e);
@@ -445,7 +445,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return count;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
                             topicId),
                     e);
@@ -480,7 +480,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 return map;
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_BATCH_SUBSCRIPTION_IDS, e);
         }
     }
@@ -503,7 +503,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 return rs.next();
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_CHECKING_PENDING_DELIVERIES_FOR_SUBSCRIPTION,
                             subscriptionId),
                     e);
@@ -528,7 +528,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     EventNotificationCommonConstants.ERROR_GETTING_PENDING_SUBSCRIPTIONS_FOR_RECOVERY, e);
         }
     }

@@ -16,10 +16,10 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.service.exception;
+package org.wso2.dpdp.accelerator.complaint.mgt.service.constants;
 
 /**
- * The ComplaintException "description" text used at each throw site, named here instead of
+ * The ComplaintServiceException "description" text used at each throw site, named here instead of
  * written inline - mirrors the constants-class convention in financial-services-accelerator's
  * ConsentCoreServiceConstants. Entries with a placeholder are String.format templates; the rest
  * are used as-is.

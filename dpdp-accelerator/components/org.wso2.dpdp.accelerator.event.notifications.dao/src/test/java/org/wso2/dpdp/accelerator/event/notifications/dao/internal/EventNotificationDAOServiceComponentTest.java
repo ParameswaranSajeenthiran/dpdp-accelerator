@@ -22,7 +22,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
 import javax.sql.DataSource;
@@ -110,7 +110,7 @@ public class EventNotificationDAOServiceComponentTest {
         EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
         component.setDPDPConfigurationService(configurationService);
 
-        expectThrows(DPDPCommonRuntimeException.class, component::activate);
+        expectThrows(DPDPSystemException.class, component::activate);
         verify(connection).close();
     }
 
@@ -122,7 +122,7 @@ public class EventNotificationDAOServiceComponentTest {
         EventNotificationDAOServiceComponent component = new EventNotificationDAOServiceComponent();
         component.setDPDPConfigurationService(configurationService);
 
-        expectThrows(DPDPCommonRuntimeException.class, component::activate);
+        expectThrows(DPDPSystemException.class, component::activate);
         verify(connection).close();
     }
 

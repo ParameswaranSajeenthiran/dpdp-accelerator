@@ -16,20 +16,15 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.common.exception;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions;
 
-/**
- * Thrown when {@code dpdp-accelerator.xml} cannot be read or parsed.
- */
-public class DPDPCommonRuntimeException extends RuntimeException {
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 
-    public DPDPCommonRuntimeException(String message) {
+/** Common parent for every consent.extensions DAO-layer exception. */
+public class ConsentExtensionsDaoException extends DPDPException {
 
-        super(message);
-    }
+    protected ConsentExtensionsDaoException(String errorCode, String message, int httpStatus, Throwable cause) {
 
-    public DPDPCommonRuntimeException(String message, Throwable cause) {
-
-        super(message, cause);
+        super(errorCode, message, message, httpStatus, cause);
     }
 }

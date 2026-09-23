@@ -25,7 +25,6 @@ import org.wso2.carbon.consent.mgt.core.PrivilegedConsentManager;
 import org.wso2.carbon.consent.mgt.core.exception.ConsentManagementException;
 import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryResponseDTO;
@@ -67,18 +66,12 @@ public class ConsentHistorySelfApi {
         ConsentHistoryEndpointUtil.validatePagination(limit, offset);
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         requireCallerInvolvedInConsent(consentId);
-        try {
-            PagedResult<ConsentStatusAuditRecord> result = getConsentHistoryService()
-                    .getStatusAuditHistory(tenantDomain, consentId, limit, offset);
-            ConsentHistoryEndpointUtil.requireHistoryExists(result.getTotalCount(), consentId);
-            StatusHistoryResponseDTO response = ConsentHistoryEndpointUtil.buildStatusHistoryResponse(consentId,
-                    result, limit, offset);
-            return Response.ok(response).build();
-        } catch (ConsentHistoryDataRetrievalException e) {
-            LOG.error("Error retrieving status-audit history for consent: " + sanitize(consentId), e);
-            throw new ConsentHistoryEndpointException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    ConsentHistoryErrorCodes.SERVER_ERROR, "Could not retrieve the status-audit history.");
-        }
+        PagedResult<ConsentStatusAuditRecord> result = getConsentHistoryService()
+                .getStatusAuditHistory(tenantDomain, consentId, limit, offset);
+        ConsentHistoryEndpointUtil.requireHistoryExists(result.getTotalCount(), consentId);
+        StatusHistoryResponseDTO response = ConsentHistoryEndpointUtil.buildStatusHistoryResponse(consentId,
+                result, limit, offset);
+        return Response.ok(response).build();
     }
 
     @GET
@@ -90,18 +83,12 @@ public class ConsentHistorySelfApi {
         ConsentHistoryEndpointUtil.validatePagination(limit, offset);
         String tenantDomain = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         requireCallerInvolvedInConsent(consentId);
-        try {
-            PagedResult<ConsentHistoryRecord> result = getConsentHistoryService()
-                    .getConsentHistory(tenantDomain, consentId, limit, offset);
-            ConsentHistoryEndpointUtil.requireHistoryExists(result.getTotalCount(), consentId);
-            ConsentHistoryResponseDTO response = ConsentHistoryEndpointUtil.buildConsentHistoryResponse(consentId,
-                    result, limit, offset, OBJECT_MAPPER);
-            return Response.ok(response).build();
-        } catch (ConsentHistoryDataRetrievalException e) {
-            LOG.error("Error retrieving history for consent: " + sanitize(consentId), e);
-            throw new ConsentHistoryEndpointException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    ConsentHistoryErrorCodes.SERVER_ERROR, "Could not retrieve the history.");
-        }
+        PagedResult<ConsentHistoryRecord> result = getConsentHistoryService()
+                .getConsentHistory(tenantDomain, consentId, limit, offset);
+        ConsentHistoryEndpointUtil.requireHistoryExists(result.getTotalCount(), consentId);
+        ConsentHistoryResponseDTO response = ConsentHistoryEndpointUtil.buildConsentHistoryResponse(consentId,
+                result, limit, offset, OBJECT_MAPPER);
+        return Response.ok(response).build();
     }
 
     /**

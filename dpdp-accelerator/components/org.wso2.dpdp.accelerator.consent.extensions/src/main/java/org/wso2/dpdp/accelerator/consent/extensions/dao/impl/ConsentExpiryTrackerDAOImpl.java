@@ -35,8 +35,7 @@ import java.util.List;
 public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
 
     @Override
-    public void upsertExpiry(Connection connection, String orgId, String consentId, long expiryTime)
-            throws ConsentExpiryDataAccessException {
+    public void upsertExpiry(Connection connection, String orgId, String consentId, long expiryTime) {
 
         try {
             try (PreparedStatement delete = connection.prepareStatement(
@@ -58,7 +57,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     }
 
     @Override
-    public void deleteExpiry(Connection connection, String consentId) throws ConsentExpiryDataAccessException {
+    public void deleteExpiry(Connection connection, String consentId) {
 
         try (PreparedStatement statement = connection.prepareStatement(
                 getQueries(connection).getDeleteExpiryQuery())) {
@@ -71,8 +70,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     }
 
     @Override
-    public List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize)
-            throws ConsentExpiryDataAccessException {
+    public List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize) {
 
         List<ConsentExpiryRecord> records = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(
@@ -100,8 +98,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     }
 
     @Override
-    public boolean claimDueExpiry(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
-            throws ConsentExpiryDataAccessException {
+    public boolean claimDueExpiry(Connection connection, ConsentExpiryRecord candidate, long nowMillis) {
 
         try (PreparedStatement statement = connection.prepareStatement(
                 getQueries(connection).getClaimObservedExpiryQuery())) {
@@ -116,8 +113,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
     }
 
     @Override
-    public ConsentExpiryRecord findExpiry(Connection connection, String orgId, String consentId)
-            throws ConsentExpiryDataAccessException {
+    public ConsentExpiryRecord findExpiry(Connection connection, String orgId, String consentId) {
 
         try (PreparedStatement statement = connection.prepareStatement(
                 getQueries(connection).getFindExpiryQuery())) {
@@ -133,7 +129,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
 
     @Override
     public List<ConsentExpiryRecord> findDueExpiries(Connection connection, long nowMillis, int batchSize,
-            ConsentExpiryRecord cursor) throws ConsentExpiryDataAccessException {
+            ConsentExpiryRecord cursor) {
 
         if (batchSize <= 0) {
             throw new IllegalArgumentException("Consent expiry batch size must be positive.");
@@ -160,8 +156,7 @@ public class ConsentExpiryTrackerDAOImpl implements ConsentExpiryTrackerDAO {
         return records;
     }
     @Override
-    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
-            throws ConsentExpiryDataAccessException {
+    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis) {
 
         try (PreparedStatement statement = connection.prepareStatement(
                 getQueries(connection).getReconcileExpiryQuery())) {
