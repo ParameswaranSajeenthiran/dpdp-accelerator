@@ -18,7 +18,8 @@ public class DBQueryProviderTest {
     public void queryProvidersExposeNonEmptyQueries() throws Exception {
         for (EventNotificationCommonDBQueries provider : new EventNotificationCommonDBQueries[] {
                 new EventNotificationCommonDBQueries(), new EventNotificationMysqlDBQueries(),
-                new EventNotificationPostgresDBQueries(), new EventNotificationSqliteDBQueries() }) {
+                new EventNotificationH2DBQueries(), new EventNotificationPostgresDBQueries(),
+                new EventNotificationSqliteDBQueries() }) {
             for (Method method : EventNotificationCommonDBQueries.class.getMethods()) {
                 if (method.getDeclaringClass() == EventNotificationCommonDBQueries.class
                         && method.getReturnType() == String.class && method.getParameterCount() == 0) {
@@ -30,6 +31,8 @@ public class DBQueryProviderTest {
                 instanceof EventNotificationPostgresDBQueries);
         Assert.assertTrue(EventNotificationQueryFactory.getQueryProvider("sqlite")
                 instanceof EventNotificationSqliteDBQueries);
+        Assert.assertTrue(EventNotificationQueryFactory.getQueryProvider("h2") instanceof EventNotificationH2DBQueries);
+        Assert.assertTrue(EventNotificationQueryFactory.getQueryProvider() instanceof EventNotificationH2DBQueries);
     }
 
     @Test

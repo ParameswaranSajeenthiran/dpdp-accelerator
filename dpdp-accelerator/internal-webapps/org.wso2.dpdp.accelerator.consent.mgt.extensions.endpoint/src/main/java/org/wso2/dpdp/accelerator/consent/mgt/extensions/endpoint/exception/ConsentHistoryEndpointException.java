@@ -18,36 +18,16 @@
 
 package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception;
 
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
+
 /**
  * Carries the HTTP status and {@code CH-*} error code a resource method wants returned; the
  * actual response is built by {@link org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error.ConsentHistoryEndpointExceptionMapper}.
  */
-public class ConsentHistoryEndpointException extends RuntimeException {
-
-    private final int httpStatus;
-    private final String errorCode;
-    private final String description;
+public class ConsentHistoryEndpointException extends DPDPException {
 
     public ConsentHistoryEndpointException(int httpStatus, String errorCode, String description) {
 
-        super(description);
-        this.httpStatus = httpStatus;
-        this.errorCode = errorCode;
-        this.description = description;
-    }
-
-    public int getHttpStatus() {
-
-        return httpStatus;
-    }
-
-    public String getErrorCode() {
-
-        return errorCode;
-    }
-
-    public String getDescription() {
-
-        return description;
+        super(errorCode, description, description, httpStatus);
     }
 }

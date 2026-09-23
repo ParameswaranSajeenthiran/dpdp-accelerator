@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+ ~ Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ ~
+ ~ WSO2 LLC. licenses this file to you under the Apache License,
+ ~ Version 2.0 (the "License"); you may not use this file except
+ ~ in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     http://www.apache.org/licenses/LICENSE-2.0
+ ~
+ ~ Unless required by applicable law or agreed to in writing,
+ ~ software distributed under the License is distributed on an
+ ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~ KIND, either express or implied. See the License for the
+ ~ specific language governing permissions and limitations
+ ~ under the License.
+ -->
+
+<!--
+  Vendored, not fetched from a URL at build time: the rules below are content-identical to
+  wso2/code-quality-tools' own checkstyle.xml (the ruleset the Financial Services accelerator
+  points at over HTTP), translated to current Checkstyle's module names (no "*Check"-suffixed
+  aliases, which newer Checkstyle releases dropped). Vendoring keeps the build reproducible
+  offline and the actual rules reviewable in this repo's own history, instead of resolvable only
+  by fetching a mutable remote file - see wso2/dpdp-accelerator#38.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <module name="FileTabCharacter">
+        <property name="severity" value="error"/>
+    </module>
+
+    <module name="FileLength">
+        <property name="max" value="3000"/>
+        <property name="severity" value="warning"/>
+    </module>
+
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf"/>
+    </module>
+
+    <module name="RegexpSingleline">
+        <property name="format" value="((//.*)|(\*.*))FIXME"/>
+        <property name="message" value="TODO is preferred to FIXME. e.g. &quot;TODO: (DPDP-123) - Refactor when v2 is released.&quot;"/>
+    </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="((//.*)|(\*.*))TODO[^: (]"/>
+        <property name="message" value="All TODOs should be named. e.g. &quot;TODO: (DPDP-123) - Refactor when v2 is released.&quot;"/>
+    </module>
+
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="severity" value="error"/>
+        <!-- Exempts import/package statements and long URLs inside comments. -->
+        <property name="ignorePattern" value="^(package .*;\s*)|(import .*;\s*)|( *\* *https?://.*)$"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Imports -->
+        <module name="AvoidStarImport">
+            <property name="allowClassImports" value="false"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="RedundantImport">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="ImportOrder">
+            <property name="groups" value="*,java,javax"/>
+            <property name="ordered" value="true"/>
+            <property name="separated" value="true"/>
+            <property name="option" value="bottom"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="junit.framework"/>
+        </module>
+        <module name="UnusedImports"/>
+
+        <!-- Length -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF"/>
+            <property name="max" value="300"/>
+            <property name="countEmpty" value="false"/>
+            <property name="severity" value="warning"/>
+        </module>
+
+        <!-- Javadoc. JavadocMethod only validates a javadoc comment's own content when one is
+             present (it doesn't flag missing javadoc at all - JavadocType below covers the
+             type-level requirement issue #38 actually wants). validateThrows is off: checking a
+             declared @throws type would need it already compiled, which a method in the same,
+             not-yet-compiled module never is this early (this execution binds to validate,
+             before compile) - and it's the same information NeedBraces/the compiler already
+             enforce, not a real style gap. -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public, protected"/>
+            <property name="severity" value="error"/>
+            <property name="allowMissingParamTags" value="true"/>
+            <property name="allowMissingReturnTag" value="true"/>
+            <property name="validateThrows" value="false"/>
+        </module>
+        <module name="JavadocType">
+            <property name="scope" value="protected"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="JavadocStyle">
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- Naming -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]{1,})*$"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="TypeName">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="ConstantName">
+            <property name="applyToPublic" value="true"/>
+            <property name="applyToProtected" value="true"/>
+            <property name="applyToPackage" value="true"/>
+            <property name="applyToPrivate" value="false"/>
+            <property name="format" value="^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|FLAG_.*)$"/>
+            <message key="name.invalidPattern"
+                     value="Variable ''{0}'' should be in ALL_CAPS (if it is a constant) or be private (otherwise)."/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="StaticVariableName">
+            <property name="applyToPublic" value="true"/>
+            <property name="applyToProtected" value="true"/>
+            <property name="applyToPackage" value="true"/>
+            <property name="applyToPrivate" value="true"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]*_?$"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="MemberName">
+            <property name="applyToPublic" value="true"/>
+            <property name="applyToProtected" value="true"/>
+            <property name="applyToPackage" value="true"/>
+            <property name="applyToPrivate" value="true"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+            <property name="severity" value="error"/>
+        </module>
+        <!-- Allows underscore-segmented names like methodUnderTest_scenario_expected, this
+             codebase's own test-naming convention. -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="ParameterName">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="LocalFinalVariableName">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="LocalVariableName">
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- Coding / blocks -->
+        <module name="LeftCurly">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="RightCurly">
+            <property name="option" value="same"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="NeedBraces">
+            <property name="severity" value="error"/>
+            <property name="tokens" value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO"/>
+        </module>
+        <module name="UpperEll">
+            <property name="severity" value="error"/>
+        </module>
+        <module name="FallThrough">
+            <property name="reliefPattern"
+                      value="fall through|Fall through|fallthru|Fallthru|falls through|Falls through|fallthrough|Fallthrough|No break|NO break|no break|continue on"/>
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- Modifiers -->
+        <module name="ModifierOrder"/>
+
+        <!-- Whitespace -->
+        <module name="GenericWhitespace"/>
+        <module name="WhitespaceAround">
+            <property name="tokens"
+                      value="ASSIGN, BAND, BAND_ASSIGN, BOR,
+        BOR_ASSIGN, BSR, BSR_ASSIGN, BXOR, BXOR_ASSIGN, COLON, DIV, DIV_ASSIGN,
+        EQUAL, GE, GT, LAND, LCURLY, LE, LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE,
+        LITERAL_FINALLY, LITERAL_FOR, LITERAL_IF, LITERAL_RETURN,
+        LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, LOR, LT, MINUS,
+        MINUS_ASSIGN, MOD, MOD_ASSIGN, NOT_EQUAL, PLUS, PLUS_ASSIGN, QUESTION,
+        SL, SLIST, SL_ASSIGN, SR_ASSIGN, STAR, STAR_ASSIGN"/>
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="NoWhitespaceAfter">
+            <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS, UNARY_PLUS"/>
+            <property name="allowLineBreaks" value="true"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="NoWhitespaceBefore">
+            <property name="tokens" value="SEMI, DOT, POST_DEC, POST_INC"/>
+            <property name="allowLineBreaks" value="true"/>
+            <property name="severity" value="error"/>
+        </module>
+        <module name="ParenPad">
+            <property name="severity" value="error"/>
+        </module>
+
+        <!-- Banned calls: log via the module's own LOG (Apache Commons Logging) instead. -->
+        <module name="Regexp">
+            <property name="format" value="System\.out\.println"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
+        <module name="Regexp">
+            <property name="format" value="System\.err\.println"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
+        <module name="Regexp">
+            <property name="format" value="\.printStackTrace\(\)"/>
+            <property name="illegalPattern" value="true"/>
+        </module>
+
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE OFF: (.+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE ON"/>
+            <property name="checkFormat" value="Javadoc.*"/>
+            <property name="messageFormat" value="$1"/>
+        </module>
+
+    </module>
+</module>

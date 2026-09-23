@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.complaint.mgt.service.exception;
+package org.wso2.dpdp.accelerator.complaint.mgt.service.constants;
 
 /**
  * The (code, HTTP status) pairs documented in complaint-server-API.yaml for each error response -

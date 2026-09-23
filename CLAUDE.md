@@ -254,6 +254,63 @@ touching this chain, in order:
 - Never log tokens, emails, or other PII — this applies to the frontend too, not just the Java
   bundles.
 
+## Exception handling
+
+- Every DPDP-authored exception is unchecked, ultimately extending
+  `org.wso2.dpdp.accelerator.common.exception.DPDPException`. Checked exceptions remain only where
+  a WSO2 product API forces one (`StratosException`, `IdentityApplicationManagementException`,
+  `org.wso2.carbon.consent.mgt.core.exception.ConsentManagementException`, etc.).
+- `DPDPException` carries `errorCode`/`description`/`httpStatus`, set at the exact point it's
+  thrown, not attached later by whatever catches it.
+- `org.wso2.dpdp.accelerator.common.exception.DPDPSystemException` is deliberately plain (message +
+  cause only, no `errorCode`/`httpStatus`) rather than extending `DPDPException` — for a
+  system-level failure, not a business one: `dpdp-accelerator.xml` failing to parse
+  (`DPDPConfigParser`), a bundle's own startup DB connectivity check failing
+  (`*DAOServiceComponent`), a JDBC commit/connection failure (`DatabaseUtils`/
+  `JDBCPersistenceManager`), or a missing Carbon tenant context (`DPDPTenantContext`). None of these
+  get a code/status because no `ExceptionMapper` reads one off a generic `DPDPException` base —
+  only its own module's specific `*ServiceException` subtype — so attaching a shape here would just
+  be unused structure; it falls through to whichever REST layer's mapper is on the call stack (if
+  any), which returns its own fixed generic-failure response either way.
+- Per module, a `<Module>DaoException` (e.g. `ComplaintDAOException`, `EventNotificationDaoException`,
+  `ConsentExtensionsDaoException`) extends `DPDPException` and lives with the DAO layer; a
+  `<Module>ServiceException` (e.g. `ComplaintServiceException`, `EventNotificationServiceException`,
+  `ConsentExtensionsServiceException`) extends `DPDPException` and lives with the service layer.
+  Every service method catches its own module's DAO exception and rethrows its own service
+  exception before returning — a DAO-package exception never crosses the service boundary, even
+  for a generic 500 with nothing more to say.
+- Error-code/constants classes (`ComplaintErrorCode`, `*ServiceConstants`, `*ErrorCodes`) live in a
+  `constants` (or `error`) package, never inside an `exception` package.
+- A service module can't depend on its own endpoint module's error-code class. When a service
+  exception needs a code the endpoint also defines (a shared generic-500 code, or a specific
+  endpoint code), duplicate the literal value locally rather than importing across that boundary —
+  see `ComplaintErrorCode.INTERNAL_ERROR` / `ComplaintEndpointErrorCodes.INTERNAL_ERROR` (both
+  `CO-5000`), or `ConsentHistoryServiceImpl`'s `SERVER_ERROR_CODE` (matching
+  `ConsentHistoryErrorCodes.SERVER_ERROR`, both `CH-00004`).
+- `DatabaseUtils.executeInTransaction(...)` never appears inside a `catch` clause — it's a pure
+  pass-through for whatever the lambda throws, and its own job is only commit/rollback/close. The
+  calling service method wraps the whole `executeInTransaction(...)` call itself (not the lambda
+  body) to do the DAO-to-service translation.
+- No blanket `catch (Exception e)` / `catch (RuntimeException e)` "just in case" in the service
+  layer — the REST layer's `ExceptionMapper` already has a generic fallback for anything
+  unrecognized. (A broad catch is fine when the operation itself can genuinely fail in many
+  unrelated ways that all lead to one outcome — e.g. verifying a third-party webhook callback — as
+  long as the module's own exception types are still re-thrown unchanged first.)
+- A message that can reach an API response must be written fresh, in plain language, at the exact
+  line the exception is thrown for that purpose — never forwarded from a lower exception's own
+  message. A DAO-level message can stay technical; it's for the server log, not an API consumer.
+- A DAO returns `Optional<T>` for "record not present" — an expected outcome, not a failure.
+  Whether absence becomes an error, and what status it gets, is decided at the service or endpoint
+  layer, never baked into the DAO's return type.
+- DAO and service interfaces declare no `throws` clause (everything's unchecked) — document which
+  exception a method throws in the interface's javadoc instead, the way `ComplaintDAO` does.
+- An endpoint module defines its own exception type only for concerns with no service-layer
+  equivalent — API-contract validation (pagination bounds), authorization checks against a product
+  API the service module doesn't depend on, or response/DTO-shaping failures (see
+  `ConsentHistoryEndpointException` in `consent.mgt.extensions.endpoint`). A service exception that
+  already carries the right shape propagates straight to the module's `ExceptionMapper` — it's
+  never re-wrapped into a second, endpoint-owned exception first.
+
 ## Consent portal frontend (`react-apps/consent-portal`)
 
 - It's a client-side-routed SPA (`react-router-dom`, Vite build), not server-rendered — routes

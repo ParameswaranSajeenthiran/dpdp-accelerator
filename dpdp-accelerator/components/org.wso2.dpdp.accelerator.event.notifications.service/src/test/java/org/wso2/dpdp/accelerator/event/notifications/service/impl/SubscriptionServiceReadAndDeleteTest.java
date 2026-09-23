@@ -61,22 +61,22 @@ public class SubscriptionServiceReadAndDeleteTest {
 
     private SubscriptionServiceImpl service;
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void listSubscriptionsRequiresOrganization() {
         service.listSubscriptions(" ", null, null, null, 1, 0, null);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void listSubscriptionEventsRequiresSubscription() {
         service.listSubscriptionEvents("org-1", " ", 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void subscriptionHistoryRequiresDelivery() {
         service.getSubscriptionEventHistory("org-1", "sub-1", " ");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void retryVerificationRejectsActiveSubscription() {
         Subscription active = subscription("sub-1", "topic-1", "active");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("sub-1"), eq("org-1")))
@@ -84,18 +84,18 @@ public class SubscriptionServiceReadAndDeleteTest {
         service.retryVerification("org-1", "sub-1");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getSubscriptionRequiresId() {
         service.getSubscription("org-1", " ");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void subscriptionHistoryReportsMissingSubscription() {
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("missing"), eq("org-1"))).thenReturn(Optional.empty());
         service.getSubscriptionEventHistory("org-1", "missing", "delivery");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void subscriptionHistoryReportsMissingDelivery() {
         Subscription sub = subscription("sub-1", "topic-1", "active");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("sub-1"), eq("org-1"))).thenReturn(Optional.of(sub));
@@ -104,17 +104,17 @@ public class SubscriptionServiceReadAndDeleteTest {
         service.getSubscriptionEventHistory("org-1", "sub-1", "missing");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getSubscriptionRequiresOrganization() {
         service.getSubscription(" ", "sub-1");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void listSubscriptionEventsRequiresOrganization() {
         service.listSubscriptionEvents(" ", "sub-1", 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deleteSubscriptionReportsMissingResource() {
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("missing"), eq("org-1"))).thenReturn(Optional.empty());
         service.deleteSubscription("org-1", "missing");
@@ -180,7 +180,7 @@ public class SubscriptionServiceReadAndDeleteTest {
         verify(subscriptionDAO).listSubscriptions(any(Connection.class), eq("org-1"), eq("active"), eq("p"), eq("search"), eq(20), eq(0), eq("createdAt"));
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getSubscriptionRejectsMissingSubscription() {
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("missing"), eq("org-1"))).thenReturn(Optional.empty());
         service.getSubscription("org-1", "missing");
@@ -256,9 +256,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         service.setManualRetryDispatcher((orgId, subscriptionId, deliveryId) ->
                 WebhookDeliveryWorker.ManualRetrySubmissionResult.NOT_FOUND);
 
-        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException exception =
+        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException exception =
                 org.testng.Assert.expectThrows(
-                        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class,
+                        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class,
                         () -> service.retryDelivery("org-1", "sub-1", "missing"));
 
         assertEquals(exception.getStatusCode(), 404);
@@ -269,9 +269,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         service.setManualRetryDispatcher((orgId, subscriptionId, deliveryId) ->
                 WebhookDeliveryWorker.ManualRetrySubmissionResult.NOT_ELIGIBLE);
 
-        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException exception =
+        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException exception =
                 org.testng.Assert.expectThrows(
-                        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class,
+                        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class,
                         () -> service.retryDelivery("org-1", "sub-1", "del-1"));
 
         assertEquals(exception.getStatusCode(), 409);
@@ -286,7 +286,7 @@ public class SubscriptionServiceReadAndDeleteTest {
 
         try {
             service.deleteSubscription("org-1", "sub-1");
-        } catch (org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException e) {
+        } catch (org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 409);
         }
     }
@@ -348,9 +348,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         TrackingInputStream responseBody = new TrackingInputStream(new byte[4096]);
         installVerificationClient(request -> responseBody);
 
-        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException exception =
+        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException exception =
                 org.testng.Assert.expectThrows(
-                        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class,
+                        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class,
                         () -> service.retryVerification("org-1", "sub-1"));
 
         assertEquals(exception.getStatusCode(), 422);
@@ -391,9 +391,9 @@ public class SubscriptionServiceReadAndDeleteTest {
                         "topic-1", "org-1", "accounts", "", "active")));
         installSuccessfulVerificationClient();
 
-        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException exception =
+        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException exception =
                 org.testng.Assert.expectThrows(
-                        org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class,
+                        org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class,
                         () -> service.retryVerification("org-1", "sub-1"));
 
         assertEquals(exception.getStatusCode(), 404);

@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.queries;
 
+import org.wso2.dpdp.accelerator.common.persistence.DBDialectConstants;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
@@ -26,9 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Factory resolving DB-dialect specific query providers for the DPDP Complaint Management feature.
- * Mirrors {@code EventNotificationQueryFactory} - only {@code mysql} has a dedicated provider today
- * since the feature only ships {@code h2.sql}/{@code mysql.sql}; every other dialect (including H2)
- * falls back to the ANSI baseline.
+ * Mirrors {@code EventNotificationQueryFactory} - {@code mysql} and {@code h2} each have a
+ * dedicated provider today, matching the two dialects the feature ships
+ * ({@code complaints/h2.sql}/{@code complaints/mysql.sql}); any other dialect falls back to the
+ * ANSI baseline.
  */
 public class ComplaintQueryFactory {
 
@@ -39,10 +42,12 @@ public class ComplaintQueryFactory {
 
     public static ComplaintCommonDBQueries getQueryProvider(String dbType) {
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : "default";
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_H2;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("mysql")) {
+            if (k.contains(DBDialectConstants.DB_TYPE_MYSQL)) {
                 return new ComplaintMysqlDBQueries();
+            } else if (k.contains(DBDialectConstants.DB_TYPE_H2)) {
+                return new ComplaintH2DBQueries();
             }
             return new ComplaintCommonDBQueries();
         });
@@ -63,6 +68,6 @@ public class ComplaintQueryFactory {
     }
 
     public static ComplaintCommonDBQueries getQueryProvider() {
-        return getQueryProvider("default");
+        return getQueryProvider(DBDialectConstants.DB_TYPE_H2);
     }
 }

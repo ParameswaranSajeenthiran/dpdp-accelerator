@@ -16,20 +16,22 @@
  * under the License.
  */
 
-package org.wso2.dpdp.accelerator.common.exception;
+package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
 /**
- * Thrown when {@code dpdp-accelerator.xml} cannot be read or parsed.
+ * Microsoft SQL Server query provider for consent-expiry tracking.
  */
-public class DPDPCommonRuntimeException extends RuntimeException {
+public class ConsentExpirySqlServerDBQueries extends ConsentExpiryDBQueries {
 
-    public DPDPCommonRuntimeException(String message) {
+    @Override
+    public String getFindDueExpiriesQuery() {
 
-        super(message);
+        return getFindDueExpiriesQuery(" OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY");
     }
 
-    public DPDPCommonRuntimeException(String message, Throwable cause) {
+    @Override
+    public String getFindDueExpiriesAfterQuery() {
 
-        super(message, cause);
+        return getFindDueExpiriesAfterQuery(" OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY");
     }
 }

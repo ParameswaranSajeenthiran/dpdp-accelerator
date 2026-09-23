@@ -18,14 +18,24 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;
 
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
+
 /**
  * Wraps a {@link java.sql.SQLException} raised by the persistence layer. Unchecked so DAO
  * interfaces stay free of throws clauses; it propagates through the service layer to the
  * endpoint's generic exception mapper rather than being mistaken for a "not found" result.
  */
-public class ComplaintDAOException extends RuntimeException {
+public class ComplaintDAOException extends DPDPException {
+
+    private static final String ERROR_CODE = "CO-DAO-001";
+    private static final int HTTP_STATUS = 500;
 
     public ComplaintDAOException(String message, Throwable cause) {
-        super(message, cause);
+        this(ERROR_CODE, message, HTTP_STATUS, cause);
+    }
+
+    /** Lets a subtype (e.g. {@link DuplicateReferenceIdException}) report its own code/status. */
+    protected ComplaintDAOException(String errorCode, String message, int httpStatus, Throwable cause) {
+        super(errorCode, message, message, httpStatus, cause);
     }
 }

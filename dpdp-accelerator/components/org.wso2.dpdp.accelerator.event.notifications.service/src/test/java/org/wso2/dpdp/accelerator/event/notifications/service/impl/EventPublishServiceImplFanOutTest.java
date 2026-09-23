@@ -23,7 +23,7 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -159,7 +159,7 @@ public class EventPublishServiceImplFanOutTest {
                         PurposeFilterMode.ALL.getValue(), null, "active")));
         when(deliveryDAO.addWebhookDelivery(any(Connection.class), any(WebhookDelivery.class))).thenReturn(false);
 
-        EventNotificationException exception = expectThrows(EventNotificationException.class,
+        EventNotificationServiceException exception = expectThrows(EventNotificationServiceException.class,
                 () -> publish(Collections.emptyList()));
 
         assertEquals(exception.getStatusCode(), 500);

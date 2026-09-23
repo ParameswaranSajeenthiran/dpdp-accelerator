@@ -142,11 +142,9 @@ persona with no fixture (only `user-2` qualifies).
 "Officer" in the complaint tests is not a separate persona — it is any `dpdp-consent-admin` holder,
 so `loginAsConsentAdmin` doubles as the complaint officer and the event-notification admin.
 
-A second user account is optional. Tests needing two distinct real users must guard themselves:
-
-```ts
-test.skip(!hasSecondUser(), 'personas.user2 is not configured')
-```
+A second user account (`personas.user2`) is required, same as `personas.user` - it is provisioned
+unconditionally alongside it. Tests needing two distinct real users just read
+`target.personas.user2` directly; there is no skip guard to add.
 
 ### API access
 
@@ -306,19 +304,36 @@ the page object, don't assume.
 
 ## Webhook-dependent tests
 
-`tests/09-event-notifications/09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS
-process can actually reach, and skips itself otherwise. To run it:
+`09.10-webhook-delivery-api.spec.ts` needs a receiver the WSO2 IS process can actually reach
+(`webhookTestsEnabled()`), and `EventNotificationUrlValidator` rejects loopback unconditionally, so
+`localhost`/`127.0.0.1` never works.
 
-1. Set `webhook.receiverHost` to this machine's **LAN IP** — never `localhost`/`127.0.0.1`, which
-   `EventNotificationUrlValidator` rejects unconditionally regardless of any config flag.
-2. If that address is RFC1918/site-local (it normally will be), the running deployment's
-   `[dpdp_accelerator.event_notifications.webhook]` table needs
-   `allow_private_network_callback_targets = true` — it does **not** by default — and then set
-   `WEBHOOK_RECEIVER_ALLOW_PRIVATE_NETWORK=true`.
+**Local dev:** set `webhook.receiverHost` in `e2e-config.local.json` to this machine's LAN IP, set
+`allow_private_network_callback_targets = true` on the *deployed* `deployment.toml` and restart,
+set `webhook.allowPrivateNetwork` to `true` too, and widen `allowed_callback_ports` there to cover
+`8443`-`8455` (`utils/webhookReceiver.ts`'s `ALLOWED_CALLBACK_PORTS`).
 
-A machine whose LAN IP changes mid-session breaks webhook verification regardless of the tests
-being correct. All three tests in that file are also skipped in code for runtime reasons — see
-[`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "Known gaps".
+**CI:** automatic. `e2e.yml` resolves the runner's own private IP as `WEBHOOK_RECEIVER_HOST` and
+runs `scripts/enable-webhook-callbacks.sh` to apply the same `deployment.toml` changes, after
+`configure.sh` and before the server starts. Applies to every E2E workflow since they all call this
+one reusable job.
+
+**Retry-timing tests** (`09.10.01`/`09.10.02`) additionally need `base_backoff_seconds`/
+`max_retries` shortened on the deployment - the real defaults make them take up to ~90s/~11min.
+Set `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` in suite config to whatever the
+deployment was actually set to; the tests compute their own timeout budgets from these rather than
+assuming a value, so they can't silently drift out of sync with the server. CI does this
+automatically too (same script, same values, passed to both sides).
+
+Two cases were removed rather than implemented as permanent skips - `09.08`'s fan-out persistence
+rollback and `09.10`'s stuck-in-flight reclamation, both genuinely unreproducible black-box and
+already covered one layer down by Java unit tests (`EventPublishTransactionAtomicityTest`/
+`DatabaseUtilsTest`; `DeliveryRecoveryServiceTest`/`WebhookDeliveryWorkerStuckRecoveryTest`). Do
+**not** try shortening `stuck_inflight_threshold_seconds` below the webhook delivery call's fixed
+5s timeout to reach the second one - `DeliveryRecoveryService.activate()` throws
+`IllegalStateException` at server startup if you do, which cascades into unrelated startup
+failures. See [`TEST-SCENARIOS.md`](TEST-SCENARIOS.md), "What this suite cannot verify", for the
+full account of why that specific approach was tried and ruled out.
 
 ## Auth-fixture internals you must not undo
 

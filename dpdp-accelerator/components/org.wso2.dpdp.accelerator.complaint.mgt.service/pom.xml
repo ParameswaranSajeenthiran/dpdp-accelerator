@@ -239,12 +239,13 @@
                             org.wso2.dpdp.accelerator.complaint.mgt.service.*;version="${project.version}"
                         </Export-Package>
                         <Import-Package>
-                            org.wso2.dpdp.accelerator.complaint.mgt.dao;version="${project.version}",
-                            org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;version="${project.version}",
-                            org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${project.version}",
-                            org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${project.version}",
-                            org.wso2.dpdp.accelerator.common.config;version="${project.version}",
-                            org.wso2.dpdp.accelerator.common.util;version="${project.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.constants;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.exception;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.complaint.mgt.dao.model;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.common.config;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.common.exception;version="${dpdp.accelerator.version}",
+                            org.wso2.dpdp.accelerator.common.util;version="${dpdp.accelerator.version}",
                             org.osgi.framework;version="[1.8,2)",
                             *
                         </Import-Package>

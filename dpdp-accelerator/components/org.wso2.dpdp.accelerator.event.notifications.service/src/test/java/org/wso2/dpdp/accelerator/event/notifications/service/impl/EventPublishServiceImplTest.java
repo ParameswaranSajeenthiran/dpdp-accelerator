@@ -23,7 +23,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
@@ -37,12 +37,11 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import javax.sql.DataSource;
@@ -52,7 +51,6 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -233,7 +231,7 @@ public class EventPublishServiceImplTest {
             publishService.pollEvents("org1", "group-1", "subscription-1",
                     "{\"ack\":[\"delivery-1\"]}", "sha256=invalid");
             fail("Expected invalid HMAC to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
         }
         verify(deliveryDAO, never()).updatePollDeliveryStatusesByDeliveryIds(
@@ -270,7 +268,7 @@ public class EventPublishServiceImplTest {
             publishService.pollEvents("org1", "group-1", "subscription-1", "",
                     "sha256=" + HmacSigner.sign("shared-secret", "{}"));
             fail("Expected a signature for {} not to authenticate an empty request body");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
         }
         verify(deliveryDAO, never()).updatePollDeliveryStatusesByDeliveryIds(
@@ -288,7 +286,7 @@ public class EventPublishServiceImplTest {
             publishService.pollEvents("org1", "group-1", "subscription-1",
                     "{\"orgId\":\"another-tenant\"}", null);
             fail("Expected tenant mismatch to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
         }
         verify(deliveryDAO, never()).getPendingPollDeliveries(
@@ -305,7 +303,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.pollEvents("org1", "group-1", "subscription-1", "{}", null);
             fail("Expected group mismatch to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 404);
         }
         verify(deliveryDAO, never()).getPendingPollDeliveries(
@@ -329,7 +327,7 @@ public class EventPublishServiceImplTest {
         verify(deliveryAckDAO).addDeliveryAck(any(Connection.class), any());
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void completeDelivery_rejectsInvalidSignature() {
         WebhookDelivery delivery = new WebhookDelivery("delivery-1", "subscription-1", "event-1", "delivered",
                 1, null, null, null, null);
@@ -357,7 +355,7 @@ public class EventPublishServiceImplTest {
             publishService.completeDelivery("org1", "group-1", "delivery-1", body,
                     "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
             fail("Expected an undelivered webhook delivery to reject completion");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 409);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE);
         }
@@ -371,7 +369,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.completeDelivery("org1", "group-1", "unknown-delivery", "{}", "sha256=bad");
             fail("Expected an unknown delivery to be rejected as unauthenticated");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -394,7 +392,7 @@ public class EventPublishServiceImplTest {
             publishService.completeDelivery("org1", "group-1", "delivery-1", body,
                     "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
             fail("Expected a group mismatch to be rejected as unauthenticated");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -411,7 +409,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
             fail("Expected a missing subscription to be rejected as unauthenticated");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -431,7 +429,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.completeDelivery("org1", "group-1", "delivery-1", "{}", "sha256=bad");
             fail("Expected invalid authentication to be rejected before delivery state");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -456,7 +454,7 @@ public class EventPublishServiceImplTest {
             publishService.completeDelivery("org1", "group-1", "delivery-1", body,
                     "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
             fail("Expected duplicate completion to produce a conflict");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 409);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS);
         }
@@ -478,7 +476,7 @@ public class EventPublishServiceImplTest {
             publishService.completeDelivery("org1", "group-1", "delivery-1", body,
                     "sha256=" + HmacSigner.signCompletion("shared-secret", "delivery-1", body));
             fail("Expected non-HTTPS completion evidence to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getDescription(), EventNotificationServiceConstants.COMPLETION_EVIDENCE_INVALID_ERROR_MSG);
         }
@@ -501,7 +499,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.completeDelivery("org1", "group-1", "delivery-2", body, deliveryOneSignature);
             fail("Expected a completion signature bound to another delivery to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -523,7 +521,7 @@ public class EventPublishServiceImplTest {
         try {
             publishService.completeDelivery("org1", "group-1", "delivery-1", body, legacySignature);
             fail("Expected the legacy body-only completion signature to be rejected");
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 401);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE);
         }
@@ -534,8 +532,8 @@ public class EventPublishServiceImplTest {
     public void publishEvent_nullPayload_isRejected() {
         try {
             publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 422);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_MISSING_REQUIRED_PARAM);
             assertEquals(e.getDescription(), EventNotificationServiceConstants.EVENT_PAYLOAD_REQUIRED_ERROR_MSG);
@@ -547,8 +545,8 @@ public class EventPublishServiceImplTest {
     public void publishEvent_missingOrgId_throws400() {
         try {
             publishService.publishEvent(null, "g1", "topic-a", null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
         }
@@ -560,8 +558,8 @@ public class EventPublishServiceImplTest {
     public void publishEvent_missingTopicName_throws400() {
         try {
             publishService.publishEvent("org1", "g1", null, null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
         }
         verify(eventDAO, never()).addEvent(any(Connection.class), any());
@@ -571,8 +569,8 @@ public class EventPublishServiceImplTest {
     public void publishEvent_nullGroupId_throws400() {
         try {
             publishService.publishEvent("org1", null, "topic-a", null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
             assertEquals(e.getDescription(),
@@ -586,8 +584,8 @@ public class EventPublishServiceImplTest {
     public void publishEvent_blankGroupId_throws400() {
         try {
             publishService.publishEvent("org1", "   ", "topic-a", null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
             assertEquals(e.getDescription(),
@@ -602,8 +600,8 @@ public class EventPublishServiceImplTest {
         // orgId is blank but groupId is also blank. The orgId guard must fire first since it's checked first.
         try {
             publishService.publishEvent(null, null, "topic-a", null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getDescription(),
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG);
@@ -616,8 +614,8 @@ public class EventPublishServiceImplTest {
         // The groupId guard must fire before the topicName guard.
         try {
             publishService.publishEvent("org1", null, null, null, null);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getDescription(),
                     EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG);
@@ -631,8 +629,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.publishEvent("org1", "g1", "missing-topic", null, Collections.emptyMap());
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 404);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND);
             assertTrue(e.getDescription().contains("missing-topic"));
@@ -647,8 +645,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.publishEvent("org1", "g1", "topic-a", null, Collections.emptyMap());
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
         }
@@ -661,7 +659,7 @@ public class EventPublishServiceImplTest {
                 .thenReturn(Optional.of(new Topic("topic-id-1", "org1", "topic-a", null, "active")));
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(false);
 
-        EventNotificationException exception = org.testng.Assert.expectThrows(EventNotificationException.class,
+        EventNotificationServiceException exception = org.testng.Assert.expectThrows(EventNotificationServiceException.class,
                 () -> publishService.publishEvent("org1", "g1", "topic-a", null, Collections.emptyMap()));
 
         assertEquals(exception.getStatusCode(), 400);
@@ -678,8 +676,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.publishEvent("org1", "g1", "topic-a", Collections.emptyList(), Collections.emptyMap());
-            fail("Expected EventNotificationException when fan-out fails");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException when fan-out fails");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 500);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED);
         }
@@ -693,8 +691,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.publishEvent("org1", "g1", "topic-a", null, Collections.emptyMap());
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 500);
             assertEquals(e.getCode(), EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED);
         }
@@ -738,12 +736,12 @@ public class EventPublishServiceImplTest {
         verify(eventDAO, times(1)).searchEvents(any(Connection.class), eq("org1"), eq("topic1"), eq("delivered"), eq("grp1"), eq("marketing"), eq("search1"), eq(10), eq(0));
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void searchEvents_blankOrgId_throws400() {
         publishService.searchEvents("  ", "search", 10, 0);
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void searchEvents_nullOrgId_throws400() {
         publishService.searchEvents(null, "search", 10, 0);
     }
@@ -841,8 +839,8 @@ public class EventPublishServiceImplTest {
     public void listOrgDeliveries_missingOrgId_throws() {
         try {
             publishService.listOrgDeliveries(" ", null, null, null, null, 10, 0);
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 400);
         }
     }
@@ -870,8 +868,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.getDeliveryHistory("org1", "dlv-1");
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 404);
         }
     }
@@ -897,8 +895,8 @@ public class EventPublishServiceImplTest {
 
         try {
             publishService.getEventById("org1", "evt-1");
-            fail("Expected EventNotificationException");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 404);
         }
     }

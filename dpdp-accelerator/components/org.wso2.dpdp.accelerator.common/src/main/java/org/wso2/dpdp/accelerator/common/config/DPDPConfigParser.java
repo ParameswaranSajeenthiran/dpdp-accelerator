@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 import org.wso2.securevault.SecretResolver;
 import org.wso2.securevault.SecretResolverFactory;
 import org.wso2.securevault.commons.MiscellaneousUtil;
@@ -95,7 +95,7 @@ public final class DPDPConfigParser {
             LOG.error("Error occurred while building configuration from " + DPDPCommonConstants.CONFIG_FILE_NAME
                     + ". If this accelerator was upgraded in place, re-run bin/merge.sh so the template that "
                     + "renders this file is present.", e);
-            throw new DPDPCommonRuntimeException("Error occurred while building configuration from "
+            throw new DPDPSystemException("Error occurred while building configuration from "
                     + DPDPCommonConstants.CONFIG_FILE_NAME, e);
         }
     }
@@ -434,15 +434,49 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_WORKER_SHUTDOWN_TIMEOUT_SECONDS);
     }
 
-    public String getConsentExpiryCronValue() {
-
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_CRON_VALUE)
-                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_CRON_VALUE);
-    }
-
     public int getConsentExpiryBatchSize() {
 
-        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_BATCH_SIZE)
-                .map(Integer::parseInt).orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE);
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_BATCH_SIZE,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_BATCH_SIZE);
+    }
+
+    public String getConsentExpiryScheduleMode() {
+
+        if (getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_CRON_VALUE).isPresent()) {
+            throw new IllegalArgumentException("ConsentExpiry.CronValue is no longer supported. "
+                    + "Migrate consent_expiry.cron_value to schedule_mode and daily_time or interval_seconds.");
+        }
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_SCHEDULE_MODE)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_SCHEDULE_MODE);
+    }
+
+    public String getConsentExpiryDailyTime() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_DAILY_TIME)
+                .orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_DAILY_TIME);
+    }
+
+    public String getConsentExpiryTimezone() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_TIMEZONE)
+                .orElse(java.time.ZoneId.systemDefault().getId());
+    }
+
+    public int getConsentExpiryIntervalSeconds() {
+
+        return getConfigurationAsString(DPDPCommonConstants.CONSENT_EXPIRY_INTERVAL_SECONDS)
+                .map(Integer::parseInt).orElse(DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_INTERVAL_SECONDS);
+    }
+
+    public int getConsentExpiryMaxBatchesPerRun() {
+
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_MAX_BATCHES_PER_RUN,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_BATCHES_PER_RUN);
+    }
+
+    public int getConsentExpiryMaxRunSeconds() {
+
+        return getPositiveInt(DPDPCommonConstants.CONSENT_EXPIRY_MAX_RUN_SECONDS,
+                DPDPCommonConstants.DEFAULT_CONSENT_EXPIRY_MAX_RUN_SECONDS);
     }
 }

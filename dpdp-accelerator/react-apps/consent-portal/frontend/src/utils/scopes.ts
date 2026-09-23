@@ -103,6 +103,24 @@ export const REQUIRED_SCOPES = {
   ACCOUNT_SELF_DELETE: [ACCOUNT_SCOPES.SELF_DELETE],
 } as const satisfies Record<string, ScopeRequirement>
 
+/**
+ * True for a DPO - a complaint officer (holds either "any" complaint scope, matching
+ * AppSidebar's isComplaintOfficer) who has neither CONSENTS_READ_ANY nor COMPLAINTS_READ_SELF.
+ * internal_login (CONSENTS_READ_SELF) can't be used to spot this: it is granted to every
+ * signed-in user regardless of role, DPO included, so on its own it says nothing about whether
+ * someone is a genuine consent subject. A DPO-only profile has no consents of their own and no
+ * complaints filed as a Data Principal, so anything gated on "am I a consent/complaint subject"
+ * (e.g. the Dashboard) should treat this profile as having none.
+ */
+export function isDpoOnlyProfile(hasScope: (requirement: ScopeRequirement) => boolean): boolean {
+  return (
+    (hasScope(REQUIRED_SCOPES.COMPLAINTS_READ_ANY) ||
+      hasScope(REQUIRED_SCOPES.COMPLAINTS_WRITE_ANY)) &&
+    !hasScope(REQUIRED_SCOPES.CONSENTS_READ_ANY) &&
+    !hasScope(REQUIRED_SCOPES.COMPLAINTS_READ_SELF)
+  )
+}
+
 /** Splits the space separated scope string an access token carries. */
 export function parseScopes(granted: string | string[] | undefined): string[] {
   if (!granted) {

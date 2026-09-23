@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ~ Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+ ~
+ ~ WSO2 LLC. licenses this file to you under the Apache License,
+ ~ Version 2.0 (the "License"); you may not use this file except
+ ~ in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     http://www.apache.org/licenses/LICENSE-2.0
+ ~
+ ~ Unless required by applicable law or agreed to in writing,
+ ~ software distributed under the License is distributed on an
+ ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ~ KIND, either express or implied. See the License for the
+ ~ specific language governing permissions and limitations
+ ~ under the License.
+ -->
+
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<!--
+  See checkstyle.xml for why this ruleset is vendored rather than fetched from a URL. The
+  non-backlog entries below are adapted from wso2/code-quality-tools' own generic suppressions
+  (Javadoc laxness for tests, generated-code exclusion); the backlog entries are specific to this
+  repo - see wso2/dpdp-accelerator#276.
+-->
+<suppressions>
+
+    <!-- wso2/dpdp-accelerator#276: pre-existing violations across the tree, too large to fix in
+         the PR that added this gate. Remove each line as its backlog is cleared. -->
+    <suppress checks="LineLength" files=".*"/>
+    <suppress checks="ImportOrder" files=".*"/>
+    <suppress checks="JavadocType" files=".*"/>
+
+    <suppress checks="Javadoc.*" files=".*/src/test/java/.*"/>
+    <suppress checks="JavadocStyle" files=".*/src/(main|internal)/java/.*"/>
+
+    <!-- Generated from an OpenAPI spec - see CLAUDE.md, "Generated DTOs". -->
+    <suppress checks=".*" files=".*/src/gen/java/.*"/>
+
+</suppressions>

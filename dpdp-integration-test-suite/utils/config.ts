@@ -72,6 +72,14 @@ export interface E2EConfig {
   webhook: {
     receiverHost: string | null
     allowPrivateNetwork: boolean
+    /**
+     * Both null unless the deployment's own base_backoff_seconds/max_retries were deliberately
+     * shortened for faster retry tests - see AGENTS.md, "Webhook-dependent tests". The retry
+     * tests derive their own timeout budgets from these rather than assuming the deployment's
+     * defaults, so they can't silently drift out of sync with an actually-configured server.
+     */
+    baseBackoffSecondsOverride: number | null
+    maxRetriesOverride: number | null
   }
   consentExpiry: {
     schedulerPollTimeoutMs: number | null
@@ -120,6 +128,23 @@ export function requireConfigured<T>(value: T | null | undefined, key: string): 
       `"${key}" is not configured. Set it in ${path.basename(LOCAL_CONFIG_PATH)} ` +
         `(or ${path.basename(CONFIG_PATH)}), or run ./scripts/setup-local.sh to generate it.`,
     )
+  }
+  return value
+}
+
+/**
+ * Validates a configured numeric override, naming the exact key when it's malformed. `null`
+ * passes through unchanged - callers use that to mean "not configured", distinct from an invalid
+ * value someone actually typed in. Rejects non-integers and negatives so a typo (or a stray
+ * decimal/negative from hand-editing e2e-config.local.json) fails loudly here rather than
+ * silently producing a nonsensical timeout budget downstream.
+ */
+export function validateNonNegativeIntOverride(value: number | null, key: string): number | null {
+  if (value === null) {
+    return null
+  }
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`"${key}" must be a non-negative integer, got ${JSON.stringify(value)}.`)
   }
   return value
 }

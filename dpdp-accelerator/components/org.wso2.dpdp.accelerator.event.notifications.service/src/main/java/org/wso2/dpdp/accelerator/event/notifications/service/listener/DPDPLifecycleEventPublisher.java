@@ -22,6 +22,7 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.DefaultTopic;
 import org.wso2.dpdp.accelerator.event.notifications.common.listener.DPDPLifecycleEventListener;
 import org.wso2.dpdp.accelerator.event.notifications.service.EventPublishService;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,5 +93,16 @@ public class DPDPLifecycleEventPublisher implements DPDPLifecycleEventListener {
         Map<String, Object> payload = new HashMap<>();
         payload.put("userId", userId);
         eventPublishService.publishEvent(orgId, orgId, DefaultTopic.USER_ACCOUNT_DELETE.getName(), null, payload);
+    }
+
+    @Override
+    public void onConsentExpired(Connection connection, String orgId, String consentId, String previousStatus,
+            List<String> purposes) {
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("consentId", consentId);
+        payload.put("previousStatus", previousStatus);
+        eventPublishService.publishEvent(connection, orgId, orgId, DefaultTopic.CONSENT_EXPIRE.getName(), purposes,
+                payload);
     }
 }

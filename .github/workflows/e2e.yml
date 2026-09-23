@@ -99,6 +99,13 @@ jobs:
       IS_ADMIN_PASSWORD: wso2123
       IS_SOURCE: ${{ inputs.is_source }}
       DB_TYPE: ${{ inputs.db_type }}
+      # Shortened retry timing for tests/09.10's retry-exhaustion tests - see
+      # scripts/enable-webhook-callbacks.sh and utils/config.ts's webhook.*Override fields.
+      WEBHOOK_BASE_BACKOFF_SECONDS: '1'
+      WEBHOOK_MAX_RETRIES: '3'
+      # Shortened ConsentExpiryJob cycle for 04.09.03 - see
+      # scripts/enable-fast-consent-expiry.sh and utils/env.ts's consentExpirySchedulerPollTimeoutMs.
+      CONSENT_EXPIRY_INTERVAL_SECONDS: '10'
     steps:
       # pull_request_target checks out the TARGET branch by default, which would
       # silently test the wrong code. Callers therefore pass an explicit ref:
@@ -449,14 +456,16 @@ jobs:
           bash bin/merge.sh     "$IS_HOME"
           bash bin/configure.sh "$IS_HOME"
 
-      # The workflow this job was lifted from has an "Enable private-network webhook
-      # callbacks" step here, calling
-      # dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh. That script is
-      # not in the repository, so the step is omitted rather than carried as a guaranteed
-      # failure. Nothing is lost today: it flips allow_private_network_callback_targets for
-      # tests/08-event-notifications, whose webhook specs are test.skip'd in source and also
-      # gated on WEBHOOK_RECEIVER_HOST, which nothing here sets. Re-add it at this point in the
-      # sequence - after configure.sh, before the server starts - once the script lands.
+      # Must run after configure.sh (writes deployment.toml) and before the server starts.
+      - name: Enable private-network webhook callbacks
+        run: |
+          bash dpdp-integration-test-suite/scripts/enable-webhook-callbacks.sh \
+            "$IS_HOME" "$WEBHOOK_BASE_BACKOFF_SECONDS" "$WEBHOOK_MAX_RETRIES"
+
+      - name: Speed up consent expiry reconciliation
+        run: |
+          bash dpdp-integration-test-suite/scripts/enable-fast-consent-expiry.sh \
+            "$IS_HOME" "$CONSENT_EXPIRY_INTERVAL_SECONDS"
 
       - name: Start the Identity Server
         run: |
@@ -481,6 +490,17 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
+      # IS and WebhookReceiver share this runner; the receiver needs the runner's own non-loopback IP.
+      - name: Resolve the runner's webhook-reachable IP
+        run: |
+          host=$(hostname -I | awk '{print $1}')
+          if [ -z "${host}" ]; then
+            echo "::error::Could not resolve a non-loopback IP for this runner via 'hostname -I'"
+            exit 1
+          fi
+          echo "WEBHOOK_RECEIVER_HOST=${host}" >> "$GITHUB_ENV"
+          echo "Resolved webhook receiver host: ${host}"
+
       # The suite's one configuration file: e2e-config.json holds every default, and this local
       # override supplies only what is generated per run. Written before provisioning, which now
       # reads the account password from here rather than taking it as an environment variable.
@@ -501,6 +521,13 @@ jobs:
               'webhook': {
                   'receiverHost': os.environ['WEBHOOK_HOST'] or None,
                   'allowPrivateNetwork': True,
+                  # Must match the values enable-webhook-callbacks.sh applied to deployment.toml.
+                  'baseBackoffSecondsOverride': int(os.environ['WEBHOOK_BASE_BACKOFF_SECONDS']),
+                  'maxRetriesOverride': int(os.environ['WEBHOOK_MAX_RETRIES']),
+              },
+              'consentExpiry': {
+                  # Generous margin over enable-fast-consent-expiry.sh's interval, in ms.
+                  'schedulerPollTimeoutMs': int(os.environ['CONSENT_EXPIRY_INTERVAL_SECONDS']) * 3000,
               },
           }
           with open('e2e-config.local.json', 'w') as handle:
@@ -574,8 +601,6 @@ jobs:
       - name: Provision test users
         run: bash dpdp-integration-test-suite/scripts/provision-test-users.sh
 
-      # tests/08-event-notifications' real webhook-delivery tests run via WEBHOOK_RECEIVER_HOST -
-      # no secret needed, see "Enable private-network webhook callbacks..." above.
       # npm ci and the browser install are already done, so run-e2e.sh skips both and
       # just execs playwright. The github reporter adds inline annotations; the config
       # itself only declares html.

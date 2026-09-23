@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -68,7 +68,7 @@ public class JDBCPersistenceManagerTest {
         setStaticDataSource(null);
         setStaticInstance(null);
 
-        expectThrows(DPDPCommonRuntimeException.class, JDBCPersistenceManager::getInstance);
+        expectThrows(DPDPSystemException.class, JDBCPersistenceManager::getInstance);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class JDBCPersistenceManagerTest {
         Mockito.when(dataSource.getConnection()).thenReturn(connection);
         Mockito.doThrow(new SQLException("auto-commit failure")).when(connection).setAutoCommit(false);
 
-        DPDPCommonRuntimeException exception = expectThrows(DPDPCommonRuntimeException.class,
+        DPDPSystemException exception = expectThrows(DPDPSystemException.class,
                 () -> JDBCPersistenceManager.getInstance().getDBConnection());
 
         assertEquals(exception.getCause().getMessage(), "auto-commit failure");
@@ -95,7 +95,7 @@ public class JDBCPersistenceManagerTest {
         Mockito.doThrow(autoCommitFailure).when(connection).setAutoCommit(false);
         Mockito.doThrow(closeFailure).when(connection).close();
 
-        DPDPCommonRuntimeException exception = expectThrows(DPDPCommonRuntimeException.class,
+        DPDPSystemException exception = expectThrows(DPDPSystemException.class,
                 () -> JDBCPersistenceManager.getInstance().getDBConnection());
 
         assertSame(exception.getCause(), autoCommitFailure);

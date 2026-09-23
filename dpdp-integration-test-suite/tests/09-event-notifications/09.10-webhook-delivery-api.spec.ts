@@ -17,6 +17,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth.fixtures'
+import { webhookBackoffOverride } from '../../utils/env'
 import { seedActiveTopicViaApi, publishMarkedEventViaApi } from '../../utils/eventNotificationSetup'
 import { uniqueMarker } from '../../utils/testData'
 import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceiver'
@@ -28,28 +29,41 @@ import { webhookTestsEnabled, WebhookReceiver } from '../../utils/webhookReceive
  * The three core-success-path tests that used to live here (full payload envelope + integrity
  * headers, HMAC signature verification, 2xx-marks-delivered) were removed - they were
  * unreliable on a machine whose LAN IP changes mid-session, which broke webhook verification
- * regardless of the tests themselves being correct (confirmed passing standalone earlier). The
- * remaining tests are skipped by default for being slow (see each one's own comment), not for
- * this reason.
+ * regardless of the tests themselves being correct (confirmed passing standalone earlier).
  */
 test.describe('Webhook delivery', () => {
   test.beforeEach(() => {
     test.skip(!webhookTestsEnabled(), 'webhook.receiverHost is not configured - see README.md, "Webhook-dependent tests"')
   })
 
+  /**
+   * WebhookDeliveryTask.java: delaySeconds = baseBackoffSeconds * RETRY_BACKOFF_MULTIPLIER^(attempt-1)
+   * (multiplier is 3, hardcoded in EventNotificationServiceConstants - not configurable). Sums the
+   * delay before each of the first `attempts` retries, so tests can size their own poll timeouts
+   * from whatever backoff the deployment was actually configured with, instead of a hardcoded
+   * number that silently drifts from it.
+   */
+  function cumulativeBackoffSeconds(baseBackoffSeconds: number, attempts: number): number {
+    let total = 0
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      total += baseBackoffSeconds * 3 ** attempt
+    }
+    return total
+  }
+
   /** Registers a webhook subscription, waits for the verification GET to be answered, and returns the receiver already past `pending`. */
   async function registerVerifiedWebhookSubscription(
     consentAdminEventApi: import('../../clients/EventNotificationApiClient').EventNotificationApiClient,
     label: string,
-  ): Promise<{ receiver: WebhookReceiver; secret: string; topicName: string; subscriptionId: string }> {
+  ): Promise<{ receiver: WebhookReceiver; secret: string; topicName: string; subscriptionId: string; groupId: string }> {
     const topic = await seedActiveTopicViaApi(consentAdminEventApi, label)
     const receiver = new WebhookReceiver()
     const started = await receiver.start()
     const secret = uniqueMarker('secret')
     const response = await consentAdminEventApi.createSubscription({
       topic: topic.name,
-      filter: { type: 'ALL' },
-      delivery: { mode: 'WEBHOOK', callbackUrl: started.url, sharedSecret: secret },
+      filter: { type: 'all' },
+      delivery: { mode: 'webhook', callbackUrl: started.url, sharedSecret: secret },
     })
     expect(response.status(), await response.text()).toBe(201)
     const subscription = await response.json()
@@ -60,7 +74,17 @@ test.describe('Webhook delivery', () => {
       })
       .toBe('active')
 
-    return { receiver, secret, topicName: topic.name, subscriptionId: subscription.subscriptionId }
+    // SubscriptionHandler.createSubscription silently forces groupId to the caller's own org id
+    // regardless of what's requested (see seedPollSubscriptionViaApi's comment in
+    // utils/eventNotificationSetup.ts) - read it back rather than assuming 'carbon.super', which
+    // is wrong under the multi-tenant project.
+    return {
+      receiver,
+      secret,
+      topicName: topic.name,
+      subscriptionId: subscription.subscriptionId,
+      groupId: subscription.groupId,
+    }
   }
 
   /**
@@ -96,15 +120,26 @@ test.describe('Webhook delivery', () => {
     return found as { deliveryId: string; eventId: string }
   }
 
-  // Skipped by default, not deleted: real, working coverage (confirmed passing standalone -
-  // ~29s), but base_backoff_seconds=5 x3-multiplier retries make it genuinely slow (up to 90s)
-  // to wait through in every routine run. Run explicitly with
-  // `npx playwright test -g "09\.10\.01"` when touching retry/backoff logic.
-  test.skip('09.10.01 - A non-2xx response records failure and retries with the same delivery id', async ({
+  test('09.10.01 - A non-2xx response records failure and retries with the same delivery id', async ({
     consentAdminEventApi,
   }) => {
-    test.setTimeout(120_000)
-    const { receiver, topicName, subscriptionId } = await registerVerifiedWebhookSubscription(
+    // Opt-in: needs base_backoff_seconds/max_retries shortened on the deployment too, since the
+    // real defaults make this take minutes - see AGENTS.md, "Webhook-dependent tests".
+    const backoff = webhookBackoffOverride()
+    test.skip(
+      !backoff || backoff.maxRetries < 2,
+      'webhook.baseBackoffSecondsOverride/maxRetriesOverride is not configured (maxRetries must ' +
+        'allow at least 2 retries) - see AGENTS.md, "Webhook-dependent tests"',
+    )
+    const { baseBackoffSeconds } = backoff ?? { baseBackoffSeconds: 0 }
+    // Third attempt needs the first two retries' delays to have elapsed. Floor keeps this
+    // sane at very small override values; the rest of the test (subscription setup, delivery
+    // lookup, delivered-status poll) has its own budget on top.
+    const delayToThirdAttemptMs = cumulativeBackoffSeconds(baseBackoffSeconds, 2) * 1000
+    const postCountPollTimeoutMs = Math.max(15_000, delayToThirdAttemptMs * 3)
+    test.setTimeout(postCountPollTimeoutMs + 90_000)
+
+    const { receiver, topicName, subscriptionId, groupId } = await registerVerifiedWebhookSubscription(
       consentAdminEventApi,
       '08-02-01-topic',
     )
@@ -118,10 +153,9 @@ test.describe('Webhook delivery', () => {
         return { status: postCount < 3 ? 500 : 204 }
       })
 
-      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicName)
 
-      // base_backoff_seconds=5, x3 multiplier - the third attempt lands well within 90s.
-      await expect.poll(() => postCount, { timeout: 90_000 }).toBeGreaterThanOrEqual(3)
+      await expect.poll(() => postCount, { timeout: postCountPollTimeoutMs }).toBeGreaterThanOrEqual(3)
 
       const deliveryIds = new Set(
         receiver.requests.filter((r) => r.method === 'POST').map((r) => r.headers['delivery-id']),
@@ -153,26 +187,31 @@ test.describe('Webhook delivery', () => {
     }
   })
 
-  // Skipped by default, not deleted: max_retries=5 at x3-multiplier backoff genuinely takes up
-  // to ~11 minutes to exhaust (5+15+45+135+405s) - real product behavior, not a bug, but far too
-  // slow for a routine run. Run explicitly with `npx playwright test -g "09\.10\.02"` when
-  // touching retry-exhaustion logic.
-  test.skip('09.10.02 - Persistent receiver failure transitions the delivery to failed', async ({ consentAdminEventApi }) => {
-    // base_backoff_seconds=5, max_retries=5, x3 multiplier per attempt: 5+15+45+135+405 =~ 605s
-    // to exhaust every retry. Generous timeout is the point, not a bug.
-    test.setTimeout(700_000)
-    const { receiver, topicName, subscriptionId } = await registerVerifiedWebhookSubscription(
+  test('09.10.02 - Persistent receiver failure transitions the delivery to failed', async ({ consentAdminEventApi }) => {
+    // Opt-in, same as 09.10.01 - see AGENTS.md, "Webhook-dependent tests".
+    const backoff = webhookBackoffOverride()
+    test.skip(
+      !backoff,
+      'webhook.baseBackoffSecondsOverride/maxRetriesOverride is not configured - see AGENTS.md, ' +
+        '"Webhook-dependent tests"',
+    )
+    const { baseBackoffSeconds, maxRetries } = backoff ?? { baseBackoffSeconds: 0, maxRetries: 0 }
+    const exhaustionDelayMs = cumulativeBackoffSeconds(baseBackoffSeconds, maxRetries) * 1000
+    // Generous margin: a real product behavior being waited through, not a fixed operation.
+    const pollTimeoutMs = exhaustionDelayMs * 5 + 30_000
+    test.setTimeout(pollTimeoutMs + 30_000)
+
+    const { receiver, topicName, subscriptionId, groupId } = await registerVerifiedWebhookSubscription(
       consentAdminEventApi,
       '08-02-02-topic',
     )
     try {
       receiver.respondWith((request) => (request.method === 'POST' ? { status: 503 } : { status: 204 }))
-      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, 'carbon.super', topicName)
+      const { event } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicName)
 
       const delivery = await findDeliveryForEvent(consentAdminEventApi, subscriptionId, event.eventId)
 
-      // Real elapsed time here can approach 650s (5 retries at 5/15/45/135/405s backoff) - a
-      // concurrent test run elsewhere invalidating this shared consent-admin session partway
+      // A concurrent test run elsewhere invalidating this shared consent-admin session partway
       // through (see findDeliveryForEvent's comment) would show up as this poll returning
       // `undefined` for the rest of its budget rather than ever reaching 'failed', since this
       // suite's API clients hold one bearer token for their whole lifetime and don't re-login
@@ -184,7 +223,7 @@ test.describe('Webhook delivery', () => {
           async () =>
             (await consentAdminEventApi.getSubscriptionEventHistory(subscriptionId, delivery.deliveryId).then((r) => r.json()))
               .currentStatus,
-          { timeout: 650_000, intervals: [10_000] },
+          { timeout: pollTimeoutMs, intervals: [2_000] },
         )
         .toBe('failed')
 
@@ -200,15 +239,4 @@ test.describe('Webhook delivery', () => {
     }
   })
 
-  test.skip(
-    '09.10.03 - A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch',
-    () => {
-      // Reproducing a genuinely "stuck" in_flight delivery (a worker that crashed mid-dispatch)
-      // isn't achievable from outside the process - there is no test-only hook to force a delivery
-      // into in_flight and abandon it, and this suite has no direct DB-write fixture the way the
-      // DAO-level Java unit tests do (stuck_inflight_threshold_seconds/pending_subscription_recovery_*
-      // are real background-worker timers, not something a black-box HTTP/UI test can force). See
-      // TEST-SCENARIOS.md, "What this suite cannot verify".
-    },
-  )
 })

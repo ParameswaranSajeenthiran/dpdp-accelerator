@@ -18,6 +18,7 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.common.listener;
 
+import java.sql.Connection;
 import java.util.List;
 
 /**
@@ -43,4 +44,15 @@ public interface DPDPLifecycleEventListener {
     void onUserDataChanged(String orgId, String userId, List<String> changedClaimUris);
 
     void onUserAccountDeleted(String orgId, String userId);
+
+    /**
+     * Publishes expiry in the caller's transaction. Implementations must propagate failures and
+     * must not commit or close the connection. Older listeners fail explicitly rather than
+     * silently publishing in a separate transaction.
+     */
+    default void onConsentExpired(Connection connection, String orgId, String consentId, String previousStatus,
+            List<String> purposes) {
+
+        throw new UnsupportedOperationException("Transactional consent expiry publication is not supported.");
+    }
 }

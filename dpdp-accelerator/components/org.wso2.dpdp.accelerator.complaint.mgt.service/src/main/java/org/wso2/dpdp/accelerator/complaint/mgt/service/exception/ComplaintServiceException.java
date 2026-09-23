@@ -18,45 +18,34 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.exception;
 
-public class ComplaintException extends RuntimeException {
+import org.wso2.dpdp.accelerator.common.exception.DPDPException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
 
-    private final String code;
-    private final String description;
-    private final int statusCode;
+public class ComplaintServiceException extends DPDPException {
 
-    public ComplaintException(String code, String message, String description, int statusCode) {
-        super(message);
-        this.code = code;
-        this.description = description;
-        this.statusCode = statusCode;
+    public ComplaintServiceException(String code, String message, String description, int statusCode) {
+        super(code, message, description, statusCode);
     }
 
-    public ComplaintException(String code, String message, String description, int statusCode, Throwable cause) {
-        super(message, cause);
-        this.code = code;
-        this.description = description;
-        this.statusCode = statusCode;
+    public ComplaintServiceException(String code, String message, String description, int statusCode, Throwable cause) {
+        super(code, message, description, statusCode, cause);
     }
 
     /** Preferred constructor - code/statusCode come from the shared ComplaintErrorCode. */
-    public ComplaintException(ComplaintErrorCode errorCode, String message) {
+    public ComplaintServiceException(ComplaintErrorCode errorCode, String message) {
         this(errorCode.getCode(), message, message, errorCode.getHttpStatus());
     }
 
-    /** Same as {@link #ComplaintException(ComplaintErrorCode, String)}, preserving the original cause. */
-    public ComplaintException(ComplaintErrorCode errorCode, String message, Throwable cause) {
+    /** Same as {@link #ComplaintServiceException(ComplaintErrorCode, String)}, preserving the original cause. */
+    public ComplaintServiceException(ComplaintErrorCode errorCode, String message, Throwable cause) {
         this(errorCode.getCode(), message, message, errorCode.getHttpStatus(), cause);
     }
 
     public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
+        return getErrorCode();
     }
 
     public int getStatusCode() {
-        return statusCode;
+        return getHttpStatus();
     }
 }

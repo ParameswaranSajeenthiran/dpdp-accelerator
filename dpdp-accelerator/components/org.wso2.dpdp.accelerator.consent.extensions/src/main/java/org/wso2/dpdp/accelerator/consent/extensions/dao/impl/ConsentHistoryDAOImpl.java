@@ -18,13 +18,17 @@
 
 package org.wso2.dpdp.accelerator.consent.extensions.dao.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryDBQueries;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryCommonDBQueries;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.queries.ConsentHistoryQueryFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,23 +39,13 @@ import java.util.List;
 
 public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
 
-    private final ConsentHistoryDBQueries queries;
-
-    public ConsentHistoryDAOImpl() {
-
-        this(new ConsentHistoryDBQueries());
-    }
-
-    ConsentHistoryDAOImpl(ConsentHistoryDBQueries queries) {
-
-        this.queries = queries;
-    }
+    private static final Log LOG = LogFactory.getLog(ConsentHistoryDAOImpl.class);
 
     @Override
-    public void insertStatusAudit(Connection connection, ConsentStatusAuditRecord record)
-            throws ConsentHistoryDataInsertionException {
+    public void insertStatusAudit(Connection connection, ConsentStatusAuditRecord record) {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getInsertStatusAuditQuery())) {
+        try (PreparedStatement statement = connection
+                .prepareStatement(getQueries(connection).getInsertStatusAuditQuery())) {
             statement.setString(1, record.getAuditId());
             statement.setString(2, record.getConsentId());
             statement.setString(3, record.getOrgId());
@@ -62,16 +56,18 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
             statement.setLong(8, record.getActionTime());
             statement.executeUpdate();
         } catch (SQLException e) {
+            LOG.error("Error while inserting a status-audit row for consent: "
+                    + LogSanitizer.sanitize(record.getConsentId()), e);
             throw new ConsentHistoryDataInsertionException(
                     "Error while inserting a status-audit row for consent: " + record.getConsentId(), e);
         }
     }
 
     @Override
-    public void insertHistorySnapshot(Connection connection, ConsentHistoryRecord record)
-            throws ConsentHistoryDataInsertionException {
+    public void insertHistorySnapshot(Connection connection, ConsentHistoryRecord record) {
 
-        try (PreparedStatement statement = connection.prepareStatement(queries.getInsertHistorySnapshotQuery())) {
+        try (PreparedStatement statement = connection
+                .prepareStatement(getQueries(connection).getInsertHistorySnapshotQuery())) {
             statement.setString(1, record.getHistoryId());
             statement.setString(2, record.getConsentId());
             statement.setString(3, record.getOrgId());
@@ -81,6 +77,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
             statement.setLong(7, record.getActionTime());
             statement.executeUpdate();
         } catch (SQLException e) {
+            LOG.error("Error while inserting a history snapshot row for consent: "
+                    + LogSanitizer.sanitize(record.getConsentId()), e);
             throw new ConsentHistoryDataInsertionException(
                     "Error while inserting a history snapshot row for consent: " + record.getConsentId(), e);
         }
@@ -88,10 +86,11 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
 
     @Override
     public List<ConsentStatusAuditRecord> getStatusAuditHistory(Connection connection, String orgId,
-            String consentId, int limit, int offset) throws ConsentHistoryDataRetrievalException {
+            String consentId, int limit, int offset) {
 
         List<ConsentStatusAuditRecord> records = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(queries.getStatusAuditHistoryQuery())) {
+        try (PreparedStatement statement = connection
+                .prepareStatement(getQueries(connection).getStatusAuditHistoryQuery())) {
             statement.setString(1, consentId);
             statement.setString(2, orgId);
             statement.setInt(3, limit);
@@ -102,6 +101,8 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.error("Error while retrieving the status-audit history for consent: "
+                    + LogSanitizer.sanitize(consentId), e);
             throw new ConsentHistoryDataRetrievalException(
                     "Error while retrieving the status-audit history for consent: " + consentId, e);
         }
@@ -109,18 +110,18 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     }
 
     @Override
-    public int getStatusAuditHistoryCount(Connection connection, String orgId, String consentId)
-            throws ConsentHistoryDataRetrievalException {
+    public int getStatusAuditHistoryCount(Connection connection, String orgId, String consentId) {
 
-        return getCount(connection, queries.getStatusAuditHistoryCountQuery(), orgId, consentId);
+        return getCount(connection, getQueries(connection).getStatusAuditHistoryCountQuery(), orgId, consentId);
     }
 
     @Override
     public List<ConsentHistoryRecord> getConsentHistory(Connection connection, String orgId, String consentId,
-            int limit, int offset) throws ConsentHistoryDataRetrievalException {
+            int limit, int offset) {
 
         List<ConsentHistoryRecord> records = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(queries.getConsentHistoryQuery())) {
+        try (PreparedStatement statement = connection
+                .prepareStatement(getQueries(connection).getConsentHistoryQuery())) {
             statement.setString(1, consentId);
             statement.setString(2, orgId);
             statement.setInt(3, limit);
@@ -131,6 +132,7 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
                 }
             }
         } catch (SQLException e) {
+            LOG.error("Error while retrieving the history for consent: " + LogSanitizer.sanitize(consentId), e);
             throw new ConsentHistoryDataRetrievalException(
                     "Error while retrieving the history for consent: " + consentId, e);
         }
@@ -138,14 +140,12 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
     }
 
     @Override
-    public int getConsentHistoryCount(Connection connection, String orgId, String consentId)
-            throws ConsentHistoryDataRetrievalException {
+    public int getConsentHistoryCount(Connection connection, String orgId, String consentId) {
 
-        return getCount(connection, queries.getConsentHistoryCountQuery(), orgId, consentId);
+        return getCount(connection, getQueries(connection).getConsentHistoryCountQuery(), orgId, consentId);
     }
 
-    private int getCount(Connection connection, String countQuery, String orgId, String consentId)
-            throws ConsentHistoryDataRetrievalException {
+    private int getCount(Connection connection, String countQuery, String orgId, String consentId) {
 
         try (PreparedStatement statement = connection.prepareStatement(countQuery)) {
             statement.setString(1, consentId);
@@ -154,9 +154,15 @@ public class ConsentHistoryDAOImpl implements ConsentHistoryDAO {
                 return resultSet.next() ? resultSet.getInt(ConsentHistoryDAOConstants.COLUMN_TOTAL_COUNT) : 0;
             }
         } catch (SQLException e) {
+            LOG.error("Error while counting history rows for consent: " + LogSanitizer.sanitize(consentId), e);
             throw new ConsentHistoryDataRetrievalException(
                     "Error while counting history rows for consent: " + consentId, e);
         }
+    }
+
+    private ConsentHistoryCommonDBQueries getQueries(Connection connection) {
+
+        return ConsentHistoryQueryFactory.getQueryProvider(connection);
     }
 
     private ConsentStatusAuditRecord mapStatusAuditRecord(ResultSet resultSet) throws SQLException {

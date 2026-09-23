@@ -103,23 +103,93 @@ public class WebhookDeliveryWorkerTest {
     private static class QueueingExecutor implements ScheduledExecutorService {
         private final java.util.List<Runnable> queued = new java.util.ArrayList<>();
 
-        @Override public java.util.concurrent.ScheduledFuture<?> schedule(Runnable r, long d, TimeUnit u) { return null; }
-        @Override public <V> java.util.concurrent.ScheduledFuture<V> schedule(java.util.concurrent.Callable<V> c, long d, TimeUnit u) { return null; }
-        @Override public java.util.concurrent.ScheduledFuture<?> scheduleAtFixedRate(Runnable r, long i, long p, TimeUnit u) { return null; }
-        @Override public java.util.concurrent.ScheduledFuture<?> scheduleWithFixedDelay(Runnable r, long i, long p, TimeUnit u) { return null; }
-        @Override public void execute(Runnable r) { queued.add(r); }
-        @Override public void shutdown() {}
-        @Override public java.util.List<Runnable> shutdownNow() { return java.util.Collections.emptyList(); }
-        @Override public boolean isShutdown() { return false; }
-        @Override public boolean isTerminated() { return false; }
-        @Override public boolean awaitTermination(long t, TimeUnit u) { return true; }
-        @Override public <T> java.util.concurrent.Future<T> submit(java.util.concurrent.Callable<T> c) { return null; }
-        @Override public <T> java.util.concurrent.Future<T> submit(Runnable r, T result) { return null; }
-        @Override public java.util.concurrent.Future<?> submit(Runnable r) { return null; }
-        @Override public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(java.util.Collection<? extends java.util.concurrent.Callable<T>> c) { return java.util.Collections.emptyList(); }
-        @Override public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return java.util.Collections.emptyList(); }
-        @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c) { return null; }
-        @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) { return null; }
+        @Override
+        public java.util.concurrent.ScheduledFuture<?> schedule(Runnable r, long d, TimeUnit u) {
+            return null;
+        }
+
+        @Override
+        public <V> java.util.concurrent.ScheduledFuture<V> schedule(
+                java.util.concurrent.Callable<V> c, long d, TimeUnit u) {
+            return null;
+        }
+
+        @Override
+        public java.util.concurrent.ScheduledFuture<?> scheduleAtFixedRate(Runnable r, long i, long p, TimeUnit u) {
+            return null;
+        }
+
+        @Override
+        public java.util.concurrent.ScheduledFuture<?> scheduleWithFixedDelay(Runnable r, long i, long p, TimeUnit u) {
+            return null;
+        }
+
+        @Override
+        public void execute(Runnable r) {
+            queued.add(r);
+        }
+
+        @Override
+        public void shutdown() {
+        }
+
+        @Override
+        public java.util.List<Runnable> shutdownNow() {
+            return java.util.Collections.emptyList();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return false;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return false;
+        }
+
+        @Override
+        public boolean awaitTermination(long t, TimeUnit u) {
+            return true;
+        }
+
+        @Override
+        public <T> java.util.concurrent.Future<T> submit(java.util.concurrent.Callable<T> c) {
+            return null;
+        }
+
+        @Override
+        public <T> java.util.concurrent.Future<T> submit(Runnable r, T result) {
+            return null;
+        }
+
+        @Override
+        public java.util.concurrent.Future<?> submit(Runnable r) {
+            return null;
+        }
+
+        @Override
+        public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(
+                java.util.Collection<? extends java.util.concurrent.Callable<T>> c) {
+            return java.util.Collections.emptyList();
+        }
+
+        @Override
+        public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(
+                java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) {
+            return java.util.Collections.emptyList();
+        }
+
+        @Override
+        public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> c) {
+            return null;
+        }
+
+        @Override
+        public <T> T invokeAny(
+                java.util.Collection<? extends java.util.concurrent.Callable<T>> c, long t, TimeUnit u) {
+            return null;
+        }
 
         private void runAll() {
             java.util.List<Runnable> copy = new java.util.ArrayList<>(queued);

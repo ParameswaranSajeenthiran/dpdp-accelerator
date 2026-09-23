@@ -37,9 +37,11 @@ interface HistoryEntry {
  * Exercises DPDPConsentExpiryReconciler - the accelerator's reconciliation of a lapsed consent's
  * expiry into DPDP_CONSENT_STATUS_AUDIT/DPDP_CONSENT_HISTORY (ActionType.EXPIRE, actionBy=SYSTEM).
  *
- * The real ConsentExpiryJob runs on its own Quartz cron (`dpdp_accelerator.consent_expiry` in
+ * The real ConsentExpiryJob runs on its own timer (`[dpdp_accelerator.consent_expiry]` in
  * deployment.toml, daily by default) with no manual-trigger endpoint, so waiting on it for real
- * needs the operator to have shortened that cron and restarted the server first.
+ * needs the operator to have switched it to `schedule_mode = "interval"` with a short
+ * `interval_seconds` and restarted the server first (CI does this - see
+ * scripts/enable-fast-consent-expiry.sh).
  * `DPDPConsentExpiryReconciler.expireConsentIfDue` is shared code, though: its own class doc says
  * it's called identically from the scheduled job's batch path AND from every consent-mutation
  * `pre*` hook (DPDPConsentHistoryListener), so a lapsed consent gets reconciled the moment
@@ -122,8 +124,9 @@ test.describe('Consent expiry reconciliation (API)', () => {
     test.skip(
       !pollTimeout,
       'consentExpiry.schedulerPollTimeoutMs is not configured - see README.md. Requires ' +
-        "shortening deployment.toml's [dpdp_accelerator.consent_expiry].cron_value and restarting " +
-        'the server, so this is opt-in rather than run by default.',
+        "switching deployment.toml's [dpdp_accelerator.consent_expiry] to schedule_mode = " +
+        '"interval" with a short interval_seconds and restarting the server, so this is opt-in ' +
+        'rather than run by default.',
     )
     // Playwright's own default test timeout (30s) is shorter than any sane poll window for a
     // scheduler test - extend it to comfortably cover the poll plus setup/teardown.
