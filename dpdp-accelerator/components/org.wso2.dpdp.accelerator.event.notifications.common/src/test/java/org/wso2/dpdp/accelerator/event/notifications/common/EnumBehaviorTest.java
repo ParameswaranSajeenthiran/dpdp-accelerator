@@ -30,12 +30,19 @@ public class EnumBehaviorTest {
     @Test(dataProvider = "enumValues")
     public void parsesValuesIgnoringCaseAndWhitespace(Enum<?> expected, String value) {
         Object actual;
-        if (expected instanceof DeliveryMode) actual = DeliveryMode.fromValue(value);
-        else if (expected instanceof DeliveryStatus) actual = DeliveryStatus.fromValue(value);
-        else if (expected instanceof PollStatus) actual = PollStatus.fromValue(value);
-        else if (expected instanceof PurposeFilterMode) actual = PurposeFilterMode.fromValue(value);
-        else if (expected instanceof SubscriptionStatus) actual = SubscriptionStatus.fromValue(value);
-        else actual = TopicStatus.fromValue(value);
+        if (expected instanceof DeliveryMode) {
+            actual = DeliveryMode.fromValue(value);
+        } else if (expected instanceof DeliveryStatus) {
+            actual = DeliveryStatus.fromValue(value);
+        } else if (expected instanceof PollStatus) {
+            actual = PollStatus.fromValue(value);
+        } else if (expected instanceof PurposeFilterMode) {
+            actual = PurposeFilterMode.fromValue(value);
+        } else if (expected instanceof SubscriptionStatus) {
+            actual = SubscriptionStatus.fromValue(value);
+        } else {
+            actual = TopicStatus.fromValue(value);
+        }
         assertEquals(actual, expected);
     }
 

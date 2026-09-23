@@ -37,7 +37,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingRequestDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
@@ -52,7 +51,6 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 

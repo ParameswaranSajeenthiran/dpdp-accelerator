@@ -28,7 +28,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.WebhookDeliveryWorker;
 
-import java.net.http.HttpClient;
 
 import java.sql.Timestamp;
 import java.util.List;

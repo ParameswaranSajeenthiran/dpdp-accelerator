@@ -58,7 +58,8 @@ public final class ComplaintServiceUtil {
 
     // encoding.file.contentType list declared in the OpenAPI spec for both attachment upload
     // endpoints.
-    public static final Set<String> ALLOWED_CONTENT_TYPES = Set.of( // default fallback value
+    // Default fallback value.
+    public static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "application/pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "image/png",

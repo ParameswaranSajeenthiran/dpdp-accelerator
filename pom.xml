@@ -535,6 +535,44 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- Declared in <plugins>, not <pluginManagement>, so every module inherits the
+                 execution itself, not just the version - see wso2/dpdp-accelerator#38. The
+                 ruleset (checkstyle.xml) is vendored in this repo rather than fetched from a URL
+                 at build time (the Financial Services accelerator's approach) - see checkstyle.xml
+                 for why. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${maven.checkstyle.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <configuration>
+                            <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+                            <suppressionsLocation>
+                                ${maven.multiModuleProjectDirectory}/checkstyle-suppressions.xml
+                            </suppressionsLocation>
+                            <encoding>UTF-8</encoding>
+                            <consoleOutput>true</consoleOutput>
+                            <failsOnError>true</failsOnError>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <properties>
@@ -616,6 +654,8 @@
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <build.helper.maven.plugin.version>3.6.1</build.helper.maven.plugin.version>
         <openapi.generator.plugin.version>7.25.0</openapi.generator.plugin.version>
+        <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
+        <checkstyle.version>10.20.2</checkstyle.version>
 
         <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate the consent-history
              DTOs from consent-history.yaml, then set back to true and commit the result. Off by

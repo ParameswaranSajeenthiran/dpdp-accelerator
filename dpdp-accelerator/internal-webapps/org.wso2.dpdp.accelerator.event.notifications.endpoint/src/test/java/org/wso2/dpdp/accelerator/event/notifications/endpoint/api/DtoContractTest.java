@@ -24,7 +24,6 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.EventCreateRequest;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.EventNotificationExceptionMapper;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.util.EventNotificationDtoMapper;
@@ -37,10 +36,15 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
-import static org.testng.Assert.*;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 /** Compares the public JSON with the previous service DTO wire representation. */
 public class DtoContractTest {
