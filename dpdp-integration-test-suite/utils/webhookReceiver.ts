@@ -56,7 +56,7 @@ export interface ReceiverResponse {
  * The port an EventNotificationUrlValidator-governed callback URL is allowed to use is itself an
  * allow-list (`[dpdp_accelerator.event_notifications.webhook].allowed_callback_ports`, default
  * `-1,80,443,8443`) - an OS-assigned ephemeral port (Node's usual `listen(0, ...)`) almost never
- * lands in that list and gets rejected with `EN-4001 Invalid callback URL` (confirmed live). 80
+ * lands in that list and gets rejected with `EN-4001 Invalid callback URL`. 80
  * and 443 need root to bind; 8443 is the one already-allowed, unprivileged port, which is why
  * this suite's own local/CI deployment.toml widens the list to 8443-8455 (see this directory's
  * README) - several candidates, not just one, so more than one webhook.receiverHost-mode test

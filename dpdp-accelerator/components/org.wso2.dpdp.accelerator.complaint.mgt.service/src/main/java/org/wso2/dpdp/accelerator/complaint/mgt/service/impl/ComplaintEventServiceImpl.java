@@ -56,8 +56,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     @Override
     public List<ComplaintEvent> getTimeline(String orgId, String complaintId, Long since, Long until,
             Boolean isPublic, String order, int limit, int offset, int[] totalOut) {
-        // The existence check and the read share one transaction - see ComplaintService -
-        // otherwise they could disagree about whether the complaint exists.
+        // Existence check and read share one transaction to ensure consistency.
         return DatabaseUtils.executeInTransaction(conn -> {
             ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             return complaintEventDAO.listEvents(conn, orgId, complaintId, since, until, isPublic, order, limit,
@@ -80,7 +79,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
-        // SYSTEM is deliberately excluded - only ever written by the server itself, never accepted from a caller.
+        // SYSTEM role is excluded - only written by the server itself.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -99,10 +98,8 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         String complaintEventId = UUID.randomUUID().toString();
         long now = System.currentTimeMillis();
 
-        // The existence check, the comment write, and its optional status change all share one
-        // transaction - so a status-changing comment can never land against a complaint whose
-        // status never actually moved (or the reverse), and the existence check can never
-        // disagree with the write that follows it.
+        // Existence check, comment write, and optional status change share one
+        // transaction to ensure consistency between the event and complaint status.
         AddCommentResult result = DatabaseUtils.executeInTransaction(conn -> {
             Complaint c = ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
 
@@ -128,8 +125,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                         ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
             }
             if (hasToStatus) {
-                // complaint was fetched before the DB status update above; without this, the
-                // notification would carry the complaint's pre-transition status.
+                // update complaint object to reflect the new status for the notification.
                 c.setStatus(toStatus);
                 c.setUpdatedTime(now);
             }
@@ -137,8 +133,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         });
 
         if (isPublic) {
-            // An internal note (isPublic=false, officer-only per the check above) is never shown
-            // to the citizen in the timeline - notifying them about it would leak its existence.
+            // Internal notes are not shown to the citizen in the timeline.
             notificationClient.notifyCommentAdded(result.complaint, result.event);
         }
         return ComplaintCommentCreateResponseDTO.from(result.event);
@@ -176,7 +171,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
-        // SYSTEM is deliberately excluded - only ever written by the server itself, never accepted from a caller.
+        // SYSTEM role is excluded - only written by the server itself.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -198,10 +193,8 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
         long now = System.currentTimeMillis();
         String complaintEventId = UUID.randomUUID().toString();
 
-        // The existence check, the status update, and its audit event all share one transaction -
-        // both writes are checked and made to fail the whole transaction (not just skip a write)
-        // so a partial failure can never leave the status changed with no record of why, or vice
-        // versa.
+        // Existence check, status update, and audit event share one transaction
+        // to ensure the status change and event record are atomic.
         Complaint complaint = DatabaseUtils.executeInTransaction(conn -> {
             Complaint c = ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             String fromStatus = c.getStatus();

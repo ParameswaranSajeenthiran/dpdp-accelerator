@@ -24,7 +24,7 @@
 # reach a runnable state the same way.
 #
 # Idempotent: safe to re-run against a long-lived server. Existing users are left
-# alone and re-adding an existing role member is a no-op (verified: SCIM2
+# alone and re-adding an existing role member is a no-op (as observed: SCIM2
 # `op: add` on `path: users` appends rather than replacing, so other members of
 # dpdp-consent-admin are never evicted).
 #

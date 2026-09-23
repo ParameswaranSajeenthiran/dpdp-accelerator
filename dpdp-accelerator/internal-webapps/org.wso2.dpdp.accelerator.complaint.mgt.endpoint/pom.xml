@@ -47,7 +47,7 @@
 
         <!-- PrivilegedCarbonContext, used by every endpoint class to resolve the caller's identity
              directly - Carbon's own valve pipeline populates this per-request, even for a
-             plain-WAR webapp like this one (confirmed empirically). Provided at runtime by
+             plain-WAR webapp like this one. Provided at runtime by
              Carbon's shared classloader (this webapp's Environments includes Carbon - see
              webapp-classloading.xml), never bundled into the WAR. -->
         <dependency>

@@ -62,7 +62,7 @@ test.describe('Admin viewing Subscriptions', () => {
     browser,
     consentAdminEventApi,
   }) => {
-    // Two DIFFERENT topics, not two groups on one topic: confirmed live that the mixed-webhook/
+    // Two DIFFERENT topics, not two groups on one topic: the mixed-webhook/
     // poll conflict and the duplicate-subscription check are both scoped to (org, topic) only -
     // every subscription's groupId is silently forced to the org's own id regardless of what a
     // caller sends (see eventNotificationSetup.ts's seedPollSubscriptionViaApi comment for the

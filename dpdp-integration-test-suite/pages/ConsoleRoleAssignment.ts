@@ -20,7 +20,7 @@ import { type Locator, type Page } from '@playwright/test'
 
 /**
  * A role's detail page on a tenant's own Console (User Management > Roles > <role name>), scoped
- * to its "Users" tab and the "Assign User" dialog it opens. Confirmed live, end to end, that this
+ * to its "Users" tab and the "Assign User" dialog it opens. This
  * succeeds (`PATCH .../scim2/v2/Roles/{id}` -> 200, "Role updated successfully") where the
  * identical call replayed directly via curl 401s every time - the reason this suite drives role
  * assignment through here rather than through any direct SCIM2/REST call.
@@ -52,7 +52,7 @@ export class ConsoleRoleAssignment {
   /**
    * Assigns `username` to the role open in the Users tab. The "Assign User" dialog renders every
    * unassigned user in the tenant as a table row (`<td>` pair: a checkbox, then the display name
-   * plus the username in a `<code>` tag) - confirmed empirically. The checkbox's underlying
+   * plus the username in a `<code>` tag). The checkbox's underlying
    * `<input>` is itself hidden and readonly (Semantic UI's pattern); the row's `.ui.checkbox`
    * wrapper is what actually toggles it on click.
    */

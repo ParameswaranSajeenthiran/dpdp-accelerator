@@ -138,7 +138,7 @@ test.describe('Subscription lifecycle rules', () => {
 
   test('09.07.05 - A subscription with a pending delivery cannot be deleted', async ({ consentAdminEventApi }) => {
     // A POLL subscription's own delivery stays `pending` until it's consumed via the poll
-    // endpoint (confirmed: SubscriptionServiceImpl.deleteSubscription checks
+    // endpoint (SubscriptionServiceImpl.deleteSubscription checks
     // subscriptionDAO.hasPendingOrInFlightDeliveries) - the reliable, receiver-free way to get a
     // delivery stuck `pending` for this test.
     const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-delete-blocked')

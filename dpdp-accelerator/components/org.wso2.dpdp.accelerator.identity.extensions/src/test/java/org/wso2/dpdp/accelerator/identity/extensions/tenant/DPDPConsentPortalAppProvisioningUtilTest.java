@@ -96,7 +96,7 @@ public class DPDPConsentPortalAppProvisioningUtilTest {
 
         assertEquals(result, "regexp=(https://localhost:9443/t/tenant-a\\.com/consent-portal/?)");
         // The specific regression this guards against: Pattern.quote()'s \Q...\E wrapping
-        // is confirmed (by direct testing against a live tenant) to break this validator.
+        // breaks this validator.
         assertFalse(result.contains("\\Q"));
         assertFalse(result.contains(","));
     }

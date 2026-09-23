@@ -79,9 +79,7 @@ public class WebhookDeliveryTask implements Runnable {
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(
             EventNotificationServiceConstants.WEBHOOK_HTTP_TIMEOUT_SECONDS);
 
-    // ObjectMapper is thread-safe for serialization after construction (Jackson docs guarantee
-    // this). Sharing a single static instance avoids the overhead of instantiating a new mapper
-    // for every delivery task while keeping it scoped to this class.
+    // Jackson ObjectMapper is thread-safe after construction; reuse one instance per task class.
     private static final com.fasterxml.jackson.databind.ObjectMapper ENVELOPE_MAPPER =
             new com.fasterxml.jackson.databind.ObjectMapper();
 

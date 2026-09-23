@@ -24,7 +24,7 @@ export const ROWS_PER_PAGE_OPTIONS = [10, 20, 50] as const
 
 /**
  * TopicsPage.tsx at /events/topics - Event Notification Topics list, filters, and pagination.
- * TopicTable.tsx has no data-testid anywhere (confirmed across the whole feature); topicId cells
+ * TopicTable.tsx has no data-testid anywhere in the feature; topicId cells
  * render through CopyableText, which truncates the *visible* text but keeps the full id as the
  * inner span's aria-label - rowByTopicId matches on that, never on the (possibly truncated)
  * visible text.

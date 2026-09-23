@@ -46,9 +46,8 @@ import static org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintSta
 
 public class ComplaintServiceImpl implements ComplaintService {
 
-    // ComplaintServiceUtil's count-then-format sequence is inherently racy under concurrent
-    // submissions for the same org/year - see DuplicateReferenceIdException. A handful of attempts
-    // is enough to ride out that race without masking a genuinely broken database as a slow request.
+    // ComplaintServiceUtil's count-then-format sequence is racy under concurrent submissions.
+    // Retrying a few times handles this race without masking database failures.
     private static final int MAX_REFERENCE_ID_ATTEMPTS = 3;
 
     private final ComplaintDAO complaintDAO;
@@ -100,10 +99,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                     ComplaintServiceConstants.DESCRIPTION_TOO_LONG_ERROR);
         }
 
-        // actorUserId/actorRole are only ever passed by the officer-assisted intake path
-        // (ComplaintEndpoint), and only ever the resolved, authenticated caller - never anything
-        // client-supplied. A blank actorUserId means "no intake event to record" (the citizen
-        // self-service path).
+        // actorUserId/actorRole are provided by the officer-assisted intake path and must
+        // be authenticated callers. A blank actorUserId indicates citizen self-service.
         boolean recordIntakeEvent = actorUserId != null && !actorUserId.trim().isEmpty();
         if (recordIntakeEvent && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)
                 && !ComplaintActorRole.SYSTEM.name().equals(actorRole)) {
@@ -117,11 +114,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         long statutoryDueTime = now + ComplaintServiceUtil.getStatutoryDuePeriodMillis();
         String trimmedUserName = userName != null && !userName.trim().isEmpty() ? userName.trim() : null;
 
-        // A fresh reference ID is minted on every attempt (including retries) - see
-        // DuplicateReferenceIdException - since retrying with the same one would just collide again.
-        // The count and the insert it feeds share one transaction (generateReferenceId takes this
-        // same conn) - otherwise a concurrent insert between the two could be counted twice, or
-        // not at all.
+        // A fresh reference ID is minted on every attempt since retrying with the same one
+        // would collide. The count and insert share one transaction to prevent race conditions.
         DuplicateReferenceIdException lastCollision = null;
         for (int attempt = 1; attempt <= MAX_REFERENCE_ID_ATTEMPTS; attempt++) {
             try {
@@ -185,8 +179,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         requireLookupKeys(orgId, complaintId);
         return DatabaseUtils.executeInTransaction(conn -> {
             Complaint complaint = loadComplaint(conn, orgId, complaintId);
-            // A 404 rather than a 403 - /me/* must not confirm a complaint's existence to a caller
-            // who doesn't own it (see complaint-server-API.yaml).
+            // Return 404 rather than 403 to avoid confirming existence to non-owners.
             if (!complaint.getUserId().equals(ownerUserId)) {
                 throw complaintNotFound(complaintId);
             }
@@ -194,9 +187,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         });
     }
 
-    // Blank id/org is a 404, not a 400 - the API must not distinguish a malformed id from a
-    // complaint that isn't there. Checked before executeInTransaction so a request that can never
-    // match doesn't take a connection from the pool.
+    // Blank id/org is a 404 to avoid distinguishing malformed ids from missing complaints.
+    // Checked before transaction to avoid unnecessary pool usage.
     private void requireLookupKeys(String orgId, String complaintId) {
         if (orgId == null || orgId.trim().isEmpty() || complaintId == null || complaintId.trim().isEmpty()) {
             throw new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
@@ -218,8 +210,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     public List<Complaint> listComplaints(String orgId, String status, String priority, String userId,
             String search, int limit, int offset, String sort, int[] totalOut) {
-        // A typo'd/unrecognized filter value must surface as a 400, not silently return an empty
-        // page indistinguishable from "no matches" - see complaint-server-API.yaml.
+        // Unrecognized filter values must surface as 400, not an empty page.
         if (status != null && !status.trim().isEmpty() && !ComplaintStatus.isValid(status)) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_STATUS_FILTER_ERROR, status));

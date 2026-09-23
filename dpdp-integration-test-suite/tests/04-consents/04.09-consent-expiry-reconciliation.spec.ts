@@ -52,7 +52,7 @@ interface HistoryEntry {
  * runs when consentExpiry.schedulerPollTimeoutMs is configured (see README.md) - it skips
  * itself otherwise.
  *
- * Confirmed live: revoking a consent whose expiry has already passed 409s (CM_00112 - stock
+ * Revoking a consent whose expiry has already passed 409s (CM_00112 - stock
  * carbon-consent-management resolves the receipt's state to EXPIRED before validating the revoke,
  * and rejects any non-PENDING/ACTIVE-as-persisted transition). That 409 is a real, separate product
  * behaviour 04.09.02 doesn't assert on either way - preRevokeConsent's call to

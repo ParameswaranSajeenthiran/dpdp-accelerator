@@ -7,7 +7,7 @@
 # --user-id is the accelerator's own identifier, which throughout this schema IS the username
 # (PrivilegedCarbonContext.getUsername(), enforced elsewhere to look like an email) - COMPLAINT.USER_ID,
 # COMPLAINT_EVENT.ACTOR_USER_ID, DPDP_CONSENT_STATUS_AUDIT.ACTION_BY, and DPDP_CONSENT_HISTORY.ACTION_BY
-# are all written from that exact same value, confirmed by reading the accelerator's own DAO/service
+# are all written from that exact same value, as seen in the accelerator's own DAO/service
 # code. It is NOT a separate WSO2 IS SCIM UUID. --pseudonym can be anything that isn't a real
 # identifier - a random UUID (e.g. via `uuidgen`) is a good choice precisely because it can't
 # collide with a real username.

@@ -76,7 +76,7 @@ test.describe('Admin viewing and searching Events', () => {
     // orgId as GROUP_ID for every GET /events call, `search` included, regardless of what a
     // caller actually asked for; the endpoint doesn't even declare a groupId query param. An
     // event published under any other group id can never be found via GET /events at all, no
-    // matter the search term - confirmed live, not a payload/search-specific bug).
+    // matter the search term - this is a general API behavior, not a payload/search-specific bug).
     const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, { type: 'all' })
     const groupId = subscription.groupId!
     const { event, marker } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topic.name)
@@ -113,7 +113,7 @@ test.describe('Admin viewing and searching Events', () => {
     // Two DISJOINT purpose filters, not two overlapping ones - SubscriptionDAOImpl.addSubscription
     // rejects a new subscription whose purpose set *overlaps* any existing one in the same
     // (org, group, topic, deliveryMode) as EN-4090 "Duplicate subscription" (PurposeOverlapUtils
-    // .overlaps - confirmed live: even two SPECIFIC filters that merely share one purpose collide,
+    // .overlaps - even two SPECIFIC filters that merely share one purpose collide,
     // not just identical ones). Publishing an event whose purposes cover BOTH disjoint sets still
     // reaches both subscriptions, since each only needs to overlap the *event's* purposes.
     const subA = await seedPollSubscriptionViaApi(consentAdminEventApi, topic.name, {

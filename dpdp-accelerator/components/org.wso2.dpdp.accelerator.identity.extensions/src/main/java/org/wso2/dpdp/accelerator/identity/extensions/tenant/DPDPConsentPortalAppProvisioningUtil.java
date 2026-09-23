@@ -118,7 +118,7 @@ public final class DPDPConsentPortalAppProvisioningUtil {
         dto.setOauthConsumerSecret(OAuthUtil.getRandomNumber());
         dto.setCallbackUrl(callbackUrl);
         dto.setGrantTypes(String.join(" ", GRANT_TYPES));
-        // Same-origin only, matching Console/My Account (confirmed empty on the live server) -
+        // Same-origin only, matching Console/My Account -
         // must be set explicitly, not left null, or later code dereferencing it NPEs.
         dto.setAllowedOrigins(Collections.emptyList());
         dto.setBypassClientCredentials(true);

@@ -20,7 +20,7 @@ import type { APIRequestContext } from '@playwright/test'
 import { isBaseUrl } from './serverConfig'
 
 /**
- * A tenant's SCIM2 surface differs by shape, not just by base URL - confirmed live: a secondary
+ * A tenant's SCIM2 surface differs by shape, not just by base URL: a secondary
  * tenant's own users/roles live at "/o/scim2/..." under "internal_org_*" scopes, not the
  * TENANT-typed "/scim2/..." + "internal_*" surface the super tenant exposes. Using the wrong pair
  * fails closed - the wrong path 403s, and the wrong scopes mint a token with none granted at all.

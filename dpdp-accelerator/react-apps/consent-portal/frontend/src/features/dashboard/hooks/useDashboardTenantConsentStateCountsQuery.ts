@@ -23,8 +23,8 @@ import { type PageCount, pageCountFromCursor } from '../../../utils/cursorPagina
 import { CONSENT_COUNT_LIMIT, type ConsentStateCounts } from './consentStateCounts'
 
 /**
- * `totalResults` on this endpoint is just the page size, not a real total (verified against a
- * live server - see pageCountFromCursor). A single `limit=100` request per state is enough to
+ * `totalResults` on this endpoint is just the page size, not a real total (see pageCountFromCursor).
+ * A single `limit=100` request per state is enough to
  * tell "exactly N" from "more than 100" via the presence of a `next` link, without paging
  * through a tenant's entire consent history.
  */
