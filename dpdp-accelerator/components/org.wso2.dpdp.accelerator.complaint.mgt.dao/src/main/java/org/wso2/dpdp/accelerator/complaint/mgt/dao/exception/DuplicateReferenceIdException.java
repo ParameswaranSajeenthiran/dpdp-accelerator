@@ -6,6 +6,6 @@ import java.sql.SQLException;
 public class DuplicateReferenceIdException extends ComplaintDAOException {
 
     public DuplicateReferenceIdException(SQLException cause) {
-        super("A complaint with this reference ID already exists for this organization.", cause);
+        super("CO-DAO-002", "A complaint with this reference ID already exists for this organization.", 409, cause);
     }
 }

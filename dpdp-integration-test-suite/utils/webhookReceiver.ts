@@ -46,8 +46,7 @@ export interface ReceiverResponse {
  * machine/LAN (see that env var's own doc comment for the deployment.toml prerequisite this path
  * needs).
  *
- * Callers must check `webhookTestsEnabled()` and skip themselves when it isn't configured, the
- * same way `hasSecondUser()`-gated tests do.
+ * Callers must check `webhookTestsEnabled()` and skip themselves when it isn't configured.
  *
  * One instance per test (never shared across tests, per this suite's "assume parallel execution"
  * rule) - `start()` returns the exact callback URL a subscription should be registered with.
@@ -191,7 +190,7 @@ function defaultHandler(request: CapturedRequest): ReceiverResponse {
   return { status: 204 }
 }
 
-/** Mirrors hasSecondUser() - tests that need a real webhook round trip skip themselves when this is false. */
+/** Tests that need a real webhook round trip skip themselves when this is false. */
 export function webhookTestsEnabled(): boolean {
   return Boolean(webhookReceiverConfig())
 }

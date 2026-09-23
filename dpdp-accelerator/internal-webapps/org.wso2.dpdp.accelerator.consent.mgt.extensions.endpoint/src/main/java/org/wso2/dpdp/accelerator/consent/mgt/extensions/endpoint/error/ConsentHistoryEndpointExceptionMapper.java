@@ -20,6 +20,7 @@ package org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ErrorDTO;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.ConsentHistoryEndpointException;
 
@@ -32,9 +33,12 @@ import javax.ws.rs.ext.Provider;
 
 /**
  * Registered via {@code jaxrs.providers} in web.xml (not {@code @Provider}-scanned, matching the
- * product's own CXF webapps). Anything other than {@link ConsentHistoryEndpointException} is an
- * unexpected failure - logged with the real exception, returned as a generic 500 so internals are
- * never leaked to the caller.
+ * product's own CXF webapps). Recognizes its own {@link ConsentHistoryEndpointException} (built
+ * for cases with no service-layer equivalent, e.g. the ownership/existence check) and the service
+ * layer's own {@link ConsentExtensionsServiceException} directly, reading the code/status/
+ * description it already carries rather than requiring a resource-class-level rewrap. Anything
+ * else is an unexpected failure - logged with the real exception, returned as a generic 500 so
+ * internals are never leaked to the caller.
  */
 @Provider
 public class ConsentHistoryEndpointExceptionMapper implements ExceptionMapper<Throwable> {
@@ -47,6 +51,11 @@ public class ConsentHistoryEndpointExceptionMapper implements ExceptionMapper<Th
         String traceId = UUID.randomUUID().toString();
         if (throwable instanceof ConsentHistoryEndpointException) {
             ConsentHistoryEndpointException e = (ConsentHistoryEndpointException) throwable;
+            LOG.debug("Returning " + e.getHttpStatus() + " (" + e.getErrorCode() + ") for: " + e.getDescription());
+            return buildResponse(e.getHttpStatus(), e.getErrorCode(), e.getDescription(), traceId);
+        }
+        if (throwable instanceof ConsentExtensionsServiceException) {
+            ConsentExtensionsServiceException e = (ConsentExtensionsServiceException) throwable;
             LOG.debug("Returning " + e.getHttpStatus() + " (" + e.getErrorCode() + ") for: " + e.getDescription());
             return buildResponse(e.getHttpStatus(), e.getErrorCode(), e.getDescription(), traceId);
         }

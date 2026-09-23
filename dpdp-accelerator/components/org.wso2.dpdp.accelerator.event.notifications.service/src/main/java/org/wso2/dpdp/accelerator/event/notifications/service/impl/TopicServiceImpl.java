@@ -27,9 +27,9 @@ import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNoti
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
@@ -52,7 +52,7 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TopicDTO createTopic(String orgId, String name, String description) {
         if (orgId == null || orgId.trim().isEmpty() || name == null || name.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_OR_TOPIC_NAME_MISSING_ERROR_MSG,
@@ -67,7 +67,7 @@ public class TopicServiceImpl implements TopicService {
             try {
                 Optional<Topic> existing = topicDAO.getTopicByOrgAndName(conn, orgId.trim(), name.trim());
                 if (existing.isPresent()) {
-                    throw new EventNotificationException(
+                    throw new EventNotificationServiceException(
                             EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                             EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
                             EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
@@ -76,14 +76,14 @@ public class TopicServiceImpl implements TopicService {
 
                 boolean created = topicDAO.addTopic(conn, topic);
                 if (!created) {
-                    throw new EventNotificationException(
+                    throw new EventNotificationServiceException(
                             EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                             EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                             EventNotificationServiceConstants.FAILED_TO_CREATE_TOPIC_ERROR_MSG,
                             500);
                 }
             } catch (EventNotificationDuplicateResourceException e) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                         EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
                         EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
@@ -113,7 +113,7 @@ public class TopicServiceImpl implements TopicService {
                         TopicStatus.ACTIVE.getValue(), Initiator.SYSTEM.getValue());
                 boolean created = topicDAO.addTopic(conn, topic);
                 if (!created) {
-                    throw new EventNotificationException(
+                    throw new EventNotificationServiceException(
                             EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                             EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                             EventNotificationServiceConstants.FAILED_TO_CREATE_TOPIC_ERROR_MSG,
@@ -134,7 +134,7 @@ public class TopicServiceImpl implements TopicService {
             if (concurrentlyCreated.isPresent()) {
                 return mapExistingSystemTopic(concurrentlyCreated.get(), topicName);
             }
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                     EventNotificationServiceConstants.ERROR_TITLE_TOPIC_ALREADY_EXISTS,
                     EventNotificationServiceConstants.TOPIC_ALREADY_EXISTS_ERROR_MSG,
@@ -144,7 +144,7 @@ public class TopicServiceImpl implements TopicService {
 
     private void validateTopicCreationParameters(String orgId, String name) {
         if (orgId == null || orgId.trim().isEmpty() || name == null || name.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_OR_TOPIC_NAME_MISSING_ERROR_MSG,
@@ -156,7 +156,7 @@ public class TopicServiceImpl implements TopicService {
         boolean active = TopicStatus.ACTIVE.getValue().equalsIgnoreCase(topic.getStatus());
         boolean systemInitiated = Initiator.SYSTEM.getValue().equalsIgnoreCase(topic.getInitiatedBy());
         if (!active || !systemInitiated) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                     EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
                     String.format(EventNotificationServiceConstants.SYSTEM_TOPIC_NAME_CONFLICT_ERROR_MSG, topicName),
@@ -170,7 +170,7 @@ public class TopicServiceImpl implements TopicService {
     public PaginatedResult<TopicDTO> listTopics(String orgId, String status, String search, int limit, int offset,
             String sort) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
@@ -196,14 +196,14 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public TopicDTO deleteTopic(String orgId, String topicIdStr) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
                     400);
         }
         if (topicIdStr == null || topicIdStr.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.TOPIC_ID_MISSING_ERROR_MSG,
@@ -213,7 +213,7 @@ public class TopicServiceImpl implements TopicService {
         return DatabaseUtils.executeInTransaction(conn -> {
             Optional<Topic> topicOpt = topicDAO.getTopicById(conn, topicIdStr.trim(), orgId.trim());
             if (!topicOpt.isPresent() || !orgId.trim().equalsIgnoreCase(topicOpt.get().getOrgId())) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,
                         EventNotificationServiceConstants.ERROR_TITLE_TOPIC_NOT_FOUND,
                         String.format(EventNotificationServiceConstants.TOPIC_NOT_FOUND_ERROR_MSG, topicIdStr.trim()),
@@ -222,7 +222,7 @@ public class TopicServiceImpl implements TopicService {
 
             Topic topic = topicOpt.get();
             if (Initiator.SYSTEM.getValue().equalsIgnoreCase(topic.getInitiatedBy())) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                         EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
                         String.format(EventNotificationServiceConstants.SYSTEM_TOPIC_DELETE_FORBIDDEN_ERROR_MSG,
@@ -231,7 +231,7 @@ public class TopicServiceImpl implements TopicService {
             }
 
             if (TopicStatus.DEREGISTERED.getValue().equalsIgnoreCase(topic.getStatus())) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,
                         EventNotificationServiceConstants.ERROR_TITLE_TOPIC_NOT_FOUND,
                         String.format(EventNotificationServiceConstants.TOPIC_ALREADY_DEREGISTERED_ERROR_MSG,
@@ -243,7 +243,7 @@ public class TopicServiceImpl implements TopicService {
             try {
                 updated = topicDAO.deregisterTopicAtomic(conn, topic.getTopicId(), orgId.trim());
             } catch (EventNotificationInvalidStateException e) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                         EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
                         String.format(EventNotificationServiceConstants.TOPIC_HAS_ACTIVE_SUBSCRIPTIONS_ERROR_MSG,
@@ -251,7 +251,7 @@ public class TopicServiceImpl implements TopicService {
                         409);
             }
             if (!updated) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                         EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                         EventNotificationServiceConstants.FAILED_TO_DEREGISTER_TOPIC_ERROR_MSG,

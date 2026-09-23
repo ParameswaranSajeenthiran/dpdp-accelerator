@@ -21,7 +21,7 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.PollDelivery;
@@ -81,7 +81,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setTimestamp(9, delivery.getDeliveredAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_WEBHOOK_DELIVERY,
                             (delivery != null ? delivery.getDeliveryId() : "null")),
                     e);
@@ -114,7 +114,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY, deliveryId), e);
         }
     }
@@ -154,7 +154,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY, deliveryId), e);
         }
     }
@@ -174,7 +174,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(6, orgId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS,
                             deliveryId), e);
         }
@@ -194,7 +194,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
         }
     }
@@ -214,7 +214,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     EventNotificationCommonConstants.ERROR_GETTING_PENDING_WEBHOOK_DELIVERIES, e);
         }
     }
@@ -255,7 +255,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(5, delivery.getDeliveryId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS,
                             (delivery != null ? delivery.getDeliveryId() : "null")),
                     e);
@@ -313,7 +313,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setTimestamp(7, audit.getAttemptAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_WEBHOOK_DELIVERY_AUDIT,
                             (audit != null ? audit.getDeliveryId() : "null")),
                     e);
@@ -344,7 +344,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_WEBHOOK_DELIVERY_AUDITS, deliveryId),
                     e);
         }
@@ -364,7 +364,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setTimestamp(8, delivery.getCompletedAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_ADDING_POLL_DELIVERY,
                             (delivery != null ? delivery.getDeliveryId() : "null")),
                     e);
@@ -395,7 +395,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_POLL_DELIVERY, deliveryId), e);
         }
     }
@@ -433,7 +433,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return candidates;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_PENDING_POLL_DELIVERIES,
                             subscriptionId), e);
         }
@@ -470,7 +470,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                         subscriptionId, orgId, groupId);
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUSES,
                             subscriptionId), e);
         }
@@ -518,7 +518,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(1, deliveryId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -533,7 +533,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setTimestamp(2, updatedBefore != null ? updatedBefore : new Timestamp(System.currentTimeMillis()));
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -552,7 +552,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(3, deliveryId.trim());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_WEBHOOK_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -566,7 +566,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(1, deliveryId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -582,7 +582,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(3, deliveryId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -599,7 +599,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setString(4, expectedStatus);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_POLL_DELIVERY_STATUS, deliveryId), e);
         }
     }
@@ -644,7 +644,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_DELIVERIES_FOR_SUBSCRIPTION,
                             subscriptionId),
                     e);
@@ -671,7 +671,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTION_DELIVERY, deliveryId), e);
         }
     }
@@ -781,7 +781,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
         }
     }
@@ -803,7 +803,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_ORG_DELIVERY, deliveryId), e);
         }
     }
@@ -865,7 +865,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             }
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_ORG_DELIVERIES, orgId), e);
         }
     }

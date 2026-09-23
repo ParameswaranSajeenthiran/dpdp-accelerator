@@ -21,7 +21,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
 
@@ -68,7 +68,7 @@ public interface ComplaintEventService {
      * @param isPublic      visibility of the entry to the Data Principal
      * @param toStatus      optional status to transition the complaint to in the same call
      * @return the newly created timeline entry
-     * @throws ComplaintException thrown with a 409 status (CO-4090) if toStatus is non-null and
+     * @throws ComplaintServiceException thrown with a 409 status (CO-4090) if toStatus is non-null and
      *                            the transition isn't valid from the complaint's current status -
      *                            see ComplaintServiceUtil
      */
@@ -97,7 +97,7 @@ public interface ComplaintEventService {
      * @param toStatus      status to transition to
      * @param note          required when toStatus is RESOLVED, optional otherwise
      * @return the updated complaint
-     * @throws ComplaintException thrown with a 409 status (CO-4090) if the transition isn't valid
+     * @throws ComplaintServiceException thrown with a 409 status (CO-4090) if the transition isn't valid
      *                            from the complaint's current status - see
      *                            ComplaintServiceUtil
      */

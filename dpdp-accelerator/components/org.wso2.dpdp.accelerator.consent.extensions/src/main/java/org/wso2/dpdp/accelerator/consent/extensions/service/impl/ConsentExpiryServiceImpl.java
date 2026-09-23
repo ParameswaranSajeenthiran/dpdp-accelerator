@@ -22,117 +22,101 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentExpiryTrackerDAO;
-import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
+import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExtensionsDaoException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.impl.ConsentExpiryTrackerDAOImpl;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.service.ConsentExpiryService;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ConsentExpiryServiceImpl implements ConsentExpiryService {
 
     private static final Log LOG = LogFactory.getLog(ConsentExpiryServiceImpl.class);
 
     private final ConsentExpiryTrackerDAO consentExpiryTrackerDAO;
-    private final Supplier<Connection> connectionSupplier;
-    private final Consumer<Connection> commitAction;
-    private final Consumer<Connection> rollbackAction;
 
     public ConsentExpiryServiceImpl() {
 
-        this(new ConsentExpiryTrackerDAOImpl(), DatabaseUtils::getDBConnection, DatabaseUtils::commitTransaction,
-                DatabaseUtils::rollbackTransaction);
+        this(new ConsentExpiryTrackerDAOImpl());
     }
 
-    /**
-     * Lets tests substitute a fake {@link Connection} and no-op commit/rollback, without going
-     * through the real, JNDI-backed {@link DatabaseUtils} - the DAO is mocked in those tests
-     * anyway, so the connection object itself is never actually used for I/O.
-     */
-    ConsentExpiryServiceImpl(ConsentExpiryTrackerDAO consentExpiryTrackerDAO, Supplier<Connection> connectionSupplier,
-            Consumer<Connection> commitAction, Consumer<Connection> rollbackAction) {
+    /** Lets tests substitute a mocked DAO while still running through a real transaction. */
+    ConsentExpiryServiceImpl(ConsentExpiryTrackerDAO consentExpiryTrackerDAO) {
 
         this.consentExpiryTrackerDAO = consentExpiryTrackerDAO;
-        this.connectionSupplier = connectionSupplier;
-        this.commitAction = commitAction;
-        this.rollbackAction = rollbackAction;
     }
 
     @Override
-    public void trackExpiry(String orgId, String consentId, long expiryTimeMillis)
-            throws ConsentExpiryDataAccessException {
+    public void trackExpiry(String orgId, String consentId, long expiryTimeMillis) {
 
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            DatabaseUtils.executeInTransaction(connection -> {
                 consentExpiryTrackerDAO.upsertExpiry(connection, orgId, consentId, expiryTimeMillis);
-                commitAction.accept(connection);
                 LOG.debug("Tracking expiry for consent: " + consentId);
-            } catch (ConsentExpiryDataAccessException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+                return null;
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException("Unable to track expiry for consent: " + consentId, e);
         }
     }
 
     @Override
-    public void untrackExpiry(String orgId, String consentId) throws ConsentExpiryDataAccessException {
+    public void untrackExpiry(String orgId, String consentId) {
 
-        Connection connection = connectionSupplier.get();
         try {
-            try {
+            DatabaseUtils.executeInTransaction(connection -> {
                 consentExpiryTrackerDAO.deleteExpiry(connection, consentId);
-                commitAction.accept(connection);
                 LOG.debug("Untracking expiry for consent: " + consentId);
-            } catch (ConsentExpiryDataAccessException e) {
-                rollbackAction.accept(connection);
-                throw e;
-            }
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+                return null;
+            });
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException("Unable to untrack expiry for consent: " + consentId, e);
         }
     }
 
-
     @Override
-    public boolean claimExpiryIfDue(Connection connection, ConsentExpiryRecord candidate, long nowMillis)
-            throws ConsentExpiryDataAccessException {
+    public boolean claimExpiryIfDue(Connection connection, ConsentExpiryRecord candidate, long nowMillis) {
 
-        return consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, nowMillis);
-    }
-
-    @Override
-    public ConsentExpiryRecord findExpiry(String orgId, String consentId) throws ConsentExpiryDataAccessException {
-
-        Connection connection = connectionSupplier.get();
         try {
-            return consentExpiryTrackerDAO.findExpiry(connection, orgId, consentId);
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+            return consentExpiryTrackerDAO.claimDueExpiry(connection, candidate, nowMillis);
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to claim the observed expiry deadline for consent: " + candidate.getConsentId(), e);
         }
     }
 
     @Override
-    public List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize, ConsentExpiryRecord cursor)
-            throws ConsentExpiryDataAccessException {
+    public ConsentExpiryRecord findExpiry(String orgId, String consentId) {
 
-        Connection connection = connectionSupplier.get();
         try {
-            return consentExpiryTrackerDAO.findDueExpiries(connection, nowMillis, batchSize, cursor);
-        } finally {
-            DatabaseUtils.closeConnection(connection);
+            return DatabaseUtils.executeInTransaction(connection ->
+                    consentExpiryTrackerDAO.findExpiry(connection, orgId, consentId));
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException("Unable to look up expiry for consent: " + consentId, e);
         }
     }
-    @Override
-    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis)
-            throws ConsentExpiryDataAccessException {
 
-        return consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, expiryTimeMillis);
+    @Override
+    public List<ConsentExpiryRecord> findDueExpiries(long nowMillis, int batchSize, ConsentExpiryRecord cursor) {
+
+        try {
+            return DatabaseUtils.executeInTransaction(connection ->
+                    consentExpiryTrackerDAO.findDueExpiries(connection, nowMillis, batchSize, cursor));
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException("Unable to find due consent expiries.", e);
+        }
     }
 
+    @Override
+    public boolean reconcileExpiry(Connection connection, ConsentExpiryRecord candidate, long expiryTimeMillis) {
+
+        try {
+            return consentExpiryTrackerDAO.reconcileExpiry(connection, candidate, expiryTimeMillis);
+        } catch (ConsentExtensionsDaoException e) {
+            throw new ConsentExtensionsServiceException(
+                    "Unable to reconcile the observed expiry deadline for consent: " + candidate.getConsentId(), e);
+        }
+    }
 }

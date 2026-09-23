@@ -28,9 +28,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
@@ -69,30 +69,30 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     public ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String message, boolean isPublic, String toStatus) {
         if (message == null || message.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.MESSAGE_REQUIRED_ERROR);
         }
         if (message.length() > ComplaintServiceConstants.MAX_MESSAGE_LENGTH) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.MESSAGE_TOO_LONG_ERROR);
         }
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
         // SYSTEM is deliberately excluded - only ever written by the server itself, never accepted from a caller.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_ROLE_INVALID_ERROR);
         }
         if (!isPublic && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
-            throw new ComplaintException(ComplaintErrorCode.FORBIDDEN,
+            throw new ComplaintServiceException(ComplaintErrorCode.FORBIDDEN,
                     String.format(ComplaintServiceConstants.INTERNAL_NOTE_FORBIDDEN_ERROR, actorRole));
         }
         boolean hasToStatus = toStatus != null && !toStatus.trim().isEmpty();
         if (hasToStatus && !ComplaintStatus.isValid(toStatus)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_STATUS_VALUE_ERROR, toStatus));
         }
 
@@ -110,7 +110,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             if (hasToStatus) {
                 fromStatus = c.getStatus();
                 if (!ComplaintServiceUtil.isValidTransition(fromStatus, toStatus)) {
-                    throw new ComplaintException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
+                    throw new ComplaintServiceException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
                             String.format(ComplaintServiceConstants.INVALID_STATUS_TRANSITION_ERROR, fromStatus,
                                     toStatus));
                 }
@@ -120,11 +120,11 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
                     actorUserName, actorRole, isPublic, message.trim(), fromStatus, hasToStatus ? toStatus : null,
                     now);
             if (!complaintEventDAO.addEvent(conn, event)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
             }
             if (hasToStatus && !complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
             }
             if (hasToStatus) {
@@ -163,7 +163,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             return complaintEventDAO.getEventById(conn, complaintEventId, orgId, complaintId);
         });
         if (eventOpt.isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMMENT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.COMMENT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.TIMELINE_ENTRY_NOT_FOUND_ERROR, complaintEventId));
         }
         return eventOpt.get();
@@ -173,25 +173,25 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     public ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String toStatus, String note) {
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
         // SYSTEM is deliberately excluded - only ever written by the server itself, never accepted from a caller.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_ROLE_INVALID_ERROR);
         }
         if (toStatus == null || toStatus.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.TO_STATUS_REQUIRED_ERROR);
         }
         if (!ComplaintStatus.isValid(toStatus)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_STATUS_VALUE_ERROR, toStatus));
         }
         if (RESOLVED.name().equals(toStatus) && (note == null || note.trim().isEmpty())) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.NOTE_REQUIRED_FOR_RESOLVED_ERROR);
         }
 
@@ -206,7 +206,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             Complaint c = ComplaintServiceUtil.getComplaint(conn, complaintDAO, orgId, complaintId);
             String fromStatus = c.getStatus();
             if (!ComplaintServiceUtil.isValidTransition(fromStatus, toStatus)) {
-                throw new ComplaintException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
+                throw new ComplaintServiceException(ComplaintErrorCode.INVALID_STATE_TRANSITION,
                         String.format(ComplaintServiceConstants.INVALID_STATUS_TRANSITION_ERROR, fromStatus,
                                 toStatus));
             }
@@ -214,11 +214,11 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             ComplaintEvent event = new ComplaintEvent(complaintEventId, orgId, complaintId, actorUserId,
                     actorUserName, actorRole, true, note, fromStatus, toStatus, now);
             if (!complaintDAO.updateStatus(conn, complaintId, orgId, toStatus, now)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.STATUS_UPDATE_FAILED_ERROR);
             }
             if (!complaintEventDAO.addEvent(conn, event)) {
-                throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+                throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                         ComplaintServiceConstants.ADD_COMMENT_FAILED_ERROR);
             }
             c.setStatus(toStatus);

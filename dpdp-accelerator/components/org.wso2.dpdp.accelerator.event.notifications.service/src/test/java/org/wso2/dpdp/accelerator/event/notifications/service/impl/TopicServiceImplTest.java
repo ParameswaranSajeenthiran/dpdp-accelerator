@@ -28,9 +28,9 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
@@ -99,17 +99,17 @@ public class TopicServiceImplTest {
         assertEquals(result.getStatus(), "active");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateTopicMissingOrgId() {
         topicService.createTopic(null, "user-consent", "desc");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateTopicMissingName() {
         topicService.createTopic("org1", "", "desc");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateTopicAlreadyExists() {
         Topic existing = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.of(existing));
@@ -141,7 +141,7 @@ public class TopicServiceImplTest {
         assertEquals(result.getStatus(), "deregistered");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testDeleteTopicHasActiveSubscriptionsReturns409() {
         Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
         when(topicDAO.getTopicById(any(Connection.class), eq("t1"), eq("org1"))).thenReturn(Optional.of(topic));
@@ -152,13 +152,13 @@ public class TopicServiceImplTest {
         topicService.deleteTopic("org1", "t1");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testDeleteTopicNotFound() {
         when(topicDAO.getTopicById(any(Connection.class), eq("t99"), eq("org1"))).thenReturn(Optional.empty());
         topicService.deleteTopic("org1", "t99");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testCreateTopicDataAccessExceptionMappedTo409() {
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("user-consent"))).thenReturn(Optional.empty());
         when(topicDAO.addTopic(any(Connection.class), any(Topic.class))).thenThrow(
@@ -199,7 +199,7 @@ public class TopicServiceImplTest {
         verify(topicDAO, never()).addTopic(any(Connection.class), any(Topic.class));
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testEnsureSystemTopicRejectsUserTopicCollision() {
         Topic existing = new Topic("t1", "org1", "consent.update", "desc", "active", "user");
         when(topicDAO.getTopicByOrgAndName(any(Connection.class), eq("org1"), eq("consent.update"))).thenReturn(Optional.of(existing));
@@ -229,7 +229,7 @@ public class TopicServiceImplTest {
         verify(recoveryConnection).close();
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testEnsureSystemTopicRejectsConcurrentUserTopicCollision() throws Exception {
         Connection recoveryConnection = mock(Connection.class);
         when(dataSource.getConnection()).thenReturn(connection, recoveryConnection);
@@ -244,7 +244,7 @@ public class TopicServiceImplTest {
         topicService.ensureSystemTopic("org1", "consent.update", "desc");
     }
 
-    @Test(expectedExceptions = EventNotificationException.class)
+    @Test(expectedExceptions = EventNotificationServiceException.class)
     public void testDeleteSystemTopicIsForbidden() {
         Topic topic = new Topic("t1", "org1", "consent.update", "desc", "active", "system");
         when(topicDAO.getTopicById(any(Connection.class), eq("t1"), eq("org1"))).thenReturn(Optional.of(topic));

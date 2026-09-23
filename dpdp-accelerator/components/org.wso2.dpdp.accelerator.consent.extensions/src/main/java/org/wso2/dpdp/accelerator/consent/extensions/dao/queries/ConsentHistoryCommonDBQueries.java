@@ -21,12 +21,14 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.constants.ConsentHistoryDAOConstants;
 
 /**
- * SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. h2 and mysql DML is
- * identical, so one class serves both dialects; instance methods (not {@code static final}
- * constants) so a dialect-specific subclass could override an individual query later, mirroring
- * the Financial Services accelerator's own {@code ConsentMgtCommonDBQueries}.
+ * ANSI-baseline SQL for {@code DPDP_CONSENT_STATUS_AUDIT}/{@code DPDP_CONSENT_HISTORY}. h2 and
+ * mysql DML is identical today, so {@link ConsentHistoryMysqlDBQueries} overrides nothing yet;
+ * instance methods (not {@code static final} constants) are what let a dialect subclass override
+ * an individual query later, mirroring the Financial Services accelerator's own
+ * {@code ConsentMgtCommonDBQueries}. {@link ConsentHistoryQueryFactory} resolves which provider a
+ * given connection gets.
  */
-public class ConsentHistoryDBQueries {
+public class ConsentHistoryCommonDBQueries {
 
     public String getInsertStatusAuditQuery() {
 

@@ -31,9 +31,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.EmailNotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
@@ -76,27 +76,27 @@ public class ComplaintServiceImpl implements ComplaintService {
     public ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName,
             String subjectCategory, String description, String actorUserId, String actorRole) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.INVALID_REQUEST_BODY,
+            throw new ComplaintServiceException(ComplaintErrorCode.INVALID_REQUEST_BODY,
                     ComplaintServiceConstants.ORG_ID_HEADER_REQUIRED_ERROR);
         }
         if (userId == null || userId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.USER_ID_REQUIRED_ERROR);
         }
         if (subjectCategory == null || subjectCategory.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.SUBJECT_CATEGORY_REQUIRED_ERROR);
         }
         if (!isValidCategory(subjectCategory)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_SUBJECT_CATEGORY_ERROR, subjectCategory));
         }
         if (description == null || description.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.DESCRIPTION_REQUIRED_ERROR);
         }
         if (description.length() > ComplaintServiceConstants.MAX_DESCRIPTION_LENGTH) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.DESCRIPTION_TOO_LONG_ERROR);
         }
 
@@ -107,7 +107,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         boolean recordIntakeEvent = actorUserId != null && !actorUserId.trim().isEmpty();
         if (recordIntakeEvent && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)
                 && !ComplaintActorRole.SYSTEM.name().equals(actorRole)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.CREATE_COMPLAINT_ACTOR_ROLE_INVALID_ERROR);
         }
 
@@ -143,14 +143,14 @@ public class ComplaintServiceImpl implements ComplaintService {
                 lastCollision = e;
             }
         }
-        throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+        throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                 ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR, lastCollision);
     }
 
     /** The citizen self-service path: just the complaint row, no intake event. */
     private void persistComplaint(Connection conn, Complaint complaint) {
         if (!complaintDAO.addComplaint(conn, complaint)) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
         }
     }
@@ -162,14 +162,14 @@ public class ComplaintServiceImpl implements ComplaintService {
     private void persistWithComplaintEventIntake(Connection conn, Complaint complaint, String actorUserId, String actorRole,
             long now) {
         if (!complaintDAO.addComplaint(conn, complaint)) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
         }
         ComplaintEvent event = new ComplaintEvent(UUID.randomUUID().toString(), complaint.getOrgId(),
                 complaint.getComplaintId(), actorUserId, null, actorRole, true,
                 ComplaintServiceConstants.OFFICER_INTAKE_EVENT_MESSAGE, null, OPEN.name(), now);
         if (!complaintEventDAO.addEvent(conn, event)) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.CREATE_COMPLAINT_FAILED_ERROR);
         }
     }
@@ -199,7 +199,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     // match doesn't take a connection from the pool.
     private void requireLookupKeys(String orgId, String complaintId) {
         if (orgId == null || orgId.trim().isEmpty() || complaintId == null || complaintId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                     ComplaintServiceConstants.COMPLAINT_NOT_FOUND_ERROR);
         }
     }
@@ -210,8 +210,8 @@ public class ComplaintServiceImpl implements ComplaintService {
                 .orElseThrow(() -> complaintNotFound(complaintId));
     }
 
-    private ComplaintException complaintNotFound(String complaintId) {
-        return new ComplaintException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
+    private ComplaintServiceException complaintNotFound(String complaintId) {
+        return new ComplaintServiceException(ComplaintErrorCode.COMPLAINT_NOT_FOUND,
                 String.format(ComplaintServiceConstants.COMPLAINT_NOT_FOUND_BY_ID_ERROR, complaintId));
     }
 
@@ -221,11 +221,11 @@ public class ComplaintServiceImpl implements ComplaintService {
         // A typo'd/unrecognized filter value must surface as a 400, not silently return an empty
         // page indistinguishable from "no matches" - see complaint-server-API.yaml.
         if (status != null && !status.trim().isEmpty() && !ComplaintStatus.isValid(status)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_STATUS_FILTER_ERROR, status));
         }
         if (priority != null && !priority.trim().isEmpty() && !ComplaintPriority.isValid(priority)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.INVALID_PRIORITY_FILTER_ERROR, priority));
         }
         return DatabaseUtils.executeInTransaction(conn -> complaintDAO.listComplaints(conn, orgId, status, priority,

@@ -29,8 +29,8 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
@@ -54,7 +54,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryComplet
 import org.wso2.dpdp.accelerator.event.notifications.common.util.HmacSigner;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.SignedEventPayloadFactory;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
@@ -136,7 +136,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         String safeSubscriptionId = requireValue(subscriptionId,
                 EventNotificationServiceConstants.SUBSCRIPTION_ID_MISSING_ERROR_MSG);
         if (configurationService == null || signedEventPayloadFactory == null || subscriptionDAO == null) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.POLLING_SERVICES_NOT_INITIALIZED_ERROR_MSG, 500);
         }
@@ -146,12 +146,12 @@ public class EventPublishServiceImpl implements EventPublishService {
             String bodyToParse = rawBody.trim().isEmpty() ? "{}" : rawBody;
             request = objectMapper.readValue(bodyToParse, EventPollingRequestDTO.class);
         } catch (JsonProcessingException e) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.POLLING_REQUEST_BODY_MALFORMED_ERROR_MSG, 400);
         }
         if (request.getOrgId() != null && !safeOrgId.equalsIgnoreCase(request.getOrgId().trim())) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_MISMATCH_TENANT_CONTEXT_ERROR_MSG, 400);
         }
@@ -160,7 +160,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 request.getAck() == null ? Collections.emptyList() : request.getAck());
         Map<String, PollDeliveryError> errors = normalizePollErrors(request.getSetErrs());
         if (!Collections.disjoint(ackIds, errors.keySet())) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.POLL_ACK_ERROR_OVERLAP_ERROR_MSG, 400);
         }
@@ -168,7 +168,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 ? configurationService.isEventNotificationPollingDefaultReturnImmediately()
                 : request.getReturnImmediately();
         if (!returnImmediately) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.LONG_POLLING_NOT_SUPPORTED_ERROR_MSG, 400);
         }
@@ -180,20 +180,20 @@ public class EventPublishServiceImpl implements EventPublishService {
                     .filter(value -> safeGroupId.equalsIgnoreCase(value.getGroupId()))
                     .filter(value -> DeliveryMode.POLL.getValue().equalsIgnoreCase(value.getDeliveryMode()))
                     .filter(value -> "active".equalsIgnoreCase(value.getStatus()))
-                    .orElseThrow(() -> new EventNotificationException(
+                    .orElseThrow(() -> new EventNotificationServiceException(
                             EventNotificationServiceConstants.ERROR_CODE_RESOURCE_NOT_FOUND,
                             EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_NOT_FOUND,
                             EventNotificationServiceConstants.SUBSCRIPTION_NOT_FOUND_ERROR_MSG, 404));
             String sharedSecret = subscription.getSharedSecret();
             if (sharedSecret == null || sharedSecret.trim().isEmpty()) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
                         EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                         EventNotificationServiceConstants.POLLING_SUBSCRIPTION_NO_SECRET_ERROR_MSG, 409);
             }
 
             if (configurationService.isEventNotificationPollingRequestHmacValidationEnabled()
                     && !HmacSigner.verify(sharedSecret, rawBody, eventSignature)) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
+                throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
                         EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
                         EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
             }
@@ -208,7 +208,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             for (int index = 0; index < Math.min(maxEvents, pending.size()); index++) {
                 PollDelivery delivery = pending.get(index);
                 Event event = eventDAO.getEventById(conn, delivery.getEventId(), safeOrgId)
-                        .orElseThrow(() -> new EventNotificationException(
+                        .orElseThrow(() -> new EventNotificationServiceException(
                                 EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
                                 EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
                                 EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, 500));
@@ -220,7 +220,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 } catch (Exception e) {
                     LOG.error("Failed to sign polling delivery [" + LogSanitizer.sanitize(delivery.getDeliveryId())
                             + "].", e);
-                    throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+                    throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                             EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                             "Failed to sign polling event payload.", 500);
                 }
@@ -237,7 +237,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         String safeDeliveryId = requireValue(deliveryId,
                 EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG);
         if (subscriptionDAO == null) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.ERROR_TITLE_INTERNAL_ERROR,
                     EventNotificationServiceConstants.DELIVERY_COMPLETION_SERVICES_NOT_INITIALIZED_ERROR_MSG, 500);
         }
@@ -254,7 +254,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 throw invalidCompletionSignature();
             }
             if (!DeliveryStatus.DELIVERED.getValue().equalsIgnoreCase(delivery.get().getStatus())) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
+                throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
                         EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                         EventNotificationServiceConstants.DELIVERY_COMPLETION_INVALID_STATE_ERROR_MSG, 409);
             }
@@ -282,7 +282,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                                 completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
                                 completion.getCompletionEvidence().trim()));
             } catch (EventNotificationDuplicateResourceException e) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
+                throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_RESOURCE_EXISTS,
                         EventNotificationServiceConstants.ERROR_TITLE_RESOURCE_EXISTS,
                         EventNotificationServiceConstants.DELIVERY_COMPLETION_ALREADY_EXISTS_ERROR_MSG, 409);
             }
@@ -292,7 +292,7 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     private static String requireValue(String value, String message) {
         if (value == null || value.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST, message, 400);
         }
         return value.trim();
@@ -326,13 +326,13 @@ public class EventPublishServiceImpl implements EventPublishService {
         }
     }
 
-    private static EventNotificationException invalidCompletion(String title, String description) {
-        return new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+    private static EventNotificationServiceException invalidCompletion(String title, String description) {
+        return new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                 title, description, 400);
     }
 
-    private static EventNotificationException invalidCompletionSignature() {
-        return new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
+    private static EventNotificationServiceException invalidCompletionSignature() {
+        return new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_SIGNATURE,
                 EventNotificationServiceConstants.ERROR_TITLE_OPERATION_FORBIDDEN,
                 EventNotificationServiceConstants.INVALID_SIGNATURE_ERROR_MSG, 401);
     }
@@ -364,7 +364,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                         || description == null || description.trim().isEmpty()
                         || description.trim()
                                 .length() > EventNotificationServiceConstants.MAX_POLL_ERROR_DETAIL_LENGTH) {
-                    throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                             EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                             EventNotificationServiceConstants.POLL_ERROR_DETAIL_REQUIRED_ERROR_MSG, 400);
                 }
@@ -381,7 +381,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 ? configurationService.getEventNotificationPollingDefaultMaxEvents()
                 : requestedMaxEvents;
         if (effectiveMaxEvents < 0 || effectiveMaxEvents > configuredLimit) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     "maxEvents must be between 0 and " + configuredLimit + ".", 400);
         }
@@ -396,11 +396,11 @@ public class EventPublishServiceImpl implements EventPublishService {
         try {
             return DatabaseUtils.executeInTransaction(connection ->
                     persistEvent(connection, orgId, groupId, topicName, purposes, payloadJson));
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             throw e;
         } catch (RuntimeException e) {
             LOG.error("Event publication transaction failed.", e);
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG, 500);
@@ -422,21 +422,21 @@ public class EventPublishServiceImpl implements EventPublishService {
             Map<String, Object> payload) {
 
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
                     400);
         }
         if (groupId == null || groupId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.GROUP_ID_MISSING_ERROR_MSG,
                     400);
         }
         if (topicName == null || topicName.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_OR_TOPIC_NAME_MISSING_ERROR_MSG,
@@ -444,7 +444,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         }
 
         if (payload == null) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_MISSING_REQUIRED_PARAM,
                     EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
                     EventNotificationServiceConstants.EVENT_PAYLOAD_REQUIRED_ERROR_MSG,
@@ -455,7 +455,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             LOG.error("Failed to serialize event payload: " + LogSanitizer.sanitize(e.getMessage()), e);
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
@@ -474,7 +474,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             Event event = new Event(eventId, orgId.trim(), groupId.trim(), topic.getTopicId(), payloadJson, now);
 
             if (!eventDAO.addEvent(conn, event)) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                         EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                         String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
@@ -488,12 +488,12 @@ public class EventPublishServiceImpl implements EventPublishService {
 
             return new EventDTO(eventId, orgId, event.getGroupId(), topic.getTopicId(), payloadJson,
                     purposes, now, now);
-        } catch (EventNotificationException e) {
+        } catch (EventNotificationServiceException e) {
             throw e;
         } catch (RuntimeException e) {
             LOG.error("Failed to publish event [" + LogSanitizer.sanitize(eventId) + "]: "
                     + LogSanitizer.sanitize(e.getMessage()), e);
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.ERROR_TITLE_EVENT_PUBLISH_FAILED,
                     EventNotificationServiceConstants.EVENT_PUBLISH_FAILED_ERROR_MSG,
@@ -564,7 +564,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                         + "] on event [" + LogSanitizer.sanitize(event.getEventId()) + "].");
             }
         } else {
-            throw new EventNotificationDataAccessException("Failed to queue webhook delivery for subscription ["
+            throw new EventNotificationDaoException("Failed to queue webhook delivery for subscription ["
                     + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["
                     + LogSanitizer.sanitize(event.getEventId()) + "] — DAO returned false.");
         }
@@ -575,7 +575,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                 UUID.randomUUID().toString(), subscription.getSubscriptionId(), event.getEventId(),
                 PollStatus.PENDING.getValue(), now, null);
         if (!deliveryDAO.addPollDelivery(conn, delivery)) {
-            throw new EventNotificationDataAccessException("Failed to queue poll delivery for subscription ["
+            throw new EventNotificationDaoException("Failed to queue poll delivery for subscription ["
                     + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["
                     + LogSanitizer.sanitize(event.getEventId()) + "] — DAO returned false.");
         }
@@ -584,7 +584,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     private Topic resolveActiveTopic(Connection conn, String orgId, String topicName) {
         Optional<Topic> existing = topicDAO.getActiveTopicByOrgAndNameForUpdate(conn, orgId.trim(), topicName.trim());
         if (!existing.isPresent()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_TOPIC_NOT_FOUND,
                     EventNotificationServiceConstants.ERROR_TITLE_TOPIC_NOT_FOUND,
                     String.format(EventNotificationServiceConstants.EVENT_TOPIC_NOT_FOUND_ERROR_MSG, topicName),
@@ -592,7 +592,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         }
         Topic topic = existing.get();
         if (!TopicStatus.ACTIVE.getValue().equalsIgnoreCase(topic.getStatus())) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
                     String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG, topic.getName()),
@@ -615,7 +615,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     public PaginatedResult<EventDTO> searchEvents(String orgId, String topic, String status, String groupId,
             String subscriptionId, String purposes, String search, int limit, int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
@@ -640,7 +640,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     public PaginatedResult<SubscriptionDeliveryDTO> listOrgDeliveries(String orgId, String status,
             String subscriptionId, String groupId, String purposes, String search, int limit, int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
@@ -676,12 +676,12 @@ public class EventPublishServiceImpl implements EventPublishService {
     @Override
     public SubscriptionEventHistoryDTO getDeliveryHistory(String orgId, String deliveryId) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
         }
         if (deliveryId == null || deliveryId.trim().isEmpty()) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.DELIVERY_ID_MISSING_ERROR_MSG, 400);
         }
@@ -690,7 +690,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             Optional<SubscriptionDeliverySummary> summaryOpt = deliveryDAO.getOrgDeliveryById(conn, orgId.trim(),
                     deliveryId.trim());
             if (!summaryOpt.isPresent()) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
+                throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_DELIVERY_NOT_FOUND,
                         EventNotificationServiceConstants.ERROR_TITLE_DELIVERY_NOT_FOUND,
                         EventNotificationServiceConstants.DELIVERY_NOT_FOUND_ERROR_MSG, 404);
             }
@@ -709,14 +709,14 @@ public class EventPublishServiceImpl implements EventPublishService {
     @Override
     public EventDTO getEventById(String orgId, String eventId) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
                     400);
         }
         if (eventId == null || eventId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,
@@ -725,7 +725,7 @@ public class EventPublishServiceImpl implements EventPublishService {
         return DatabaseUtils.executeInTransaction(conn -> {
             Optional<Event> eventOpt = eventDAO.getEventById(conn, eventId.trim(), orgId.trim());
             if (!eventOpt.isPresent()) {
-                throw new EventNotificationException(
+                throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_EVENT_NOT_FOUND,
                         EventNotificationServiceConstants.ERROR_TITLE_EVENT_NOT_FOUND,
                         String.format(EventNotificationServiceConstants.EVENT_NOT_FOUND_ERROR_MSG, eventId.trim()),
@@ -752,14 +752,14 @@ public class EventPublishServiceImpl implements EventPublishService {
     public PaginatedResult<SubscriptionDeliveryDTO> getEventDeliveries(String orgId, String eventId, int limit,
             int offset) {
         if (orgId == null || orgId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG,
                     400);
         }
         if (eventId == null || eventId.trim().isEmpty()) {
-            throw new EventNotificationException(
+            throw new EventNotificationServiceException(
                     EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.EVENT_ID_MISSING_ERROR_MSG,

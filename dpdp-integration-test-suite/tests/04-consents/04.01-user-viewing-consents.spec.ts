@@ -20,7 +20,6 @@ import {
   test,
   expect,
   getPersonaState,
-  hasSecondUser,
   loginAsUser,
   pageForPersonaState,
 } from '../../fixtures/auth.fixtures'
@@ -75,12 +74,7 @@ test.describe('User viewing Consents (UI)', () => {
     target,
     consentAdminConsentApi,
   }) => {
-    test.skip(!hasSecondUser(), 'personas.user2 is not configured')
-    // hasSecondUser() already confirmed this is set - the skip above guards it.
     const secondUser = target.personas.user2
-    if (!secondUser) {
-      throw new Error('Unreachable: hasSecondUser() already checked this above.')
-    }
 
     const { consentId } = await seedConsentViaApi(
       consentAdminConsentApi,

@@ -24,13 +24,13 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDataAccessException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
 import java.lang.reflect.Field;
@@ -104,13 +104,13 @@ public class EventPublishTransactionAtomicityTest {
         when(topicDAO.getActiveTopicByOrgAndNameForUpdate(any(Connection.class), eq(orgId), eq(topicName)))
                 .thenReturn(Optional.of(activeTopic));
         when(eventDAO.addEvent(any(Connection.class), any())).thenReturn(true);
-        doThrow(new EventNotificationDataAccessException("Fanout DB write failure"))
+        doThrow(new EventNotificationDaoException("Fanout DB write failure"))
                 .when(subscriptionDAO).getActiveSubscriptionsForFanOut(any(Connection.class), eq(orgId), eq("topic-123"));
 
         try {
             publishService.publishEvent(orgId, groupId, topicName, Arrays.asList("purpose-1"), Collections.emptyMap());
-            fail("Expected EventNotificationException on fan-out failure");
-        } catch (EventNotificationException e) {
+            fail("Expected EventNotificationServiceException on fan-out failure");
+        } catch (EventNotificationServiceException e) {
             assertEquals(e.getStatusCode(), 500);
             verify(subscriptionDAO).getActiveSubscriptionsForFanOut(any(Connection.class), eq(orgId), eq("topic-123"));
         }

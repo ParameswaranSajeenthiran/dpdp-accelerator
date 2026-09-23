@@ -34,7 +34,9 @@
   },
   "webhook": {
     "receiverHost": null,
-    "allowPrivateNetwork": false
+    "allowPrivateNetwork": false,
+    "baseBackoffSecondsOverride": null,
+    "maxRetriesOverride": null
   },
   "consentExpiry": {
     "schedulerPollTimeoutMs": null

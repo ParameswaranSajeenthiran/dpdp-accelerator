@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.utils.CarbonUtils;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
-import org.wso2.dpdp.accelerator.common.exception.DPDPCommonRuntimeException;
+import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 import org.wso2.securevault.SecretResolver;
 import org.wso2.securevault.SecretResolverFactory;
 import org.wso2.securevault.commons.MiscellaneousUtil;
@@ -95,7 +95,7 @@ public final class DPDPConfigParser {
             LOG.error("Error occurred while building configuration from " + DPDPCommonConstants.CONFIG_FILE_NAME
                     + ". If this accelerator was upgraded in place, re-run bin/merge.sh so the template that "
                     + "renders this file is present.", e);
-            throw new DPDPCommonRuntimeException("Error occurred while building configuration from "
+            throw new DPDPSystemException("Error occurred while building configuration from "
                     + DPDPCommonConstants.CONFIG_FILE_NAME, e);
         }
     }

@@ -78,50 +78,50 @@ public class EventPublishReadTest {
         field.set(null, instance);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void searchEventsRequiresOrganization() {
         service = new EventPublishServiceImpl();
         service.searchEvents(" ", null, 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getEventRequiresId() {
         service.getEventById("org-1", " ");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getEventNotFoundIsReported() {
         when(eventDAO.getEventById(any(Connection.class), eq("missing"), eq("org-1"))).thenReturn(Optional.empty());
         service.getEventById("org-1", "missing");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getEventDeliveriesRequiresEventId() {
         service.getEventDeliveries("org-1", " ", 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deliveryHistoryNotFoundIsReported() {
         when(deliveryDAO.getOrgDeliveryById(any(Connection.class), eq("org-1"), eq("missing"))).thenReturn(Optional.empty());
         service.getDeliveryHistory("org-1", "missing");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void listOrgDeliveriesRequiresOrganization() {
         service.listOrgDeliveries(" ", null, null, null, null, null, 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getEventRequiresOrganization() {
         service.getEventById(" ", "event");
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void getEventDeliveriesRequiresOrganization() {
         service.getEventDeliveries(" ", "event", 1, 0);
     }
 
-    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.service.exception.EventNotificationException.class)
+    @Test(expectedExceptions = org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException.class)
     public void deliveryHistoryRequiresDeliveryId() {
         service.getDeliveryHistory("org-1", " ");
     }

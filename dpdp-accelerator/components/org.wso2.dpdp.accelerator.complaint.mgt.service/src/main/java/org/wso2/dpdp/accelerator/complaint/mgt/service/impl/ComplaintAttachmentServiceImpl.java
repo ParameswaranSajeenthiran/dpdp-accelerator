@@ -28,9 +28,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.sql.Connection;
@@ -125,14 +125,14 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
     private void validateActor(String actorUserId, String actorRole) {
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_USER_ID_REQUIRED_ERROR);
         }
         // SYSTEM is deliberately excluded - only ever written by the server itself, the same
         // restriction ComplaintEventServiceImpl#addComment applies to caller-supplied actor roles.
         if (!ComplaintActorRole.USER.name().equals(actorRole)
                 && !ComplaintActorRole.COMPLAINT_OFFICER.name().equals(actorRole)) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.ACTOR_ROLE_INVALID_ERROR);
         }
     }
@@ -148,7 +148,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
         boolean added = complaintEventDAO.addEvent(conn, event);
         if (!added) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.ATTACHMENT_EVENT_STORE_FAILED_ERROR);
         }
         return complaintEventId;
@@ -176,13 +176,13 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     private ComplaintAttachmentDownloadResponseDTO toDownloadResponse(Optional<ComplaintAttachment> attachmentOpt,
             String attachmentId, boolean restrictToPublicOnly) {
         if (attachmentOpt.isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.ATTACHMENT_NOT_FOUND,
+            throw new ComplaintServiceException(ComplaintErrorCode.ATTACHMENT_NOT_FOUND,
                     String.format(ComplaintServiceConstants.ATTACHMENT_NOT_FOUND_ERROR, attachmentId));
         }
         ComplaintAttachment attachment = attachmentOpt.get();
 
         if (restrictToPublicOnly && !attachment.isPublic()) {
-            throw new ComplaintException(ComplaintErrorCode.FORBIDDEN,
+            throw new ComplaintServiceException(ComplaintErrorCode.FORBIDDEN,
                     ComplaintServiceConstants.INTERNAL_ATTACHMENT_ACCESS_DENIED_ERROR);
         }
 
@@ -192,27 +192,27 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
     private void validateFiles(List<UploadedFile> files) {
         if (files == null || files.isEmpty()) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.FILE_LIST_REQUIRED_ERROR);
         }
         int maxFiles = ComplaintServiceUtil.getAttachmentMaxFilesPerUpload();
         if (files.size() > maxFiles) {
-            throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+            throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     String.format(ComplaintServiceConstants.TOO_MANY_FILES_ERROR, maxFiles, files.size()));
         }
         long maxSize = ComplaintServiceUtil.getAttachmentMaxSizeBytes();
         for (UploadedFile file : files) {
             if (file.getData() == null || file.getData().length == 0) {
-                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         ComplaintServiceConstants.UPLOADED_FILE_EMPTY_ERROR);
             }
             if (!ComplaintServiceUtil.isAllowedAttachmentContentType(file.getContentType())) {
-                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         String.format(ComplaintServiceConstants.UNSUPPORTED_CONTENT_TYPE_ERROR,
                                 file.getContentType()));
             }
             if (file.getData().length > maxSize) {
-                throw new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         String.format(ComplaintServiceConstants.FILE_SIZE_EXCEEDED_ERROR, file.getFileName(),
                                 maxSize));
             }
@@ -228,7 +228,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
         boolean added = attachmentDAO.addAttachment(conn, attachment);
         if (!added) {
-            throw new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
                     ComplaintServiceConstants.ATTACHMENT_STORE_FAILED_ERROR);
         }
         return attachment;
