@@ -578,6 +578,10 @@
         <!-- Bounded Import-Package ranges for the Carbon/Identity properties above, grouped by
              release train, so an incompatible future version fails fast instead of resolving. -->
         <carbon.kernel.imp.pkg.version.range>[4.12.0, 5.0.0)</carbon.kernel.imp.pkg.version.range>
+        <!-- org.wso2.carbon.user.api ships in a 4.12.34 bundle but exports its one package at the
+             package's own, independent version (1.0.1) - verified against the real jar's manifest,
+             not the bundle version, after this mismatch broke OSGi resolution once before. -->
+        <carbon.user.api.imp.pkg.version.range>[1.0.1, 2.0.0)</carbon.user.api.imp.pkg.version.range>
         <carbon.tenant.common.imp.pkg.version.range>[4.14.0, 5.0.0)</carbon.tenant.common.imp.pkg.version.range>
         <carbon.identity.imp.pkg.version.range>[7.10.0, 8.0.0)</carbon.identity.imp.pkg.version.range>
         <carbon.identity.oauth.imp.pkg.version.range>[7.4.0, 8.0.0)</carbon.identity.oauth.imp.pkg.version.range>
