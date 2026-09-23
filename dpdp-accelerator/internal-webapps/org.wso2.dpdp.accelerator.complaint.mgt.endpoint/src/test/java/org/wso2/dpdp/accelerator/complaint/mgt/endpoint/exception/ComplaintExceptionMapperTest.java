@@ -18,15 +18,22 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ErrorEnvelope;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 class ComplaintExceptionMapperTest {
 
@@ -71,5 +78,77 @@ class ComplaintExceptionMapperTest {
         assertNotNull(firstEnvelope.getTraceId());
         assertNotNull(secondEnvelope.getTraceId());
         assertNotEquals(firstEnvelope.getTraceId(), secondEnvelope.getTraceId());
+    }
+
+    @Test
+    void mapsAnUnknownEnumValueInTheBodyToA422ValidationError() {
+        Response response = mapper.toResponse(new BadRequestException(
+                readFailure("{\"subjectCategory\":\"NOT_A_CATEGORY\",\"description\":\"d\"}",
+                        MeComplaintCreateRequest.class)));
+
+        assertEquals(422, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4002", envelope.getCode());
+        assertEquals("Field 'subjectCategory' must be one of the defined ComplaintCategory enum values.",
+                envelope.getMessage());
+    }
+
+    @Test
+    void namesTheNestedFieldForAnUnknownStatus() {
+        Response response = mapper.toResponse(
+                readFailure("{\"message\":\"m\",\"toStatus\":\"AWAITING_COMPLAINT_INFO\"}",
+                        MeComplaintMessageRequest.class));
+
+        assertEquals(422, response.getStatus());
+        assertEquals("Field 'toStatus' must be one of the defined ComplaintStatus enum values.",
+                ((ErrorEnvelope) response.getEntity()).getMessage());
+    }
+
+    @Test
+    void mapsAnUnparseableBodyToA400() {
+        Response response = mapper.toResponse(new BadRequestException(
+                readFailure("{\"description\":", MeComplaintCreateRequest.class)));
+
+        assertEquals(400, response.getStatus());
+        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void mapsAWrongTypedFieldToA400() {
+        Response response = mapper.toResponse(
+                readFailure("{\"description\":{}}", MeComplaintCreateRequest.class));
+
+        assertEquals(400, response.getStatus());
+        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void unwrapsAComplaintExceptionCause() {
+        ComplaintException cause = new ComplaintException("CO-4090", "Invalid transition", "No.", 409);
+
+        Response response = mapper.toResponse(new RuntimeException(cause));
+
+        assertEquals(409, response.getStatus());
+        assertEquals("CO-4090", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void keepsTheStatusOfAClientSideJaxRsException() {
+        Response response = mapper.toResponse(new NotFoundException());
+
+        assertEquals(404, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4040", envelope.getCode());
+        assertEquals("Not Found", envelope.getMessage());
+    }
+
+    private static Exception readFailure(String body, Class<?> type) {
+        try {
+            new ObjectMapper().readValue(body, type);
+        } catch (Exception e) {
+            return e;
+        }
+        fail("Expected " + body + " to be rejected");
+        return null;
     }
 }

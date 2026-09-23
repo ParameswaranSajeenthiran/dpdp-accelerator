@@ -18,8 +18,7 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import java.util.List;
@@ -48,11 +47,11 @@ public interface ComplaintAttachmentService {
      *                      {@code ComplaintEventService#addComment}
      * @param actorUserName display name of actorUserId
      * @param actorRole     resolved, authenticated caller's role
-     * @return the newly created attachments
+     * @return the newly created attachments, without file content
      * @throws ComplaintException thrown if the request fails validation against the attachment
      *                            policy
      */
-    List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
+    List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName, String actorRole);
 
     /**
@@ -66,12 +65,12 @@ public interface ComplaintAttachmentService {
      * @param ownerUserId   Data Principal expected to own the complaint
      * @param ownerUserName display name of ownerUserId
      * @param files         files to upload
-     * @return the newly created attachments
+     * @return the newly created attachments, without file content
      * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId, or if the request fails
      *                            validation against the attachment policy
      */
-    List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<UploadedFile> files);
 
     /**
@@ -79,9 +78,9 @@ public interface ComplaintAttachmentService {
      *
      * @param orgId       tenant/organization the complaint belongs to
      * @param complaintId complaint to list attachments for
-     * @return every attachment bound to the complaint
+     * @return every attachment bound to the complaint, without file content
      */
-    List<ComplaintAttachmentResponseDTO> listAttachmentsForComplaint(String orgId, String complaintId);
+    List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId);
 
     /**
      * Downloads an attachment including its file content. When restrictToPublicOnly is true (the
@@ -98,7 +97,7 @@ public interface ComplaintAttachmentService {
      *                            403 if restrictToPublicOnly is true and the attachment isn't
      *                            public
      */
-    ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
+    ComplaintAttachment downloadAttachment(String orgId, String complaintId,
             String attachmentId, boolean restrictToPublicOnly);
 
     /**
@@ -115,7 +114,7 @@ public interface ComplaintAttachmentService {
      *                            org or does not belong to ownerUserId, or if the attachment
      *                            doesn't exist, or a 403 if the attachment isn't public
      */
-    ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
+    ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId);
 
     /** A single uploaded multipart file, decoupled from any particular HTTP framework's bean type. */

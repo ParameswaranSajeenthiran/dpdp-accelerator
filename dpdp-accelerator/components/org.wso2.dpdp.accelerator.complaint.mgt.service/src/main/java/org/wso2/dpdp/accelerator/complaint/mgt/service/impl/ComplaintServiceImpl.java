@@ -29,8 +29,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceConstants;
@@ -67,13 +65,13 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName,
+    public Complaint createComplaint(String orgId, String userId, String userName,
             String subjectCategory, String description) {
         return createComplaint(orgId, userId, userName, subjectCategory, description, null, null);
     }
 
     @Override
-    public ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName,
+    public Complaint createComplaint(String orgId, String userId, String userName,
             String subjectCategory, String description, String actorUserId, String actorRole) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new ComplaintException(ComplaintErrorCode.INVALID_REQUEST_BODY,
@@ -138,7 +136,7 @@ public class ComplaintServiceImpl implements ComplaintService {
                     return c;
                 });
                 notificationClient.notifyComplaintCreated(complaint);
-                return ComplaintCreateResponseDTO.from(complaint);
+                return complaint;
             } catch (DuplicateReferenceIdException e) {
                 lastCollision = e;
             }
@@ -233,10 +231,9 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
-        ComplaintQueueStats stats = DatabaseUtils.executeInTransaction(
+    public ComplaintQueueStats getQueueStats(String orgId) {
+        return DatabaseUtils.executeInTransaction(
                 conn -> complaintDAO.getQueueStats(conn, orgId, System.currentTimeMillis()));
-        return ComplaintQueueStatsResponseDTO.from(stats);
     }
 
     private boolean isValidCategory(String category) {

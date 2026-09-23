@@ -26,7 +26,7 @@ info:
     carries its own `isPublic` flag governing whether the Data Principal
     can see it. There is a single upload endpoint per namespace that can
     be called at any point in the complaint's lifecycle.
-  version: "2.9.0"
+  version: "2.10.0"
   license:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
@@ -71,7 +71,6 @@ paths:
       security:
         - OAuth2:
             - complaints:write:self
-      parameters:
       requestBody:
         required: true
         content:
@@ -151,6 +150,33 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /me/complaints/categories:
+    get:
+      tags: [Me - Complaints]
+      summary: List complaint categories
+      description: >
+        Every ComplaintCategory with the priority a new complaint in that
+        category is assigned.
+
+        Required scope: `complaints:read:self`
+      operationId: meGetCategories
+      security:
+        - OAuth2:
+            - complaints:read:self
+      responses:
+        '200':
+          description: Complaint categories and their derived priority
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /me/complaints/{complaintId}:
     get:
       tags: [Me - Complaints]
@@ -159,8 +185,7 @@ paths:
         Returns the complaint only if it is owned by the authenticated
         Data Principal. Returns 404 (not 403) if the complaint belongs to
         another user, to avoid confirming the ID's existence to a caller
-        who shouldn't see it. Does not include attachments — use
-        GET .../timeline for those.
+        who shouldn't see it. Only isPublic=true attachments are listed.
 
         Required scope: `complaints:read:self`
       operationId: meGetComplaint
@@ -227,9 +252,9 @@ paths:
                   minItems: 1
                   maxItems: 5
                   description: One to five files to upload in a single request.
-              encoding:
-                file:
-                  contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
+            encoding:
+              file:
+                contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
       responses:
         '201':
           description: Attachments stored and bound directly to the complaint
@@ -483,7 +508,6 @@ paths:
       security:
         - OAuth2:
             - complaints:write:any
-      parameters:
       requestBody:
         required: true
         content:
@@ -612,6 +636,33 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /complaints/categories:
+    get:
+      tags: [Complaint Management - Complaints]
+      summary: List complaint categories (officer)
+      description: >
+        Every ComplaintCategory with the priority a new complaint in that
+        category is assigned.
+
+        Required scope: `complaints:read:any`
+      operationId: cmGetCategories
+      security:
+        - OAuth2:
+            - complaints:read:any
+      responses:
+        '200':
+          description: Complaint categories and their derived priority
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /complaints/{complaintId}:
     get:
       tags: [Complaint Management - Complaints]
@@ -628,8 +679,8 @@ paths:
       responses:
         '200':
           description: >
-            Complaint core fields. Does not include attachments — use
-            GET .../timeline for those.
+            Complaint core fields plus every attachment's metadata,
+            regardless of isPublic.
           content:
             application/json:
               schema:
@@ -692,9 +743,9 @@ paths:
                   description: >
                     Whether these attachments should be visible to the
                     Data Principal. Defaults to true.
-              encoding:
-                file:
-                  contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
+            encoding:
+              file:
+                contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
       responses:
         '201':
           description: Attachments stored and bound directly to the complaint
@@ -1034,7 +1085,7 @@ components:
       enum: [CRITICAL, HIGH, MEDIUM, LOW]
     ComplaintStatus:
       type: string
-      enum: [OPEN, IN_PROGRESS, AWAITING_COMPLAINT_INFO, AWAITING_INTERNAL_REVIEW, RESOLVED]
+      enum: [OPEN, IN_PROGRESS, WAITING_ON_CLIENT, AWAITING_INTERNAL_REVIEW, RESOLVED]
     ComplaintTimelineEntryType:
       type: string
       enum: [STATUS_CHANGE, COMMENT, INTERNAL_NOTE]
@@ -1074,6 +1125,7 @@ components:
           type: string
         sizeBytes:
           type: integer
+          format: int64
         isPublic:
           type: boolean
           description: >
@@ -1163,6 +1215,7 @@ components:
       type: object
       required:
         - id
+        - referenceId
         - subjectCategory
         - priority
         - status
@@ -1175,6 +1228,9 @@ components:
         id:
           type: string
           format: uuid
+        referenceId:
+          type: string
+          description: Human-readable complaint reference shown to the Data Principal.
         subjectCategory:
           $ref: '#/components/schemas/ComplaintCategory'
         priority:
@@ -1209,12 +1265,13 @@ components:
     ComplaintRecord:
       type: object
       description: >
-        Does not include attachments — use GET .../timeline for the
-        complaint's attachments (nested under the timeline entry each was
-        uploaded with) or GET .../attachments/{attachmentId} to download a
-        specific one.
+        `attachments` lists the complaint's attachment metadata (filtered
+        to isPublic=true for /me callers). Use GET .../timeline to see which
+        entry each was uploaded under, or GET .../attachments/{attachmentId}
+        to download one.
       required:
         - id
+        - referenceId
         - subjectCategory
         - priority
         - status
@@ -1227,6 +1284,9 @@ components:
         id:
           type: string
           format: uuid
+        referenceId:
+          type: string
+          description: Human-readable complaint reference shown to the Data Principal.
         subjectCategory:
           $ref: '#/components/schemas/ComplaintCategory'
         priority:
@@ -1243,6 +1303,10 @@ components:
             ComplaintCreateResponse.userName.
         description:
           type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplaintAttachmentResponse'
         submittedAt:
           type: integer
           format: int64
@@ -1264,17 +1328,35 @@ components:
           items:
             $ref: '#/components/schemas/ComplaintRecord'
         metadata:
-          type: object
-          required: [total, offset, count, limit]
-          properties:
-            total:
-              type: integer
-            offset:
-              type: integer
-            count:
-              type: integer
-            limit:
-              type: integer
+          $ref: '#/components/schemas/PageMetadata'
+    PageMetadata:
+      type: object
+      required: [total, offset, count, limit]
+      properties:
+        total:
+          type: integer
+        offset:
+          type: integer
+        count:
+          type: integer
+        limit:
+          type: integer
+    ComplaintCategoryInfo:
+      type: object
+      required: [category, priority]
+      properties:
+        category:
+          $ref: '#/components/schemas/ComplaintCategory'
+        priority:
+          $ref: '#/components/schemas/ComplaintPriority'
+    CategoryListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComplaintCategoryInfo'
     ComplaintQueueStatsResponse:
       type: object
       required: [openCount, awaitingInternalReviewCount, resolvedCount, slaBreachedCount]
@@ -1306,17 +1388,7 @@ components:
           items:
             $ref: '#/components/schemas/ComplaintTimelineEntryResponse'
         metadata:
-          type: object
-          required: [total, offset, count, limit]
-          properties:
-            total:
-              type: integer
-            offset:
-              type: integer
-            count:
-              type: integer
-            limit:
-              type: integer
+          $ref: '#/components/schemas/PageMetadata'
     ComplaintStatusUpdateResponse:
       type: object
       required: [message, toStatus, updatedAt]
@@ -1443,7 +1515,7 @@ components:
 
     ComplaintAttachmentDownloadResponse:
       type: object
-      required: [attachmentId, fileName, contentType, uploadedTime, content]
+      required: [attachmentId, fileName, contentType, content]
       properties:
         attachmentId:
           type: string

@@ -19,12 +19,12 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintRecord;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintStatusUpdateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.Consumes;
@@ -58,10 +58,10 @@ public class MeComplaintEndpoint {
     }
 
     @POST
-    public Response createComplaint(MeComplaintCreateRequestDTO request) {
+    public Response createComplaint(MeComplaintCreateRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintCreateResponseDTO response = complaintHandler.createOwnComplaint(callerOrgId,
+        ComplaintCreateResponse response = complaintHandler.createOwnComplaint(callerOrgId,
                 callerUsername, callerUsername, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -74,7 +74,7 @@ public class MeComplaintEndpoint {
             @QueryParam("sort") String sort) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintListResponseDTO response = complaintHandler.listOwnComplaints(callerOrgId,
+        ComplaintListResponse response = complaintHandler.listOwnComplaints(callerOrgId,
                 callerUsername, status, limit, offset, sort);
         return Response.ok(response).build();
     }
@@ -90,7 +90,7 @@ public class MeComplaintEndpoint {
     public Response getComplaint(@PathParam("complaintId") String complaintId) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintRecordDTO response =
+        ComplaintRecord response =
                 complaintHandler.getOwnComplaint(callerOrgId, complaintId, callerUsername);
         return Response.ok(response).build();
     }
@@ -99,10 +99,10 @@ public class MeComplaintEndpoint {
     @Path("/{complaintId}/status")
     public Response updateComplaintStatus(
             @PathParam("complaintId") String complaintId,
-            MeComplaintStatusUpdateRequestDTO request) {
+            MeComplaintStatusUpdateRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintStatusUpdateResponseDTO response = complaintHandler.updateOwnStatus(callerOrgId,
+        ComplaintStatusUpdateResponse response = complaintHandler.updateOwnStatus(callerOrgId,
                 complaintId, callerUsername, callerUsername, request);
         return Response.ok(response).build();
     }

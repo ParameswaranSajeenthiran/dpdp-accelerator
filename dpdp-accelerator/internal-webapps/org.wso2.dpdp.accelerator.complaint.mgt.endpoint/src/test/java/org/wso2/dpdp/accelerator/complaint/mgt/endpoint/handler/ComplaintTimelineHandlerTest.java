@@ -29,8 +29,8 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponse;
 
 import java.util.List;
 
@@ -75,7 +75,7 @@ class ComplaintTimelineHandlerTest {
         when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), eq(1000L), isNull(), isNull(), isNull(), eq(20),
                 eq(0), any())).thenReturn(List.of());
 
-        TimelineListResponseDTO response = handler.getTimeline(ORG_ID, "c1", 1000L, null, null, null, null);
+        TimelineListResponse response = handler.getTimeline(ORG_ID, "c1", 1000L, null, null, null, null);
 
         assertEquals(20, response.getMetadata().getLimit());
         assertEquals(0, response.getMetadata().getOffset());
@@ -108,7 +108,7 @@ class ComplaintTimelineHandlerTest {
         when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), isNull(), isNull(), eq(20),
                 eq(0), any())).thenReturn(List.of(entry("e1"), entry("e2")));
 
-        TimelineListResponseDTO response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
+        TimelineListResponse response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 
         assertEquals(2, response.getData().size());
         assertEquals("e1", response.getData().get(0).getId());
@@ -122,9 +122,9 @@ class ComplaintTimelineHandlerTest {
         forE1.setAttachmentId("a1");
         forE1.setComplaintEventId("e1");
         when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(ComplaintAttachmentResponseDTO.from(forE1)));
+                .thenReturn(List.of(forE1));
 
-        TimelineListResponseDTO response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
+        TimelineListResponse response = handler.getTimeline(ORG_ID, "c1", null, null, null, null, null);
 
         assertEquals(1, response.getData().get(0).getAttachments().size());
         assertEquals("a1", response.getData().get(0).getAttachments().get(0).getAttachmentId());
@@ -141,7 +141,7 @@ class ComplaintTimelineHandlerTest {
         when(complaintEventService.getTimeline(eq(ORG_ID), eq("c1"), isNull(), isNull(), eq(true), isNull(), eq(20),
                 eq(0), any())).thenReturn(List.of(entry("e1")));
 
-        TimelineListResponseDTO response =
+        TimelineListResponse response =
                 handler.getOwnTimeline(ORG_ID, "c1", "user1", null, null, null, null, null);
 
         assertEquals(1, response.getData().size());

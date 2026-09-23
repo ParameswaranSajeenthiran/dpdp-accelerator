@@ -37,14 +37,11 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -224,7 +221,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
-        List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
+        List<ComplaintAttachment> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), false, "officer1", "Officer One",
                 "COMPLAINT_OFFICER");
 
@@ -242,7 +239,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any(Connection.class), any(ComplaintAttachment.class))).thenReturn(true);
 
-        List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadComplaintAttachments("org1", "c1",
+        List<ComplaintAttachment> result = attachmentService.uploadComplaintAttachments("org1", "c1",
                 List.of(pdfFile("a.pdf", 10), pdfFile("b.pdf", 20)), true, "user1", "User One", "USER");
 
         ArgumentCaptor<ComplaintEvent> eventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
@@ -299,7 +296,7 @@ class ComplaintAttachmentServiceImplTest {
         attachment.setSizeBytesOverride(123L);
         when(attachmentDAO.listAttachmentsForComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(List.of(attachment));
 
-        List<ComplaintAttachmentResponseDTO> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
+        List<ComplaintAttachment> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
 
         assertEquals(1, result.size());
         assertEquals("a1", result.get(0).getAttachmentId());
@@ -310,7 +307,7 @@ class ComplaintAttachmentServiceImplTest {
     void listAttachmentsForComplaintReturnsEmptyWhenNoneExist() {
         when(attachmentDAO.listAttachmentsForComplaint(any(Connection.class), eq("org1"), eq("c1"))).thenReturn(List.of());
 
-        List<ComplaintAttachmentResponseDTO> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
+        List<ComplaintAttachment> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
 
         assertTrue(result.isEmpty());
     }
@@ -333,11 +330,11 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1, 2, 3}, false, 100L);
         when(attachmentDAO.getAttachmentWithDataById(any(Connection.class), eq("a1"), eq("org1"), eq("c1"))).thenReturn(Optional.of(attachment));
 
-        ComplaintAttachmentDownloadResponseDTO result = attachmentService.downloadAttachment("org1", "c1", "a1",
+        ComplaintAttachment result = attachmentService.downloadAttachment("org1", "c1", "a1",
                 false);
 
         assertEquals("a1", result.getAttachmentId());
-        assertEquals(3, Base64.getDecoder().decode(result.getContent()).length);
+        assertEquals(3, result.getFileData().length);
     }
 
     @Test
@@ -358,7 +355,7 @@ class ComplaintAttachmentServiceImplTest {
                 "application/pdf", new byte[]{1}, true, 100L);
         when(attachmentDAO.getAttachmentWithDataById(any(Connection.class), eq("a1"), eq("org1"), eq("c1"))).thenReturn(Optional.of(attachment));
 
-        ComplaintAttachmentDownloadResponseDTO result = attachmentService.downloadAttachment("org1", "c1", "a1",
+        ComplaintAttachment result = attachmentService.downloadAttachment("org1", "c1", "a1",
                 true);
 
         assertEquals("a1", result.getAttachmentId());
@@ -384,7 +381,7 @@ class ComplaintAttachmentServiceImplTest {
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         when(attachmentDAO.addAttachment(any(Connection.class), any())).thenReturn(true);
 
-        List<ComplaintAttachmentResponseDTO> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1",
+        List<ComplaintAttachment> result = attachmentService.uploadOwnComplaintAttachments("org1", "c1",
                 "user1", "User One", List.of(pdfFile("a.pdf", 10)));
 
         assertEquals(1, result.size());

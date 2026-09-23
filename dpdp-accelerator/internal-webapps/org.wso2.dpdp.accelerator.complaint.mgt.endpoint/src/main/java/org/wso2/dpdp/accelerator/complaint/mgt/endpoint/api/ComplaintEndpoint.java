@@ -19,14 +19,14 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintRecord;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import javax.ws.rs.Consumes;
@@ -67,9 +67,9 @@ public class ComplaintEndpoint {
     }
 
     @POST
-    public Response createComplaint(ComplaintCreateRequestDTO request) {
+    public Response createComplaint(CmComplaintCreateRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
-        ComplaintCreateResponseDTO response = complaintHandler.createComplaint(currentOrgId(),
+        ComplaintCreateResponse response = complaintHandler.createComplaint(currentOrgId(),
                 callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -83,7 +83,7 @@ public class ComplaintEndpoint {
             @QueryParam("limit") Integer limit,
             @QueryParam("offset") Integer offset,
             @QueryParam("sort") String sort) {
-        ComplaintListResponseDTO response = complaintHandler.listComplaints(currentOrgId(), status, priority, userId,
+        ComplaintListResponse response = complaintHandler.listComplaints(currentOrgId(), status, priority, userId,
                 search, limit, offset, sort);
         return Response.ok(response).build();
     }
@@ -91,21 +91,21 @@ public class ComplaintEndpoint {
     @GET
     @Path("/stats")
     public Response getQueueStats() {
-        ComplaintQueueStatsResponseDTO response = complaintHandler.getQueueStats(currentOrgId());
+        ComplaintQueueStatsResponse response = complaintHandler.getQueueStats(currentOrgId());
         return Response.ok(response).build();
     }
 
     @GET
     @Path("/categories")
     public Response getCategories() {
-        CategoryListResponseDTO response = complaintHandler.getCategories();
+        CategoryListResponse response = complaintHandler.getCategories();
         return Response.ok(response).build();
     }
 
     @GET
     @Path("/{complaintId}")
     public Response getComplaint(@PathParam("complaintId") String complaintId) {
-        ComplaintRecordDTO response = complaintHandler.getComplaint(currentOrgId(), complaintId);
+        ComplaintRecord response = complaintHandler.getComplaint(currentOrgId(), complaintId);
         return Response.ok(response).build();
     }
 
@@ -113,9 +113,9 @@ public class ComplaintEndpoint {
     @Path("/{complaintId}/status")
     public Response updateComplaintStatus(
             @PathParam("complaintId") String complaintId,
-            ComplaintStatusUpdateRequestDTO request) {
+            ComplaintStatusUpdateRequest request) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
-        ComplaintStatusUpdateResponseDTO response = complaintHandler.updateStatus(currentOrgId(), complaintId,
+        ComplaintStatusUpdateResponse response = complaintHandler.updateStatus(currentOrgId(), complaintId,
                 callerUsername, callerUsername, ACTOR_ROLE_COMPLAINT_OFFICER, request);
         return Response.ok(response).build();
     }

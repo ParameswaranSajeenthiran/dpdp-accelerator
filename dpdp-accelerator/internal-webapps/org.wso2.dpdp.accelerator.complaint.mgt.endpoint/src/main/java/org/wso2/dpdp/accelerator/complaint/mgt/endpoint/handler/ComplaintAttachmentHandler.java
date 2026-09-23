@@ -21,9 +21,10 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
@@ -70,31 +71,33 @@ public class ComplaintAttachmentHandler {
 
     // ---- Officer/admin ----
 
-    public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponse> uploadComplaintAttachments(String orgId, String complaintId,
             List<Attachment> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        return complaintAttachmentService.uploadComplaintAttachments(orgId, complaintId, files,
-                isPublic == null || isPublic, actorUserId, actorUserName,
-                ComplaintActorRole.COMPLAINT_OFFICER.name());
+        return ComplaintDtoMapper.toAttachments(complaintAttachmentService.uploadComplaintAttachments(orgId,
+                complaintId, files, isPublic == null || isPublic, actorUserId, actorUserName,
+                ComplaintActorRole.COMPLAINT_OFFICER.name()));
     }
 
-    public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponse downloadAttachment(String orgId, String complaintId,
             String attachmentId) {
-        return complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, false);
+        return ComplaintDtoMapper.toDownload(
+                complaintAttachmentService.downloadAttachment(orgId, complaintId, attachmentId, false));
     }
 
     // ---- Data Principal ----
 
-    public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachmentResponse> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<Attachment> fileParts) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
-        return complaintAttachmentService.uploadOwnComplaintAttachments(orgId, complaintId, ownerUserId,
-                ownerUserName, files);
+        return ComplaintDtoMapper.toAttachments(complaintAttachmentService.uploadOwnComplaintAttachments(orgId,
+                complaintId, ownerUserId, ownerUserName, files));
     }
 
-    public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
+    public ComplaintAttachmentDownloadResponse downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
-        return complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId);
+        return ComplaintDtoMapper.toDownload(
+                complaintAttachmentService.downloadOwnAttachment(orgId, complaintId, ownerUserId, attachmentId));
     }
 
     // ---- shared ----

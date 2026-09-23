@@ -31,8 +31,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 
@@ -191,13 +189,13 @@ class ComplaintEventServiceImplTest {
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
         String atLimit = "a".repeat(5000);
 
-        ComplaintCommentCreateResponseDTO event =
+        ComplaintEvent event =
                 eventService.addComment("org1", "c1", "user1", "User One", "USER", atLimit, true, null);
 
-        assertEquals(atLimit, event.getMessage());
+        assertEquals(atLimit, event.getComment());
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(notificationClient).notifyCommentAdded(eq(complaint), notifiedEventCaptor.capture());
-        assertEquals(event.getId(), notifiedEventCaptor.getValue().getComplaintEventId());
+        assertEquals(event.getComplaintEventId(), notifiedEventCaptor.getValue().getComplaintEventId());
     }
 
     @Test
@@ -236,11 +234,11 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.getComplaintById(any(Connection.class), eq("c1"), eq("org1"))).thenReturn(Optional.of(openComplaint()));
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "internal note", false, null);
 
         assertEquals(false, event.isPublic());
-        assertEquals("internal note", event.getMessage());
+        assertEquals("internal note", event.getComment());
         // An internal note is never shown to the citizen in the timeline - notifying them about it
         // would leak its existence.
         verify(notificationClient, never()).notifyCommentAdded(any(), any());
@@ -267,7 +265,7 @@ class ComplaintEventServiceImplTest {
         when(complaintDAO.updateStatus(any(Connection.class), eq("c1"), eq("org1"), eq("IN_PROGRESS"), anyLong()))
                 .thenReturn(true);
 
-        ComplaintCommentCreateResponseDTO event = eventService.addComment("org1", "c1", "officer1", "Officer One",
+        ComplaintEvent event = eventService.addComment("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "note", true, "IN_PROGRESS");
 
         assertEquals("OPEN", event.getFromStatus());
@@ -278,7 +276,7 @@ class ComplaintEventServiceImplTest {
         assertEquals("IN_PROGRESS", complaint.getStatus());
         ArgumentCaptor<ComplaintEvent> notifiedEventCaptor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(notificationClient).notifyCommentAdded(eq(complaint), notifiedEventCaptor.capture());
-        assertEquals(event.getId(), notifiedEventCaptor.getValue().getComplaintEventId());
+        assertEquals(event.getComplaintEventId(), notifiedEventCaptor.getValue().getComplaintEventId());
     }
 
     @Test
@@ -398,10 +396,10 @@ class ComplaintEventServiceImplTest {
                 .thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintStatusUpdateResponseDTO result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
+        Complaint result = eventService.updateStatus("org1", "c1", "officer1", "Officer One",
                 "COMPLAINT_OFFICER", "IN_PROGRESS", null);
 
-        assertEquals("IN_PROGRESS", result.getToStatus());
+        assertEquals("IN_PROGRESS", result.getStatus());
         ArgumentCaptor<ComplaintEvent> captor = ArgumentCaptor.forClass(ComplaintEvent.class);
         verify(complaintEventDAO).addEvent(any(Connection.class), captor.capture());
         assertEquals("OPEN", captor.getValue().getFromStatus());

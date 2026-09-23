@@ -31,6 +31,11 @@
     <name>WSO2 DPDP Accelerator - Complaint Management Endpoint</name>
 
     <dependencies>
+        <!-- Annotations on the generated REST models in src/gen/java. -->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.wso2.dpdp.accelerator</groupId>
             <artifactId>org.wso2.dpdp.accelerator.complaint.mgt.service</artifactId>
@@ -178,6 +183,53 @@
     <build>
         <finalName>api#dpdp#complaints#v1</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals><goal>generate</goal></goals>
+                        <configuration>
+                            <skip>${dpdp.dto.codegen.skip}</skip>
+                            <inputSpec>${project.basedir}/src/main/resources/complaint-server-API.yaml</inputSpec>
+                            <generatorName>jaxrs-cxf</generatorName>
+                            <generateApis>false</generateApis>
+                            <generateApiTests>false</generateApiTests>
+                            <generateApiDocumentation>false</generateApiDocumentation>
+                            <generateModelTests>false</generateModelTests>
+                            <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <modelPackage>org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto</modelPackage>
+                            <!-- IDs and trace IDs stay opaque strings, and attachment content stays the
+                                 service's own base64 string rather than a decode/re-encode round trip. -->
+                            <typeMappings>
+                                <typeMapping>UUID=String</typeMapping>
+                                <typeMapping>ByteArray=String</typeMapping>
+                            </typeMappings>
+                            <configOptions>
+                                <sourceFolder>src/gen/java</sourceFolder>
+                                <useBeanValidation>false</useBeanValidation>
+                                <openApiNullable>false</openApiNullable>
+                                <containerDefaultToNull>true</containerDefaultToNull>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                            </configOptions>
+                            <output>${project.basedir}</output>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-generated-dto-source</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>add-source</goal></goals>
+                        <configuration><sources><source>src/gen/java</source></sources></configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

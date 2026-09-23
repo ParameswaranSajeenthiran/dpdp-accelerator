@@ -26,9 +26,10 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CmComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatus;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
 
 import static org.testng.Assert.assertEquals;
@@ -58,20 +59,20 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentPassesResolvedIdentityAndRequestFieldsThroughToEventService() {
-        ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
+        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
         request.setMessage("hello");
-        request.setPublic(true);
-        request.setToStatus("IN_PROGRESS");
+        request.setIsPublic(true);
+        request.setToStatus(ComplaintStatus.IN_PROGRESS);
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 true, "hello", "OPEN", "IN_PROGRESS", 100L);
         when(complaintEventService.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", "hello",
-                true, "IN_PROGRESS")).thenReturn(ComplaintCommentCreateResponseDTO.from(event));
+                true, "IN_PROGRESS")).thenReturn(event);
 
-        ComplaintCommentCreateResponseDTO response =
+        ComplaintCommentCreateResponse response =
                 handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
 
         assertEquals("e1", response.getId());
-        assertEquals("IN_PROGRESS", response.getToStatus());
+        assertEquals("IN_PROGRESS", response.getToStatus().toString());
     }
 
     @Test
@@ -86,7 +87,7 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentThrowsWhenIsPublicIsMissingFromRequest() {
-        ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
+        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
         request.setMessage("hello");
 
         expectThrows(ComplaintException.class,
@@ -97,16 +98,16 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addCommentHonorsExplicitIsPublicFalse() {
-        ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
+        CmComplaintMessageRequest request = new CmComplaintMessageRequest();
         request.setMessage("internal note");
-        request.setPublic(false);
+        request.setIsPublic(false);
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER",
                 false, "internal note", null, null, 100L);
         when(complaintEventService.addComment(eq(ORG_ID), eq("c1"), eq("officer1"), eq("Officer One"),
                 eq("COMPLAINT_OFFICER"), eq("internal note"), eq(false), isNull()))
-                .thenReturn(ComplaintCommentCreateResponseDTO.from(event));
+                .thenReturn(event);
 
-        ComplaintCommentCreateResponseDTO response =
+        ComplaintCommentCreateResponse response =
                 handler.addComment(ORG_ID, "c1", "officer1", "Officer One", "COMPLAINT_OFFICER", request);
 
         assertEquals("e1", response.getId());
@@ -114,19 +115,19 @@ class ComplaintCommentHandlerTest {
 
     @Test
     void addOwnCommentVerifiesOwnershipAndForcesUserRoleAndPublic() {
-        MeComplaintMessageRequestDTO request = new MeComplaintMessageRequestDTO();
+        MeComplaintMessageRequest request = new MeComplaintMessageRequest();
         request.setMessage("hello");
-        request.setToStatus("RESOLVED");
+        request.setToStatus(ComplaintStatus.RESOLVED);
         ComplaintEvent event = new ComplaintEvent("e1", ORG_ID, "c1", "user1", "User One", "USER", true, "hello",
                 "OPEN", "RESOLVED", 100L);
         when(complaintEventService.addComment(ORG_ID, "c1", "user1", "User One", "USER", "hello", true, "RESOLVED"))
-                .thenReturn(ComplaintCommentCreateResponseDTO.from(event));
+                .thenReturn(event);
 
-        ComplaintCommentCreateResponseDTO response =
+        ComplaintCommentCreateResponse response =
                 handler.addOwnComment(ORG_ID, "c1", "user1", "User One", request);
 
         assertEquals("e1", response.getId());
-        assertEquals("USER", response.getActorRole());
+        assertEquals("USER", response.getActorRole().toString());
         verify(complaintService).getOwnedComplaint(ORG_ID, "c1", "user1");
     }
 
