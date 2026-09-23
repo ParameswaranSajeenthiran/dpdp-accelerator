@@ -29,9 +29,9 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.CallbackUrlCanonicalizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.EventNotificationUrlValidator;
 import org.wso2.dpdp.accelerator.event.notifications.common.util.PurposeOverlapUtils;
@@ -52,14 +52,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.WebhookDeliveryWorker;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.util.EventNotificationParameterUtils;
 
@@ -176,7 +168,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         for (String name : topicNames) {
             if (name == null || name.trim().isEmpty()
                     || !normalizedNames.add(name.trim().toLowerCase(Locale.ROOT))) {
-                throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                throw new EventNotificationServiceException(
+                        EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                         EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                         "Topics must contain unique non-blank names.", 400);
             }
@@ -205,7 +198,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         validatePurposeFilterMode(filterType, purposes);
         if (topicNames.size() > 1 && filterType != PurposeFilterMode.ALL
                 && (normalizedNames.contains("user.account.delete") || normalizedNames.contains("user.data.change"))) {
-            throw new EventNotificationException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+            throw new EventNotificationServiceException(
+                    EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_VALIDATION_FAILED,
                     "Subscriptions containing user lifecycle topics require the all purpose filter.", 422);
         }

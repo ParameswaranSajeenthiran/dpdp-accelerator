@@ -28,7 +28,6 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.Ev
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

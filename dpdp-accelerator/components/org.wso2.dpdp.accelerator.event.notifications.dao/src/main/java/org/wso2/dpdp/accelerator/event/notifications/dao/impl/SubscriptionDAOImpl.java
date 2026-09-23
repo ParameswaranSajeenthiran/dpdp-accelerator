@@ -425,7 +425,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             hydrateTopics(conn, list);
             return list;
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC,
                             orgId, String.join(",", topicIds)),
                     e);

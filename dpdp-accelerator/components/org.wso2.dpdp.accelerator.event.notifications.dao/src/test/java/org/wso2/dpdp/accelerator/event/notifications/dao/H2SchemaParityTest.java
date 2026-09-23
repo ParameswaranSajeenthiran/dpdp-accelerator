@@ -177,7 +177,9 @@ public class H2SchemaParityTest {
                 statement.execute("ALTER TABLE SUBSCRIPTION_TOPIC ADD CONSTRAINT FAIL_SECOND "
                         + "CHECK (SUBSCRIPTION_ID <> 'rollback' OR TOPIC_ID <> 'b')");
             }
-            expectThrows(org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException.class,
+            expectThrows(
+                    org.wso2.dpdp.accelerator.event.notifications.common.exception.dao
+                            .EventNotificationDuplicateResourceException.class,
                     () -> dao.addSubscription(connection, subscription));
             connection.rollback();
             assertTrue(!dao.getSubscriptionById(connection, "rollback", "org").isPresent());

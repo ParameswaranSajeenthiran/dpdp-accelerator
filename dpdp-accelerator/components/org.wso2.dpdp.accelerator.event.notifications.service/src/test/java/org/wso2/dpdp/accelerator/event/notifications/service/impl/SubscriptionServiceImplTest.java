@@ -86,7 +86,7 @@ public class SubscriptionServiceImplTest {
 
         @Test
         public void rejectsNormalizedDuplicateTopicsBeforeWriting() {
-                org.testng.Assert.expectThrows(EventNotificationException.class,
+                org.testng.Assert.expectThrows(EventNotificationServiceException.class,
                                 () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
                                                 java.util.Arrays.asList("accounts", " ACCOUNTS "),
                                                 new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList()),

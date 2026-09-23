@@ -289,7 +289,7 @@ public class TopicDAOImpl implements TopicDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
         }
         return topics;
@@ -317,7 +317,7 @@ public class TopicDAOImpl implements TopicDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new EventNotificationDataAccessException(
+            throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
         }
         return result;

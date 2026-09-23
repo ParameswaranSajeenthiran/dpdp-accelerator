@@ -315,7 +315,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         java.lang.reflect.Constructor<?> constructor = taskClass.getDeclaredConstructor(SubscriptionServiceImpl.class,
                 String.class, String.class, int.class);
         constructor.setAccessible(true);
-        installVerificationClient(request -> { throw new IllegalStateException("Receiver unavailable"); });
+        installVerificationClient(request -> {
+            throw new IllegalStateException("Receiver unavailable");
+        });
         Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", 0);
         task.run();
         verify(configurationService).getEventNotificationMaxRetries();
@@ -328,7 +330,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         java.lang.reflect.Constructor<?> constructor = taskClass.getDeclaredConstructor(SubscriptionServiceImpl.class,
                 String.class, String.class, int.class);
         constructor.setAccessible(true);
-        installVerificationClient(request -> { throw new IllegalStateException("Receiver unavailable"); });
+        installVerificationClient(request -> {
+            throw new IllegalStateException("Receiver unavailable");
+        });
         Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", 1);
         task.run();
         verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "stale");
@@ -487,8 +491,13 @@ public class SubscriptionServiceReadAndDeleteTest {
                     buffer.get(chunk);
                     bytes.write(chunk, 0, chunk.length);
                 }
-                public void onError(Throwable error) { body.completeExceptionally(error); }
-                public void onComplete() { body.complete(bytes.toByteArray()); }
+                public void onError(Throwable error) {
+                    body.completeExceptionally(error);
+                }
+
+                public void onComplete() {
+                    body.complete(bytes.toByteArray());
+                }
             });
             try {
                 com.fasterxml.jackson.databind.JsonNode json =
