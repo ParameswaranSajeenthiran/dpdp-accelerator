@@ -140,6 +140,8 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
             case 404:
                 return ComplaintErrorCode.COMPLAINT_NOT_FOUND;
             default:
+                // Documented contract: CO-4001 doubles as the generic code for client errors
+                // with no code of their own (405, 406, 415, ...); the status itself is kept.
                 return ComplaintErrorCode.INVALID_REQUEST_BODY;
         }
     }

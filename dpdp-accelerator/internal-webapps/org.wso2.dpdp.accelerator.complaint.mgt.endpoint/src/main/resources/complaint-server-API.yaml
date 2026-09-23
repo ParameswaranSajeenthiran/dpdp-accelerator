@@ -1041,7 +1041,10 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
     BadRequest:
-      description: Invalid request body (CO-4001)
+      description: >-
+        Invalid request body (CO-4001). CO-4001 is also the code for any other
+        client error without a code of its own, such as 405 Method Not Allowed or
+        415 Unsupported Media Type; those keep their own HTTP status and headers.
       content:
         application/json:
           schema:

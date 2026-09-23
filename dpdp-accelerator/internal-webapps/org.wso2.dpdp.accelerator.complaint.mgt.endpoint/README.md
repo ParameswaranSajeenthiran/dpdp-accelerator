@@ -39,6 +39,10 @@ in the specification. `ComplaintExceptionMapper` returns an unknown enum value a
 422 `CO-4002`, the same code the service returned before the models were typed, and
 any other unreadable body as 400 `CO-4001`.
 
+Any other 4xx the framework raises without a code of its own, such as 405 or 415,
+keeps its HTTP status and headers (e.g. `Allow`) and also carries `CO-4001` as the
+generic client-error code.
+
 Multipart attachment uploads are documented in the specification but still bound
 directly through CXF's `@Multipart` in the resource classes; only their JSON
 responses use generated models.
