@@ -81,4 +81,15 @@ public interface ComplaintAttachmentDAO {
      * @return every attachment bound to the complaint
      */
     List<ComplaintAttachment> listAttachmentsForComplaint(Connection conn, String orgId, String complaintId);
+
+    /**
+     * Lists attachment metadata for several complaints in a single query - used by the complaint
+     * list endpoints so a page of N complaints doesn't cost N extra lookups.
+     *
+     * @param conn         caller-owned connection this read runs against
+     * @param orgId        tenant/organization the complaints belong to
+     * @param complaintIds complaints to list attachments for; an empty list returns an empty result
+     * @return every attachment bound to any of the complaints, ordered by complaint then created time
+     */
+    List<ComplaintAttachment> listAttachmentsForComplaints(Connection conn, String orgId, List<String> complaintIds);
 }
