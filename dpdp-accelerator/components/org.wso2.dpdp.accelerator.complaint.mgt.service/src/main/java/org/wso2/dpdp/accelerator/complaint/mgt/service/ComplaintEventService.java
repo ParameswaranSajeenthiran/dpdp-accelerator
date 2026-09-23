@@ -96,7 +96,7 @@ public interface ComplaintEventService {
      * @param toStatus      status to transition to
      * @param note          required when toStatus is RESOLVED, optional otherwise
      * @return the updated complaint
-     * @throws ComplaintException thrown with a 409 status (CO-4090) if the transition isn't valid
+     * @throws ComplaintServiceException thrown with a 409 status (CO-4090) if the transition isn't valid
      *                            from the complaint's current status - see
      *                            ComplaintServiceUtil
      */

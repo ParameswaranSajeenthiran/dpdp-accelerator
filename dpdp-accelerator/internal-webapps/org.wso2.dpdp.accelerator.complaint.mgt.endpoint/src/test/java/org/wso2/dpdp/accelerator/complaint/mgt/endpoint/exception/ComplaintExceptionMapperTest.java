@@ -23,7 +23,7 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ErrorEnvelope;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAllowedException;
@@ -42,8 +42,8 @@ class ComplaintExceptionMapperTest {
 
     @Test
     void mapsComplaintExceptionToItsOwnStatusCodeAndErrorBody() {
-        ComplaintException exception =
-                new ComplaintException("CO-4040", "Complaint not found", "No complaint with that id.", 404);
+        ComplaintServiceException exception =
+                new ComplaintServiceException("CO-4040", "Complaint not found", "No complaint with that id.", 404);
 
         Response response = mapper.toResponse(exception);
 
@@ -125,7 +125,7 @@ class ComplaintExceptionMapperTest {
 
     @Test
     void unwrapsAComplaintExceptionCause() {
-        ComplaintException cause = new ComplaintException("CO-4090", "Invalid transition", "No.", 409);
+        ComplaintServiceException cause = new ComplaintServiceException("CO-4090", "Invalid transition", "No.", 409);
 
         Response response = mapper.toResponse(new RuntimeException(cause));
 

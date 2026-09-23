@@ -30,7 +30,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentServic
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCategory;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCategoryInfo;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;

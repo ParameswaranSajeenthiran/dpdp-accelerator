@@ -26,8 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ErrorEnvelope;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
@@ -54,10 +54,10 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
     @Override
     public Response toResponse(Throwable exception) {
         // CXF wraps a failed body read in a BadRequestException, so the Jackson error (or a
-        // ComplaintException thrown from deeper in the stack) is usually a cause, not the top.
-        ComplaintException complaintException = findCause(exception, ComplaintException.class);
-        if (complaintException != null) {
-            return build(complaintException);
+        // ComplaintServiceException thrown from deeper in the stack) is usually a cause, not the top.
+        ComplaintServiceException complaintServiceException = findCause(exception, ComplaintServiceException.class);
+        if (complaintServiceException != null) {
+            return build(complaintServiceException);
         }
         JsonProcessingException jsonException = findCause(exception, JsonProcessingException.class);
         if (jsonException != null) {
@@ -73,15 +73,15 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                 }
                 Response.Status reason = Response.Status.fromStatusCode(status);
                 String message = reason != null ? reason.getReasonPhrase() : String.valueOf(status);
-                Response.ResponseBuilder builder =
-                        builder(new ComplaintException(errorCodeFor(status).getCode(), message, message, status));
+                Response.ResponseBuilder builder = builder(new ComplaintServiceException(
+                        errorCodeFor(status).getCode(), message, message, status));
                 copyHeaders(original, builder);
                 return builder.build();
             }
         }
 
         LOG.error("Unhandled exception in Complaint API: " + LogSanitizer.sanitize(exception.getMessage()), exception);
-        return build(new ComplaintException(ComplaintErrorCode.INTERNAL_ERROR.getCode(), "Internal error",
+        return build(new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR.getCode(), "Internal error",
                 "An unexpected error occurred while processing the request.",
                 Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
     }
@@ -90,7 +90,7 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
      * An unknown enum value keeps the 422 CO-4002 the service returned for it before the request
      * models were generated with enum types; any other unreadable body is a 400 CO-4001.
      */
-    private static ComplaintException fromJsonException(JsonProcessingException exception) {
+    private static ComplaintServiceException fromJsonException(JsonProcessingException exception) {
         if (exception instanceof JsonMappingException) {
             JsonMappingException mappingException = (JsonMappingException) exception;
             Class<?> enumType = enumTarget(mappingException);
@@ -99,14 +99,14 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Invalid enum value in request body for field: " + LogSanitizer.sanitize(field));
                 }
-                return new ComplaintException(ComplaintErrorCode.VALIDATION_FAILED,
+                return new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                         String.format(INVALID_ENUM_VALUE_ERROR, field, enumType.getSimpleName()));
             }
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Malformed request body: " + LogSanitizer.sanitize(exception.getOriginalMessage()));
         }
-        return new ComplaintException(ComplaintErrorCode.INVALID_REQUEST_BODY, MALFORMED_BODY_ERROR);
+        return new ComplaintServiceException(ComplaintErrorCode.INVALID_REQUEST_BODY, MALFORMED_BODY_ERROR);
     }
 
     private static Class<?> enumTarget(JsonMappingException exception) {
@@ -171,11 +171,11 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
         }
     }
 
-    private static Response build(ComplaintException exception) {
+    private static Response build(ComplaintServiceException exception) {
         return builder(exception).build();
     }
 
-    private static Response.ResponseBuilder builder(ComplaintException exception) {
+    private static Response.ResponseBuilder builder(ComplaintServiceException exception) {
         ErrorEnvelope envelope = new ErrorEnvelope()
                 .code(exception.getCode())
                 .message(exception.getMessage())
