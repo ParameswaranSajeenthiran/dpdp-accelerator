@@ -20,18 +20,21 @@ package org.wso2.dpdp.accelerator.common.persistence;
 
 /**
  * Substrings matched against {@code DatabaseMetaData.getDatabaseProductName()} to resolve a
- * DB-dialect specific query provider. Shared across every feature's own
- * {@code *QueryFactory} (Complaint, Event Notifications, Consent History) so the same literal
- * isn't redefined per module. Only the dialects an accelerator dbscript actually ships for today
- * are listed - add another constant here only once a feature ships a dedicated
- * {@code dbscripts/<feature>/<dialect>.sql} for it.
+ * DB-dialect specific query provider. Shared across every feature's own {@code *QueryFactory}
+ * (Complaint, Event Notifications, Consent History, Consent Expiry) so the same literal isn't
+ * redefined per module. {@code oracle}/{@code sql server}/{@code mssql} have only one consumer
+ * today ({@code ConsentExpiryQueryFactory}) and no accelerator dbscript ships for either dialect,
+ * but live here for consistency with the other dialect constants rather than as one-off literals.
  */
 public final class DBDialectConstants {
 
+    public static final String DB_TYPE_H2 = "h2";
     public static final String DB_TYPE_MYSQL = "mysql";
     public static final String DB_TYPE_POSTGRES = "postgres";
     public static final String DB_TYPE_SQLITE = "sqlite";
-    public static final String DB_TYPE_DEFAULT = "default";
+    public static final String DB_TYPE_ORACLE = "oracle";
+    public static final String DB_TYPE_SQL_SERVER = "sql server";
+    public static final String DB_TYPE_MSSQL = "mssql";
 
     private DBDialectConstants() {
     }

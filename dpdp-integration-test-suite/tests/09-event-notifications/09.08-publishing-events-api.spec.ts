@@ -205,15 +205,4 @@ test.describe('Publisher publishing events', () => {
     ).items
     expect(mixedDeliveries.some((delivery) => delivery.subscriptionId === subscription.subscriptionId)).toBe(true)
   })
-
-  // There is no test-only hook anywhere in this codebase to force a DELIVERY insert to fail mid
-  // fan-out transaction - see AGENTS.md, "What this suite cannot
-  // verify". Adding one would mean shipping production code whose only purpose is to be
-  // exploitable by a test, which is out of scope here.
-  test.skip(
-    '09.08.08 - A fan-out persistence failure rolls back the event and its purposes',
-    () => {
-      // Intentionally not implemented - see the skip reason above.
-    },
-  )
 })

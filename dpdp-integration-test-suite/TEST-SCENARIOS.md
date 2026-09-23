@@ -10,9 +10,9 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 173 across 46 spec files in 9 areas |
-| **Skipped in code** | 4 — `09.08.08`, `09.10.01`, `09.10.02`, `09.10.03` |
-| **Skipped when unconfigured** | `04.01.03`, `04.07.04` (second user); `04.09.03` (expiry cron) |
+| **Tests** | 171 across 46 spec files in 9 areas |
+| **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
@@ -182,7 +182,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | --- | --- | --- |
 | `04.01.01` | The detail page renders subject, service, and purpose/element structure | Subject, service id, "Not applicable", and the element row under its expanded purpose. |
 | `04.01.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
-| `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation. Skips unless `personas.user2` is configured. |
+| `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation - requires `personas.user2`. |
 | `04.01.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
 | `04.01.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
 
@@ -240,7 +240,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | `04.07.01` | Approving a Pending consent records CREATE then AUTHORIZE_APPROVE, oldest-first in the table and newest-first in the dialog | CREATE (admin) then AUTHORIZE_APPROVE (user); oldest-first in the lifecycle table, newest-first in the dialog; initial-snapshot chip on CREATE; a real diff tag on APPROVE. |
 | `04.07.02` | Rejecting a Pending consent records AUTHORIZE_REJECT with a diffed authorization |  |
 | `04.07.03` | A full self-service lifecycle (created, approved, then revoked) is captured in order end to end | All three entries in strict order in both views; the revoke entry renders a real diff. |
-| `04.07.04` | A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject | The child's own history attributes the approval to the **parent**. Skips unless `personas.user2` is configured. |
+| `04.07.04` | A delegated consent (parent approving on behalf of a child) attributes the approval to the parent, not the subject | The child's own history attributes the approval to the **parent**. Requires `personas.user2`. |
 
 ### `04.08-admin-viewing-consent-history.spec.ts`
 
@@ -258,7 +258,7 @@ Exercises `DPDPConsentExpiryReconciler`. Asserts only on API responses, but stil
 | --- | --- | --- |
 | `04.09.01` | A consent whose expiry time has not yet passed has no EXPIRE entry in its history | Negative control: no EXPIRE entry for a future expiry. |
 | `04.09.02` | Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry | EXPIRE written with `actionBy=SYSTEM`, `currentStatus=EXPIRED`, in both status-audit and history. The revoke's own 409 is deliberately not asserted. |
-| `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs a shortened cron and a server restart). |
+| `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs `schedule_mode = "interval"` and a server restart) - CI sets this automatically. |
 
 ## `05-authorization/` — Route guards and sidebar visibility
 
@@ -423,7 +423,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**46 tests, 11 spec files.**
+**44 tests, 11 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -507,7 +507,6 @@ Register conflicts, re-verification, and delete guards.
 | `09.08.05` | An ALL-filter subscription receives every event regardless of purposes | No/one/many purposes, exactly one delivery each. |
 | `09.08.06` | SPECIFIC purpose matching is case-insensitive and requires overlap | Overlapping purposes deliver; unrelated ones do not. |
 | `09.08.07` | ALL_EXCEPT matches only when the event carries a purpose outside the exclusion set |  |
-| `09.08.08` | A fan-out persistence failure rolls back the event and its purposes | **Permanently skipped** - would require shipping a test-only hook in production code. |
 
 ### `09.09-event-queries-api.spec.ts` · API-only
 
@@ -520,13 +519,14 @@ Query and delivery-scoping rules on the read endpoints.
 
 ### `09.10-webhook-delivery-api.spec.ts` · API-only
 
-Every test needs a network-reachable receiver (`webhook.receiverHost`) **and** all three are additionally skipped in code. See "Known gaps".
+Every test needs a network-reachable receiver (`webhook.receiverHost`). `09.10.01`/`09.10.02` also
+need `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride`. See "Known gaps" for the
+stuck-in-flight reclamation case removed from this file.
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped in code.** Real, working coverage (~29s standalone), skipped only because 5s x3 backoff makes it slow. |
-| `09.10.02` | Persistent receiver failure transitions the delivery to failed | **Skipped in code.** Retry exhaustion genuinely takes ~11 minutes (5+15+45+135+405s). |
-| `09.10.03` | A stale in-flight delivery is reclaimed once without duplicate concurrent dispatch | **Not implemented** - a stuck in-flight delivery is unreachable from outside the process. |
+| `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped unless `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` are set** - real elapsed time scales with those values. |
+| `09.10.02` | Persistent receiver failure transitions the delivery to failed | Same opt-in as `09.10.01` - exhausts every retry, so scales with `maxRetriesOverride` too. |
 
 ### `09.11-tenant-isolation-api.spec.ts` · API-only
 
@@ -593,16 +593,14 @@ Worth recording because they were product observations, not test scaffolding:
 
 ## No webhook happy-path coverage
 
-`09.10-webhook-delivery-api.spec.ts` has **no runnable tests**. The three core success-path tests
-(payload envelope and integrity headers, HMAC signature verification, 2xx-marks-delivered) were
-deleted — they were unreliable on a machine whose LAN IP changes mid-session. The three that
-remain are all skipped in code (`test.skip(title, fn)`, unconditional) for reasons unrelated to
-`webhook.receiverHost` - the file's own `beforeEach` still gates on it too, but that gate is moot
-today, since all three are already permanently skipped before it would ever matter:
-
-- `09.10.01` — real, working coverage (~29s standalone); skipped only for being slow.
-- `09.10.02` — retry exhaustion genuinely takes ~11 minutes (5+15+45+135+405s backoff).
-- `09.10.03` — not implemented; see below.
+`09.10-webhook-delivery-api.spec.ts`'s three core success-path tests (payload envelope and
+integrity headers, HMAC signature verification, 2xx-marks-delivered) were deleted — they were
+unreliable on a machine whose LAN IP changes mid-session. `09.10.01`/`09.10.02` cover retry and
+retry-exhaustion behavior instead, opt-in via `webhook.baseBackoffSecondsOverride`/
+`maxRetriesOverride` (see AGENTS.md, "Webhook-dependent tests") since the real product defaults
+make them take minutes - CI sets both automatically, so these two run on every E2E workflow. Its
+third case, stuck-in-flight reclamation, was removed rather than implemented - see "What this
+suite cannot verify".
 
 ## Smaller gaps
 
@@ -615,15 +613,37 @@ today, since all three are already permanently skipped before it would ever matt
 
 ## What this suite cannot verify
 
-Two behaviours are unreachable from a black-box HTTP/UI test, and the corresponding tests are
-permanently skipped rather than deleted so the gap stays visible:
+Both removed cases are genuinely unreachable from a black-box HTTP test, and both are already
+covered one layer down by Java unit tests with a mocked DAO - so removing the dead
+`test.skip()`'d E2E placeholder loses no real verification.
 
-- **`09.08.08` — fan-out persistence rollback.** Forcing a `DELIVERY` insert to fail mid-transaction
-  would mean shipping production code whose only purpose is to be exploitable by a test.
-- **`09.10.03` — stale in-flight delivery reclamation.** Reproducing a worker that crashed
-  mid-dispatch needs either a test-only hook or direct DB writes; `stuck_inflight_threshold_seconds`
-  and the pending-subscription recovery timers are real background workers, not something an
-  external test can force.
+**`09.08`'s fan-out persistence rollback case.** Forcing a `DELIVERY` insert to fail
+mid-transaction, purely to prove the whole publish rolls back atomically, has no trigger reachable
+through legitimate API calls - it would mean shipping production code whose only purpose is to be
+exploitable by a test, which stays out of scope here. Covered instead by
+`EventPublishTransactionAtomicityTest.testFanOutFailureCausesEventPublishToFailWith500`
+(`event.notifications.service` module, forces the fan-out DAO call to throw and asserts the whole
+publish fails with a 500) and `DatabaseUtilsTest` (`common` module, verifies the transaction
+wrapper genuinely calls `connection.rollback()` on failure and never on success).
+
+**`09.10`'s stuck-in-flight delivery reclamation case.** The original plan for this one turned out
+to be wrong, not just risky - worth recording so it isn't tried again the same way. `claim`/
+`reclaim`/`complete` (`EventNotificationCommonDBQueries.java`'s `getClaimWebhookDeliveryQuery`/
+`getClaimStuckWebhookDeliveryQuery`/`getUpdateWebhookDeliveryStatusQuery`) really are optimistic on
+`STATUS`, keyed only on elapsed time (`stuck_inflight_threshold_seconds`), and the webhook HTTP
+call really does have a fixed 5s timeout (`WEBHOOK_HTTP_TIMEOUT_SECONDS`) - that part of the
+analysis was correct. What it missed: `DeliveryRecoveryService.activate()` throws
+`IllegalStateException` at server startup if `stuck_inflight_threshold_seconds <=
+WEBHOOK_HTTP_TIMEOUT_SECONDS` ("...so an active webhook request cannot be reclaimed") - a
+deliberate, hard-enforced product invariant guaranteeing the exact race this test wanted to
+construct can never be configured, not merely one that's hard to time. Confirmed live: setting
+`stuck_inflight_threshold_seconds = 1` in CI crashed the event-notification service bundle's
+activation entirely, cascading into unrelated startup failures (`SubscriptionEndpoint` failing to
+instantiate, super-tenant role provisioning failing) across three consecutive CI runs before the
+real cause was found. Covered instead by `DeliveryRecoveryServiceTest.
+activationRejectsStuckThresholdAtHttpTimeout` (asserts this exact guard),
+`WebhookDeliveryWorkerStuckRecoveryTest`, and `WebhookDeliveryWorkerTest.
+testEmptyPendingTriggersStuckPass` (`event.notifications.service` module, all with a mocked DAO).
 
 ---
 

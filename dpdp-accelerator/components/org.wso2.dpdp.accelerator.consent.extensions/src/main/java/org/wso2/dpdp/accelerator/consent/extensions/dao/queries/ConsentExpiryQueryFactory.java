@@ -39,12 +39,15 @@ public class ConsentExpiryQueryFactory {
     public static ConsentExpiryDBQueries getQueryProvider(String dbType) {
 
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_DEFAULT;
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_H2;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
-            if (k.contains("oracle")) {
+            if (k.contains(DBDialectConstants.DB_TYPE_ORACLE)) {
                 return new ConsentExpiryOracleDBQueries();
-            } else if (k.contains("sql server") || k.contains("mssql")) {
+            } else if (k.contains(DBDialectConstants.DB_TYPE_SQL_SERVER)
+                    || k.contains(DBDialectConstants.DB_TYPE_MSSQL)) {
                 return new ConsentExpirySqlServerDBQueries();
+            } else if (k.contains(DBDialectConstants.DB_TYPE_H2)) {
+                return new ConsentExpiryH2DBQueries();
             }
             return new ConsentExpiryDBQueries();
         });
@@ -67,6 +70,6 @@ public class ConsentExpiryQueryFactory {
 
     public static ConsentExpiryDBQueries getQueryProvider() {
 
-        return getQueryProvider(DBDialectConstants.DB_TYPE_DEFAULT);
+        return getQueryProvider(DBDialectConstants.DB_TYPE_H2);
     }
 }

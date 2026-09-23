@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { config, requireConfigured, trimTrailingSlash } from './config'
+import { config, requireConfigured, trimTrailingSlash, validateNonNegativeIntOverride } from './config'
 
 export interface Persona {
   username: string
@@ -70,15 +70,11 @@ export const env = {
   // no test used it before this persona existed.
   dpo: persona('dpo'),
 
-  /**
-   * Optional: a second user account, used only by ownership-isolation tests that
-   * need two distinct real users. Those tests skip themselves when this isn't configured,
-   * since a real environment can't fabricate extra user accounts the way a stubbed IdP could.
-   */
-  secondUser: (): Persona | undefined => {
-    const { username, password } = config.personas.user2
-    return username && password ? { username, password } : undefined
-  },
+  // A second, distinct real user account - required, same as `user` above, so
+  // ownership-isolation tests always run rather than silently skipping themselves when it's
+  // left unconfigured. Provisioned unconditionally alongside `user` by
+  // scripts/provision-test-users.sh.
+  user2: persona('user2'),
 
   /**
    * The super-tenant admin. Used by scripts/bootstrap-provisioning-app.ts for its one-time
@@ -185,9 +181,10 @@ export function consentHistoryApiUrl(path: string, tenantDomain?: string): strin
  * Opt-in only (see README.md, "Configuration"): the real ConsentExpiryJob's default daily cron makes waiting on
  * it impractical for an automated run, so the one test that actually waits on the live scheduler
  * (rather than triggering DPDPConsentExpiryReconciler via a mutation) needs the operator to have
- * both shortened [dpdp_accelerator.consent_expiry].cron_value in deployment.toml and restarted the
- * server, then set this to a timeout comfortably larger than that interval. Undefined means "not
- * configured" - that test skips itself, mirroring hasSecondUser()/webhookReceiverConfig() above.
+ * switched [dpdp_accelerator.consent_expiry] to schedule_mode = "interval" with a short
+ * interval_seconds in deployment.toml and restarted the server, then set this to a timeout
+ * comfortably larger than that interval. Undefined means "not configured" - that test skips
+ * itself, mirroring webhookReceiverConfig() below.
  */
 export function consentExpirySchedulerPollTimeoutMs(): number | undefined {
   return config.consentExpiry.schedulerPollTimeoutMs ?? undefined
@@ -199,12 +196,30 @@ export function consentExpirySchedulerPollTimeoutMs(): number | undefined {
  * against - EventNotificationUrlValidator rejects loopback/127.0.0.1 unconditionally (see
  * AGENTS.md, "Webhook-dependent tests"), so a receiver bound to
  * this machine's own loopback interface can never pass callback-URL validation no matter what
- * deployment.toml says. Tests that need this skip themselves (mirroring hasSecondUser()) unless
- * both a receiver host and confirmation that the deployment allows it are explicitly configured.
+ * deployment.toml says. Tests that need this skip themselves unless both a receiver host and
+ * confirmation that the deployment allows it are explicitly configured.
  */
 export function webhookReceiverConfig(): { host: string; allowPrivateNetwork: boolean } | undefined {
   const { receiverHost, allowPrivateNetwork } = config.webhook
   return receiverHost ? { host: receiverHost, allowPrivateNetwork } : undefined
+}
+
+/**
+ * Opt-in (see AGENTS.md, "Webhook-dependent tests"): the retry-exhaustion tests take minutes at
+ * the deployment's real base_backoff_seconds/max_retries defaults, so they need both shortened on
+ * the server and reported here - undefined means "not configured", and those tests skip
+ * themselves rather than assume a value the deployment might not actually have.
+ */
+export function webhookBackoffOverride(): { baseBackoffSeconds: number; maxRetries: number } | undefined {
+  const baseBackoffSeconds = validateNonNegativeIntOverride(
+    config.webhook.baseBackoffSecondsOverride,
+    'webhook.baseBackoffSecondsOverride',
+  )
+  const maxRetries = validateNonNegativeIntOverride(config.webhook.maxRetriesOverride, 'webhook.maxRetriesOverride')
+  // Both-or-neither by design: a lone value (the other left null) isn't a usable override, so
+  // this reads as "not configured" rather than an error - unlike an invalid value, which
+  // validateNonNegativeIntOverride already rejected above.
+  return baseBackoffSeconds !== null && maxRetries !== null ? { baseBackoffSeconds, maxRetries } : undefined
 }
 
 export type PersonaName = 'user' | 'user-2' | 'consent-admin' | 'dpo'
