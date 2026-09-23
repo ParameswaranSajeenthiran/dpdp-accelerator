@@ -28,6 +28,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServic
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -156,7 +157,17 @@ class ComplaintExceptionMapperTest {
         assertEquals(null, response.getHeaders().get("Content-Encoding"));
         assertEquals(null, response.getHeaders().get("Content-Length"));
         assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
+        assertEquals("CO-4000", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void givesAnUnmappedClientErrorTheGenericCodeAndKeepsItsStatus() {
+        Response response = mapper.toResponse(new NotSupportedException());
+
+        assertEquals(415, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4000", envelope.getCode());
+        assertEquals("Unsupported Media Type", envelope.getMessage());
     }
 
     private static Exception readFailure(String body, Class<?> type) {

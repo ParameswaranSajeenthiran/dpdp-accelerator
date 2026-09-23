@@ -26,6 +26,12 @@ info:
     carries its own `isPublic` flag governing whether the Data Principal
     can see it. There is a single upload endpoint per namespace that can
     be called at any point in the complaint's lifecycle.
+
+
+    Every error response carries an ErrorEnvelope. A client error with no
+    code of its own, such as 405 Method Not Allowed or 415 Unsupported Media
+    Type, keeps its HTTP status and headers (for example `Allow`) and carries
+    the generic code CO-4000.
   version: "2.10.0"
   license:
     name: Apache-2.0
@@ -1041,10 +1047,7 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
     BadRequest:
-      description: >-
-        Invalid request body (CO-4001). CO-4001 is also the code for any other
-        client error without a code of its own, such as 405 Method Not Allowed or
-        415 Unsupported Media Type; those keep their own HTTP status and headers.
+      description: Invalid request body (CO-4001)
       content:
         application/json:
           schema:

@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ErrorEnvelope;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.error.ComplaintEndpointErrorCodes;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
@@ -74,7 +75,7 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
                 Response.Status reason = Response.Status.fromStatusCode(status);
                 String message = reason != null ? reason.getReasonPhrase() : String.valueOf(status);
                 Response.ResponseBuilder builder = builder(new ComplaintServiceException(
-                        errorCodeFor(status).getCode(), message, message, status));
+                        errorCodeFor(status), message, message, status));
                 copyHeaders(original, builder);
                 return builder.build();
             }
@@ -131,18 +132,16 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
         return "";
     }
 
-    private static ComplaintErrorCode errorCodeFor(int status) {
+    private static String errorCodeFor(int status) {
         switch (status) {
             case 401:
-                return ComplaintErrorCode.UNAUTHENTICATED;
+                return ComplaintErrorCode.UNAUTHENTICATED.getCode();
             case 403:
-                return ComplaintErrorCode.FORBIDDEN;
+                return ComplaintErrorCode.FORBIDDEN.getCode();
             case 404:
-                return ComplaintErrorCode.COMPLAINT_NOT_FOUND;
+                return ComplaintErrorCode.COMPLAINT_NOT_FOUND.getCode();
             default:
-                // Documented contract: CO-4001 doubles as the generic code for client errors
-                // with no code of their own (405, 406, 415, ...); the status itself is kept.
-                return ComplaintErrorCode.INVALID_REQUEST_BODY;
+                return ComplaintEndpointErrorCodes.CLIENT_ERROR;
         }
     }
 
