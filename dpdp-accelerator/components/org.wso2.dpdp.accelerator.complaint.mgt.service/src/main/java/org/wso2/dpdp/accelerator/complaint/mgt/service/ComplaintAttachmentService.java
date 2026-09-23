@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public interface ComplaintAttachmentService {
      * @param actorUserName display name of actorUserId
      * @param actorRole     resolved, authenticated caller's role
      * @return the newly created attachments
-     * @throws ComplaintException thrown if the request fails validation against the attachment
+     * @throws ComplaintServiceException thrown if the request fails validation against the attachment
      *                            policy
      */
     List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
@@ -66,7 +66,7 @@ public interface ComplaintAttachmentService {
      * @param ownerUserName display name of ownerUserId
      * @param files         files to upload
      * @return the newly created attachments
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId, or if the request fails
      *                            validation against the attachment policy
      */
@@ -93,7 +93,7 @@ public interface ComplaintAttachmentService {
      * @param attachmentId        attachment to download
      * @param restrictToPublicOnly whether to enforce the isPublic visibility check
      * @return the attachment including its file content
-     * @throws ComplaintException thrown with a 404 status if the attachment doesn't exist, or a
+     * @throws ComplaintServiceException thrown with a 404 status if the attachment doesn't exist, or a
      *                            403 if restrictToPublicOnly is true and the attachment isn't
      *                            public
      */
@@ -110,7 +110,7 @@ public interface ComplaintAttachmentService {
      * @param ownerUserId Data Principal expected to own the complaint
      * @param attachmentId attachment to download
      * @return the attachment including its file content
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId, or if the attachment
      *                            doesn't exist, or a 403 if the attachment isn't public
      */

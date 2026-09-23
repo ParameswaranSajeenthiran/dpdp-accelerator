@@ -20,7 +20,7 @@ package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintException;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public interface ComplaintService {
      * @param subjectCategory category of the complaint subject
      * @param description     free-text description of the complaint
      * @return the newly created complaint
-     * @throws ComplaintException thrown if the request fails validation
+     * @throws ComplaintServiceException thrown if the request fails validation
      */
     Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description);
@@ -66,7 +66,7 @@ public interface ComplaintService {
      *                        this codebase follows
      * @param actorRole       resolved, authenticated caller's role
      * @return the newly created complaint
-     * @throws ComplaintException thrown if the request fails validation
+     * @throws ComplaintServiceException thrown if the request fails validation
      */
     Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description, String actorUserId, String actorRole);
@@ -80,14 +80,14 @@ public interface ComplaintService {
      * @param orgId       tenant/organization the complaint belongs to
      * @param complaintId complaint to fetch
      * @return the complaint
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org
      */
     Complaint getComplaint(String orgId, String complaintId);
 
     /**
      * Same as {@link #getComplaint(String, String)}, but additionally raises a 404
-     * ComplaintException (not a 403 - see complaint-server-API.yaml, which is explicit that
+     * ComplaintServiceException (not a 403 - see complaint-server-API.yaml, which is explicit that
      * /me/* must not confirm a complaint's existence to a caller who doesn't own it) if the
      * complaint's userId does not match ownerUserId. Used by every /me/* handler method that acts
      * on a single complaintId.
@@ -96,7 +96,7 @@ public interface ComplaintService {
      * @param complaintId complaint to fetch
      * @param ownerUserId Data Principal expected to own the complaint
      * @return the complaint
-     * @throws ComplaintException thrown with a 404 status if the complaint doesn't exist for this
+     * @throws ComplaintServiceException thrown with a 404 status if the complaint doesn't exist for this
      *                            org or does not belong to ownerUserId
      */
     Complaint getOwnedComplaint(String orgId, String complaintId, String ownerUserId);
