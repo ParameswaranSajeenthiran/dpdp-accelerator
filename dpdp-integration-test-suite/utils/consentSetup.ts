@@ -88,10 +88,10 @@ export async function seedConsentViaApi(
     subjectId,
     serviceId,
     // `language` is optional per consent-management-v2.yaml, but omitting it 500s: the
-    // underlying CM_RECEIPT.LANGUAGE DB column is NOT NULL with no server-side default (as seen
-    // live - IS returns a generic CM_00084 "Internal server error" wrapping an
-    // H2 NULL-not-allowed constraint violation on that column). Tracked as a real product bug,
-    // not a test bug - recorded in TEST-SCENARIOS.md.
+    // underlying CM_RECEIPT.LANGUAGE DB column is NOT NULL with no server-side default (IS
+    // returns a generic CM_00084 "Internal server error" wrapping an H2 NULL-not-allowed
+    // constraint violation on that column). Tracked as a real product bug, not a test bug -
+    // recorded in TEST-SCENARIOS.md.
     language: 'en',
     purposes: [{ id: purposeId, elements: [{ id: elementId }] }],
     ...(state === 'PENDING' ? { authorizations } : { state }),
