@@ -161,7 +161,8 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
     private static void copyHeaders(Response original, Response.ResponseBuilder target) {
         for (Map.Entry<String, List<Object>> header : original.getHeaders().entrySet()) {
             if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(header.getKey())
-                    || HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(header.getKey())) {
+                    || HttpHeaders.CONTENT_LENGTH.equalsIgnoreCase(header.getKey())
+                    || HttpHeaders.CONTENT_ENCODING.equalsIgnoreCase(header.getKey())) {
                 continue;
             }
             for (Object value : header.getValue()) {

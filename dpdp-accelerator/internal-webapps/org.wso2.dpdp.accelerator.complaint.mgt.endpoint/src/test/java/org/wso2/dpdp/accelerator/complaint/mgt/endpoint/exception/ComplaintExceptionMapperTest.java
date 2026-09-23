@@ -146,12 +146,15 @@ class ComplaintExceptionMapperTest {
     @Test
     void keepsTheAllowHeaderOfA405ButReplacesItsBody() {
         Response original = Response.status(405).header("Allow", "GET").header("Allow", "POST")
+                .header("Content-Encoding", "gzip").header("Content-Length", "42")
                 .type(MediaType.TEXT_PLAIN).entity("not allowed").build();
 
         Response response = mapper.toResponse(new NotAllowedException(original));
 
         assertEquals(405, response.getStatus());
         assertEquals(java.util.Arrays.asList("GET", "POST"), response.getHeaders().get("Allow"));
+        assertEquals(null, response.getHeaders().get("Content-Encoding"));
+        assertEquals(null, response.getHeaders().get("Content-Length"));
         assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
         assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
     }
