@@ -30,8 +30,10 @@ info:
 
     Every error response carries an ErrorEnvelope. A client error with no
     code of its own, such as 405 Method Not Allowed or 415 Unsupported Media
-    Type, keeps its HTTP status and headers (for example `Allow`) and carries
-    the generic code CO-4000.
+    Type, keeps its HTTP status and carries the generic code CO-4000. Its
+    headers (for example `Allow`) are kept too, except the ones describing
+    the original body, which is replaced: Content-Length and
+    Content-Encoding are dropped, and Content-Type becomes application/json.
   version: "2.10.0"
   license:
     name: Apache-2.0
