@@ -43,17 +43,22 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintService
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -310,6 +315,37 @@ class ComplaintAttachmentServiceImplTest {
         List<ComplaintAttachment> result = attachmentService.listAttachmentsForComplaint("org1", "c1");
 
         assertTrue(result.isEmpty());
+    }
+
+    // ---- listAttachmentsForComplaints ----
+
+    @Test
+    void listAttachmentsForComplaintsGroupsDaoResultsByComplaintInOneLookup() {
+        ComplaintAttachment first = new ComplaintAttachment();
+        first.setAttachmentId("a1");
+        first.setComplaintId("c1");
+        ComplaintAttachment second = new ComplaintAttachment();
+        second.setAttachmentId("a2");
+        second.setComplaintId("c1");
+        ComplaintAttachment third = new ComplaintAttachment();
+        third.setAttachmentId("a3");
+        third.setComplaintId("c2");
+        when(attachmentDAO.listAttachmentsForComplaints(any(Connection.class), eq("org1"),
+                eq(List.of("c1", "c2", "c3")))).thenReturn(List.of(first, second, third));
+
+        Map<String, List<ComplaintAttachment>> result =
+                attachmentService.listAttachmentsForComplaints("org1", List.of("c1", "c2", "c3"));
+
+        assertEquals(List.of(first, second), result.get("c1"));
+        assertEquals(List.of(third), result.get("c2"));
+        assertFalse(result.containsKey("c3"));
+        verify(attachmentDAO, times(1)).listAttachmentsForComplaints(any(Connection.class), anyString(), anyList());
+    }
+
+    @Test
+    void listAttachmentsForComplaintsSkipsTheDatabaseForAnEmptyIdList() {
+        assertTrue(attachmentService.listAttachmentsForComplaints("org1", List.of()).isEmpty());
+        verify(attachmentDAO, never()).listAttachmentsForComplaints(any(Connection.class), anyString(), anyList());
     }
 
     // ---- downloadAttachment ----

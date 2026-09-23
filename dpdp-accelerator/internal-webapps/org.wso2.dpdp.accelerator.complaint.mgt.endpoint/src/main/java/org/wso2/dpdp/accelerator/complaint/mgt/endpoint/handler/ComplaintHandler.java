@@ -38,7 +38,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -162,10 +164,13 @@ public class ComplaintHandler {
         List<Complaint> list = complaintService.listComplaints(orgId, status, priority, userId, search, lim, off,
                 sort, totalOut);
 
+        Map<String, List<ComplaintAttachment>> attachmentsByComplaint = complaintAttachmentService
+                .listAttachmentsForComplaints(orgId,
+                        list.stream().map(Complaint::getComplaintId).collect(Collectors.toList()));
         List<ComplaintRecord> records = new ArrayList<>();
         for (Complaint complaint : list) {
-            List<ComplaintAttachment> attachments = complaintAttachmentService
-                    .listAttachmentsForComplaint(orgId, complaint.getComplaintId());
+            List<ComplaintAttachment> attachments = attachmentsByComplaint
+                    .getOrDefault(complaint.getComplaintId(), Collections.emptyList());
             records.add(ComplaintDtoMapper.toRecord(complaint,
                     restrictToPublicAttachments ? publicOnly(attachments) : attachments));
         }

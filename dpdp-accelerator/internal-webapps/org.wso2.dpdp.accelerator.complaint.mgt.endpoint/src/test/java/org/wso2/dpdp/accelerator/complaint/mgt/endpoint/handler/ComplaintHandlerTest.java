@@ -44,6 +44,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateReq
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintStatusUpdateRequest;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -51,6 +52,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -165,13 +167,17 @@ class ComplaintHandlerTest {
                     return List.of(sampleComplaint("c1", "user1", "OPEN"), sampleComplaint("c2", "user1",
                             "IN_PROGRESS"));
                 });
-        when(complaintAttachmentService.listAttachmentsForComplaint(eq(ORG_ID), anyString())).thenReturn(List.of());
+        when(complaintAttachmentService.listAttachmentsForComplaints(ORG_ID, List.of("c1", "c2")))
+                .thenReturn(Map.of("c1", List.of(attachment("a1", false))));
 
         ComplaintListResponse response = handler.listComplaints(ORG_ID, null, null, null, null, null, null, null);
 
         assertEquals(2, response.getData().size());
+        assertEquals(1, response.getData().get(0).getAttachments().size());
+        assertEquals(0, response.getData().get(1).getAttachments().size());
         assertEquals(42, response.getMetadata().getTotal());
         assertEquals(2, response.getMetadata().getCount());
+        verify(complaintAttachmentService, never()).listAttachmentsForComplaint(anyString(), anyString());
     }
 
     @Test
@@ -251,8 +257,8 @@ class ComplaintHandlerTest {
         // userId, so search never applies (see ComplaintHandler#listOwnComplaints).
         when(complaintService.listComplaints(eq(ORG_ID), any(), any(), eq("user1"), isNull(), eq(10), eq(0), any(),
                 any())).thenReturn(List.of(sampleComplaint("c1", "user1", "OPEN")));
-        when(complaintAttachmentService.listAttachmentsForComplaint(ORG_ID, "c1"))
-                .thenReturn(List.of(attachment("a1", false)));
+        when(complaintAttachmentService.listAttachmentsForComplaints(ORG_ID, List.of("c1")))
+                .thenReturn(Map.of("c1", List.of(attachment("a1", false))));
 
         ComplaintListResponse response = handler.listOwnComplaints(ORG_ID, "user1", null, null, null, null);
 

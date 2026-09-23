@@ -22,6 +22,7 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Complaint attachment core service interface.
@@ -81,6 +82,16 @@ public interface ComplaintAttachmentService {
      * @return every attachment bound to the complaint, without file content
      */
     List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId);
+
+    /**
+     * Fetches metadata (no file content) for the attachments of several complaints in one lookup.
+     *
+     * @param orgId        tenant/organization the complaints belong to
+     * @param complaintIds complaints to list attachments for
+     * @return attachments grouped by complaint ID, each group oldest first; complaints with no
+     *         attachments have no entry
+     */
+    Map<String, List<ComplaintAttachment>> listAttachmentsForComplaints(String orgId, List<String> complaintIds);
 
     /**
      * Downloads an attachment including its file content. When restrictToPublicOnly is true (the

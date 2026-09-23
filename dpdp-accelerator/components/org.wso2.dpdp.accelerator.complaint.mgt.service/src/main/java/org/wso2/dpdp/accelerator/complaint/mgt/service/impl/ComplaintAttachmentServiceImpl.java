@@ -33,9 +33,13 @@ import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentService {
 
@@ -148,6 +152,18 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     public List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
         return DatabaseUtils.executeInTransaction(
                 conn -> attachmentDAO.listAttachmentsForComplaint(conn, orgId, complaintId));
+    }
+
+    @Override
+    public Map<String, List<ComplaintAttachment>> listAttachmentsForComplaints(String orgId,
+            List<String> complaintIds) {
+        if (complaintIds == null || complaintIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<ComplaintAttachment> attachments = DatabaseUtils.executeInTransaction(
+                conn -> attachmentDAO.listAttachmentsForComplaints(conn, orgId, complaintIds));
+        return attachments.stream().collect(Collectors.groupingBy(ComplaintAttachment::getComplaintId,
+                LinkedHashMap::new, Collectors.toList()));
     }
 
     @Override
