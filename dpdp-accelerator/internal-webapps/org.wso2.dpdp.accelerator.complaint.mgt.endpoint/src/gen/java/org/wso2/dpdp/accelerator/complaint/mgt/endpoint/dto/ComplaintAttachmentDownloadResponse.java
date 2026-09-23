@@ -23,7 +23,7 @@ public class ComplaintAttachmentDownloadResponse  {
  /**
   * Unix timestamp, milliseconds.
   */
-  @ApiModelProperty(value = "Unix timestamp, milliseconds.")
+  @ApiModelProperty(required = true, value = "Unix timestamp, milliseconds.")
 
   private Long uploadedTime;
 
