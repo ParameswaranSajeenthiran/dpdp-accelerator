@@ -2,14 +2,22 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.DeliveryConfigRequest;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Filter;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionStatus;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Supply exactly one of topics or the deprecated singleton topic.
+ */
+@ApiModel(description="Supply exactly one of topics or the deprecated singleton topic.")
 
 public class SubscriptionCreateRequest  {
   
@@ -66,9 +74,19 @@ public class SubscriptionCreateRequest  {
 
   private String message;
 
-  @ApiModelProperty(required = true, value = "")
+ /**
+  * Singleton compatibility field; absent for multi-topic subscriptions.
+  */
+  @ApiModelProperty(value = "Singleton compatibility field; absent for multi-topic subscriptions.")
 
   private String topic;
+
+ /**
+  * Unique topic names; duplicates are rejected after normalization.
+  */
+  @ApiModelProperty(value = "Unique topic names; duplicates are rejected after normalization.")
+
+  private List<String> topics;
 
   @ApiModelProperty(value = "")
 
@@ -222,7 +240,7 @@ public class SubscriptionCreateRequest  {
   }
 
  /**
-   * Get topic
+   * Singleton compatibility field; absent for multi-topic subscriptions.
    * @return topic
   **/
   @JsonProperty("topic")
@@ -236,6 +254,29 @@ public class SubscriptionCreateRequest  {
 
   public SubscriptionCreateRequest topic(String topic) {
     this.topic = topic;
+    return this;
+  }
+
+ /**
+   * Unique topic names; duplicates are rejected after normalization.
+   * @return topics
+  **/
+  @JsonProperty("topics")
+  public List<String> getTopics() {
+    return topics;
+  }
+
+  public void setTopics(List<String> topics) {
+    this.topics = topics;
+  }
+
+  public SubscriptionCreateRequest topics(List<String> topics) {
+    this.topics = topics;
+    return this;
+  }
+
+  public SubscriptionCreateRequest addTopicsItem(String topicsItem) {
+    this.topics.add(topicsItem);
     return this;
   }
 
@@ -293,13 +334,14 @@ public class SubscriptionCreateRequest  {
         Objects.equals(this.alreadyExists, subscriptionCreateRequest.alreadyExists) &&
         Objects.equals(this.message, subscriptionCreateRequest.message) &&
         Objects.equals(this.topic, subscriptionCreateRequest.topic) &&
+        Objects.equals(this.topics, subscriptionCreateRequest.topics) &&
         Objects.equals(this.filter, subscriptionCreateRequest.filter) &&
         Objects.equals(this.delivery, subscriptionCreateRequest.delivery);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(subscriptionId, orgId, groupId, status, createdAt, updatedAt, alreadyExists, message, topic, filter, delivery);
+    return Objects.hash(subscriptionId, orgId, groupId, status, createdAt, updatedAt, alreadyExists, message, topic, topics, filter, delivery);
   }
 
   @Override
@@ -316,6 +358,7 @@ public class SubscriptionCreateRequest  {
     sb.append("    alreadyExists: ").append(toIndentedString(alreadyExists)).append("\n");
     sb.append("    message: ").append(toIndentedString(message)).append("\n");
     sb.append("    topic: ").append(toIndentedString(topic)).append("\n");
+    sb.append("    topics: ").append(toIndentedString(topics)).append("\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
     sb.append("    delivery: ").append(toIndentedString(delivery)).append("\n");
     sb.append("}");

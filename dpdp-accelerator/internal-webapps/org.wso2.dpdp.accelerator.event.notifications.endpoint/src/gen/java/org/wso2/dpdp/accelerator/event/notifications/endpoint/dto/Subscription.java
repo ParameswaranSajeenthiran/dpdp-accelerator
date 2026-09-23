@@ -2,6 +2,9 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.DeliveryConfig;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Filter;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionStatus;
@@ -25,9 +28,20 @@ public class Subscription  {
 
   private String groupId;
 
-  @ApiModelProperty(required = true, value = "")
+ /**
+  * Singleton compatibility field; absent for multi-topic subscriptions.
+  */
+  @ApiModelProperty(value = "Singleton compatibility field; absent for multi-topic subscriptions.")
 
+@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
   private String topic;
+
+ /**
+  * Unique topic names in canonical stored form.
+  */
+  @ApiModelProperty(required = true, value = "Unique topic names in canonical stored form.")
+
+  private List<String> topics;
 
   @ApiModelProperty(required = true, value = "")
 
@@ -111,7 +125,7 @@ public class Subscription  {
   }
 
  /**
-   * Get topic
+   * Singleton compatibility field; absent for multi-topic subscriptions.
    * @return topic
   **/
   @JsonProperty("topic")
@@ -125,6 +139,29 @@ public class Subscription  {
 
   public Subscription topic(String topic) {
     this.topic = topic;
+    return this;
+  }
+
+ /**
+   * Unique topic names in canonical stored form.
+   * @return topics
+  **/
+  @JsonProperty("topics")
+  public List<String> getTopics() {
+    return topics;
+  }
+
+  public void setTopics(List<String> topics) {
+    this.topics = topics;
+  }
+
+  public Subscription topics(List<String> topics) {
+    this.topics = topics;
+    return this;
+  }
+
+  public Subscription addTopicsItem(String topicsItem) {
+    this.topics.add(topicsItem);
     return this;
   }
 
@@ -267,6 +304,7 @@ public class Subscription  {
         Objects.equals(this.orgId, subscription.orgId) &&
         Objects.equals(this.groupId, subscription.groupId) &&
         Objects.equals(this.topic, subscription.topic) &&
+        Objects.equals(this.topics, subscription.topics) &&
         Objects.equals(this.filter, subscription.filter) &&
         Objects.equals(this.delivery, subscription.delivery) &&
         Objects.equals(this.status, subscription.status) &&
@@ -278,7 +316,7 @@ public class Subscription  {
 
   @Override
   public int hashCode() {
-    return Objects.hash(subscriptionId, orgId, groupId, topic, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
+    return Objects.hash(subscriptionId, orgId, groupId, topic, topics, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
   }
 
   @Override
@@ -290,6 +328,7 @@ public class Subscription  {
     sb.append("    orgId: ").append(toIndentedString(orgId)).append("\n");
     sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");
     sb.append("    topic: ").append(toIndentedString(topic)).append("\n");
+    sb.append("    topics: ").append(toIndentedString(topics)).append("\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
     sb.append("    delivery: ").append(toIndentedString(delivery)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");

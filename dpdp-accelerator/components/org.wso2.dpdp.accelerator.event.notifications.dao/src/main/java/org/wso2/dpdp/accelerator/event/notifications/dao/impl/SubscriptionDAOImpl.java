@@ -81,10 +81,16 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         subscription.setPurposeSetHash(purposeSetHash);
 
         try {
-                EventNotificationCommonDBQueries queries = getQueries(conn);
+            EventNotificationCommonDBQueries queries = getQueries(conn);
+            List<String> topicIds = new ArrayList<>(subscription.getTopicIds());
+            Collections.sort(topicIds);
+            if (topicIds.isEmpty()) {
+                throw new IllegalArgumentException("Subscription requires at least one topic.");
+            }
+            for (String topicId : topicIds) {
                 try (PreparedStatement topicLockPs = conn
                         .prepareStatement(queries.getLockTopicForSubscriptionQuery())) {
-                    topicLockPs.setString(1, subscription.getTopicId());
+                    topicLockPs.setString(1, topicId);
                     topicLockPs.setString(2, subscription.getOrgId());
                     if (topicLockPs.executeUpdate() == 0) {
                         throw new EventNotificationInvalidStateException(
@@ -92,13 +98,16 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     }
                 }
 
-                // Re-check topic status under the same lock. The service-layer pre-check ran before
-                // we acquired the row lock, so a concurrent deregisterTopic on the same topic could
-                // have committed between then and now. Without this re-check we would happily INSERT
+                // Re-check topic status under the same lock. The service-layer pre-check ran
+                // before
+                // we acquired the row lock, so a concurrent deregisterTopic on the same topic
+                // could
+                // have committed between then and now. Without this re-check we would happily
+                // INSERT
                 // a subscription under a deregistered topic.
                 try (PreparedStatement statusPs = conn
                         .prepareStatement(queries.getGetTopicStatusForSubscriptionQuery())) {
-                    statusPs.setString(1, subscription.getTopicId());
+                    statusPs.setString(1, topicId);
                     statusPs.setString(2, subscription.getOrgId());
                     try (ResultSet rs = statusPs.executeQuery()) {
                         String currentStatus = rs.next() ? rs.getString(1) : null;
@@ -110,80 +119,93 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     }
                 }
 
-                try (PreparedStatement lockPs = conn.prepareStatement(queries.getLockActiveSubscriptionsQuery())) {
-                    lockPs.setString(1, subscription.getOrgId());
-                    lockPs.setString(2, subscription.getGroupId());
-                    lockPs.setString(3, subscription.getTopicId());
-                    try (ResultSet rs = lockPs.executeQuery()) {
-                        while (rs.next()) {
-                            String existingId = rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID);
-                            String existingModeStr = rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE);
-                            String existingDeliveryModeStr = rs.getString(EventNotificationDBColumns.DELIVERY_MODE);
-                            String existingCallbackUrl = rs.getString(EventNotificationDBColumns.CALLBACK_URL);
-
-                            DeliveryMode existingDelMode = DeliveryMode.fromValueOrDefault(existingDeliveryModeStr,
-                                    DeliveryMode.WEBHOOK);
-
-                            if (newDelMode != existingDelMode) {
-                                throw new EventNotificationDuplicateResourceException(
-                                        EventNotificationCommonConstants.ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE);
-                            }
-
-                            if (newDelMode == DeliveryMode.WEBHOOK) {
-                                String newCb = CallbackUrlCanonicalizer.canonicalize(subscription.getCallbackUrl());
-                                String existCb = CallbackUrlCanonicalizer.canonicalize(existingCallbackUrl);
-                                if (!newCb.equals(existCb)) {
-                                    continue;
-                                }
-                            }
-
-                            PurposeFilterMode existingMode = PurposeFilterMode.fromValueOrDefault(existingModeStr,
-                                    PurposeFilterMode.ALL);
-                            List<String> existingPurposes = getPurposesBySubscriptionId(existingId, conn);
-                            Set<String> existingSet = PurposeOverlapUtils.canonicalize(existingPurposes);
-                            if (PurposeOverlapUtils.overlaps(newMode, newSet, existingMode, existingSet)) {
-                                throw new EventNotificationDuplicateResourceException(
-                                        EventNotificationCommonConstants.ERROR_SUBSCRIPTION_OVERLAPPING_PURPOSES);
-                            }
-                        }
-                    }
-                }
-
-                try (PreparedStatement ps = conn.prepareStatement(queries.getAddSubscriptionQuery())) {
-                    ps.setString(1, subscription.getSubscriptionId());
-                    ps.setString(2, subscription.getOrgId());
-                    ps.setString(3, subscription.getGroupId());
-                    ps.setString(4, subscription.getTopicId());
-                    ps.setString(5, subscription.getPurposeFilterMode());
-                    ps.setString(6, subscription.getPurposeSetHash());
-                    ps.setString(7, subscription.getDeliveryMode());
-                    ps.setString(8, subscription.getCallbackUrl());
-                    ps.setString(9, subscription.getSharedSecret());
-                    ps.setString(10, subscription.getStatus());
-                    ps.executeUpdate();
-
-                    if (subscription.getPurposes() != null && !subscription.getPurposes().isEmpty()) {
-                        try (PreparedStatement purposePs = conn
-                                .prepareStatement(queries.getAddSubscriptionPurposesQuery())) {
-                            for (String purpose : subscription.getPurposes()) {
-                                purposePs.setString(1, subscription.getSubscriptionId());
-                                purposePs.setString(2, purpose.trim());
-                                purposePs.addBatch();
-                            }
-                            purposePs.executeBatch();
-                        }
-                    }
-
-                }
-            } catch (SQLException e) {
-                if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
-                    throw new EventNotificationDuplicateResourceException(
-                            EventNotificationCommonConstants.ERROR_DUPLICATE_SUBSCRIPTION, e);
-                }
-                throw new EventNotificationDaoException(
-                        String.format(EventNotificationCommonConstants.ERROR_ADDING_SUBSCRIPTION,
-                                subscription.getSubscriptionId()), e);
             }
+            try (PreparedStatement lockPs = conn.prepareStatement(
+                    queries.getLockSubscriptionsForTopicsQuery(topicIds.size()))) {
+                lockPs.setString(1, subscription.getOrgId());
+                lockPs.setString(2, subscription.getGroupId());
+                for (int i = 0; i < topicIds.size(); i++) {
+                    lockPs.setString(i + 3, topicIds.get(i));
+                }
+                try (ResultSet rs = lockPs.executeQuery()) {
+                    while (rs.next()) {
+                        String existingId = rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID);
+                        String existingModeStr = rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE);
+                        String existingDeliveryModeStr = rs.getString(EventNotificationDBColumns.DELIVERY_MODE);
+                        String existingCallbackUrl = rs.getString(EventNotificationDBColumns.CALLBACK_URL);
+
+                        DeliveryMode existingDelMode = DeliveryMode.fromValueOrDefault(existingDeliveryModeStr,
+                                DeliveryMode.WEBHOOK);
+
+                        if (newDelMode != existingDelMode) {
+                            throw new EventNotificationDuplicateResourceException(
+                                    EventNotificationCommonConstants.ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE);
+                        }
+
+                        if (newDelMode == DeliveryMode.WEBHOOK) {
+                            String newCb = CallbackUrlCanonicalizer.canonicalize(subscription.getCallbackUrl());
+                            String existCb = CallbackUrlCanonicalizer.canonicalize(existingCallbackUrl);
+                            if (!newCb.equals(existCb)) {
+                                continue;
+                            }
+                        }
+
+                        PurposeFilterMode existingMode = PurposeFilterMode.fromValueOrDefault(existingModeStr,
+                                PurposeFilterMode.ALL);
+                        List<String> existingPurposes = getPurposesBySubscriptionId(existingId, conn);
+                        Set<String> existingSet = PurposeOverlapUtils.canonicalize(existingPurposes);
+                        if (PurposeOverlapUtils.overlaps(newMode, newSet, existingMode, existingSet)) {
+                            throw new EventNotificationDuplicateResourceException(
+                                    EventNotificationCommonConstants.ERROR_SUBSCRIPTION_OVERLAPPING_PURPOSES);
+                        }
+                    }
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(queries.getAddSubscriptionQuery())) {
+                ps.setString(1, subscription.getSubscriptionId());
+                ps.setString(2, subscription.getOrgId());
+                ps.setString(3, subscription.getGroupId());
+                ps.setString(4, subscription.getPurposeFilterMode());
+                ps.setString(5, subscription.getPurposeSetHash());
+                ps.setString(6, subscription.getDeliveryMode());
+                ps.setString(7, subscription.getCallbackUrl());
+                ps.setString(8, subscription.getSharedSecret());
+                ps.setString(9, subscription.getStatus());
+                ps.executeUpdate();
+                try (PreparedStatement topicPs = conn.prepareStatement(queries.getAddSubscriptionTopicQuery())) {
+                    for (String topicId : topicIds) {
+                        topicPs.setString(1, subscription.getOrgId());
+                        topicPs.setString(2, subscription.getSubscriptionId());
+                        topicPs.setString(3, topicId);
+                        topicPs.addBatch();
+                    }
+                    topicPs.executeBatch();
+                }
+
+                if (subscription.getPurposes() != null && !subscription.getPurposes().isEmpty()) {
+                    try (PreparedStatement purposePs = conn
+                            .prepareStatement(queries.getAddSubscriptionPurposesQuery())) {
+                        for (String purpose : subscription.getPurposes()) {
+                            purposePs.setString(1, subscription.getSubscriptionId());
+                            purposePs.setString(2, purpose.trim());
+                            purposePs.addBatch();
+                        }
+                        purposePs.executeBatch();
+                    }
+                }
+
+            }
+        } catch (SQLException e) {
+            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                throw new EventNotificationDuplicateResourceException(
+                        EventNotificationCommonConstants.ERROR_DUPLICATE_SUBSCRIPTION, e);
+            }
+            throw new EventNotificationDaoException(
+                    String.format(EventNotificationCommonConstants.ERROR_ADDING_SUBSCRIPTION,
+                            subscription.getSubscriptionId()),
+                    e);
+        }
     }
 
     @Override
@@ -195,6 +217,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 if (rs.next()) {
                     Subscription sub = mapSubscription(rs);
                     sub.setPurposes(getPurposesBySubscriptionId(subscriptionId, conn));
+                    hydrateTopics(conn, Collections.singletonList(sub));
                     return Optional.of(sub);
                 }
             }
@@ -222,7 +245,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_UPDATING_SUBSCRIPTION_STATUS,
-                            subscriptionId), e);
+                            subscriptionId),
+                    e);
         }
     }
 
@@ -295,7 +319,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     }
 
     @Override
-    public PaginatedDAOResult<Subscription> listSubscriptions(Connection conn, String orgId, String status, String purposes,
+    public PaginatedDAOResult<Subscription> listSubscriptions(Connection conn, String orgId, String status,
+            String purposes,
             String search, int limit, int offset, String sort) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
@@ -310,7 +335,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         int total = 0;
         try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
-            String sortColumn = builder.resolveSortColumn();
+            String sortColumn = builder.resolveSortColumn() + ", s.SUBSCRIPTION_ID ASC";
             QueryResult countResult = builder.buildCountQuery();
             QueryResult selectResult = builder
                     .buildSelectQuery(queries.getPaginationClause(sortColumn));
@@ -353,6 +378,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 }
             }
 
+            hydrateTopics(conn, subscriptions);
             return new PaginatedDAOResult<>(subscriptions, total);
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -364,6 +390,46 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     public List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId) {
         return getSubscriptionsByOrgAndTopic(conn, orgId, topicId,
                 getQueries(conn).getGetLiveSubscriptionsByOrgAndTopicQuery());
+    }
+
+    @Override
+    public List<Subscription> getLiveSubscriptionsByOrgAndTopics(Connection conn, String orgId, List<String> topicIds) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        if (topicIds == null || topicIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Subscription> list = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                getQueries(conn).getGetLiveSubscriptionsByOrgAndTopicsQuery(topicIds.size()))) {
+            ps.setString(1, orgId);
+            for (int i = 0; i < topicIds.size(); i++) {
+                ps.setString(i + 2, topicIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapSubscription(rs));
+                }
+            }
+            if (!list.isEmpty()) {
+                List<String> subIds = new ArrayList<>();
+                for (Subscription s : list) {
+                    subIds.add(s.getSubscriptionId());
+                }
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
+                for (Subscription s : list) {
+                    s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
+                }
+            }
+            hydrateTopics(conn, list);
+            return list;
+        } catch (SQLException e) {
+            throw new EventNotificationDataAccessException(
+                    String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC,
+                            orgId, String.join(",", topicIds)),
+                    e);
+        }
     }
 
     @Override
@@ -396,6 +462,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
             }
+            hydrateTopics(conn, list);
             return list;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -405,15 +472,13 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         }
     }
 
-    @Override
-    public List<String> getPurposesBySubscriptionId(Connection conn, String subscriptionId, String orgId) {
+    private List<String> getPurposesBySubscriptionIdAndOrg(Connection conn, String subscriptionId) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
         List<String> purposes = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetSubscriptionPurposesQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getPurposesBySubscriptionIdQuery())) {
             ps.setString(1, subscriptionId);
-            ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
@@ -526,6 +591,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                     list.add(sub);
                 }
             }
+            hydrateTopics(conn, list);
             return list;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -536,7 +602,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     private List<String> getPurposesBySubscriptionId(String subscriptionId, Connection conn) throws SQLException {
         List<String> purposes = new ArrayList<>();
         try (PreparedStatement ps = conn
-                .prepareStatement(getQueries(conn).getGetPurposesBySubscriptionIdWithoutOrgIdQuery())) {
+                .prepareStatement(getQueries(conn).getPurposesBySubscriptionIdQuery())) {
             ps.setString(1, subscriptionId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -547,20 +613,53 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         return purposes;
     }
 
+    private void hydrateTopics(Connection conn, List<Subscription> subscriptions) throws SQLException {
+        if (subscriptions.isEmpty()) {
+            return;
+        }
+        Map<String, Subscription> byId = new HashMap<>();
+        Map<String, List<String>> ids = new HashMap<>();
+        Map<String, List<String>> names = new HashMap<>();
+        for (Subscription subscription : subscriptions) {
+            byId.put(subscription.getSubscriptionId(), subscription);
+            ids.put(subscription.getSubscriptionId(), new ArrayList<>());
+            names.put(subscription.getSubscriptionId(), new ArrayList<>());
+        }
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn)
+                .getSubscriptionTopicsByIdsQuery(subscriptions.size()))) {
+            for (int i = 0; i < subscriptions.size(); i++) {
+                ps.setString(i + 1, subscriptions.get(i).getSubscriptionId());
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String id = rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID);
+                    if (!byId.get(id).getOrgId().equals(rs.getString(EventNotificationDBColumns.ORG_ID))) {
+                        throw new SQLException("Subscription topic tenant mismatch.");
+                    }
+                    ids.get(id).add(rs.getString(EventNotificationDBColumns.TOPIC_ID));
+                    names.get(id).add(rs.getString(EventNotificationDBColumns.NAME));
+                }
+            }
+        }
+        for (Subscription subscription : subscriptions) {
+            subscription.setTopicIds(ids.get(subscription.getSubscriptionId()));
+            subscription.setTopicNames(names.get(subscription.getSubscriptionId()));
+        }
+    }
+
     private Subscription mapSubscription(ResultSet rs) throws SQLException {
-        return new Subscription(
-                rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
-                rs.getString(EventNotificationDBColumns.ORG_ID),
-                rs.getString(EventNotificationDBColumns.GROUP_ID),
-                rs.getString(EventNotificationDBColumns.TOPIC_ID),
-                rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE),
-                null,
-                rs.getString(EventNotificationDBColumns.PURPOSE_SET_HASH),
-                rs.getString(EventNotificationDBColumns.DELIVERY_MODE),
-                rs.getString(EventNotificationDBColumns.CALLBACK_URL),
-                rs.getString(EventNotificationDBColumns.SHARED_SECRET),
-                rs.getString(EventNotificationDBColumns.STATUS),
-                rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
-                rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT));
+        Subscription subscription = new Subscription();
+        subscription.setSubscriptionId(rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID));
+        subscription.setOrgId(rs.getString(EventNotificationDBColumns.ORG_ID));
+        subscription.setGroupId(rs.getString(EventNotificationDBColumns.GROUP_ID));
+        subscription.setPurposeFilterMode(rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE));
+        subscription.setPurposeSetHash(rs.getString(EventNotificationDBColumns.PURPOSE_SET_HASH));
+        subscription.setDeliveryMode(rs.getString(EventNotificationDBColumns.DELIVERY_MODE));
+        subscription.setCallbackUrl(rs.getString(EventNotificationDBColumns.CALLBACK_URL));
+        subscription.setSharedSecret(rs.getString(EventNotificationDBColumns.SHARED_SECRET));
+        subscription.setStatus(rs.getString(EventNotificationDBColumns.STATUS));
+        subscription.setCreatedAt(rs.getTimestamp(EventNotificationDBColumns.CREATED_AT));
+        subscription.setUpdatedAt(rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT));
+        return subscription;
     }
 }

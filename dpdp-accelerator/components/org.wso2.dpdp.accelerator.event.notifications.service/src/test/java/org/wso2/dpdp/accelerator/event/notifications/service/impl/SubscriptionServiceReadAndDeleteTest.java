@@ -33,13 +33,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -131,10 +134,23 @@ public class SubscriptionServiceReadAndDeleteTest {
                 .thenReturn(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_ALLOWED_CALLBACK_PORTS);
         when(configurationService.isEventNotificationPrivateNetworkCallbackTargetsAllowed()).thenReturn(false);
         when(configurationService.getEventNotificationMaxVerificationResponseBodyBytes()).thenReturn(4096);
+        when(configurationService.getEventNotificationMaxSubscriptionTopics())
+                .thenReturn(DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS);
         DataSource dataSource = org.mockito.Mockito.mock(DataSource.class);
         when(dataSource.getConnection()).thenReturn(connection);
         setStaticInstance(null);
         setStaticDataSource(dataSource);
+        when(topicDAO.getTopicsByIds(any(Connection.class), anyList(), anyString()))
+                .thenAnswer(inv -> {
+                    List<String> ids = inv.getArgument(1);
+                    String orgId = inv.getArgument(2);
+                    List<org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic> topics = new ArrayList<>();
+                    for (String id : ids) {
+                        topics.add(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
+                                id, orgId, "accounts", "", "active"));
+                    }
+                    return topics;
+                });
         when(subscriptionDAO.lockSubscriptionForVerification(eq(connection), anyString(), anyString(), anyString()))
                 .thenAnswer(invocation -> Optional.of(webhookSubscription(invocation.getArgument(1),
                         invocation.getArgument(3))));
@@ -168,7 +184,8 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(subscriptionDAO.listSubscriptions(any(Connection.class), eq("org-1"), eq("active"), eq("p"), eq("search"),
                 anyInt(), eq(0), eq("createdAt")))
                 .thenReturn(new PaginatedDAOResult<>(Collections.singletonList(sub), 3));
-        when(topicDAO.getTopicById(any(Connection.class), eq("topic-1"), eq("org-1"))).thenReturn(Optional.empty());
+        when(topicDAO.getTopicsByIds(any(Connection.class), eq(Collections.singletonList("topic-1")), eq("org-1")))
+                .thenReturn(Collections.emptyList());
 
         PaginatedResult<?> result = service.listSubscriptions(" org-1 ", " ACTIVE ", "p", "search", 0, -1,
                 "createdAt");
@@ -296,9 +313,10 @@ public class SubscriptionServiceReadAndDeleteTest {
         java.lang.Class<?> taskClass = java.util.Arrays.stream(SubscriptionServiceImpl.class.getDeclaredClasses())
                 .filter(type -> type.getSimpleName().equals("WebhookVerificationTask")).findFirst().get();
         java.lang.reflect.Constructor<?> constructor = taskClass.getDeclaredConstructor(SubscriptionServiceImpl.class,
-                String.class, String.class, String.class, String.class, int.class);
+                String.class, String.class, int.class);
         constructor.setAccessible(true);
-        Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", "not-a-url", "topic", 0);
+        installVerificationClient(request -> { throw new IllegalStateException("Receiver unavailable"); });
+        Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", 0);
         task.run();
         verify(configurationService).getEventNotificationMaxRetries();
     }
@@ -308,9 +326,10 @@ public class SubscriptionServiceReadAndDeleteTest {
         java.lang.Class<?> taskClass = java.util.Arrays.stream(SubscriptionServiceImpl.class.getDeclaredClasses())
                 .filter(type -> type.getSimpleName().equals("WebhookVerificationTask")).findFirst().get();
         java.lang.reflect.Constructor<?> constructor = taskClass.getDeclaredConstructor(SubscriptionServiceImpl.class,
-                String.class, String.class, String.class, String.class, int.class);
+                String.class, String.class, int.class);
         constructor.setAccessible(true);
-        Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", "not-a-url", "topic", 1);
+        installVerificationClient(request -> { throw new IllegalStateException("Receiver unavailable"); });
+        Runnable task = (Runnable) constructor.newInstance(service, "sub-1", "org-1", 1);
         task.run();
         verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "stale");
     }
@@ -321,10 +340,9 @@ public class SubscriptionServiceReadAndDeleteTest {
         java.lang.Class<?> taskClass = java.util.Arrays.stream(SubscriptionServiceImpl.class.getDeclaredClasses())
                 .filter(type -> type.getSimpleName().equals("WebhookVerificationTask")).findFirst().get();
         java.lang.reflect.Constructor<?> constructor = taskClass.getDeclaredConstructor(SubscriptionServiceImpl.class,
-                String.class, String.class, String.class, String.class, int.class);
+                String.class, String.class, int.class);
         constructor.setAccessible(true);
-        ((Runnable) constructor.newInstance(service, "sub-1", "org-1", "https://93.184.216.34:443/callback",
-                "topic", 0)).run();
+        ((Runnable) constructor.newInstance(service, "sub-1", "org-1", 0)).run();
         verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
         verify(connection).commit();
         verify(connection).close();
@@ -363,8 +381,8 @@ public class SubscriptionServiceReadAndDeleteTest {
     public void retryVerificationUsesGuardedExpectedStatusTransition() throws Exception {
         Subscription pending = webhookSubscription("sub-1", "pending");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("sub-1"), eq("org-1"))).thenReturn(Optional.of(pending));
-        when(topicDAO.getTopicById(any(Connection.class), eq("topic-1"), eq("org-1")))
-                .thenReturn(Optional.of(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
+        when(topicDAO.getTopicsByIds(any(Connection.class), eq(Collections.singletonList("topic-1")), eq("org-1")))
+                .thenReturn(Collections.singletonList(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
                         "topic-1", "org-1", "accounts", "", "active")));
         when(subscriptionDAO.updateSubscriptionStatus(any(Connection.class), eq("sub-1"), eq("org-1"), eq("pending"), eq("active")))
                 .thenReturn(true);
@@ -386,8 +404,8 @@ public class SubscriptionServiceReadAndDeleteTest {
                 .thenReturn(Optional.of(pending), Optional.of(deleted));
         when(subscriptionDAO.lockSubscriptionForVerification(connection, "sub-1", "org-1", "pending"))
                 .thenReturn(Optional.empty());
-        when(topicDAO.getTopicById(any(Connection.class), eq("topic-1"), eq("org-1")))
-                .thenReturn(Optional.of(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
+        when(topicDAO.getTopicsByIds(any(Connection.class), eq(Collections.singletonList("topic-1")), eq("org-1")))
+                .thenReturn(Collections.singletonList(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
                         "topic-1", "org-1", "accounts", "", "active")));
         installSuccessfulVerificationClient();
 
@@ -419,7 +437,8 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(response.statusCode()).thenReturn(200);
         doAnswer(invocation -> {
             HttpRequest request = invocation.getArgument(0);
-            when(response.body()).thenReturn(bodyProvider.apply(request));
+            InputStream body = bodyProvider.apply(request);
+            when(response.body()).thenReturn(body);
             return response;
         }).when(httpClient).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
         java.lang.reflect.Field field = SubscriptionServiceImpl.class.getDeclaredField("httpClient");
@@ -430,17 +449,81 @@ public class SubscriptionServiceReadAndDeleteTest {
     private void prepareRetryVerification(Subscription subscription) {
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq(subscription.getSubscriptionId()), eq(subscription.getOrgId())))
                 .thenReturn(Optional.of(subscription));
-        when(topicDAO.getTopicById(any(Connection.class), eq(subscription.getTopicId()), eq(subscription.getOrgId())))
-                .thenReturn(Optional.of(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
-                        subscription.getTopicId(), subscription.getOrgId(), "accounts", "", "active")));
+        String topicId = subscription.getTopicIds().isEmpty() ? "topic-1" : subscription.getTopicIds().get(0);
+        when(topicDAO.getTopicsByIds(any(Connection.class), eq(subscription.getTopicIds()), eq(subscription.getOrgId())))
+                .thenReturn(Collections.singletonList(new org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic(
+                        topicId, subscription.getOrgId(), "accounts", "", "active")));
         when(subscriptionDAO.updateSubscriptionStatus(any(Connection.class), eq(subscription.getSubscriptionId()), eq(subscription.getOrgId()),
                 eq("pending"), eq("active"))).thenReturn(true);
     }
 
+    @Test
+    public void verifiesOneHundredTopicsWithOneJsonRequest() throws Exception {
+        Subscription sub = webhookSubscription("sub-1", "pending");
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        java.util.List<String> names = new java.util.ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            ids.add("topic-" + i);
+            names.add("topic.name." + i);
+        }
+        sub.setTopicIds(ids);
+        sub.setTopicNames(names);
+        prepareRetryVerification(sub);
+        when(subscriptionDAO.lockSubscriptionForVerification(eq(connection), eq("sub-1"), eq("org-1"),
+                eq("pending"))).thenReturn(Optional.of(sub));
+        java.util.concurrent.atomic.AtomicInteger requests = new java.util.concurrent.atomic.AtomicInteger();
+        installVerificationClient(request -> {
+            requests.incrementAndGet();
+            assertEquals(request.method(), "POST");
+            assertEquals(request.headers().firstValue("Content-Type").get(), "application/json");
+            java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+            java.util.concurrent.CompletableFuture<byte[]> body = new java.util.concurrent.CompletableFuture<>();
+            request.bodyPublisher().get().subscribe(new java.util.concurrent.Flow.Subscriber<java.nio.ByteBuffer>() {
+                public void onSubscribe(java.util.concurrent.Flow.Subscription subscription) {
+                    subscription.request(Long.MAX_VALUE);
+                }
+                public void onNext(java.nio.ByteBuffer buffer) {
+                    byte[] chunk = new byte[buffer.remaining()];
+                    buffer.get(chunk);
+                    bytes.write(chunk, 0, chunk.length);
+                }
+                public void onError(Throwable error) { body.completeExceptionally(error); }
+                public void onComplete() { body.complete(bytes.toByteArray()); }
+            });
+            try {
+                com.fasterxml.jackson.databind.JsonNode json =
+                        new com.fasterxml.jackson.databind.ObjectMapper().readTree(body.join());
+                assertEquals(json.get("type").asText(), "subscription.verification");
+                assertEquals(json.get("subscriptionId").asText(), "sub-1");
+                assertEquals(json.get("topics").size(), 100);
+                return new ByteArrayInputStream(json.get("challenge").asText().getBytes(StandardCharsets.UTF_8));
+            } catch (java.io.IOException e) {
+                throw new AssertionError(e);
+            }
+        });
+        org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO result =
+                service.retryVerification("org-1", "sub-1");
+        assertEquals(requests.get(), 1);
+        assertEquals(result.getTopics(), names);
+        org.testng.Assert.assertNull(result.getTopic());
+        verify(subscriptionDAO).updateSubscriptionStatus(connection, "sub-1", "org-1", "pending", "active");
+    }
+
     private Subscription webhookSubscription(String id, String status) {
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        return new Subscription(id, "org-1", "group-1", "topic-1", "ALL", Collections.emptyList(),
-                "WEBHOOK", "https://93.184.216.34:443/callback", "secret", status, now, now);
+        Subscription sub = new Subscription();
+        sub.setSubscriptionId(id);
+        sub.setOrgId("org-1");
+        sub.setGroupId("group-1");
+        sub.setTopicIds(Collections.singletonList("topic-1"));
+        sub.setPurposeFilterMode("ALL");
+        sub.setPurposes(Collections.emptyList());
+        sub.setDeliveryMode("WEBHOOK");
+        sub.setCallbackUrl("https://93.184.216.34:443/callback");
+        sub.setSharedSecret("secret");
+        sub.setStatus(status);
+        sub.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        sub.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        return sub;
     }
 
     private Subscription subscription(String id, String topicId, String status) {
@@ -448,7 +531,8 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(sub.getSubscriptionId()).thenReturn(id);
         when(sub.getOrgId()).thenReturn("org-1");
         when(sub.getGroupId()).thenReturn("group-1");
-        when(sub.getTopicId()).thenReturn(topicId);
+        when(sub.getTopicIds()).thenReturn(Collections.singletonList(topicId));
+        when(sub.getTopicNames()).thenReturn(Collections.emptyList());
         when(sub.getStatus()).thenReturn(status);
         when(sub.getPurposeFilterMode()).thenReturn("ALL");
         when(sub.getDeliveryMode()).thenReturn("POLL");

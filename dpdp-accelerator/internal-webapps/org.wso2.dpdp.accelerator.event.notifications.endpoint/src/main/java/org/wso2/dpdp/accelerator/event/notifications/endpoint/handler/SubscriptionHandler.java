@@ -28,6 +28,9 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEve
 
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
+import java.util.Collections;
+import java.util.List;
+
 public class SubscriptionHandler {
 
     private final SubscriptionService subscriptionService;
@@ -47,11 +50,19 @@ public class SubscriptionHandler {
     }
 
     public SubscriptionDTO createSubscription(String orgId, SubscriptionDTO request) {
-        String groupId = orgId != null ? orgId.trim() : null;
-        String topic = request != null ? request.getTopic() : null;
+        String groupId = (request != null && request.getGroupId() != null) ? request.getGroupId().trim() : null;
         FilterDTO filterDTO = request != null ? request.getFilter() : null;
         DeliveryConfigDTO deliveryDTO = request != null ? request.getDelivery() : null;
-        return subscriptionService.createSubscription(orgId, groupId, topic, filterDTO, deliveryDTO);
+
+        List<String> topics;
+        if (request != null && request.getTopics() != null && !request.getTopics().isEmpty()) {
+            topics = request.getTopics();
+        } else if (request != null && request.getTopic() != null) {
+            topics = Collections.singletonList(request.getTopic());
+        } else {
+            topics = null;
+        }
+        return subscriptionService.createMultiTopicSubscription(orgId, groupId, topics, filterDTO, deliveryDTO);
     }
 
     public PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes,

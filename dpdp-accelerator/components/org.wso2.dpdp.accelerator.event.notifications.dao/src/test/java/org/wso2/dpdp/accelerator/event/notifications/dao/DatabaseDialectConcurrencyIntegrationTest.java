@@ -118,11 +118,20 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     new Topic("topic-fanout", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
             assertTrue(topicDAO.addTopic(seed,
                     new Topic("topic-publish", "org-1", "payments", "", TopicStatus.ACTIVE.getValue())));
-            subscriptionDAO.addSubscription(seed,
-                    new Subscription("sub-1", "org-1", "group-1", "topic-fanout",
-                            PurposeFilterMode.ALL.getValue(), Collections.emptyList(),
-                            DeliveryMode.WEBHOOK.getValue(), "https://example.com/callback", "secret",
-                            SubscriptionStatus.ACTIVE.getValue(), now, now));
+            Subscription sub = new Subscription();
+            sub.setSubscriptionId("sub-1");
+            sub.setOrgId("org-1");
+            sub.setGroupId("group-1");
+            sub.setTopicIds(Collections.singletonList("topic-fanout"));
+            sub.setPurposeFilterMode(PurposeFilterMode.ALL.getValue());
+            sub.setPurposes(Collections.emptyList());
+            sub.setDeliveryMode(DeliveryMode.WEBHOOK.getValue());
+            sub.setCallbackUrl("https://example.com/callback");
+            sub.setSharedSecret("secret");
+            sub.setStatus(SubscriptionStatus.ACTIVE.getValue());
+            sub.setCreatedAt(now);
+            sub.setUpdatedAt(now);
+            subscriptionDAO.addSubscription(seed, sub);
         }
 
         verifySubscriptionDeletionWaitsForFanOut(connectionFactory, subscriptionDAO, eventDAO, deliveryDAO, now);
@@ -213,10 +222,11 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD " + payloadType +
                     " NOT NULL, CREATED_AT TIMESTAMP NOT NULL)");
             statement.execute("CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, " +
-                    "ORG_ID VARCHAR(128) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, " +
+                    "ORG_ID VARCHAR(128) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
                     "PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, PURPOSE_SET_HASH VARCHAR(64) NOT NULL, " +
                     "DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), SHARED_SECRET VARCHAR(512), " +
                     "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL)");
+            statement.execute("CREATE TABLE SUBSCRIPTION_TOPIC (ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), TOPIC_ID VARCHAR(64), PRIMARY KEY(SUBSCRIPTION_ID, TOPIC_ID))");
             statement.execute("CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64) NOT NULL, " +
                     "PURPOSE_NAME VARCHAR(128) NOT NULL, PRIMARY KEY (SUBSCRIPTION_ID, PURPOSE_NAME))");
             statement.execute("CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, " +

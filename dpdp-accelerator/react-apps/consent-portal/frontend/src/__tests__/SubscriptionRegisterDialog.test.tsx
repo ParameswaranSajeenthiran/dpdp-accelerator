@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { OxygenTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
@@ -35,6 +36,61 @@ afterEach(() => {
 })
 
 describe('SubscriptionRegisterDialog', () => {
+  it('loads another topic page and submits the selected topics in one request', async () => {
+    topicsApi.fetchTopics
+      .mockResolvedValueOnce({ items: [{ name: 'consent.update' }], total: 2 })
+      .mockResolvedValueOnce({ items: [{ name: 'consent.revoke' }], total: 2 })
+      .mockResolvedValue({
+        items: [{ name: 'consent.update' }, { name: 'consent.revoke' }],
+        total: 2,
+      })
+    const onSubmit = vi.fn()
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog
+              open
+              loading={false}
+              onClose={vi.fn()}
+              onSubmit={onSubmit}
+            />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
+    )
+    await screen.findByText('consent.update')
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('checkbox', { name: 'consent.update' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Load more topics' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'consent.revoke' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
+      target: { value: 'https://receiver.example/callback' },
+    })
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Close registration' })).toBeInTheDocument()
+    expect(onSubmit).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Selected topics')
+    expect(screen.getByRole('status')).toHaveTextContent('2')
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByRole('textbox', { name: /Webhook Callback URL/ })).toHaveValue(
+      'https://receiver.example/callback',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        topics: ['consent.update', 'consent.revoke'],
+      }),
+    )
+  })
   it.each(['user.account.delete', 'user.data.change'])(
     'hides consent-purpose controls and submits the all filter for %s',
     async (topic) => {
@@ -45,19 +101,24 @@ describe('SubscriptionRegisterDialog', () => {
       const onSubmit = vi.fn()
 
       render(
-        <I18nextProvider i18n={i18n}>
-          <OxygenUIThemeProvider theme={OxygenTheme}>
-            <SubscriptionRegisterDialog
-              open
-              loading={false}
-              onClose={vi.fn()}
-              onSubmit={onSubmit}
-            />
-          </OxygenUIThemeProvider>
-        </I18nextProvider>,
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        >
+          <I18nextProvider i18n={i18n}>
+            <OxygenUIThemeProvider theme={OxygenTheme}>
+              <SubscriptionRegisterDialog
+                open
+                loading={false}
+                onClose={vi.fn()}
+                onSubmit={onSubmit}
+              />
+            </OxygenUIThemeProvider>
+          </I18nextProvider>
+        </QueryClientProvider>,
       )
 
-      await screen.findByText(topic)
+      fireEvent.click(await screen.findByRole('checkbox', { name: topic }))
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }))
       expect(screen.queryByLabelText('Consent Purpose Filter Mode')).not.toBeInTheDocument()
       expect(screen.queryByLabelText('Consent Purposes (comma-separated)')).not.toBeInTheDocument()
 
@@ -69,7 +130,7 @@ describe('SubscriptionRegisterDialog', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          topic,
+          topics: [topic],
           filter: { type: 'all', purposes: undefined },
         }),
       )
@@ -83,14 +144,19 @@ describe('SubscriptionRegisterDialog', () => {
     })
 
     render(
-      <I18nextProvider i18n={i18n}>
-        <OxygenUIThemeProvider theme={OxygenTheme}>
-          <SubscriptionRegisterDialog open loading={false} onClose={vi.fn()} onSubmit={vi.fn()} />
-        </OxygenUIThemeProvider>
-      </I18nextProvider>,
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog open loading={false} onClose={vi.fn()} onSubmit={vi.fn()} />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
     )
 
-    await screen.findByText('consent.status.update')
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'consent.status.update' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     expect(screen.getByLabelText('Consent Purpose Filter Mode')).toBeInTheDocument()
   })
 })

@@ -87,6 +87,17 @@ test('HTTP challenge, durable acceptance, replay after restart, and storage fail
     assert.equal(challenge.status, 200);
     assert.equal(await challenge.text(), 'exact-value');
     assert.equal((await fetch(`${url}?hub.mode=subscribe&hub.topic=wrong&hub.challenge=x`)).status, 400);
+    const verification = { type: 'subscription.verification', subscriptionId: 'new-sub',
+      topics: ['consent.revoke'], challenge: 'aggregate-challenge' };
+    const verifySet = body => fetch(url, { method: 'POST',
+      headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const aggregate = await verifySet(verification);
+    assert.equal(aggregate.status, 200);
+    assert.equal(await aggregate.text(), 'aggregate-challenge');
+    assert.equal((await verifySet({ ...verification, topics: ['wrong'] })).status, 400);
+    assert.equal((await verifySet({ ...verification, topics: [] })).status, 400);
+    assert.equal((await verifySet({ ...verification, topics: ['consent.revoke', 'consent.revoke'] })).status, 400);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM inbox').get().n, 0);
     const d = delivery();
     const send = () => fetch(url, { method: 'POST', headers: d.headers, body: d.raw });
     assert.equal((await send()).status, 503);

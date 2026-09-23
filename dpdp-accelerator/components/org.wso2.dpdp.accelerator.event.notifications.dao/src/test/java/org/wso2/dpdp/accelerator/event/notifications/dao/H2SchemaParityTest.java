@@ -59,10 +59,11 @@ public class H2SchemaParityTest {
                         + "(EVENT_ID, ORG_ID, GROUP_ID, TOPIC_ID, PAYLOAD) "
                         + "VALUES ('event-1', 'org-1', 'group-1', 'topic-1', '{}')");
                 statement.executeUpdate("INSERT INTO SUBSCRIPTION "
-                        + "(SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, STATUS, PURPOSE_FILTER_MODE, "
+                        + "(SUBSCRIPTION_ID, ORG_ID, GROUP_ID, STATUS, PURPOSE_FILTER_MODE, "
                         + "PURPOSE_SET_HASH, DELIVERY_MODE, UPDATED_AT) VALUES "
-                        + "('sub-1', 'org-1', 'group-1', 'topic-1', 'active', 'all', '', 'webhook', "
+                        + "('sub-1', 'org-1', 'group-1', 'active', 'all', '', 'webhook', "
                         + "TIMESTAMP '2000-01-01 00:00:00')");
+                statement.executeUpdate("INSERT INTO SUBSCRIPTION_TOPIC VALUES ('org-1', 'sub-1', 'topic-1')");
                 statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
                         + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) VALUES "
                         + "('delivery-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')");
@@ -125,5 +126,61 @@ public class H2SchemaParityTest {
             current = current.getParent();
         }
         throw new IllegalStateException("Could not locate " + SCHEMA_PATH);
+    }
+
+    @Test
+    public void multiTopicSubscriptionMatchesBothTopicsAndPreservesPageCardinality() throws Exception {
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:multi_topic_schema");
+                Reader schema = Files.newBufferedReader(findSchema(), StandardCharsets.UTF_8)) {
+            RunScript.execute(connection, schema);
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("INSERT INTO TOPIC (TOPIC_ID, ORG_ID, NAME) VALUES "
+                        + "('a', 'org', 'accounts'), ('b', 'org', 'billing'), ('c', 'other', 'private')");
+            }
+            org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl dao =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl();
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription subscription =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            subscription.setSubscriptionId("sub");
+            subscription.setOrgId("org");
+            subscription.setGroupId("group");
+            subscription.setTopicIds(java.util.Arrays.asList("a"));
+            subscription.setPurposeFilterMode("all");
+            subscription.setPurposes(java.util.Collections.emptyList());
+            subscription.setDeliveryMode("poll");
+            subscription.setSharedSecret("secret");
+            subscription.setStatus("active");
+            subscription.setTopicIds(java.util.Arrays.asList("b", "a"));
+            dao.addSubscription(connection, subscription);
+            connection.commit();
+            org.testng.Assert.assertEquals(dao.getSubscriptionById(connection, "sub", "org").get().getTopicIds(),
+                    java.util.Arrays.asList("a", "b"));
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "org", "a").size(), 1);
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "org", "b").size(), 1);
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "other", "a").size(), 0);
+            PaginatedDAOResult<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> page =
+                    dao.listSubscriptions(connection, "org", null, null, "billing", 1, 0, null);
+            org.testng.Assert.assertEquals(page.getTotal(), 1L);
+            org.testng.Assert.assertEquals(page.getItems().get(0).getTopicNames(),
+                    java.util.Arrays.asList("accounts", "billing"));
+            try (Statement statement = connection.createStatement()) {
+                expectThrows(SQLException.class, () -> statement.executeUpdate(
+                        "INSERT INTO SUBSCRIPTION_TOPIC VALUES ('org', 'sub', 'c')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate(
+                        "INSERT INTO SUBSCRIPTION_TOPIC VALUES ('other', 'sub', 'c')"));
+            }
+            connection.rollback();
+            subscription.setSubscriptionId("rollback");
+            subscription.setGroupId("new-group");
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE SUBSCRIPTION_TOPIC ADD CONSTRAINT FAIL_SECOND "
+                        + "CHECK (SUBSCRIPTION_ID <> 'rollback' OR TOPIC_ID <> 'b')");
+            }
+            expectThrows(org.wso2.dpdp.accelerator.event.notifications.common.exception.EventNotificationDuplicateResourceException.class,
+                    () -> dao.addSubscription(connection, subscription));
+            connection.rollback();
+            assertTrue(!dao.getSubscriptionById(connection, "rollback", "org").isPresent());
+        }
     }
 }

@@ -18,6 +18,10 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.model;
 
+import java.util.Collections;
+
+import java.util.ArrayList;
+
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -26,7 +30,8 @@ public class Subscription {
     private String subscriptionId;
     private String orgId;
     private String groupId;
-    private String topicId;
+    private List<String> topicIds = new ArrayList<>();
+    private List<String> topicNames = new ArrayList<>();
     private String purposeFilterMode;
     private List<String> purposes;
     private String purposeSetHash;
@@ -38,33 +43,6 @@ public class Subscription {
     private Timestamp updatedAt;
 
     public Subscription() {
-    }
-
-    public Subscription(String subscriptionId, String orgId, String groupId, String topicId,
-                        String purposeFilterMode, List<String> purposes, String deliveryMode,
-                        String callbackUrl, String sharedSecret, String status,
-                        Timestamp createdAt, Timestamp updatedAt) {
-        this(subscriptionId, orgId, groupId, topicId, purposeFilterMode, purposes, "", deliveryMode,
-                callbackUrl, sharedSecret, status, createdAt, updatedAt);
-    }
-
-    public Subscription(String subscriptionId, String orgId, String groupId, String topicId,
-                        String purposeFilterMode, List<String> purposes, String purposeSetHash,
-                        String deliveryMode, String callbackUrl, String sharedSecret, String status,
-                        Timestamp createdAt, Timestamp updatedAt) {
-        this.subscriptionId = subscriptionId;
-        this.orgId = orgId;
-        this.groupId = groupId;
-        this.topicId = topicId;
-        this.purposeFilterMode = purposeFilterMode;
-        this.purposes = purposes;
-        this.purposeSetHash = purposeSetHash;
-        this.deliveryMode = deliveryMode;
-        this.callbackUrl = callbackUrl;
-        this.sharedSecret = sharedSecret;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public String getSubscriptionId() {
@@ -91,12 +69,21 @@ public class Subscription {
         this.groupId = groupId;
     }
 
-    public String getTopicId() {
-        return topicId;
+
+    public List<String> getTopicIds() {
+        return Collections.unmodifiableList(topicIds);
     }
 
-    public void setTopicId(String topicId) {
-        this.topicId = topicId;
+    public List<String> getTopicNames() {
+        return Collections.unmodifiableList(topicNames);
+    }
+
+    public void setTopicNames(List<String> topicNames) {
+        this.topicNames = new ArrayList<>(topicNames);
+    }
+
+    public void setTopicIds(List<String> topicIds) {
+        this.topicIds = new ArrayList<>(topicIds);
     }
 
     public String getPurposeFilterMode() {

@@ -204,6 +204,15 @@ paths:
                     mode: webhook
                     callbackUrl: https://processor.example/webhooks/consent
                     sharedSecret: replace-with-a-strong-secret
+              multipleTopics:
+                value:
+                  topics: [consent-status-changed, user.account.delete]
+                  filter:
+                    type: all
+                  delivery:
+                    mode: webhook
+                    callbackUrl: https://processor.example/webhooks/consent
+                    sharedSecret: replace-with-a-strong-secret
               poll:
                 value:
                   topic: consent-status-changed
@@ -1347,7 +1356,8 @@ components:
       enum: [active, pending, stale, deleted]
     SubscriptionCreateRequest:
       type: object
-      required: [topic, delivery]
+      required: [delivery]
+      description: Supply exactly one of topics or the deprecated singleton topic.
       properties:
         subscriptionId:
           type: string
@@ -1383,13 +1393,22 @@ components:
           description: Accepted for compatibility; ignored on creation.
         topic:
           type: string
+          deprecated: true
+          description: Singleton compatibility field; absent for multi-topic subscriptions.
+        topics:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Unique topic names; duplicates are rejected after normalization.
+          items:
+            type: string
         filter:
           $ref: "#/components/schemas/Filter"
         delivery:
           $ref: "#/components/schemas/DeliveryConfigRequest"
     Subscription:
       type: object
-      required: [subscriptionId, orgId, groupId, topic, filter, delivery, status]
+      required: [subscriptionId, orgId, groupId, topics, filter, delivery, status]
       properties:
         subscriptionId:
           type: string
@@ -1399,6 +1418,16 @@ components:
           type: string
         topic:
           type: string
+          x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)'
+          deprecated: true
+          description: Singleton compatibility field; absent for multi-topic subscriptions.
+        topics:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Unique topic names in canonical stored form.
+          items:
+            type: string
         filter:
           $ref: "#/components/schemas/Filter"
         delivery:

@@ -35,6 +35,7 @@ import {
 } from '@wso2/oxygen-ui'
 import { Eye, RefreshCw, Trash2 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
+import SubscriptionTopicChips from './SubscriptionTopicChips'
 import CopyableText from '../../../components/CopyableText'
 import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import type { SubscriptionRecord } from '../../../types/subscription'
@@ -108,7 +109,7 @@ export default function SubscriptionTable({
           >
             <TableRow>
               <TableCell>{t('subscriptions.table.subscriptionId')}</TableCell>
-              <TableCell>{t('subscriptions.table.topic')}</TableCell>
+              <TableCell>{t('subscriptions.topicUi.topics')}</TableCell>
               <TableCell>{t('subscriptions.table.groupId')}</TableCell>
               <TableCell>{t('subscriptions.table.filter')}</TableCell>
               <TableCell>{t('subscriptions.table.deliveryMode')}</TableCell>
@@ -143,9 +144,7 @@ export default function SubscriptionTable({
                     <CopyableText value={sub.subscriptionId} truncateAt={14} monospace />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {sub.topic}
-                    </Typography>
+                    <SubscriptionTopicChips topics={sub.topics ?? (sub.topic ? [sub.topic] : [])} />
                   </TableCell>
                   <TableCell>
                     {sub.groupId ? (
@@ -262,4 +261,8 @@ export default function SubscriptionTable({
       />
     </Paper>
   )
+}
+
+SubscriptionTable.defaultProps = {
+  isMutating: false,
 }

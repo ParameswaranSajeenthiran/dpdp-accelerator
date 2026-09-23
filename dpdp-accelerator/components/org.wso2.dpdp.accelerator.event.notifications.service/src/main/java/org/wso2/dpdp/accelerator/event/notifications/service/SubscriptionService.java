@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service;
 
+import java.util.List;
+
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
@@ -27,13 +29,8 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEve
 
 public interface SubscriptionService {
 
-    default SubscriptionDTO createSubscription(String orgId, String topicName, FilterDTO filter,
-            DeliveryConfigDTO delivery) {
-        return createSubscription(orgId, orgId, topicName, filter, delivery);
-    }
-
-    SubscriptionDTO createSubscription(String orgId, String groupId, String topicName, FilterDTO filter,
-            DeliveryConfigDTO delivery);
+    SubscriptionDTO createMultiTopicSubscription(String orgId, String groupId, List<String> topics,
+            FilterDTO filter, DeliveryConfigDTO delivery);
 
     PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes, String search,
             int limit, int offset, String sort);

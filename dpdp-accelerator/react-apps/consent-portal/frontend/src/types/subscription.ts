@@ -55,7 +55,8 @@ export interface SubscriptionRecord {
   subscriptionId: string
   orgId?: string
   groupId?: string
-  topic: string
+  topic?: string
+  topics?: string[]
   filter?: FilterConfig
   delivery?: DeliveryConfig
   status: SubscriptionStatus | string
@@ -67,7 +68,8 @@ export interface SubscriptionRecord {
 
 export interface SubscriptionInput {
   groupId?: string
-  topic: string
+  topic?: string
+  topics?: string[]
   filter: FilterConfig
   delivery: DeliveryConfig
 }

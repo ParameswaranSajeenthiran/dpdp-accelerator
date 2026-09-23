@@ -147,8 +147,19 @@ public class DaoWritePathCoverageTest {
         TopicDAOImpl topicDao = new TopicDAOImpl();
         assertTrue(topicDao.addTopic(connection, new Topic("t-1", "org-1", "accounts", "desc", "active")));
         assertTrue(topicDao.updateTopicStatus(connection, "t-1", "org-1", TopicStatus.ACTIVE));
-        Subscription subscription = new Subscription("s-1", "org-1", "group-1", "t-1", "all",
-                Arrays.asList("marketing"), "webhook", "https://example.com/hook", "secret", "pending", now, now);
+        Subscription subscription = new Subscription();
+        subscription.setSubscriptionId("s-1");
+        subscription.setOrgId("org-1");
+        subscription.setGroupId("group-1");
+        subscription.setTopicIds(Collections.singletonList("t-1"));
+        subscription.setPurposeFilterMode("all");
+        subscription.setPurposes(Arrays.asList("marketing"));
+        subscription.setDeliveryMode("webhook");
+        subscription.setCallbackUrl("https://example.com/hook");
+        subscription.setSharedSecret("secret");
+        subscription.setStatus("pending");
+        subscription.setCreatedAt(now);
+        subscription.setUpdatedAt(now);
         SubscriptionDAOImpl subscriptionDao = new SubscriptionDAOImpl();
         try {
             subscriptionDao.addSubscription(connection, subscription);

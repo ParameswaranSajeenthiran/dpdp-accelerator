@@ -18,6 +18,7 @@
 
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -25,18 +26,20 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
-  FormHelperText,
   IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
   Select,
   Stack,
+  Stepper,
+  Step,
+  StepLabel,
   TextField,
   Typography,
 } from '@wso2/oxygen-ui'
-import { Key, Plus, RefreshCw } from '@wso2/oxygen-ui-icons-react'
-import { useEffect, useState } from 'react'
+import { Key, ArrowLeft, ArrowRight, X, RefreshCw } from '@wso2/oxygen-ui-icons-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   DeliveryMode,
@@ -44,8 +47,9 @@ import type {
   SubscriptionInput,
 } from '../../../types/subscription'
 import { DELIVERY_MODES, PURPOSE_FILTER_MODES } from '../../../types/subscription'
-import { fetchTopics } from '../api/topicsApi'
+import SubscriptionTopicPicker from './SubscriptionTopicPicker'
 import { supportsConsentPurposeFilter } from '../utils/topicCapabilities'
+import { MAX_SUBSCRIPTION_TOPICS } from '../constants'
 
 interface SubscriptionRegisterDialogProps {
   open: boolean
@@ -70,10 +74,10 @@ export default function SubscriptionRegisterDialog({
 }: SubscriptionRegisterDialogProps): React.JSX.Element {
   const { t } = useTranslation('common')
 
-  const [topics, setTopics] = useState<string[]>([])
-  const [topicsLoading, setTopicsLoading] = useState(false)
+  const [step, setStep] = useState(0)
+  const [selectionBusy, setSelectionBusy] = useState(false)
 
-  const [topic, setTopic] = useState('')
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [filterMode, setFilterMode] = useState<PurposeFilterMode>('all')
   const [purposesInput, setPurposesInput] = useState('')
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('webhook')
@@ -85,22 +89,6 @@ export default function SubscriptionRegisterDialog({
   const [purposesError, setPurposesError] = useState('')
   const [secretError, setSecretError] = useState('')
 
-  useEffect(() => {
-    if (open) {
-      setTopicsLoading(true)
-      fetchTopics({ limit: 100, offset: 0, status: 'ACTIVE' })
-        .then((res) => {
-          const names = (res.items ?? []).map((item) => item.name)
-          setTopics(names)
-          if (names.length > 0 && !topic) {
-            setTopic(names[0])
-          }
-        })
-        .catch(() => setTopics([]))
-        .finally(() => setTopicsLoading(false))
-    }
-  }, [open])
-
   const handleGenerateSecret = (): void => {
     setSharedSecret(generateRandomHexSecret())
     if (secretError) setSecretError('')
@@ -108,10 +96,15 @@ export default function SubscriptionRegisterDialog({
 
   const handleSubmit = (event: React.FormEvent): void => {
     event.preventDefault()
+    if (selectionBusy || loading) return
+    if (step === 0) {
+      if (selectedTopics.length > 0 && selectedTopics.length <= MAX_SUBSCRIPTION_TOPICS) setStep(1)
+      return
+    }
 
     let hasError = false
 
-    if (!topic.trim()) {
+    if (selectedTopics.length === 0 || selectedTopics.length > MAX_SUBSCRIPTION_TOPICS) {
       setTopicError(t('subscriptions.dialog.topicRequired'))
       hasError = true
     } else {
@@ -123,13 +116,17 @@ export default function SubscriptionRegisterDialog({
       .map((p) => p.trim())
       .filter(Boolean)
 
-    const supportsPurposeFilter = supportsConsentPurposeFilter(topic)
-    const effectiveFilterMode: PurposeFilterMode = supportsPurposeFilter ? filterMode : 'all'
+    const supportsPurposeFilter = selectedTopics.every(supportsConsentPurposeFilter)
+    const effectiveFilterMode: PurposeFilterMode = filterMode
+    if (!supportsPurposeFilter && filterMode !== 'all') {
+      setPurposesError(t('subscriptions.dialog.multiTopicFilter'))
+      hasError = true
+    }
 
     if (effectiveFilterMode !== 'all' && trimmedPurposes.length === 0) {
       setPurposesError(t('subscriptions.dialog.purposesRequired'))
       hasError = true
-    } else {
+    } else if (supportsPurposeFilter || filterMode === 'all') {
       setPurposesError('')
     }
 
@@ -158,7 +155,7 @@ export default function SubscriptionRegisterDialog({
     if (hasError) return
 
     onSubmit({
-      topic: topic.trim(),
+      topics: selectedTopics,
       filter: {
         type: effectiveFilterMode,
         purposes: effectiveFilterMode !== 'all' ? trimmedPurposes : undefined,
@@ -174,12 +171,14 @@ export default function SubscriptionRegisterDialog({
   return (
     <Dialog
       open={open}
-      onClose={loading ? undefined : onClose}
+      onClose={loading || selectionBusy ? undefined : onClose}
       maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: (theme) => ({
           borderRadius: 1,
+          height: 'min(760px, calc(100dvh - 64px))',
+          overflow: 'hidden',
           ...theme.applyStyles('light', { bgcolor: theme.palette.grey[50] }),
           ...theme.applyStyles('dark', { bgcolor: 'rgba(255, 255, 255, 0.06)' }),
         }),
@@ -191,191 +190,214 @@ export default function SubscriptionRegisterDialog({
           borderBottom: 1,
           borderColor: 'divider',
           textAlign: 'center',
+          flexShrink: 0,
+          position: 'relative',
         }}
       >
+        <IconButton
+          aria-label={t('subscriptions.topicUi.close')}
+          disabled={loading || selectionBusy}
+          onClick={onClose}
+          sx={{ position: 'absolute', top: 1, right: 1 }}
+        >
+          <X size={20} />
+        </IconButton>
         <Stack spacing={0.75}>
           <Typography variant="h6" fontWeight={700}>
             {t('subscriptions.dialog.registerTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('subscriptions.dialog.registerSubtitle')}
+            {t(
+              step === 0
+                ? 'subscriptions.topicUi.chooseTopics'
+                : 'subscriptions.topicUi.configureDelivery',
+            )}
           </Typography>
+          <Stepper activeStep={step} sx={{ pt: 2 }}>
+            <Step>
+              <StepLabel>{t('subscriptions.topicUi.topics')}</StepLabel>
+            </Step>
+            <Step>
+              <StepLabel>{t('subscriptions.topicUi.delivery')}</StepLabel>
+            </Step>
+          </Stepper>
         </Stack>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ px: 3, py: 3 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+      >
+        <DialogContent sx={{ px: 3, py: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           <Stack spacing={2.5}>
             {error ? <Alert severity="error">{error}</Alert> : null}
+            {step === 1 && purposesError ? <Alert severity="error">{purposesError}</Alert> : null}
 
-            <FormControl fullWidth size="small" required error={Boolean(topicError)}>
-              <InputLabel id="topic-select-label">
-                {t('subscriptions.dialog.topicLabel')}
-              </InputLabel>
-              <Select
-                labelId="topic-select-label"
-                label={t('subscriptions.dialog.topicLabel')}
-                value={topic}
-                disabled={topicsLoading}
-                onChange={(e) => {
-                  const nextTopic = e.target.value
-                  setTopic(nextTopic)
-                  if (!supportsConsentPurposeFilter(nextTopic)) {
-                    setFilterMode('all')
-                    setPurposesInput('')
-                    setPurposesError('')
-                  }
-                  if (topicError) setTopicError('')
+            {topicError ? <Alert severity="error">{topicError}</Alert> : null}
+            {step === 0 ? (
+              <SubscriptionTopicPicker
+                selected={selectedTopics}
+                onBusyChange={setSelectionBusy}
+                onChange={(values) => {
+                  setSelectedTopics(values)
+                  setTopicError('')
                 }}
-              >
-                {topics.map((name) => (
-                  <MenuItem key={name} value={name}>
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {topicError ? <FormHelperText>{topicError}</FormHelperText> : null}
-            </FormControl>
-
-            {supportsConsentPurposeFilter(topic) ? (
+              />
+            ) : (
               <>
+                {selectedTopics.every(supportsConsentPurposeFilter) || filterMode !== 'all' ? (
+                  <>
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="filter-mode-label">
+                        {t('subscriptions.dialog.filterModeLabel')}
+                      </InputLabel>
+                      <Select
+                        labelId="filter-mode-label"
+                        label={t('subscriptions.dialog.filterModeLabel')}
+                        value={filterMode}
+                        onChange={(e) => setFilterMode(e.target.value as PurposeFilterMode)}
+                      >
+                        {PURPOSE_FILTER_MODES.map((mode) => (
+                          <MenuItem key={mode} value={mode}>
+                            {t(`subscriptions.filterType.${mode}`, mode)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    {filterMode !== 'all' ? (
+                      <TextField
+                        required
+                        fullWidth
+                        size="small"
+                        label={t('subscriptions.dialog.purposesLabel')}
+                        placeholder={t('subscriptions.dialog.purposesPlaceholder')}
+                        value={purposesInput}
+                        error={Boolean(purposesError)}
+                        helperText={purposesError || t('subscriptions.dialog.purposesHelper')}
+                        onChange={(e) => {
+                          setPurposesInput(e.target.value)
+                          if (purposesError) setPurposesError('')
+                        }}
+                      />
+                    ) : null}
+                  </>
+                ) : null}
+
                 <FormControl fullWidth size="small">
-                  <InputLabel id="filter-mode-label">
-                    {t('subscriptions.dialog.filterModeLabel')}
+                  <InputLabel id="delivery-mode-label">
+                    {t('subscriptions.dialog.deliveryModeLabel')}
                   </InputLabel>
                   <Select
-                    labelId="filter-mode-label"
-                    label={t('subscriptions.dialog.filterModeLabel')}
-                    value={filterMode}
-                    onChange={(e) => setFilterMode(e.target.value as PurposeFilterMode)}
+                    labelId="delivery-mode-label"
+                    label={t('subscriptions.dialog.deliveryModeLabel')}
+                    value={deliveryMode}
+                    onChange={(e) => setDeliveryMode(e.target.value as DeliveryMode)}
                   >
-                    {PURPOSE_FILTER_MODES.map((mode) => (
+                    {DELIVERY_MODES.map((mode) => (
                       <MenuItem key={mode} value={mode}>
-                        {t(`subscriptions.filterType.${mode}`, mode)}
+                        {t(`subscriptions.deliveryMode.${mode}`, mode)}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
 
-                {filterMode !== 'all' ? (
+                {deliveryMode === 'webhook' ? (
                   <TextField
                     required
                     fullWidth
                     size="small"
-                    label={t('subscriptions.dialog.purposesLabel')}
-                    placeholder={t('subscriptions.dialog.purposesPlaceholder')}
-                    value={purposesInput}
-                    error={Boolean(purposesError)}
-                    helperText={purposesError || t('subscriptions.dialog.purposesHelper')}
+                    label={t('subscriptions.dialog.callbackUrlLabel')}
+                    placeholder="https://example.com/webhook"
+                    value={callbackUrl}
+                    error={Boolean(callbackUrlError)}
+                    helperText={callbackUrlError}
                     onChange={(e) => {
-                      setPurposesInput(e.target.value)
-                      if (purposesError) setPurposesError('')
+                      setCallbackUrl(e.target.value)
+                      if (callbackUrlError) setCallbackUrlError('')
                     }}
                   />
                 ) : null}
+
+                <TextField
+                  required
+                  fullWidth
+                  size="small"
+                  label={t('subscriptions.dialog.secretLabel')}
+                  value={sharedSecret}
+                  error={Boolean(secretError)}
+                  helperText={secretError || t('subscriptions.dialog.secretHelper')}
+                  onChange={(e) => {
+                    setSharedSecret(e.target.value)
+                    if (secretError) setSecretError('')
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Key size={16} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          title={t('subscriptions.dialog.generateSecret')}
+                          onClick={handleGenerateSecret}
+                          edge="end"
+                        >
+                          <RefreshCw size={16} />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </>
-            ) : null}
-
-            <FormControl fullWidth size="small">
-              <InputLabel id="delivery-mode-label">
-                {t('subscriptions.dialog.deliveryModeLabel')}
-              </InputLabel>
-              <Select
-                labelId="delivery-mode-label"
-                label={t('subscriptions.dialog.deliveryModeLabel')}
-                value={deliveryMode}
-                onChange={(e) => setDeliveryMode(e.target.value as DeliveryMode)}
-              >
-                {DELIVERY_MODES.map((mode) => (
-                  <MenuItem key={mode} value={mode}>
-                    {t(`subscriptions.deliveryMode.${mode}`, mode)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {deliveryMode === 'webhook' ? (
-              <TextField
-                required
-                fullWidth
-                size="small"
-                label={t('subscriptions.dialog.callbackUrlLabel')}
-                placeholder="https://example.com/webhook"
-                value={callbackUrl}
-                error={Boolean(callbackUrlError)}
-                helperText={callbackUrlError}
-                onChange={(e) => {
-                  setCallbackUrl(e.target.value)
-                  if (callbackUrlError) setCallbackUrlError('')
-                }}
-              />
-            ) : null}
-
-            <TextField
-              required
-              fullWidth
-              size="small"
-              label={t('subscriptions.dialog.secretLabel')}
-              value={sharedSecret}
-              error={Boolean(secretError)}
-              helperText={secretError || t('subscriptions.dialog.secretHelper')}
-              onChange={(e) => {
-                setSharedSecret(e.target.value)
-                if (secretError) setSecretError('')
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Key size={16} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      title={t('subscriptions.dialog.generateSecret')}
-                      onClick={handleGenerateSecret}
-                      edge="end"
-                    >
-                      <RefreshCw size={16} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+            )}
           </Stack>
         </DialogContent>
 
         <DialogActions
           sx={{
-            p: 3,
-            pt: 2,
+            px: 3,
+            py: 2,
             borderTop: 1,
             borderColor: 'divider',
             bgcolor: 'background.default',
-            flexDirection: 'column',
-            gap: 1.25,
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            gap: 2,
           }}
         >
+          {step === 0 ? (
+            <Button variant="outlined" disabled={selectionBusy} onClick={onClose}>
+              {t('consentRegistry.modals.actions.cancel')}
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              startIcon={<ArrowLeft size={16} />}
+              disabled={loading}
+              onClick={() => setStep(0)}
+            >
+              {t('subscriptions.topicUi.back')}
+            </Button>
+          )}
           <Button
-            fullWidth
             type="submit"
             variant="contained"
-            color="primary"
-            startIcon={
-              loading ? <CircularProgress size={16} color="inherit" /> : <Plus size={16} />
-            }
-            disabled={loading || topicsLoading}
+            disabled={loading || selectionBusy || selectedTopics.length === 0}
+            endIcon={step === 0 ? <ArrowRight size={16} /> : undefined}
           >
-            {loading
-              ? t('subscriptions.dialog.registering')
-              : t('subscriptions.dialog.registerSubmit')}
-          </Button>
-          <Button fullWidth variant="outlined" disabled={loading} onClick={onClose}>
-            {t('consentRegistry.modals.actions.cancel')}
+            {loading && <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />}
+            {step === 0 && t('subscriptions.topicUi.next')}
+            {step === 1 && !loading && t('subscriptions.dialog.registerSubmit')}
+            {step === 1 && loading && t('subscriptions.dialog.registering')}
           </Button>
         </DialogActions>
-      </form>
+      </Box>
     </Dialog>
   )
 }
+
+SubscriptionRegisterDialog.defaultProps = { error: undefined }

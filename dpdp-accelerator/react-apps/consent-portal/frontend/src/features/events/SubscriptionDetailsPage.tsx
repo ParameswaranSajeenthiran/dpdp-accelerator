@@ -44,6 +44,7 @@ import {
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
+import SubscriptionTopicsSection from './components/SubscriptionTopicsSection'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { formatEpochTimestamp } from '../../utils/dateTime'
@@ -151,7 +152,7 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                 {t('subscriptions.actions.backToList')}
               </Button>
               <Typography variant="h4" fontWeight={700}>
-                {sub.topic}
+                {t('subscriptions.topicUi.detailsTitle')}
               </Typography>
               <Chip
                 size="small"
@@ -212,8 +213,10 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                 },
                 {
                   icon: <Radio size={16} />,
-                  label: t('subscriptions.table.topic'),
-                  value: sub.topic,
+                  label: t('subscriptions.topicUi.topics'),
+                  value: t('subscriptions.topicUi.topicCount', {
+                    count: (sub.topics ?? (sub.topic ? [sub.topic] : [])).length,
+                  }),
                 },
                 {
                   icon: <Users size={16} />,
@@ -268,6 +271,7 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
           </CardContent>
         </Card>
 
+        <SubscriptionTopicsSection topics={sub.topics ?? (sub.topic ? [sub.topic] : [])} />
         <Card sx={{ border: 1, borderColor: 'divider', boxShadow: 1 }}>
           <CardHeader
             title={

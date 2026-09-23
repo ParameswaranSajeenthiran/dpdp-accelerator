@@ -24,6 +24,9 @@ package org.wso2.dpdp.accelerator.event.notifications.common.constants;
  */
 public class EventNotificationCommonConstants {
 
+    public static final int MAX_VERIFICATION_REQUEST_BYTES = 262144;
+    public static final String SUBSCRIPTION_VERIFICATION_TYPE = "subscription.verification";
+
     private EventNotificationCommonConstants() {
     }
 

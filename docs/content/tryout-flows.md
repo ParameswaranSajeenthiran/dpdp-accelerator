@@ -665,6 +665,10 @@ GET /dpdp/events?hub.mode=subscribe&hub.topic=user.data.change&hub.challenge=3b3
 Host: receiver.example.com
 ```
 
+This singleton tryout uses GET verification. Multi-topic subscriptions use one JSON
+verification POST containing the complete topic array; see
+[webhook verification](event-notification-guide.md#respond-to-verification).
+
 The receiver must return the challenge itself, not a JSON wrapper:
 
 ```http
