@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Resolves the consent-history query provider for the connected database dialect. Only
- * {@code mysql} has a dedicated provider today; every other dialect falls back to the ANSI
+ * Resolves the consent-history query provider for the connected database dialect. {@code mysql}
+ * and {@code h2} each have a dedicated provider today; every other dialect falls back to the ANSI
  * baseline, mirroring {@link ConsentExpiryQueryFactory}.
  */
 public class ConsentHistoryQueryFactory {
@@ -41,10 +41,12 @@ public class ConsentHistoryQueryFactory {
     public static ConsentHistoryCommonDBQueries getQueryProvider(String dbType) {
 
         String key = (dbType != null && !dbType.trim().isEmpty())
-                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_DEFAULT;
+                ? dbType.trim().toLowerCase(Locale.ROOT) : DBDialectConstants.DB_TYPE_H2;
         return PROVIDER_MAP.computeIfAbsent(key, k -> {
             if (k.contains(DBDialectConstants.DB_TYPE_MYSQL)) {
                 return new ConsentHistoryMysqlDBQueries();
+            } else if (k.contains(DBDialectConstants.DB_TYPE_H2)) {
+                return new ConsentHistoryH2DBQueries();
             }
             return new ConsentHistoryCommonDBQueries();
         });
@@ -67,6 +69,6 @@ public class ConsentHistoryQueryFactory {
 
     public static ConsentHistoryCommonDBQueries getQueryProvider() {
 
-        return getQueryProvider(DBDialectConstants.DB_TYPE_DEFAULT);
+        return getQueryProvider(DBDialectConstants.DB_TYPE_H2);
     }
 }

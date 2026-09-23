@@ -20,7 +20,9 @@ package org.wso2.dpdp.accelerator.consent.extensions.dao.queries;
 
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 public class ConsentExpiryQueryFactoryTest {
@@ -39,6 +41,26 @@ public class ConsentExpiryQueryFactoryTest {
         assertTrue(ConsentExpiryQueryFactory.getQueryProvider("Microsoft SQL Server")
                 instanceof ConsentExpirySqlServerDBQueries);
         assertTrue(ConsentExpiryQueryFactory.getQueryProvider("mssql") instanceof ConsentExpirySqlServerDBQueries);
+    }
+
+    @Test
+    public void resolvesH2ProviderForH2Dialect() {
+
+        assertTrue(ConsentExpiryQueryFactory.getQueryProvider("H2") instanceof ConsentExpiryH2DBQueries);
+    }
+
+    @Test
+    public void fallsBackToAnsiBaselineForUnrecognizedDialects() {
+
+        assertEquals(ConsentExpiryQueryFactory.getQueryProvider("Derby").getClass(), ConsentExpiryDBQueries.class);
+    }
+
+    @Test
+    public void blankAndNullDialectsResolveToTheH2Provider() {
+
+        assertSame(ConsentExpiryQueryFactory.getQueryProvider((String) null), ConsentExpiryQueryFactory.getQueryProvider());
+        assertSame(ConsentExpiryQueryFactory.getQueryProvider("  "), ConsentExpiryQueryFactory.getQueryProvider());
+        assertTrue(ConsentExpiryQueryFactory.getQueryProvider() instanceof ConsentExpiryH2DBQueries);
     }
 
     private void assertOffsetFetchQueries(ConsentExpiryDBQueries queries) {

@@ -29,8 +29,9 @@ import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Covers the dialect routing in {@link ConsentHistoryQueryFactory} - the mysql branch, the ANSI
- * fallback, and the connection-metadata resolution the DAO actually calls.
+ * Covers the dialect routing in {@link ConsentHistoryQueryFactory} - the mysql and h2 branches,
+ * the ANSI fallback for anything else, and the connection-metadata resolution the DAO actually
+ * calls.
  */
 public class ConsentHistoryQueryFactoryTest {
 
@@ -41,18 +42,25 @@ public class ConsentHistoryQueryFactoryTest {
     }
 
     @Test
-    public void fallsBackToAnsiBaselineForOtherDialects() {
+    public void resolvesH2ProviderForH2Dialect() {
 
-        assertEquals(ConsentHistoryQueryFactory.getQueryProvider("H2").getClass(),
+        assertTrue(ConsentHistoryQueryFactory.getQueryProvider("H2") instanceof ConsentHistoryH2DBQueries);
+    }
+
+    @Test
+    public void fallsBackToAnsiBaselineForUnrecognizedDialects() {
+
+        assertEquals(ConsentHistoryQueryFactory.getQueryProvider("Derby").getClass(),
                 ConsentHistoryCommonDBQueries.class);
     }
 
     @Test
-    public void blankAndNullDialectsResolveToTheDefaultProvider() {
+    public void blankAndNullDialectsResolveToTheH2Provider() {
 
         assertSame(ConsentHistoryQueryFactory.getQueryProvider((String) null),
                 ConsentHistoryQueryFactory.getQueryProvider());
         assertSame(ConsentHistoryQueryFactory.getQueryProvider("  "), ConsentHistoryQueryFactory.getQueryProvider());
+        assertTrue(ConsentHistoryQueryFactory.getQueryProvider() instanceof ConsentHistoryH2DBQueries);
     }
 
     @Test
@@ -68,12 +76,12 @@ public class ConsentHistoryQueryFactoryTest {
         try (Connection connection = DriverManager
                 .getConnection("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1")) {
             assertEquals(ConsentHistoryQueryFactory.getQueryProvider(connection).getClass(),
-                    ConsentHistoryCommonDBQueries.class);
+                    ConsentHistoryH2DBQueries.class);
         }
     }
 
     @Test
-    public void nullOrUnusableConnectionFallsBackToTheDefaultProvider() throws Exception {
+    public void nullOrUnusableConnectionFallsBackToTheH2Provider() throws Exception {
 
         assertSame(ConsentHistoryQueryFactory.getQueryProvider((Connection) null),
                 ConsentHistoryQueryFactory.getQueryProvider());
