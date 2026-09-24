@@ -65,9 +65,12 @@ public class TransactionIntegrationTest {
                         + "(CASE WHEN STATUS = 'active' THEN LOWER(NAME) ELSE NULL END));"
                         + "CREATE UNIQUE INDEX UQ_TOPIC_ORG_ACTIVE_NAME ON TOPIC(ORG_ID, ACTIVE_NAME);"
                         + "CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
+                        + "NAME VARCHAR(225) NOT NULL, "
                         + "GROUP_ID VARCHAR(128) NOT NULL, PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, "
                         + "PURPOSE_SET_HASH VARCHAR(64) NOT NULL, DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), "
-                        + "SHARED_SECRET VARCHAR(512), STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL);"
+                        + "SHARED_SECRET VARCHAR(512), STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL, "
+                        + "ACTIVE_NAME VARCHAR(225) GENERATED ALWAYS AS (CASE WHEN STATUS <> 'deleted' THEN LOWER(NAME) ELSE NULL END));"
+                        + "CREATE UNIQUE INDEX UQ_SUB_ORG_ACTIVE_NAME ON SUBSCRIPTION(ORG_ID, ACTIVE_NAME);"
                         + "CREATE TABLE SUBSCRIPTION_TOPIC (ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), TOPIC_ID VARCHAR(64), PRIMARY KEY(SUBSCRIPTION_ID, TOPIC_ID));"
                         + "CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128), "
                         + "PRIMARY KEY(SUBSCRIPTION_ID, PURPOSE_NAME));"
@@ -115,6 +118,7 @@ public class TransactionIntegrationTest {
         topicDAO.addTopic(connection, new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue()));
         Subscription subscription = new Subscription();
         subscription.setSubscriptionId("sub-1");
+        subscription.setName("sub-name");
         subscription.setOrgId("org-1");
         subscription.setGroupId("group-1");
         subscription.setTopicIds(Collections.singletonList("topic-1"));
@@ -165,6 +169,7 @@ public class TransactionIntegrationTest {
                 new Event("event-1", "org-1", "group-1", "topic-1", "{}", now));
         Subscription sub1 = new Subscription();
         sub1.setSubscriptionId("sub-1");
+        sub1.setName("sub1-name");
         sub1.setOrgId("org-1");
         sub1.setGroupId("group-1");
         sub1.setTopicIds(Collections.singletonList("topic-1"));
@@ -304,6 +309,7 @@ public class TransactionIntegrationTest {
             Timestamp now = new Timestamp(System.currentTimeMillis());
             Subscription subscription = new Subscription();
             subscription.setSubscriptionId(id);
+            subscription.setName(id + "-name");
             subscription.setOrgId("org-1");
             subscription.setGroupId("group-1");
             subscription.setTopicIds(reverse ? java.util.Arrays.asList("topic-b", "topic-a")
@@ -447,6 +453,7 @@ public class TransactionIntegrationTest {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         Subscription subFanOut = new Subscription();
         subFanOut.setSubscriptionId("sub-1");
+        subFanOut.setName("sub-fan-out");
         subFanOut.setOrgId("org-1");
         subFanOut.setGroupId("group-1");
         subFanOut.setTopicIds(Collections.singletonList("topic-1"));
@@ -513,6 +520,7 @@ public class TransactionIntegrationTest {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         Subscription subVerify = new Subscription();
         subVerify.setSubscriptionId("sub-1");
+        subVerify.setName("sub-verify");
         subVerify.setOrgId("org-1");
         subVerify.setGroupId("group-1");
         subVerify.setTopicIds(Collections.singletonList("topic-1"));
@@ -558,6 +566,7 @@ public class TransactionIntegrationTest {
                 new Topic("topic-1", "org-1", "accounts", "", TopicStatus.ACTIVE.getValue())));
         Subscription subPoll = new Subscription();
         subPoll.setSubscriptionId("sub-1");
+        subPoll.setName("sub-poll");
         subPoll.setOrgId("org-1");
         subPoll.setGroupId("group-1");
         subPoll.setTopicIds(Collections.singletonList("topic-1"));

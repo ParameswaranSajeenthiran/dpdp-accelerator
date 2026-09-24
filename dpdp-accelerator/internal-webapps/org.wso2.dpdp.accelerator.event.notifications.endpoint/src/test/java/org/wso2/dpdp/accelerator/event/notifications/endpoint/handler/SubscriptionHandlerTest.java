@@ -100,38 +100,40 @@ public class SubscriptionHandlerTest {
     @Test
     public void testCreateSubscription_WithGroupId() {
         SubscriptionDTO request = new SubscriptionDTO();
+        request.setName("my-sub");
         request.setGroupId("group123");
         request.setTopics(Arrays.asList("topic1", "topic2"));
 
         SubscriptionDTO expectedResponse = new SubscriptionDTO();
         expectedResponse.setSubscriptionId("sub123");
 
-        when(subscriptionService.createMultiTopicSubscription(eq("org1"), eq("group123"), any(), any(), any()))
+        when(subscriptionService.createMultiTopicSubscription(eq("org1"), eq("group123"), eq("my-sub"), any(), any(), any()))
                 .thenReturn(expectedResponse);
 
         SubscriptionDTO response = subscriptionHandler.createSubscription("org1", request);
 
         assertNotNull(response);
         assertEquals(response.getSubscriptionId(), "sub123");
-        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), eq("group123"), any(), any(), any());
+        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), eq("group123"), eq("my-sub"), any(), any(), any());
     }
 
     @Test
     public void testCreateSubscription_WithoutGroupId() {
         SubscriptionDTO request = new SubscriptionDTO();
+        request.setName("my-sub-2");
         request.setTopics(Collections.singletonList("topic1"));
 
         SubscriptionDTO expectedResponse = new SubscriptionDTO();
         expectedResponse.setSubscriptionId("sub456");
 
-        when(subscriptionService.createMultiTopicSubscription(eq("org1"), isNull(), any(), any(), any()))
+        when(subscriptionService.createMultiTopicSubscription(eq("org1"), isNull(), eq("my-sub-2"), any(), any(), any()))
                 .thenReturn(expectedResponse);
 
         SubscriptionDTO response = subscriptionHandler.createSubscription("org1", request);
 
         assertNotNull(response);
         assertEquals(response.getSubscriptionId(), "sub456");
-        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), isNull(), any(), any(), any());
+        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), isNull(), eq("my-sub-2"), any(), any(), any());
     }
 
     @Test
@@ -139,13 +141,13 @@ public class SubscriptionHandlerTest {
         SubscriptionDTO expectedResponse = new SubscriptionDTO();
         expectedResponse.setSubscriptionId("sub789");
 
-        when(subscriptionService.createMultiTopicSubscription(eq("org1"), isNull(), isNull(), isNull(), isNull()))
+        when(subscriptionService.createMultiTopicSubscription(eq("org1"), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(expectedResponse);
 
         SubscriptionDTO response = subscriptionHandler.createSubscription("org1", null);
 
         assertNotNull(response);
         assertEquals(response.getSubscriptionId(), "sub789");
-        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), isNull(), isNull(), isNull(), isNull());
+        verify(subscriptionService).createMultiTopicSubscription(eq("org1"), isNull(), isNull(), isNull(), isNull(), isNull());
     }
 }

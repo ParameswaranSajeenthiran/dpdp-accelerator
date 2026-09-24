@@ -75,6 +75,7 @@ public class SubscriptionQueryBuilder {
         StringBuilder sql = new StringBuilder(
                 "SELECT DISTINCT s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ", s." +
                 EventNotificationDBColumns.ORG_ID + ", s." + EventNotificationDBColumns.GROUP_ID + ", s." +
+                EventNotificationDBColumns.NAME + ", s." +
                 EventNotificationDBColumns.PURPOSE_FILTER_MODE + ", s." +
                 EventNotificationDBColumns.PURPOSE_SET_HASH + ", s." + EventNotificationDBColumns.DELIVERY_MODE +
                 ", s." + EventNotificationDBColumns.CALLBACK_URL + ", s." + EventNotificationDBColumns.SHARED_SECRET +
@@ -115,6 +116,8 @@ public class SubscriptionQueryBuilder {
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.GROUP_ID + ")"))
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.NAME + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.STATUS + ")"))
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.CALLBACK_URL + ")"))
@@ -151,6 +154,7 @@ public class SubscriptionQueryBuilder {
                     .append("))")
                     .append(")");
             String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
+            params.add(term);
             params.add(term);
             params.add(term);
             params.add(term);

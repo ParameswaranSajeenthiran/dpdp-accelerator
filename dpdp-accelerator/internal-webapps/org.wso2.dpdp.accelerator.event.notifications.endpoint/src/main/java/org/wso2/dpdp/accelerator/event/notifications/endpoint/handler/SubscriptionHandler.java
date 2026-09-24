@@ -50,6 +50,7 @@ public class SubscriptionHandler {
     }
 
     public SubscriptionDTO createSubscription(String orgId, SubscriptionDTO request) {
+        String name = request != null ? request.getName() : null;
         String groupId = (request != null && request.getGroupId() != null) ? request.getGroupId().trim() : null;
         FilterDTO filterDTO = request != null ? request.getFilter() : null;
         DeliveryConfigDTO deliveryDTO = request != null ? request.getDelivery() : null;
@@ -62,7 +63,7 @@ public class SubscriptionHandler {
         } else {
             topics = null;
         }
-        return subscriptionService.createMultiTopicSubscription(orgId, groupId, topics, filterDTO, deliveryDTO);
+        return subscriptionService.createMultiTopicSubscription(orgId, groupId, name, topics, filterDTO, deliveryDTO);
     }
 
     public PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes,

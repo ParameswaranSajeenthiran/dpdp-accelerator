@@ -95,9 +95,14 @@ public class EventNotificationCommonDBQueries {
 
     // SUBSCRIPTION Queries
     public String getAddSubscriptionQuery() {
-        return "INSERT INTO SUBSCRIPTION (SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, " +
+        return "INSERT INTO SUBSCRIPTION (SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, " +
                 "PURPOSE_SET_HASH, DELIVERY_MODE, CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    }
+
+    public String getActiveSubscriptionByOrgAndNameQuery() {
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, STATUS FROM SUBSCRIPTION "
+                + "WHERE ORG_ID = ? AND LOWER(NAME) = LOWER(?) AND STATUS <> " + SQL_SUBSCRIPTION_DELETED;
     }
 
     public String getAddSubscriptionTopicQuery() {
@@ -116,14 +121,14 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetSubscriptionByIdQuery() {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ?";
     }
 
     public String getLockSubscriptionsForTopicsQuery(int count) {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 + "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT "
                 + "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND GROUP_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st "
                 + "WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID IN ("
@@ -185,7 +190,7 @@ public class EventNotificationCommonDBQueries {
      * webhook verification or has a stale verification.
      */
     public String getGetLiveSubscriptionsByOrgAndTopicQuery() {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID = ?) " +
@@ -194,7 +199,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetLiveSubscriptionsByOrgAndTopicsQuery(int count) {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 + "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT "
                 + "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st "
                 + "WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID IN ("
@@ -204,7 +209,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getActiveSubscriptionsForFanOutQuery() {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, " +
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, " +
                 "DELIVERY_MODE, CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID = ?) AND STATUS = " + SQL_SUBSCRIPTION_ACTIVE +
                 " ORDER BY SUBSCRIPTION_ID FOR UPDATE";
@@ -412,7 +417,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetPendingSubscriptionsForRecoveryQuery() {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, "
                 +
                 "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                 "FROM SUBSCRIPTION WHERE STATUS = " + SQL_SUBSCRIPTION_PENDING + " AND DELIVERY_MODE = "

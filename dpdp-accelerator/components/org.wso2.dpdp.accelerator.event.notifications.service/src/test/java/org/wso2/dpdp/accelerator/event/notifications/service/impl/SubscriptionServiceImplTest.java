@@ -73,21 +73,25 @@ public class SubscriptionServiceImplTest {
                 when(topicDAO.getTopicsByOrgAndNames(any(Connection.class), eq("org1"), any())).thenReturn(resolved);
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                "sub-name",
                                 java.util.Arrays.asList("billing", "accounts"),
                                 new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList()),
                                 new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret"));
                 assertEquals(result.getTopics(), java.util.Arrays.asList("accounts", "billing"));
+                assertEquals(result.getName(), "sub-name");
                 org.testng.Assert.assertNull(result.getTopic());
                 org.mockito.ArgumentCaptor<Subscription> created = org.mockito.ArgumentCaptor
                                 .forClass(Subscription.class);
                 verify(subscriptionDAO).addSubscription(any(Connection.class), created.capture());
                 assertEquals(created.getValue().getTopicIds(), java.util.Arrays.asList("a", "b"));
+                assertEquals(created.getValue().getName(), "sub-name");
         }
 
         @Test
         public void rejectsNormalizedDuplicateTopicsBeforeWriting() {
                 org.testng.Assert.expectThrows(EventNotificationServiceException.class,
                                 () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                "sub-name",
                                                 java.util.Arrays.asList("accounts", " ACCOUNTS "),
                                                 new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList()),
                                                 new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret")));
@@ -169,7 +173,7 @@ public class SubscriptionServiceImplTest {
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getStatus(), SubscriptionStatus.ACTIVE);
         }
@@ -178,7 +182,7 @@ public class SubscriptionServiceImplTest {
         public void testCreateSubscriptionMissingTopic() {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
-                subscriptionService.createMultiTopicSubscription("org1", "group1", null, filter, delivery);
+                subscriptionService.createMultiTopicSubscription("org1", "group1", "sub-name", null, filter, delivery);
         }
 
         @Test
@@ -192,7 +196,7 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", null,
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getGroupId(), "org1");
         }
@@ -208,7 +212,7 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "   ",
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getGroupId(), "org1");
         }
@@ -218,7 +222,7 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
                 subscriptionService.createMultiTopicSubscription(null, "group1",
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
         }
 
         @Test(expectedExceptions = EventNotificationServiceException.class)
@@ -231,7 +235,7 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.SPECIFIC, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
                 subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
         }
 
         @Test(expectedExceptions = EventNotificationServiceException.class)
@@ -244,7 +248,7 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.EXCEPT, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
                 subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
         }
 
         @Test
@@ -260,7 +264,7 @@ public class SubscriptionServiceImplTest {
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("topic1"), filter, delivery);
+                                "sub-name", Collections.singletonList("topic1"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getStatus(), SubscriptionStatus.ACTIVE);
         }
@@ -279,7 +283,7 @@ public class SubscriptionServiceImplTest {
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
 
                 subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
         }
 
         @Test
@@ -344,7 +348,7 @@ public class SubscriptionServiceImplTest {
                                 "http://127.0.0.1:8080/callback", "secret123");
 
                 subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
         }
 
         @Test
@@ -362,7 +366,7 @@ public class SubscriptionServiceImplTest {
                                 "https://93.184.216.34:9443/callback", "secret123");
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
                 assertNotNull(result);
         }
 
@@ -378,7 +382,7 @@ public class SubscriptionServiceImplTest {
                                 "https://192.168.1.10:443/callback", "secret123");
 
                 subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
         }
 
         @Test
@@ -395,7 +399,7 @@ public class SubscriptionServiceImplTest {
                                 "https://192.168.1.10:443/callback", "secret123");
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
                 assertNotNull(result);
         }
 
@@ -412,7 +416,7 @@ public class SubscriptionServiceImplTest {
 
                 EventNotificationServiceException exception = expectThrows(EventNotificationServiceException.class,
                                 () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                                Collections.singletonList("user-consent"), filter, delivery));
+                                                "sub-name", Collections.singletonList("user-consent"), filter, delivery));
                 assertEquals(exception.getStatusCode(), 400);
                 assertEquals(exception.getDescription(),
                                 EventNotificationServiceConstants.SHARED_SECRET_REQUIRED_ERROR_MSG);
@@ -446,7 +450,7 @@ public class SubscriptionServiceImplTest {
                                 "https://93.184.216.34:443/callback2", "secret2");
 
                 SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getStatus(), SubscriptionStatus.PENDING);
         }
@@ -468,7 +472,7 @@ public class SubscriptionServiceImplTest {
                                 "https://93.184.216.34:443/callback1", "secret2");
 
                 subscriptionService.createMultiTopicSubscription("org1", null,
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
         }
 
         @Test(expectedExceptions = EventNotificationServiceException.class)
@@ -487,7 +491,7 @@ public class SubscriptionServiceImplTest {
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret2");
 
                 subscriptionService.createMultiTopicSubscription("org1", null,
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
         }
 
         @Test(expectedExceptions = EventNotificationServiceException.class)
@@ -506,7 +510,57 @@ public class SubscriptionServiceImplTest {
                                 "https://93.184.216.34:443/callback", "secret2");
 
                 subscriptionService.createMultiTopicSubscription("org1", null,
-                                Collections.singletonList("user-consent"), filter, delivery);
+                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
+        }
+
+        @Test
+        public void testCreateSubscriptionNullOrEmptyNameThrowsBadRequest() {
+                FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+                DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+
+                EventNotificationServiceException ex1 = expectThrows(EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                null, Collections.singletonList("t1"), filter, delivery));
+                assertEquals(ex1.getStatusCode(), 400);
+
+                EventNotificationServiceException ex2 = expectThrows(EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                "", Collections.singletonList("t1"), filter, delivery));
+                assertEquals(ex2.getStatusCode(), 400);
+
+                EventNotificationServiceException ex3 = expectThrows(EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                "   ", Collections.singletonList("t1"), filter, delivery));
+                assertEquals(ex3.getStatusCode(), 400);
+        }
+
+        @Test
+        public void testCreateSubscriptionNameExceeds225CharsThrowsBadRequest() {
+                FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+                DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+                String longName = new String(new char[226]).replace('\0', 'a');
+
+                EventNotificationServiceException ex = expectThrows(EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                longName, Collections.singletonList("t1"), filter, delivery));
+                assertEquals(ex.getStatusCode(), 400);
+        }
+
+        @Test
+        public void testCreateSubscriptionTrimsName() {
+                Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
+                Map<String, Topic> resolved = new HashMap<>();
+                resolved.put("user-consent", topic);
+                when(topicDAO.getTopicsByOrgAndNames(any(Connection.class), eq("org1"), any())).thenReturn(resolved);
+                doNothing().when(subscriptionDAO).addSubscription(any(Connection.class), any(Subscription.class));
+
+                FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+                DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+
+                SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                "  trimmed-name  ", Collections.singletonList("user-consent"), filter, delivery);
+                assertNotNull(result);
+                assertEquals(result.getName(), "trimmed-name");
         }
 
         // ---- helpers ----
@@ -515,6 +569,7 @@ public class SubscriptionServiceImplTest {
                         String callbackUrl, String status) {
                 Subscription s = new Subscription();
                 s.setSubscriptionId(id);
+                s.setName(id + "-name");
                 s.setOrgId(orgId);
                 s.setGroupId(orgId);
                 s.setTopicIds(Collections.singletonList(topicId));

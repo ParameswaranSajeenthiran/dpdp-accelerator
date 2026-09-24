@@ -87,4 +87,16 @@ export class SubscriptionDetailsPage {
       .click()
     return new SubscriptionDeliveryHistoryModal(this.page)
   }
+
+  async expandSubscribedTopics(): Promise<void> {
+    const toggle = this.page.getByRole('button', { name: 'Subscribed Topics' })
+    const expanded = await toggle.getAttribute('aria-expanded')
+    if (expanded !== 'true') {
+      await toggle.click()
+    }
+  }
+
+  topicChip(topicName: string): Locator {
+    return this.page.locator('#subscribed-topic-content').getByText(topicName, { exact: true })
+  }
 }

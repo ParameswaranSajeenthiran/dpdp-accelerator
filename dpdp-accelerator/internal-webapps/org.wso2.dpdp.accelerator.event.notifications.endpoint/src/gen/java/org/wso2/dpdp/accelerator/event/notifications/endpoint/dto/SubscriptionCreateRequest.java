@@ -21,6 +21,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SubscriptionCreateRequest  {
   
+  @ApiModelProperty(required = true, value = "Unique display name for the subscription within the organization.")
+  private String name;
+
  /**
   * Accepted for compatibility; ignored on creation.
   */
@@ -95,6 +98,20 @@ public class SubscriptionCreateRequest  {
   @ApiModelProperty(required = true, value = "")
 
   private DeliveryConfigRequest delivery;
+  @JsonProperty("name")
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public SubscriptionCreateRequest name(String name) {
+    this.name = name;
+    return this;
+  }
+
  /**
    * Accepted for compatibility; ignored on creation.
    * @return subscriptionId
@@ -325,7 +342,8 @@ public class SubscriptionCreateRequest  {
       return false;
     }
     SubscriptionCreateRequest subscriptionCreateRequest = (SubscriptionCreateRequest) o;
-    return Objects.equals(this.subscriptionId, subscriptionCreateRequest.subscriptionId) &&
+    return Objects.equals(this.name, subscriptionCreateRequest.name) &&
+        Objects.equals(this.subscriptionId, subscriptionCreateRequest.subscriptionId) &&
         Objects.equals(this.orgId, subscriptionCreateRequest.orgId) &&
         Objects.equals(this.groupId, subscriptionCreateRequest.groupId) &&
         Objects.equals(this.status, subscriptionCreateRequest.status) &&
@@ -341,7 +359,7 @@ public class SubscriptionCreateRequest  {
 
   @Override
   public int hashCode() {
-    return Objects.hash(subscriptionId, orgId, groupId, status, createdAt, updatedAt, alreadyExists, message, topic, topics, filter, delivery);
+    return Objects.hash(name, subscriptionId, orgId, groupId, status, createdAt, updatedAt, alreadyExists, message, topic, topics, filter, delivery);
   }
 
   @Override
@@ -349,6 +367,7 @@ public class SubscriptionCreateRequest  {
     StringBuilder sb = new StringBuilder();
     sb.append("class SubscriptionCreateRequest {\n");
     
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    subscriptionId: ").append(toIndentedString(subscriptionId)).append("\n");
     sb.append("    orgId: ").append(toIndentedString(orgId)).append("\n");
     sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");

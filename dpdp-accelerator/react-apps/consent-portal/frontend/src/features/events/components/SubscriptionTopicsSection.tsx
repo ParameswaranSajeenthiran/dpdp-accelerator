@@ -61,7 +61,9 @@ export default function SubscriptionTopicsSection({ topics }: Props): React.JSX.
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
             aria-controls="subscribed-topic-content"
-            aria-label={t('subscriptions.topicUi.subscribedCount', { count: topics.length }).replace(/\s*\([^)]*\)\s*$/, '')}
+            aria-label={t('subscriptions.topicUi.subscribedCount', {
+              count: topics.length,
+            }).replace(/\s*\([^)]*\)\s*$/, '')}
             sx={{
               p: 0,
               minWidth: 'auto',
@@ -74,7 +76,10 @@ export default function SubscriptionTopicsSection({ topics }: Props): React.JSX.
             }}
           >
             <Typography variant="h6" fontWeight={700} component="span">
-              {t('subscriptions.topicUi.subscribedCount', { count: topics.length }).replace(/\s*\([^)]*\)\s*$/, '')}
+              {t('subscriptions.topicUi.subscribedCount', { count: topics.length }).replace(
+                /\s*\([^)]*\)\s*$/,
+                '',
+              )}
             </Typography>
             <Chip
               size="small"

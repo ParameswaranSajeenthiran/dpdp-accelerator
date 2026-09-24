@@ -86,6 +86,7 @@ public final class EventNotificationDtoMapper {
             throw new IllegalArgumentException("Supply topic or topics, not both.");
         }
         SubscriptionDTO target = new SubscriptionDTO();
+        target.setName(source.getName());
         target.setSubscriptionId(source.getSubscriptionId());
         target.setOrgId(source.getOrgId());
         target.setGroupId(source.getGroupId());
@@ -133,6 +134,7 @@ public final class EventNotificationDtoMapper {
             return null;
         }
         Subscription target = new Subscription();
+        target.setName(source.getName());
         target.setSubscriptionId(source.getSubscriptionId());
         target.setOrgId(source.getOrgId());
         target.setGroupId(source.getGroupId());

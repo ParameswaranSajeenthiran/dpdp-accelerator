@@ -30,6 +30,7 @@ public class Subscription {
     private String subscriptionId;
     private String orgId;
     private String groupId;
+    private String name;
     private List<String> topicIds = new ArrayList<>();
     private List<String> topicNames = new ArrayList<>();
     private String purposeFilterMode;
@@ -67,6 +68,14 @@ public class Subscription {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
 

@@ -129,7 +129,9 @@ export default function SubscriptionTopicPicker({
               userSelect: 'none',
               '&:hover': {
                 bgcolor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.06)'
+                    : 'rgba(0, 0, 0, 0.04)',
               },
             }}
           >
@@ -178,7 +180,11 @@ export default function SubscriptionTopicPicker({
               }}
             >
               {selected.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ py: 0.5, fontStyle: 'italic' }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ py: 0.5, fontStyle: 'italic' }}
+                >
                   {t('subscriptions.topicUi.noSelected')}
                 </Typography>
               ) : (
@@ -280,11 +286,18 @@ export default function SubscriptionTopicPicker({
           {!query.isPending && !query.isError && !topics.length ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <Typography>
-                {t(search.trim() ? 'subscriptions.topicUi.noMatches' : 'subscriptions.topicUi.noTopics')}
+                {t(
+                  search.trim()
+                    ? 'subscriptions.topicUi.noMatches'
+                    : 'subscriptions.topicUi.noTopics',
+                )}
               </Typography>
             </Box>
           ) : null}
-          {!query.isPending && !query.isError && topics.length > 0 && availableTopics.length === 0 ? (
+          {!query.isPending &&
+          !query.isError &&
+          topics.length > 0 &&
+          availableTopics.length === 0 ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 {t('subscriptions.topicUi.allSelected')}

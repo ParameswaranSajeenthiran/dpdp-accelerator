@@ -29,7 +29,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEve
 
 public interface SubscriptionService {
 
-    SubscriptionDTO createMultiTopicSubscription(String orgId, String groupId, List<String> topics,
+    SubscriptionDTO createMultiTopicSubscription(String orgId, String groupId, String name, List<String> topics,
             FilterDTO filter, DeliveryConfigDTO delivery);
 
     PaginatedResult<SubscriptionDTO> listSubscriptions(String orgId, String status, String purposes, String search,

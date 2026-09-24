@@ -34,6 +34,7 @@ public class SubscriptionDTO {
     private String subscriptionId;
     private String orgId;
     private String groupId;
+    private String name;
     private String topic;
     private List<String> topics;
     private FilterDTO filter;
@@ -95,6 +96,14 @@ public class SubscriptionDTO {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

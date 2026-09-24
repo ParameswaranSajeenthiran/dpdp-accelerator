@@ -120,6 +120,7 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     new Topic("topic-publish", "org-1", "payments", "", TopicStatus.ACTIVE.getValue())));
             Subscription sub = new Subscription();
             sub.setSubscriptionId("sub-1");
+            sub.setName("sub-concurrent");
             sub.setOrgId("org-1");
             sub.setGroupId("group-1");
             sub.setTopicIds(Collections.singletonList("topic-fanout"));
@@ -222,7 +223,7 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD " + payloadType +
                     " NOT NULL, CREATED_AT TIMESTAMP NOT NULL)");
             statement.execute("CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, " +
-                    "ORG_ID VARCHAR(128) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
+                    "ORG_ID VARCHAR(128) NOT NULL, NAME VARCHAR(225) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
                     "PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, PURPOSE_SET_HASH VARCHAR(64) NOT NULL, " +
                     "DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), SHARED_SECRET VARCHAR(512), " +
                     "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL)");

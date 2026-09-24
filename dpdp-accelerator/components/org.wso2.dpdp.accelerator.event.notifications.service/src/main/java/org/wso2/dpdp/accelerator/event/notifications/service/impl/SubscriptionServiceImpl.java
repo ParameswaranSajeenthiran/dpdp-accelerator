@@ -147,12 +147,22 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public SubscriptionDTO createMultiTopicSubscription(String orgId, String groupId, List<String> topicNames,
-            FilterDTO filter, DeliveryConfigDTO delivery) {
+    public SubscriptionDTO createMultiTopicSubscription(String orgId, String groupId, String name,
+            List<String> topicNames, FilterDTO filter, DeliveryConfigDTO delivery) {
         if (orgId == null || orgId.trim().isEmpty()) {
             throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                     EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
                     EventNotificationServiceConstants.ORG_ID_MISSING_ERROR_MSG, 400);
+        }
+        if (name == null || name.trim().isEmpty()) {
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "Subscription name must not be blank.", 400);
+        }
+        if (name.trim().length() > 225) {
+            throw new EventNotificationServiceException(EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
+                    EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
+                    "Subscription name must not exceed 225 characters.", 400);
         }
         String effectiveGroupId = (groupId != null && !groupId.trim().isEmpty())
                 ? groupId.trim()
@@ -165,9 +175,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
 
         Set<String> normalizedNames = new HashSet<>();
-        for (String name : topicNames) {
-            if (name == null || name.trim().isEmpty()
-                    || !normalizedNames.add(name.trim().toLowerCase(Locale.ROOT))) {
+        for (String tName : topicNames) {
+            if (tName == null || tName.trim().isEmpty()
+                    || !normalizedNames.add(tName.trim().toLowerCase(Locale.ROOT))) {
                 throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST,
                         EventNotificationServiceConstants.ERROR_TITLE_MALFORMED_REQUEST,
@@ -235,6 +245,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             sub[0].setSubscriptionId(subscriptionId);
             sub[0].setOrgId(orgId.trim());
             sub[0].setGroupId(effectiveGroupId);
+            sub[0].setName(name.trim());
             sub[0].setPurposeFilterMode(filterType.getValue());
             sub[0].setPurposes(purposes);
             sub[0].setDeliveryMode(deliveryMode.getValue());
@@ -996,7 +1007,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         DeliveryMode deliveryMode = DeliveryMode.fromValueOrDefault(sub.getDeliveryMode(), DeliveryMode.WEBHOOK);
         DeliveryConfigDTO delivery = new DeliveryConfigDTO(deliveryMode, sub.getCallbackUrl(), null);
 
-        return new SubscriptionDTO(
+        SubscriptionDTO dto = new SubscriptionDTO(
                 sub.getSubscriptionId(),
                 sub.getOrgId(),
                 sub.getGroupId(),
@@ -1008,6 +1019,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 updatedAt,
                 false,
                 null);
+        dto.setName(sub.getName());
+        return dto;
     }
 
     private DPDPConfigurationService getConfiguration() {

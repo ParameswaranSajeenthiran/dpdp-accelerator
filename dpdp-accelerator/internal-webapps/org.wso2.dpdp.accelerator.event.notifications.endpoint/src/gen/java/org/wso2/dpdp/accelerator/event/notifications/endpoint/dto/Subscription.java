@@ -16,6 +16,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Subscription  {
   
+  @ApiModelProperty(required = true, value = "Unique display name for the subscription within the organization.")
+  private String name;
+
   @ApiModelProperty(required = true, value = "")
 
   private String subscriptionId;
@@ -70,6 +73,20 @@ public class Subscription  {
   @ApiModelProperty(value = "")
 
   private String message;
+  @JsonProperty("name")
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Subscription name(String name) {
+    this.name = name;
+    return this;
+  }
+
  /**
    * Get subscriptionId
    * @return subscriptionId
@@ -300,7 +317,8 @@ public class Subscription  {
       return false;
     }
     Subscription subscription = (Subscription) o;
-    return Objects.equals(this.subscriptionId, subscription.subscriptionId) &&
+    return Objects.equals(this.name, subscription.name) &&
+        Objects.equals(this.subscriptionId, subscription.subscriptionId) &&
         Objects.equals(this.orgId, subscription.orgId) &&
         Objects.equals(this.groupId, subscription.groupId) &&
         Objects.equals(this.topic, subscription.topic) &&
@@ -316,7 +334,7 @@ public class Subscription  {
 
   @Override
   public int hashCode() {
-    return Objects.hash(subscriptionId, orgId, groupId, topic, topics, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
+    return Objects.hash(name, subscriptionId, orgId, groupId, topic, topics, filter, delivery, status, createdAt, updatedAt, alreadyExists, message);
   }
 
   @Override
@@ -324,6 +342,7 @@ public class Subscription  {
     StringBuilder sb = new StringBuilder();
     sb.append("class Subscription {\n");
     
+    sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    subscriptionId: ").append(toIndentedString(subscriptionId)).append("\n");
     sb.append("    orgId: ").append(toIndentedString(orgId)).append("\n");
     sb.append("    groupId: ").append(toIndentedString(groupId)).append("\n");

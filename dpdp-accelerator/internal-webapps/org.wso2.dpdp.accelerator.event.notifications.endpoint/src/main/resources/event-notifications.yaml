@@ -1356,9 +1356,13 @@ components:
       enum: [active, pending, stale, deleted]
     SubscriptionCreateRequest:
       type: object
-      required: [delivery]
+      required: [delivery, name]
       description: Supply exactly one of topics or the deprecated singleton topic.
       properties:
+        name:
+          type: string
+          maxLength: 225
+          description: Unique display name for the subscription within the organization.
         subscriptionId:
           type: string
           deprecated: true
@@ -1408,7 +1412,7 @@ components:
           $ref: "#/components/schemas/DeliveryConfigRequest"
     Subscription:
       type: object
-      required: [subscriptionId, orgId, groupId, topics, filter, delivery, status]
+      required: [subscriptionId, orgId, groupId, name, topics, filter, delivery, status]
       properties:
         subscriptionId:
           type: string
@@ -1416,6 +1420,10 @@ components:
           type: string
         groupId:
           type: string
+        name:
+          type: string
+          maxLength: 225
+          description: Unique display name for the subscription within the organization.
         topic:
           type: string
           x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)'

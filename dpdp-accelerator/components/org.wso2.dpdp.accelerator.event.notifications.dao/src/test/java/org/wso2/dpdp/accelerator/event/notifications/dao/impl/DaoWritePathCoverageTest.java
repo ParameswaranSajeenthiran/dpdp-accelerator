@@ -149,6 +149,7 @@ public class DaoWritePathCoverageTest {
         assertTrue(topicDao.updateTopicStatus(connection, "t-1", "org-1", TopicStatus.ACTIVE));
         Subscription subscription = new Subscription();
         subscription.setSubscriptionId("s-1");
+        subscription.setName("sub-write-coverage");
         subscription.setOrgId("org-1");
         subscription.setGroupId("group-1");
         subscription.setTopicIds(Collections.singletonList("t-1"));

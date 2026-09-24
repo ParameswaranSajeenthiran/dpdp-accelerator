@@ -178,13 +178,16 @@ test.describe('Admin viewing Subscriptions', () => {
       await detailsPage.goto(subscription.subscriptionId)
 
       await expect(detailsPage.fieldValue('Subscription ID')).toContainText(subscription.subscriptionId)
-      await expect(detailsPage.fieldValue('Topic')).toHaveText(topic.name)
+      await expect(detailsPage.fieldValue('Topics')).toContainText('Topics (1)')
       await expect(detailsPage.fieldValue('Group ID')).toContainText(subscription.groupId!)
       await expect(detailsPage.fieldValue('Delivery Mode')).toContainText('Poll')
       await expect(detailsPage.fieldValue('Created At')).not.toHaveText('-')
       await expect(detailsPage.fieldValue('Last Updated')).not.toHaveText('-')
 
-      await expect(page.getByRole('heading', { name: topic.name })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Subscription details' })).toBeVisible()
+
+      await detailsPage.expandSubscribedTopics()
+      await expect(detailsPage.topicChip(topic.name)).toBeVisible()
 
       const deliveryRow = detailsPage.deliveryEventRowByDeliveryId(delivery!.deliveryId)
       await expect(deliveryRow).toBeVisible()

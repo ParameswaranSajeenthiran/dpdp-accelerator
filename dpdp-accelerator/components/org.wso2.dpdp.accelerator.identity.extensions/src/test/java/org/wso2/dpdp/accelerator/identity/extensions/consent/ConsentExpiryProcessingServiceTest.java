@@ -484,9 +484,9 @@ public class ConsentExpiryProcessingServiceTest {
             statement.execute("INSERT INTO TOPIC (TOPIC_ID, ORG_ID, NAME, STATUS) "
                     + "VALUES ('topic', 'carbon.super', 'consent.expire', 'active')");
             for (String mode : new String[] { "webhook", "poll" }) {
-                statement.execute("INSERT INTO SUBSCRIPTION (SUBSCRIPTION_ID, ORG_ID, GROUP_ID, "
+                statement.execute("INSERT INTO SUBSCRIPTION (SUBSCRIPTION_ID, ORG_ID, NAME, GROUP_ID, "
                         + "STATUS, PURPOSE_FILTER_MODE, DELIVERY_MODE) VALUES ('" + mode
-                        + "', 'carbon.super', 'carbon.super', 'active', 'ALL', '" + mode + "')");
+                        + "', 'carbon.super', '" + mode + "-sub', 'carbon.super', 'active', 'ALL', '" + mode + "')");
                 statement.execute("INSERT INTO SUBSCRIPTION_TOPIC (ORG_ID, SUBSCRIPTION_ID, TOPIC_ID) "
                         + "VALUES ('carbon.super', '" + mode + "', 'topic')");
             }

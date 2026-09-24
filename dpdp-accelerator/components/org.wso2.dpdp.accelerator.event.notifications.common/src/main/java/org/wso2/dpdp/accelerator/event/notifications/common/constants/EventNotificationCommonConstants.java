@@ -79,6 +79,8 @@ public class EventNotificationCommonConstants {
     public static final String ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE =
             "A subscriber cannot use both webhook and poll delivery modes for the same topic.";
     public static final String ERROR_DUPLICATE_SUBSCRIPTION = "A subscription with the same parameters already exists.";
+    public static final String ERROR_SUBSCRIPTION_NAME_ALREADY_EXISTS = "A subscription with the name '%s' already exists.";
+    public static final String ERROR_SUBSCRIPTION_NAME_NULL_OR_EMPTY = "Subscription name must not be null or empty.";
     public static final String ERROR_DELIVERY_ACK_ALREADY_EXISTS = "Completion evidence already acknowledged for this delivery.";
     public static final String ERROR_TOPIC_HAS_ACTIVE_SUBSCRIPTIONS = "Topic has active subscriptions and cannot be deregistered.";
     public static final String ERROR_TOPIC_NOT_ACTIVE = "Topic is not active and cannot accept new subscriptions.";

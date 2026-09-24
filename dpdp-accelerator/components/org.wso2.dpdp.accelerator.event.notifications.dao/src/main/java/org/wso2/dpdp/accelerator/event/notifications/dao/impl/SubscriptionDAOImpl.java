@@ -43,6 +43,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +68,9 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         if (subscription == null) {
             return;
         }
+        if (subscription.getName() == null || subscription.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException(EventNotificationCommonConstants.ERROR_SUBSCRIPTION_NAME_NULL_OR_EMPTY);
+        }
         PurposeFilterMode newMode = PurposeFilterMode.fromValueOrDefault(subscription.getPurposeFilterMode(),
                 PurposeFilterMode.ALL);
         DeliveryMode newDelMode = DeliveryMode.fromValueOrDefault(subscription.getDeliveryMode(),
@@ -82,6 +86,17 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
         try {
             EventNotificationCommonDBQueries queries = getQueries(conn);
+            try (PreparedStatement checkPs = conn.prepareStatement(queries.getActiveSubscriptionByOrgAndNameQuery())) {
+                checkPs.setString(1, subscription.getOrgId());
+                checkPs.setString(2, subscription.getName().trim());
+                try (ResultSet rs = checkPs.executeQuery()) {
+                    if (rs.next()) {
+                        throw new EventNotificationDuplicateResourceException(
+                                String.format(EventNotificationCommonConstants.ERROR_SUBSCRIPTION_NAME_ALREADY_EXISTS,
+                                        subscription.getName().trim()));
+                    }
+                }
+            }
             List<String> topicIds = new ArrayList<>(subscription.getTopicIds());
             Collections.sort(topicIds);
             if (topicIds.isEmpty()) {
@@ -166,12 +181,13 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 ps.setString(1, subscription.getSubscriptionId());
                 ps.setString(2, subscription.getOrgId());
                 ps.setString(3, subscription.getGroupId());
-                ps.setString(4, subscription.getPurposeFilterMode());
-                ps.setString(5, subscription.getPurposeSetHash());
-                ps.setString(6, subscription.getDeliveryMode());
-                ps.setString(7, subscription.getCallbackUrl());
-                ps.setString(8, subscription.getSharedSecret());
-                ps.setString(9, subscription.getStatus());
+                ps.setString(4, subscription.getName().trim());
+                ps.setString(5, subscription.getPurposeFilterMode());
+                ps.setString(6, subscription.getPurposeSetHash());
+                ps.setString(7, subscription.getDeliveryMode());
+                ps.setString(8, subscription.getCallbackUrl());
+                ps.setString(9, subscription.getSharedSecret());
+                ps.setString(10, subscription.getStatus());
                 ps.executeUpdate();
                 try (PreparedStatement topicPs = conn.prepareStatement(queries.getAddSubscriptionTopicQuery())) {
                     for (String topicId : topicIds) {
@@ -198,6 +214,12 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             }
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                String msg = e.getMessage() != null ? e.getMessage().toUpperCase(Locale.ROOT) : "";
+                if (msg.contains("UQ_SUB_ORG_ACTIVE_NAME") || msg.contains("ACTIVE_NAME") || msg.contains("NAME")) {
+                    throw new EventNotificationDuplicateResourceException(
+                            String.format(EventNotificationCommonConstants.ERROR_SUBSCRIPTION_NAME_ALREADY_EXISTS,
+                                    subscription.getName()), e);
+                }
                 throw new EventNotificationDuplicateResourceException(
                         EventNotificationCommonConstants.ERROR_DUPLICATE_SUBSCRIPTION, e);
             }
@@ -652,6 +674,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         subscription.setSubscriptionId(rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID));
         subscription.setOrgId(rs.getString(EventNotificationDBColumns.ORG_ID));
         subscription.setGroupId(rs.getString(EventNotificationDBColumns.GROUP_ID));
+        subscription.setName(rs.getString(EventNotificationDBColumns.NAME));
         subscription.setPurposeFilterMode(rs.getString(EventNotificationDBColumns.PURPOSE_FILTER_MODE));
         subscription.setPurposeSetHash(rs.getString(EventNotificationDBColumns.PURPOSE_SET_HASH));
         subscription.setDeliveryMode(rs.getString(EventNotificationDBColumns.DELIVERY_MODE));

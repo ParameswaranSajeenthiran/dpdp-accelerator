@@ -30,7 +30,7 @@ public class EventNotificationSqliteDBQueries extends EventNotificationCommonDBQ
 
     @Override
     public String getLockSubscriptionsForTopicsQuery(int count) {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, " +
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, DELIVERY_MODE, " +
                "CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND GROUP_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st " +
                "WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID IN (" +
@@ -41,7 +41,7 @@ public class EventNotificationSqliteDBQueries extends EventNotificationCommonDBQ
 
     @Override
     public String getActiveSubscriptionsForFanOutQuery() {
-        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, " +
+        return "SELECT SUBSCRIPTION_ID, ORG_ID, GROUP_ID, NAME, PURPOSE_FILTER_MODE, PURPOSE_SET_HASH, " +
                "DELIVERY_MODE, CALLBACK_URL, SHARED_SECRET, STATUS, CREATED_AT, UPDATED_AT " +
                "FROM SUBSCRIPTION s WHERE ORG_ID = ? AND EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND st.TOPIC_ID = ?) AND STATUS = " + SQL_SUBSCRIPTION_ACTIVE;
     }
