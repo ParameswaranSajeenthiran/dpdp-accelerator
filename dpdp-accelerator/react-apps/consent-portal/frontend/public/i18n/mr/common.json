@@ -54,9 +54,9 @@
     "subtitleAdmin": "सर्व वापरकर्त्यांमधील संमती (consent) क्रियाकलापांचा आढावा.",
     "loadFailed": "सध्या तुमचा डॅशबोर्ड लोड करण्यात अक्षम.",
     "consentsTitle": "संमती",
-    "viewConsents": "View all consents",
+    "viewConsents": "सर्व संमती पहा",
     "complaintsTitle": "तक्रारी",
-    "waitingOnDpo": "Waiting on DPO",
+    "waitingOnDpo": "डी.पी.ओ.च्या प्रतीक्षेत",
     "complaintsLoadFailed": "तुमच्या तक्रारी आत्ता लोड करता येत नाहीयेत.",
     "viewComplaints": "सर्व तक्रारी पहा"
   },

@@ -54,9 +54,9 @@
     "subtitleAdmin": "सभी उपयोगकर्ताओं में सहमति गतिविधि का एक अवलोकन।",
     "loadFailed": "अभी आपका डैशबोर्ड लोड नहीं हो पा रहा है।",
     "consentsTitle": "सहमतियां",
-    "viewConsents": "View all consents",
+    "viewConsents": "सभी सहमतियां देखें",
     "complaintsTitle": "शिकायतें",
-    "waitingOnDpo": "Waiting on DPO",
+    "waitingOnDpo": "डीपीओ की प्रतीक्षा है",
     "complaintsLoadFailed": "आपकी शिकायतें अभी लोड नहीं हो पा रही हैं।",
     "viewComplaints": "सभी शिकायतें देखें"
   },
