@@ -114,7 +114,16 @@
       "noAuthorizations": "এই সম্মতির জন্য কোন অনুমোদন নথিভুক্ত করা হয়নি।",
       "noElements": "এই উদ্দেশ্যের সাথে কোনো উপাদান যুক্ত নেই।",
       "noPurposes": "এই সম্মতির সঙ্গে কোনো উদ্দেশ্য যুক্ত নেই।",
-      "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।"
+      "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "দেখুন",

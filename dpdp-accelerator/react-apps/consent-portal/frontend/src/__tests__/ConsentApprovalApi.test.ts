@@ -129,10 +129,16 @@ describe('self-service consent API', () => {
 
   it('approves a pending consent through the authorize endpoint', async () => {
     transport.httpRequest
-      .mockResolvedValueOnce({ status: 200, data: detail('consent/123?draft', 'PENDING') })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: {
+          ...detail('consent/123?draft', 'PENDING'),
+          authorizations: [{ userId: 'alice', state: 'PENDING', updatedTime: 1 }],
+        },
+      })
       .mockResolvedValueOnce({ status: 204, data: undefined })
 
-    await expect(approveMyConsent('consent/123?draft')).resolves.toEqual({ status: 'OK' })
+    await expect(approveMyConsent('consent/123?draft', 'alice')).resolves.toEqual({ status: 'OK' })
 
     const [read, authorize] = sentRequests()
     expect(pathOf(read)).toBe(`${SELF_CONSENTS}/consent%2F123%3Fdraft`)
@@ -143,10 +149,16 @@ describe('self-service consent API', () => {
 
   it('rejects a pending consent through the same endpoint', async () => {
     transport.httpRequest
-      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'PENDING') })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: {
+          ...detail('c-1', 'PENDING'),
+          authorizations: [{ userId: 'alice', state: 'PENDING', updatedTime: 1 }],
+        },
+      })
       .mockResolvedValueOnce({ status: 204, data: undefined })
 
-    await expect(rejectMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
+    await expect(rejectMyConsent('c-1', 'alice')).resolves.toEqual({ status: 'OK' })
 
     const [, authorize] = sentRequests()
     expect(pathOf(authorize)).toBe(`${SELF_CONSENTS}/c-1/authorize`)
@@ -182,26 +194,30 @@ describe('self-service consent API', () => {
     expect(sentRequests().every((request) => request.method === 'GET')).toBe(true)
   })
 
-  it('allows approving a previously rejected consent - a rejection is reconsiderable', async () => {
-    transport.httpRequest
-      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'REJECTED') })
-      .mockResolvedValueOnce({ status: 204, data: undefined })
+  it('refuses to approve a consent the caller already rejected - a decision cannot be reopened', async () => {
+    transport.httpRequest.mockResolvedValue({
+      status: 200,
+      data: {
+        ...detail('c-1', 'REJECTED'),
+        authorizations: [{ userId: 'alice', state: 'REJECTED', updatedTime: 1 }],
+      },
+    })
 
-    await expect(approveMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
-
-    const [, authorize] = sentRequests()
-    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'APPROVED' })
+    const failure = approveMyConsent('c-1', 'alice')
+    await expect(failure).rejects.toMatchObject({ code: 'INVALID_CONSENT_STATE' })
   })
 
-  it("allows rejecting an active consent - withdraws just the caller's own approval", async () => {
-    transport.httpRequest
-      .mockResolvedValueOnce({ status: 200, data: detail('c-1', 'ACTIVE') })
-      .mockResolvedValueOnce({ status: 204, data: undefined })
+  it('refuses to reject a consent the caller already approved - use revoke, not reject, to undo it', async () => {
+    transport.httpRequest.mockResolvedValue({
+      status: 200,
+      data: {
+        ...detail('c-1', 'ACTIVE'),
+        authorizations: [{ userId: 'alice', state: 'APPROVED', updatedTime: 1 }],
+      },
+    })
 
-    await expect(rejectMyConsent('c-1')).resolves.toEqual({ status: 'OK' })
-
-    const [, authorize] = sentRequests()
-    expect(JSON.parse(String(authorize.data))).toEqual({ state: 'REJECTED' })
+    const failure = rejectMyConsent('c-1', 'alice')
+    await expect(failure).rejects.toMatchObject({ code: 'INVALID_CONSENT_STATE' })
   })
 
   it("gates on the given authorizer's own decision, not the aggregate state", async () => {

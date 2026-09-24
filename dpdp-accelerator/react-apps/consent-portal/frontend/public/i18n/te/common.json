@@ -114,7 +114,16 @@
       "noAuthorizations": "ఈ సమ్మతి కోసం ఎటువంటి అనుమతులు నమోదు చేయబడలేదు.",
       "noElements": "ఈ ఉద్దేశ్యంతో ఏ అంశాలు అనుబంధించబడలేదు.",
       "noPurposes": "ఈ సమ్మతితో ఎటువంటి ఉద్దేశాలు ముడిపడి లేవు.",
-      "noProperties": "ఈ సమ్మతితో ఎటువంటి ఆస్తులు అనుబంధించబడలేదు."
+      "noProperties": "ఈ సమ్మతితో ఎటువంటి ఆస్తులు అనుబంధించబడలేదు.",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "వీక్షించు",

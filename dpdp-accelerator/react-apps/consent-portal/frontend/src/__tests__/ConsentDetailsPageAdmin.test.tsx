@@ -113,9 +113,15 @@ describe('ConsentDetailsPage admin variant - acting on a consent as its own stak
     expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
   })
 
-  it('offers approve, reject and revoke when the admin is themselves the subject', async () => {
+  it('offers approve and reject when the admin is themselves a named authoriser on their own consent', async () => {
     adminConsentsApi.fetchAdminConsentByID.mockResolvedValue(
-      buildConsent('PENDING', { subjectId: CURRENT_USER_ID }),
+      buildConsent('PENDING', {
+        subjectId: CURRENT_USER_ID,
+        authorizations: [
+          { userId: CURRENT_USER_ID, state: 'PENDING', updatedTime: 1 },
+          { userId: 'co-authoriser', state: 'PENDING', updatedTime: 2 },
+        ],
+      }),
     )
 
     renderAdminDetailPage([REQUIRED_SCOPES.CONSENTS_READ_ANY, REQUIRED_SCOPES.CONSENTS_WRITE_SELF])
@@ -137,7 +143,7 @@ describe('ConsentDetailsPage admin variant - acting on a consent as its own stak
     expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument()
   })
 
-  it('offers only reject when the admin, as authorizer, already approved - the aggregate is still pending on others', async () => {
+  it('offers no action, only a waiting message, once the admin as authoriser already approved - the aggregate is still pending on others', async () => {
     adminConsentsApi.fetchAdminConsentByID.mockResolvedValue(
       buildConsent('PENDING', {
         authorizations: [{ userId: CURRENT_USER_ID, state: 'APPROVED', updatedTime: 1 }],
@@ -146,8 +152,11 @@ describe('ConsentDetailsPage admin variant - acting on a consent as its own stak
 
     renderAdminDetailPage([REQUIRED_SCOPES.CONSENTS_READ_ANY, REQUIRED_SCOPES.CONSENTS_WRITE_SELF])
 
-    expect(await screen.findByRole('button', { name: 'Reject' })).toBeInTheDocument()
+    expect(
+      await screen.findByText("You've made your decision. Waiting for the rest to decide."),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
   })
 
   it('lets an admin who is also the subject revoke via the any-consent scope even without write-self', async () => {
@@ -162,7 +171,13 @@ describe('ConsentDetailsPage admin variant - acting on a consent as its own stak
 
   it('calls the self-service authorize endpoint (not the admin API) when approving from the admin view', async () => {
     adminConsentsApi.fetchAdminConsentByID.mockResolvedValue(
-      buildConsent('PENDING', { subjectId: CURRENT_USER_ID }),
+      buildConsent('PENDING', {
+        subjectId: CURRENT_USER_ID,
+        authorizations: [
+          { userId: CURRENT_USER_ID, state: 'PENDING', updatedTime: 1 },
+          { userId: 'co-authoriser', state: 'PENDING', updatedTime: 2 },
+        ],
+      }),
     )
     myConsentsApi.approveMyConsent.mockResolvedValue({ status: 'OK' })
 

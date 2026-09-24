@@ -114,7 +114,16 @@
       "noAuthorizations": "امہ رضامندی خٲطرٕ چھنہٕ کانٛہہ اجازت نامہٕ درج کرنہٕ آمت۔",
       "noElements": "امہِ مقصدس سۭتۍ چھنہٕ کانٛہہ تہِ عنصر وابستہٕ۔",
       "noPurposes": "امہِ رضامندی سۭتۍ چھنہٕ کانٛہہ مقصد وابستہٕ۔",
-      "noProperties": "امہ رضامندی سۭتۍ چھنہٕ کانٛہہ خاصیت وابستہٕ۔"
+      "noProperties": "امہ رضامندی سۭتۍ چھنہٕ کانٛہہ خاصیت وابستہٕ۔",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "وُچھیو",

@@ -114,7 +114,16 @@
       "noAuthorizations": "इस सैह्‌मती आस्तै कोई प्राधिकरण दर्ज नेईं कीता गेआ ऐ।",
       "noElements": "इस उद्देश कन्नै कोई तत्व जुड़े दा नेईं ऐ।",
       "noPurposes": "इस सैह्‌मती कन्नै कोई मकसद जुड़े दा नेईं ऐ।",
-      "noProperties": "इस सैह्‌मती कन्नै कोई संपत्तियां जुड़ी दियां नेईं हैन।"
+      "noProperties": "इस सैह्‌मती कन्नै कोई संपत्तियां जुड़ी दियां नेईं हैन।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "दिक्खो",

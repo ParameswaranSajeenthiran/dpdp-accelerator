@@ -114,7 +114,16 @@
       "noAuthorizations": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒꯤꯗꯃꯛ ꯑꯌꯥꯕ ꯄꯤꯕꯒꯤ ꯔꯦꯀꯣꯔꯗ ꯂꯩꯇꯦ",
       "noElements": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒ ꯃꯔꯤ ꯂꯩꯅꯕ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯃꯠꯇ ꯂꯩꯇꯦ",
       "noPurposes": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄꯔꯄꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
-      "noProperties": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄ꯭ꯔꯣꯄꯔꯇꯤ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫"
+      "noProperties": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄ꯭ꯔꯣꯄꯔꯇꯤ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "য়েংবিয়ু",

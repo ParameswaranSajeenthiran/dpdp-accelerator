@@ -58,6 +58,8 @@ vi.mock('../features/my-consents/api/consentHistoryApi', () => consentHistoryApi
 vi.mock('../features/admin-consents/api/consentHistoryApi', () => adminConsentHistoryApi)
 
 const CONSENT_ID = '06168ee0-f82a-4b0f-87ea-2a37600ec3f2'
+// The signed-in identity every TestAuthorizationProvider session uses.
+const CURRENT_USER_ID = 'test-user'
 
 function buildConsent(state: string, overrides: Partial<ConsentDetail> = {}): ConsentDetail {
   return {
@@ -127,35 +129,59 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('ConsentDetailsPage lifecycle actions', () => {
-  it('shows approve and reject for pending consents without revoke', async () => {
-    renderConsentDetailsPage('PENDING')
+describe('ConsentDetailsPage lifecycle actions - caller with their own authorization entry', () => {
+  it('shows approve and reject while their own decision is pending, without revoke', async () => {
+    renderConsentDetailsPage('PENDING', Object.values(REQUIRED_SCOPES), {
+      authorizations: [{ userId: CURRENT_USER_ID, state: 'PENDING', updatedTime: 1 }],
+    })
 
     expect(await screen.findByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 
-  it("shows revoke and reject for active consents - reject withdraws just the caller's own approval", async () => {
-    renderConsentDetailsPage('ACTIVE')
+  it('shows only revoke once active - a decision cannot be reopened by rejecting', async () => {
+    renderConsentDetailsPage('ACTIVE', Object.values(REQUIRED_SCOPES), {
+      authorizations: [{ userId: CURRENT_USER_ID, state: 'APPROVED', updatedTime: 1 }],
+    })
 
     expect(await screen.findByRole('button', { name: 'Revoke' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
   })
 
-  it('shows approve only for a rejected consent, so the caller can reconsider', async () => {
-    renderConsentDetailsPage('REJECTED')
+  it('shows no action, only a message, once the caller has rejected it themself', async () => {
+    renderConsentDetailsPage('REJECTED', Object.values(REQUIRED_SCOPES), {
+      authorizations: [{ userId: CURRENT_USER_ID, state: 'REJECTED', updatedTime: 1 }],
+    })
 
-    expect(await screen.findByRole('button', { name: 'Approve' })).toBeInTheDocument()
+    expect(await screen.findByText("You've rejected this consent.")).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
+  })
+
+  it('shows a waiting message, not a button, once decided but the aggregate is still pending on someone else', async () => {
+    renderConsentDetailsPage('PENDING', Object.values(REQUIRED_SCOPES), {
+      authorizations: [
+        { userId: CURRENT_USER_ID, state: 'APPROVED', updatedTime: 1 },
+        { userId: 'co-authoriser', state: 'PENDING', updatedTime: 2 },
+      ],
+    })
+
+    expect(
+      await screen.findByText("You've made your decision. Waiting for the rest to decide."),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
   })
 
   it('hides lifecycle actions without the consent write scope', async () => {
     // Self-service writes are gated on internal_login, which a session scoped
     // to the catalogue alone does not carry.
-    renderConsentDetailsPage('PENDING', [REQUIRED_SCOPES.PURPOSES_READ])
+    renderConsentDetailsPage('PENDING', [REQUIRED_SCOPES.PURPOSES_READ], {
+      authorizations: [{ userId: CURRENT_USER_ID, state: 'PENDING', updatedTime: 1 }],
+    })
 
     expect(await screen.findByRole('heading', { name: 'Consent Details' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
@@ -164,11 +190,51 @@ describe('ConsentDetailsPage lifecycle actions', () => {
   })
 
   it.each(['REVOKED', 'EXPIRED'])(
-    'shows no lifecycle action for %s consents - a withdrawal or lapse stays final',
+    'shows no lifecycle action for %s consents, overriding even a stale approved entry - a withdrawal or lapse stays final',
     async (state) => {
-      renderConsentDetailsPage(state)
+      renderConsentDetailsPage(state, Object.values(REQUIRED_SCOPES), {
+        authorizations: [{ userId: CURRENT_USER_ID, state: 'APPROVED', updatedTime: 1 }],
+      })
 
       expect(await screen.findByRole('heading', { name: 'Consent Details' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
+      expect(
+        await screen.findByText(
+          state === 'REVOKED' ? 'This consent has been revoked.' : 'This consent has expired.',
+        ),
+      ).toBeInTheDocument()
+    },
+  )
+})
+
+describe('ConsentDetailsPage lifecycle actions - Direct Consent (no one else named)', () => {
+  it('lets the subject revoke it once active', async () => {
+    renderConsentDetailsPage('ACTIVE', Object.values(REQUIRED_SCOPES), {
+      subjectId: CURRENT_USER_ID,
+      authorizations: [],
+    })
+
+    expect(await screen.findByRole('button', { name: 'Revoke' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
+  })
+})
+
+describe('ConsentDetailsPage lifecycle actions - pure observer (subject with no authorization entry)', () => {
+  it.each([
+    ['PENDING', 'Waiting for authoriser approval.'],
+    ['ACTIVE', 'This consent has been approved.'],
+    ['REJECTED', 'This consent has been rejected.'],
+  ])(
+    'shows only a status message for a %s consent, never a button',
+    async (state, expectedText) => {
+      // The default fixture's only authorization entry belongs to "admin", not
+      // the signed-in "test-user" - an observer on someone else's decision.
+      renderConsentDetailsPage(state)
+
+      expect(await screen.findByText(expectedText)).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Reject' })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
@@ -226,7 +292,11 @@ describe('ConsentDetailsPage content', () => {
   })
 
   it('surfaces the API message when approving a consent that is not PENDING', async () => {
-    consentsApi.fetchMyConsentByID.mockResolvedValue(buildConsent('PENDING'))
+    consentsApi.fetchMyConsentByID.mockResolvedValue(
+      buildConsent('PENDING', {
+        authorizations: [{ userId: CURRENT_USER_ID, state: 'PENDING', updatedTime: 1 }],
+      }),
+    )
     consentHistoryApi.fetchMyConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
     adminConsentHistoryApi.fetchAdminConsentStatusHistory.mockResolvedValue(EMPTY_STATUS_HISTORY)
     consentsApi.approveMyConsent.mockRejectedValue(
@@ -241,6 +311,6 @@ describe('ConsentDetailsPage content', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Consent is not in PENDING state.')
     })
-    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID, 'test-user')
+    expect(consentsApi.approveMyConsent).toHaveBeenCalledWith(CONSENT_ID, CURRENT_USER_ID)
   })
 })

@@ -114,7 +114,16 @@
       "noAuthorizations": "ଏହି ସମ୍ମତି ପାଇଁ କୌଣସି ଅନୁମତି ରେକର୍ଡ କରାଯାଇ ନାହିଁ।",
       "noElements": "ଏହି ଉଦ୍ଦେଶ୍ୟ ସହିତ କୌଣସି ଉପାଦାନ ଜଡିତ ନାହିଁ।",
       "noPurposes": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ଉଦ୍ଦେଶ୍ୟ ଜଡ଼ିତ ନାହିଁ।",
-      "noProperties": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ସମ୍ପତ୍ତି ଜଡ଼ିତ ନାହିଁ।"
+      "noProperties": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ସମ୍ପତ୍ତି ଜଡ଼ିତ ନାହିଁ।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "ଦେଖନ୍ତୁ",

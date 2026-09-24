@@ -114,7 +114,16 @@
       "noAuthorizations": "यो सहमतिका लागि कुनै अनुमतिहरू रेकर्ड गरिएको छैन।",
       "noElements": "यस उद्देश्यसँग कुनै तत्त्वहरू सम्बन्धित छैनन्।",
       "noPurposes": "यो सहमतिसँग कुनै उद्देश्यहरू सम्बन्धित छैनन्।",
-      "noProperties": "यो सहमतिसँग कुनै सम्पत्तिहरू सम्बन्धित छैनन्।"
+      "noProperties": "यो सहमतिसँग कुनै सम्पत्तिहरू सम्बन्धित छैनन्।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "हेर्नुहोस्",

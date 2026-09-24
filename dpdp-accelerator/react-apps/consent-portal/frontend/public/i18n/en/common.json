@@ -114,7 +114,16 @@
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
       "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "noProperties": "No properties are associated with this consent.",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "View",

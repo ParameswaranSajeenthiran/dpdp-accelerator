@@ -114,7 +114,16 @@
       "noAuthorizations": "इन रज़ामंदी जे लाइ का बि इज़ाज़त दर्ज न आहे।",
       "noElements": "इन मक़्सद सां को बि उनसुरु लाॻापियल न आहे।",
       "noPurposes": "इन रज़ामंदी सां को बि मक़्सद लाॻापियल न आहे।",
-      "noProperties": "इन रज़ामंदी सां को बि ख़ासियत लाॻापियल न आहे।"
+      "noProperties": "इन रज़ामंदी सां को बि ख़ासियत लाॻापियल न आहे।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "ڏسو",

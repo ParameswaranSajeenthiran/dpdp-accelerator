@@ -114,7 +114,16 @@
       "noAuthorizations": "एहि सहमति लेल कोनो अधिकार दर्ज नहि अछि।",
       "noElements": "एहि उद्देश्यसँ कोनो तत्व सम्बन्धित नहि अछि।",
       "noPurposes": "एहि सहमति सँ कोनो उद्देश्य सम्बन्धित नहि अछि।",
-      "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।"
+      "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "देखू",

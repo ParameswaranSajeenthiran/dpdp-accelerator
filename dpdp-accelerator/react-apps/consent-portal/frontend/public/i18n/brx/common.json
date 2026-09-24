@@ -114,7 +114,16 @@
       "noAuthorizations": "बे गनायथिनि थाखाय जेबो गनायथि लिरनाय गैया।",
       "noElements": "बे थांखिजों जेबो गुदिमुवाफोर सोमोन्दो गैया।",
       "noPurposes": "बे गनायथिजों जेबो थांखिफोर सोमोन्दो गैया।",
-      "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।"
+      "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "नाय",

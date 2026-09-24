@@ -114,7 +114,16 @@
       "noAuthorizations": "இந்த ஒப்புதலுக்கான எந்த அங்கீகாரமும் பதிவு செய்யப்படவில்லை.",
       "noElements": "இந்த நோக்கத்துடன் எந்த கூறுகளும் தொடர்புபடுத்தப்படவில்லை.",
       "noPurposes": "இந்த ஒப்புதலுடன் எந்த நோக்கங்களும் இணைக்கப்படவில்லை.",
-      "noProperties": "இந்த ஒப்புதலுடன் எந்த சொத்துக்களும் இணைக்கப்படவில்லை."
+      "noProperties": "இந்த ஒப்புதலுடன் எந்த சொத்துக்களும் இணைக்கப்படவில்லை.",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "பார்",
