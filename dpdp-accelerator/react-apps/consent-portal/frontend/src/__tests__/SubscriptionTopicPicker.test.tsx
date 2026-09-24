@@ -217,13 +217,7 @@ it('does not report query pending state as busy through onBusyChange', () => {
   api.fetchTopics.mockReturnValue(new Promise(() => {}))
   const onBusyChange = vi.fn()
 
-  mount(
-    <SubscriptionTopicPicker
-      selected={[]}
-      onChange={vi.fn()}
-      onBusyChange={onBusyChange}
-    />,
-  )
+  mount(<SubscriptionTopicPicker selected={[]} onChange={vi.fn()} onBusyChange={onBusyChange} />)
 
   expect(onBusyChange).toHaveBeenCalledWith(false)
   expect(onBusyChange).not.toHaveBeenCalledWith(true)
