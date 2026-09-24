@@ -1,50 +1,75 @@
 # Complaint Management REST models
 
-`src/main/resources/complaint-server-API.yaml` owns the public JSON contract.
-OpenAPI Generator produces endpoint-local models in `src/gen/java`
-(`org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto`). Keep these generated
-files under version control and do not edit them by hand.
+This module's request and response classes are generated from an OpenAPI
+specification rather than written by hand.
 
-From the repository root, regenerate and verify this module with:
+- **The specification** is `src/main/resources/complaint-server-API.yaml`. It
+  defines the API's JSON, so change the API there first.
+- **The generated classes** live in `src/gen/java`, in the package
+  `org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto`. They are committed to
+  the repository. Don't edit them by hand; regenerate them instead.
+
+## Regenerating the models
+
+A normal build compiles the committed classes and doesn't run the generator. After
+changing the specification, regenerate them from the repository root:
 
 ```sh
 mvn -f dpdp-accelerator/internal-webapps/org.wso2.dpdp.accelerator.complaint.mgt.endpoint/pom.xml \
   -Ddpdp.dto.codegen.skip=false verify
 ```
 
-This command requires the current reactor dependencies to be installed locally.
-Normal builds compile the committed models with generation disabled. The generator
-version is pinned in the parent POM. Review the specification and generated-source
-diff together; a second regeneration must produce identical Java sources. Remove
-obsolete generated models explicitly when deleting or renaming schemas.
+This needs the other accelerator modules already installed in your local Maven
+repository, so run `mvn clean install` from the root first if you haven't.
 
-## Mapping and compatibility
+Before committing:
 
-The service layer returns the DAO models (`Complaint`, `ComplaintEvent`,
-`ComplaintAttachment`, `ComplaintQueueStats`); it has no DTOs of its own. Handlers
-take the generated request models, pass plain values to the services, and build
-the generated response models from the returned DAO models with
-`ComplaintDtoMapper`. The service and DAO modules never depend on the generated
-models.
+- Review the specification change and the regenerated classes together.
+- Run the command a second time. It should produce no further changes.
+- If you deleted or renamed a schema, delete its old class yourself. The
+  generator doesn't remove files.
 
-`ComplaintDtoMapperTest` pins every response's JSON.
+The generator version is set in the root `pom.xml`.
 
-Generation maps `format: uuid` to `String`, so IDs stay opaque, and `format: byte`
-to `String`, so attachment content passes through as the service's base64 string.
-Automatic bean validation is disabled to keep the service's own validation and
-error codes.
+## How the models are used
 
-Request enums (`subjectCategory`, `toStatus`) accept only the exact values declared
-in the specification. `ComplaintExceptionMapper` returns an unknown enum value as
-422 `CO-4002`, the same code the service returned before the models were typed, and
-any other unreadable body as 400 `CO-4001`.
+Only this module uses the generated classes. The service and DAO modules don't
+depend on them.
 
-Any other 4xx the framework raises without a code of its own, such as 405 or 415,
-keeps its HTTP status and carries the generic client-error code `CO-4000`. Its
-headers (e.g. `Allow`) are kept too, except the ones describing the framework's
-original body, which is replaced: `Content-Length` and `Content-Encoding` are
+- Resource classes receive the generated request models, and the handlers pass
+  plain values from them to the services.
+- The services return DAO models (`Complaint`, `ComplaintEvent`,
+  `ComplaintAttachment`, `ComplaintQueueStats`). `ComplaintDtoMapper` turns those
+  into the generated response models.
+- `ComplaintDtoMapperTest` checks the JSON of every response, so a change to a
+  response's shape fails a test.
+
+Generator settings that shape the classes:
+
+- IDs (`format: uuid`) stay plain strings.
+- Attachment content (`format: byte`) stays the base64 string the service
+  already uses, so it isn't decoded and re-encoded.
+- Automatic bean validation is off. The services do their own validation and
+  return their own error codes.
+
+Multipart file uploads are described in the specification, but the upload
+endpoints still read files through CXF's `@Multipart`. Only their JSON responses
+use the generated models.
+
+## Error responses
+
+`ComplaintExceptionMapper` turns every error into a JSON error body:
+
+| Situation | Status | Code |
+| --- | --- | --- |
+| A `subjectCategory` or `toStatus` value the specification doesn't list | 422 | `CO-4002` |
+| Any other request body that can't be read | 400 | `CO-4001` |
+| Any other client error with no code of its own, such as 405 or 415 | unchanged | `CO-4000` |
+
+The 422 keeps the code the service returned for unknown values before the
+request models used enums.
+
+For the last row, the response keeps the framework's status and headers, such
+as `Allow` on a 405. Headers that described the framework's own error body change
+because that body is replaced: `Content-Length` and `Content-Encoding` are
 dropped, and `Content-Type` becomes `application/json`.
-
-Multipart attachment uploads are documented in the specification but still bound
-directly through CXF's `@Multipart` in the resource classes; only their JSON
-responses use generated models.

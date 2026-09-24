@@ -82,7 +82,7 @@ public class ComplaintExceptionMapper implements ExceptionMapper<Throwable> {
         }
 
         LOG.error("Unhandled exception in Complaint API: " + LogSanitizer.sanitize(exception.getMessage()), exception);
-        return build(new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR.getCode(), "Internal error",
+        return build(new ComplaintServiceException(ComplaintEndpointErrorCodes.INTERNAL_ERROR, "Internal error",
                 "An unexpected error occurred while processing the request.",
                 Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
     }
