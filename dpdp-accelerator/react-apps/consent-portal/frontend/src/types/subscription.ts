@@ -53,6 +53,7 @@ export interface DeliveryConfig {
 
 export interface SubscriptionRecord {
   subscriptionId: string
+  name?: string
   orgId?: string
   groupId?: string
   topic?: string
@@ -67,6 +68,7 @@ export interface SubscriptionRecord {
 }
 
 export interface SubscriptionInput {
+  name: string
   groupId?: string
   topic?: string
   topics?: string[]

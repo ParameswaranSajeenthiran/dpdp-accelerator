@@ -16,126 +16,31 @@
  * under the License.
  */
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Button,
-  Chip,
-  Collapse,
-  Divider,
-  Stack,
-  TextField,
-  Typography,
-} from '@wso2/oxygen-ui'
-import { ChevronDown } from '@wso2/oxygen-ui-icons-react'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import SubscriptionChipListSection from './SubscriptionChipListSection'
 
 interface Props {
   topics: string[]
 }
+
 export default function SubscriptionTopicsSection({ topics }: Props): React.JSX.Element {
   const { t } = useTranslation('common')
-  const [search, setSearch] = useState('')
-  const [expanded, setExpanded] = useState(false)
-  const matches = topics.filter((topic) =>
-    topic.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+
+  const title = t('subscriptions.topicUi.subscribedCount', { count: topics.length }).replace(
+    /\s*\([^)]*\)\s*$/,
+    '',
   )
+
   return (
-    <Card sx={{ border: 1, borderColor: 'divider', boxShadow: 1 }}>
-      <CardHeader
-        sx={{
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          flexWrap: { xs: 'wrap', sm: 'nowrap' },
-          gap: { xs: 2, sm: 0 },
-          '& .MuiCardHeader-action': {
-            alignSelf: { xs: 'stretch', sm: 'center' },
-            m: 0,
-            width: { xs: '100%', sm: 'auto' },
-          },
-        }}
-        title={
-          <Button
-            color="inherit"
-            onClick={() => setExpanded(!expanded)}
-            aria-expanded={expanded}
-            aria-controls="subscribed-topic-content"
-            aria-label={t('subscriptions.topicUi.subscribedCount', {
-              count: topics.length,
-            }).replace(/\s*\([^)]*\)\s*$/, '')}
-            sx={{
-              p: 0,
-              minWidth: 'auto',
-              textTransform: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 1,
-              color: 'text.primary',
-              '&:hover': { bgcolor: 'transparent', opacity: 0.8 },
-            }}
-          >
-            <Typography variant="h6" fontWeight={700} component="span">
-              {t('subscriptions.topicUi.subscribedCount', { count: topics.length }).replace(
-                /\s*\([^)]*\)\s*$/,
-                '',
-              )}
-            </Typography>
-            <Chip
-              size="small"
-              label={topics.length.toString()}
-              color="primary"
-              variant="filled"
-              sx={{ height: 20, fontSize: '0.75rem', fontWeight: 600 }}
-            />
-            <ChevronDown
-              size={20}
-              style={{
-                transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 200ms ease-in-out',
-              }}
-            />
-          </Button>
-        }
-        subheader={
-          <Typography variant="body2" color="text.secondary">
-            {t('subscriptions.details.topicsSubtitle')}
-          </Typography>
-        }
-        action={
-          <TextField
-            size="small"
-            label={t('subscriptions.topicUi.searchAssociated')}
-            value={search}
-            sx={{ width: { xs: '100%', sm: 280 }, maxWidth: '100%' }}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setExpanded(true)
-            }}
-          />
-        }
-      />
-      <Collapse in={expanded}>
-        <Divider />
-        <CardContent id="subscribed-topic-content" sx={{ p: 3 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" useFlexGap flexWrap="wrap" gap={1}>
-              {matches.map((topic) => (
-                <Chip
-                  key={topic}
-                  label={topic}
-                  title={topic}
-                  variant="outlined"
-                  sx={{ maxWidth: '100%' }}
-                />
-              ))}
-            </Stack>
-            {!matches.length ? (
-              <Typography role="status">{t('subscriptions.topicUi.noMatches')}</Typography>
-            ) : null}
-          </Stack>
-        </CardContent>
-      </Collapse>
-    </Card>
+    <SubscriptionChipListSection
+      title={title}
+      count={topics.length}
+      subtitle={t('subscriptions.details.topicsSubtitle')}
+      searchLabel={t('subscriptions.topicUi.searchAssociated')}
+      noMatchesLabel={t('subscriptions.topicUi.noMatches')}
+      items={topics}
+      collapsible={false}
+      contentId="subscribed-topic-content"
+    />
   )
 }

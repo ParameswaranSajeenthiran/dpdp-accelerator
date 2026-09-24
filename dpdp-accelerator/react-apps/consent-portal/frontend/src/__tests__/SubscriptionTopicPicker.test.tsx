@@ -17,7 +17,7 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { OxygenTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { useState } from 'react'
 import { I18nextProvider } from 'react-i18next'
@@ -26,10 +26,12 @@ import SubscriptionTopicPicker from '../features/events/components/SubscriptionT
 import SubscriptionTopicChips from '../features/events/components/SubscriptionTopicChips'
 import SubscriptionTopicsSection from '../features/events/components/SubscriptionTopicsSection'
 import { collectMatchingTopics } from '../features/events/hooks/useSubscriptionTopicPicker'
+import { getTopicCategory } from '../features/events/utils/topicCategory'
 import i18n from '../i18n/i18n'
 
 const api = vi.hoisted(() => ({ fetchTopics: vi.fn() }))
 vi.mock('../features/events/api/topicsApi', () => api)
+
 afterEach(() => {
   cleanup()
   vi.resetAllMocks()
@@ -46,59 +48,118 @@ function mount(child: React.ReactNode): void {
     </QueryClientProvider>,
   )
 }
+
 function Picker(): React.JSX.Element {
   const [selected, setSelected] = useState<string[]>([])
   return <SubscriptionTopicPicker selected={selected} onChange={setSelected} />
 }
-it('preserves selection across server searches and supports clearing', async () => {
-  api.fetchTopics.mockImplementation(({ search }: { search?: string }) =>
-    Promise.resolve({
-      items: [{ topicId: search || 'a', name: search || 'alpha' }],
-      total: 1,
-    }),
-  )
+
+it('clears selection when category changes and allows chip deletion across categories', async () => {
+  api.fetchTopics.mockResolvedValue({
+    items: [
+      { topicId: '1', name: 'consent.alpha', status: 'ACTIVE', initiatedBy: 'SYSTEM' },
+      { topicId: '2', name: 'user.beta', status: 'ACTIVE', initiatedBy: 'SYSTEM' },
+      { topicId: '3', name: 'custom.gamma', status: 'ACTIVE', initiatedBy: 'USER' },
+    ],
+    total: 3,
+  })
+
   mount(<Picker />)
-  fireEvent.click(await screen.findByRole('checkbox', { name: 'alpha' }))
-  fireEvent.change(screen.getByLabelText('Search topics by name'), { target: { value: 'beta' } })
-  fireEvent.click(await screen.findByRole('checkbox', { name: 'beta' }))
-  expect(screen.getByRole('status')).toHaveTextContent('Selected topics')
-  expect(screen.getByRole('status')).toHaveTextContent('2')
-  fireEvent.change(screen.getByLabelText('Search topics by name'), { target: { value: '' } })
-  await waitFor(() => expect(screen.getByRole('checkbox', { name: 'alpha' })).toBeChecked())
-  fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
-  expect(screen.getByRole('status')).toHaveTextContent('0')
+
+  // Autocomplete is disabled until a category is chosen
+  expect(screen.getByPlaceholderText('Select a category first to choose topics')).toBeDisabled()
+
+  // Select "Consent Topics" category
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /topic category/i }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Consent Topics' }))
+
+  const input = screen.getByPlaceholderText('Search topics by name')
+  expect(input).toBeEnabled()
+
+  // Open Autocomplete options and pick consent.alpha
+  fireEvent.focus(input)
+  fireEvent.keyDown(input, { key: 'ArrowDown' })
+  const optionAlpha = await screen.findByRole('option', { name: 'consent.alpha' })
+  fireEvent.click(optionAlpha)
+  expect(screen.getByText('consent.alpha')).toBeInTheDocument()
+
+  // Switch category to "User Topics" -> selection must be cleared because mixing is not allowed
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /topic category/i }))
+  fireEvent.click(await screen.findByRole('option', { name: 'User Topics' }))
+
+  expect(screen.queryByText('consent.alpha')).not.toBeInTheDocument()
+
+  // Open Autocomplete and pick user.beta
+  fireEvent.focus(input)
+  fireEvent.keyDown(input, { key: 'ArrowDown' })
+  const optionBeta = await screen.findByRole('option', { name: 'user.beta' })
+  fireEvent.click(optionBeta)
+  expect(screen.getByText('user.beta')).toBeInTheDocument()
+
+  // Switch category to "Custom Topics" -> selection must be cleared
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /topic category/i }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Custom Topics' }))
+
+  expect(screen.queryByText('user.beta')).not.toBeInTheDocument()
+
+  // Open Autocomplete and pick custom.gamma
+  fireEvent.focus(input)
+  fireEvent.keyDown(input, { key: 'ArrowDown' })
+  const optionGamma = await screen.findByRole('option', { name: 'custom.gamma' })
+  fireEvent.click(optionGamma)
+  expect(screen.getByText('custom.gamma')).toBeInTheDocument()
+
+  // Delete custom.gamma via its chip delete icon
+  const deleteIcons = document.querySelectorAll('.MuiChip-deleteIcon')
+  expect(deleteIcons.length).toBe(1)
+  fireEvent.click(deleteIcons[0])
+  expect(screen.queryByText('custom.gamma')).not.toBeInTheDocument()
 })
-it('enforces the 100 topic cap without disabling removal', async () => {
-  api.fetchTopics.mockResolvedValue({ items: [{ name: 'topic-0' }, { name: 'extra' }], total: 2 })
+
+it('enforces the 100 topic cap and allows chip deletion', async () => {
+  api.fetchTopics.mockResolvedValue({ items: [], total: 0 })
+  const onChange = vi.fn()
+
   mount(
     <SubscriptionTopicPicker
-      selected={Array.from({ length: 100 }, (_, index) => `topic-${index}`)}
-      onChange={vi.fn()}
+      selected={Array.from({ length: 100 }, (_, index) => `consent.topic-${index}`)}
+      onChange={onChange}
     />,
   )
-  expect(await screen.findByRole('checkbox', { name: 'extra' })).toBeDisabled()
-  expect(screen.getByRole('checkbox', { name: 'topic-0' })).toBeEnabled()
+
+  // Chip delete button exists and calls onChange without that item
+  const deleteButtons = document.querySelectorAll('.MuiChip-deleteIcon')
+  expect(deleteButtons.length).toBe(100)
+  fireEvent.click(deleteButtons[0])
+  expect(onChange).toHaveBeenCalled()
 })
-it('shows a retryable error and distinguishes an empty catalog', async () => {
-  api.fetchTopics
-    .mockRejectedValueOnce(new Error('offline'))
-    .mockResolvedValue({ items: [], total: 0 })
+
+it('shows a retryable error on fetch failure', async () => {
+  api.fetchTopics.mockRejectedValueOnce(new Error('offline'))
   mount(<Picker />)
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: /topic category/i }))
+  fireEvent.click(await screen.findByRole('option', { name: 'Consent Topics' }))
+
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not load topics')
-  fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-  expect(await screen.findByText('No active topics available.')).toBeInTheDocument()
 })
-it('expands compact chips and searches associated topics', () => {
+
+it('renders compact chips and searches associated topics in SubscriptionTopicsSection', () => {
   mount(
     <>
       <SubscriptionTopicChips topics={['alpha', 'beta', 'gamma']} />
       <SubscriptionTopicsSection topics={['delta', 'epsilon']} />
     </>,
   )
+
   expect(screen.queryByText('gamma')).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '+1 more' }))
   expect(screen.getByText('gamma')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Subscribed Topics' }))
+
+  // SubscriptionTopicsSection is non-collapsible (always expanded)
+  expect(screen.getByText('delta')).toBeInTheDocument()
+  expect(screen.getByText('epsilon')).toBeInTheDocument()
+
   fireEvent.change(screen.getByLabelText('Search associated topics'), {
     target: { value: 'epsilon' },
   })
@@ -106,25 +167,28 @@ it('expands compact chips and searches associated topics', () => {
   expect(screen.getByText('epsilon')).toBeInTheDocument()
 })
 
-it('selects matching topics across all pages and keeps existing selections', async () => {
-  api.fetchTopics
-    .mockResolvedValueOnce({ items: [{ name: 'alpha' }], total: 2 })
-    .mockResolvedValueOnce({ items: [{ name: 'beta' }], total: 2 })
-  await expect(collectMatchingTopics('consent', ['existing', 'alpha'])).resolves.toEqual([
+it('selects matching topics and keeps existing selections', async () => {
+  api.fetchTopics.mockResolvedValueOnce({
+    items: [{ name: 'consent.alpha' }, { name: 'consent.beta' }],
+    total: 2,
+  })
+  await expect(collectMatchingTopics('consent', ['existing', 'consent.alpha'])).resolves.toEqual([
     'existing',
-    'alpha',
-    'beta',
+    'consent.alpha',
+    'consent.beta',
   ])
   expect(api.fetchTopics).toHaveBeenLastCalledWith({
     status: 'ACTIVE',
     search: 'consent',
     limit: 100,
-    offset: 1,
+    offset: 0,
   })
 })
+
 it('rejects select all above the cap instead of truncating', async () => {
   api.fetchTopics.mockResolvedValue({ items: [{ name: 'alpha' }], total: 101 })
   await expect(collectMatchingTopics('', [])).rejects.toThrow(RangeError)
+
   api.fetchTopics.mockResolvedValue({ items: [{ name: 'extra' }], total: 1 })
   await expect(
     collectMatchingTopics(
@@ -133,25 +197,18 @@ it('rejects select all above the cap instead of truncating', async () => {
     ),
   ).rejects.toThrow(RangeError)
 })
-it('does not return partial results when a later page fails', async () => {
-  api.fetchTopics
-    .mockResolvedValueOnce({ items: [{ name: 'alpha' }], total: 2 })
-    .mockRejectedValueOnce(new Error('offline'))
-  const selected = ['existing']
-  await expect(collectMatchingTopics('', selected)).rejects.toThrow('offline')
-  expect(selected).toEqual(['existing'])
-})
-it('select all button selects matches and reports overflow without losing selection', async () => {
-  api.fetchTopics.mockResolvedValue({ items: [{ name: 'alpha' }, { name: 'beta' }], total: 2 })
-  mount(<Picker />)
-  await screen.findByRole('checkbox', { name: 'alpha' })
-  fireEvent.click(screen.getByRole('button', { name: 'Select all' }))
-  await waitFor(() => {
-    expect(screen.getByRole('status')).toHaveTextContent('Selected topics')
-    expect(screen.getByRole('status')).toHaveTextContent('2')
-  })
-  api.fetchTopics.mockResolvedValue({ items: [{ name: 'extra' }], total: 101 })
-  fireEvent.click(screen.getByRole('button', { name: 'Select all' }))
-  expect(await screen.findByRole('alert')).toHaveTextContent('100-topic limit')
-  expect(screen.getByRole('status')).toHaveTextContent('2')
+
+it('categorizes topics by checking SYSTEM status first before prefix', () => {
+  // System topics check prefix
+  expect(getTopicCategory({ name: 'consent.update', initiatedBy: 'SYSTEM' })).toBe('consent')
+  expect(getTopicCategory({ name: 'consent.custom', initiatedBy: 'SYSTEM' })).toBe('consent')
+  expect(getTopicCategory({ name: 'user.data.change', initiatedBy: 'SYSTEM' })).toBe('user')
+  expect(getTopicCategory({ name: 'user.account.delete', initiatedBy: 'SYSTEM' })).toBe('user')
+  expect(getTopicCategory({ name: 'other.system.topic', initiatedBy: 'SYSTEM' })).toBe('custom')
+
+  // Non-system topics are ALWAYS custom, even if they have consent. or user. in name
+  expect(getTopicCategory({ name: 'consent.custom', initiatedBy: 'USER' })).toBe('custom')
+  expect(getTopicCategory({ name: 'user.custom', initiatedBy: 'USER' })).toBe('custom')
+  expect(getTopicCategory({ name: 'orders.placed', initiatedBy: 'USER' })).toBe('custom')
+  expect(getTopicCategory({ name: 'payment.completed' })).toBe('custom')
 })

@@ -639,7 +639,18 @@
       "excluding": "excluding",
       "selectedTopics": "Selected topics",
       "availableTopics": "Available topics",
-      "allSelected": "All matching topics are selected."
+      "allSelected": "All matching topics are selected.",
+      "category": "Topic Category",
+      "categoryPlaceholder": "Select topic category",
+      "categoryConsent": "Consent Topics",
+      "categoryUser": "User Topics",
+      "categoryCustom": "Custom Topics",
+      "categoryRequired": "Select a category first to choose topics",
+      "selectAllShown": "Select all shown",
+      "clearCategory": "Clear category topics",
+      "searchPurposes": "Search purposes",
+      "purposesCount": "Subscribed Purposes",
+      "noPurposesMatches": "No matching purposes."
     },
     "title": "सब्सक्रिप्शन",
     "subtitle": "आपके संगठन के लिए इवेंट नोटिफिकेशन सब्सक्रिप्शन का प्रबंधन और निगरानी करें",
@@ -671,6 +682,7 @@
     },
     "table": {
       "ariaLabel": "सब्सक्रिप्शन प्रबंधन तालिका",
+      "name": "Name",
       "subscriptionId": "सब्सक्रिप्शन आईडी",
       "topic": "विषय",
       "groupId": "समूह आईडी",
@@ -695,6 +707,10 @@
     "dialog": {
       "registerTitle": "सब्सक्रिप्शन रजिस्टर करें",
       "registerSubtitle": "एक नई घटना अधिसूचना सदस्यता और डिलीवरी मोड कॉन्फ़िगर करें",
+      "nameLabel": "Subscription Name",
+      "namePlaceholder": "e.g. Orders Notification Webhook",
+      "nameRequired": "Subscription name is required.",
+      "nameTooLong": "Subscription name must not exceed 225 characters.",
       "topicLabel": "विषय",
       "multiTopicFilter": "Select the all purpose filter when including user lifecycle topics.",
       "topicRequired": "विषय आवश्यक है।",
@@ -727,13 +743,19 @@
     },
     "details": {
       "loadFailed": "सदस्यता विवरण लोड करने में असमर्थ।",
+      "name": "Subscription Name",
       "configTitle": "सब्सक्रिप्शन कॉन्फ़िगरेशन",
       "configSubtitle": "सामान्य मेटाडेटा, रूटिंग पैरामीटर और फ़िल्टरिंग नियम",
       "eventsTitle": "डिलीवरी इतिहास और निष्पादन लॉग",
       "eventsSubtitle": "इस सब्सक्राइबर को भेजे गए हालिया इवेंट डिलीवरी और पुनः प्रयास",
       "createdAt": "कदा बनाया गया",
       "updatedAt": "अंतिम अपडेट",
-      "topicsSubtitle": "Active event topics registered for delivery on this subscription"
+      "topicsSubtitle": "Active event topics registered for delivery on this subscription",
+      "purposesTitle": "Subscribed Purposes",
+      "purposesSubtitle": "Consent purposes configured for event filtering",
+      "allPurposesNotice": "This subscription receives events for all purposes.",
+      "searchPurposes": "Search associated purposes",
+      "noPurposes": "No matching purposes."
     },
     "deliveryEvents": {
       "ariaLabel": "डिलीवरी इवेंट लॉग टेबल",

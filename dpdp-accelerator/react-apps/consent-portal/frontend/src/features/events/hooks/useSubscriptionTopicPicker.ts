@@ -16,11 +16,7 @@
  * under the License.
  */
 
-import {
-  useInfiniteQuery,
-  type UseInfiniteQueryResult,
-  type InfiniteData,
-} from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { fetchTopics } from '../api/topicsApi'
 import { MAX_SUBSCRIPTION_TOPICS } from '../constants'
@@ -28,48 +24,35 @@ import type { TopicListResponse } from '../../../types/topic'
 
 export async function collectMatchingTopics(search: string, selected: string[]): Promise<string[]> {
   const names = new Set(selected)
-  const collect = async (offset: number): Promise<string[]> => {
-    const page = await fetchTopics({
-      status: 'ACTIVE',
-      search: search.trim() || undefined,
-      limit: 100,
-      offset,
-    })
-    page.items.forEach((topic) => names.add(topic.name))
-    if (page.total > MAX_SUBSCRIPTION_TOPICS || names.size > MAX_SUBSCRIPTION_TOPICS) {
-      throw new RangeError('Topic selection exceeds the subscription limit')
-    }
-    const next = offset + page.items.length
-    if (next < page.total) {
-      if (!page.items.length) throw new Error('Incomplete topic results')
-      return collect(next)
-    }
-    return [...names]
+  const page = await fetchTopics({
+    status: 'ACTIVE',
+    search: search.trim() || undefined,
+    limit: 100,
+    offset: 0,
+  })
+  page.items.forEach((topic) => names.add(topic.name))
+  if (page.total > MAX_SUBSCRIPTION_TOPICS || names.size > MAX_SUBSCRIPTION_TOPICS) {
+    throw new RangeError('Topic selection exceeds the subscription limit')
   }
-  return collect(0)
+  return [...names]
 }
 
 export default function useSubscriptionTopicPicker(
   search: string,
-): UseInfiniteQueryResult<InfiniteData<TopicListResponse>> {
+): UseQueryResult<TopicListResponse> {
   const [debouncedSearch, setDebouncedSearch] = useState(search)
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
     return () => window.clearTimeout(timer)
   }, [search])
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: ['subscription-topic-picker', debouncedSearch],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
+    queryFn: () =>
       fetchTopics({
         status: 'ACTIVE',
         search: debouncedSearch.trim() || undefined,
-        limit: 30,
-        offset: pageParam,
+        limit: 100,
+        offset: 0,
       }),
-    getNextPageParam: (lastPage, pages) => {
-      const loaded = pages.reduce((count, page) => count + page.items.length, 0)
-      return lastPage.items.length > 0 && loaded < lastPage.total ? loaded : undefined
-    },
   })
 }
