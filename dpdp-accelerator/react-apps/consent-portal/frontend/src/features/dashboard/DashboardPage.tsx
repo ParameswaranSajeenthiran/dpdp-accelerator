@@ -115,7 +115,7 @@ function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): Re
         value={value(counts?.expired)}
         label={t('consentRegistry.status.expired')}
         icon={<Hourglass size={22} />}
-        iconColor="secondary"
+        iconColor="info"
       />
     </Box>
   )
