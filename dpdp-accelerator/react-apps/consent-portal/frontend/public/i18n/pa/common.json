@@ -32,13 +32,14 @@
     "administration": "ਪ੍ਰਸ਼ਾਸਨ",
     "adminConsents": "ਸਾਰੀਆਂ ਸਹਿਮਤੀਆਂ",
     "myComplaints": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ",
+    "complaints": "ਸ਼ਿਕਾਇਤਾਂ",
     "complaintManagement": "ਸ਼ਿਕਾਇਤਾਂ",
     "events": "ਸਮਾਗਮ",
+    "eventNotifications": "Event Notifications",
     "topics": "ਵਿਸ਼ੇ",
     "subscriptions": "ਸਬਸਕ੍ਰਿਪਸ਼ਨਾਂ"
   },
   "layout": {
-    "home": "ਹੋਮ",
     "breadcrumbAriaLabel": "ਬ੍ਰੈੱਡਕ੍ਰੰਬ",
     "userMenu": {
       "unknownUser": "ਅਣਪਛਾਤਾ ਵਰਤੋਂਕਾਰ",

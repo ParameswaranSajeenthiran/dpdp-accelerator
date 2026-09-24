@@ -20,10 +20,12 @@ import { Box, Breadcrumbs, Link, Typography } from '@wso2/oxygen-ui'
 import { ChevronRight } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
+import { PENDING_CONSENTS_PATH } from '../../../features/my-consents/constants'
 
 interface BreadcrumbItem {
   label: string
-  path: string
+  // Absent for section groupings that have no page of their own.
+  path?: string
   isCurrent: boolean
 }
 
@@ -42,16 +44,20 @@ function safeDecodeURIComponent(value: string): string {
 function buildBreadcrumbItems(
   pathname: string,
   search: string,
-  homeLabel: string,
+  dashboardLabel: string,
+  consentGroupLabel: string,
   consentsLabel: string,
   pendingConsentsLabel: string,
+  catalogLabel: string,
   purposesLabel: string,
   elementsLabel: string,
   administrationLabel: string,
   administrationConsentsLabel: string,
+  eventNotificationsLabel: string,
   eventsLabel: string,
   subscriptionsLabel: string,
   topicsLabel: string,
+  complaintsGroupLabel: string,
   myComplaintsLabel: string,
   complaintManagementLabel: string,
 ): BreadcrumbItem[] {
@@ -59,10 +65,8 @@ function buildBreadcrumbItems(
 
   if (complaintCaseDetailsMatch) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
       {
         label: administrationLabel,
-        path: '/complaint-management',
         isCurrent: false,
       },
       {
@@ -80,10 +84,8 @@ function buildBreadcrumbItems(
 
   if (pathname.startsWith('/complaint-management')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
       {
         label: administrationLabel,
-        path: '/complaint-management',
         isCurrent: false,
       },
       {
@@ -98,7 +100,7 @@ function buildBreadcrumbItems(
 
   if (complaintDetailsMatch) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: complaintsGroupLabel, isCurrent: false },
       {
         label: myComplaintsLabel,
         path: '/complaints',
@@ -114,7 +116,7 @@ function buildBreadcrumbItems(
 
   if (pathname.startsWith('/complaints')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: complaintsGroupLabel, isCurrent: false },
       { label: myComplaintsLabel, path: '/complaints', isCurrent: true },
     ]
   }
@@ -123,10 +125,8 @@ function buildBreadcrumbItems(
 
   if (adminConsentDetailsMatch) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
       {
         label: administrationLabel,
-        path: '/administration/consents',
         isCurrent: false,
       },
       {
@@ -144,10 +144,8 @@ function buildBreadcrumbItems(
 
   if (pathname.startsWith('/administration/consents')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
       {
         label: administrationLabel,
-        path: '/administration/consents',
         isCurrent: false,
       },
       {
@@ -159,17 +157,14 @@ function buildBreadcrumbItems(
   }
 
   const consentDetailsMatch = pathname.match(/^\/consents\/([^/]+)$/)
+  const isPendingView = new URLSearchParams(search).get('view') === 'pending'
 
   if (consentDetailsMatch) {
     return [
+      { label: consentGroupLabel, isCurrent: false },
       {
-        label: homeLabel,
-        path: '/dashboard',
-        isCurrent: false,
-      },
-      {
-        label: consentsLabel,
-        path: '/consents',
+        label: isPendingView ? pendingConsentsLabel : consentsLabel,
+        path: isPendingView ? PENDING_CONSENTS_PATH : '/consents',
         isCurrent: false,
       },
       {
@@ -181,16 +176,10 @@ function buildBreadcrumbItems(
   }
 
   if (pathname.startsWith('/consents')) {
-    const isPending = new URLSearchParams(search).get('view') === 'pending'
-
     return [
+      { label: consentGroupLabel, isCurrent: false },
       {
-        label: homeLabel,
-        path: '/dashboard',
-        isCurrent: false,
-      },
-      {
-        label: isPending ? pendingConsentsLabel : consentsLabel,
+        label: isPendingView ? pendingConsentsLabel : consentsLabel,
         path: '/consents',
         isCurrent: true,
       },
@@ -202,7 +191,7 @@ function buildBreadcrumbItems(
   if (catalogDetailsMatch) {
     const section = catalogDetailsMatch[1]
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: catalogLabel, isCurrent: false },
       {
         label: section === 'purposes' ? purposesLabel : elementsLabel,
         path: `/${section}`,
@@ -218,14 +207,14 @@ function buildBreadcrumbItems(
 
   if (pathname.startsWith('/purposes')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: catalogLabel, isCurrent: false },
       { label: purposesLabel, path: '/purposes', isCurrent: true },
     ]
   }
 
   if (pathname.startsWith('/elements')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: catalogLabel, isCurrent: false },
       { label: elementsLabel, path: '/elements', isCurrent: true },
     ]
   }
@@ -234,8 +223,7 @@ function buildBreadcrumbItems(
 
   if (subscriptionDetailsMatch) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events', isCurrent: false },
+      { label: eventNotificationsLabel, isCurrent: false },
       { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: false },
       {
         label: safeDecodeURIComponent(subscriptionDetailsMatch[1]),
@@ -247,30 +235,42 @@ function buildBreadcrumbItems(
 
   if (pathname.startsWith('/events/subscriptions')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events', isCurrent: false },
+      { label: eventNotificationsLabel, isCurrent: false },
       { label: subscriptionsLabel, path: '/events/subscriptions', isCurrent: true },
     ]
   }
 
   if (pathname.startsWith('/events/topics')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
-      { label: eventsLabel, path: '/events', isCurrent: false },
+      { label: eventNotificationsLabel, isCurrent: false },
       { label: topicsLabel, path: '/events/topics', isCurrent: true },
+    ]
+  }
+
+  const eventDetailsMatch = pathname.match(/^\/events\/([^/]+)$/)
+
+  if (eventDetailsMatch) {
+    return [
+      { label: eventNotificationsLabel, isCurrent: false },
+      { label: eventsLabel, path: '/events', isCurrent: false },
+      {
+        label: safeDecodeURIComponent(eventDetailsMatch[1]),
+        path: pathname,
+        isCurrent: true,
+      },
     ]
   }
 
   if (pathname.startsWith('/events')) {
     return [
-      { label: homeLabel, path: '/dashboard', isCurrent: false },
+      { label: eventNotificationsLabel, isCurrent: false },
       { label: eventsLabel, path: '/events', isCurrent: true },
     ]
   }
 
   return [
     {
-      label: homeLabel,
+      label: dashboardLabel,
       path: '/dashboard',
       isCurrent: true,
     },
@@ -284,16 +284,20 @@ function HeaderBreadcrumbs({ currentLabel }: HeaderBreadcrumbsProps): React.JSX.
   const breadcrumbItems = buildBreadcrumbItems(
     location.pathname,
     location.search,
-    t('layout.home'),
+    t('sidebar.dashboard'),
+    t('sidebar.consent'),
     t('sidebar.allConsents'),
     t('sidebar.pendingConsents'),
+    t('sidebar.catalog'),
     t('sidebar.purposes'),
     t('sidebar.elements'),
     t('sidebar.administration'),
     t('sidebar.adminConsents'),
+    t('sidebar.eventNotifications'),
     t('sidebar.events'),
     t('sidebar.subscriptions'),
     t('sidebar.topics'),
+    t('sidebar.complaints'),
     t('sidebar.myComplaints'),
     t('sidebar.complaintManagement'),
   ).map((item) => (item.isCurrent && currentLabel ? { ...item, label: currentLabel } : item))
@@ -307,19 +311,31 @@ function HeaderBreadcrumbs({ currentLabel }: HeaderBreadcrumbsProps): React.JSX.
           </Box>
         }
       >
-        {breadcrumbItems.map((item) =>
-          item.isCurrent ? (
-            <Typography
-              key={`${item.path}-${item.label}-current`}
-              component="span"
-              variant="body2"
-              color="text.primary"
-              fontWeight={600}
-              aria-current="page"
-            >
-              {item.label}
-            </Typography>
-          ) : (
+        {breadcrumbItems.map((item) => {
+          if (item.isCurrent) {
+            return (
+              <Typography
+                key={`${item.label}-current`}
+                component="span"
+                variant="body2"
+                color="text.primary"
+                fontWeight={600}
+                aria-current="page"
+              >
+                {item.label}
+              </Typography>
+            )
+          }
+
+          if (!item.path) {
+            return (
+              <Typography key={item.label} component="span" variant="body2" color="text.secondary">
+                {item.label}
+              </Typography>
+            )
+          }
+
+          return (
             <Link
               key={`${item.path}-${item.label}`}
               component={RouterLink}
@@ -331,8 +347,8 @@ function HeaderBreadcrumbs({ currentLabel }: HeaderBreadcrumbsProps): React.JSX.
             >
               {item.label}
             </Link>
-          ),
-        )}
+          )
+        })}
       </Breadcrumbs>
     </Box>
   )

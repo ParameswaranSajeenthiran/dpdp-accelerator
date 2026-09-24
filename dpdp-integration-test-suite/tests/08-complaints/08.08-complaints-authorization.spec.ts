@@ -26,9 +26,11 @@ import { AppSidebarPage } from '../../pages/AppSidebarPage'
  *
  * Sidebar label text is read straight from public/i18n/en/common.json, not guessed from the
  * translation key names - AppSidebar.tsx's `sidebar.myComplaints` renders "My Complaints" (the
- * Data Principal's own item, its own unlabeled Sidebar.Category) while `sidebar.complaintManagement`
- * renders just "Complaints" (nested under the "Administration" category, alongside
- * `sidebar.adminConsents` - not "Complaint Management" as the key's own name might suggest).
+ * Data Principal's own item, under the "Complaints" category heading from `sidebar.complaints`) while
+ * `sidebar.complaintManagement` also renders just "Complaints" (the officer's item, nested under the
+ * "Administration" category, alongside `sidebar.adminConsents` - not "Complaint Management" as the
+ * key's own name might suggest). A Data Principal therefore sees the text "Complaints" once, as a
+ * heading; only a Consent Admin sees an "Administration" category holding the officer's item.
  *
  * The two entries never appear together for either persona: DPDPIdentityExtensionTenantMgtListener
  * routes every `:self` complaint scope to `dpdp-consent-user` and every `:any` one to
@@ -55,16 +57,18 @@ test.describe('Complaints route-level access control and sidebar visibility (UI)
     await dataPrincipalPage.context().close()
   })
 
-  test('08.08.03 - A Data Principal\'s sidebar shows a "My Complaints" entry, not "Complaints"', async ({
+  test('08.08.03 - A Data Principal\'s sidebar shows a "My Complaints" entry, not the officer\'s "Complaints" entry', async ({
     browser,
   }) => {
     const dataPrincipalPage = await loginAsUser(browser)
     await dataPrincipalPage.goto('dashboard')
     const sidebar = new AppSidebarPage(dataPrincipalPage)
     await expect(sidebar.label('My Complaints')).toBeVisible()
-    // The officer-facing label never appears at all for a persona lacking COMPLAINTS_READ_ANY -
-    // COMPLAINT_ITEMS.filter(hasScope) removes it from the DOM entirely, not merely hides it.
-    await expect(sidebar.label('Complaints')).toHaveCount(0)
+    // The officer-facing item never appears at all for a persona lacking COMPLAINTS_READ_ANY -
+    // ADMINISTRATION_ITEMS.filter(hasScope) removes it from the DOM entirely, not merely hides it.
+    // The one remaining "Complaints" is the category heading above "My Complaints".
+    await expect(sidebar.label('Complaints')).toHaveCount(1)
+    await expect(sidebar.label('Administration')).toHaveCount(0)
     await dataPrincipalPage.context().close()
   })
 

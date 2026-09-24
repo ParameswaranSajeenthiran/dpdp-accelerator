@@ -409,7 +409,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | --- | --- | --- |
 | `08.08.01` | A Data Principal navigating directly to /complaints is not redirected away |  |
 | `08.08.02` | A Data Principal navigating directly to /complaint-management is redirected away |  |
-| `08.08.03` | A Data Principal's sidebar shows a "My Complaints" entry, not "Complaints" | The `:self` and `:any` complaint scopes go to different roles, so the two sidebar entries never co-exist. |
+| `08.08.03` | A Data Principal's sidebar shows a "My Complaints" entry, not the officer's "Complaints" entry | The `:self` and `:any` complaint scopes go to different roles, so the two sidebar entries never co-exist. "Complaints" still appears once, as the category heading above "My Complaints"; the officer's item is ruled out by the absent "Administration" category. |
 | `08.08.04` | A Consent Admin can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints" |  |
 
 ### `08.09-end-to-end-scenarios.spec.ts`

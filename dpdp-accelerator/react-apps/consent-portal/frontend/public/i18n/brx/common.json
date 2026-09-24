@@ -32,13 +32,14 @@
     "administration": "सालायनाय",
     "adminConsents": "गासैबो गनायथिनायफोर",
     "myComplaints": "आंनि अजतफोर",
+    "complaints": "अजतफोर",
     "complaintManagement": "अजतफोर",
     "events": "जाथायफोर",
+    "eventNotifications": "Event Notifications",
     "topics": "आयदाफोर",
     "subscriptions": "साब्सक्रिपसनफोर"
   },
   "layout": {
-    "home": "न'",
     "breadcrumbAriaLabel": "ब्रेडक्राम्ब",
     "userMenu": {
       "unknownUser": "मिथिमोनै बाहायग्रा",

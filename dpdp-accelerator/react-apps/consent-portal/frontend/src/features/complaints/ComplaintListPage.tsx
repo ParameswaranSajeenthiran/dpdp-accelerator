@@ -20,7 +20,6 @@ import { Alert, Box, Button, Stack, Typography } from '@wso2/oxygen-ui'
 import { Plus } from '@wso2/oxygen-ui-icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import ComplaintListFilters, {
   type ComplaintListStatusFilter,
 } from './components/ComplaintListFilters'
@@ -60,7 +59,6 @@ function ComplaintListPage(): React.JSX.Element {
           justifyContent="space-between"
         >
           <Stack spacing={1}>
-            <HeaderBreadcrumbs currentLabel="" />
             <Typography variant="h4" fontWeight={700}>
               {t('complaints.list.title')}
             </Typography>

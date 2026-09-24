@@ -32,13 +32,14 @@
     "administration": "শাসন/পরিচালনা",
     "adminConsents": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯌꯥꯅꯕ",
     "myComplaints": "ইগী ৱাকৎশিং",
+    "complaints": "Complaints",
     "complaintManagement": "ৱাকৎ পরিচালনা",
     "events": "ꯏꯚꯦꯟꯠꯁꯤꯡ",
+    "eventNotifications": "Event Notifications",
     "topics": "ꯇꯣꯄꯤꯛꯁꯤꯡ",
     "subscriptions": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ"
   },
   "layout": {
-    "home": "য়ুম (Home)",
     "breadcrumbAriaLabel": "ব্রেডক্রম্ব",
     "userMenu": {
       "unknownUser": "খংদবা শীজিন্নবমী",

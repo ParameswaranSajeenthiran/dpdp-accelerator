@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सर्व संमती",
     "myComplaints": "माझ्या तक्रारी",
+    "complaints": "तक्रारी",
     "complaintManagement": "तक्रारी",
     "events": "कार्यक्रम",
+    "eventNotifications": "Event Notifications",
     "topics": "विषय",
     "subscriptions": "सबस्क्रिप्शन"
   },
   "layout": {
-    "home": "मुख्यपृष्ठ",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अज्ञात वापरकर्ता",

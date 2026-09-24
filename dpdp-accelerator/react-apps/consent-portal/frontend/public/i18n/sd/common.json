@@ -32,13 +32,14 @@
     "administration": "انتظاميه",
     "adminConsents": "सभुई रज़ामंदी",
     "myComplaints": "منهنجون شڪايتون",
+    "complaints": "شڪايتون",
     "complaintManagement": "شڪايتون",
     "events": "वाक़िआ",
+    "eventNotifications": "Event Notifications",
     "topics": "मौजूअ",
     "subscriptions": "सदस्यताउं"
   },
   "layout": {
-    "home": "گھر",
     "breadcrumbAriaLabel": "بريڊ ڪرمب",
     "userMenu": {
       "unknownUser": "نامعلوم استعمال ڪندڙ",

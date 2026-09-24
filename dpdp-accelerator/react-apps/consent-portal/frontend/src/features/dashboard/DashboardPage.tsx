@@ -48,7 +48,7 @@ import {
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
+import { PENDING_CONSENTS_PATH, PENDING_CONSENTS_VIEW_SEARCH } from '../my-consents/constants'
 import useAuthorization from '../auth/useAuthorization'
 import type { ConsentSummary } from '../../types/consent'
 import { formatEpochTimestamp } from '../../utils/dateTime'
@@ -77,7 +77,7 @@ function summarizePurposes(consent: ConsentSummary): string {
 
 function PendingConsentRow({ consent }: { consent: ConsentSummary }): React.JSX.Element {
   const navigate = useNavigate()
-  const consentPath = `/consents/${encodeURIComponent(consent.id)}`
+  const consentPath = `/consents/${encodeURIComponent(consent.id)}${PENDING_CONSENTS_VIEW_SEARCH}`
 
   return (
     <Box
@@ -238,7 +238,6 @@ function DashboardPage(): React.JSX.Element {
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
         <Stack spacing={0.75}>
-          <HeaderBreadcrumbs />
           <Typography variant="h4" fontWeight={700}>
             {t('dashboard.title')}
           </Typography>
@@ -338,7 +337,7 @@ function DashboardPage(): React.JSX.Element {
                     {pendingConsents.length > 0 ? (
                       <Button
                         component={RouterLink}
-                        to="/consents?view=pending&state=PENDING"
+                        to={PENDING_CONSENTS_PATH}
                         size="small"
                         endIcon={<ArrowRight size={15} />}
                         sx={{ mt: 1 }}

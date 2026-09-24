@@ -32,13 +32,14 @@
     "administration": "প্রশাসন",
     "adminConsents": "সকল সম্মতি",
     "myComplaints": "আমার অভিযোগ",
+    "complaints": "অভিযোগ",
     "complaintManagement": "অভিযোগ",
     "events": "ইভেন্ট",
+    "eventNotifications": "Event Notifications",
     "topics": "বিষয়সমূহ",
     "subscriptions": "সদস্যতা"
   },
   "layout": {
-    "home": "হোম",
     "breadcrumbAriaLabel": "ব্রেডক্রাম্ব",
     "userMenu": {
       "unknownUser": "অজানা ব্যবহারকারী",
