@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import java.io.IOException;
@@ -66,7 +66,7 @@ class ComplaintTimelineEndpointTest {
 
     @Test
     void getTimelineReturns200WithHandlerResponse() {
-        TimelineListResponseDTO handlerResponse = new TimelineListResponseDTO();
+        TimelineListResponse handlerResponse = new TimelineListResponse();
         when(timelineHandler.getTimeline(ORG_ID, "c1", 1000L, null, "asc", 10, 0)).thenReturn(handlerResponse);
 
         Response response = endpoint.getTimeline("c1", 1000L, null, "asc", 10, 0);

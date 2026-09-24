@@ -27,8 +27,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import java.io.IOException;
@@ -71,7 +71,7 @@ class ComplaintAttachmentEndpointTest {
 
     @Test
     void uploadComplaintAttachmentReturns201WithHandlerResponse() {
-        List<ComplaintAttachmentResponseDTO> handlerResponse = List.of();
+        List<ComplaintAttachmentResponse> handlerResponse = List.of();
         when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                 "officer1")).thenReturn(handlerResponse);
 
@@ -83,8 +83,9 @@ class ComplaintAttachmentEndpointTest {
 
     @Test
     void downloadComplaintAttachmentReturns200WithHandlerResponse() {
-        ComplaintAttachmentDownloadResponseDTO handlerResponse =
-                new ComplaintAttachmentDownloadResponseDTO("att1", "a.pdf", "application/pdf", new byte[]{1});
+        ComplaintAttachmentDownloadResponse handlerResponse =
+                new ComplaintAttachmentDownloadResponse()
+                        .attachmentId("att1").fileName("a.pdf").contentType("application/pdf").content("AQ==");
         when(attachmentHandler.downloadAttachment(ORG_ID, "c1", "att1")).thenReturn(handlerResponse);
 
         Response response = endpoint.downloadComplaintAttachment("c1", "att1");

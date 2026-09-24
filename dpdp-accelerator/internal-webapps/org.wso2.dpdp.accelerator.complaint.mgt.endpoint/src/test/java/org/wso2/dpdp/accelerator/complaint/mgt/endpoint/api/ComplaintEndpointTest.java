@@ -26,14 +26,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintRecord;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintHandler;
 
 import java.io.IOException;
@@ -73,8 +73,8 @@ class ComplaintEndpointTest {
 
     @Test
     void createComplaintReturns201WithHandlerResponse() {
-        ComplaintCreateRequestDTO request = new ComplaintCreateRequestDTO();
-        ComplaintCreateResponseDTO handlerResponse = new ComplaintCreateResponseDTO();
+        ComplaintCreateRequest request = new ComplaintCreateRequest();
+        ComplaintCreateResponse handlerResponse = new ComplaintCreateResponse();
         when(complaintHandler.createComplaint(ORG_ID, "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 
@@ -86,7 +86,7 @@ class ComplaintEndpointTest {
 
     @Test
     void listComplaintsReturns200WithHandlerResponse() {
-        ComplaintListResponseDTO handlerResponse = new ComplaintListResponseDTO();
+        ComplaintListResponse handlerResponse = new ComplaintListResponse();
         when(complaintHandler.listComplaints(ORG_ID, "OPEN", "HIGH", "user1", "acme", 10, 0, "updatedTime"))
                 .thenReturn(handlerResponse);
 
@@ -98,7 +98,7 @@ class ComplaintEndpointTest {
 
     @Test
     void getQueueStatsReturns200WithHandlerResponse() {
-        ComplaintQueueStatsResponseDTO handlerResponse = new ComplaintQueueStatsResponseDTO();
+        ComplaintQueueStatsResponse handlerResponse = new ComplaintQueueStatsResponse();
         when(complaintHandler.getQueueStats(ORG_ID)).thenReturn(handlerResponse);
 
         Response response = endpoint.getQueueStats();
@@ -109,7 +109,7 @@ class ComplaintEndpointTest {
 
     @Test
     void getCategoriesReturns200WithHandlerResponse() {
-        CategoryListResponseDTO handlerResponse = new CategoryListResponseDTO();
+        CategoryListResponse handlerResponse = new CategoryListResponse();
         when(complaintHandler.getCategories()).thenReturn(handlerResponse);
 
         Response response = endpoint.getCategories();
@@ -120,7 +120,7 @@ class ComplaintEndpointTest {
 
     @Test
     void getComplaintReturns200WithHandlerResponse() {
-        ComplaintRecordDTO handlerResponse = new ComplaintRecordDTO();
+        ComplaintRecord handlerResponse = new ComplaintRecord();
         when(complaintHandler.getComplaint(ORG_ID, "c1")).thenReturn(handlerResponse);
 
         Response response = endpoint.getComplaint("c1");
@@ -131,8 +131,8 @@ class ComplaintEndpointTest {
 
     @Test
     void updateComplaintStatusReturns200WithHandlerResponse() {
-        ComplaintStatusUpdateRequestDTO request = new ComplaintStatusUpdateRequestDTO();
-        ComplaintStatusUpdateResponseDTO handlerResponse = new ComplaintStatusUpdateResponseDTO();
+        ComplaintStatusUpdateRequest request = new ComplaintStatusUpdateRequest();
+        ComplaintStatusUpdateResponse handlerResponse = new ComplaintStatusUpdateResponse();
         when(complaintHandler.updateStatus(ORG_ID, "c1", "officer1", "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 

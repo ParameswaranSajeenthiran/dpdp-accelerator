@@ -26,18 +26,20 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintActorRole;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentService {
 
@@ -53,7 +55,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
     }
 
     @Override
-    public List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName,
             String actorRole) {
         validateFiles(files);
@@ -67,11 +69,11 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             return performUpload(conn, orgId, complaintId, files, isPublic, actorUserId, actorUserName, actorRole,
                     now);
         });
-        return toAttachmentDtos(stored);
+        return stored;
     }
 
     @Override
-    public List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    public List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<UploadedFile> files) {
         validateFiles(files);
         validateActor(ownerUserId, ComplaintActorRole.USER.name());
@@ -84,7 +86,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
             return performUpload(conn, orgId, complaintId, files, true, ownerUserId, ownerUserName,
                     ComplaintActorRole.USER.name(), now);
         });
-        return toAttachmentDtos(stored);
+        return stored;
     }
 
     private List<ComplaintAttachment> performUpload(Connection conn, String orgId, String complaintId,
@@ -99,23 +101,15 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
         return attachments;
     }
 
-    private List<ComplaintAttachmentResponseDTO> toAttachmentDtos(List<ComplaintAttachment> attachments) {
-        List<ComplaintAttachmentResponseDTO> result = new ArrayList<>();
-        for (ComplaintAttachment attachment : attachments) {
-            result.add(ComplaintAttachmentResponseDTO.from(attachment));
-        }
-        return result;
-    }
-
     @Override
-    public ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
+    public ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId) {
         // Ownership check and attachment fetch share one transaction to ensure consistency.
         Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(conn -> {
             ComplaintServiceUtil.getOwnedComplaint(conn, complaintDAO, orgId, complaintId, ownerUserId);
             return attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId);
         });
-        return toDownloadResponse(attachmentOpt, attachmentId, true);
+        return validateAndGetAttachment(attachmentOpt, attachmentId, true);
     }
 
     private void validateActor(String actorUserId, String actorRole) {
@@ -140,32 +134,39 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
 
         boolean added = complaintEventDAO.addEvent(conn, event);
         if (!added) {
-            throw new ComplaintServiceException(ComplaintErrorCode.INTERNAL_ERROR,
+            throw new ComplaintServiceException((ComplaintErrorCode.INTERNAL_ERROR),
                     ComplaintServiceConstants.ATTACHMENT_EVENT_STORE_FAILED_ERROR);
         }
         return complaintEventId;
     }
 
     @Override
-    public List<ComplaintAttachmentResponseDTO> listAttachmentsForComplaint(String orgId, String complaintId) {
-        List<ComplaintAttachment> attachments = DatabaseUtils.executeInTransaction(
+    public List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
+        return DatabaseUtils.executeInTransaction(
                 conn -> attachmentDAO.listAttachmentsForComplaint(conn, orgId, complaintId));
-        List<ComplaintAttachmentResponseDTO> beans = new ArrayList<>();
-        for (ComplaintAttachment attachment : attachments) {
-            beans.add(ComplaintAttachmentResponseDTO.from(attachment));
-        }
-        return beans;
     }
 
     @Override
-    public ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
+    public Map<String, List<ComplaintAttachment>> listAttachmentsForComplaints(String orgId,
+            List<String> complaintIds) {
+        if (complaintIds == null || complaintIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<ComplaintAttachment> attachments = DatabaseUtils.executeInTransaction(
+                conn -> attachmentDAO.listAttachmentsForComplaints(conn, orgId, complaintIds));
+        return attachments.stream().collect(Collectors.groupingBy(ComplaintAttachment::getComplaintId,
+                LinkedHashMap::new, Collectors.toList()));
+    }
+
+    @Override
+    public ComplaintAttachment downloadAttachment(String orgId, String complaintId,
             String attachmentId, boolean restrictToPublicOnly) {
         Optional<ComplaintAttachment> attachmentOpt = DatabaseUtils.executeInTransaction(
                 conn -> attachmentDAO.getAttachmentWithDataById(conn, attachmentId, orgId, complaintId));
-        return toDownloadResponse(attachmentOpt, attachmentId, restrictToPublicOnly);
+        return validateAndGetAttachment(attachmentOpt, attachmentId, restrictToPublicOnly);
     }
 
-    private ComplaintAttachmentDownloadResponseDTO toDownloadResponse(Optional<ComplaintAttachment> attachmentOpt,
+    private ComplaintAttachment validateAndGetAttachment(Optional<ComplaintAttachment> attachmentOpt,
             String attachmentId, boolean restrictToPublicOnly) {
         if (attachmentOpt.isEmpty()) {
             throw new ComplaintServiceException(ComplaintErrorCode.ATTACHMENT_NOT_FOUND,
@@ -178,8 +179,7 @@ public class ComplaintAttachmentServiceImpl implements ComplaintAttachmentServic
                     ComplaintServiceConstants.INTERNAL_ATTACHMENT_ACCESS_DENIED_ERROR);
         }
 
-        return new ComplaintAttachmentDownloadResponseDTO(attachment.getAttachmentId(), attachment.getFileName(),
-                attachment.getContentType(), attachment.getFileData());
+        return attachment;
     }
 
     private void validateFiles(List<UploadedFile> files) {

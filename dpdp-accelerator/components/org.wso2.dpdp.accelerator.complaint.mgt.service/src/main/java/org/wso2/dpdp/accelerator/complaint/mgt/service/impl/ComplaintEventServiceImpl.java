@@ -26,11 +26,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintStatus;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
@@ -65,7 +63,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
+    public ComplaintEvent addComment(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String message, boolean isPublic, String toStatus) {
         if (message == null || message.trim().isEmpty()) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -136,7 +134,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             // Internal notes are not shown to the citizen in the timeline.
             notificationClient.notifyCommentAdded(result.complaint, result.event);
         }
-        return ComplaintCommentCreateResponseDTO.from(result.event);
+        return result.event;
     }
 
     /** Carries both values a transactional {@code addComment} needs to return out of one lambda. */
@@ -165,7 +163,7 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
     }
 
     @Override
-    public ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
+    public Complaint updateStatus(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String toStatus, String note) {
         if (actorUserId == null || actorUserId.trim().isEmpty()) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
@@ -219,6 +217,6 @@ public class ComplaintEventServiceImpl implements ComplaintEventService {
             return c;
         });
 
-        return ComplaintStatusUpdateResponseDTO.from(complaint);
+        return complaint;
     }
 }

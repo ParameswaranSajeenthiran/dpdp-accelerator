@@ -673,8 +673,8 @@
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
         <checkstyle.version>10.20.2</checkstyle.version>
 
-        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate the consent-history
-             DTOs from consent-history.yaml, then set back to true and commit the result. Off by
+        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate an endpoint module's
+             REST DTOs from its OpenAPI spec, then commit the result under src/gen/java. Off by
              default so a normal build doesn't regenerate on every run. -->
         <dpdp.dto.codegen.skip>true</dpdp.dto.codegen.skip>
 

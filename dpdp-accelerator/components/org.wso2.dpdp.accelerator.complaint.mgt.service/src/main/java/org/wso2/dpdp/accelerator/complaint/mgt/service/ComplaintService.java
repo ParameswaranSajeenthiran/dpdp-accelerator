@@ -19,8 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
@@ -32,8 +31,7 @@ import java.util.List;
 public interface ComplaintService {
 
     /**
-     * Creates a new complaint for POST /complaints. Returns a lean result - no attachments field,
-     * since there can't be any yet.
+     * Creates a new complaint for POST /complaints.
      *
      * @param orgId           tenant/organization the complaint belongs to
      * @param userId          Data Principal the complaint is lodged for
@@ -46,7 +44,7 @@ public interface ComplaintService {
      * @return the newly created complaint
      * @throws ComplaintServiceException thrown if the request fails validation
      */
-    ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName, String subjectCategory,
+    Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description);
 
     /**
@@ -69,7 +67,7 @@ public interface ComplaintService {
      * @return the newly created complaint
      * @throws ComplaintServiceException thrown if the request fails validation
      */
-    ComplaintCreateResponseDTO createComplaint(String orgId, String userId, String userName, String subjectCategory,
+    Complaint createComplaint(String orgId, String userId, String userName, String subjectCategory,
             String description, String actorUserId, String actorRole);
 
     /**
@@ -129,5 +127,5 @@ public interface ComplaintService {
      * @param orgId tenant/organization to compute stats for
      * @return the queue stats - see ComplaintDAO#getQueueStats
      */
-    ComplaintQueueStatsResponseDTO getQueueStats(String orgId);
+    ComplaintQueueStats getQueueStats(String orgId);
 }

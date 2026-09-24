@@ -19,11 +19,12 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintMessageRequestDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
@@ -57,28 +58,28 @@ public class ComplaintCommentHandler {
         this.complaintEventService = complaintEventService;
     }
 
-    public ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
-            String actorUserName, String actorRole, ComplaintMessageRequestDTO request) {
+    public ComplaintCommentCreateResponse addComment(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, ComplaintMessageRequest request) {
         String message = request != null ? request.getMessage() : null;
-        Boolean requestedIsPublic = request != null ? request.isPublic() : null;
+        Boolean requestedIsPublic = request != null ? request.getIsPublic() : null;
         if (requestedIsPublic == null) {
             throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
                     ComplaintServiceConstants.IS_PUBLIC_REQUIRED_ERROR);
         }
         boolean isPublic = requestedIsPublic;
-        String toStatus = request != null ? request.getToStatus() : null;
+        String toStatus = request != null ? ComplaintDtoMapper.value(request.getToStatus()) : null;
 
-        return complaintEventService.addComment(orgId, complaintId, actorUserId, actorUserName, actorRole, message,
-                isPublic, toStatus);
+        return ComplaintDtoMapper.toCommentResponse(complaintEventService.addComment(orgId, complaintId,
+                actorUserId, actorUserName, actorRole, message, isPublic, toStatus));
     }
 
-    public ComplaintCommentCreateResponseDTO addOwnComment(String orgId, String complaintId, String ownerUserId,
-            String ownerUserName, MeComplaintMessageRequestDTO request) {
+    public ComplaintCommentCreateResponse addOwnComment(String orgId, String complaintId, String ownerUserId,
+            String ownerUserName, MeComplaintMessageRequest request) {
         complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
         String message = request != null ? request.getMessage() : null;
-        String toStatus = request != null ? request.getToStatus() : null;
+        String toStatus = request != null ? ComplaintDtoMapper.value(request.getToStatus()) : null;
 
-        return complaintEventService.addComment(orgId, complaintId, ownerUserId, ownerUserName, "USER", message,
-                true, toStatus);
+        return ComplaintDtoMapper.toCommentResponse(complaintEventService.addComment(orgId, complaintId,
+                ownerUserId, ownerUserName, "USER", message, true, toStatus));
     }
 }
