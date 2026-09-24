@@ -78,6 +78,7 @@ test.describe('Admin viewing Subscriptions', () => {
     // EventNotificationUrlValidator and get a genuinely distinct delivery-mode/status row without
     // needing this suite's own WebhookReceiver (see README's "Webhook-dependent tests").
     const webhookResponse = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: webhookTopic.name,
       filter: { type: 'all' },
       delivery: {

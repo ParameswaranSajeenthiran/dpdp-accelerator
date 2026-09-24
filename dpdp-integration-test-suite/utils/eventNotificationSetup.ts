@@ -60,8 +60,10 @@ export async function seedPollSubscriptionViaApi(
   api: EventNotificationApiClient,
   topic: string,
   filter: FilterConfig = { type: 'all' },
+  name: string = uniqueMarker('sub'),
 ): Promise<SubscriptionRecord> {
   const response = await api.createSubscription({
+    name,
     topic,
     filter,
     delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },

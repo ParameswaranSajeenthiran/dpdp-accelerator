@@ -39,6 +39,7 @@ test.describe('Subscription lifecycle rules', () => {
     const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'duplicate-check')
     const callbackUrl = `https://Example.com/${uniqueMarker('hook')}`
     const first = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topic.name,
       filter: { type: 'specific', purposes: ['Account', 'Profile'] },
       delivery: { mode: 'webhook', callbackUrl, sharedSecret: uniqueMarker('secret') },
@@ -48,6 +49,7 @@ test.describe('Subscription lifecycle rules', () => {
     // Same host with different casing, same purposes with different order/casing/duplicates -
     // CallbackUrlCanonicalizer/PurposeOverlapUtils treat these as equivalent to the original.
     const duplicate = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topic.name,
       filter: { type: 'specific', purposes: ['profile', 'ACCOUNT', 'account'] },
       delivery: { mode: 'webhook', callbackUrl: callbackUrl.toLowerCase(), sharedSecret: uniqueMarker('secret') },
@@ -61,6 +63,7 @@ test.describe('Subscription lifecycle rules', () => {
     const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'mixed-mode-a')
     const groupA = uniqueMarker('group')
     const webhookFirst = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topicA.name,
       groupId: groupA,
       filter: { type: 'all' },
@@ -68,6 +71,7 @@ test.describe('Subscription lifecycle rules', () => {
     })
     expect(webhookFirst.status()).toBe(201)
     const pollConflict = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topicA.name,
       groupId: groupA,
       filter: { type: 'all' },
@@ -78,6 +82,7 @@ test.describe('Subscription lifecycle rules', () => {
     const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'mixed-mode-b')
     const groupB = uniqueMarker('group')
     const pollFirst = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topicB.name,
       groupId: groupB,
       filter: { type: 'all' },
@@ -85,6 +90,7 @@ test.describe('Subscription lifecycle rules', () => {
     })
     expect(pollFirst.status()).toBe(201)
     const webhookConflict = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topicB.name,
       groupId: groupB,
       filter: { type: 'all' },
