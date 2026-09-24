@@ -138,9 +138,6 @@ export default function SubscriptionTable({
 
               const defaultFilterName = filterType === 'all' ? 'All Purposes' : filterType
               let filterLabel = t(`subscriptions.filterType.${filterType}`, defaultFilterName)
-              if (filterLabel === 'All Events') {
-                filterLabel = 'All Purposes'
-              }
               if (filterType !== 'all' && purposeCount > 0) {
                 filterLabel += ` (${purposeCount})`
               }

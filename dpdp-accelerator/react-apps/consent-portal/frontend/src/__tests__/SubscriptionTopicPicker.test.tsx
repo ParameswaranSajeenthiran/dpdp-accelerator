@@ -212,3 +212,19 @@ it('categorizes topics by checking SYSTEM status first before prefix', () => {
   expect(getTopicCategory({ name: 'orders.placed', initiatedBy: 'USER' })).toBe('custom')
   expect(getTopicCategory({ name: 'payment.completed' })).toBe('custom')
 })
+
+it('does not report query pending state as busy through onBusyChange', () => {
+  api.fetchTopics.mockReturnValue(new Promise(() => {}))
+  const onBusyChange = vi.fn()
+
+  mount(
+    <SubscriptionTopicPicker
+      selected={[]}
+      onChange={vi.fn()}
+      onBusyChange={onBusyChange}
+    />,
+  )
+
+  expect(onBusyChange).toHaveBeenCalledWith(false)
+  expect(onBusyChange).not.toHaveBeenCalledWith(true)
+})

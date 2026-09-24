@@ -215,7 +215,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
                 String msg = e.getMessage() != null ? e.getMessage().toUpperCase(Locale.ROOT) : "";
-                if (msg.contains("UQ_SUB_ORG_ACTIVE_NAME") || msg.contains("ACTIVE_NAME") || msg.contains("NAME")) {
+                if (msg.contains("UQ_SUB_ORG_ACTIVE_NAME")) {
                     throw new EventNotificationDuplicateResourceException(
                             String.format(EventNotificationCommonConstants.ERROR_SUBSCRIPTION_NAME_ALREADY_EXISTS,
                                     subscription.getName()), e);

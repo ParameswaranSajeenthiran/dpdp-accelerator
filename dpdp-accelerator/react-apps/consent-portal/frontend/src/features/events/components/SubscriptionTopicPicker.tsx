@@ -59,8 +59,8 @@ export default function SubscriptionTopicPicker({
   const query = useSubscriptionTopicPicker(searchTerm)
 
   useEffect(() => {
-    onBusyChange?.(query.isPending)
-  }, [query.isPending, onBusyChange])
+    onBusyChange?.(false)
+  }, [onBusyChange])
 
   const options: TopicRecord[] = useMemo(() => {
     const items = query.data?.items ?? []

@@ -100,6 +100,8 @@ public class EventNotificationServiceConstants {
         public static final String SUBSCRIPTION_CONCURRENT_MODIFICATION_ERROR_MSG = "Subscription status was modified concurrently by another operation.";
         public static final String TOPIC_HAS_ACTIVE_SUBSCRIPTIONS_ERROR_MSG = "Topic '%s' has active subscriptions and cannot be deregistered. Delete or complete all subscriptions for this topic first.";
         public static final String TOPIC_NOT_ACTIVE_ERROR_MSG = "Topic '%s' is not active and cannot accept new subscriptions.";
+        public static final String TOPICS_NOT_ACTIVE_ERROR_MSG =
+                "One or more requested topics are not active and cannot accept new subscriptions.";
         public static final String FILTER_PURPOSES_REQUIRED_FOR_SPECIFIC_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is SPECIFIC.";
         public static final String FILTER_PURPOSES_REQUIRED_FOR_EXCEPT_ERROR_MSG = "filter.purposes must contain at least one entry when filter.type is EXCEPT.";
         public static final String POLL_ACK_ERROR_OVERLAP_ERROR_MSG = "A delivery cannot be present in both ack and setErrs.";

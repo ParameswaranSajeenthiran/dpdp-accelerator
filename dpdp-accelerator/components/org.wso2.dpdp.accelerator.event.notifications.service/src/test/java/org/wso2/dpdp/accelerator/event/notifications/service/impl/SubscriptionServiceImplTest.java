@@ -269,7 +269,7 @@ public class SubscriptionServiceImplTest {
                 assertEquals(result.getStatus(), SubscriptionStatus.ACTIVE);
         }
 
-        @Test(expectedExceptions = EventNotificationServiceException.class)
+        @Test
         public void testCreateSubscriptionTopicDeregisteredUnderLockReturns409() throws Exception {
                 Topic topic = new Topic("t1", "org1", "user-consent", "desc", "active");
                 Map<String, Topic> resolved = new HashMap<>();
@@ -282,8 +282,36 @@ public class SubscriptionServiceImplTest {
                 FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
 
-                subscriptionService.createMultiTopicSubscription("org1", "group1",
-                                "sub-name", Collections.singletonList("user-consent"), filter, delivery);
+                EventNotificationServiceException ex = org.testng.Assert.expectThrows(
+                                EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                "sub-name", Collections.singletonList("user-consent"), filter, delivery));
+                assertEquals(ex.getStatusCode(), 409);
+                assertEquals(ex.getDescription(),
+                                String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG, "user-consent"));
+        }
+
+        @Test
+        public void testCreateMultiTopicSubscriptionDeregisteredUnderLockReturns409() throws Exception {
+                Topic topic1 = new Topic("t1", "org1", "user-consent", "desc", "active");
+                Topic topic2 = new Topic("t2", "org1", "user-auth", "desc", "active");
+                Map<String, Topic> resolved = new HashMap<>();
+                resolved.put("user-consent", topic1);
+                resolved.put("user-auth", topic2);
+                when(topicDAO.getTopicsByOrgAndNames(any(Connection.class), eq("org1"), any())).thenReturn(resolved);
+                doThrow(new EventNotificationInvalidStateException(
+                                org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants.ERROR_TOPIC_NOT_ACTIVE))
+                                .when(subscriptionDAO).addSubscription(any(Connection.class), any(Subscription.class));
+
+                FilterDTO filter = new FilterDTO(PurposeFilterMode.ALL, Collections.emptyList());
+                DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.POLL, null, "secret123");
+
+                EventNotificationServiceException ex = org.testng.Assert.expectThrows(
+                                EventNotificationServiceException.class,
+                                () -> subscriptionService.createMultiTopicSubscription("org1", "group1",
+                                                "sub-name", java.util.Arrays.asList("user-consent", "user-auth"), filter, delivery));
+                assertEquals(ex.getStatusCode(), 409);
+                assertEquals(ex.getDescription(), EventNotificationServiceConstants.TOPICS_NOT_ACTIVE_ERROR_MSG);
         }
 
         @Test
@@ -449,7 +477,7 @@ public class SubscriptionServiceImplTest {
                 DeliveryConfigDTO delivery = new DeliveryConfigDTO(DeliveryMode.WEBHOOK,
                                 "https://93.184.216.34:443/callback2", "secret2");
 
-                SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "group1",
+                SubscriptionDTO result = subscriptionService.createMultiTopicSubscription("org1", "org1",
                                 "sub-name", Collections.singletonList("user-consent"), filter, delivery);
                 assertNotNull(result);
                 assertEquals(result.getStatus(), SubscriptionStatus.PENDING);

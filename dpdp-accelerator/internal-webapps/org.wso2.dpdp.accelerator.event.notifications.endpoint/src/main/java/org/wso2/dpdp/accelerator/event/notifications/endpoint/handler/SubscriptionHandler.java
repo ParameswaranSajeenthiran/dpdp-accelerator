@@ -51,7 +51,7 @@ public class SubscriptionHandler {
 
     public SubscriptionDTO createSubscription(String orgId, SubscriptionDTO request) {
         String name = request != null ? request.getName() : null;
-        String groupId = (request != null && request.getGroupId() != null) ? request.getGroupId().trim() : null;
+        String groupId = orgId != null ? orgId.trim() : null;
         FilterDTO filterDTO = request != null ? request.getFilter() : null;
         DeliveryConfigDTO deliveryDTO = request != null ? request.getDelivery() : null;
 

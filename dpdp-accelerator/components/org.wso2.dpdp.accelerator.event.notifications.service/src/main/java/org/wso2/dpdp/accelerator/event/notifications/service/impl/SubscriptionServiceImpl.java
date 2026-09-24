@@ -184,7 +184,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "Topics must contain unique non-blank names.", 400);
             }
         }
-        String topicName = topicNames.get(0).trim();
         List<Topic> resolvedTopics = new ArrayList<>();
         PurposeFilterMode filterType = (filter != null && filter.getType() != null) ? filter.getType()
                 : PurposeFilterMode.ALL;
@@ -260,10 +259,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 // The DAO detected a deregistered/inactive topic under the row lock — a
                 // concurrent TopicService.deleteTopic committed between our service-layer
                 // pre-check and the FOR UPDATE acquisition in the DAO. Map to 409.
+                String errorMessage = topicNames.size() == 1
+                        ? String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG,
+                                topicNames.get(0).trim())
+                        : EventNotificationServiceConstants.TOPICS_NOT_ACTIVE_ERROR_MSG;
                 throw new EventNotificationServiceException(
                         EventNotificationServiceConstants.ERROR_CODE_INVALID_STATE,
                         EventNotificationServiceConstants.ERROR_TITLE_INVALID_STATE,
-                        String.format(EventNotificationServiceConstants.TOPIC_NOT_ACTIVE_ERROR_MSG, topicName.trim()),
+                        errorMessage,
                         409);
             } catch (EventNotificationDuplicateResourceException e) {
                 String conflictMessage = EventNotificationCommonConstants.ERROR_SUBSCRIPTION_MIXED_DELIVERY_MODE
