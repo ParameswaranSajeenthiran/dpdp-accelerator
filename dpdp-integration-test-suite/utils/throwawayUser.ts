@@ -102,8 +102,10 @@ export async function createThrowawayUser(
   const ctx = await resolveScimAdminContext()
 
   // Unique per run: a leftover account from an interrupted run must not collide with this one.
+  // The random part matters too - two accounts created in the same millisecond (a test making a
+  // pair, or two workers at once) would otherwise get the same name and the second create fails.
   // Email-shaped because the accelerator enforces it - SCIM2 rejects a bare name with 31301.
-  const username = `${usernamePrefix}-${Date.now().toString(36)}@dpdp.test`
+  const username = `${usernamePrefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}@dpdp.test`
   const password = `Throwaway#${Math.random().toString(36).slice(2, 10)}A1`
 
   const response = await fetch(ctx.surface.usersUrl, {

@@ -15,6 +15,7 @@
     "test:account": "playwright test tests/07-account",
     "test:complaints": "playwright test tests/08-complaints",
     "test:event-notifications": "playwright test tests/09-event-notifications",
+    "test:dashboard": "playwright test tests/10-dashboard",
     "typecheck": "tsc --noEmit",
     "verify:ids": "node scripts/verify-test-ids.mjs",
     "report": "playwright show-report"

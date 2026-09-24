@@ -146,6 +146,16 @@ A second user account (`personas.user2`) is required, same as `personas.user` - 
 unconditionally alongside it. Tests needing two distinct real users just read
 `target.personas.user2` directly; there is no skip guard to add.
 
+### Exact per-user totals: throwaway accounts
+
+The one exception to "never assert totals": a test may assert an exact count **for an account
+nothing else writes to**. The `throwawayAccounts` fixture's `create(prefix)` makes a fresh
+`dpdp-consent-user` account, signs it in, and hands back its `session` plus self-service
+`consentApi`/`complaintApi` clients; the fixture deletes it when the test ends. Call it inside the
+test (never `beforeAll`), so a retry gets a fresh account too. Anything else - a cached persona,
+the tenant as a whole - still gets presence/absence assertions only. `tests/10-dashboard/` is
+built on this.
+
 ### API access
 
 Fixtures are requested by destructuring the test callback's first argument:
