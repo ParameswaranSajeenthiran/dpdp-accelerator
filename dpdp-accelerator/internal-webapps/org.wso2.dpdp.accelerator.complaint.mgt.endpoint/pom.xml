@@ -193,6 +193,9 @@
                             <skip>${dpdp.dto.codegen.skip}</skip>
                             <inputSpec>${project.basedir}/src/main/resources/complaint-server-API.yaml</inputSpec>
                             <generatorName>jaxrs-cxf</generatorName>
+                            <!-- Only model.mustache is overridden: the stock 7.25.0 template plus the
+                                 WSO2 license header, which the jaxrs-cxf template has no hook for. -->
+                            <templateDirectory>${project.basedir}/src/main/openapi-templates</templateDirectory>
                             <generateApis>false</generateApis>
                             <generateApiTests>false</generateApiTests>
                             <generateApiDocumentation>false</generateApiDocumentation>
