@@ -26,7 +26,13 @@ import {
   openManagementSession,
   readOidcCredentials,
 } from './managementApi'
-import { ensureRoleMembership, ensureScimUser, mintScimToken, type ScimSurface } from './scimProvisioning'
+import {
+  ensureRoleMembership,
+  ensureScimUser,
+  mintScimToken,
+  revokeRolePermissions,
+  type ScimSurface,
+} from './scimProvisioning'
 import { generatePassword } from './testData'
 
 export interface PersonaCredential {
@@ -49,6 +55,11 @@ export interface ProvisioningToken {
   clientId: string
   clientSecret: string
 }
+
+// Earlier accelerator builds provisioned these onto dpdp-consent-admin too; its role reconciler
+// only ever adds, so a long-lived target keeps them until they're removed here. 08.08.05 asserts
+// the admin has neither.
+const LEGACY_ADMIN_COMPLAINT_SCOPES = ['complaints:read:any', 'complaints:write:any']
 
 const APP_NAME = 'DPDP E2E Provisioning'
 const APP_DESCRIPTION =
@@ -130,6 +141,7 @@ export async function provisionPersonas(
     const userId = await ensureScimUser(request, surface, token, username, password)
     await ensureRoleMembership(request, surface, token, roleFor[key], userId)
   }
+  await revokeRolePermissions(request, surface, token, roles.consentAdmin, LEGACY_ADMIN_COMPLAINT_SCOPES)
 
   return personas
 }

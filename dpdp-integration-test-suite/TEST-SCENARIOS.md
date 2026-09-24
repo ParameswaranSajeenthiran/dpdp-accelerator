@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 171 across 46 spec files in 9 areas |
+| **Tests** | 172 across 46 spec files in 9 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -325,11 +325,11 @@ Destructive and irreversible, so each test creates and signs in as its own throw
 
 ## `08-complaints/` — Grievance redressal
 
-Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona **is** `dpdp-consent-admin` - there is no distinct Complaint Officer persona. Complaints are seeded via `seedComplaintViaApi`; status moves via `moveComplaintToStatusViaApi`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
+Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona is `dpdp-consent-dpo`, the only role holding the `:any` complaint scopes; `dpdp-consent-admin` holds none. Complaints are seeded via `seedComplaintViaApi`; status moves via `moveComplaintToStatusViaApi`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
 
 **Not covered:** the list's true empty state - the shared `user` persona always has history.
 
-**43 tests, 9 spec files.**
+**44 tests, 9 spec files.**
 
 ### `08.01-data-principal-creating-complaints.spec.ts`
 
@@ -410,7 +410,8 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | `08.08.01` | A Data Principal navigating directly to /complaints is not redirected away |  |
 | `08.08.02` | A Data Principal navigating directly to /complaint-management is redirected away |  |
 | `08.08.03` | A Data Principal's sidebar shows a "My Complaints" entry, not "Complaints" | The `:self` and `:any` complaint scopes go to different roles, so the two sidebar entries never co-exist. |
-| `08.08.04` | A Consent Admin can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints" |  |
+| `08.08.04` | A DPO can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints" |  |
+| `08.08.05` | A Consent Admin navigating directly to /complaint-management is redirected away, and their sidebar shows no complaint entry | Complaint oversight is DPO-only; `dpdp-consent-admin` is provisioned with no complaint scope. |
 
 ### `08.09-end-to-end-scenarios.spec.ts`
 
