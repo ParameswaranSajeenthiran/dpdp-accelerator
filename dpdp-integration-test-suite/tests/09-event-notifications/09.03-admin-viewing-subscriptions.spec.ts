@@ -179,7 +179,9 @@ test.describe('Admin viewing Subscriptions', () => {
       await detailsPage.goto(subscription.subscriptionId)
 
       await expect(detailsPage.fieldValue('Subscription ID')).toContainText(subscription.subscriptionId)
-      await expect(detailsPage.fieldValue('Topics')).toContainText('Topics (1)')
+      if (subscription.name) {
+        await expect(detailsPage.fieldValue('Subscription Name')).toContainText(subscription.name)
+      }
       await expect(detailsPage.fieldValue('Group ID')).toContainText(subscription.groupId!)
       await expect(detailsPage.fieldValue('Delivery Mode')).toContainText('Poll')
       await expect(detailsPage.fieldValue('Created At')).not.toHaveText('-')

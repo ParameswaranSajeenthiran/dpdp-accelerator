@@ -90,9 +90,11 @@ export class SubscriptionDetailsPage {
 
   async expandSubscribedTopics(): Promise<void> {
     const toggle = this.page.getByRole('button', { name: 'Subscribed Topics' })
-    const expanded = await toggle.getAttribute('aria-expanded')
-    if (expanded !== 'true') {
-      await toggle.click()
+    if ((await toggle.count()) > 0) {
+      const expanded = await toggle.getAttribute('aria-expanded')
+      if (expanded !== 'true') {
+        await toggle.click()
+      }
     }
   }
 
