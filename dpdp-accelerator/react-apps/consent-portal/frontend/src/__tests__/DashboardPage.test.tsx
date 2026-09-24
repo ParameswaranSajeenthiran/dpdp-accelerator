@@ -88,10 +88,6 @@ describe('DashboardPage', () => {
         return Promise.resolve(rawConsents(101)) // total, unfiltered
       },
     )
-    myConsentsApi.fetchMyConsents.mockResolvedValue({
-      data: [{ id: 'p1', subjectId: 'user-1', serviceId: 'svc', state: 'PENDING', timestamp: 1 }],
-      metadata: { total: 1, offset: 0, count: 1, limit: 100 },
-    })
     complaintsApi.fetchMyComplaintsTotal.mockImplementation((status?: string) =>
       Promise.resolve(
         {
@@ -109,17 +105,13 @@ describe('DashboardPage', () => {
 
     expect(screen.getByText('Consents by status')).toBeInTheDocument()
     expect(await screen.findByText('100+')).toBeInTheDocument() // total
-    // The pending count appears twice: the status tile and the "Needs your attention" badge.
-    await waitFor(() => {
-      expect(screen.getAllByText('3')).toHaveLength(2)
-    })
-    expect(screen.getByText('Needs your attention')).toBeInTheDocument()
+    expect(await screen.findByText('3')).toBeInTheDocument() // pending
     expect(screen.getByText('Complaints')).toBeInTheDocument()
-    // Without relation=ANY the server returns only consents the user is the subject of, hiding
-    // the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
-    expect(myConsentsApi.fetchMyConsents).toHaveBeenCalledWith(
-      expect.objectContaining({ state: 'PENDING', relation: 'ANY' }),
-    )
+    // Pending consents have their own page - the dashboard shows only the count, not a list.
+    expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
+    expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
+    // Without relation=ANY the server counts only consents the user is the subject of, leaving
+    // out the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
     expect(myConsentsApi.fetchMyConsentsRaw).toHaveBeenCalledTimes(6)
     myConsentsApi.fetchMyConsentsRaw.mock.calls.forEach(([params]) => {
       expect(params).toMatchObject({ relation: 'ANY' })
@@ -180,28 +172,10 @@ describe('DashboardPage', () => {
     expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
-    expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
-  })
-
-  it('shows an error, not a false "no pending consents" empty state, when that fetch fails', async () => {
-    myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
-    // The pending-list fetch (fetchMyConsents, not fetchMyConsentsRaw) fails independently of
-    // the state-count queries, which still succeed.
-    myConsentsApi.fetchMyConsents.mockRejectedValue(new Error('network error'))
-    complaintsApi.fetchMyComplaintsTotal.mockResolvedValue(0)
-
-    renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF])
-
-    expect(await screen.findByText('Unable to load your dashboard right now.')).toBeInTheDocument()
-    expect(screen.queryByText('You have no pending consents to review.')).not.toBeInTheDocument()
   })
 
   it('shows "-", not a false 0, for complaint counts when that fetch fails', async () => {
     myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
-    myConsentsApi.fetchMyConsents.mockResolvedValue({
-      data: [],
-      metadata: { total: 0, offset: 0, count: 0, limit: 100 },
-    })
     complaintsApi.fetchMyComplaintsTotal.mockRejectedValue(new Error('network error'))
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
