@@ -76,22 +76,21 @@ function rawConsents(count: number): unknown[] {
 
 describe('DashboardPage', () => {
   it('shows a regular user their own consent and complaint counts', async () => {
-    // Total (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
+    // Active (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
     // own distinct number so assertions can't accidentally match the wrong tile.
     myConsentsApi.fetchMyConsentsRaw.mockImplementation(
       (params: { state?: string }): Promise<unknown[]> => {
         if (params.state === 'PENDING') return Promise.resolve(rawConsents(3))
-        if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(35))
+        if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(101))
         if (params.state === 'REJECTED') return Promise.resolve(rawConsents(36))
         if (params.state === 'REVOKED') return Promise.resolve(rawConsents(37))
         if (params.state === 'EXPIRED') return Promise.resolve(rawConsents(38))
-        return Promise.resolve(rawConsents(101)) // total, unfiltered
+        return Promise.resolve(rawConsents(35))
       },
     )
     complaintsApi.fetchMyComplaintsTotal.mockImplementation((status?: string) =>
       Promise.resolve(
         {
-          undefined: 60,
           OPEN: 61,
           IN_PROGRESS: 62,
           WAITING_ON_CLIENT: 63,
@@ -104,9 +103,15 @@ describe('DashboardPage', () => {
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
     expect(screen.getByText('Consents')).toBeInTheDocument()
-    expect(await screen.findByText('100+')).toBeInTheDocument() // total
+    expect(await screen.findByText('100+')).toBeInTheDocument() // active
     expect(await screen.findByText('3')).toBeInTheDocument() // pending
     expect(screen.getByText('Complaints')).toBeInTheDocument()
+    expect(await screen.findByText('61')).toBeInTheDocument() // open complaints
+    // No Total cards, so no unfiltered count is fetched for either section.
+    expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
+    expect(screen.queryByText('Total complaints')).not.toBeInTheDocument()
+    expect(complaintsApi.fetchMyComplaintsTotal).toHaveBeenCalledTimes(5)
+    expect(complaintsApi.fetchMyComplaintsTotal).not.toHaveBeenCalledWith()
     // Pending consents have their own page - the dashboard shows only the count, not a list.
     expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View all consents' })).toHaveAttribute(
@@ -116,9 +121,9 @@ describe('DashboardPage', () => {
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     // Without relation=ANY the server counts only consents the user is the subject of, leaving
     // out the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
-    expect(myConsentsApi.fetchMyConsentsRaw).toHaveBeenCalledTimes(6)
+    expect(myConsentsApi.fetchMyConsentsRaw).toHaveBeenCalledTimes(5)
     myConsentsApi.fetchMyConsentsRaw.mock.calls.forEach(([params]) => {
-      expect(params).toMatchObject({ relation: 'ANY' })
+      expect(params).toMatchObject({ relation: 'ANY', state: expect.any(String) })
     })
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
     expect(catalogApi.fetchPurposes).not.toHaveBeenCalled()
@@ -128,8 +133,8 @@ describe('DashboardPage', () => {
   it('shows an admin exact tenant-wide consent, purposes, and elements counts', async () => {
     adminConsentsApi.fetchAdminConsents.mockImplementation(
       (params: { state?: string }): Promise<unknown> => {
-        if (params.state === undefined) {
-          // Total: a full page with a next link still available - "100+".
+        if (params.state === 'ACTIVE') {
+          // A full page with a next link still available - "100+".
           return Promise.resolve({
             totalResults: 100,
             links: [{ rel: 'next', href: 'https://x?after=Mg==' }],
@@ -137,13 +142,12 @@ describe('DashboardPage', () => {
           })
         }
         const counts: Record<string, number> = {
-          ACTIVE: 29,
-          PENDING: 6,
+          PENDING: 29,
           REJECTED: 0,
           REVOKED: 0,
           EXPIRED: 0,
         }
-        const count = counts[params.state] ?? 0
+        const count = counts[params.state ?? ''] ?? 0
         return Promise.resolve({ totalResults: count, links: [], Consents: rawConsents(count) })
       },
     )
@@ -170,6 +174,11 @@ describe('DashboardPage', () => {
       expect(screen.getByText('8')).toBeInTheDocument()
     })
     expect(screen.getByText('12')).toBeInTheDocument()
+    expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
+    expect(adminConsentsApi.fetchAdminConsents).toHaveBeenCalledTimes(5)
+    adminConsentsApi.fetchAdminConsents.mock.calls.forEach(([params]) => {
+      expect(params).toMatchObject({ state: expect.any(String) })
+    })
     expect(
       screen.getByText('An overview of consent activity across all users.'),
     ).toBeInTheDocument()
@@ -190,10 +199,10 @@ describe('DashboardPage', () => {
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
     expect(await screen.findByText('Unable to load your complaints right now.')).toBeInTheDocument()
-    expect(screen.getByText('Total complaints')).toBeInTheDocument()
-    // Six complaint tiles - all "-", never a false "0" implying a real (empty) count.
+    expect(screen.getByText('Resolved')).toBeInTheDocument()
+    // Five complaint tiles - all "-", never a false "0" implying a real (empty) count.
     expect(screen.queryAllByText('0')).toHaveLength(0)
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(6)
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(5)
   })
 
   it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {

@@ -25,7 +25,6 @@ import {
   Clock3,
   Hourglass,
   Inbox,
-  Layers,
   RefreshCw,
   ShieldCheck,
   Target,
@@ -77,16 +76,10 @@ function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): Re
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
         gap: 2,
       }}
     >
-      <StatCard
-        value={value(counts?.total)}
-        label={t('dashboard.totalConsents')}
-        icon={<Layers size={22} />}
-        iconColor="primary"
-      />
       <StatCard
         value={value(counts?.pending)}
         label={t('consentRegistry.status.pending')}
@@ -245,16 +238,10 @@ function DashboardPage(): React.JSX.Element {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
                 gap: 2,
               }}
             >
-              <StatCard
-                value={formatComplaintCount(complaintCountsQuery, (data) => data.total)}
-                label={t('dashboard.totalComplaints')}
-                icon={<Layers size={22} />}
-                iconColor="primary"
-              />
               <StatCard
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.open)}
                 label={t('complaints.status.open')}

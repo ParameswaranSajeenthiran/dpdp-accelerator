@@ -54,10 +54,8 @@
     "subtitleAdmin": "सर्व वापरकर्त्यांमधील संमती (consent) क्रियाकलापांचा आढावा.",
     "loadFailed": "सध्या तुमचा डॅशबोर्ड लोड करण्यात अक्षम.",
     "consentsTitle": "संमती",
-    "totalConsents": "संपूर्ण संमती",
     "viewConsents": "View all consents",
     "complaintsTitle": "तक्रारी",
-    "totalComplaints": "एकूण तक्रारी",
     "complaintsLoadFailed": "तुमच्या तक्रारी आत्ता लोड करता येत नाहीयेत.",
     "viewComplaints": "सर्व तक्रारी पहा"
   },

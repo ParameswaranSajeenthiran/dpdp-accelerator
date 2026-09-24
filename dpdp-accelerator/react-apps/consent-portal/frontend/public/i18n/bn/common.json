@@ -54,10 +54,8 @@
     "subtitleAdmin": "সমস্ত ব্যবহারকারীর মধ্যে সম্মতি কার্যকলাপের একটি সংক্ষিপ্ত বিবরণ।",
     "loadFailed": "এই মুহূর্তে আপনার ড্যাশবোর্ড লোড করা যাচ্ছে না।",
     "consentsTitle": "সম্মতিসমূহ",
-    "totalConsents": "সম্পূর্ণ সম্মতি।",
     "viewConsents": "View all consents",
     "complaintsTitle": "অভিযোগ",
-    "totalComplaints": "মোট অভিযোগ",
     "complaintsLoadFailed": "এই মুহূর্তে আপনার অভিযোগগুলি লোড করা যাচ্ছে না।",
     "viewComplaints": "সমস্ত অভিযোগ দেখুন"
   },

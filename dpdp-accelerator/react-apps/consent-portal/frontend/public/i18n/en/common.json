@@ -54,10 +54,8 @@
     "subtitleAdmin": "An overview of consent activity across all users.",
     "loadFailed": "Unable to load your dashboard right now.",
     "consentsTitle": "Consents",
-    "totalConsents": "Total consents",
     "viewConsents": "View all consents",
     "complaintsTitle": "Complaints",
-    "totalComplaints": "Total complaints",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
     "viewComplaints": "View all complaints"
   },

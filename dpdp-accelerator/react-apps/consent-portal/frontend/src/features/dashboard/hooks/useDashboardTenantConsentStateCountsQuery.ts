@@ -28,21 +28,20 @@ import { CONSENT_COUNT_LIMIT, type ConsentStateCounts } from './consentStateCoun
  * tell "exactly N" from "more than 100" via the presence of a `next` link, without paging
  * through a tenant's entire consent history.
  */
-async function countTenantConsents(state?: ConsentState): Promise<PageCount> {
+async function countTenantConsents(state: ConsentState): Promise<PageCount> {
   const response = await fetchAdminConsents({ limit: CONSENT_COUNT_LIMIT, state })
   return pageCountFromCursor(response.Consents.length, response.links, CONSENT_COUNT_LIMIT)
 }
 
 async function fetchTenantConsentStateCounts(): Promise<ConsentStateCounts> {
-  const [total, pending, active, rejected, revoked, expired] = await Promise.all([
-    countTenantConsents(),
+  const [pending, active, rejected, revoked, expired] = await Promise.all([
     countTenantConsents('PENDING'),
     countTenantConsents('ACTIVE'),
     countTenantConsents('REJECTED'),
     countTenantConsents('REVOKED'),
     countTenantConsents('EXPIRED'),
   ])
-  return { total, pending, active, rejected, revoked, expired }
+  return { pending, active, rejected, revoked, expired }
 }
 
 export default function useDashboardTenantConsentStateCountsQuery(

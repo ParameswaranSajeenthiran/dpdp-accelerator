@@ -27,7 +27,7 @@ import { CONSENT_COUNT_LIMIT, type ConsentStateCounts } from './consentStateCoun
  * fetchMyConsentsRaw) - asking for one more than CONSENT_COUNT_LIMIT and checking the array
  * length is the only way to know whether more than that many consents exist.
  */
-async function countSelfConsents(state?: ConsentState): Promise<PageCount> {
+async function countSelfConsents(state: ConsentState): Promise<PageCount> {
   // The server defaults relation to SUBJECT, which would leave out consents this user only
   // authorizes - ANY keeps these counts in line with the Consents page.
   const consents = await fetchMyConsentsRaw({
@@ -39,15 +39,14 @@ async function countSelfConsents(state?: ConsentState): Promise<PageCount> {
 }
 
 async function fetchSelfConsentStateCounts(): Promise<ConsentStateCounts> {
-  const [total, pending, active, rejected, revoked, expired] = await Promise.all([
-    countSelfConsents(),
+  const [pending, active, rejected, revoked, expired] = await Promise.all([
     countSelfConsents('PENDING'),
     countSelfConsents('ACTIVE'),
     countSelfConsents('REJECTED'),
     countSelfConsents('REVOKED'),
     countSelfConsents('EXPIRED'),
   ])
-  return { total, pending, active, rejected, revoked, expired }
+  return { pending, active, rejected, revoked, expired }
 }
 
 export default function useDashboardSelfConsentStateCountsQuery(
