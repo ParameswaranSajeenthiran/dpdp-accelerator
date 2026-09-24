@@ -23,7 +23,6 @@ import type { PageCount } from '../../../utils/cursorPagination'
 export const CONSENT_COUNT_LIMIT = 100
 
 export interface ConsentStateCounts {
-  total: PageCount
   pending: PageCount
   active: PageCount
   rejected: PageCount
