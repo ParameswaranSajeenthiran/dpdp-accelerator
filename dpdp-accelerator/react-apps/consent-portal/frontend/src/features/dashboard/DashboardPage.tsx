@@ -81,30 +81,35 @@ function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): Re
       }}
     >
       <StatCard
+        data-stat="consent-pending"
         value={value(counts?.pending)}
         label={t('consentRegistry.status.pending')}
         icon={<Clock3 size={22} />}
         iconColor="warning"
       />
       <StatCard
+        data-stat="consent-active"
         value={value(counts?.active)}
         label={t('consentRegistry.status.active')}
         icon={<ShieldCheck size={22} />}
         iconColor="success"
       />
       <StatCard
+        data-stat="consent-rejected"
         value={value(counts?.rejected)}
         label={t('consentRegistry.status.rejected')}
         icon={<XCircle size={22} />}
         iconColor="error"
       />
       <StatCard
+        data-stat="consent-revoked"
         value={value(counts?.revoked)}
         label={t('consentRegistry.status.revoked')}
         icon={<Ban size={22} />}
         iconColor="error"
       />
       <StatCard
+        data-stat="consent-expired"
         value={value(counts?.expired)}
         label={t('consentRegistry.status.expired')}
         icon={<Hourglass size={22} />}
@@ -197,6 +202,7 @@ function DashboardPage(): React.JSX.Element {
                 >
                   {showPurposesCount ? (
                     <StatCard
+                      data-stat="catalog-purposes"
                       value={
                         purposesCountQuery.isLoading
                           ? '-'
@@ -209,6 +215,7 @@ function DashboardPage(): React.JSX.Element {
                   ) : null}
                   {showElementsCount ? (
                     <StatCard
+                      data-stat="catalog-elements"
                       value={
                         elementsCountQuery.isLoading
                           ? '-'
@@ -243,24 +250,28 @@ function DashboardPage(): React.JSX.Element {
               }}
             >
               <StatCard
+                data-stat="complaint-open"
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.open)}
                 label={t('complaints.status.open')}
                 icon={<Inbox size={22} />}
                 iconColor="info"
               />
               <StatCard
+                data-stat="complaint-in-progress"
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.inProgress)}
                 label={t('complaints.status.investigation')}
                 icon={<RefreshCw size={22} />}
                 iconColor="warning"
               />
               <StatCard
+                data-stat="complaint-waiting-on-client"
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.waitingOnClient)}
                 label={t('complaints.status.awaitingInfo')}
                 icon={<UserCheck size={22} />}
                 iconColor="error"
               />
               <StatCard
+                data-stat="complaint-waiting-on-dpo"
                 value={formatComplaintCount(
                   complaintCountsQuery,
                   (data) => data.waitingOnInternalReview,
@@ -270,6 +281,7 @@ function DashboardPage(): React.JSX.Element {
                 iconColor="warning"
               />
               <StatCard
+                data-stat="complaint-resolved"
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.resolved)}
                 label={t('complaints.status.resolved')}
                 icon={<CheckCircle2 size={22} />}
