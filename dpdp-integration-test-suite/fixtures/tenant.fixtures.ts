@@ -42,7 +42,7 @@ export interface TenantContext {
   /** Created via Console's "New Root Organization" wizard, then explicitly assigned
    * dpdp-consent-admin by this fixture - role membership is never auto-provisioned, being the
    * tenant's owner grants Console/IS-level administration only, nothing about this custom
-   * application role (confirmed live: without the explicit assignment below, the owner's sidebar
+   * application role (without the explicit assignment below, the owner's sidebar
    * has no admin items at all). */
   owner: Persona
   ownerConsentApi: ConsentApiClient
@@ -147,7 +147,7 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
   const owner: Persona = { username: `${uniqueMarker('tenant-owner')}@dpdp.test`, password: 'TenantOwner@2026!' }
 
   // Step 1: super admin creates the tenant + owner through Console's "New Root Organization"
-  // wizard. Confirmed live this is the only tenant-creation path whose password field works
+  // wizard. This is the only tenant-creation path whose password field works
   // immediately - see ConsoleRootOrganizationWizard's own comment for the full comparison
   // against the raw Tenant Management REST API.
   const adminPage = await loginToConsole(
@@ -166,22 +166,22 @@ async function createTenant(browser: Browser): Promise<CreatedTenant> {
     email: owner.username,
     password: owner.password,
   })
-  // Provisioning itself is synchronous (confirmed live: the accelerator's onTenantCreate
+  // Provisioning itself is synchronous (the accelerator's onTenantCreate
   // finishes within the same request the dialog's own POST makes), but the dialog's close
   // animation and the underlying list's refresh still need a beat before the context is torn
   // down mid-flight.
   await adminPage.waitForTimeout(2_000)
   await adminPage.context().close()
 
-  // Step 2: the tenant owner logs into their OWN Console (never the super admin - confirmed
-  // live that `admin` cannot log into a secondary tenant's Console at all, since classic
+  // Step 2: the tenant owner logs into their OWN Console (never the super admin — `admin`
+  // cannot log into a secondary tenant's Console at all, since classic
   // tenants have fully independent user stores) and is assigned dpdp-consent-admin. Role
   // MEMBERSHIP is never auto-provisioned, only the roles themselves - true for the super tenant
   // too (see scripts/provision-test-users.sh and docs/content/configuration-guide.md's "Recovering a
-  // broken tenant" section) and confirmed live here: the freshly created owner has no admin
+  // broken tenant" section) - the freshly created owner has no admin
   // sidebar items at all until this assignment. Being the tenant's owner only grants
   // Console/IS-level administration, not this custom application role - the two are unrelated.
-  // Confirmed live to succeed here even though the identical `PATCH .../scim2/v2/Roles/{id}` call
+  // This succeeds even though the identical `PATCH .../scim2/v2/Roles/{id}` call
   // 401s when replayed directly via curl - see ConsoleRoleAssignment for the full story; this
   // suite never calls SCIM2 directly as a result.
   const ownerConsolePage = await loginToConsole(browser, tenantConsoleUrl(domain), owner)

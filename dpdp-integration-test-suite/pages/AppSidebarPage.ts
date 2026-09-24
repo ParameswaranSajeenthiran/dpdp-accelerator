@@ -30,7 +30,7 @@ export class AppSidebarPage {
   constructor(page: Page) {
     // The "Primary navigation" aria-label lands on the outer <Sidebar> wrapper, which renders
     // as a `complementary` (<aside>) landmark - the inner <Sidebar.Nav> is an unnamed <nav> -
-    // confirmed via an actual accessibility-tree snapshot, not guessed. "Dashboard" also appears
+    // as seen in an actual accessibility-tree snapshot. "Dashboard" also appears
     // as a main-content heading, so this scope is required to avoid ambiguous matches.
     this.nav = page.getByRole('complementary')
   }

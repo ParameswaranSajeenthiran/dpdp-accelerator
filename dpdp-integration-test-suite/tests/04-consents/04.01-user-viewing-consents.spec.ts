@@ -142,7 +142,7 @@ test.describe('User viewing Consents (UI)', () => {
     await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
     // Rejected is not terminal for Approve specifically: isApprovableByCurrentUser (consentAuthorization.ts)
     // deliberately treats REJECTED the same as PENDING, so the subject can change their mind
-    // later - confirmed against the actual source, not assumed. Reject and Revoke, however, both
+    // later (see isApprovableByCurrentUser in consentAuthorization.ts). Reject and Revoke, however, both
     // require a state Rejected no longer is (isRejectableByCurrentUser excludes REJECTED;
     // isConsentRevokableState requires ACTIVE), so those two genuinely disappear.
     await expect(detailPage.actionAvailable('approve')).toHaveCount(1)

@@ -115,7 +115,7 @@ test.describe('User searching Consents (UI)', () => {
     )
 
     // The serviceId filter is an exact match against the server, not a substring/contains match
-    // like the Elements/Purposes catalog's name search - confirmed empirically (a direct API
+    // like the Elements/Purposes catalog's name search - this is an exact match behavior (a direct API
     // call with a substring returned zero results), not documented anywhere.
     const partialServiceId = serviceId.slice(serviceId.indexOf('-') + 1, serviceId.lastIndexOf('-'))
 

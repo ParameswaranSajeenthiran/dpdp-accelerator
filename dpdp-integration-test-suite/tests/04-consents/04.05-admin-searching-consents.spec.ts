@@ -90,7 +90,7 @@ test.describe('Admin searching Consents (UI)', () => {
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Unlike the Consent ID filter (which disables the state filter - see the test above), the
-    // subject/service filters don't - confirmed in AdminConsentFilters.tsx: only
+    // subject/service filters don't - as seen in AdminConsentFilters.tsx: only
     // `filters.consentId` disables it. Both seeded under the same unique service id and
     // narrowed to it first, so the state filter's effect is checked within a controlled
     // two-row set instead of the full, ever-growing unfiltered list.
@@ -125,7 +125,7 @@ test.describe('Admin searching Consents (UI)', () => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     // Unlike subjectId/serviceId (which go through the real list-filter API), a Consent ID
     // search does a direct GET-by-ID (see useAdminConsentListQuery in
-    // useAdminConsentQueries.ts) - confirmed by actually running this: a non-existent id 404s,
+    // useAdminConsentQueries.ts) - a non-existent id 404s,
     // which the query surfaces as a load failure, never as "no results". A truncated/partial
     // id would 404 the same way, so there's no separate "partial match" case to test here,
     // unlike serviceId's real substring-vs-exact distinction (see the equivalent self-service

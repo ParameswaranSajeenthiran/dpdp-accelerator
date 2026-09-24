@@ -168,7 +168,7 @@ overview card shows).
 | `03.05.02` | Adding a version with a name that already exists shows the duplicate-version validation error and blocks submission | The Create button itself stays enabled - this validation is a no-op in the submit handler, not a disabled button; the real proof is the dialog staying open. |
 | `03.05.03` | Setting a version as latest moves the "Latest" label to it, and its own delete action becomes enabled | Also confirms the reverse: the version just promoted away from latest becomes deletable, and the newly-latest one's own delete becomes disabled. |
 | `03.05.04` | Deleting a non-latest version removes it from the version history |  |
-| `03.05.05` | A version referenced by a consent cannot be deleted | Confirmed live: the server rejects this, but the frontend shows only a generic error - see "Product bugs the tests work around" below. |
+| `03.05.05` | A version referenced by a consent cannot be deleted | The server rejects this, but the frontend shows only a generic error - see "Product bugs the tests work around" below. |
 
 ## `04-consents/` — Consent records
 
@@ -399,7 +399,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | `08.07.02` | Sending a reply with a status change transitions the complaint and records the transition |  |
 | `08.07.03` | Only OPEN's curated next statuses (In Progress, Waiting on Client) appear in the status menu | Asserts the UI's deliberately curated subset of the backend's transition graph, not the backend's own rules. |
 | `08.07.04` | Switching to "Internal note" posts a note the Data Principal never sees | Absent from the Data Principal's own timeline API response - verified against the API, not the UI. |
-| `08.07.05` | Resolving requires confirmation, and cancelling leaves the complaint open and the draft intact | Status stays In Progress (confirmed via the API) **and** the typed draft is still in the composer. |
+| `08.07.05` | Resolving requires confirmation, and cancelling leaves the complaint open and the draft intact | Status stays In Progress (verified via the API) **and** the typed draft is still in the composer. |
 | `08.07.06` | Confirming the resolve dialog resolves the complaint and locks the composer |  |
 | `08.07.07` | Sending a reply with a status change and an attachment transitions the complaint and uploads the file | Message, chip and attachment tile all present; composer draft and staged file both cleared. |
 
@@ -449,7 +449,7 @@ Mixed UI and API. Two server behaviours drive most of the test design: `groupId`
 | `09.03.01` | The subscription list renders configuration and accepts pagination |  |
 | `09.03.02` | Status and delivery-mode filters narrow the list and Clear restores it | Each filter change gets its own checkpoint so two requests cannot resolve out of order onto a stale combination. |
 | `09.03.03` | Searching by a partial subscription, topic, or callback value finds matching rows |  |
-| `09.03.04` | Subscription details show configuration, timestamps, and deliveries | Delivery confirmed via the API first; a poll delivery's empty attempt-history modal opens cleanly. |
+| `09.03.04` | Subscription details show configuration, timestamps, and deliveries | Delivery verified via the API first; a poll delivery's empty attempt-history modal opens cleanly. |
 | `09.03.05` | An unknown subscription id shows load failure without leaking data |  |
 
 ### `09.04-admin-viewing-events.spec.ts`
@@ -649,7 +649,7 @@ testEmptyPendingTriggersStuckPass` (`event.notifications.service` module, all wi
 
 # Product bugs the tests work around
 
-Real defects, confirmed live, that dictate how tests above are written. Recorded here so nobody
+Real defects that dictate how tests above are written. Recorded here so nobody
 "fixes" a test that is correctly encoding a bug.
 
 | Bug | Effect on the tests |
@@ -702,7 +702,7 @@ Worth stating, since everything above is a gap or a caveat:
   and say so when it differs from what the backend supports — `09.01.02`'s unreachable validation
   message, `04.05.04`'s load-fail-vs-empty-results distinction.
   That is the right call for a regression suite.
-- **Claims are verified, not assumed.** Comments record what was confirmed against a real server:
+- **Claims are verified, not assumed.** Comments record what was observed in practice:
   the exact-vs-substring semantics of each filter, the forced `groupId`, the `GET /events` bug,
   SCIM2's tenant limitation.
 - **Negative assertions use `toHaveCount(0)`**, matching how the sidebar and action buttons behave

@@ -19,14 +19,14 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintTimelineEntryResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintTimelineEntryResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,18 +70,18 @@ public class ComplaintTimelineHandler {
         this.complaintAttachmentService = complaintAttachmentService;
     }
 
-    public TimelineListResponseDTO getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
+    public TimelineListResponse getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
             String order, Integer limit, Integer offset) {
         return getTimeline(orgId, complaintId, fromTime, toTime, null, order, limit, offset);
     }
 
-    public TimelineListResponseDTO getOwnTimeline(String orgId, String complaintId, String ownerUserId,
+    public TimelineListResponse getOwnTimeline(String orgId, String complaintId, String ownerUserId,
             Long fromTime, Long toTime, String order, Integer limit, Integer offset) {
         complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
         return getTimeline(orgId, complaintId, fromTime, toTime, true, order, limit, offset);
     }
 
-    private TimelineListResponseDTO getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
+    private TimelineListResponse getTimeline(String orgId, String complaintId, Long fromTime, Long toTime,
             Boolean isPublic, String order, Integer limit, Integer offset) {
         int lim = limit != null && limit > 0 ? Math.min(limit, 100) : 20;
         int off = offset != null && offset >= 0 ? offset : 0;
@@ -90,20 +90,21 @@ public class ComplaintTimelineHandler {
         List<ComplaintEvent> entries = complaintEventService.getTimeline(orgId, complaintId, fromTime, toTime,
                 isPublic, order, lim, off, totalOut);
 
-        Map<String, List<ComplaintAttachmentResponseDTO>> attachmentsByEventId = complaintAttachmentService
+        Map<String, List<ComplaintAttachment>> attachmentsByEventId = complaintAttachmentService
                 .listAttachmentsForComplaint(orgId, complaintId)
                 .stream()
                 .filter(attachment -> attachment.getComplaintEventId() != null)
-                .collect(Collectors.groupingBy(ComplaintAttachmentResponseDTO::getComplaintEventId));
+                .collect(Collectors.groupingBy(ComplaintAttachment::getComplaintEventId));
 
-        List<ComplaintTimelineEntryResponseDTO> beanList = new ArrayList<>();
+        List<ComplaintTimelineEntryResponse> timeline = new ArrayList<>();
         for (ComplaintEvent entry : entries) {
-            List<ComplaintAttachmentResponseDTO> attachments = attachmentsByEventId
+            List<ComplaintAttachment> attachments = attachmentsByEventId
                     .getOrDefault(entry.getComplaintEventId(), Collections.emptyList());
-            beanList.add(ComplaintTimelineEntryResponseDTO.from(entry, attachments));
+            timeline.add(ComplaintDtoMapper.toTimelineEntry(entry, attachments));
         }
 
-        PageMetadataDTO metadata = new PageMetadataDTO(totalOut[0], off, beanList.size(), lim);
-        return new TimelineListResponseDTO(beanList, metadata);
+        return new TimelineListResponse()
+                .data(timeline)
+                .metadata(ComplaintDtoMapper.toPage(totalOut[0], off, timeline.size(), lim));
     }
 }

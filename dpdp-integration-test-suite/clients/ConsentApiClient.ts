@@ -108,7 +108,7 @@ export interface MyConsentListParams {
  * that need to prove a user's token is rejected by the admin surface construct this client
  * with the user's headers and call an admin method directly.
  *
- * `tenantDomain`, when passed, prefixes every URL with `/t/<tenant>` - confirmed live that a real
+ * `tenantDomain`, when passed, prefixes every URL with `/t/<tenant>` - a real
  * bearer token reaches both surfaces fine tenant-qualified (see fixtures/tenant.fixtures.ts).
  * Omit it for the super-tenant every other caller of this class targets.
  */

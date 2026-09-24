@@ -45,7 +45,7 @@ export async function seedActiveTopicViaApi(api: EventNotificationApiClient, lab
  * SubscriptionCreateRequest directly against a WebhookReceiver instead (see
  * AGENTS.md).
  *
- * There is deliberately no `groupId` parameter here: confirmed live, `SubscriptionHandler
+ * There is deliberately no `groupId` parameter here: `SubscriptionHandler
  * .createSubscription` (`internal-webapps/.../endpoint/handler/SubscriptionHandler.java`) never
  * reads `request.getGroupId()` at all - it unconditionally sets `groupId = orgId`, silently
  * discarding whatever a caller sends. `event-notifications.yaml`'s own examples show a

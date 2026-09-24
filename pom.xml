@@ -627,7 +627,7 @@
         <carbon.identity.governance.imp.pkg.version.range>[1.8.0, 2.0.0)</carbon.identity.governance.imp.pkg.version.range>
         <!-- 2.9.10 is the first published version with the listener/hook APIs we need. IS 7.3.0
              actually ships an unpublished 2.9.0.3 hotfix (not on Nexus, so we can't compile
-             against it) - decompiled and confirmed API-identical to 2.9.10, so the Import-Package
+             against it) - decompiled and found to be API-identical to 2.9.10, so the Import-Package
              range below is floored at 2.9.0.3, not 2.9.10, or bundle resolution fails on a real
              IS 7.3.0 install. -->
         <carbon.consent.mgt.core.version>2.9.10</carbon.consent.mgt.core.version>
@@ -673,8 +673,8 @@
         <maven.checkstyle.plugin.version>3.6.0</maven.checkstyle.plugin.version>
         <checkstyle.version>10.20.2</checkstyle.version>
 
-        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate the consent-history
-             DTOs from consent-history.yaml, then set back to true and commit the result. Off by
+        <!-- Set to false (e.g. -Ddpdp.dto.codegen.skip=false) to regenerate an endpoint module's
+             REST DTOs from its OpenAPI spec, then commit the result under src/gen/java. Off by
              default so a normal build doesn't regenerate on every run. -->
         <dpdp.dto.codegen.skip>true</dpdp.dto.codegen.skip>
 

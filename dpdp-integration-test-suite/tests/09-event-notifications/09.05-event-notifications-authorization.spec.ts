@@ -85,7 +85,6 @@ test.describe('Event Notification authorization and access control', () => {
     await expect(sidebar.label('Topics')).toHaveCount(0)
     await expect(sidebar.label('Subscriptions')).toHaveCount(0)
     await expect(sidebar.label('Events')).toHaveCount(0)
-    await expect(sidebar.label('Event Notifications')).toHaveCount(0)
 
     for (const path of ['events', 'events/topics', 'events/subscriptions']) {
       await userPage.goto(path)

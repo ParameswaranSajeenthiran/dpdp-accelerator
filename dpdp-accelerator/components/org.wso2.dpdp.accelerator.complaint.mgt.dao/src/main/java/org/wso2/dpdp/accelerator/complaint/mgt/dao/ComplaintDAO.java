@@ -102,8 +102,7 @@ public interface ComplaintDAO {
             String search, int limit, int offset, String sort, int[] totalOut);
 
     /**
-     * Computes org-wide counts for the officer/admin queue's summary tiles. The following
-     * functionality is contained in this method.
+     * Computes org-wide counts for the officer/admin queue's summary tiles.
      *
      * <p>1. Counts complaints currently OPEN or IN_PROGRESS as a single "open" bucket.
      * <p>2. Counts complaints currently AWAITING_INTERNAL_REVIEW.

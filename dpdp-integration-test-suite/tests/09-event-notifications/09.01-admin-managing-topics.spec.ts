@@ -72,7 +72,7 @@ test.describe('Admin managing Topics', () => {
         // native HTML `required` attribute (TextField's own `required` prop) - the browser's
         // constraint validation blocks the submit event before it ever reaches React, so the
         // component's own custom "Topic name is required." helper-text branch is unreachable
-        // through a real click (confirmed live: dialog.nameRequiredError never renders here).
+        // through a real click (the browser's constraint validation blocks the submit event).
         // The two are functionally equivalent from a user's perspective (submission is blocked,
         // a required-field message is shown), so this asserts the actual, observable outcome -
         // native constraint validation failing - rather than the effectively dead custom message.

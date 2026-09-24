@@ -186,12 +186,17 @@ public class ComplaintCommonDBQueries {
 
     public String getListAttachmentMetadataByComplaintQuery() {
 
+        return getListAttachmentMetadataBaseQuery() + "AND " + ComplaintDBColumns.COMPLAINT_ID + " = ? ORDER BY "
+                + ComplaintDBColumns.CREATED_TIME + " ASC";
+    }
+
+    public String getListAttachmentMetadataBaseQuery() {
+
         return "SELECT " + ComplaintDBColumns.ATTACHMENT_ID + ", " + ComplaintDBColumns.ORG_ID + ", "
                 + ComplaintDBColumns.COMPLAINT_ID + ", " + ComplaintDBColumns.COMPLAINT_EVENT_ID + ", "
                 + ComplaintDBColumns.FILE_NAME + ", " + ComplaintDBColumns.FILE_CONTENT_TYPE + ", "
                 + "LENGTH(" + ComplaintDBColumns.FILE_DATA + ") AS " + ComplaintDBColumns.SIZE_BYTES + ", "
                 + ComplaintDBColumns.IS_PUBLIC + ", " + ComplaintDBColumns.CREATED_TIME
-                + " FROM " + DAOConstants.TABLE_COMPLAINT_ATTACHMENT + " WHERE " + ComplaintDBColumns.ORG_ID + " = ? AND "
-                + ComplaintDBColumns.COMPLAINT_ID + " = ? ORDER BY " + ComplaintDBColumns.CREATED_TIME + " ASC";
+                + " FROM " + DAOConstants.TABLE_COMPLAINT_ATTACHMENT + " WHERE " + ComplaintDBColumns.ORG_ID + " = ? ";
     }
 }

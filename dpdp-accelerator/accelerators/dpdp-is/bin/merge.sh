@@ -39,11 +39,8 @@ fi
 
 WEBAPPS_PATH="${WSO2_IS_HOME}/repository/deployment/server/webapps"
 
-# A stale exploded webapp from an older accelerator version would otherwise sit
-# alongside the fresh one - `cp -r` below only adds/overwrites, it never removes
-# a destination file the new build no longer has (a renamed WEB-INF/lib jar, a
-# deleted class). Driven off the accelerator's own webapps so a future webapp
-# is covered automatically instead of needing another hardcoded block.
+# Remove stale exploded webapps from older versions to ensure a clean deployment,
+# as `cp -r` only adds/overwrites and never removes files.
 for webapp in "${ACCELERATOR_HOME}"/carbon-home/repository/deployment/server/webapps/*/; do
   name="$(basename "${webapp}")"
   target="${WEBAPPS_PATH}/${name}"
@@ -54,8 +51,7 @@ for webapp in "${ACCELERATOR_HOME}"/carbon-home/repository/deployment/server/web
   rm -f "${WEBAPPS_PATH}/${name}.war"
 done
 
-# Likewise for dropins: a stale jar from an older accelerator version (renamed class,
-# version bump) would otherwise sit alongside the new one and load as a duplicate bundle.
+# Remove stale dropins to prevent duplicate bundle loading.
 echo "Removing old DPDP accelerator artifacts from the product"
 find "${WSO2_IS_HOME}/repository/components/dropins" -name "org.wso2.dpdp.accelerator.*" -exec rm -f {} \;
 

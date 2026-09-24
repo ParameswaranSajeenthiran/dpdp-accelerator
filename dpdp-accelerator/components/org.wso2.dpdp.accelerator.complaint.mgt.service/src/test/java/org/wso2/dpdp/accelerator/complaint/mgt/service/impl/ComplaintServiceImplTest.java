@@ -34,8 +34,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.DuplicateReferenceI
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintQueueStats;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.notification.NotificationClient;
@@ -239,7 +237,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.countByReferenceIdPrefix(any(Connection.class), eq("org1"), anyString())).thenReturn(0);
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint =
+        Complaint complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc  ");
 
         assertEquals("CRITICAL", complaint.getPriority());
@@ -276,7 +274,7 @@ class ComplaintServiceImplTest {
                 .thenThrow(new DuplicateReferenceIdException(new SQLIntegrityConstraintViolationException("dup")))
                 .thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint =
+        Complaint complaint =
                 complaintService.createComplaint("org1", "user1", "User One", "DATA_BREACH", "desc");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -303,7 +301,7 @@ class ComplaintServiceImplTest {
         when(complaintDAO.addComplaint(any(Connection.class), any(Complaint.class))).thenReturn(true);
         when(complaintEventDAO.addEvent(any(Connection.class), any(ComplaintEvent.class))).thenReturn(true);
 
-        ComplaintCreateResponseDTO complaint = complaintService.createComplaint("org1", "user1", null,
+        Complaint complaint = complaintService.createComplaint("org1", "user1", null,
                 "DATA_BREACH", "desc", "officer1", "COMPLAINT_OFFICER");
 
         assertEquals("OPEN", complaint.getStatus());
@@ -312,11 +310,11 @@ class ComplaintServiceImplTest {
         assertEquals("officer1", captor.getValue().getActorUserId());
         assertEquals("COMPLAINT_OFFICER", captor.getValue().getActorRole());
         assertEquals("OPEN", captor.getValue().getToStatus());
-        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
-        assertEquals(complaint.getId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), captor.getValue().getComplaintId());
         ArgumentCaptor<Complaint> notifiedComplaintCaptor = ArgumentCaptor.forClass(Complaint.class);
         verify(notificationClient).notifyComplaintCreated(notifiedComplaintCaptor.capture());
-        assertEquals(complaint.getId(), notifiedComplaintCaptor.getValue().getComplaintId());
+        assertEquals(complaint.getComplaintId(), notifiedComplaintCaptor.getValue().getComplaintId());
     }
 
     @Test
@@ -435,7 +433,7 @@ class ComplaintServiceImplTest {
         ComplaintQueueStats stats = new ComplaintQueueStats(3, 1, 2, 1);
         when(complaintDAO.getQueueStats(any(Connection.class), eq("org1"), anyLong())).thenReturn(stats);
 
-        ComplaintQueueStatsResponseDTO result = complaintService.getQueueStats("org1");
+        ComplaintQueueStats result = complaintService.getQueueStats("org1");
 
         assertEquals(stats.getOpenCount(), result.getOpenCount());
         assertEquals(stats.getAwaitingInternalReviewCount(), result.getAwaitingInternalReviewCount());

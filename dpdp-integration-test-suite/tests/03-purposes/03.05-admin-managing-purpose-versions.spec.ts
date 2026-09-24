@@ -188,7 +188,7 @@ test.describe('Admin managing Purpose versions (UI)', () => {
     const deleteDialog = new PurposeVersionDeleteDialog(consentAdminPage)
     await deleteDialog.confirm()
 
-    // Confirmed live: the server does reject this, but PurposeDetailsPage.tsx's
+    // The server does reject this, but PurposeDetailsPage.tsx's
     // deleteVersionErrorMessage treats every failure as unexpected and shows this generic text -
     // unlike the whole-Purpose delete, there's no version-specific "still referenced" message.
     await expect(deleteDialog.errorAlert).toContainText(

@@ -89,8 +89,7 @@ final class EmailTemplateConfigLoader {
             configFile = new File(CarbonUtils.getCarbonConfigDirPath(),
                     CONFIG_DIRECTORY + File.separator + CONFIG_FILE_NAME);
         } catch (RuntimeException e) {
-            // Throws if neither carbon.home nor CARBON_HOME is set - never expected in a real
-            // IS runtime, but this loader must not be the reason provisioning fails over it.
+            // Fallback to bundled defaults if config directory cannot be resolved.
             LOG.debug("Could not resolve the carbon config directory; falling back to the bundled classpath "
                     + "default for every complaint email template.", e);
             return Collections.emptyMap();
@@ -126,9 +125,7 @@ final class EmailTemplateConfigLoader {
             LOG.debug("Loaded " + templates.size() + " complaint email template override(s) from " + configFile);
             return Collections.unmodifiableMap(templates);
         } catch (IOException | XMLStreamException | RuntimeException e) {
-            // RuntimeException also covers OMException (a parse failure) and IllegalArgumentException
-            // (an XMLInputFactory property the ambient StAX implementation doesn't support) - this
-            // loader must not be the reason provisioning fails outright over either.
+            // Fallback to bundled defaults if parsing fails or if a property is unsupported by the StAX implementation.
             LOG.error("Error parsing " + configFile + "; falling back to the bundled classpath default for every "
                     + "complaint email template.", e);
             return Collections.emptyMap();

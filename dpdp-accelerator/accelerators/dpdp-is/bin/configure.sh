@@ -149,11 +149,8 @@ run_admin_sql() {
 }
 
 # database_exists <name>
-# Only empty output means "no such database". A failed query is reported and aborts,
-# because silently treating it as absent would send the product's non-idempotent DDL
-# at a database that may already hold data. The `if` form is required: a failing
-# command substitution in a plain assignment aborts under `set -e` before the status
-# can be read.
+# Only empty output means "no such database". A failed query aborts to prevent
+# applying non-idempotent DDL to a database that may already hold data.
 database_exists() {
   local sql out args
   sql="$(expand_template "${DB_DB_EXISTS_SQL}" "$1")"
@@ -244,9 +241,8 @@ else
     echo "[2/4] JDBC driver already present: $(basename "${DRIVER_JAR}")"
   else
     echo "[2/4] Downloading $(basename "${DRIVER_JAR}")"
-    # Downloaded beside the target and moved into place only once complete: an
-    # interrupted transfer would otherwise leave a truncated jar that the next run
-    # reports as "already present", and the server then fails to load the driver.
+    # Downloaded beside the target and moved into place once complete to prevent
+    # truncated jars from being reported as present and causing server load failures.
     DRIVER_TMP="${DRIVER_JAR}.part"
     if command -v curl > /dev/null 2>&1; then
       curl -fsSL "${DB_DRIVER_URL}" -o "${DRIVER_TMP}" || { rm -f "${DRIVER_TMP}"; exit 2; }
@@ -293,10 +289,8 @@ create_is_databases() {
   done
 }
 
-# The product's own DDL is not idempotent - consent/mysql.sql guards none of its 10
-# CREATE TABLEs, agent none of 4 - so it is applied only to a database this run
-# created. Re-running against an existing database would error and, worse, is exactly
-# where a careless DROP would destroy real data.
+# The product's own DDL is not idempotent. It is applied only to databases created
+# this run to avoid errors or destroying real data on existing databases.
 was_created() {
   case " ${IS_DB_CREATED} " in *" $1 "*) return 0 ;; *) return 1 ;; esac
 }
@@ -319,18 +313,8 @@ apply_is_schema() {
   fi
 }
 
-# MySQL's InnoDB rejects a standalone "ADD COLUMN ... AUTO_INCREMENT" - the column
-# has to be indexed in the same ALTER. WSO2's migration adds the key in the very next
-# statement, which is fine on H2 but errors on MySQL (1075), so the two consecutive
-# ALTERs on one table are folded into one. Left untouched for H2, whose own migration
-# file works as shipped.
-# This is an upstream Identity Server bug: wso2/product-is#28412. Remove this workaround
-# once the shipped mysql-migration.txt applies cleanly to MySQL 8.
-#
-# Assumes the ALTER that adds the key immediately follows the one adding the column, as it
-# does in the shipped migration - the fold does not compare table names. If a future
-# migration puts an unrelated ALTER TABLE next, the second clause would be applied to the
-# first table. Re-check this if the workaround outlives the upstream fix.
+# MySQL's InnoDB rejects standalone "ADD COLUMN ... AUTO_INCREMENT". We fold consecutive
+# ALTERs into one to avoid MySQL 1075 errors.
 mysqlify_migration() {
   awk '
     held != "" {
@@ -373,9 +357,7 @@ apply_consent_migration() {
 if [ "${APPLY_IS_CONSENT_MGT_V2_MIGRATION}" != "true" ] && [ "${DB_TYPE}" = "h2" ]; then
   echo "[3/4] Skipping the consent schema migration (APPLY_IS_CONSENT_MGT_V2_MIGRATION is not true)."
 elif [ "${DB_TYPE}" = "h2" ]; then
-  # The embedded database is the file WSO2 ships pre-populated; there is nothing to drop
-  # or create, so RECREATE_DATABASES has no meaning here. Say so rather than ignore it
-  # silently, or a reader expecting a clean reset gets one with no explanation.
+  # The embedded database is pre-populated; RECREATE_DATABASES is ignored.
   if [ "${RECREATE_DATABASES}" = "true" ]; then
     echo "[3/4] NOTE: RECREATE_DATABASES is ignored for the embedded h2 database."
   fi

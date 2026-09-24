@@ -31,7 +31,7 @@ export class LoginPage {
 
   constructor(private readonly page: Page) {
     // Rendered by the login.do JSP only after a failed attempt redirects back to itself with
-    // authFailure=true - confirmed empirically (see fixtures/auth.fixtures.ts's
+    // authFailure=true - as seen in fixtures/auth.fixtures.ts's
     // loginAndCaptureState, the one place this locator is actually exercised), not documented
     // anywhere.
     this.errorMessage = this.page.getByTestId('login-page-error-message')

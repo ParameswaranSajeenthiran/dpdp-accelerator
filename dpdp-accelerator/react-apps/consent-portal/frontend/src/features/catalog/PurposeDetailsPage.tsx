@@ -122,7 +122,7 @@ function PurposeDetailsPage(): React.JSX.Element {
 
   const propertyEntries = Object.entries(detail.properties ?? {})
   // The purpose's own description/elements/properties always mirror whichever
-  // version is currently latest -- verified live, not documented behaviour --
+  // version is currently latest - as observed in current behavior -
   // so a new version starts from these rather than an empty form.
   const versionFormSource = {
     description: detail.description,

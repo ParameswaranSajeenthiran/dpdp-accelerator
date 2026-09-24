@@ -18,11 +18,11 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Complaint attachment core service interface.
@@ -30,8 +30,7 @@ import java.util.List;
 public interface ComplaintAttachmentService {
 
     /**
-     * Uploads and binds one or more files to the complaint. The following functionality is
-     * contained in this method.
+     * Uploads and binds one or more files to the complaint.
      *
      * <p>1. Validates the file list against the configured attachment policy (count, size,
      * content type).
@@ -52,7 +51,7 @@ public interface ComplaintAttachmentService {
      * @throws ComplaintServiceException thrown if the request fails validation against the attachment
      *                            policy
      */
-    List<ComplaintAttachmentResponseDTO> uploadComplaintAttachments(String orgId, String complaintId,
+    List<ComplaintAttachment> uploadComplaintAttachments(String orgId, String complaintId,
             List<UploadedFile> files, boolean isPublic, String actorUserId, String actorUserName, String actorRole);
 
     /**
@@ -71,7 +70,7 @@ public interface ComplaintAttachmentService {
      *                            org or does not belong to ownerUserId, or if the request fails
      *                            validation against the attachment policy
      */
-    List<ComplaintAttachmentResponseDTO> uploadOwnComplaintAttachments(String orgId, String complaintId,
+    List<ComplaintAttachment> uploadOwnComplaintAttachments(String orgId, String complaintId,
             String ownerUserId, String ownerUserName, List<UploadedFile> files);
 
     /**
@@ -79,9 +78,19 @@ public interface ComplaintAttachmentService {
      *
      * @param orgId       tenant/organization the complaint belongs to
      * @param complaintId complaint to list attachments for
-     * @return every attachment bound to the complaint
+     * @return every attachment bound to the complaint, without file content
      */
-    List<ComplaintAttachmentResponseDTO> listAttachmentsForComplaint(String orgId, String complaintId);
+    List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId);
+
+    /**
+     * Fetches metadata (no file content) for the attachments of several complaints in one lookup.
+     *
+     * @param orgId        tenant/organization the complaints belong to
+     * @param complaintIds complaints to list attachments for
+     * @return attachments grouped by complaint ID, each group oldest first; complaints with no
+     *         attachments have no entry
+     */
+    Map<String, List<ComplaintAttachment>> listAttachmentsForComplaints(String orgId, List<String> complaintIds);
 
     /**
      * Downloads an attachment including its file content. When restrictToPublicOnly is true (the
@@ -98,7 +107,7 @@ public interface ComplaintAttachmentService {
      *                            403 if restrictToPublicOnly is true and the attachment isn't
      *                            public
      */
-    ComplaintAttachmentDownloadResponseDTO downloadAttachment(String orgId, String complaintId,
+    ComplaintAttachment downloadAttachment(String orgId, String complaintId,
             String attachmentId, boolean restrictToPublicOnly);
 
     /**
@@ -115,7 +124,7 @@ public interface ComplaintAttachmentService {
      *                            org or does not belong to ownerUserId, or if the attachment
      *                            doesn't exist, or a 403 if the attachment isn't public
      */
-    ComplaintAttachmentDownloadResponseDTO downloadOwnAttachment(String orgId, String complaintId,
+    ComplaintAttachment downloadOwnAttachment(String orgId, String complaintId,
             String ownerUserId, String attachmentId);
 
     /** A single uploaded multipart file, decoupled from any particular HTTP framework's bean type. */
