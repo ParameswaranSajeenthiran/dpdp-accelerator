@@ -49,6 +49,14 @@ public class TopicQueryBuilderTest {
     public void testDefaultAndStatusSorts() {
         assertEquals(new TopicQueryBuilder("org").setSort("status").resolveSortColumn(), "STATUS ASC");
         assertEquals(new TopicQueryBuilder("org").setSort("-status").resolveSortColumn(), "STATUS DESC");
-        assertEquals(new TopicQueryBuilder("org").setSort("invalid").resolveSortColumn(), "NAME ASC");
+        assertEquals(new TopicQueryBuilder("org").setSort("name").resolveSortColumn(), "NAME ASC");
+        assertEquals(new TopicQueryBuilder("org").setSort("createdAt").resolveSortColumn(),
+                "CREATED_AT ASC, NAME ASC");
+        assertEquals(new TopicQueryBuilder("org").setSort("-createdAt").resolveSortColumn(),
+                "CREATED_AT DESC, NAME ASC");
+        assertEquals(new TopicQueryBuilder("org").setSort("invalid").resolveSortColumn(),
+                "CREATED_AT DESC, NAME ASC");
+        assertEquals(new TopicQueryBuilder("org").setSort(null).resolveSortColumn(),
+                "CREATED_AT DESC, NAME ASC");
     }
 }

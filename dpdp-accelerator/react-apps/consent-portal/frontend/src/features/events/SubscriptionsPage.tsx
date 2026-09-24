@@ -272,6 +272,7 @@ export default function SubscriptionsPage(): React.JSX.Element {
               createMutation.mutate(payload, {
                 onSuccess: (subscription) => {
                   setIsRegisterOpen(false)
+                  updateParams(filters)
                   if (
                     payload.delivery.mode === 'webhook' &&
                     normalizeSubscriptionStatus(subscription.status) === 'PENDING'

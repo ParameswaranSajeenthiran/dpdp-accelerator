@@ -50,14 +50,20 @@ public class TopicQueryBuilder {
     }
 
     public String resolveSortColumn() {
-        if ("-name".equalsIgnoreCase(sort)) {
+        if ("name".equalsIgnoreCase(sort)) {
+            return EventNotificationDBColumns.NAME + " ASC";
+        } else if ("-name".equalsIgnoreCase(sort)) {
             return EventNotificationDBColumns.NAME + " DESC";
         } else if ("status".equalsIgnoreCase(sort)) {
             return EventNotificationDBColumns.STATUS + " ASC";
         } else if ("-status".equalsIgnoreCase(sort)) {
             return EventNotificationDBColumns.STATUS + " DESC";
+        } else if ("createdAt".equalsIgnoreCase(sort)) {
+            return EventNotificationDBColumns.CREATED_AT + " ASC, " + EventNotificationDBColumns.NAME + " ASC";
         }
-        return EventNotificationDBColumns.NAME + " ASC";
+        // Newest first by default, so a just-registered topic surfaces on the first page. NAME breaks
+        // ties because CREATED_AT only has second precision on some dialects.
+        return EventNotificationDBColumns.CREATED_AT + " DESC, " + EventNotificationDBColumns.NAME + " ASC";
     }
 
     public QueryResult buildSelectQuery(String paginationClause) {
