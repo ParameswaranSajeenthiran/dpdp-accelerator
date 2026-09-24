@@ -216,7 +216,7 @@ function DashboardPage(): React.JSX.Element {
                       }
                       label={t('sidebar.elements')}
                       icon={<Blocks size={22} />}
-                      iconColor="secondary"
+                      iconColor="info"
                     />
                   ) : null}
                 </Box>
