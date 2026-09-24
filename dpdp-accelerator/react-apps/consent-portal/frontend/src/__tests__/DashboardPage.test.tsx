@@ -115,6 +115,15 @@ describe('DashboardPage', () => {
     })
     expect(screen.getByText('Needs your attention')).toBeInTheDocument()
     expect(screen.getByText('Complaints')).toBeInTheDocument()
+    // Without relation=ANY the server returns only consents the user is the subject of, hiding
+    // the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
+    expect(myConsentsApi.fetchMyConsents).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'PENDING', relation: 'ANY' }),
+    )
+    expect(myConsentsApi.fetchMyConsentsRaw).toHaveBeenCalledTimes(6)
+    myConsentsApi.fetchMyConsentsRaw.mock.calls.forEach(([params]) => {
+      expect(params).toMatchObject({ relation: 'ANY' })
+    })
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
     expect(catalogApi.fetchPurposes).not.toHaveBeenCalled()
     expect(catalogApi.fetchElements).not.toHaveBeenCalled()

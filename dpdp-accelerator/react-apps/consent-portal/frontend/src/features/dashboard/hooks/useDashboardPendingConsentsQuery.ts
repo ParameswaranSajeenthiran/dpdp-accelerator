@@ -29,7 +29,14 @@ const PENDING_BATCH_SIZE = 100
 
 /** The signed-in user's pending consents, with purposes/authorizations inlined for display. */
 async function fetchPendingConsents(): Promise<ConsentSummary[]> {
-  const response = await fetchMyConsents({ limit: PENDING_BATCH_SIZE, offset: 0, state: 'PENDING' })
+  // The server defaults relation to SUBJECT, which would hide exactly the consents awaiting this
+  // user's decision as an authorizer.
+  const response = await fetchMyConsents({
+    limit: PENDING_BATCH_SIZE,
+    offset: 0,
+    state: 'PENDING',
+    relation: 'ANY',
+  })
   return response.data
 }
 

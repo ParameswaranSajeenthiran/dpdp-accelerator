@@ -28,7 +28,13 @@ import { CONSENT_COUNT_LIMIT, type ConsentStateCounts } from './consentStateCoun
  * length is the only way to know whether more than that many consents exist.
  */
 async function countSelfConsents(state?: ConsentState): Promise<PageCount> {
-  const consents = await fetchMyConsentsRaw({ limit: CONSENT_COUNT_LIMIT + 1, state })
+  // The server defaults relation to SUBJECT, which would leave out consents this user only
+  // authorizes - ANY keeps these counts in line with the Consents page.
+  const consents = await fetchMyConsentsRaw({
+    limit: CONSENT_COUNT_LIMIT + 1,
+    state,
+    relation: 'ANY',
+  })
   return pageCountFromOverfetch(consents.length, CONSENT_COUNT_LIMIT)
 }
 
