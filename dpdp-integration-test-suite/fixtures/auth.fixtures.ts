@@ -49,15 +49,13 @@ interface Fixtures {
   target: Target
   userConsentApi: ConsentApiClient
   consentAdminConsentApi: ConsentApiClient
-  // "Officer" here is any dpdp-consent-admin holder (see AGENTS.md's
-  // Personas section) - reuses the same consent-admin persona/login as consentAdminConsentApi,
-  // just wrapped in the complaint client instead of the consent one.
+  // "Officer" here is the dpdp-consent-dpo persona - the only role holding the complaints:*:any
+  // scopes (see AGENTS.md's Personas section).
   userComplaintApi: ComplaintApiClient
   officerComplaintApi: ComplaintApiClient
   // dpdp-consent-admin holds every notifications:* scope (see
   // AGENTS.md), so this one persona doubles as the admin, the
-  // event publisher, and the webhook-verification actor - same "one role covers every surface"
-  // rationale as officerComplaintApi above.
+  // event publisher, and the webhook-verification actor.
   consentAdminEventApi: EventNotificationApiClient
   // dpdp-consent-user holds NO notifications:* scope - used only to prove every event-notification
   // endpoint rejects a token that lacks the relevant scope.
@@ -493,6 +491,11 @@ export async function loginAsConsentAdmin(browser: Browser): Promise<Page> {
   return loginAs(browser, 'consent-admin', target.personas.consentAdmin)
 }
 
+export async function loginAsDpo(browser: Browser): Promise<Page> {
+  const target = resolveTarget(test.info().project.name)
+  return loginAs(browser, 'dpo', target.personas.dpo)
+}
+
 export const test = base.extend<Fixtures>({
   target: async ({}, use) => {
     await use(resolveTarget(test.info().project.name))
@@ -522,7 +525,7 @@ export const test = base.extend<Fixtures>({
 
   officerComplaintApi: async ({ browser, request }, use) => {
     const target = resolveTarget(test.info().project.name)
-    const personaState = await getPersonaState(browser, 'consent-admin', target.personas.consentAdmin)
+    const personaState = await getPersonaState(browser, 'dpo', target.personas.dpo)
     await use(new ComplaintApiClient(request, authHeadersFromPersonaState(personaState), target.tenantDomain))
   },
 

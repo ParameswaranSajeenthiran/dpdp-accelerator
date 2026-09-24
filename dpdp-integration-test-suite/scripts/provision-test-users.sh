@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Creates the three accounts the integration suite needs and assigns their roles.
+# Creates the four accounts the integration suite needs and assigns their roles.
 #
 # The accelerator provisions the DPDP Consent Portal application and both roles
 # automatically, but never any user and never role membership - see
@@ -31,7 +31,7 @@
 # Usage:
 #   bash scripts/provision-test-users.sh
 #
-# Every setting - server URL, the three usernames, their password, the roles to assign - comes
+# Every setting - server URL, the four usernames, their password, the roles to assign - comes
 # from e2e-config.json plus the optional e2e-config.local.json beside it, the same single
 # configuration the TypeScript side reads (see utils/config.ts). There are no environment
 # variables and no defaults inlined here. ./scripts/setup-local.sh generates the password into
@@ -101,8 +101,9 @@ emit = {
         (config.get('provisioningClient') or {}).get('clientSecret'), 'provisioningClient.clientSecret'
     ),
     'ADMIN_ROLE': require(config['personaRoles']['consentAdmin'], 'personaRoles.consentAdmin'),
+    'DPO_ROLE': require(config['personaRoles']['dpo'], 'personaRoles.dpo'),
 }
-for shell_name, persona in (('USER', 'user'), ('USER_2', 'user2'), ('ADMIN', 'consentAdmin')):
+for shell_name, persona in (('USER', 'user'), ('USER_2', 'user2'), ('ADMIN', 'consentAdmin'), ('DPO', 'dpo')):
     entry = config['personas'][persona]
     emit['%s_NAME' % shell_name] = require(entry['username'], 'personas.%s.username' % persona)
     emit['%s_PASSWORD' % shell_name] = require(entry['password'], 'personas.%s.password' % persona)
@@ -263,5 +264,6 @@ api -o /dev/null -f "${IS_BASE_URL}/scim2/Users?count=1" \
 provision "${USER_NAME}"   "${USER_PASSWORD}"   "${USER_ROLE}"
 provision "${USER_2_NAME}" "${USER_2_PASSWORD}" "${USER_ROLE}"
 provision "${ADMIN_NAME}"  "${ADMIN_PASSWORD}"  "${ADMIN_ROLE}"
+provision "${DPO_NAME}"    "${DPO_PASSWORD}"    "${DPO_ROLE}"
 
 echo "Done."
