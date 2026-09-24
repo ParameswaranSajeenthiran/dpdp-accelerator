@@ -116,13 +116,13 @@
       "noPurposes": "இந்த ஒப்புதலுடன் எந்த நோக்கங்களும் இணைக்கப்படவில்லை.",
       "noProperties": "இந்த ஒப்புதலுடன் எந்த சொத்துக்களும் இணைக்கப்படவில்லை.",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "அங்கீகார அதிகாரியின் ஒப்புதலுக்காக காத்திருக்கிறேன்.",
+        "approved": "இந்த ஒப்புதல் அங்கீகரிக்கப்பட்டுள்ளது.",
+        "rejected": "இந்த ஒப்புதல் நிராகரிக்கப்பட்டுள்ளது.",
+        "decisionRecordedWaiting": "நீ உன் முடிவை எடுத்துவிட்டாய். மற்றவர்கள் முடிவு செய்யக் காத்திருக்கிறேன்.",
+        "youRejected": "இந்த சம்மதத்தை நீங்கள் நிராகரித்துவிட்டீர்கள்.",
+        "revoked": "இந்த ஒப்புதல் திரும்பப் பெறப்பட்டுள்ளது.",
+        "expired": "இந்த ஒப்புதல் காலாவதியாகிவிட்டது."
       }
     },
     "actions": {

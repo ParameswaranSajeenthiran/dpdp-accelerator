@@ -116,13 +116,13 @@
       "noPurposes": "ഈ സമ്മതവുമായി ബന്ധപ്പെട്ട് ഒരു ലക്ഷ്യവുമില്ല.",
       "noProperties": "ഈ സമ്മതവുമായി ബന്ധപ്പെട്ട് യാതൊരു സ്വത്തുക്കളും ഇല്ല.",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "അധികാരിയുടെ അംഗീകാരത്തിനായി കാത്തിരിക്കുന്നു.",
+        "approved": "ഈ സമ്മതം അംഗീകരിച്ചിരിക്കുന്നു.",
+        "rejected": "ഈ സമ്മതം നിരസിച്ചിരിക്കുന്നു.",
+        "decisionRecordedWaiting": "നിങ്ങളുടെ തീരുമാനം നിങ്ങൾ എടുത്തു. ബാക്കിയുള്ളവർ തീരുമാനിക്കാൻ കാത്തിരിക്കുന്നു.",
+        "youRejected": "നിങ്ങൾ ഈ സമ്മതം നിരസിച്ചു.",
+        "revoked": "ഈ സമ്മതം പിൻവലിച്ചിരിക്കുന്നു.",
+        "expired": "ഈ സമ്മതം കാലഹരണപ്പെട്ടു."
       }
     },
     "actions": {

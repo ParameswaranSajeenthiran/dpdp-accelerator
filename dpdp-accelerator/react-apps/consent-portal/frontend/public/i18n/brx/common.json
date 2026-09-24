@@ -116,13 +116,13 @@
       "noPurposes": "बे गनायथिजों जेबो थांखिफोर सोमोन्दो गैया।",
       "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "गनायथिगिरिनि गनायथिनि थाखाय नेगासिनो दं।",
+        "approved": "बे गनायथिखौ गनायथि होनाय जाबाय।",
+        "rejected": "बे गनायथिखौ नेवसिगारनाय जाबाय।",
+        "decisionRecordedWaiting": "नोंथाङा नोंथांनि थिरांथाखौ लाबाय। गुबुनफोरा थिरांथा लानो नेगासिनो दं।",
+        "youRejected": "नोंथाङा बे गनायथिखौ नेवसिगारबाय।",
+        "revoked": "बे गनायथिखौ बोखारनाय जाबाय।",
+        "expired": "बे गनायथिया जोबबाय।"
       }
     },
     "actions": {

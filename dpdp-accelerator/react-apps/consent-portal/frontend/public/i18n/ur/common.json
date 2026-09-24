@@ -116,13 +116,13 @@
       "noPurposes": "اس رضامندی سے کوئی مقاصد وابستہ نہیں ہیں۔",
       "noProperties": "اس رضامندی سے کوئی جائیداد منسلک نہیں ہے۔",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "آتھورائزر کی منظوری کا انتظار ہے۔",
+        "approved": "اس رضامندی کی منظوری دے دی گئی ہے۔",
+        "rejected": "یہ رضامندی مسترد کر دی گئی ہے۔",
+        "decisionRecordedWaiting": "تم نے اپنا فیصلہ کر لیا ہے۔ باقی لوگوں کے فیصلے کا انتظار ہے۔",
+        "youRejected": "آپ نے اس رضامندی کو مسترد کر دیا ہے۔",
+        "revoked": "یہ رضامندی منسوخ کر دی گئی ہے۔",
+        "expired": "یہ رضامندی ختم ہو چکی ہے۔"
       }
     },
     "actions": {

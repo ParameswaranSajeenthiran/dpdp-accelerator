@@ -116,13 +116,13 @@
       "noPurposes": "امہِ رضامندی سۭتۍ چھنہٕ کانٛہہ مقصد وابستہٕ۔",
       "noProperties": "امہ رضامندی سۭتۍ چھنہٕ کانٛہہ خاصیت وابستہٕ۔",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "آتھورایزر منظوٗری ہُنٛد انتظار کران۔",
+        "approved": "یہِ رضامندی چھِ منظور کرنہٕ آمٕژ۔",
+        "rejected": "یہِ رضامندی چھِ رد کرنہٕ آمٕژ۔",
+        "decisionRecordedWaiting": "تۄہہِ کوٚروٗ پنُن فٲصلہٕ۔ باقین ہُنٛد فٲصلہٕ کرنُک انتظار کران۔",
+        "youRejected": "تۄہہِ  چھِو یہِ رضامندی رَد کٔرمٕژ۔",
+        "revoked": "یہِ رضامندی چھِ رد کرنہٕ آمٕژ۔",
+        "expired": "یہِ رضامندی چھےٚ ختم گٔمٕژ۔"
       }
     },
     "actions": {

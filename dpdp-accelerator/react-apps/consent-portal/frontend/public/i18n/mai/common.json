@@ -116,13 +116,13 @@
       "noPurposes": "एहि सहमति सँ कोनो उद्देश्य सम्बन्धित नहि अछि।",
       "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "अधिकारक अनुमोदनक प्रतीक्षा कएल जा रहल अछि।",
+        "approved": "ई सहमति स्वीकृत कऽ देल गेल अछि।",
+        "rejected": "ई सहमति अस्वीकृत क' देल गेल अछि।",
+        "decisionRecordedWaiting": "अहाँ अपन निर्णय लऽ लेलहुँ। बाकी लोक सभक निर्णयक लेल बाट जोहैत छी।",
+        "youRejected": "अहाँ ई सहमति अस्वीकार कए देलहुँ।",
+        "revoked": "ई सहमति रद्द कऽ देल गेल अछि।",
+        "expired": "ई सहमति समाप्त भऽ गेल अछि।"
       }
     },
     "actions": {

@@ -116,13 +116,13 @@
       "noPurposes": "इस सैह्‌मती कन्नै कोई मकसद जुड़े दा नेईं ऐ।",
       "noProperties": "इस सैह्‌मती कन्नै कोई संपत्तियां जुड़ी दियां नेईं हैन।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "अधिकारक दी मंजूरी दी निहालप च।",
+        "approved": "एह्‌‌ सैह्‌‌मती मंजूर करी दित्ती गेई ऐ।",
+        "rejected": "एह्‌‌ सैह्‌‌मती नामंजूर करी दित्ती गेई ऐ।",
+        "decisionRecordedWaiting": "तुसें अपना फैसला करी लैता ऐ। बाकी लोकें दे फैसला करने दा इंतजार करा'रदे आं।",
+        "youRejected": "तुसें इस सैह्‌मती गी नामंजूर करी दित्ता ऐ।",
+        "revoked": "एह्‌‌ सैह्‌‌मती बापस लेई लैती गेई ऐ।",
+        "expired": "एह्‌‌ सैह्‌‌मती खतम होई चुकी ऐ।"
       }
     },
     "actions": {

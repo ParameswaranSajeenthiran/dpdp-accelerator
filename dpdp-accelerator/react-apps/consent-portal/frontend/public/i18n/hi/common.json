@@ -116,13 +116,13 @@
       "noPurposes": "इस सहमति से कोई उद्देश्य नहीं जुड़े हैं।",
       "noProperties": "इस सहमति से कोई भी संपत्ति जुड़ी नहीं है।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "प्राधिकरण की स्वीकृति का इंतज़ार है।",
+        "approved": "इस सहमति को मंज़ूरी मिल गई है।",
+        "rejected": "यह सहमति अस्वीकार कर दी गई है।",
+        "decisionRecordedWaiting": "आपने अपना निर्णय ले लिया है। बाकी लोगों के निर्णय लेने का इंतज़ार है।",
+        "youRejected": "आपने इस सहमति को अस्वीकार कर दिया है।",
+        "revoked": "यह सहमति रद्द कर दी गई है।",
+        "expired": "यह सहमति समाप्त हो गई है।"
       }
     },
     "actions": {

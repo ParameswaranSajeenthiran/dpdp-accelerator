@@ -116,13 +116,13 @@
       "noPurposes": "এই সন্মতিৰ সৈতে কোনো উদ্দেশ্য জড়িত নাই।",
       "noProperties": "এই সন্মতিৰ সৈতে কোনো ধৰ্ম-সম্পত্তি জড়িত নাথাকে।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "অনুমোদনকাৰীৰ অনুমোদনৰ বাবে অপেক্ষা কৰি আছো।",
+        "approved": "এই সন্মতি মঞ্জুৰ কৰা হৈছে।",
+        "rejected": "এই সন্মতি নাকচ কৰা হৈছে।",
+        "decisionRecordedWaiting": "তুমি তোমাৰ সিদ্ধান্ত লৈছা। বাকীসকলে কি সিদ্ধান্ত লয় তাৰ বাবে অপেক্ষা কৰি আছো।",
+        "youRejected": "আপুনি এই সন্মতি নাকচ কৰিছে।",
+        "revoked": "এই সন্মতি প্ৰত্যাহাৰ কৰা হৈছে।",
+        "expired": "এই সন্মতিৰ ম্যাদ উকলি গৈছে।"
       }
     },
     "actions": {

@@ -116,13 +116,13 @@
       "noPurposes": "এই সম্মতির সঙ্গে কোনো উদ্দেশ্য যুক্ত নেই।",
       "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "অনুমোদনকারীর অনুমোদনের জন্য অপেক্ষা করছি।",
+        "approved": "এই সম্মতিটি অনুমোদিত হয়েছে।",
+        "rejected": "এই সম্মতি বাতিল করা হয়েছে।",
+        "decisionRecordedWaiting": "আপনি আপনার সিদ্ধান্ত নিয়েছেন। বাকিদের সিদ্ধান্তের জন্য অপেক্ষা করছি।",
+        "youRejected": "আপনি এই সম্মতি প্রত্যাখ্যান করেছেন।",
+        "revoked": "এই সম্মতি প্রত্যাহার করা হয়েছে।",
+        "expired": "এই সম্মতিটি শেষ হয়ে গেছে।"
       }
     },
     "actions": {

@@ -116,13 +116,13 @@
       "noPurposes": "ᱱᱚᱶᱟ ᱨᱮ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱡᱚᱥ ᱥᱮᱞᱮᱫ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾",
       "noProperties": "ᱱᱚᱣᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱥᱟᱶ ᱡᱟᱦᱟᱱ ᱥᱚᱢᱯᱚᱛᱤ ᱥᱮᱞᱮᱫ ᱵᱟᱹᱱᱩᱜᱼᱟ ᱾",
       "statusMessages": {
-        "awaitingApproval": "Waiting for authoriser approval.",
-        "approved": "This consent has been approved.",
-        "rejected": "This consent has been rejected.",
-        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
-        "youRejected": "You've rejected this consent.",
-        "revoked": "This consent has been revoked.",
-        "expired": "This consent has expired."
+        "awaitingApproval": "ᱟᱹᱭᱫᱟᱹᱨᱤᱭᱟᱹ ᱠᱚᱣᱟᱜ ᱥᱟᱹᱠᱭᱟᱹᱛ ᱞᱟᱹᱜᱤᱫ ᱛᱟᱺᱜᱤ ᱟᱠᱟᱱᱟ ᱾",
+        "approved": "ᱱᱚᱣᱟ ᱨᱮᱵᱮᱱ ᱫᱚ ᱢᱟᱱᱚᱛ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱾",
+        "rejected": "ᱱᱚᱣᱟ ᱨᱟᱹᱡᱤ ᱵᱟᱛᱟᱣ ᱵᱟᱹᱛᱤᱞ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱾",
+        "decisionRecordedWaiting": "ᱟᱢ ᱟᱢᱟᱜ ᱴᱷᱟᱹᱣᱠᱟᱹ ᱟᱠᱟᱫᱟᱢ ᱾ ᱵᱟᱹᱠᱤ ᱦᱚᱲᱠᱚ ᱴᱷᱟᱹᱣᱠᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱛᱟᱺᱜᱤ ᱟᱠᱟᱫᱟᱢ ᱾",
+        "youRejected": "ᱟᱢ ᱱᱚᱣᱟ ᱨᱟᱹᱡᱤ ᱵᱟᱛᱟᱣ ᱵᱟᱹᱛᱤᱞ ᱟᱠᱟᱫᱟᱢ ᱾",
+        "revoked": "ᱱᱚᱣᱟ ᱨᱮᱵᱮᱱ ᱫᱚ ᱵᱟᱹᱛᱤᱞ ᱦᱩᱭ ᱟᱠᱟᱱᱟ ᱾",
+        "expired": "ᱱᱚᱣᱟ ᱨᱟᱹᱡᱤ ᱨᱮᱭᱟᱜ ᱢᱮᱭᱟᱫ ᱪᱟᱵᱟ ᱟᱠᱟᱱᱟ ᱾"
       }
     },
     "actions": {
