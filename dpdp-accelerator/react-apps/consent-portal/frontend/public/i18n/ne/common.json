@@ -53,7 +53,7 @@
     "subtitle": "तपाईंको सहमति गतिविधि र आगामी कार्यहरूको अवलोकन।",
     "subtitleAdmin": "सबै प्रयोगकर्ताहरूमा सहमति क्रियाकलापको सिंहावलोकन।",
     "loadFailed": "अहिले तपाईंको ड्यासबोर्ड लोड गर्न सकिएन।",
-    "consentsByStatus": "पद अनुसार सहमतिहरू",
+    "consentsTitle": "सहमतिहरू",
     "totalConsents": "सम्पूर्ण सहमतिहरू",
     "viewConsents": "View all consents",
     "complaintsTitle": "उजुरीहरू",

@@ -171,7 +171,7 @@ function DashboardPage(): React.JSX.Element {
         {showConsentSection ? (
           <>
             <Typography variant="h6" fontWeight={700}>
-              {t('dashboard.consentsByStatus')}
+              {t('dashboard.consentsTitle')}
             </Typography>
             <ConsentStateCards
               counts={stateCountsQuery.data}

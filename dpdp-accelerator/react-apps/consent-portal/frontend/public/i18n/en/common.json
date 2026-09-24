@@ -53,7 +53,7 @@
     "subtitle": "An overview of your consent activity and upcoming actions.",
     "subtitleAdmin": "An overview of consent activity across all users.",
     "loadFailed": "Unable to load your dashboard right now.",
-    "consentsByStatus": "Consents by status",
+    "consentsTitle": "Consents",
     "totalConsents": "Total consents",
     "viewConsents": "View all consents",
     "complaintsTitle": "Complaints",

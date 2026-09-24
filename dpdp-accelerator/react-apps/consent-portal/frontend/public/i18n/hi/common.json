@@ -53,7 +53,7 @@
     "subtitle": "आपकी सहमति गतिविधियों और आगामी कार्रवाइयों का विवरण।",
     "subtitleAdmin": "सभी उपयोगकर्ताओं में सहमति गतिविधि का एक अवलोकन।",
     "loadFailed": "अभी आपका डैशबोर्ड लोड नहीं हो पा रहा है।",
-    "consentsByStatus": "स्थिति के अनुसार सहमति",
+    "consentsTitle": "सहमतियां",
     "totalConsents": "पूर्ण सहमति",
     "viewConsents": "View all consents",
     "complaintsTitle": "शिकायतें",

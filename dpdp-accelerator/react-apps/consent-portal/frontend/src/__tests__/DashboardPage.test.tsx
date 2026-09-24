@@ -103,7 +103,7 @@ describe('DashboardPage', () => {
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
-    expect(screen.getByText('Consents by status')).toBeInTheDocument()
+    expect(screen.getByText('Consents')).toBeInTheDocument()
     expect(await screen.findByText('100+')).toBeInTheDocument() // total
     expect(await screen.findByText('3')).toBeInTheDocument() // pending
     expect(screen.getByText('Complaints')).toBeInTheDocument()
@@ -199,7 +199,7 @@ describe('DashboardPage', () => {
   it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {
     renderDashboard([REQUIRED_SCOPES.COMPLAINTS_READ_ANY])
 
-    expect(screen.queryByText('Consents by status')).not.toBeInTheDocument()
+    expect(screen.queryByText('Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
     expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
