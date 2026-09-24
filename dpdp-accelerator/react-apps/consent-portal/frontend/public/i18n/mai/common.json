@@ -55,6 +55,7 @@
     "loadFailed": "अखनि अहाँक डैशबोर्ड लोड करै मे असमर्थ।",
     "consentsByStatus": "पद अनुसार सहमति",
     "totalConsents": "कुल सहमति",
+    "viewConsents": "View all consents",
     "complaintsTitle": "शिकायत",
     "totalComplaints": "कुल शिकायत",
     "complaintsLoadFailed": "अहाँक शिकायत सभकेँ एखन लोड करबामे असमर्थ छी।",

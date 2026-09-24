@@ -55,6 +55,7 @@
     "loadFailed": "বৰ্তমান আপোনাৰ ডেছব’ৰ্ড ল'ড কৰিব পৰা নগ'ল।",
     "consentsByStatus": "স্থিতি অনুসৰি সন্মতিসমূহ",
     "totalConsents": "সম্পূৰ্ণ সন্মতিসমূহ",
+    "viewConsents": "View all consents",
     "complaintsTitle": "অভিযোগসমূহ",
     "totalComplaints": "মুঠ অভিযোগ",
     "complaintsLoadFailed": "আপোনাৰ অভিযোগবোৰ এতিয়াই লোড কৰিব পৰা হোৱা নাই।",

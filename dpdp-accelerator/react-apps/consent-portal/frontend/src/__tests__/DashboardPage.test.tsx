@@ -109,6 +109,10 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Complaints')).toBeInTheDocument()
     // Pending consents have their own page - the dashboard shows only the count, not a list.
     expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View all consents' })).toHaveAttribute(
+      'href',
+      '/consents',
+    )
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     // Without relation=ANY the server counts only consents the user is the subject of, leaving
     // out the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
@@ -172,6 +176,11 @@ describe('DashboardPage', () => {
     expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
+    // The counts are tenant-wide, so the link goes to the admin registry, not My Consents.
+    expect(screen.getByRole('link', { name: 'View all consents' })).toHaveAttribute(
+      'href',
+      '/administration/consents',
+    )
   })
 
   it('shows "-", not a false 0, for complaint counts when that fetch fails', async () => {

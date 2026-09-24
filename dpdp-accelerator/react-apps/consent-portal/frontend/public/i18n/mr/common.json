@@ -55,6 +55,7 @@
     "loadFailed": "सध्या तुमचा डॅशबोर्ड लोड करण्यात अक्षम.",
     "consentsByStatus": "दर्जा नुसार संमती",
     "totalConsents": "संपूर्ण संमती",
+    "viewConsents": "View all consents",
     "complaintsTitle": "तक्रारी",
     "totalComplaints": "एकूण तक्रारी",
     "complaintsLoadFailed": "तुमच्या तक्रारी आत्ता लोड करता येत नाहीयेत.",

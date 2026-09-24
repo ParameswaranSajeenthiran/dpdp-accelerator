@@ -55,6 +55,7 @@
     "loadFailed": "ഇപ്പോൾ നിങ്ങളുടെ ഡാഷ്‌ബോർഡ് ലോഡുചെയ്യാൻ കഴിഞ്ഞില്ല.",
     "consentsByStatus": "സ്ഥാനമനുസരിച്ചുള്ള സമ്മതങ്ങൾ",
     "totalConsents": "സമ്പൂർണ്ണ സമ്മതങ്ങൾ",
+    "viewConsents": "View all consents",
     "complaintsTitle": "പരാതികൾ",
     "totalComplaints": "ആകെ പരാതികൾ",
     "complaintsLoadFailed": "നിങ്ങളുടെ പരാതികൾ ഇപ്പോൾ ലോഡ് ചെയ്യാൻ കഴിയില്ല.",

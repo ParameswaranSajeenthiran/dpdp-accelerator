@@ -55,6 +55,7 @@
     "loadFailed": "এই মুহূর্তে আপনার ড্যাশবোর্ড লোড করা যাচ্ছে না।",
     "consentsByStatus": "পদমর্যাদা অনুযায়ী সম্মতি",
     "totalConsents": "সম্পূর্ণ সম্মতি।",
+    "viewConsents": "View all consents",
     "complaintsTitle": "অভিযোগ",
     "totalComplaints": "মোট অভিযোগ",
     "complaintsLoadFailed": "এই মুহূর্তে আপনার অভিযোগগুলি লোড করা যাচ্ছে না।",

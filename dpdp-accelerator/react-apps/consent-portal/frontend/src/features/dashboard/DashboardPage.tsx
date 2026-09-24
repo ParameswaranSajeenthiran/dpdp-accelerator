@@ -179,6 +179,17 @@ function DashboardPage(): React.JSX.Element {
               t={t}
             />
 
+            <Box>
+              <Button
+                component={RouterLink}
+                to={isTenantConsentView ? '/administration/consents' : '/consents'}
+                size="small"
+                endIcon={<ArrowRight size={15} />}
+              >
+                {t('dashboard.viewConsents')}
+              </Button>
+            </Box>
+
             {showPurposesCount || showElementsCount ? (
               <>
                 <Typography variant="h6" fontWeight={700}>
