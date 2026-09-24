@@ -107,6 +107,8 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('3')).toBeInTheDocument() // pending
     expect(screen.getByText('Complaints')).toBeInTheDocument()
     expect(await screen.findByText('61')).toBeInTheDocument() // open complaints
+    expect(screen.getByText('Waiting on DPO')).toBeInTheDocument()
+    expect(screen.queryByText('Waiting on Internal Review')).not.toBeInTheDocument()
     // No Total cards, so no unfiltered count is fetched for either section.
     expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Total complaints')).not.toBeInTheDocument()

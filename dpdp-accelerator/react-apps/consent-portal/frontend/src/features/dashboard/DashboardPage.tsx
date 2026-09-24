@@ -265,7 +265,7 @@ function DashboardPage(): React.JSX.Element {
                   complaintCountsQuery,
                   (data) => data.waitingOnInternalReview,
                 )}
-                label={t('complaints.status.waitingOnDpo')}
+                label={t('dashboard.waitingOnDpo')}
                 icon={<Clock3 size={22} />}
                 iconColor="warning"
               />

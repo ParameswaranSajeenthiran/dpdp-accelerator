@@ -56,6 +56,7 @@
     "consentsTitle": "সম্মতিসমূহ",
     "viewConsents": "View all consents",
     "complaintsTitle": "অভিযোগ",
+    "waitingOnDpo": "Waiting on DPO",
     "complaintsLoadFailed": "এই মুহূর্তে আপনার অভিযোগগুলি লোড করা যাচ্ছে না।",
     "viewComplaints": "সমস্ত অভিযোগ দেখুন"
   },

@@ -56,6 +56,7 @@
     "consentsTitle": "Consents",
     "viewConsents": "View all consents",
     "complaintsTitle": "Complaints",
+    "waitingOnDpo": "Waiting on DPO",
     "complaintsLoadFailed": "Unable to load your complaints right now.",
     "viewComplaints": "View all complaints"
   },

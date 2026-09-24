@@ -56,6 +56,7 @@
     "consentsTitle": "सहमतिहरू",
     "viewConsents": "View all consents",
     "complaintsTitle": "उजुरीहरू",
+    "waitingOnDpo": "Waiting on DPO",
     "complaintsLoadFailed": "अहिले तपाईँको गुनासो लोड गर्न असमर्थ छु।",
     "viewComplaints": "सबै गुनासोहरू हेर्नुहोस्"
   },
