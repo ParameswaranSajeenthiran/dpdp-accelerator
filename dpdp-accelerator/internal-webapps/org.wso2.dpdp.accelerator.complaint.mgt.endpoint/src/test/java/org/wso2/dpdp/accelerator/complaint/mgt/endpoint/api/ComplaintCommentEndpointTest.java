@@ -26,8 +26,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintMessageRequestDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
 import java.io.IOException;
@@ -67,8 +67,8 @@ class ComplaintCommentEndpointTest {
 
     @Test
     void addComplaintMessageResolvesActorFromTokenAndReturns200WithHandlerResponse() {
-        ComplaintMessageRequestDTO request = new ComplaintMessageRequestDTO();
-        ComplaintCommentCreateResponseDTO handlerResponse = new ComplaintCommentCreateResponseDTO();
+        ComplaintMessageRequest request = new ComplaintMessageRequest();
+        ComplaintCommentCreateResponse handlerResponse = new ComplaintCommentCreateResponse();
         when(commentHandler.addComment(ORG_ID, "c1", "officer1", "officer1", "COMPLAINT_OFFICER", request))
                 .thenReturn(handlerResponse);
 

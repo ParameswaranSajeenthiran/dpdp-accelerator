@@ -18,9 +18,8 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service;
 
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintEvent;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCommentCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 import java.util.List;
@@ -72,7 +71,7 @@ public interface ComplaintEventService {
      *                            the transition isn't valid from the complaint's current status -
      *                            see ComplaintServiceUtil
      */
-    ComplaintCommentCreateResponseDTO addComment(String orgId, String complaintId, String actorUserId,
+    ComplaintEvent addComment(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String message, boolean isPublic, String toStatus);
 
     /**
@@ -101,6 +100,6 @@ public interface ComplaintEventService {
      *                            from the complaint's current status - see
      *                            ComplaintServiceUtil
      */
-    ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
+    Complaint updateStatus(String orgId, String complaintId, String actorUserId,
             String actorUserName, String actorRole, String toStatus, String note);
 }

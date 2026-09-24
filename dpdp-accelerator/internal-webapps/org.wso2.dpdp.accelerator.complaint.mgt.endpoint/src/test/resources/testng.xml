@@ -22,6 +22,7 @@
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception"/>
             <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler"/>
+            <package name="org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util"/>
         </packages>
     </test>
 </suite>

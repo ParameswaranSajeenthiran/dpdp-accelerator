@@ -44,10 +44,6 @@ export type ComplaintPriorityAPI = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
 
 export const COMPLAINT_PRIORITIES: ComplaintPriorityAPI[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
 
-// Note: complaint-server-API.yaml's ComplaintStatus enum names this state AWAITING_COMPLAINT_INFO;
-// the DAO/service layer (DAOConstants, mysql.sql's CHK_COMPLAINT_STATUS) and this frontend both
-// predate that spec revision and consistently use WAITING_ON_CLIENT instead. Kept as-is rather
-// than renamed across the DB/enum layer for this pass - see the integration notes for this gap.
 export type ComplaintStatus =
   'OPEN' | 'IN_PROGRESS' | 'WAITING_ON_CLIENT' | 'AWAITING_INTERNAL_REVIEW' | 'RESOLVED'
 

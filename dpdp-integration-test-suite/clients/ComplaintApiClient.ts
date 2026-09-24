@@ -38,10 +38,7 @@ export type ComplaintCategory =
   | 'EXCESSIVE_DATA_COLLECTION'
   | 'OTHER'
 
-// ComplaintStatus.java, not complaint-server-API.yaml's ComplaintStatus enum: the yaml says
-// AWAITING_COMPLAINT_INFO, the DB/service/API actually says WAITING_ON_CLIENT. Verified by reading
-// StatusTransitionValidator.java and ComplaintServiceConstants.NOTE_REQUIRED_FOR_RESOLVED_ERROR's
-// call site directly.
+// Mirrors ComplaintStatus.java and complaint-server-API.yaml's ComplaintStatus enum.
 export type ComplaintStatus = 'OPEN' | 'IN_PROGRESS' | 'WAITING_ON_CLIENT' | 'AWAITING_INTERNAL_REVIEW' | 'RESOLVED'
 
 export type ComplaintPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'

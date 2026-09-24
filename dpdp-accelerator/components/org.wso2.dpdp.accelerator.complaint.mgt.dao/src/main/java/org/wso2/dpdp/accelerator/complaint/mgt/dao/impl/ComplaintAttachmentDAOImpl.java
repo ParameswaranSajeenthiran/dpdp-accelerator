@@ -25,7 +25,9 @@ import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintAttachmentDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.ComplaintDBColumns;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.exception.ComplaintDAOException;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintAttachmentQueryBuilder;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.ComplaintQueryFactory;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.queries.QueryResult;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -121,17 +123,7 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
             ps.setString(2, complaintId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    ComplaintAttachment a = new ComplaintAttachment();
-                    a.setAttachmentId(rs.getString(ComplaintDBColumns.ATTACHMENT_ID));
-                    a.setOrgId(rs.getString(ComplaintDBColumns.ORG_ID));
-                    a.setComplaintId(rs.getString(ComplaintDBColumns.COMPLAINT_ID));
-                    a.setComplaintEventId(rs.getString(ComplaintDBColumns.COMPLAINT_EVENT_ID));
-                    a.setFileName(rs.getString(ComplaintDBColumns.FILE_NAME));
-                    a.setContentType(rs.getString(ComplaintDBColumns.FILE_CONTENT_TYPE));
-                    a.setSizeBytesOverride(rs.getLong(ComplaintDBColumns.SIZE_BYTES)); // size only, no real bytes loaded
-                    a.setPublic(rs.getBoolean(ComplaintDBColumns.IS_PUBLIC));
-                    a.setCreatedTime(rs.getLong(ComplaintDBColumns.CREATED_TIME));
-                    attachments.add(a);
+                    attachments.add(mapResultSetToAttachmentMetadata(rs));
                 }
             }
         } catch (SQLException e) {
@@ -139,6 +131,48 @@ public class ComplaintAttachmentDAOImpl implements ComplaintAttachmentDAO {
             throw new ComplaintDAOException("Error listing attachments for complaint: " + complaintId, e);
         }
         return attachments;
+    }
+
+    @Override
+    public List<ComplaintAttachment> listAttachmentsForComplaints(Connection conn, String orgId,
+            List<String> complaintIds) {
+        List<ComplaintAttachment> attachments = new ArrayList<>();
+        if (complaintIds == null || complaintIds.isEmpty()) {
+            return attachments;
+        }
+        QueryResult query = new ComplaintAttachmentQueryBuilder(orgId, ComplaintQueryFactory.getQueryProvider(conn))
+                .setComplaintIds(complaintIds)
+                .buildListMetadataByComplaintsQuery();
+        try (PreparedStatement ps = conn.prepareStatement(query.getSql())) {
+            List<Object> params = query.getParameters();
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    attachments.add(mapResultSetToAttachmentMetadata(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOG.error("Error listing attachments for " + complaintIds.size() + " complaints in org: "
+                    + LogSanitizer.sanitize(orgId), e);
+            throw new ComplaintDAOException("Error listing attachments for complaints in org: " + orgId, e);
+        }
+        return attachments;
+    }
+
+    private ComplaintAttachment mapResultSetToAttachmentMetadata(ResultSet rs) throws SQLException {
+        ComplaintAttachment a = new ComplaintAttachment();
+        a.setAttachmentId(rs.getString(ComplaintDBColumns.ATTACHMENT_ID));
+        a.setOrgId(rs.getString(ComplaintDBColumns.ORG_ID));
+        a.setComplaintId(rs.getString(ComplaintDBColumns.COMPLAINT_ID));
+        a.setComplaintEventId(rs.getString(ComplaintDBColumns.COMPLAINT_EVENT_ID));
+        a.setFileName(rs.getString(ComplaintDBColumns.FILE_NAME));
+        a.setContentType(rs.getString(ComplaintDBColumns.FILE_CONTENT_TYPE));
+        a.setSizeBytesOverride(rs.getLong(ComplaintDBColumns.SIZE_BYTES)); // size only, no real bytes loaded
+        a.setPublic(rs.getBoolean(ComplaintDBColumns.IS_PUBLIC));
+        a.setCreatedTime(rs.getLong(ComplaintDBColumns.CREATED_TIME));
+        return a;
     }
 
     private ComplaintAttachment mapResultSetToAttachment(ResultSet rs) throws SQLException {

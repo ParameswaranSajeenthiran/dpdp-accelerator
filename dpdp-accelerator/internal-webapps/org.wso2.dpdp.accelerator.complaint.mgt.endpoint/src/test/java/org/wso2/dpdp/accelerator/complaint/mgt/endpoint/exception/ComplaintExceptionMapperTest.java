@@ -18,15 +18,24 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ErrorEnvelope;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotAllowedException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 class ComplaintExceptionMapperTest {
 
@@ -71,5 +80,103 @@ class ComplaintExceptionMapperTest {
         assertNotNull(firstEnvelope.getTraceId());
         assertNotNull(secondEnvelope.getTraceId());
         assertNotEquals(firstEnvelope.getTraceId(), secondEnvelope.getTraceId());
+    }
+
+    @Test
+    void mapsAnUnknownEnumValueInTheBodyToA422ValidationError() {
+        Response response = mapper.toResponse(new BadRequestException(
+                readFailure("{\"subjectCategory\":\"NOT_A_CATEGORY\",\"description\":\"d\"}",
+                        MeComplaintCreateRequest.class)));
+
+        assertEquals(422, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4002", envelope.getCode());
+        assertEquals("Field 'subjectCategory' must be one of the defined ComplaintCategory enum values.",
+                envelope.getMessage());
+    }
+
+    @Test
+    void namesTheNestedFieldForAnUnknownStatus() {
+        Response response = mapper.toResponse(
+                readFailure("{\"message\":\"m\",\"toStatus\":\"AWAITING_COMPLAINT_INFO\"}",
+                        MeComplaintMessageRequest.class));
+
+        assertEquals(422, response.getStatus());
+        assertEquals("Field 'toStatus' must be one of the defined ComplaintStatus enum values.",
+                ((ErrorEnvelope) response.getEntity()).getMessage());
+    }
+
+    @Test
+    void mapsAnUnparseableBodyToA400() {
+        Response response = mapper.toResponse(new BadRequestException(
+                readFailure("{\"description\":", MeComplaintCreateRequest.class)));
+
+        assertEquals(400, response.getStatus());
+        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void mapsAWrongTypedFieldToA400() {
+        Response response = mapper.toResponse(
+                readFailure("{\"description\":{}}", MeComplaintCreateRequest.class));
+
+        assertEquals(400, response.getStatus());
+        assertEquals("CO-4001", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void unwrapsAComplaintExceptionCause() {
+        ComplaintServiceException cause = new ComplaintServiceException("CO-4090", "Invalid transition", "No.", 409);
+
+        Response response = mapper.toResponse(new RuntimeException(cause));
+
+        assertEquals(409, response.getStatus());
+        assertEquals("CO-4090", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void keepsTheStatusOfAClientSideJaxRsException() {
+        Response response = mapper.toResponse(new NotFoundException());
+
+        assertEquals(404, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4040", envelope.getCode());
+        assertEquals("Not Found", envelope.getMessage());
+    }
+
+    @Test
+    void keepsTheAllowHeaderOfA405ButReplacesItsBody() {
+        Response original = Response.status(405).header("Allow", "GET").header("Allow", "POST")
+                .header("Content-Encoding", "gzip").header("Content-Length", "42")
+                .type(MediaType.TEXT_PLAIN).entity("not allowed").build();
+
+        Response response = mapper.toResponse(new NotAllowedException(original));
+
+        assertEquals(405, response.getStatus());
+        assertEquals(java.util.Arrays.asList("GET", "POST"), response.getHeaders().get("Allow"));
+        assertEquals(null, response.getHeaders().get("Content-Encoding"));
+        assertEquals(null, response.getHeaders().get("Content-Length"));
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("CO-4000", ((ErrorEnvelope) response.getEntity()).getCode());
+    }
+
+    @Test
+    void givesAnUnmappedClientErrorTheGenericCodeAndKeepsItsStatus() {
+        Response response = mapper.toResponse(new NotSupportedException());
+
+        assertEquals(415, response.getStatus());
+        ErrorEnvelope envelope = (ErrorEnvelope) response.getEntity();
+        assertEquals("CO-4000", envelope.getCode());
+        assertEquals("Unsupported Media Type", envelope.getMessage());
+    }
+
+    private static Exception readFailure(String body, Class<?> type) {
+        try {
+            new ObjectMapper().readValue(body, type);
+        } catch (Exception e) {
+            return e;
+        }
+        fail("Expected " + body + " to be rejected");
+        return null;
     }
 }

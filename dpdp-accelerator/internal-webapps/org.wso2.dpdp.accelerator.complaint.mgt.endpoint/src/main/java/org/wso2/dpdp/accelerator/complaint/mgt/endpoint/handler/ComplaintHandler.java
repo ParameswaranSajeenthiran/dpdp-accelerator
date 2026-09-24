@@ -20,25 +20,25 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
+import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.CategoryListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintListResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintQueueStatsResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintRecord;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintStatusUpdateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintCreateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintStatusUpdateRequest;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.CategoryListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCategoryDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintCreateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintListResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintQueueStatsResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintRecordDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintStatusUpdateResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintCreateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.MeComplaintStatusUpdateRequestDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.PageMetadataDTO;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.util.ComplaintServiceUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -79,87 +79,83 @@ public class ComplaintHandler {
 
     // ---- Officer/admin (/complaints/*) ----
 
-    public ComplaintCreateResponseDTO createComplaint(String orgId, String actorUserId, String actorRole,
-            ComplaintCreateRequestDTO request) {
+    public ComplaintCreateResponse createComplaint(String orgId, String actorUserId, String actorRole,
+            ComplaintCreateRequest request) {
         String userId = request != null ? request.getUserId() : null;
-        String subjectCategory = request != null ? request.getSubjectCategory() : null;
+        String subjectCategory = request != null ? ComplaintDtoMapper.value(request.getSubjectCategory()) : null;
         String description = request != null ? request.getDescription() : null;
         // No resolvable display name here - the officer supplies only the Data Principal's userId,
         // not a token belonging to that user. actorUserId/actorRole identify the officer performing
         // the intake for the audit trail - resolved by the caller from the bearer token, never from
         // the request body.
-        return complaintService.createComplaint(orgId, userId, null, subjectCategory, description, actorUserId,
-                actorRole);
+        return ComplaintDtoMapper.toCreateResponse(complaintService.createComplaint(orgId, userId, null,
+                subjectCategory, description, actorUserId, actorRole));
     }
 
-    public ComplaintRecordDTO getComplaint(String orgId, String complaintId) {
+    public ComplaintRecord getComplaint(String orgId, String complaintId) {
         Complaint complaint = complaintService.getComplaint(orgId, complaintId);
-        List<ComplaintAttachmentResponseDTO> attachments =
+        List<ComplaintAttachment> attachments =
                 complaintAttachmentService.listAttachmentsForComplaint(orgId, complaintId);
-        return ComplaintRecordDTO.from(complaint, attachments);
+        return ComplaintDtoMapper.toRecord(complaint, attachments);
     }
 
-    public ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
+    public ComplaintListResponse listComplaints(String orgId, String status, String priority, String userId,
             String search, Integer limit, Integer offset, String sort) {
         return listComplaints(orgId, status, priority, userId, search, limit, offset, sort, false);
     }
 
-    public ComplaintQueueStatsResponseDTO getQueueStats(String orgId) {
-        return complaintService.getQueueStats(orgId);
+    public ComplaintQueueStatsResponse getQueueStats(String orgId) {
+        return ComplaintDtoMapper.toQueueStats(complaintService.getQueueStats(orgId));
     }
 
-    public CategoryListResponseDTO getCategories() {
-        Map<String, String> categoryPriorities = new TreeMap<>(ComplaintServiceUtil.getCategoryPriorities());
-        List<ComplaintCategoryDTO> beanList = new ArrayList<>();
-        for (Map.Entry<String, String> entry : categoryPriorities.entrySet()) {
-            beanList.add(new ComplaintCategoryDTO(entry.getKey(), entry.getValue()));
-        }
-        return new CategoryListResponseDTO(beanList);
+    public CategoryListResponse getCategories() {
+        return ComplaintDtoMapper.toCategories(new TreeMap<>(ComplaintServiceUtil.getCategoryPriorities()));
     }
 
-    public ComplaintStatusUpdateResponseDTO updateStatus(String orgId, String complaintId, String actorUserId,
-            String actorUserName, String actorRole, ComplaintStatusUpdateRequestDTO request) {
-        String toStatus = request != null ? request.getToStatus() : null;
+    public ComplaintStatusUpdateResponse updateStatus(String orgId, String complaintId, String actorUserId,
+            String actorUserName, String actorRole, ComplaintStatusUpdateRequest request) {
+        String toStatus = request != null ? ComplaintDtoMapper.value(request.getToStatus()) : null;
         String note = request != null ? request.getNote() : null;
 
-        return complaintEventService.updateStatus(orgId, complaintId, actorUserId, actorUserName, actorRole,
-                toStatus, note);
+        return ComplaintDtoMapper.toStatusUpdateResponse(complaintEventService.updateStatus(orgId, complaintId,
+                actorUserId, actorUserName, actorRole, toStatus, note));
     }
 
     // ---- Data Principal (/me/complaints/*) ----
 
-    public ComplaintCreateResponseDTO createOwnComplaint(String orgId, String ownerUserId, String ownerUserName,
-            MeComplaintCreateRequestDTO request) {
-        String subjectCategory = request != null ? request.getSubjectCategory() : null;
+    public ComplaintCreateResponse createOwnComplaint(String orgId, String ownerUserId, String ownerUserName,
+            MeComplaintCreateRequest request) {
+        String subjectCategory = request != null ? ComplaintDtoMapper.value(request.getSubjectCategory()) : null;
         String description = request != null ? request.getDescription() : null;
-        return complaintService.createComplaint(orgId, ownerUserId, ownerUserName, subjectCategory, description);
+        return ComplaintDtoMapper.toCreateResponse(
+                complaintService.createComplaint(orgId, ownerUserId, ownerUserName, subjectCategory, description));
     }
 
-    public ComplaintRecordDTO getOwnComplaint(String orgId, String complaintId, String ownerUserId) {
+    public ComplaintRecord getOwnComplaint(String orgId, String complaintId, String ownerUserId) {
         Complaint complaint = complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
-        List<ComplaintAttachmentResponseDTO> attachments =
+        List<ComplaintAttachment> attachments =
                 complaintAttachmentService.listAttachmentsForComplaint(orgId, complaintId);
-        return ComplaintRecordDTO.from(complaint, publicOnly(attachments));
+        return ComplaintDtoMapper.toRecord(complaint, publicOnly(attachments));
     }
 
-    public ComplaintListResponseDTO listOwnComplaints(String orgId, String ownerUserId, String status,
+    public ComplaintListResponse listOwnComplaints(String orgId, String ownerUserId, String status,
             Integer limit, Integer offset, String sort) {
         // No free-text search here - a Data Principal's own list is already scoped to a single
         // userId, so there's nothing for search to narrow down further.
         return listComplaints(orgId, status, null, ownerUserId, null, limit, offset, sort, true);
     }
 
-    public ComplaintStatusUpdateResponseDTO updateOwnStatus(String orgId, String complaintId, String ownerUserId,
-            String ownerUserName, MeComplaintStatusUpdateRequestDTO request) {
+    public ComplaintStatusUpdateResponse updateOwnStatus(String orgId, String complaintId, String ownerUserId,
+            String ownerUserName, MeComplaintStatusUpdateRequest request) {
         complaintService.getOwnedComplaint(orgId, complaintId, ownerUserId);
-        String toStatus = request != null ? request.getToStatus() : null;
-        return complaintEventService.updateStatus(orgId, complaintId, ownerUserId, ownerUserName, "USER", toStatus,
-                null);
+        String toStatus = request != null ? ComplaintDtoMapper.value(request.getToStatus()) : null;
+        return ComplaintDtoMapper.toStatusUpdateResponse(complaintEventService.updateStatus(orgId, complaintId,
+                ownerUserId, ownerUserName, "USER", toStatus, null));
     }
 
     // ---- shared ----
 
-    private ComplaintListResponseDTO listComplaints(String orgId, String status, String priority, String userId,
+    private ComplaintListResponse listComplaints(String orgId, String status, String priority, String userId,
             String search, Integer limit, Integer offset, String sort, boolean restrictToPublicAttachments) {
         int lim = limit != null && limit > 0 ? Math.min(limit, 100) : 10;
         int off = offset != null && offset >= 0 ? offset : 0;
@@ -168,19 +164,23 @@ public class ComplaintHandler {
         List<Complaint> list = complaintService.listComplaints(orgId, status, priority, userId, search, lim, off,
                 sort, totalOut);
 
-        List<ComplaintRecordDTO> beanList = new ArrayList<>();
+        Map<String, List<ComplaintAttachment>> attachmentsByComplaint = complaintAttachmentService
+                .listAttachmentsForComplaints(orgId,
+                        list.stream().map(Complaint::getComplaintId).collect(Collectors.toList()));
+        List<ComplaintRecord> records = new ArrayList<>();
         for (Complaint complaint : list) {
-            List<ComplaintAttachmentResponseDTO> attachments = complaintAttachmentService
-                    .listAttachmentsForComplaint(orgId, complaint.getComplaintId());
-            beanList.add(ComplaintRecordDTO.from(complaint,
+            List<ComplaintAttachment> attachments = attachmentsByComplaint
+                    .getOrDefault(complaint.getComplaintId(), Collections.emptyList());
+            records.add(ComplaintDtoMapper.toRecord(complaint,
                     restrictToPublicAttachments ? publicOnly(attachments) : attachments));
         }
 
-        PageMetadataDTO metadata = new PageMetadataDTO(totalOut[0], off, beanList.size(), lim);
-        return new ComplaintListResponseDTO(beanList, metadata);
+        return new ComplaintListResponse()
+                .data(records)
+                .metadata(ComplaintDtoMapper.toPage(totalOut[0], off, records.size(), lim));
     }
 
-    private List<ComplaintAttachmentResponseDTO> publicOnly(List<ComplaintAttachmentResponseDTO> attachments) {
-        return attachments.stream().filter(ComplaintAttachmentResponseDTO::isPublic).collect(Collectors.toList());
+    private List<ComplaintAttachment> publicOnly(List<ComplaintAttachment> attachments) {
+        return attachments.stream().filter(ComplaintAttachment::isPublic).collect(Collectors.toList());
     }
 }

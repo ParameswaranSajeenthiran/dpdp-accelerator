@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import javax.ws.rs.Consumes;
@@ -61,7 +61,7 @@ public class MeComplaintAttachmentEndpoint {
             @Multipart("file") List<Attachment> fileParts) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadOwnComplaintAttachments(
+        List<ComplaintAttachmentResponse> response = attachmentHandler.uploadOwnComplaintAttachments(
                 callerOrgId, complaintId, callerUsername, callerUsername, fileParts);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -73,7 +73,7 @@ public class MeComplaintAttachmentEndpoint {
             @PathParam("attachmentId") String attachmentId) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintAttachmentDownloadResponseDTO response = attachmentHandler.downloadOwnAttachment(
+        ComplaintAttachmentDownloadResponse response = attachmentHandler.downloadOwnAttachment(
                 callerOrgId, complaintId, callerUsername, attachmentId);
         return Response.ok(response).build();
     }

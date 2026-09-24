@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -162,6 +163,30 @@ class ComplaintAttachmentDAOImplTest {
         assertEquals("a1", results.get(1).getAttachmentId());
     }
 
+    @Test
+    void listAttachmentsForComplaintsReturnsOnlyRequestedComplaintsInTheOrgWithoutFileData() {
+        addAttachment(sampleAttachment("a1", "org1", "c1", new byte[]{1, 2}, true, 200L));
+        addAttachment(sampleAttachment("a2", "org1", "c1", new byte[]{1}, false, 100L));
+        addAttachment(sampleAttachment("a3", "org1", "c2", new byte[]{1, 2, 3}, true, 300L));
+        addAttachment(sampleAttachment("a4", "org1", "c3", new byte[]{1}, true, 400L));
+        addAttachment(sampleAttachment("a5", "org-other", "c1", new byte[]{1}, true, 500L));
+
+        List<ComplaintAttachment> results = listAttachmentsForComplaints("org1", List.of("c1", "c2"));
+
+        assertEquals(results.stream().map(ComplaintAttachment::getAttachmentId).collect(Collectors.toList()),
+                List.of("a2", "a1", "a3"));
+        assertNull(results.get(2).getFileData());
+        assertEquals(3L, results.get(2).getSizeBytes());
+        assertFalse(results.get(0).isPublic());
+    }
+
+    @Test
+    void listAttachmentsForComplaintsReturnsEmptyForEmptyIdList() {
+        addAttachment(sampleAttachment("a1", "org1", "c1", new byte[]{1}, true, 100L));
+
+        assertTrue(listAttachmentsForComplaints("org1", List.of()).isEmpty());
+    }
+
     // The DAO takes a Connection and never opens one itself, so these stand in for the service
     // layer that owns the transaction in production - see ComplaintAttachmentDAO.
 
@@ -181,5 +206,9 @@ class ComplaintAttachmentDAOImplTest {
 
     private List<ComplaintAttachment> listAttachmentsForComplaint(String orgId, String complaintId) {
         return DatabaseUtils.executeInTransaction(conn -> dao.listAttachmentsForComplaint(conn, orgId, complaintId));
+    }
+
+    private List<ComplaintAttachment> listAttachmentsForComplaints(String orgId, List<String> complaintIds) {
+        return DatabaseUtils.executeInTransaction(conn -> dao.listAttachmentsForComplaints(conn, orgId, complaintIds));
     }
 }
