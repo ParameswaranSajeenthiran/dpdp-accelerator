@@ -217,7 +217,7 @@ public class WebhookDeliveryTask implements Runnable {
     private void recordPermanentFailure(String responseCode) {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         WebhookDelivery failed = new WebhookDelivery(
-                delivery.getDeliveryId(), delivery.getSubscriptionId(), delivery.getEventId(),
+                delivery.getDeliveryId(), delivery.getOrgId(), delivery.getSubscriptionId(), delivery.getEventId(),
                 DeliveryStatus.FAILED.getValue(), delivery.getAttemptCount() + 1, null,
                 delivery.getCreatedAt(), now, null);
         try {
@@ -250,6 +250,7 @@ public class WebhookDeliveryTask implements Runnable {
         WebhookDeliveryAudit audit = newAudit(now, String.valueOf(httpStatus));
         WebhookDelivery updated = new WebhookDelivery(
                 delivery.getDeliveryId(),
+                delivery.getOrgId(),
                 delivery.getSubscriptionId(),
                 delivery.getEventId(),
                 DeliveryStatus.DELIVERED.getValue(),
@@ -285,6 +286,7 @@ public class WebhookDeliveryTask implements Runnable {
         if (newAttempt > maxRetries) {
             WebhookDelivery failed = new WebhookDelivery(
                     delivery.getDeliveryId(),
+                    delivery.getOrgId(),
                     delivery.getSubscriptionId(),
                     delivery.getEventId(),
                     DeliveryStatus.FAILED.getValue(),

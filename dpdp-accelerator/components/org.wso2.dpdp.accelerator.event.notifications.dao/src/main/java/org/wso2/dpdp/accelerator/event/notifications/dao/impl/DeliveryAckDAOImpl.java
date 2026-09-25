@@ -47,9 +47,10 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryAckQuery())) {
             ps.setString(1, ack.getAckId());
             ps.setString(2, ack.getDeliveryId());
-            ps.setTimestamp(3, ack.getCompletedAt());
-            ps.setString(4, ack.getCompletionStatus());
-            ps.setString(5, ack.getCompletionEvidence());
+            ps.setString(3, ack.getOrgId());
+            ps.setTimestamp(4, ack.getCompletedAt());
+            ps.setString(5, ack.getCompletionStatus());
+            ps.setString(6, ack.getCompletionEvidence());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
@@ -62,17 +63,19 @@ public class DeliveryAckDAOImpl implements DeliveryAckDAO {
     }
 
     @Override
-    public Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(Connection conn, String deliveryId) {
+    public Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(Connection conn, String deliveryId, String orgId) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetWebhookDeliveryAckByDeliveryIdQuery())) {
             ps.setString(1, deliveryId);
+            ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     WebhookDeliveryAck ack = new WebhookDeliveryAck(
                             rs.getString(EventNotificationDBColumns.ACK_ID),
                             rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
                             rs.getTimestamp(EventNotificationDBColumns.COMPLETED_AT),
                             rs.getString(EventNotificationDBColumns.COMPLETION_STATUS),
                             rs.getString(EventNotificationDBColumns.COMPLETION_EVIDENCE)

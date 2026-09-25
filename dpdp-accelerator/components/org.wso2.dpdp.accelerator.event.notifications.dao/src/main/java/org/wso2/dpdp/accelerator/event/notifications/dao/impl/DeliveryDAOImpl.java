@@ -71,14 +71,15 @@ public class DeliveryDAOImpl implements DeliveryDAO {
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddWebhookDeliveryQuery())) {
             ps.setString(1, delivery.getDeliveryId());
-            ps.setString(2, delivery.getSubscriptionId());
-            ps.setString(3, delivery.getEventId());
-            ps.setString(4, delivery.getStatus());
-            ps.setInt(5, delivery.getAttemptCount());
-            ps.setTimestamp(6, delivery.getNextRetryAt());
-            ps.setTimestamp(7, delivery.getCreatedAt());
-            ps.setTimestamp(8, delivery.getUpdatedAt());
-            ps.setTimestamp(9, delivery.getDeliveredAt());
+            ps.setString(2, delivery.getOrgId());
+            ps.setString(3, delivery.getSubscriptionId());
+            ps.setString(4, delivery.getEventId());
+            ps.setString(5, delivery.getStatus());
+            ps.setInt(6, delivery.getAttemptCount());
+            ps.setTimestamp(7, delivery.getNextRetryAt());
+            ps.setTimestamp(8, delivery.getCreatedAt());
+            ps.setTimestamp(9, delivery.getUpdatedAt());
+            ps.setTimestamp(10, delivery.getDeliveredAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -100,6 +101,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 if (rs.next()) {
                     WebhookDelivery delivery = new WebhookDelivery(
                             rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
                             rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                             rs.getString(EventNotificationDBColumns.EVENT_ID),
                             rs.getString(EventNotificationDBColumns.STATUS),
@@ -222,6 +224,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     private WebhookDeliveryDispatchContext mapDispatchContext(ResultSet rs) throws SQLException {
         WebhookDelivery delivery = new WebhookDelivery(
                 rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                rs.getString(EventNotificationDBColumns.ORG_ID),
                 rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                 rs.getString(EventNotificationDBColumns.EVENT_ID),
                 rs.getString(EventNotificationDBColumns.STATUS),
@@ -355,13 +358,14 @@ public class DeliveryDAOImpl implements DeliveryDAO {
     public boolean addPollDelivery(Connection conn, PollDelivery delivery) {
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getAddPollDeliveryQuery())) {
             ps.setString(1, delivery.getDeliveryId());
-            ps.setString(2, delivery.getSubscriptionId());
-            ps.setString(3, delivery.getEventId());
-            ps.setString(4, delivery.getStatus());
-            ps.setString(5, delivery.getErrorCode());
-            ps.setString(6, delivery.getErrorDetail());
-            ps.setTimestamp(7, delivery.getCreatedAt());
-            ps.setTimestamp(8, delivery.getCompletedAt());
+            ps.setString(2, delivery.getOrgId());
+            ps.setString(3, delivery.getSubscriptionId());
+            ps.setString(4, delivery.getEventId());
+            ps.setString(5, delivery.getStatus());
+            ps.setString(6, delivery.getErrorCode());
+            ps.setString(7, delivery.getErrorDetail());
+            ps.setTimestamp(8, delivery.getCreatedAt());
+            ps.setTimestamp(9, delivery.getCompletedAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -383,6 +387,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 if (rs.next()) {
                     PollDelivery delivery = new PollDelivery(
                             rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
                             rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                             rs.getString(EventNotificationDBColumns.EVENT_ID),
                             rs.getString(EventNotificationDBColumns.STATUS),
@@ -422,6 +427,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 while (rs.next()) {
                     candidates.add(new PollDelivery(
                             rs.getString(EventNotificationDBColumns.DELIVERY_ID),
+                            rs.getString(EventNotificationDBColumns.ORG_ID),
                             rs.getString(EventNotificationDBColumns.SUBSCRIPTION_ID),
                             rs.getString(EventNotificationDBColumns.EVENT_ID),
                             rs.getString(EventNotificationDBColumns.STATUS),

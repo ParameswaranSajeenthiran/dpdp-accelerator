@@ -73,7 +73,8 @@ public interface SubscriptionDAO {
 
     long countActiveSubscriptionsForTopic(Connection connection, String orgId, String topicId);
 
-    Map<String, List<String>> getPurposesBySubscriptionIds(Connection connection, List<String> subscriptionIds);
+    Map<String, List<String>> getPurposesBySubscriptionIds(Connection connection, String orgId,
+            List<String> subscriptionIds);
 
     boolean hasPendingOrInFlightDeliveries(Connection connection, String subscriptionId, String orgId);
 

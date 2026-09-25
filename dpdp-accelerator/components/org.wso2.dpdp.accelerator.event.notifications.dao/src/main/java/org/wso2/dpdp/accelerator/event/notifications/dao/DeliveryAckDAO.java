@@ -27,5 +27,5 @@ public interface DeliveryAckDAO {
 
     boolean addDeliveryAck(Connection conn, WebhookDeliveryAck ack);
 
-    Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(Connection conn, String deliveryId);
+    Optional<WebhookDeliveryAck> getDeliveryAckByDeliveryId(Connection conn, String deliveryId, String orgId);
 }

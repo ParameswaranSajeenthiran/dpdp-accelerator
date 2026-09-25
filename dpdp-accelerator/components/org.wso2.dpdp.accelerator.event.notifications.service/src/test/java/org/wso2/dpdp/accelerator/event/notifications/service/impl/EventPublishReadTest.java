@@ -159,7 +159,7 @@ public class EventPublishReadTest {
         when(deliveryDAO.getOrgDeliveryById(any(Connection.class), eq("org-1"), eq("d1"))).thenReturn(Optional.of(summary));
         when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq("d1"), eq("org-1"))).thenReturn(Optional.of(
                 new WebhookDelivery("d1", "s1", "e1", "failed", 1, new Timestamp(200), null, null, null)));
-        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq("d1"))).thenReturn(Optional.of(
+        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq("d1"), eq("org-1"))).thenReturn(Optional.of(
                 new WebhookDeliveryAck("a", "d1", null, "completed", "evidence")));
         when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq("d1"), eq("org-1"))).thenReturn(Arrays.asList(
                 new WebhookDeliveryAudit("a1", "e1", "d1", "org-1", "200", null, new Timestamp(300)),

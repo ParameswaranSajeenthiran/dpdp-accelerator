@@ -24,6 +24,7 @@ public class WebhookDeliveryAck {
 
     private String ackId;
     private String deliveryId;
+    private String orgId;
     private Timestamp completedAt;
     private String completionStatus;
     private String completionEvidence;
@@ -31,12 +32,27 @@ public class WebhookDeliveryAck {
     public WebhookDeliveryAck() {
     }
 
-    public WebhookDeliveryAck(String ackId, String deliveryId, Timestamp completedAt, String completionStatus, String completionEvidence) {
+    public WebhookDeliveryAck(String ackId, String deliveryId, Timestamp completedAt, String completionStatus,
+            String completionEvidence) {
+        this(ackId, deliveryId, null, completedAt, completionStatus, completionEvidence);
+    }
+
+    public WebhookDeliveryAck(String ackId, String deliveryId, String orgId, Timestamp completedAt,
+            String completionStatus, String completionEvidence) {
         this.ackId = ackId;
         this.deliveryId = deliveryId;
+        this.orgId = orgId;
         this.completedAt = completedAt;
         this.completionStatus = completionStatus;
         this.completionEvidence = completionEvidence;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public String getAckId() {

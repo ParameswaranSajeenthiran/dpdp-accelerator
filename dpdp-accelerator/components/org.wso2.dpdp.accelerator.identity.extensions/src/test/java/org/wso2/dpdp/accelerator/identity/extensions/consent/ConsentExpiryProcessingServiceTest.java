@@ -227,7 +227,7 @@ public class ConsentExpiryProcessingServiceTest {
                 call.callRealMethod();
                 throw new IllegalStateException("purposes failure");
             })
-                    .when(events).addEventPurposes(any(Connection.class), anyString(), any());
+                    .when(events).addEventPurposes(any(Connection.class), anyString(), anyString(), any());
         } else if ("webhook".equals(stage)) {
             doAnswer(call -> {
                 call.callRealMethod();

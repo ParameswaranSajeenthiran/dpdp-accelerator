@@ -167,7 +167,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
 
                         PurposeFilterMode existingMode = PurposeFilterMode.fromValueOrDefault(existingModeStr,
                                 PurposeFilterMode.ALL);
-                        List<String> existingPurposes = getPurposesBySubscriptionId(existingId, conn);
+                        List<String> existingPurposes = getPurposesBySubscriptionId(existingId,
+                                subscription.getOrgId(), conn);
                         Set<String> existingSet = PurposeOverlapUtils.canonicalize(existingPurposes);
                         if (PurposeOverlapUtils.overlaps(newMode, newSet, existingMode, existingSet)) {
                             throw new EventNotificationDuplicateResourceException(
@@ -204,7 +205,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                             .prepareStatement(queries.getAddSubscriptionPurposesQuery())) {
                         for (String purpose : subscription.getPurposes()) {
                             purposePs.setString(1, subscription.getSubscriptionId());
-                            purposePs.setString(2, purpose.trim());
+                            purposePs.setString(2, subscription.getOrgId());
+                            purposePs.setString(3, purpose.trim());
                             purposePs.addBatch();
                         }
                         purposePs.executeBatch();
@@ -238,7 +240,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Subscription sub = mapSubscription(rs);
-                    sub.setPurposes(getPurposesBySubscriptionId(subscriptionId, conn));
+                    sub.setPurposes(getPurposesBySubscriptionId(subscriptionId, orgId, conn));
                     hydrateTopics(conn, Collections.singletonList(sub));
                     return Optional.of(sub);
                 }
@@ -394,7 +396,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 for (Subscription s : subscriptions) {
                     subIds.add(s.getSubscriptionId());
                 }
-                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, orgId, subIds);
                 for (Subscription s : subscriptions) {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
@@ -439,7 +441,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 for (Subscription s : list) {
                     subIds.add(s.getSubscriptionId());
                 }
-                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, orgId, subIds);
                 for (Subscription s : list) {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
@@ -479,7 +481,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
                 for (Subscription s : list) {
                     subIds.add(s.getSubscriptionId());
                 }
-                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, subIds);
+                Map<String, List<String>> purposeMap = getPurposesBySubscriptionIds(conn, orgId, subIds);
                 for (Subscription s : list) {
                     s.setPurposes(purposeMap.getOrDefault(s.getSubscriptionId(), Collections.emptyList()));
                 }
@@ -490,27 +492,6 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_GETTING_SUBSCRIPTIONS_BY_ORG_AND_TOPIC, orgId,
                             topicId),
-                    e);
-        }
-    }
-
-    private List<String> getPurposesBySubscriptionIdAndOrg(Connection conn, String subscriptionId) {
-        if (conn == null) {
-            throw new IllegalArgumentException("Connection cannot be null.");
-        }
-        List<String> purposes = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getPurposesBySubscriptionIdQuery())) {
-            ps.setString(1, subscriptionId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
-                }
-            }
-            return purposes;
-        } catch (SQLException e) {
-            throw new EventNotificationDaoException(
-                    String.format(EventNotificationCommonConstants.ERROR_GETTING_PURPOSES_BY_SUBSCRIPTION_ID,
-                            subscriptionId),
                     e);
         }
     }
@@ -540,7 +521,8 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
     }
 
     @Override
-    public Map<String, List<String>> getPurposesBySubscriptionIds(Connection conn, List<String> subscriptionIds) {
+    public Map<String, List<String>> getPurposesBySubscriptionIds(Connection conn, String orgId,
+            List<String> subscriptionIds) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
@@ -554,8 +536,9 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         try {
             String sql = String.format(getQueries(conn).getGetSubscriptionPurposesByIdsTemplate(), placeholders);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, orgId);
                 for (int i = 0; i < subscriptionIds.size(); i++) {
-                    ps.setString(i + 1, subscriptionIds.get(i));
+                    ps.setString(i + 2, subscriptionIds.get(i));
                 }
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -609,7 +592,7 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next() && list.size() < limit) {
                     Subscription sub = mapSubscription(rs);
-                    sub.setPurposes(getPurposesBySubscriptionId(sub.getSubscriptionId(), conn));
+                    sub.setPurposes(getPurposesBySubscriptionId(sub.getSubscriptionId(), sub.getOrgId(), conn));
                     list.add(sub);
                 }
             }
@@ -621,11 +604,13 @@ public class SubscriptionDAOImpl implements SubscriptionDAO {
         }
     }
 
-    private List<String> getPurposesBySubscriptionId(String subscriptionId, Connection conn) throws SQLException {
+    private List<String> getPurposesBySubscriptionId(String subscriptionId, String orgId, Connection conn)
+            throws SQLException {
         List<String> purposes = new ArrayList<>();
-        try (PreparedStatement ps = conn
-                .prepareStatement(getQueries(conn).getPurposesBySubscriptionIdQuery())) {
+        String sql = getQueries(conn).getPurposesBySubscriptionIdAndOrgQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, subscriptionId);
+            ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));

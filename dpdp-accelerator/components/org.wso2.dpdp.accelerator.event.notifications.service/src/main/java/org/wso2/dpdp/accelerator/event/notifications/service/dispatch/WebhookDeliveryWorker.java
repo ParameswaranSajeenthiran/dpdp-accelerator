@@ -301,6 +301,7 @@ public class WebhookDeliveryWorker implements Runnable {
                 + "] unrecoverable: " + LogSanitizer.sanitize(reason));
         WebhookDelivery failed = new WebhookDelivery(
                 delivery.getDeliveryId(),
+                delivery.getOrgId(),
                 delivery.getSubscriptionId(),
                 delivery.getEventId(),
                 DeliveryStatus.FAILED.getValue(),

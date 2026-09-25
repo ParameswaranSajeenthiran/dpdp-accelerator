@@ -52,7 +52,7 @@ public class DaoReadPathCoverageTest {
         subscriptions.getSubscriptionById(connection, "missing", "org");
         subscriptions.listSubscriptions(connection, "org", null, null, null, 20, 0, null);
         subscriptions.countActiveSubscriptionsForTopic(connection, "org", "topic");
-        subscriptions.getPurposesBySubscriptionIds(connection, java.util.Collections.singletonList("sub"));
+        subscriptions.getPurposesBySubscriptionIds(connection, "org", java.util.Collections.singletonList("sub"));
         subscriptions.hasPendingOrInFlightDeliveries(connection, "sub", "org");
         subscriptions.getPendingSubscriptionsForRecovery(connection, new Timestamp(System.currentTimeMillis()), 10);
 
@@ -63,8 +63,8 @@ public class DaoReadPathCoverageTest {
 
         EventDAOImpl events = new EventDAOImpl();
         events.getEventById(connection, "missing", "org");
-        events.getEventPurposes(connection, "event");
-        events.hasActiveEventsForTopic(connection, "topic");
+        events.getEventPurposes(connection, "event", "org");
+        events.hasActiveEventsForTopic(connection, "topic", "org");
         events.searchEvents(connection, "org", null, null, null, null, null, null, 20, 0);
 
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
@@ -102,8 +102,8 @@ public class DaoReadPathCoverageTest {
 
         EventDAOImpl events = new EventDAOImpl();
         expectThrows(RuntimeException.class, () -> events.getEventById(connection, "event", "org"));
-        expectThrows(RuntimeException.class, () -> events.getEventPurposes(connection, "event"));
-        expectThrows(RuntimeException.class, () -> events.hasActiveEventsForTopic(connection, "topic"));
+        expectThrows(RuntimeException.class, () -> events.getEventPurposes(connection, "event", "org"));
+        expectThrows(RuntimeException.class, () -> events.hasActiveEventsForTopic(connection, "topic", "org"));
         expectThrows(RuntimeException.class, () -> events.searchEvents(connection, "org", null, null, null, null, null, null, 20, 0));
 
         DeliveryDAOImpl deliveries = new DeliveryDAOImpl();
@@ -124,7 +124,7 @@ public class DaoReadPathCoverageTest {
         org.testng.Assert.assertTrue(deliveries.listEventDeliveries(connection, null, "event", 10, 0, null).isEmpty());
         org.testng.Assert.assertTrue(deliveries.listEventDeliveries(connection, "org", "", 10, 0, null).isEmpty());
         org.testng.Assert.assertTrue(new SubscriptionDAOImpl()
-                .getPurposesBySubscriptionIds(connection, Collections.emptyList()).isEmpty());
+                .getPurposesBySubscriptionIds(connection, "org", Collections.emptyList()).isEmpty());
     }
 
     private void setConfiguration(DeliveryDAOImpl dao) throws Exception {

@@ -126,11 +126,15 @@ public class EventQueryBuilder {
             sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND wd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ? AND LOWER(wd.")
                     .append(EventNotificationDBColumns.STATUS).append(") = ?)")
                     .append(" OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND pd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ? AND LOWER(pd.")
                     .append(EventNotificationDBColumns.STATUS).append(") = ?))");
             params.add(subscriptionParam);
@@ -141,10 +145,14 @@ public class EventQueryBuilder {
             sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND wd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ?)")
                     .append(" OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND pd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = ?))");
             params.add(subscriptionId.trim());
             params.add(subscriptionId.trim());
@@ -153,10 +161,14 @@ public class EventQueryBuilder {
         if (hasStatus && !hasSubscriptionId) {
             sql.append(" AND (EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(wd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND LOWER(wd.")
                     .append(EventNotificationDBColumns.STATUS).append(") = ?) OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND LOWER(pd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND LOWER(pd.")
                     .append(EventNotificationDBColumns.STATUS).append(") = ?))");
             String statusParam = status.trim().toLowerCase(Locale.ROOT);
             params.add(statusParam);
@@ -174,7 +186,9 @@ public class EventQueryBuilder {
             if (!valid.isEmpty()) {
                 sql.append(" AND e.").append(EventNotificationDBColumns.EVENT_ID)
                         .append(" IN (SELECT ep.").append(EventNotificationDBColumns.EVENT_ID)
-                        .append(" FROM EVENT_PURPOSE ep WHERE LOWER(ep.")
+                        .append(" FROM EVENT_PURPOSE ep WHERE ep.")
+                        .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                        .append(EventNotificationDBColumns.ORG_ID).append(" AND LOWER(ep.")
                         .append(EventNotificationDBColumns.PURPOSE_NAME).append(") IN (");
                 for (int i = 0; i < valid.size(); i++) {
                     sql.append(i == 0 ? "?" : ", ?");
@@ -196,12 +210,16 @@ public class EventQueryBuilder {
                             queries.getEventPayloadSearchExpression()))
                     .append(" OR EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd WHERE wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND ")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND wd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND ")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(wd." + EventNotificationDBColumns.DELIVERY_ID + ")"))
                     .append(") OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd WHERE pd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = e.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND ")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND pd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" AND ")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(pd." + EventNotificationDBColumns.DELIVERY_ID + ")"))
                     .append(")")

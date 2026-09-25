@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 public class PollDelivery {
 
     private String deliveryId;
+    private String orgId;
     private String subscriptionId;
     private String eventId;
     private String status;
@@ -34,18 +35,25 @@ public class PollDelivery {
     public PollDelivery() {
     }
 
-    public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status, Timestamp createdAt, Timestamp completedAt) {
-        this(deliveryId, subscriptionId, eventId, status, null, createdAt, completedAt);
+    public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status,
+            Timestamp createdAt, Timestamp completedAt) {
+        this(deliveryId, null, subscriptionId, eventId, status, null, null, createdAt, completedAt);
     }
 
     public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status, String errorDetail,
             Timestamp createdAt, Timestamp completedAt) {
-        this(deliveryId, subscriptionId, eventId, status, null, errorDetail, createdAt, completedAt);
+        this(deliveryId, null, subscriptionId, eventId, status, null, errorDetail, createdAt, completedAt);
     }
 
     public PollDelivery(String deliveryId, String subscriptionId, String eventId, String status, String errorCode,
             String errorDetail, Timestamp createdAt, Timestamp completedAt) {
+        this(deliveryId, null, subscriptionId, eventId, status, errorCode, errorDetail, createdAt, completedAt);
+    }
+
+    public PollDelivery(String deliveryId, String orgId, String subscriptionId, String eventId, String status,
+            String errorCode, String errorDetail, Timestamp createdAt, Timestamp completedAt) {
         this.deliveryId = deliveryId;
+        this.orgId = orgId;
         this.subscriptionId = subscriptionId;
         this.eventId = eventId;
         this.status = status;
@@ -61,6 +69,14 @@ public class PollDelivery {
 
     public void setDeliveryId(String deliveryId) {
         this.deliveryId = deliveryId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public String getSubscriptionId() {

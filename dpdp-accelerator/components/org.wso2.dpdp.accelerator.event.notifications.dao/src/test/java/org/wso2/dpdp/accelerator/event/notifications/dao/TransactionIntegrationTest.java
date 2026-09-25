@@ -72,16 +72,16 @@ public class TransactionIntegrationTest {
                         + "ACTIVE_NAME VARCHAR(225) GENERATED ALWAYS AS (CASE WHEN STATUS <> 'deleted' THEN LOWER(NAME) ELSE NULL END));"
                         + "CREATE UNIQUE INDEX UQ_SUB_ORG_ACTIVE_NAME ON SUBSCRIPTION(ORG_ID, ACTIVE_NAME);"
                         + "CREATE TABLE SUBSCRIPTION_TOPIC (ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), TOPIC_ID VARCHAR(64), PRIMARY KEY(SUBSCRIPTION_ID, TOPIC_ID));"
-                        + "CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64), PURPOSE_NAME VARCHAR(128), "
+                        + "CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64), ORG_ID VARCHAR(128), PURPOSE_NAME VARCHAR(128), "
                         + "PRIMARY KEY(SUBSCRIPTION_ID, PURPOSE_NAME));"
-                        + "CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, SUBSCRIPTION_ID VARCHAR(64), "
+                        + "CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), "
                         + "EVENT_ID VARCHAR(64), STATUS VARCHAR(32), ERROR_CODE VARCHAR(64), "
                         + "ERROR_DETAIL VARCHAR(1024), "
                         + "CREATED_AT TIMESTAMP, COMPLETED_AT TIMESTAMP);"
                         + "CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, "
                         + "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD VARCHAR(4096), "
                         + "CREATED_AT TIMESTAMP NOT NULL);"
-                        + "CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, "
+                        + "CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128), "
                         + "SUBSCRIPTION_ID VARCHAR(64), EVENT_ID VARCHAR(64), STATUS VARCHAR(32), "
                         + "ATTEMPT_COUNT INT, MANUAL_RETRY_USED BOOLEAN DEFAULT FALSE, NEXT_RETRY_AT TIMESTAMP, "
                         + "CREATED_AT TIMESTAMP, UPDATED_AT TIMESTAMP, "
@@ -183,7 +183,7 @@ public class TransactionIntegrationTest {
         sub1.setUpdatedAt(now);
         new SubscriptionDAOImpl().addSubscription(connection, sub1);
         DeliveryDAOImpl dao = new DeliveryDAOImpl();
-        dao.addWebhookDelivery(connection, new WebhookDelivery("delivery-1", "sub-1", "event-1", "failed", 6,
+        dao.addWebhookDelivery(connection, new WebhookDelivery("delivery-1", "org-1", "sub-1", "event-1", "failed", 6,
                 null, now, now, null));
 
         assertTrue(dao.getWebhookDeliveryDispatchContext(connection, "org-1", "sub-1", "delivery-1").isPresent());
@@ -192,6 +192,7 @@ public class TransactionIntegrationTest {
 
         WebhookDelivery prepared = dao.getWebhookDeliveryById(connection, "delivery-1", "org-1").get();
         assertEquals(prepared.getStatus(), DeliveryStatus.PENDING.getValue());
+        assertEquals(prepared.getOrgId(), "org-1");
         assertEquals(prepared.getAttemptCount(), 6);
         assertTrue(prepared.isManualRetryUsed());
     }
@@ -488,7 +489,7 @@ public class TransactionIntegrationTest {
                 assertTrue(eventDAO.addEvent(fanOut,
                         new Event("event-1", "org-1", "group-1", "topic-1", "{}", now)));
                 assertTrue(deliveryDAO.addWebhookDelivery(fanOut,
-                        new WebhookDelivery("delivery-1", "sub-1", "event-1",
+                        new WebhookDelivery("delivery-1", "org-1", "sub-1", "event-1",
                                 DeliveryStatus.PENDING.getValue(), 0, null, now, now, null)));
                 fanOut.commit();
                 assertFalse(deletion.get(5, TimeUnit.SECONDS),
@@ -578,7 +579,8 @@ public class TransactionIntegrationTest {
         subPoll.setUpdatedAt(now);
         subscriptionDAO.addSubscription(connection, subPoll);
         assertTrue(deliveryDAO.addPollDelivery(connection,
-                new PollDelivery("delivery-1", "sub-1", "event-1", PollStatus.PENDING.getValue(), now, null)));
+                new PollDelivery("delivery-1", "org-1", "sub-1", "event-1", PollStatus.PENDING.getValue(),
+                        null, null, now, null)));
 
         try (Connection first = newConnection(); Connection second = newConnection()) {
             first.setAutoCommit(false);

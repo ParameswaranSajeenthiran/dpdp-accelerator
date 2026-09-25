@@ -83,7 +83,7 @@ final class DeliveryHistoryMapper {
                     && delivery.getAttemptCount() > maxRetries && !delivery.isManualRetryUsed());
         }
 
-        Optional<WebhookDeliveryAck> deliveryAck = deliveryAckDAO.getDeliveryAckByDeliveryId(conn, deliveryId);
+        Optional<WebhookDeliveryAck> deliveryAck = deliveryAckDAO.getDeliveryAckByDeliveryId(conn, deliveryId, orgId);
         if (deliveryAck.isPresent()) {
             WebhookDeliveryAck ack = deliveryAck.get();
             dto.setCompletionStatus(ack.getCompletionStatus() != null ? ack.getCompletionStatus()

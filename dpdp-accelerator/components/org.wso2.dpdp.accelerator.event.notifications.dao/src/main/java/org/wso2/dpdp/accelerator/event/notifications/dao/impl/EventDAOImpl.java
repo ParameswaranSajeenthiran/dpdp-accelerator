@@ -90,7 +90,7 @@ public class EventDAOImpl implements EventDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Event event = mapEvent(rs, false);
-                    event.setPurposes(getEventPurposes(conn, eventId));
+                    event.setPurposes(getEventPurposes(conn, eventId, orgId));
                     return Optional.of(event);
                 }
             }
@@ -102,7 +102,7 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public void addEventPurposes(Connection conn, String eventId, List<String> purposes) {
+    public void addEventPurposes(Connection conn, String eventId, String orgId, List<String> purposes) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
@@ -113,7 +113,8 @@ public class EventDAOImpl implements EventDAO {
             for (String purpose : purposes) {
                 if (purpose != null && !purpose.trim().isEmpty()) {
                     ps.setString(1, eventId);
-                    ps.setString(2, purpose.trim());
+                    ps.setString(2, orgId);
+                    ps.setString(3, purpose.trim());
                     ps.addBatch();
                 }
             }
@@ -129,13 +130,14 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public List<String> getEventPurposes(Connection conn, String eventId) {
+    public List<String> getEventPurposes(Connection conn, String eventId, String orgId) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
         List<String> purposes = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesQuery())) {
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getGetEventPurposesByOrgQuery())) {
             ps.setString(1, eventId);
+            ps.setString(2, orgId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     purposes.add(rs.getString(EventNotificationDBColumns.PURPOSE_NAME));
@@ -149,12 +151,13 @@ public class EventDAOImpl implements EventDAO {
     }
 
     @Override
-    public boolean hasActiveEventsForTopic(Connection conn, String topicId) {
+    public boolean hasActiveEventsForTopic(Connection conn, String topicId, String orgId) {
         if (conn == null) {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getHasActiveEventsForTopicQuery())) {
-            ps.setString(1, topicId);
+            ps.setString(1, orgId);
+            ps.setString(2, topicId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
@@ -215,7 +218,7 @@ public class EventDAOImpl implements EventDAO {
 
             if (!events.isEmpty()) {
                 List<String> eventIds = events.stream().map(Event::getEventId).collect(Collectors.toList());
-                Map<String, List<String>> purposeMap = getPurposesByEventIds(conn, eventIds);
+                Map<String, List<String>> purposeMap = getPurposesByEventIds(conn, orgId, eventIds);
                 for (Event e : events) {
                     e.setPurposes(purposeMap.getOrDefault(e.getEventId(), Collections.emptyList()));
                 }
@@ -253,7 +256,7 @@ public class EventDAOImpl implements EventDAO {
      * {@code SubscriptionDAOImpl.getPurposesBySubscriptionIds} to avoid N+1 when
      * rendering the search response.
      */
-    private Map<String, List<String>> getPurposesByEventIds(Connection conn, List<String> eventIds)
+    private Map<String, List<String>> getPurposesByEventIds(Connection conn, String orgId, List<String> eventIds)
             throws SQLException {
         if (eventIds == null || eventIds.isEmpty()) {
             return Collections.emptyMap();
@@ -264,8 +267,9 @@ public class EventDAOImpl implements EventDAO {
         sql = String.format(
                 getQueries(conn).getGetPurposesByEventIdsTemplate(), placeholders);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, orgId);
             for (int i = 0; i < eventIds.size(); i++) {
-                ps.setString(i + 1, eventIds.get(i));
+                ps.setString(i + 2, eventIds.get(i));
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
