@@ -43,6 +43,17 @@ describe('getSelfConsentActionView', () => {
       expect(getSelfConsentActionView('alice', 'ACTIVE', [], 'mallory').canRevoke).toBe(false)
     })
 
+    it('shows a rejected message even without an authorizations entry - a consent can be created REJECTED directly', () => {
+      // Not reachable through the normal UI flow (a Direct consent is created ACTIVE), but the
+      // admin API accepts an explicit `state` at creation regardless of `authorizations` - this
+      // must not silently show nothing.
+      const view = getSelfConsentActionView('alice', 'REJECTED', [], 'alice')
+      expect(view.canApprove).toBe(false)
+      expect(view.canReject).toBe(false)
+      expect(view.canRevoke).toBe(false)
+      expect(view.statusMessageKey).toBe('youRejected')
+    })
+
     it('offers no approve or reject, since a Direct consent never passes through PENDING', () => {
       const view = getSelfConsentActionView('alice', 'ACTIVE', [], 'alice')
       expect(view.canApprove).toBe(false)

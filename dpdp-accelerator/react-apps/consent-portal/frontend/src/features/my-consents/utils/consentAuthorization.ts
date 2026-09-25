@@ -93,9 +93,18 @@ export function getSelfConsentActionView(
 
   const authorizers = authorizations ?? []
 
-  // Direct Consent - no one else named. The subject owns it outright.
+  // Direct Consent - no one else named. The subject owns it outright. PENDING/REJECTED aren't
+  // reachable through the normal creation flow here (a Direct consent is created ACTIVE), but a
+  // consent can still exist in that shape - e.g. created directly with an explicit state - so
+  // this stays defensive rather than silently returning no message at all.
   if (authorizers.length === 0) {
-    return { ...NO_ACTIONS, canRevoke: state === 'ACTIVE' && subjectId === currentUserId }
+    if (state === 'ACTIVE') {
+      return { ...NO_ACTIONS, canRevoke: subjectId === currentUserId }
+    }
+    if (state === 'REJECTED') {
+      return { ...NO_ACTIONS, statusMessageKey: 'youRejected' }
+    }
+    return NO_ACTIONS
   }
 
   const own = myAuthorization(authorizers, currentUserId)
