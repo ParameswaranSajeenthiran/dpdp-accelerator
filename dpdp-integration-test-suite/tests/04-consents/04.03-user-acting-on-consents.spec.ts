@@ -131,7 +131,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.03.05 - A Rejected consent can be approved again, but offers no reject or revoke', async ({
+  test('04.03.05 - A Rejected consent offers no approve, reject, or revoke - rejection is final', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -146,9 +146,10 @@ test.describe('User acting on Consents (UI)', () => {
     const detailPage = new ConsentDetailPage(userPage, 'self')
     await detailPage.goto(consentId)
     await expect(detailPage.purposesSection).toBeVisible()
-    await expect(userPage.getByRole('button', { name: 'Approve', exact: true })).toBeVisible()
+    await expect(userPage.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0)
     await expect(userPage.getByRole('button', { name: 'Reject', exact: true })).toHaveCount(0)
     await expect(userPage.getByRole('button', { name: 'Revoke', exact: true })).toHaveCount(0)
+    await expect(userPage.getByText("You've rejected this consent.")).toBeVisible()
     await userPage.context().close()
   })
 })

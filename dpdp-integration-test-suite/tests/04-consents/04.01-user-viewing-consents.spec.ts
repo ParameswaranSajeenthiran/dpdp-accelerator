@@ -140,14 +140,13 @@ test.describe('User viewing Consents (UI)', () => {
     // right (see the identical rationale in 02.01.01/03.01.02's re-navigation checks).
     await detailPage.goto(consentId)
     await expect(userPage.getByText('Rejected', { exact: true }).first()).toBeVisible()
-    // Rejected is not terminal for Approve specifically: isApprovableByCurrentUser (consentAuthorization.ts)
-    // deliberately treats REJECTED the same as PENDING, so the subject can change their mind
-    // later (see isApprovableByCurrentUser in consentAuthorization.ts). Reject and Revoke, however, both
-    // require a state Rejected no longer is (isRejectableByCurrentUser excludes REJECTED;
-    // isConsentRevokableState requires ACTIVE), so those two genuinely disappear.
-    await expect(detailPage.actionAvailable('approve')).toHaveCount(1)
+    // A decision is final once made: getSelfConsentActionView (consentAuthorization.ts) never
+    // offers Approve/Reject/Revoke again once the caller's own authorization entry is REJECTED -
+    // there's no reconsidering by acting again, only the status message below.
+    await expect(detailPage.actionAvailable('approve')).toHaveCount(0)
     await expect(detailPage.actionAvailable('reject')).toHaveCount(0)
     await expect(detailPage.actionAvailable('revoke')).toHaveCount(0)
+    await expect(userPage.getByText("You've rejected this consent.")).toBeVisible()
     await userPage.context().close()
   })
 })
