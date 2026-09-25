@@ -33,8 +33,6 @@ import {
 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
-import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import { PENDING_CONSENTS_PATH, PENDING_CONSENTS_VIEW_SEARCH } from '../my-consents/constants'
 import useAuthorization from '../auth/useAuthorization'
 import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
 import type { PageCount } from '../../utils/cursorPagination'
