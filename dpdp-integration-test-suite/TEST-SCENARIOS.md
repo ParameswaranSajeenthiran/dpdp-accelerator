@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | |                                                                                                                           |
 |---|---------------------------------------------------------------------------------------------------------------------------|
-| **Tests** | 100 across 52 spec files in 10 areas                                                                                      |
+| **Tests** | 200 across 53 spec files in 10 areas                                                                                      |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff)                                                      |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md)                                                                                                  |
@@ -174,7 +174,7 @@ overview card shows).
 
 The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
-**49 tests, 11 spec files.**
+**49 tests, 12 spec files.**
 
 ### `04.01-user-viewing-consents.spec.ts`
 
@@ -284,14 +284,14 @@ A Co-Authorized Consent: the subject (`personas.user`) is also one of two named 
 | `04.11.04` | A single co-authoriser rejecting ends the consent for both, immediately | The one who never decided sees the generic "This consent has been rejected.", not "You've rejected this consent." |
 | `04.11.05` | Revoking a still-Pending consent leaves an authoriser who already approved seeing only the revoked message | Regression for wso2/dpdp-accelerator#271 - admin revokes while still Pending on the other authoriser; a stale APPROVED must not resurface a button. |
 
-### `04.10-consent-creation-keeps-earlier-consents.spec.ts`
+### `04.12-consent-creation-keeps-earlier-consents.spec.ts`
 
 Pins the shipped `[consent_mgt] revoke_active_consents_on_create = false`. Asserts only on API responses, but still needs a browser for seeding.
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.10.01` | Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE | Both consents are seeded against one catalog (`seedCatalogViaApi`) under a shared `serviceId`. States are read from the admin list filtered by `serviceId` + `purposeId`, which proves both carry that purpose; the earlier consent's status history must have no REVOKED entry. Fails on a deployment with the switch `true`, or on an Identity Server below U2 update level 17, which ignores the key. |
-| `04.10.02` | Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING | Same as `04.10.01` for a PENDING earlier consent - the product's auto-revoke covers PENDING as well as ACTIVE. |
+| `04.12.01` | Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE | Both consents are seeded against one catalog (`seedCatalogViaApi`) under a shared `serviceId`. States are read from the admin list filtered by `serviceId` + `purposeId`, which proves both carry that purpose; the earlier consent's status history must have no REVOKED entry. Fails on a deployment with the switch `true`, or on an Identity Server below U2 update level 17, which ignores the key. |
+| `04.12.02` | Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING | Same as `04.12.01` for a PENDING earlier consent - the product's auto-revoke covers PENDING as well as ACTIVE. |
 
 ## `05-authorization/` — Route guards and sidebar visibility
 
@@ -749,7 +749,7 @@ Real defects that dictate how tests above are written. Recorded here so nobody
 | **`GET /events` hardcodes the caller's orgId as `GROUP_ID`** and does not even declare a `groupId` query param. An event published under any other group id can never be found through `GET /events`, whatever the search term. | Every event test reads a seeded subscription's *returned* `groupId` and publishes with that exact value. |
 | **`SubscriptionHandler.createSubscription` silently forces `groupId` to the org id**, ignoring what the caller sent. Fan-out matches on exact `(ORG_ID, GROUP_ID, TOPIC_ID)`. | Two subscriptions on one topic are always "the same group", so tests needing two distinct subscriptions use two topics or disjoint purpose filters. |
 | **Consent mutations do not invalidate the history query keys.** | `03.07`/`03.08` navigate a second time after each action, or the lifecycle card and dialog show stale data. |
-| **Creating a v2 consent auto-revokes the same subject/service/purpose's ACTIVE and PENDING consents without firing `pre/postRevokeConsent`** (product-is#28405), so the accelerator's status audit and history never record the revoke. | The accelerator ships `revoke_active_consents_on_create = false`; `04.10` pins that. |
+| **Creating a v2 consent auto-revokes the same subject/service/purpose's ACTIVE and PENDING consents without firing `pre/postRevokeConsent`** (product-is#28405), so the accelerator's status audit and history never record the revoke. | The accelerator ships `revoke_active_consents_on_create = false`; `04.12` pins that. |
 | **`CM_RECEIPT.LANGUAGE` is `NOT NULL` with no server-side default**, so omitting it yields a generic `CM_00084` wrapping an H2 constraint violation. | `seedConsentViaApi` always sends `language: 'en'`. |
 | **Deleting a Purpose version referenced by a consent is rejected server-side, but `PurposeDetailsPage.tsx`'s `deleteVersionErrorMessage` treats every failure as unexpected** and shows a generic "Something went wrong" message - unlike the whole-Purpose delete, which has its own "still referenced by one or more consents" text. | `03.05.05` asserts the generic text, since that is what the product actually shows. |
 | **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatusViaApi` always sends a note, even where the API does not require one. |

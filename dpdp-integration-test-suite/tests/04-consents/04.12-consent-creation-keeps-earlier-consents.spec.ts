@@ -70,14 +70,14 @@ test.describe('Consent creation keeps earlier consents (API)', () => {
     await expectNoRevokeInStatusHistory(adminApi, earlier.consentId)
   }
 
-  test('04.10.01 - Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE', async ({
+  test('04.12.01 - Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE', async ({
     target,
     consentAdminConsentApi,
   }) => {
     await expectEarlierConsentKept(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
   })
 
-  test('04.10.02 - Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING', async ({
+  test('04.12.02 - Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING', async ({
     target,
     consentAdminConsentApi,
   }) => {
