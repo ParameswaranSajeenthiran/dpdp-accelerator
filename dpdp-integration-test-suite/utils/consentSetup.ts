@@ -22,7 +22,9 @@ import { randomElementProfile, randomPurposeProfile, randomServiceId } from './t
 
 export interface SeededConsent {
   consentId: string
+  purposeId: string
   purposeName: string
+  elementId: string
   elementDisplayName: string
   serviceId: string
 }
@@ -100,5 +102,5 @@ export async function seedConsentViaApi(
   expect(consentResponse.status()).toBe(201)
   const consent = (await consentResponse.json()) as { id: string }
 
-  return { consentId: consent.id, purposeName, elementDisplayName, serviceId }
+  return { consentId: consent.id, purposeId, purposeName, elementId, elementDisplayName, serviceId }
 }

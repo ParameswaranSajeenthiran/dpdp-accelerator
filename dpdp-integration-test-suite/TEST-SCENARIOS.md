@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 172 across 46 spec files in 9 areas |
+| **Tests** | 174 across 47 spec files in 9 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -174,7 +174,7 @@ overview card shows).
 
 The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
-**37 tests, 9 spec files.**
+**39 tests, 10 spec files.**
 
 ### `04.01-user-viewing-consents.spec.ts`
 
@@ -259,6 +259,15 @@ Exercises `DPDPConsentExpiryReconciler`. Asserts only on API responses, but stil
 | `04.09.01` | A consent whose expiry time has not yet passed has no EXPIRE entry in its history | Negative control: no EXPIRE entry for a future expiry. |
 | `04.09.02` | Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry | EXPIRE written with `actionBy=SYSTEM`, `currentStatus=EXPIRED`, in both status-audit and history. The revoke's own 409 is deliberately not asserted. |
 | `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs `schedule_mode = "interval"` and a server restart) - CI sets this automatically. |
+
+### `04.10-consent-creation-keeps-earlier-consents.spec.ts`
+
+Pins the shipped `[consent_mgt] revoke_active_consents_on_create = false`. Asserts only on API responses, but still needs a browser for seeding.
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `04.10.01` | Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE | The later consent reuses the earlier one's `serviceId`, purpose id and element id. Checks the earlier consent's state and that its status history has no REVOKED entry. Fails on a deployment with the switch `true`, or on an Identity Server below U2 update level 17, which ignores the key. |
+| `04.10.02` | Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING | Same as `04.10.01` for a PENDING earlier consent - the product's auto-revoke covers PENDING as well as ACTIVE. |
 
 ## `05-authorization/` — Route guards and sidebar visibility
 
@@ -658,6 +667,7 @@ Real defects that dictate how tests above are written. Recorded here so nobody
 | **`GET /events` hardcodes the caller's orgId as `GROUP_ID`** and does not even declare a `groupId` query param. An event published under any other group id can never be found through `GET /events`, whatever the search term. | Every event test reads a seeded subscription's *returned* `groupId` and publishes with that exact value. |
 | **`SubscriptionHandler.createSubscription` silently forces `groupId` to the org id**, ignoring what the caller sent. Fan-out matches on exact `(ORG_ID, GROUP_ID, TOPIC_ID)`. | Two subscriptions on one topic are always "the same group", so tests needing two distinct subscriptions use two topics or disjoint purpose filters. |
 | **Consent mutations do not invalidate the history query keys.** | `03.07`/`03.08` navigate a second time after each action, or the lifecycle card and dialog show stale data. |
+| **Creating a v2 consent auto-revokes the same subject/service/purpose's ACTIVE and PENDING consents without firing `pre/postRevokeConsent`** (product-is#28405), so the accelerator's status audit and history never record the revoke. | The accelerator ships `revoke_active_consents_on_create = false`; `04.10` pins that. |
 | **`CM_RECEIPT.LANGUAGE` is `NOT NULL` with no server-side default**, so omitting it yields a generic `CM_00084` wrapping an H2 constraint violation. | `seedConsentViaApi` always sends `language: 'en'`. |
 | **Deleting a Purpose version referenced by a consent is rejected server-side, but `PurposeDetailsPage.tsx`'s `deleteVersionErrorMessage` treats every failure as unexpected** and shows a generic "Something went wrong" message - unlike the whole-Purpose delete, which has its own "still referenced by one or more consents" text. | `03.05.05` asserts the generic text, since that is what the product actually shows. |
 | **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatusViaApi` always sends a note, even where the API does not require one. |
