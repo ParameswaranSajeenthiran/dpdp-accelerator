@@ -352,6 +352,65 @@ touching this chain, in order:
   translation is a separate pass); `npm run i18n:verify` and `src/__tests__/I18nKeys.test.ts`
   enforce completeness and will fail the build otherwise. `catalog.json` is exempt: it holds
   wording for admin-created Purposes/Elements and is allowed to be incomplete.
+### Approve / Reject / Revoke rules
+
+The consent detail page's button visibility (`features/my-consents/utils/consentAuthorization.ts`,
+`ConsentDetailsPage.tsx`) shipped inconsistently across five separate bug reports before this
+convention existed. Everything below is decided by one thing: whether the viewer has their own
+entry in the consent's `authorizations` list.
+
+- **Direct Consent** — `authorizations` is empty. The subject consents for herself; the consent is
+  created `ACTIVE` (no `PENDING` step). She can revoke it through self-service, and an admin can
+  also revoke it via oversight — the admin rule below applies to every scenario, Direct included.
+- **Delegated Consent** — `authorizations` names one or more people other than the subject (e.g. a
+  child's mother and father). The subject has no entry, so she's an observer: no approve, reject,
+  or revoke. IS requires **every** named authoriser to approve before the consent goes `ACTIVE`; a
+  single rejection, by anyone named, ends it immediately (this reject-side assumption still needs
+  confirming against a live IS instance).
+- **Co-Authorized Consent** — the subject is named as one of the authorisers herself, alongside at
+  least one other. She decides for herself exactly like any other authoriser.
+
+State machine: a Direct consent only ever goes `ACTIVE → {REVOKED, EXPIRED}` (both terminal). A
+Delegated/Co-Authorized consent starts `PENDING → {EXPIRED, REJECTED, REVOKED}` (terminal — the
+last only via admin oversight, which can revoke a still-pending request outright) or
+`PENDING → ACTIVE → {REVOKED, EXPIRED}` (terminal).
+
+Rules that hold regardless of how the code is structured:
+
+- **Terminal aggregate states always win.** `REVOKED`/`EXPIRED` on the consent itself override
+  anything a stale per-authoriser entry says — never fall back to a per-authoriser `APPROVED` once
+  the consent as a whole is revoked or expired.
+- **Admin gating looks only at the consent's own state**, never at scenario or involvement: Revoke
+  while `PENDING` or `ACTIVE`, nothing otherwise. Admins never see Approve/Reject. (Today's
+  `ConsentDetailsPage.tsx` requires `canWriteSelf` even for `variant === 'admin'`, so an admin with
+  only the tenant-wide write scope currently sees no actions at all — worth fixing alongside any
+  change here.)
+- **A Direct consent's only action is Revoke**, and only for the subject, only while `ACTIVE`.
+- **For Delegated/Co-Authorized consents, gate on the viewer's own `authorizations` entry, not the
+  aggregate state**: no entry (and you're the subject) → observer, status text only, no buttons
+  ever. Own entry present → Approve/Reject only while *your own* entry is still undecided; once
+  you've decided, show a waiting message instead, even if the aggregate consent is still `PENDING`
+  on someone else. Revoke is available to anyone with an entry once the consent is `ACTIVE` — not
+  only whoever approved it.
+- **Rejection text differs by whose decision caused it** — "you rejected this" vs. "this was
+  rejected" — but functionally a single rejection from anyone named ends the consent for everyone.
+
+Every "has an own entry" case (Authoriser in either scenario, or the subject in a Co-Authorized
+consent) behaves identically — same gating, same copy — regardless of which named scenario
+produced that entry:
+
+| Who's asking | PENDING | ACTIVE | REJECTED | REVOKED | EXPIRED |
+|---|---|---|---|---|---|
+| Subject, Direct Consent | *n/a — created ACTIVE* | Revoke | *n/a* | "This consent has been revoked." | "This consent has expired." |
+| Subject, Delegated Consent (pure observer) | "Waiting for authoriser approval." | "This consent has been approved." | "This consent has been rejected." | "This consent has been revoked." | "This consent has expired." |
+| Anyone with `hasOwnEntry` | Own decision pending → Approve + Reject. Already decided → "You've made your decision. Waiting for the rest to decide." | Revoke | You rejected it → "You've rejected this consent." Someone else rejected it → "This consent has been rejected." | "This consent has been revoked." | "This consent has expired." |
+| Admin, Direct Consent | *n/a* | Revoke | *n/a* | "This consent has been revoked." | "This consent has expired." |
+| Admin, Delegated/Co-Authorized Consent | Revoke | Revoke | "This consent has been rejected." | "This consent has been revoked." | "This consent has expired." |
+
+Status-copy keys (`awaitingApproval`, `approved`, `rejected`, `decisionRecordedWaiting`,
+`youRejected`, `revoked`, `expired`) are all written to hold for one authoriser or several — none
+of them name a count, so a multi-authoriser consent needs no separate wording from a
+single-authoriser one.
 
 ## Frontend conventions
 

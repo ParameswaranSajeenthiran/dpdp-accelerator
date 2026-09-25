@@ -8,13 +8,13 @@ in CI was actually checking.
 > this file in the same commit. `npm run verify:ids` fails the build if an ID here has no test, or
 > a test has no entry here — see [`AGENTS.md`](AGENTS.md), "Keeping TEST-SCENARIOS.md current".
 
-| | |
-|---|---|
-| **Tests** | 190 across 51 spec files in 10 areas |
+| |                                                                                                                           |
+|---|---------------------------------------------------------------------------------------------------------------------------|
+| **Tests** | 100 across 52 spec files in 10 areas                                                                                      |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
-| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
-| **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
-| **Setup and how to run** | [`README.md`](README.md) |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff)                                                      |
+| **Rules and conventions** | [`AGENTS.md`](AGENTS.md)                                                                                                  |
+| **Setup and how to run** | [`README.md`](README.md)                                                                                                  |
 
 ## Finding a test from a failure
 
@@ -174,7 +174,7 @@ overview card shows).
 
 The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` creates the Element, Purpose, and Consent all through the admin API - none of these tests exercise the create-Element/create-Purpose forms themselves (see `02-elements/02.01-*` and `03-purposes/03.01-*` for those). `state: PENDING` is expressed by supplying `authorizations` - the v2 API rejects an explicit `PENDING`.
 
-**39 tests, 10 spec files.**
+**49 tests, 11 spec files.**
 
 ### `04.01-user-viewing-consents.spec.ts`
 
@@ -184,7 +184,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | `04.01.02` | An unknown consent id shows the load-failed message with a way back to the registry |  |
 | `04.01.03` | A different user cannot open another user's consent by its URL | Ownership isolation - requires `personas.user2`. |
 | `04.01.04` | The rows-per-page control caps the number of rendered rows at the selected size | Seeds one more than the smallest page size, so a next page is guaranteed regardless of how many consents already exist. |
-| `04.01.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. Rejection is not terminal for Approve (`isApprovableByCurrentUser` covers PENDING and REJECTED), but Reject and Revoke both disappear. |
+| `04.01.05` | A rejected consent shows Rejected and no further action on a fresh detail-page load | Re-navigates after confirming, so the check is against server-persisted state, not the dialog's own optimistic update. A decision is final once made: Approve, Reject, and Revoke all disappear, replaced by "You've rejected this consent." |
 
 ### `04.02-user-searching-consents.spec.ts`
 
@@ -203,7 +203,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | `04.03.02` | Rejecting a Pending consent from its detail page moves it to Rejected |  |
 | `04.03.03` | Revoking an Active consent from the list moves it to Revoked and removes the revoke action | Row reads Revoked **and** the Revoke button is gone from that row. |
 | `04.03.04` | Approving from the detail page works the same way as from the list |  |
-| `04.03.05` | A Rejected consent can be approved again, but offers no reject or revoke | Rejection is not terminal: `isApprovableByCurrentUser()` covers PENDING and REJECTED, so a principal may change their mind. Reject and Revoke are not offered. |
+| `04.03.05` | A Rejected consent offers no approve, reject, or revoke - rejection is final | No button of any kind once Rejected; "You've rejected this consent." shows instead. |
 
 ### `04.04-admin-viewing-consents.spec.ts`
 
@@ -231,7 +231,7 @@ The largest area. **Consent creation has no UI at all**, so `seedConsentViaApi` 
 | `04.06.01` | Admin can revoke an Active consent from the list |  |
 | `04.06.02` | The admin detail page shows Revoke but never Approve or Reject for an Active consent | Revoke visible; Approve/Reject absent. The admin registry never offers approve/reject. |
 | `04.06.03` | The admin list shows no Approve action for a Pending consent, and no Revoke action either | Neither Approve nor Revoke offered on a Pending row. |
-| `04.06.04` | The admin detail page offers no action at all for a Pending consent | No action at all. |
+| `04.06.04` | The admin detail page offers only Revoke for a Pending consent, never Approve or Reject | Admin oversight can revoke a still-Pending request outright, unlike the admin list (`04.06.03`), which is deliberately left Active-only. |
 
 ### `04.07-user-viewing-consent-history.spec.ts`
 
@@ -259,6 +259,30 @@ Exercises `DPDPConsentExpiryReconciler`. Asserts only on API responses, but stil
 | `04.09.01` | A consent whose expiry time has not yet passed has no EXPIRE entry in its history | Negative control: no EXPIRE entry for a future expiry. |
 | `04.09.02` | Revoking a consent past its expiry time first reconciles the lapse into an EXPIRE history entry | EXPIRE written with `actionBy=SYSTEM`, `currentStatus=EXPIRED`, in both status-audit and history. The revoke's own 409 is deliberately not asserted. |
 | `04.09.03` | The background ConsentExpiryJob reconciles a lapsed consent within one scheduler cycle, with an accurate history timestamp | Waits on the real `ConsentExpiryJob` with no mutation, and checks `actionTime` falls between due and observed. Skips unless `consentExpiry.schedulerPollTimeoutMs` is set (needs `schedule_mode = "interval"` and a server restart) - CI sets this automatically. |
+
+### `04.10-user-acting-on-delegated-consents.spec.ts`
+
+A Delegated Consent: the subject (`personas.user`) never appears in `authorizations` - `personas.user2` is the sole named authoriser, deciding on the subject's behalf. Covers what the subject and the authoriser each see on the detail page, which `04.07.04` never asserts (it only checks history attribution).
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `04.10.01` | The subject of a Pending delegated consent sees only a waiting message, never a button | No entry of their own - "Waiting for authoriser approval." |
+| `04.10.02` | The subject of an Active delegated consent (approved by the authoriser) sees only an approved message | Authoriser approves via `authorizeMyConsent`, not the UI - the point is the subject's resulting view. |
+| `04.10.03` | The subject of a Rejected delegated consent (rejected by the authoriser) sees only a rejected message |  |
+| `04.10.04` | The named authoriser, not the subject, sees Approve and Reject while the consent is Pending | Logs in as `personas.user2` via `getPersonaState`/`pageForPersonaState`. |
+| `04.10.05` | The subject of a Revoked delegated consent sees only a revoked message, even though they were never a decision-maker | Authoriser approves then revokes via the API - anyone with an entry can revoke once Active, not only the subject. |
+
+### `04.11-user-acting-on-coauthorized-consents.spec.ts`
+
+A Co-Authorized Consent: the subject (`personas.user`) is also one of two named authorisers, alongside `personas.user2`, deciding for themself exactly like any other authoriser. First file to seed more than one `authorizations` entry - `seedConsentViaApi` already accepted a list, nothing before this exercised it. IS moves the consent to ACTIVE only once every authoriser has approved, and to REJECTED as soon as any one rejects.
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `04.11.01` | Both co-authorisers independently see Approve and Reject while their own decision is pending |  |
+| `04.11.02` | Once one co-authoriser approves, they see a waiting message while the other still has their own Approve/Reject | Proves the gate is per-caller, not on the aggregate state, which is still Pending. |
+| `04.11.03` | Once every co-authoriser has approved, the consent is Active and either of them can revoke it |  |
+| `04.11.04` | A single co-authoriser rejecting ends the consent for both, immediately | The one who never decided sees the generic "This consent has been rejected.", not "You've rejected this consent." |
+| `04.11.05` | Revoking a still-Pending consent leaves an authoriser who already approved seeing only the revoked message | Regression for wso2/dpdp-accelerator#271 - admin revokes while still Pending on the other authoriser; a stale APPROVED must not resurface a button. |
 
 ### `04.10-consent-creation-keeps-earlier-consents.spec.ts`
 
@@ -418,7 +442,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 | --- | --- | --- |
 | `08.08.01` | A Data Principal navigating directly to /complaints is not redirected away |  |
 | `08.08.02` | A Data Principal navigating directly to /complaint-management is redirected away |  |
-| `08.08.03` | A Data Principal's sidebar shows a "My Complaints" entry, not "Complaints" | The `:self` and `:any` complaint scopes go to different roles, so the two sidebar entries never co-exist. |
+| `08.08.03` | A Data Principal's sidebar shows a "My Complaints" entry, not the officer's "Complaints" entry | The `:self` and `:any` complaint scopes go to different roles, so the two sidebar entries never co-exist. "Complaints" still appears once, as the category heading above "My Complaints"; the officer's item is ruled out by the absent "Administration" category. |
 | `08.08.04` | A DPO can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints" |  |
 | `08.08.05` | A Consent Admin navigating directly to /complaint-management is redirected away, and their sidebar shows no complaint entry | Complaint oversight is DPO-only; `dpdp-consent-admin` is provisioned with no complaint scope. |
 

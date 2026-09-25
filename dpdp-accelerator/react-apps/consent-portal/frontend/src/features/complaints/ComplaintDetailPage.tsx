@@ -37,8 +37,8 @@ import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcr
 import { formatEpochTimestamp } from '../../utils/dateTime'
 import ComplaintActivityFeed from './components/ComplaintActivityFeed'
 import ComplaintAttachmentsPanel from './components/ComplaintAttachmentsPanel'
+import ComplaintDeadline from './components/ComplaintDeadline'
 import ComplaintReplyComposer from './components/ComplaintReplyComposer'
-import ComplaintSlaIndicator from './components/ComplaintSlaIndicator'
 import ComplaintStatusChip from './components/ComplaintStatusChip'
 import {
   useMyComplaintDetailQuery,
@@ -50,9 +50,6 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   month: 'short',
   day: '2-digit',
   year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
 }
 
 function ComplaintDetailLoading(): React.JSX.Element {
@@ -127,10 +124,6 @@ function ComplaintDetailPage(): React.JSX.Element {
         </Typography>
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
           <ComplaintStatusChip status={complaint.status} viewerRole="DataPrincipal" />
-          <ComplaintSlaIndicator
-            statutoryDueDate={complaint.statutoryDueDate}
-            status={complaint.status}
-          />
         </Stack>
       </Stack>
 
@@ -160,18 +153,32 @@ function ComplaintDetailPage(): React.JSX.Element {
               </Typography>
             </Box>
 
-            <Box>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={600}
-                sx={{ display: 'block', textTransform: 'uppercase' }}
-              >
-                {t('complaints.detail.submittedOnLabel')}
-              </Typography>
-              <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
-              </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                gap: 2,
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={600}
+                  sx={{ display: 'block', textTransform: 'uppercase' }}
+                >
+                  {t('complaints.detail.submittedOnLabel')}
+                </Typography>
+                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+                  {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
+                </Typography>
+              </Box>
+              <ComplaintDeadline
+                submittedAt={complaint.submittedAt}
+                statutoryDueDate={complaint.statutoryDueDate}
+                status={complaint.status}
+                audience="dataPrincipal"
+              />
             </Box>
           </Stack>
         </CardContent>

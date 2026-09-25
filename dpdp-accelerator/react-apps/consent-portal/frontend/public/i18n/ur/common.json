@@ -32,13 +32,14 @@
     "administration": "انتظامیہ",
     "adminConsents": "تمام رضامندیاں",
     "myComplaints": "میری شکایتیں",
+    "complaints": "شکایتیں",
     "complaintManagement": "شکایتیں",
     "events": "واقعات",
+    "eventNotifications": "ایونٹ نوٹیفکیشنز",
     "topics": "موضوعات",
     "subscriptions": "سبسکرپشنز"
   },
   "layout": {
-    "home": "ہوم",
     "breadcrumbAriaLabel": "بریڈ کرمب",
     "userMenu": {
       "unknownUser": "نامعلوم صارف",
@@ -114,7 +115,16 @@
       "noAuthorizations": "اس رضامندی کے لیے کوئی اجازت نامے درج نہیں ہیں۔",
       "noElements": "اس مقصد کے ساتھ کوئی عناصر منسلک نہیں ہیں۔",
       "noPurposes": "اس رضامندی سے کوئی مقاصد وابستہ نہیں ہیں۔",
-      "noProperties": "اس رضامندی سے کوئی جائیداد منسلک نہیں ہے۔"
+      "noProperties": "اس رضامندی سے کوئی جائیداد منسلک نہیں ہے۔",
+      "statusMessages": {
+        "awaitingApproval": "آتھورائزر کی منظوری کا انتظار ہے۔",
+        "approved": "اس رضامندی کی منظوری دے دی گئی ہے۔",
+        "rejected": "یہ رضامندی مسترد کر دی گئی ہے۔",
+        "decisionRecordedWaiting": "تم نے اپنا فیصلہ کر لیا ہے۔ باقی لوگوں کے فیصلے کا انتظار ہے۔",
+        "youRejected": "آپ نے اس رضامندی کو مسترد کر دیا ہے۔",
+        "revoked": "یہ رضامندی منسوخ کر دی گئی ہے۔",
+        "expired": "یہ رضامندی ختم ہو چکی ہے۔"
+      }
     },
     "actions": {
       "view": "دیکھیں",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "آخری تاریخ: {{date}}",
       "dueToday": "آج آخری دن ہے",
-      "overdueSingular": "{{count}} دن کی تاخیر",
-      "overduePlural": "{{count}} دنوں کی تاخیر",
-      "daysLeftSingular": "{{count}} دن باقی ہے",
-      "daysLeftPlural": "{{count}} دن باقی ہیں",
-      "dueLabel": "آخری تاریخ"
+      "daysLeft": "{{count}} دن باقی ہیں",
+      "daysLeft_one": "{{count}} دن باقی ہے",
+      "daysLeft_other": "{{count}} دن باقی ہیں",
+      "overdueDays": "{{count}} دنوں کی تاخیر",
+      "overdueDays_one": "{{count}} دن کی تاخیر",
+      "overdueDays_other": "{{count}} دنوں کی تاخیر",
+      "overdue": "تاخیر کا شکار",
+      "deadlineLabelDataPrincipal": "آخری تاریخ",
+      "deadlineLabelOfficer": "قانونی ڈیڈلائن",
+      "periodDataPrincipal": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دنوں کے اندر حل کرنا ہوگا۔",
+      "periodDataPrincipal_one": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دن کے اندر حل کرنا ہوگا۔",
+      "periodDataPrincipal_other": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دنوں کے اندر حل کرنا ہوگا۔",
+      "periodOfficer": "شکایات موصول ہونے کے {{count}} دنوں کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "periodOfficer_one": "شکایات موصول ہونے کے {{count}} دن کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "periodOfficer_other": "شکایات موصول ہونے کے {{count}} دنوں کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "breachedDataPrincipal": "ڈیڈلائن گزر چکی ہے۔ اگر آپ کو تسلی بخش جواب نہیں ملا ہے، تو آپ اپنی شکایت ڈیٹا پروٹیکشن بورڈ کو بھیج سکتے ہیں۔",
+      "breachedOfficer": "تاخیر کا شکار: اس کیس کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "جب صارف کے لائف سائیکل کے موضوعات شامل کر رہے ہوں تو تمام مقاصد کا فلٹر منتخب کریں۔",
       "topicRequired": "موضوع ضروری ہے۔",
       "filterModeLabel": "مقصد فلٹر موڈ",
-      "purposesLabel": "مقاصد (کمیہ سے جدا)",
-      "purposesPlaceholder": "مثال کے طور پر، مارکیٹنگ، تجزیات",
-      "purposesHelper": "فلٹر کرنے کے لیے رضامندی کے مقاصد کی کوما سے جدا فہرست",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "مخصوص یا تمام کے علاوہ کے ذریعے فلٹر کرتے وقت مقاصد کی ضرورت ہوتی ہے۔",
       "deliveryModeLabel": "ڈیلیوری موڈ",
       "callbackUrlLabel": "ویب ہک کال بیک یو آر ایل",
@@ -726,7 +748,10 @@
       "secretHelper": "ویب ہک پے لوڈز پر دستخط کرنے یا پول کی درخواستوں کی تصدیق کرنے کے لیے استعمال کیا جاتا ہے",
       "generateSecret": "نیا خفیہ بنائیں",
       "registering": "رجسٹر ہو رہا ہے...",
-      "registerSubmit": "سبسکرپشن رجسٹر کریں"
+      "registerSubmit": "سبسکرپشن رجسٹر کریں",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "سبسکرپشن حذف کرنے کی تصدیق کریں",

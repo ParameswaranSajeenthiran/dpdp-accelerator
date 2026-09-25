@@ -32,13 +32,14 @@
     "administration": "Administration",
     "adminConsents": "All Consents",
     "myComplaints": "My Complaints",
+    "complaints": "Complaints",
     "complaintManagement": "Complaints",
     "events": "Events",
+    "eventNotifications": "Event Notifications",
     "topics": "Topics",
     "subscriptions": "Subscriptions"
   },
   "layout": {
-    "home": "Home",
     "breadcrumbAriaLabel": "Breadcrumb",
     "userMenu": {
       "unknownUser": "Unknown user",
@@ -114,7 +115,16 @@
       "noAuthorizations": "No authorizations are recorded for this consent.",
       "noElements": "No elements are associated with this purpose.",
       "noPurposes": "No purposes are associated with this consent.",
-      "noProperties": "No properties are associated with this consent."
+      "noProperties": "No properties are associated with this consent.",
+      "statusMessages": {
+        "awaitingApproval": "Waiting for authoriser approval.",
+        "approved": "This consent has been approved.",
+        "rejected": "This consent has been rejected.",
+        "decisionRecordedWaiting": "You've made your decision. Waiting for the rest to decide.",
+        "youRejected": "You've rejected this consent.",
+        "revoked": "This consent has been revoked.",
+        "expired": "This consent has expired."
+      }
     },
     "actions": {
       "view": "View",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "Due {{date}}",
       "dueToday": "Due today",
-      "overdueSingular": "{{count}} day overdue",
-      "overduePlural": "{{count}} days overdue",
-      "daysLeftSingular": "{{count}} day left",
-      "daysLeftPlural": "{{count}} days left",
-      "dueLabel": "Due"
+      "daysLeft": "{{count}} days left",
+      "daysLeft_one": "{{count}} day left",
+      "daysLeft_other": "{{count}} days left",
+      "overdueDays": "{{count}} days overdue",
+      "overdueDays_one": "{{count}} day overdue",
+      "overdueDays_other": "{{count}} days overdue",
+      "overdue": "Overdue",
+      "deadlineLabelDataPrincipal": "Due date",
+      "deadlineLabelOfficer": "Statutory deadline",
+      "periodDataPrincipal": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodDataPrincipal_one": "The organisation must resolve your complaint within {{count}} day of submitting it.",
+      "periodDataPrincipal_other": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodOfficer": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_one": "Complaints must be resolved within {{count}} day of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_other": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "breachedDataPrincipal": "The deadline has passed. If you have not had a satisfactory response, you can escalate your complaint to the Data Protection Board.",
+      "breachedOfficer": "Overdue: this case counts as an SLA breach."
     },
     "timeline": {
       "complaintReceived": "Complaint received",
@@ -713,9 +735,12 @@
       "multiTopicFilter": "Select the all purpose filter when including user lifecycle topics.",
       "topicRequired": "Topic is required.",
       "filterModeLabel": "Consent Purpose Filter Mode",
-      "purposesLabel": "Consent Purposes (comma-separated)",
-      "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
-      "purposesHelper": "Comma-separated list of consent purposes to filter",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search.",
       "purposesRequired": "Purposes are required when filtering by specific or all-except.",
       "deliveryModeLabel": "Delivery Mode",
       "callbackUrlLabel": "Webhook Callback URL",

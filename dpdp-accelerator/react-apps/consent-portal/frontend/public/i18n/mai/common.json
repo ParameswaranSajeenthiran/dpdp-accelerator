@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सब सहमति",
     "myComplaints": "हमर शिकायत सभ",
+    "complaints": "Complaints",
     "complaintManagement": "शिकायत प्रबंधन",
     "events": "घटना",
+    "eventNotifications": "इवेंट नोटिफिकेशन",
     "topics": "विषय",
     "subscriptions": "सदस्यता"
   },
   "layout": {
-    "home": "होम",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अज्ञात उपयोगकर्ता",
@@ -114,7 +115,16 @@
       "noAuthorizations": "एहि सहमति लेल कोनो अधिकार दर्ज नहि अछि।",
       "noElements": "एहि उद्देश्यसँ कोनो तत्व सम्बन्धित नहि अछि।",
       "noPurposes": "एहि सहमति सँ कोनो उद्देश्य सम्बन्धित नहि अछि।",
-      "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।"
+      "noProperties": "एहि सहमति सँ कोनो सम्पत्ति सम्बन्धित नहि अछि।",
+      "statusMessages": {
+        "awaitingApproval": "अधिकारक अनुमोदनक प्रतीक्षा कएल जा रहल अछि।",
+        "approved": "ई सहमति स्वीकृत कऽ देल गेल अछि।",
+        "rejected": "ई सहमति अस्वीकृत क' देल गेल अछि।",
+        "decisionRecordedWaiting": "अहाँ अपन निर्णय लऽ लेलहुँ। बाकी लोक सभक निर्णयक लेल बाट जोहैत छी।",
+        "youRejected": "अहाँ ई सहमति अस्वीकार कए देलहुँ।",
+        "revoked": "ई सहमति रद्द कऽ देल गेल अछि।",
+        "expired": "ई सहमति समाप्त भऽ गेल अछि।"
+      }
     },
     "actions": {
       "view": "देखू",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "नियत तिथि {{date}}",
       "dueToday": "आजुक नियत तिथि",
-      "overdueSingular": "{{count}} दिन विलंब",
-      "overduePlural": "{{count}} दिन विलंब",
-      "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी",
-      "dueLabel": "समय सीमा"
+      "daysLeft": "{{count}} दिन बाँकी",
+      "daysLeft_one": "{{count}} दिन बाँकी",
+      "daysLeft_other": "{{count}} दिन बाँकी",
+      "overdueDays": "{{count}} दिन विलंब",
+      "overdueDays_one": "{{count}} दिन विलंब",
+      "overdueDays_other": "{{count}} दिन विलंब",
+      "overdue": "विलंब",
+      "deadlineLabelDataPrincipal": "समय सीमा",
+      "deadlineLabelOfficer": "वैधानिक समय-सीमा",
+      "periodDataPrincipal": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodDataPrincipal_one": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodDataPrincipal_other": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodOfficer": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "periodOfficer_one": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "periodOfficer_other": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "breachedDataPrincipal": "समय-सीमा बीति गेल अछि। जँ अहाँकेँ कोनो संतोषजनक जवाब नहि भेटल अछि, तँ अहाँ अपन शिकायत डेटा प्रोटेक्शन बोर्ड केँ पठा सकैत छी।",
+      "breachedOfficer": "विलंब: एहि मामला केँ SLA उल्लंघन मानल जाइत अछि।"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त भेल",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "जखन यूजर लाइफसाइकिल विषय शामिल करी तँ सब उद्देश्य फिल्टर चुनू।",
       "topicRequired": "विषय आवश्यक अछि।",
       "filterModeLabel": "उद्देश्य फिल्टर मोड",
-      "purposesLabel": "उद्देश्य (अल्पविराम सँ अलग कएल गेल)",
-      "purposesPlaceholder": "उदाहरणक लेल, मार्केटिंग, एनालिटिक्स",
-      "purposesHelper": "फ़िल्टर करय लेल सहमति उद्देश्यक अल्पविराम-पृथक सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट या सब-अपवाद द्वारा फिल्टर करैत काल उद्देश्यक आवश्यकता होइत अछि।",
       "deliveryModeLabel": "डिलीवरी मोड",
       "callbackUrlLabel": "वेबहुक कॉलबैक यूआरएल",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड पर हस्ताक्षर करबाक या पोल अनुरोधक प्रमाणित करबाक लेल उपयोग कएल गेल",
       "generateSecret": "नव गुप्त बनाबू",
       "registering": "पंजीकरण कएल जा रहल अछि...",
-      "registerSubmit": "सदस्यता पंजीकृत करू"
+      "registerSubmit": "सदस्यता पंजीकृत करू",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता हटाबय कें पुष्टि करू",

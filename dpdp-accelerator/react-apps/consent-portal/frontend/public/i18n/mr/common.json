@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सर्व संमती",
     "myComplaints": "माझ्या तक्रारी",
+    "complaints": "तक्रारी",
     "complaintManagement": "तक्रारी",
     "events": "कार्यक्रम",
+    "eventNotifications": "इव्हेंट नोटिफिकेशन्स",
     "topics": "विषय",
     "subscriptions": "सबस्क्रिप्शन"
   },
   "layout": {
-    "home": "मुख्यपृष्ठ",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अज्ञात वापरकर्ता",
@@ -114,7 +115,16 @@
       "noAuthorizations": "या संमतीसाठी कोणतीही अधिकृतता नोंदवली जात नाही.",
       "noElements": "या उद्देशाशी कोणतेही घटक संबंधित नाहीत.",
       "noPurposes": "या संमतीशी कोणतेही उद्देश जोडलेले नाहीत.",
-      "noProperties": "या संमतीशी कोणतेही गुणधर्म संबंधित नाहीत."
+      "noProperties": "या संमतीशी कोणतेही गुणधर्म संबंधित नाहीत.",
+      "statusMessages": {
+        "awaitingApproval": "अधिकृत व्यक्तीच्या मंजुरीची प्रतीक्षा आहे.",
+        "approved": "ही संमती मंजूर झाली आहे.",
+        "rejected": "ही संमती नाकारली गेली आहे.",
+        "decisionRecordedWaiting": "तू तुझा निर्णय घेतला आहेस. आता बाकीच्यांनी काय ठरवायचं आहे, याची वाट बघतोय.",
+        "youRejected": "तुम्ही ही संमती नाकारली आहे.",
+        "revoked": "ही संमती मागे घेण्यात आली आहे.",
+        "expired": "ही संमती कालबाह्य झाली आहे."
+      }
     },
     "actions": {
       "view": "पहा",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "अंतिम मुदत {{date}}",
       "dueToday": "आज देय",
-      "overdueSingular": "{{count}} दिवस थकीत",
-      "overduePlural": "{{count}} दिवस थकीत",
-      "daysLeftSingular": "{{count}} दिवस शिल्लक",
-      "daysLeftPlural": "{{count}} दिवस शिल्लक",
-      "dueLabel": "अंतिम तारीख"
+      "daysLeft": "{{count}} दिवस शिल्लक",
+      "daysLeft_one": "{{count}} दिवस शिल्लक",
+      "daysLeft_other": "{{count}} दिवस शिल्लक",
+      "overdueDays": "{{count}} दिवस थकीत",
+      "overdueDays_one": "{{count}} दिवस थकीत",
+      "overdueDays_other": "{{count}} दिवस थकीत",
+      "overdue": "उशीर",
+      "deadlineLabelDataPrincipal": "अंतिम तारीख",
+      "deadlineLabelOfficer": "वैधानिक मुदत",
+      "periodDataPrincipal": "तक्रार दाखल केल्यापासून {{count}} दिवसांच्या आत संस्थेने तुमच्या तक्रारीचे निवारण करणे आवश्यक आहे.",
+      "periodDataPrincipal_one": "तक्रार दाखल केल्यापासून {{count}} दिवसाच्या आत संस्थेने तुमच्या तक्रारीचे निवारण करणे आवश्यक आहे.",
+      "periodDataPrincipal_other": "तक्रार दाखल केल्यापासून {{count}} दिवसांच्या आत संस्थेने तुमच्या तक्रारीचे निवारण करणे आवश्यक आहे.",
+      "periodOfficer": "तक्रार दाखल केल्यापासून {{count}} दिवसांच्या आत तिचे निवारण होणे आवश्यक आहे. या तारखेनंतरही न सुटलेल्या तक्रारींना SLA चे उल्लंघन मानले जाते.",
+      "periodOfficer_one": "तक्रार दाखल केल्यापासून {{count}} दिवसाच्या आत तिचे निवारण होणे आवश्यक आहे. या तारखेनंतरही न सुटलेल्या तक्रारींना SLA चे उल्लंघन मानले जाते.",
+      "periodOfficer_other": "तक्रार दाखल केल्यापासून {{count}} दिवसांच्या आत तिचे निवारण होणे आवश्यक आहे. या तारखेनंतरही न सुटलेल्या तक्रारींना SLA चे उल्लंघन मानले जाते.",
+      "breachedDataPrincipal": "मुदत संपली आहे. जर तुम्हाला समाधानकारक उत्तर मिळाले नसेल, तर तुम्ही तुमची तक्रार Data Protection Board कडे पाठवू शकता.",
+      "breachedOfficer": "उशीर: हे प्रकरण SLA चे उल्लंघन मानले जाते."
     },
     "timeline": {
       "complaintReceived": "तक्रार प्राप्त झाली",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "युझर लाइफसायकल टॉपिक्स समाविष्ट करताना सर्व उद्दिष्ट फिल्टर निवडा.",
       "topicRequired": "विषय आवश्यक आहे.",
       "filterModeLabel": "उद्देश फिल्टर मोड",
-      "purposesLabel": "उद्देश (स्वल्पविराम-विभक्त)",
-      "purposesPlaceholder": "उदा. मार्केटिंग, ॲनालिटिक्स",
-      "purposesHelper": "फिल्टर करण्यासाठी संमतीच्या उद्देशांची स्वल्पविराम-विभक्त सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट किंवा सर्व-अपवाद फिल्टर करताना उद्देश आवश्यक आहेत.",
       "deliveryModeLabel": "वितरण मोड",
       "callbackUrlLabel": "वेबहुक कॉलबॅक URL",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड साइन इन करण्यासाठी किंवा पोल विनंती प्रमाणित करण्यासाठी वापरले जाते",
       "generateSecret": "नवीन गुप्त कोड तयार करा",
       "registering": "नोंदणी करत आहे...",
-      "registerSubmit": "सबस्क्रिप्शन नोंदवा"
+      "registerSubmit": "सबस्क्रिप्शन नोंदवा",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता हटवणे निश्चित करा",

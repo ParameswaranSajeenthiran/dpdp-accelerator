@@ -32,13 +32,14 @@
     "administration": "শাসন/পরিচালনা",
     "adminConsents": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯌꯥꯅꯕ",
     "myComplaints": "ইগী ৱাকৎশিং",
+    "complaints": "Complaints",
     "complaintManagement": "ৱাকৎ পরিচালনা",
     "events": "ꯏꯚꯦꯟꯠꯁꯤꯡ",
+    "eventNotifications": "ꯏꯚꯦꯟꯠ ꯈꯪꯍꯟꯕꯁꯤꯡ",
     "topics": "ꯇꯣꯄꯤꯛꯁꯤꯡ",
     "subscriptions": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ"
   },
   "layout": {
-    "home": "য়ুম (Home)",
     "breadcrumbAriaLabel": "ব্রেডক্রম্ব",
     "userMenu": {
       "unknownUser": "খংদবা শীজিন্নবমী",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒꯤꯗꯃꯛ ꯑꯌꯥꯕ ꯄꯤꯕꯒꯤ ꯔꯦꯀꯣꯔꯗ ꯂꯩꯇꯦ",
       "noElements": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒ ꯃꯔꯤ ꯂꯩꯅꯕ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯃꯠꯇ ꯂꯩꯇꯦ",
       "noPurposes": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄꯔꯄꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
-      "noProperties": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄ꯭ꯔꯣꯄꯔꯇꯤ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫"
+      "noProperties": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄ꯭ꯔꯣꯄꯔꯇꯤ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
+      "statusMessages": {
+        "awaitingApproval": "ꯑꯣꯊꯣꯔꯥꯏꯖꯔꯒꯤ ꯑꯌꯥꯕꯒꯤꯗꯃꯛ ꯉꯥꯏꯔꯤ꯫",
+        "approved": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕ ꯑꯁꯤ ꯑꯌꯥꯕ ꯄꯤꯔꯦ꯫",
+        "rejected": "ꯃꯁꯤꯒꯤ ꯑꯌꯥꯕ ꯑꯁꯤ ꯌꯥꯈꯤꯗꯦ꯫",
+        "decisionRecordedWaiting": "ꯅꯍꯥꯛꯅ ꯅꯍꯥꯛꯀꯤ ꯋꯥꯔꯦꯞ ꯂꯧꯈ꯭ꯔꯦ꯫ ꯑꯇꯣꯞꯄꯁꯤꯡꯅ ꯋꯥꯔꯦꯞ ꯂꯧꯅꯕ ꯉꯥꯏꯔꯤ꯫",
+        "youRejected": "ꯅꯍꯥꯛꯅ ꯃꯁꯤꯒꯤ ꯑꯌꯥꯕ ꯑꯁꯤ ꯌꯥꯈꯤꯗꯦ꯫",
+        "revoked": "ꯃꯁꯤꯒꯤ ꯑꯌꯥꯕ ꯑꯁꯤ ꯂꯧꯊꯣꯛꯈ꯭ꯔꯦ꯫",
+        "expired": "ꯃꯁꯤꯒꯤ ꯑꯌꯥꯕ ꯑꯁꯤ ꯃꯇꯝ ꯂꯣꯏꯔꯦ꯫"
+      }
     },
     "actions": {
       "view": "য়েংবিয়ু",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "লোইগদবা {{date}}",
       "dueToday": "ঙসি লোইগদবা",
-      "overdueSingular": "নুমিত {{count}} হেলেমখ্রে",
-      "overduePlural": "নুমিত {{count}} হেলেমখ্রে",
-      "daysLeftSingular": "নুমিত {{count}} ৱাৎলি",
-      "daysLeftPlural": "নুমিত {{count}} ৱাৎলি",
-      "dueLabel": "ꯃꯇꯝ"
+      "daysLeft": "নুমিত {{count}} ৱাৎলি",
+      "daysLeft_one": "নুমিত {{count}} ৱাৎলি",
+      "daysLeft_other": "নুমিত {{count}} ৱাৎলি",
+      "overdueDays": "নুমিত {{count}} হেলেমখ্রে",
+      "overdueDays_one": "নুমিত {{count}} হেলেমখ্রে",
+      "overdueDays_other": "নুমিত {{count}} হেলেমখ্রে",
+      "overdue": "ওভরড্যু",
+      "deadlineLabelDataPrincipal": "ꯃꯇꯝ",
+      "deadlineLabelOfficer": "স্টেট্যুটরি ডেডলাইন",
+      "periodDataPrincipal": "অরগানাইজেসন্না নহাক্কি ৱাকৎ অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি।",
+      "periodDataPrincipal_one": "অরগানাইজেসন্না নহাক্কি ৱাকৎ অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি।",
+      "periodDataPrincipal_other": "অরগানাইজেসন্না নহাক্কি ৱাকৎ অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি।",
+      "periodOfficer": "ৱাকৎশিং অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি। কোক্‌হন্দবা ৱাকৎশিং অদু নুমিত অসিগী মতুংদা SLA ব্রিচ ওইনা লৌই।",
+      "periodOfficer_one": "ৱাকৎশিং অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি। কোক্‌হন্দবা ৱাকৎশিং অদু নুমিত অসিগী মতুংদা SLA ব্রিচ ওইনা লৌই।",
+      "periodOfficer_other": "ৱাকৎশিং অদু পিসিন্লবা মতুংদা নুমিত {{count}} গী মনুংদা কোক্‌হংগদবনি। কোক্‌হন্দবা ৱাকৎশিং অদু নুমিত অসিগী মতুংদা SLA ব্রিচ ওইনা লৌই।",
+      "breachedDataPrincipal": "ডেডলাইন অদু লৈরে। করিগুম্না নহাক্না মতিক চবা পাউখুম অমা ফাংদ্রবদি, নহাক্না নহাক্কি ৱাকৎ অদু Data Protection Board তা এস্কেলেত তৌবা যাই।",
+      "breachedOfficer": "ওভরড্যু: কেস অসি SLA ব্রিচ ওইনা লৌই।"
     },
     "timeline": {
       "complaintReceived": "ৱাকৎ ফংখ্রে",
@@ -726,7 +748,10 @@
       "secretHelper": "ꯋꯦꯕꯍꯨꯛ ꯄꯦꯂꯣꯗꯁꯤꯡ ꯁꯥꯏꯟ ꯇꯧꯅꯕ ꯅꯠꯇ꯭ꯔꯒ ꯄꯣꯜ ꯔꯤꯀ꯭ꯋꯦꯁꯠꯁꯤꯡ ꯑꯣꯊꯦꯟꯇꯤꯀꯦꯠ ꯇꯧꯅꯕ ꯁꯤꯖꯤꯟꯅꯩ",
       "generateSecret": "ꯑꯅꯧꯕ ꯁꯤꯀ꯭ꯔꯦꯠ ꯖꯦꯅꯔꯦꯠ ꯇꯧ꯫",
       "registering": "ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧꯔꯤ...",
-      "registerSubmit": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫"
+      "registerSubmit": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯗꯤꯂꯤꯁꯟ ꯀꯟꯐꯔꯝ ꯇꯧ꯫",

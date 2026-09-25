@@ -39,6 +39,7 @@ import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import ComplaintPriorityChip from '../../complaints/components/ComplaintPriorityChip'
 import ComplaintSlaIndicator from '../../complaints/components/ComplaintSlaIndicator'
 import ComplaintStatusChip from '../../complaints/components/ComplaintStatusChip'
+import { SLA_DEADLINE_FORMAT_OPTIONS } from '../../complaints/utils/complaintDisplay'
 
 interface ComplaintQueueTableProps {
   rows: ComplaintRecord[]
@@ -229,6 +230,13 @@ function ComplaintQueueTable({
                     <ComplaintSlaIndicator
                       statutoryDueDate={row.statutoryDueDate}
                       status={row.status}
+                      // The queue has no due-date column, so the tooltip carries it.
+                      tooltip={t('complaints.sla.dueDate', {
+                        date: formatEpochTimestamp(
+                          row.statutoryDueDate,
+                          SLA_DEADLINE_FORMAT_OPTIONS,
+                        ),
+                      })}
                     />
                   </TableCell>
                   <TableCell>{formatEpochTimestamp(row.updatedAt, DATE_FORMAT_OPTIONS)}</TableCell>

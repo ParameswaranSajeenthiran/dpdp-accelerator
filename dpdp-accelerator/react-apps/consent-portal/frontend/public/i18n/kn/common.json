@@ -32,13 +32,14 @@
     "administration": "ಆಡಳಿತ",
     "adminConsents": "ಎಲ್ಲಾ ಒಪ್ಪಿಗೆಗಳು",
     "myComplaints": "ನನ್ನ ದೂರುಗಳು",
+    "complaints": "ದೂರುಗಳು",
     "complaintManagement": "ದೂರುಗಳು",
     "events": "ಘಟನೆಗಳು",
+    "eventNotifications": "ಇವೆಂಟ್ ಅಧಿಸೂಚನೆಗಳು",
     "topics": "ವಿಷಯಗಳು",
     "subscriptions": "ಚಂದಾದಾರಿಕೆಗಳು"
   },
   "layout": {
-    "home": "ಮುಖಪುಟ",
     "breadcrumbAriaLabel": "ಬ್ರೆಡ್‌ಕ್ರಂಬ್",
     "userMenu": {
       "unknownUser": "ತಿಳಿಯದ ಬಳಕೆದಾರ",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ಈ ಒಪ್ಪಿಗೆಗಾಗಿ ಯಾವುದೇ ಅಧಿಕಾರಗಳನ್ನು ದಾಖಲಿಸಲಾಗಿಲ್ಲ.",
       "noElements": "ಯಾವುದೇ ಅಂಶಗಳು ಈ ಉದ್ದೇಶದೊಂದಿಗೆ ಸಂಬಂಧ ಹೊಂದಿಲ್ಲ.",
       "noPurposes": "ಈ ಒಪ್ಪಿಗೆಯೊಂದಿಗೆ ಯಾವುದೇ ಉದ್ದೇಶಗಳನ್ನು ಸಂಯೋಜಿಸಲಾಗಿಲ್ಲ.",
-      "noProperties": "ಈ ಒಪ್ಪಿಗೆಯೊಂದಿಗೆ ಯಾವುದೇ ಆಸ್ತಿಗಳನ್ನು ಸಂಯೋಜಿಸಲಾಗಿಲ್ಲ."
+      "noProperties": "ಈ ಒಪ್ಪಿಗೆಯೊಂದಿಗೆ ಯಾವುದೇ ಆಸ್ತಿಗಳನ್ನು ಸಂಯೋಜಿಸಲಾಗಿಲ್ಲ.",
+      "statusMessages": {
+        "awaitingApproval": "ಅಧಿಕಾರಿಯ ಅನುಮೋದನೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ.",
+        "approved": "ಈ ಸಮ್ಮತಿಯನ್ನು ಅನುಮೋದಿಸಲಾಗಿದೆ.",
+        "rejected": "ಈ ಸಮ್ಮತಿಯನ್ನು ತಿರಸ್ಕರಿಸಲಾಗಿದೆ.",
+        "decisionRecordedWaiting": "ನೀವು ನಿಮ್ಮ ನಿರ್ಧಾರವನ್ನು ತೆಗೆದುಕೊಂಡಿದ್ದೀರಿ. ಉಳಿದವರು ನಿರ್ಧರಿಸಲು ಕಾಯುತ್ತಿದ್ದೇನೆ.",
+        "youRejected": "ನೀವು ಈ ಒಪ್ಪಿಗೆಯನ್ನು ತಿರಸ್ಕರಿಸಿದ್ದೀರಿ.",
+        "revoked": "ಈ ಸಮ್ಮತಿಯನ್ನು ಹಿಂಪಡೆಯಲಾಗಿದೆ.",
+        "expired": "ಈ ಸಮ್ಮತಿಯು ಅವಧಿ ಮುಗಿದಿದೆ."
+      }
     },
     "actions": {
       "view": "ವೀಕ್ಷಿಸಿ",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "ಗಡುವು {{date}}",
       "dueToday": "ಇಂದು ಗಡುವು",
-      "overdueSingular": "{{count}} ದಿನ ಮೀರಿದೆ",
-      "overduePlural": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
-      "daysLeftSingular": "{{count}} ದಿನ ಉಳಿದಿದೆ",
-      "daysLeftPlural": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
-      "dueLabel": "ಗಡುವು"
+      "daysLeft": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
+      "daysLeft_one": "{{count}} ದಿನ ಉಳಿದಿದೆ",
+      "daysLeft_other": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
+      "overdueDays": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
+      "overdueDays_one": "{{count}} ದಿನ ಮೀರಿದೆ",
+      "overdueDays_other": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
+      "overdue": "ವಿಳಂಬವಾಗಿದೆ",
+      "deadlineLabelDataPrincipal": "ಗಡುವು",
+      "deadlineLabelOfficer": "ಶಾಸನಬದ್ಧ ಗಡುವು",
+      "periodDataPrincipal": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodDataPrincipal_one": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನದ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodDataPrincipal_other": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodOfficer": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "periodOfficer_one": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನದ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "periodOfficer_other": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "breachedDataPrincipal": "ಗಡುವು ಮುಗಿದಿದೆ. ನಿಮಗೆ ತೃಪ್ತಿದಾಯಕ ಉತ್ತರ ಸಿಗದಿದ್ದರೆ, ನಿಮ್ಮ ದೂರನ್ನು ಡೇಟಾ ಪ್ರೊಟೆಕ್ಷನ್ ಬೋರ್ಡ್‌ಗೆ ಮೇಲ್ದರ್ಜೆಗೇರಿಸಬಹುದು.",
+      "breachedOfficer": "ವಿಳಂಬವಾಗಿದೆ: ಈ ಪ್ರಕರಣವು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ."
     },
     "timeline": {
       "complaintReceived": "ದೂರು ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "ಬಳಕೆದಾರರ ಜೀವನಚಕ್ರದ ವಿಷಯಗಳನ್ನು ಸೇರಿಸುವಾಗ ಎಲ್ಲಾ ಉದ್ದೇಶಗಳ ಫಿಲ್ಟರ್ ಅನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
       "topicRequired": "ವಿಷಯವು ಅಗತ್ಯವಿದೆ.",
       "filterModeLabel": "ಉದ್ದೇಶ ಫಿಲ್ಟರ್ ಮೋಡ್",
-      "purposesLabel": "ಉದ್ದೇಶಗಳು (ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಲಾಗಿದೆ)",
-      "purposesPlaceholder": "ಉದಾಹರಣೆಗೆ MARKETING, ANALYTICS",
-      "purposesHelper": "ಫಿಲ್ಟರ್ ಮಾಡಲು ಒಪ್ಪಿಗೆ ಉದ್ದೇಶಗಳ ಕಾಮಾ-ಬೇರ್ಪಡಿಸಿದ ಪಟ್ಟಿ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ನಿರ್ದಿಷ್ಟ ಅಥವಾ ಎಲ್ಲವನ್ನೂ ಹೊರತುಪಡಿಸಿ ಫಿಲ್ಟರ್ ಮಾಡುವಾಗ ಉದ್ದೇಶಗಳು ಅಗತ್ಯವಿದೆ.",
       "deliveryModeLabel": "ವಿತರಣಾ ವಿಧಾನ",
       "callbackUrlLabel": "ವೆಬ್‌ಹುಕ್ ಕಾಲ್ಬ್ಯಾಕ್ URL",
@@ -726,7 +748,10 @@
       "secretHelper": "ವೆಬ್‌ಹುಕ್ ಪೇಲೋಡ್‌ಗಳನ್ನು ಸೈನ್ ಮಾಡಲು ಅಥವಾ ಮತದಾನ ವಿನಂತಿಗಳನ್ನು ದೃಢೀಕರಿಸಲು ಬಳಸಲಾಗುತ್ತದೆ",
       "generateSecret": "ಹೊಸ ರಹಸ್ಯವನ್ನು ರಚಿಸಿ",
       "registering": "ನೋಂದಾಯಿಸಲಾಗುತ್ತಿದೆ...",
-      "registerSubmit": "ಚಂದಾದಾರಿಕೆಯನ್ನು ನೋಂದಾಯಿಸಿ"
+      "registerSubmit": "ಚಂದಾದಾರಿಕೆಯನ್ನು ನೋಂದಾಯಿಸಿ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ಚಂದಾದಾರಿಕೆ ಅಳಿಸುವಿಕೆಯನ್ನು ಖಚಿತಪಡಿಸಿ",

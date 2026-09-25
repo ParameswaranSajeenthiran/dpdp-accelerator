@@ -32,13 +32,14 @@
     "administration": "ਪ੍ਰਸ਼ਾਸਨ",
     "adminConsents": "ਸਾਰੀਆਂ ਸਹਿਮਤੀਆਂ",
     "myComplaints": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ",
+    "complaints": "ਸ਼ਿਕਾਇਤਾਂ",
     "complaintManagement": "ਸ਼ਿਕਾਇਤਾਂ",
     "events": "ਸਮਾਗਮ",
+    "eventNotifications": "ਇਵੈਂਟ ਨੋਟੀਫਿਕੇਸ਼ਨ",
     "topics": "ਵਿਸ਼ੇ",
     "subscriptions": "ਸਬਸਕ੍ਰਿਪਸ਼ਨਾਂ"
   },
   "layout": {
-    "home": "ਹੋਮ",
     "breadcrumbAriaLabel": "ਬ੍ਰੈੱਡਕ੍ਰੰਬ",
     "userMenu": {
       "unknownUser": "ਅਣਪਛਾਤਾ ਵਰਤੋਂਕਾਰ",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ਇਸ ਸਹਿਮਤੀ ਲਈ ਕੋਈ ਅਧਿਕਾਰ ਦਰਜ ਨਹੀਂ ਕੀਤੇ ਗਏ ਹਨ।",
       "noElements": "ਇਸ ਉਦੇਸ਼ ਨਾਲ ਕੋਈ ਵੀ ਤੱਤ ਜੁੜੇ ਨਹੀਂ ਹਨ।",
       "noPurposes": "ਇਸ ਸਹਿਮਤੀ ਨਾਲ ਕੋਈ ਉਦੇਸ਼ ਜੁੜੇ ਨਹੀਂ ਹਨ।",
-      "noProperties": "ਇਸ ਸਹਿਮਤੀ ਨਾਲ ਕੋਈ ਵੀ ਸੰਪਤੀਆਂ ਜੁੜੀਆਂ ਨਹੀਂ ਹਨ।"
+      "noProperties": "ਇਸ ਸਹਿਮਤੀ ਨਾਲ ਕੋਈ ਵੀ ਸੰਪਤੀਆਂ ਜੁੜੀਆਂ ਨਹੀਂ ਹਨ।",
+      "statusMessages": {
+        "awaitingApproval": "ਅਧਿਕਾਰਕ ਦੀ ਮਨਜ਼ੂਰੀ ਦੀ ਉਡੀਕ ਕਰ ਰਹੀ ਹਾਂ।",
+        "approved": "ਇਹ ਸਹਿਮਤੀ ਮਨਜ਼ੂਰ ਹੋ ਗਈ ਹੈ।",
+        "rejected": "ਇਹ ਸਹਿਮਤੀ ਰੱਦ ਕਰ ਦਿੱਤੀ ਗਈ ਹੈ।",
+        "decisionRecordedWaiting": "ਤੁਸੀਂ ਆਪਣਾ ਫੈਸਲਾ ਕਰ ਲਿਆ ਹੈ। ਬਾਕੀ ਦੇ ਫੈਸਲਾ ਕਰਨ ਦੀ ਉਡੀਕ ਕਰ ਰਹੀ ਹਾਂ।",
+        "youRejected": "ਤੁਸੀਂ ਇਸ ਸਹਿਮਤੀ ਨੂੰ ਰੱਦ ਕਰ ਦਿੱਤਾ ਹੈ।",
+        "revoked": "ਇਹ ਸਹਿਮਤੀ ਰੱਦ ਕਰ ਦਿੱਤੀ ਗਈ ਹੈ।",
+        "expired": "ਇਹ ਸਹਿਮਤੀ ਦੀ ਮਿਆਦ ਖਤਮ ਹੋ ਗਈ ਹੈ।"
+      }
     },
     "actions": {
       "view": "ਵੇਖੋ",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "ਅੰਤਿਮ ਤਾਰੀਖ {{date}}",
       "dueToday": "ਅੱਜ ਅੰਤਿਮ ਤਾਰੀਖ ਹੈ",
-      "overdueSingular": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
-      "overduePlural": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
-      "daysLeftSingular": "{{count}} ਦਿਨ ਬਾਕੀ ਹੈ",
-      "daysLeftPlural": "{{count}} ਦਿਨ ਬਾਕੀ ਹਨ",
-      "dueLabel": "ਆਖਰੀ ਮਿਤੀ"
+      "daysLeft": "{{count}} ਦਿਨ ਬਾਕੀ ਹਨ",
+      "daysLeft_one": "{{count}} ਦਿਨ ਬਾਕੀ ਹੈ",
+      "daysLeft_other": "{{count}} ਦਿਨ ਬਾਕੀ ਹਨ",
+      "overdueDays": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
+      "overdueDays_one": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
+      "overdueDays_other": "{{count}} ਦਿਨ ਦੇਰੀ ਹੋ ਗਈ ਹੈ",
+      "overdue": "ਦੇਰੀ ਨਾਲ",
+      "deadlineLabelDataPrincipal": "ਆਖਰੀ ਮਿਤੀ",
+      "deadlineLabelOfficer": "ਕਾਨੂੰਨੀ ਸਮਾਂ-ਸੀਮਾ",
+      "periodDataPrincipal": "ਸੰਸਥਾ ਨੂੰ ਤੁਹਾਡੀ ਸ਼ਿਕਾਇਤ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨਾਂ ਦੇ ਅੰਦਰ ਇਸਦਾ ਹੱਲ ਕਰਨਾ ਪਵੇਗਾ।",
+      "periodDataPrincipal_one": "ਸੰਸਥਾ ਨੂੰ ਤੁਹਾਡੀ ਸ਼ਿਕਾਇਤ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨ ਦੇ ਅੰਦਰ ਇਸਦਾ ਹੱਲ ਕਰਨਾ ਪਵੇਗਾ।",
+      "periodDataPrincipal_other": "ਸੰਸਥਾ ਨੂੰ ਤੁਹਾਡੀ ਸ਼ਿਕਾਇਤ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨਾਂ ਦੇ ਅੰਦਰ ਇਸਦਾ ਹੱਲ ਕਰਨਾ ਪਵੇਗਾ।",
+      "periodOfficer": "ਸ਼ਿਕਾਇਤਾਂ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨਾਂ ਦੇ ਅੰਦਰ ਹੱਲ ਹੋਣੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ। ਇਸ ਤਰੀਕ ਤੋਂ ਬਾਅਦ ਵੀ ਅਣਸੁਲਝੀਆਂ ਰਹਿਣ ਵਾਲੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਨੂੰ SLA ਦੀ ਉਲੰਘਣਾ ਮੰਨਿਆ ਜਾਵੇਗਾ।",
+      "periodOfficer_one": "ਸ਼ਿਕਾਇਤਾਂ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨ ਦੇ ਅੰਦਰ ਹੱਲ ਹੋਣੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ। ਇਸ ਤਰੀਕ ਤੋਂ ਬਾਅਦ ਵੀ ਅਣਸੁਲਝੀਆਂ ਰਹਿਣ ਵਾਲੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਨੂੰ SLA ਦੀ ਉਲੰਘਣਾ ਮੰਨਿਆ ਜਾਵੇਗਾ।",
+      "periodOfficer_other": "ਸ਼ਿਕਾਇਤਾਂ ਮਿਲਣ ਤੋਂ {{count}} ਦਿਨਾਂ ਦੇ ਅੰਦਰ ਹੱਲ ਹੋਣੀਆਂ ਚਾਹੀਦੀਆਂ ਹਨ। ਇਸ ਤਰੀਕ ਤੋਂ ਬਾਅਦ ਵੀ ਅਣਸੁਲਝੀਆਂ ਰਹਿਣ ਵਾਲੀਆਂ ਸ਼ਿਕਾਇਤਾਂ ਨੂੰ SLA ਦੀ ਉਲੰਘਣਾ ਮੰਨਿਆ ਜਾਵੇਗਾ।",
+      "breachedDataPrincipal": "ਸਮਾਂ-ਸੀਮਾ ਲੰਘ ਚੁੱਕੀ ਹੈ। ਜੇਕਰ ਤੁਹਾਨੂੰ ਤਸੱਲੀਬਖਸ਼ ਜਵਾਬ ਨਹੀਂ ਮਿਲਿਆ ਹੈ, ਤਾਂ ਤੁਸੀਂ ਆਪਣੀ ਸ਼ਿਕਾਇਤ Data Protection Board ਨੂੰ ਭੇਜ ਸਕਦੇ ਹੋ।",
+      "breachedOfficer": "ਦੇਰੀ ਨਾਲ: ਇਸ ਕੇਸ ਨੂੰ SLA ਦੀ ਉਲੰਘਣਾ ਮੰਨਿਆ ਜਾਂਦਾ ਹੈ।"
     },
     "timeline": {
       "complaintReceived": "ਸ਼ਿਕਾਇਤ ਪ੍ਰਾਪਤ ਹੋਈ",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "ਜਦੋਂ ਯੂਜ਼ਰ ਲਾਈਫਸਾਈਕਲ ਟੌਪਿਕਸ ਸ਼ਾਮਲ ਕਰ ਰਹੇ ਹੋਵੋ ਤਾਂ ਸਾਰੇ ਮਕਸਦ ਵਾਲਾ ਫਿਲਟਰ ਚੁਣੋ।",
       "topicRequired": "ਵਿਸ਼ਾ ਦੀ ਲੋੜ ਹੈ।",
       "filterModeLabel": "ਉਦੇਸ਼ ਫਿਲਟਰ ਮੋਡ",
-      "purposesLabel": "ਉਦੇਸ਼ (ਕਾਮੇ ਨਾਲ ਵੱਖ ਕੀਤੇ ਗਏ)",
-      "purposesPlaceholder": "ਜਿਵੇਂ ਕਿ ਮਾਰਕੀਟਿੰਗ, ਵਿਸ਼ਲੇਸ਼ਣ",
-      "purposesHelper": "ਫਿਲਟਰ ਕਰਨ ਲਈ ਸਹਿਮਤੀ ਉਦੇਸ਼ਾਂ ਦੀ ਕਾਮੇ ਨਾਲ ਵੱਖ ਕੀਤੀ ਸੂਚੀ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ਜਦੋਂ ਖਾਸ ਜਾਂ ਸਾਰੇ-ਬਿਨਾਂ ਫਿਲਟਰ ਕਰਦੇ ਹੋ ਤਾਂ ਉਦੇਸ਼ਾਂ ਦੀ ਲੋੜ ਹੁੰਦੀ ਹੈ।",
       "deliveryModeLabel": "ਡਿਲੀਵਰੀ ਢੰਗ",
       "callbackUrlLabel": "ਵੈੱਬਹੁੱਕ ਕਾਲਬੈਕ URL",
@@ -726,7 +748,10 @@
       "secretHelper": "ਵੈੱਬਹੁੱਕ ਪੇਲੋਡਾਂ 'ਤੇ ਦਸਤਖਤ ਕਰਨ ਜਾਂ ਪੋਲ ਬੇਨਤੀਆਂ ਨੂੰ ਪ੍ਰਮਾਣਿਤ ਕਰਨ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ",
       "generateSecret": "ਨਵਾਂ ਗੁਪਤ ਤਿਆਰ ਕਰੋ",
       "registering": "ਰਜਿਸਟਰ ਕਰ ਰਿਹਾ ਹੈ...",
-      "registerSubmit": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਰਜਿਸਟਰ ਕਰੋ"
+      "registerSubmit": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਰਜਿਸਟਰ ਕਰੋ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ਗਾਹਕੀ ਮਿਟਾਉਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",

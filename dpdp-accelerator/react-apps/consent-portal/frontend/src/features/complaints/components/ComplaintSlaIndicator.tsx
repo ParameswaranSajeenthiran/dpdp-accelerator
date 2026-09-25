@@ -16,81 +16,61 @@
  * under the License.
  */
 
-import { Box, Stack, Tooltip, Typography } from '@wso2/oxygen-ui'
+import { Chip, Tooltip } from '@wso2/oxygen-ui'
+import { CircleAlert, CircleCheckBig, Clock } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
-import type { ComplaintStatus } from '../../../types/complaint'
+import type { ComplaintSlaState, ComplaintStatus } from '../../../types/complaint'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
-import { getComplaintSlaDaysRemaining, getComplaintSlaState } from '../utils/complaintDisplay'
+import { getComplaintSlaSummary, SLA_DEADLINE_FORMAT_OPTIONS } from '../utils/complaintDisplay'
 
 interface ComplaintSlaIndicatorProps {
   statutoryDueDate: number
   status: ComplaintStatus
+  // null where a tooltip would only repeat what is already on screen.
+  tooltip: string | null
 }
 
-const SLA_DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
-  month: 'short',
-  day: '2-digit',
-  year: 'numeric',
+// Only the states an officer must act on get a colour, so red and amber stay meaningful in a
+// long queue.
+const SLA_CHIP_COLOR: Record<ComplaintSlaState, 'error' | 'warning' | 'default'> = {
+  breached: 'error',
+  atRisk: 'warning',
+  onTrack: 'default',
+  met: 'default',
 }
 
-const SLA_DOT_COLOR = {
-  onTrack: 'success.main',
-  atRisk: 'warning.main',
-  breached: 'error.main',
-  met: 'text.disabled',
-} as const
+const SLA_ICON: Record<ComplaintSlaState, React.JSX.Element> = {
+  breached: <CircleAlert size={14} />,
+  atRisk: <Clock size={14} />,
+  onTrack: <Clock size={14} />,
+  met: <CircleCheckBig size={14} />,
+}
 
+// Text and icon carry the state, not colour alone (WCAG 1.4.1).
 function ComplaintSlaIndicator({
   statutoryDueDate,
   status,
-}: ComplaintSlaIndicatorProps): React.JSX.Element | null {
+  tooltip,
+}: ComplaintSlaIndicatorProps): React.JSX.Element {
   const { t } = useTranslation('common')
-  const slaState = getComplaintSlaState(statutoryDueDate, status)
-  const daysRemaining = getComplaintSlaDaysRemaining(statutoryDueDate)
+  const { state, labelKey, count } = getComplaintSlaSummary(statutoryDueDate, status)
+  const label = t(labelKey, { count })
+  const dueDate = t('complaints.sla.dueDate', {
+    date: formatEpochTimestamp(statutoryDueDate, SLA_DEADLINE_FORMAT_OPTIONS),
+  })
 
-  // A resolved complaint already carries a "Resolved" status chip wherever this renders, so a
-  // second one here would just read as "Resolved Resolved".
-  if (status === 'RESOLVED') {
-    return null
-  }
-
-  let label: string
-
-  if (daysRemaining < 0) {
-    const overdueDays = Math.abs(daysRemaining)
-    label = t(
-      overdueDays === 1 ? 'complaints.sla.overdueSingular' : 'complaints.sla.overduePlural',
-      { count: overdueDays },
-    )
-  } else if (daysRemaining === 0) {
-    label = t('complaints.sla.dueToday')
-  } else {
-    label = t(
-      daysRemaining === 1 ? 'complaints.sla.daysLeftSingular' : 'complaints.sla.daysLeftPlural',
-      { count: daysRemaining },
-    )
-  }
-
-  return (
-    <Tooltip
-      title={t('complaints.sla.dueDate', {
-        date: formatEpochTimestamp(statutoryDueDate, SLA_DATE_FORMAT_OPTIONS),
-      })}
-    >
-      <Stack direction="row" spacing={0.75} alignItems="center">
-        <Box
-          sx={{
-            width: 10,
-            height: 10,
-            borderRadius: '50%',
-            bgcolor: SLA_DOT_COLOR[slaState],
-            flexShrink: 0,
-          }}
-        />
-        <Typography variant="body2">{label}</Typography>
-      </Stack>
-    </Tooltip>
+  const chip = (
+    <Chip
+      size="small"
+      variant="outlined"
+      color={SLA_CHIP_COLOR[state]}
+      icon={SLA_ICON[state]}
+      label={label}
+      // Tooltips are hover-only, so screen readers get the due date in the name instead.
+      aria-label={`${label}, ${dueDate}`}
+    />
   )
+  return tooltip ? <Tooltip title={tooltip}>{chip}</Tooltip> : chip
 }
 
 export default ComplaintSlaIndicator

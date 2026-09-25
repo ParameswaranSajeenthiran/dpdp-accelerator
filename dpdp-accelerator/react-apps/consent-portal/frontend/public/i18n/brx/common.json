@@ -32,13 +32,14 @@
     "administration": "सालायनाय",
     "adminConsents": "गासैबो गनायथिनायफोर",
     "myComplaints": "आंनि अजतफोर",
+    "complaints": "अजतफोर",
     "complaintManagement": "अजतफोर",
     "events": "जाथायफोर",
+    "eventNotifications": "इभेन्ट नोटिफिकेशन",
     "topics": "आयदाफोर",
     "subscriptions": "साब्सक्रिपसनफोर"
   },
   "layout": {
-    "home": "न'",
     "breadcrumbAriaLabel": "ब्रेडक्राम्ब",
     "userMenu": {
       "unknownUser": "मिथिमोनै बाहायग्रा",
@@ -114,7 +115,16 @@
       "noAuthorizations": "बे गनायथिनि थाखाय जेबो गनायथि लिरनाय गैया।",
       "noElements": "बे थांखिजों जेबो गुदिमुवाफोर सोमोन्दो गैया।",
       "noPurposes": "बे गनायथिजों जेबो थांखिफोर सोमोन्दो गैया।",
-      "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।"
+      "noProperties": "बे गनायथियाव जेबो सम्फथि सोमोन्दो गैया।",
+      "statusMessages": {
+        "awaitingApproval": "गनायथिगिरिनि गनायथिनि थाखाय नेगासिनो दं।",
+        "approved": "बे गनायथिखौ गनायथि होनाय जाबाय।",
+        "rejected": "बे गनायथिखौ नेवसिगारनाय जाबाय।",
+        "decisionRecordedWaiting": "नोंथाङा नोंथांनि थिरांथाखौ लाबाय। गुबुनफोरा थिरांथा लानो नेगासिनो दं।",
+        "youRejected": "नोंथाङा बे गनायथिखौ नेवसिगारबाय।",
+        "revoked": "बे गनायथिखौ बोखारनाय जाबाय।",
+        "expired": "बे गनायथिया जोबबाय।"
+      }
     },
     "actions": {
       "view": "नाय",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "जोबनाय अक्ट' {{date}}",
       "dueToday": "दिनैनो जोबगोन",
-      "overdueSingular": "{{count}} सान हाहैबाय",
-      "overduePlural": "{{count}} सानफोर हाहैबाय",
-      "daysLeftSingular": "{{count}} सान आगोनां",
-      "daysLeftPlural": "{{count}} सानफोर आगोनां",
-      "dueLabel": "थि अक्ट'"
+      "daysLeft": "{{count}} सानफोर आगोनां",
+      "daysLeft_one": "{{count}} सान आगोनां",
+      "daysLeft_other": "{{count}} सानफोर आगोनां",
+      "overdueDays": "{{count}} सानफोर हाहैबाय",
+      "overdueDays_one": "{{count}} सान हाहैबाय",
+      "overdueDays_other": "{{count}} सानफोर हाहैबाय",
+      "overdue": "गोबाव जानाय",
+      "deadlineLabelDataPrincipal": "थि अक्ट'",
+      "deadlineLabelOfficer": "आइनारी सम सिमा",
+      "periodDataPrincipal": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodDataPrincipal_one": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodDataPrincipal_other": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodOfficer": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "periodOfficer_one": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "periodOfficer_other": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "breachedDataPrincipal": "सम सिमाया बारलांबाय। जुदि नोंथाङा गोजोनथाव फिननाय मोनाखै, अब्ला नोंथाङा गावनि अजदखौ Data Protection Board सिम दैथायहरनो हागोन।",
+      "breachedOfficer": "गोबाव जानाय: बे केसखौ SLA सिफायनाय होनना साननाय जायो।"
     },
     "timeline": {
       "complaintReceived": "अजत मोनबाय",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "बाहायगिरि जिउ-खान्थि टपिकफोरखौ लाफानाय समाव गासैबो थांखि फिल्टरखौ सायख'।",
       "topicRequired": "आयदाया गोनांथार।",
       "filterModeLabel": "थांखि फिल्टर मड",
-      "purposesLabel": "थांखिफोर (खमाजों बोखावजानाय)",
-      "purposesPlaceholder": "बिदिन्थि: मार्केटिं, एनालिटिक्स",
-      "purposesHelper": "साफा खालामनो थाखाय गनायथिनि थांखिफोरनि कमानिजों बोखावजानाय फारिलाइ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "थांखिफोरखौ मोनसे थि एबा गासैखौबो नागारनानै सोदांनाय समाव नांगौ जायो।",
       "deliveryModeLabel": "दैथायहरनाय राहा",
       "callbackUrlLabel": "वेभहक केलबेक इउ.आर.एल.",
@@ -726,7 +748,10 @@
       "secretHelper": "वेभहक पेल्डफोरखौ साइन इन खालामनो एबा प'लनि खावलायनायफोरखौ थारथियारि खालामनो बाहायनाय जादोंमोन।",
       "generateSecret": "गोदान सिरि सोरजि",
       "registering": "रेजिस्टार खालामगासिनो दं...",
-      "registerSubmit": "साब्सक्रिपसनखौ रेजिस्टार खालाम"
+      "registerSubmit": "साब्सक्रिपसनखौ रेजिस्टार खालाम",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "साब्सक्रिपसन फोजोबनायखौ थारथि खालाम",

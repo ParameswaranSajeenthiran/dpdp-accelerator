@@ -32,13 +32,14 @@
     "administration": "ପ୍ରଶାସନ",
     "adminConsents": "ସମସ୍ତ ସମ୍ମତି",
     "myComplaints": "ମୋର ଅଭିଯୋଗ",
+    "complaints": "ଅଭିଯୋଗଗୁଡ଼ିକ",
     "complaintManagement": "ଅଭିଯୋଗଗୁଡ଼ିକ",
     "events": "ଇଭେଣ୍ଟଗୁଡିକ",
+    "eventNotifications": "ଇଭେଣ୍ଟ ନୋଟିଫିକେସନ୍",
     "topics": "ବିଷୟଗୁଡ଼ିକ",
     "subscriptions": "ସଦସ୍ୟତା"
   },
   "layout": {
-    "home": "ହୋମ୍",
     "breadcrumbAriaLabel": "ବ୍ରେଡକ୍ରମ୍ବ",
     "userMenu": {
       "unknownUser": "ଅଜ୍ଞାତ ଉପଯୋଗକର୍ତ୍ତା",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ଏହି ସମ୍ମତି ପାଇଁ କୌଣସି ଅନୁମତି ରେକର୍ଡ କରାଯାଇ ନାହିଁ।",
       "noElements": "ଏହି ଉଦ୍ଦେଶ୍ୟ ସହିତ କୌଣସି ଉପାଦାନ ଜଡିତ ନାହିଁ।",
       "noPurposes": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ଉଦ୍ଦେଶ୍ୟ ଜଡ଼ିତ ନାହିଁ।",
-      "noProperties": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ସମ୍ପତ୍ତି ଜଡ଼ିତ ନାହିଁ।"
+      "noProperties": "ଏହି ସମ୍ମତି ସହିତ କୌଣସି ସମ୍ପତ୍ତି ଜଡ଼ିତ ନାହିଁ।",
+      "statusMessages": {
+        "awaitingApproval": "ଅଧିକାରୀଙ୍କ ଅନୁମୋଦନକୁ ଅପେକ୍ଷା କରାଯାଉଛି।",
+        "approved": "ଏହି ସମ୍ମତି ଅନୁମୋଦିତ ହୋଇଛି।",
+        "rejected": "ଏହି ସମ୍ମତି ପ୍ରତ୍ୟାଖ୍ୟାନ କରାଯାଇଛି।",
+        "decisionRecordedWaiting": "ତୁମେ ତୁମର ନିଷ୍ପତ୍ତି ନେଇସାରିଛ। ଅବଶିଷ୍ଟମାନେ କ'ଣ ସ୍ଥିର କରୁଛନ୍ତି ଅପେକ୍ଷା କରୁଛି।",
+        "youRejected": "ଆପଣ ଏହି ସମ୍ମତିକୁ ପ୍ରତ୍ୟାଖ୍ୟାନ କରିଛନ୍ତି।",
+        "revoked": "ଏହି ସମ୍ମତି ପ୍ରତ୍ୟାହୃତ ହୋଇଛି।",
+        "expired": "ଏହି ସମ୍ମତିର ଅବଧି ଶେଷ ହୋଇଯାଇଛି।"
+      }
     },
     "actions": {
       "view": "ଦେଖନ୍ତୁ",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "ଦେୟ {{date}}",
       "dueToday": "ଆଜି ଦେୟ",
-      "overdueSingular": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "overduePlural": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "daysLeftSingular": "{{count}} ଦିନ ବାକି",
-      "daysLeftPlural": "{{count}} ଦିନ ବାକି",
-      "dueLabel": "ଶେଷ ତାରିଖ"
+      "daysLeft": "{{count}} ଦିନ ବାକି",
+      "daysLeft_one": "{{count}} ଦିନ ବାକି",
+      "daysLeft_other": "{{count}} ଦିନ ବାକି",
+      "overdueDays": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_one": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_other": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdue": "ଡେରି ହୋଇଛି",
+      "deadlineLabelDataPrincipal": "ଶେଷ ତାରିଖ",
+      "deadlineLabelOfficer": "ଆଇନଗତ ସମୟସୀମା",
+      "periodDataPrincipal": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodDataPrincipal_one": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodDataPrincipal_other": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodOfficer": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "periodOfficer_one": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "periodOfficer_other": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "breachedDataPrincipal": "ସମୟସୀମା ଶେଷ ହୋଇଯାଇଛି। ଯଦି ଆପଣ ଏକ ସନ୍ତୋଷଜନକ ଉତ୍ତର ପାଇନାହାଁନ୍ତି, ତେବେ ଆପଣ ନିଜର ଅଭିଯୋଗକୁ ଡାଟା ପ୍ରୋଟେକ୍ସନ୍ ବୋର୍ଡ (Data Protection Board) କୁ ପଠାଇପାରିବେ।",
+      "breachedOfficer": "ଡେରି ହୋଇଛି: ଏହି ମାମଲାଟି ଏକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।"
     },
     "timeline": {
       "complaintReceived": "ଅଭିଯୋଗ ଗ୍ରହଣ କରାଗଲା",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "ୟୁଜର୍ ଲାଇଫସାଇକେଲ୍ ଟପିକ୍ସ ସାମିଲ କରିବା ସମୟରେ ସବୁ ଉଦ୍ଦେଶ୍ୟ ଫିଲ୍ଟର୍ ବାଛନ୍ତୁ।",
       "topicRequired": "ବିଷୟ ଆବଶ୍ୟକ।",
       "filterModeLabel": "ଉଦ୍ଦେଶ୍ୟ ଫିଲ୍ଟର୍ ମୋଡ୍",
-      "purposesLabel": "ଉଦ୍ଦେଶ୍ୟ (କମା ଦ୍ୱାରା ପୃଥକ କରାଯାଇଛି)",
-      "purposesPlaceholder": "ଉଦାହରଣ ସ୍ୱରୂପ, MARKETING, ANALYTICS",
-      "purposesHelper": "ଫିଲ୍ଟର୍ କରିବାକୁ ସମ୍ମତି ଉଦ୍ଦେଶ୍ୟଗୁଡ଼ିକର କମା-ବିଭାଜିତ ତାଲିକା",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ନିର୍ଦ୍ଦିଷ୍ଟ କିମ୍ବା ସମସ୍ତଙ୍କୁ ବାଦ୍ ଦେଇ ଫିଲ୍ଟର୍ କରିବା ସମୟରେ ଉଦ୍ଦେଶ୍ୟ ଆବଶ୍ୟକ",
       "deliveryModeLabel": "ଡେଲିଭରି ମୋଡ୍",
       "callbackUrlLabel": "ୱେବହକ୍ କଲ୍‌ବ୍ୟାକ୍ URL",
@@ -726,7 +748,10 @@
       "secretHelper": "ୱେବହକ୍ ପେଲୋଡ୍ ସାଇନ୍ କରିବା କିମ୍ବା ପୋଲ୍ ଅନୁରୋଧକୁ ପ୍ରାମାଣିକ କରିବା ପାଇଁ ବ୍ୟବହୃତ ହୁଏ",
       "generateSecret": "ନୂଆ ସିକ୍ରେଟ୍ ଜେନେରେଟ୍ କର",
       "registering": "ପଞ୍ଜୀକରଣ କରାଯାଉଛି ...",
-      "registerSubmit": "ସଦସ୍ୟତା ପଞ୍ଜୀକରଣ କରନ୍ତୁ"
+      "registerSubmit": "ସଦସ୍ୟତା ପଞ୍ଜୀକରଣ କରନ୍ତୁ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ସବସ୍କ୍ରିପସନ୍ ଡିଲିସନ୍ ନିଶ୍ଚିତ କର",

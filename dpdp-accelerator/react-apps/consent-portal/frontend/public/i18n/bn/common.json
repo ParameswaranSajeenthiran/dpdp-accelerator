@@ -32,13 +32,14 @@
     "administration": "প্রশাসন",
     "adminConsents": "সকল সম্মতি",
     "myComplaints": "আমার অভিযোগ",
+    "complaints": "অভিযোগ",
     "complaintManagement": "অভিযোগ",
     "events": "ইভেন্ট",
+    "eventNotifications": "ইভেন্ট নোটিফিকেশনস",
     "topics": "বিষয়সমূহ",
     "subscriptions": "সদস্যতা"
   },
   "layout": {
-    "home": "হোম",
     "breadcrumbAriaLabel": "ব্রেডক্রাম্ব",
     "userMenu": {
       "unknownUser": "অজানা ব্যবহারকারী",
@@ -114,7 +115,16 @@
       "noAuthorizations": "এই সম্মতির জন্য কোন অনুমোদন নথিভুক্ত করা হয়নি।",
       "noElements": "এই উদ্দেশ্যের সাথে কোনো উপাদান যুক্ত নেই।",
       "noPurposes": "এই সম্মতির সঙ্গে কোনো উদ্দেশ্য যুক্ত নেই।",
-      "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।"
+      "noProperties": "এই সম্মতির সাথে কোনো বৈশিষ্ট্য যুক্ত নেই।",
+      "statusMessages": {
+        "awaitingApproval": "অনুমোদনকারীর অনুমোদনের জন্য অপেক্ষা করছি।",
+        "approved": "এই সম্মতিটি অনুমোদিত হয়েছে।",
+        "rejected": "এই সম্মতি বাতিল করা হয়েছে।",
+        "decisionRecordedWaiting": "আপনি আপনার সিদ্ধান্ত নিয়েছেন। বাকিদের সিদ্ধান্তের জন্য অপেক্ষা করছি।",
+        "youRejected": "আপনি এই সম্মতি প্রত্যাখ্যান করেছেন।",
+        "revoked": "এই সম্মতি প্রত্যাহার করা হয়েছে।",
+        "expired": "এই সম্মতিটি শেষ হয়ে গেছে।"
+      }
     },
     "actions": {
       "view": "দেখুন",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "জমাদানের তারিখ {{date}}",
       "dueToday": "আজ শেষ দিন",
-      "overdueSingular": "{{count}} দিন বিলম্বিত",
-      "overduePlural": "{{count}} দিন বিলম্বিত",
-      "daysLeftSingular": "{{count}} দিন বাকি",
-      "daysLeftPlural": "{{count}} দিন বাকি",
-      "dueLabel": "বাকি তারিখ"
+      "daysLeft": "{{count}} দিন বাকি",
+      "daysLeft_one": "{{count}} দিন বাকি",
+      "daysLeft_other": "{{count}} দিন বাকি",
+      "overdueDays": "{{count}} দিন বিলম্বিত",
+      "overdueDays_one": "{{count}} দিন বিলম্বিত",
+      "overdueDays_other": "{{count}} দিন বিলম্বিত",
+      "overdue": "ওভারডিউ",
+      "deadlineLabelDataPrincipal": "বাকি তারিখ",
+      "deadlineLabelOfficer": "আইনি সময়সীমা",
+      "periodDataPrincipal": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে প্রতিষ্ঠানকে আপনার অভিযোগের সমাধান করতে হবে।",
+      "periodDataPrincipal_one": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে প্রতিষ্ঠানকে আপনার অভিযোগের সমাধান করতে হবে।",
+      "periodDataPrincipal_other": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে প্রতিষ্ঠানকে আপনার অভিযোগের সমাধান করতে হবে।",
+      "periodOfficer": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে অভিযোগের সমাধান করতে হবে। এই তারিখ পার হয়ে গেলে অমীমাংসিত অভিযোগগুলোকে SLA লঙ্ঘন হিসেবে ধরা হবে।",
+      "periodOfficer_one": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে অভিযোগের সমাধান করতে হবে। এই তারিখ পার হয়ে গেলে অমীমাংসিত অভিযোগগুলোকে SLA লঙ্ঘন হিসেবে ধরা হবে।",
+      "periodOfficer_other": "অভিযোগ জমা দেওয়ার {{count}} দিনের মধ্যে অভিযোগের সমাধান করতে হবে। এই তারিখ পার হয়ে গেলে অমীমাংসিত অভিযোগগুলোকে SLA লঙ্ঘন হিসেবে ধরা হবে।",
+      "breachedDataPrincipal": "সময়সীমা পার হয়ে গেছে। আপনি যদি সন্তোষজনক কোনো উত্তর না পান, তবে আপনি আপনার অভিযোগটি ডেটা প্রোটেকশন বোর্ডে পাঠাতে পারেন।",
+      "breachedOfficer": "ওভারডিউ: এই মামলাটিকে SLA লঙ্ঘন হিসেবে ধরা হবে।"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ গৃহীত হয়েছে",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "ইউজার লাইফসাইকেল টপিক অন্তর্ভুক্ত করার সময় সব উদ্দেশ্যের ফিল্টার নির্বাচন করুন।",
       "topicRequired": "বিষয়টি প্রয়োজন।",
       "filterModeLabel": "উদ্দেশ্য ফিল্টার মোড",
-      "purposesLabel": "উদ্দেশ্য (কমা-পৃথক)",
-      "purposesPlaceholder": "যেমন: মার্কেটিং, অ্যানালিটিক্স",
-      "purposesHelper": "ফিল্টার করার জন্য সম্মতির উদ্দেশ্যগুলির কমা-বিচ্ছিন্ন তালিকা",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "নির্দিষ্ট বা সমস্ত-ব্যতীত দ্বারা ফিল্টার করার সময় উদ্দেশ্যের প্রয়োজন।",
       "deliveryModeLabel": "ডেলিভারি মোড",
       "callbackUrlLabel": "ওয়েবহুক কলব্যাক URL",
@@ -726,7 +748,10 @@
       "secretHelper": "ওয়েবহুক পেলোড সাইন ইন করতে বা পোল অনুরোধ প্রমাণীকরণে ব্যবহৃত হয়",
       "generateSecret": "নতুন গোপন তৈরি করুন",
       "registering": "নিবন্ধন করা হচ্ছে...",
-      "registerSubmit": "সদস্যতা নিবন্ধন করুন"
+      "registerSubmit": "সদস্যতা নিবন্ধন করুন",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "সাবস্ক্রিপশন মুছে ফেলা নিশ্চিত করুন",

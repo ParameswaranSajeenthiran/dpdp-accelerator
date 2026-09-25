@@ -32,13 +32,14 @@
     "administration": "प्रशासनम्",
     "adminConsents": "सर्वे अनुमतयः",
     "myComplaints": "मम आक्षेपाः",
+    "complaints": "आक्षेपाः",
     "complaintManagement": "आक्षेपाः",
     "events": "घटनानि",
+    "eventNotifications": "इवेन्ट् सूचनाः",
     "topics": "विषयाः",
     "subscriptions": "सदस्यताः"
   },
   "layout": {
-    "home": "गृहम्",
     "breadcrumbAriaLabel": "मार्गदर्शिका",
     "userMenu": {
       "unknownUser": "अज्ञातः उपयोक्ता",
@@ -114,7 +115,16 @@
       "noAuthorizations": "अस्याः संमत्याः कृते किमपि अनुमोदनं न अभिलेखितम्।",
       "noElements": "अनेन प्रयोजनार्थं न केपि तत्त्वानि सम्बद्धाः सन्ति।",
       "noPurposes": "अनेन संमत्या सह कापि उद्देशः सम्बद्धा नास्ति।",
-      "noProperties": "अनेन संमत्या सह कापि सम्पत्तिः सम्बद्धा नास्ति।"
+      "noProperties": "अनेन संमत्या सह कापि सम्पत्तिः सम्बद्धा नास्ति।",
+      "statusMessages": {
+        "awaitingApproval": "प्राधिकारिणः अनुमोदनार्थं प्रतीक्षमाणा।",
+        "approved": "एषा अनुमतिः अनुमोदिता।",
+        "rejected": "एषा अनुमतिः निराकृता।",
+        "decisionRecordedWaiting": "त्वया निर्णयः कृतः। अवशिष्टानां निर्णयं प्रतीक्षते।",
+        "youRejected": "भवती एतां सहमतिं निराकृतवती।",
+        "revoked": "एषा अनुमतिः निरस्ता।",
+        "expired": "एषा अनुमतिः समाप्ता।"
+      }
     },
     "actions": {
       "view": "पश्यन्तु",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "देय-दिनाङ्कः {{date}}",
       "dueToday": "अद्य देयम्",
-      "overdueSingular": "{{count}} दिनं विलम्बितम्",
-      "overduePlural": "{{count}} दिनानि विलम्बितानि",
-      "daysLeftSingular": "{{count}} दिनं शेषम्",
-      "daysLeftPlural": "{{count}} दिनानि शेषाणि",
-      "dueLabel": "अन्तिमतिथिः"
+      "daysLeft": "{{count}} दिनानि शेषाणि",
+      "daysLeft_one": "{{count}} दिनं शेषम्",
+      "daysLeft_other": "{{count}} दिनानि शेषाणि",
+      "overdueDays": "{{count}} दिनानि विलम्बितानि",
+      "overdueDays_one": "{{count}} दिनं विलम्बितम्",
+      "overdueDays_other": "{{count}} दिनानि विलम्बितानि",
+      "overdue": "अतिदेयम्",
+      "deadlineLabelDataPrincipal": "अन्तिमतिथिः",
+      "deadlineLabelOfficer": "वैधानिकमुपधिः",
+      "periodDataPrincipal": "संस्थायाः भवतोऽभियोगस्य प्रस्तुतीकरणस्य {{count}} दिनानाम् अन्तः समाधानं कर्तव्यम्।",
+      "periodDataPrincipal_one": "संस्थायाः भवतोऽभियोगस्य प्रस्तुतीकरणस्य {{count}} दिनस्य अन्तः समाधानं कर्तव्यम्।",
+      "periodDataPrincipal_other": "संस्थायाः भवतोऽभियोगस्य प्रस्तुतीकरणस्य {{count}} दिनानाम् अन्तः समाधानं कर्तव्यम्।",
+      "periodOfficer": "प्रस्तुतीकरणस्य {{count}} दिनानाम् अन्तः अभियोगानां समाधानं कर्तव्यम्। अस्याः तिथेरतीताः असमाहिताः अभियोगाः SLA-उल्लङ्घनत्वेन गण्यन्ते।",
+      "periodOfficer_one": "प्रस्तुतीकरणस्य {{count}} दिनस्य अन्तः अभियोगानां समाधानं कर्तव्यम्। अस्याः तिथेरतीताः असमाहिताः अभियोगाः SLA-उल्लङ्घनत्वेन गण्यन्ते।",
+      "periodOfficer_other": "प्रस्तुतीकरणस्य {{count}} दिनानाम् अन्तः अभियोगानां समाधानं कर्तव्यम्। अस्याः तिथेरतीताः असमाहिताः अभियोगाः SLA-उल्लङ्घनत्वेन गण्यन्ते।",
+      "breachedDataPrincipal": "उपधिः समाप्तः। यदि भवता सन्तोषजनकं प्रत्युत्तरं न प्राप्तम्, तर्हि भवान् स्वस्य अभियोगं Data Protection Board इत्यत्र प्रेषयितुं शक्नोति।",
+      "breachedOfficer": "अतिदेयम्: इदं प्रकरणं SLA-उल्लङ्घनत्वेन गण्यते।"
     },
     "timeline": {
       "complaintReceived": "आक्षेपः प्राप्तः",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "उपयोक्तृजीवनचक्रविषयान् समावेशयन् सर्वोद्देश्यशोधकं चिनोतु।",
       "topicRequired": "विषयः आवश्यकः।",
       "filterModeLabel": "उद्देश्य-शोधन-विधिः",
-      "purposesLabel": "उद्देश्यानि (अल्पविरामचिह्नैः विभक्तानि)",
-      "purposesPlaceholder": "उदाहरणार्थं, विपणनम्, विश्लेषिकी",
-      "purposesHelper": "शोधयितुं सहमति उद्देश्यानां अल्पविराम-पृथक् सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "उद्देश्यानि आवश्यकानि यदा विशिष्टेन अथवा सर्वैः विना शोधयन्ति।",
       "deliveryModeLabel": "वितरण प्रकारः",
       "callbackUrlLabel": "वेबहुक् प्रतिपुष्टि URL",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक् पेल्ड्स् इत्यस्य साइन-अप् कर्तुं अथवा पोल् अनुरोधान् प्रमाणीकर्तुं प्रयुक्तम्",
       "generateSecret": "नूतनं गुप्तं जनय",
       "registering": "पञ्जीकरणं क्रियते...",
-      "registerSubmit": "सदस्यता पञ्जीकुरु"
+      "registerSubmit": "सदस्यता पञ्जीकुरु",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता विलोपनं निश्चितं कुरु",

@@ -100,7 +100,6 @@ export default function EventTable({
           >
             <TableRow>
               <TableCell>{t('events.table.eventId')}</TableCell>
-              <TableCell>{t('events.table.groupId', 'Group ID')}</TableCell>
               <TableCell>{t('events.table.topic')}</TableCell>
               <TableCell>{t('events.table.purposes', 'Purposes')}</TableCell>
               <TableCell>{t('events.table.deliveries', 'Deliveries')}</TableCell>
@@ -111,7 +110,7 @@ export default function EventTable({
           <TableBody>
             {rows.length === 0 && !isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">{t('events.table.empty')}</Typography>
                 </TableCell>
               </TableRow>
@@ -130,15 +129,6 @@ export default function EventTable({
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <CopyableText value={event.eventId} truncateAt={14} monospace />
-                  </TableCell>
-                  <TableCell>
-                    {event.groupId ? (
-                      <Chip size="small" variant="outlined" label={event.groupId} />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>

@@ -57,7 +57,6 @@ describe('eventsApi', () => {
       search: 'consent.revoke',
       status: 'DELIVERED',
       topic: 'consent-events',
-      groupId: 'consumer-grp-1',
       subscriptionId: 'sub-1',
     })
 
@@ -70,7 +69,6 @@ describe('eventsApi', () => {
       search: 'consent.revoke',
       status: 'DELIVERED',
       topic: 'consent-events',
-      groupId: 'consumer-grp-1',
       subscriptionId: 'sub-1',
     })
     expect(req.method).toBe('GET')
@@ -100,7 +98,6 @@ describe('eventsApi', () => {
 
     const payload = {
       topic: 'consent.revoke',
-      groupId: 'group-1',
       purposes: ['MARKETING'],
       payload: { consentId: 'c1', status: 'REVOKED' },
     }

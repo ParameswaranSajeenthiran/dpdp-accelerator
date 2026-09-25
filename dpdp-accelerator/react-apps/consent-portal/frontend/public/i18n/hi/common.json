@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सभी सहमति",
     "myComplaints": "मेरी शिकायतें",
+    "complaints": "शिकायतें",
     "complaintManagement": "शिकायतें",
     "events": "घटनाएँ",
+    "eventNotifications": "इवेंट नोटिफिकेशन्स",
     "topics": "विषय",
     "subscriptions": "सब्सक्रिप्शन"
   },
   "layout": {
-    "home": "होम",
     "breadcrumbAriaLabel": "नेविगेशन पथ",
     "userMenu": {
       "unknownUser": "अज्ञात उपयोगकर्ता",
@@ -114,7 +115,16 @@
       "noAuthorizations": "इस सहमति के लिए कोई प्राधिकरण दर्ज नहीं किया गया है।",
       "noElements": "इस उद्देश्य से कोई तत्व नहीं जुड़े हैं।",
       "noPurposes": "इस सहमति से कोई उद्देश्य नहीं जुड़े हैं।",
-      "noProperties": "इस सहमति से कोई भी संपत्ति जुड़ी नहीं है।"
+      "noProperties": "इस सहमति से कोई भी संपत्ति जुड़ी नहीं है।",
+      "statusMessages": {
+        "awaitingApproval": "प्राधिकरण की स्वीकृति का इंतज़ार है।",
+        "approved": "इस सहमति को मंज़ूरी मिल गई है।",
+        "rejected": "यह सहमति अस्वीकार कर दी गई है।",
+        "decisionRecordedWaiting": "आपने अपना निर्णय ले लिया है। बाकी लोगों के निर्णय लेने का इंतज़ार है।",
+        "youRejected": "आपने इस सहमति को अस्वीकार कर दिया है।",
+        "revoked": "यह सहमति रद्द कर दी गई है।",
+        "expired": "यह सहमति समाप्त हो गई है।"
+      }
     },
     "actions": {
       "view": "देखें",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "{{date}} तक देय",
       "dueToday": "आज ही देय है",
-      "overdueSingular": "{{count}} दिन की देरी",
-      "overduePlural": "{{count}} दिनों की देरी",
-      "daysLeftSingular": "{{count}} दिन शेष",
-      "daysLeftPlural": "{{count}} दिन शेष",
-      "dueLabel": "नियत तिथि"
+      "daysLeft": "{{count}} दिन शेष",
+      "daysLeft_one": "{{count}} दिन शेष",
+      "daysLeft_other": "{{count}} दिन शेष",
+      "overdueDays": "{{count}} दिनों की देरी",
+      "overdueDays_one": "{{count}} दिन की देरी",
+      "overdueDays_other": "{{count}} दिनों की देरी",
+      "overdue": "ओवरड्यू",
+      "deadlineLabelDataPrincipal": "नियत तिथि",
+      "deadlineLabelOfficer": "वैधानिक समय-सीमा",
+      "periodDataPrincipal": "संगठन को आपकी शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा।",
+      "periodDataPrincipal_one": "संगठन को आपकी शिकायत मिलने के {{count}} दिन के भीतर उसे सुलझाना होगा।",
+      "periodDataPrincipal_other": "संगठन को आपकी शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा।",
+      "periodOfficer": "शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "periodOfficer_one": "शिकायत मिलने के {{count}} दिन के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "periodOfficer_other": "शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "breachedDataPrincipal": "समय-सीमा समाप्त हो चुकी है। यदि आपको संतोषजनक जवाब नहीं मिला है, तो आप अपनी शिकायत को डेटा प्रोटेक्शन बोर्ड के पास भेज सकते हैं।",
+      "breachedOfficer": "ओवरड्यू: इस मामले को SLA उल्लंघन माना जाएगा।"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त हुई",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "यूज़र लाइफसाइकिल टॉपिक्स शामिल करते समय सभी उद्देश्यों वाले फ़िल्टर को चुनें।",
       "topicRequired": "विषय आवश्यक है।",
       "filterModeLabel": "उद्देश्य फ़िल्टर मोड",
-      "purposesLabel": "उद्देश्य (अल्पविराम से अलग)",
-      "purposesPlaceholder": "उदाहरण के लिए, मार्केटिंग, एनालिटिक्स",
-      "purposesHelper": "फ़िल्टर करने के लिए सहमति उद्देश्यों की अल्पविराम-पृथक सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट या सभी-सिवाय द्वारा फ़िल्टर करते समय उद्देश्यों की आवश्यकता होती है",
       "deliveryModeLabel": "डिलीवरी मोड",
       "callbackUrlLabel": "वेबहुक कॉलबैक URL",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड को साइन इन करने या पोल अनुरोधों को प्रमाणित करने के लिए उपयोग किया गया",
       "generateSecret": "नया गुप्त जेनरेट करें",
       "registering": "रजिस्टर हो रहा है...",
-      "registerSubmit": "सब्सक्रिप्शन रजिस्टर करें"
+      "registerSubmit": "सब्सक्रिप्शन रजिस्टर करें",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता हटाने की पुष्टि करें",

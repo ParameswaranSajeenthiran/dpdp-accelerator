@@ -277,6 +277,7 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
 
         {complaintItems.length > 0 ? (
           <Sidebar.Category>
+            <Sidebar.CategoryLabel>{t('sidebar.complaints')}</Sidebar.CategoryLabel>
             {complaintItems.map((item) => (
               <Sidebar.Item key={item.id} id={item.id}>
                 <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>
@@ -312,7 +313,7 @@ function AppSidebar({ collapsed }: AppSidebarProps): React.JSX.Element {
 
         {eventItems.length > 0 ? (
           <Sidebar.Category>
-            <Sidebar.CategoryLabel>{t('sidebar.events')}</Sidebar.CategoryLabel>
+            <Sidebar.CategoryLabel>{t('sidebar.eventNotifications')}</Sidebar.CategoryLabel>
             {eventItems.map((item) => (
               <Sidebar.Item key={item.id} id={item.id}>
                 <Sidebar.ItemIcon>{item.icon}</Sidebar.ItemIcon>

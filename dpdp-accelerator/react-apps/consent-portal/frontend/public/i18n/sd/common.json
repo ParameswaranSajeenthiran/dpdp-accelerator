@@ -32,13 +32,14 @@
     "administration": "انتظاميه",
     "adminConsents": "सभुई रज़ामंदी",
     "myComplaints": "منهنجون شڪايتون",
+    "complaints": "شڪايتون",
     "complaintManagement": "شڪايتون",
     "events": "वाक़िआ",
+    "eventNotifications": "ايونٽ نوٽيفيڪيشنز",
     "topics": "मौजूअ",
     "subscriptions": "सदस्यताउं"
   },
   "layout": {
-    "home": "گھر",
     "breadcrumbAriaLabel": "بريڊ ڪرمب",
     "userMenu": {
       "unknownUser": "نامعلوم استعمال ڪندڙ",
@@ -114,7 +115,16 @@
       "noAuthorizations": "इन रज़ामंदी जे लाइ का बि इज़ाज़त दर्ज न आहे।",
       "noElements": "इन मक़्सद सां को बि उनसुरु लाॻापियल न आहे।",
       "noPurposes": "इन रज़ामंदी सां को बि मक़्सद लाॻापियल न आहे।",
-      "noProperties": "इन रज़ामंदी सां को बि ख़ासियत लाॻापियल न आहे।"
+      "noProperties": "इन रज़ामंदी सां को बि ख़ासियत लाॻापियल न आहे।",
+      "statusMessages": {
+        "awaitingApproval": "इख़्तियार कंदड़ जी मंज़ूरी जो इंतज़ार कयो वियो।",
+        "approved": "इहा रज़ामंदी मंज़ूर कई वेई आहे।",
+        "rejected": "इहा रज़ामंदी रद्द कई वेई आहे।",
+        "decisionRecordedWaiting": "तव्हां पंहिंजो फ़ैसलो करे छॾियो आहे। बाकी माण्हुनि जो फ़ैसिलो करणु जो इंतज़ार कयो पियो वञे।",
+        "youRejected": "तव्हां हिन रज़ामंदी खे रद्द करे छॾियो आहे।",
+        "revoked": "इहा रज़ामंदी रद्द कई वेई आहे।",
+        "expired": "इहा रज़ामंदी ख़त्म थी वेई आहे।"
+      }
     },
     "actions": {
       "view": "ڏسو",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "آخري تاريخ {{date}}",
       "dueToday": "اڄ آخري تاريخ آهي",
-      "overdueSingular": "{{count}} ڏينهن جي دير",
-      "overduePlural": "{{count}} ڏينهن جي دير",
-      "daysLeftSingular": "{{count}} ڏينهن باقي",
-      "daysLeftPlural": "{{count}} ڏينهن باقي",
-      "dueLabel": "آخري تاريخ"
+      "daysLeft": "{{count}} ڏينهن باقي",
+      "daysLeft_one": "{{count}} ڏينهن باقي",
+      "daysLeft_other": "{{count}} ڏينهن باقي",
+      "overdueDays": "{{count}} ڏينهن جي دير",
+      "overdueDays_one": "{{count}} ڏينهن جي دير",
+      "overdueDays_other": "{{count}} ڏينهن جي دير",
+      "overdue": "ديرو ٿيل",
+      "deadlineLabelDataPrincipal": "آخري تاريخ",
+      "deadlineLabelOfficer": "قانوني آخري مهلت",
+      "periodDataPrincipal": "ادارو توهان جي شڪيت جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻو آهي.",
+      "periodDataPrincipal_one": "ادارو توهان جي شڪيت جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻو آهي.",
+      "periodDataPrincipal_other": "ادارو توهان جي شڪيت جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻو آهي.",
+      "periodOfficer": "شڪيتون جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻيون آهن. هن تاريخ کان پوءِ به حل نه ٿيل شڪيتون SLA جي خلاف ورزي طور گڻيون وينديون.",
+      "periodOfficer_one": "شڪيتون جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻيون آهن. هن تاريخ کان پوءِ به حل نه ٿيل شڪيتون SLA جي خلاف ورزي طور گڻيون وينديون.",
+      "periodOfficer_other": "شڪيتون جمع ٿيڻ کان پوءِ {{count}} ڏينهن ۾ حل ڪرڻيون آهن. هن تاريخ کان پوءِ به حل نه ٿيل شڪيتون SLA جي خلاف ورزي طور گڻيون وينديون.",
+      "breachedDataPrincipal": "مهلت مڪمل ٿي وئي آهي. جيڪڏهن توهان کي مطمئن ڪندڙ جواب نه مليو آهي، ته توهان پنهنجي شڪيت Data Protection Board ڏانهن موڪلي سگهو ٿا.",
+      "breachedOfficer": "ديرو ٿيل: هي معاملو SLA جي خلاف ورزي طور گڻيو ويندو آهي."
     },
     "timeline": {
       "complaintReceived": "شڪايت ملي",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "Select the all purpose filter when including user lifecycle topics.",
       "topicRequired": "मौजूअ ज़रूरी आहे।",
       "filterModeLabel": "मक़्सद फ़िल्टर मोड",
-      "purposesLabel": "मक़्सद (कॉमा सां जुदा कयल)",
-      "purposesPlaceholder": "मिसाल तौर, मार्केटिंग, एनालिटिक्स",
-      "purposesHelper": "फ़िल्टर करणु लाइ रज़ामंदी जे मक़्सदनि जी कॉमा सां जुदा कयल फ़हरिस्त",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "मक़्सद ज़रूरी आहिनि जॾहिं ख़ास या सभिनी खां सवाइ फ़िल्टर कजे।",
       "deliveryModeLabel": "डिलीवरी जो तरीक़ो",
       "callbackUrlLabel": "वेबहुक कैलबैक यूआरएल",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड्स खे साइन इन करणु या पोल रिक्वेस्टनि जी तस्दीक़ करणु लाइ इस्तिमाल कयो वियो",
       "generateSecret": "नओं राज़ ठाहियो",
       "registering": "रजिस्टर कयो पियो वञे...",
-      "registerSubmit": "सदस्यता रजिस्टर करियो"
+      "registerSubmit": "सदस्यता रजिस्टर करियो",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता मिटाइणु जी तस्दीक़ करियो",

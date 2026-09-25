@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सभनें दी मंजूरी",
     "myComplaints": "मेरी शिकायतां",
+    "complaints": "शिकायतां",
     "complaintManagement": "शिकायतां",
     "events": "घटनां",
+    "eventNotifications": "इवेंट नोटिफिकेशन",
     "topics": "विशे।",
     "subscriptions": "सदस्यताएं"
   },
   "layout": {
-    "home": "होम",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अनजाण बरतूनदार",
@@ -114,7 +115,16 @@
       "noAuthorizations": "इस सैह्‌मती आस्तै कोई प्राधिकरण दर्ज नेईं कीता गेआ ऐ।",
       "noElements": "इस उद्देश कन्नै कोई तत्व जुड़े दा नेईं ऐ।",
       "noPurposes": "इस सैह्‌मती कन्नै कोई मकसद जुड़े दा नेईं ऐ।",
-      "noProperties": "इस सैह्‌मती कन्नै कोई संपत्तियां जुड़ी दियां नेईं हैन।"
+      "noProperties": "इस सैह्‌मती कन्नै कोई संपत्तियां जुड़ी दियां नेईं हैन।",
+      "statusMessages": {
+        "awaitingApproval": "अधिकारक दी मंजूरी दी निहालप च।",
+        "approved": "एह्‌‌ सैह्‌‌मती मंजूर करी दित्ती गेई ऐ।",
+        "rejected": "एह्‌‌ सैह्‌‌मती नामंजूर करी दित्ती गेई ऐ।",
+        "decisionRecordedWaiting": "तुसें अपना फैसला करी लैता ऐ। बाकी लोकें दे फैसला करने दा इंतजार करा'रदे आं।",
+        "youRejected": "तुसें इस सैह्‌मती गी नामंजूर करी दित्ता ऐ।",
+        "revoked": "एह्‌‌ सैह्‌‌मती बापस लेई लैती गेई ऐ।",
+        "expired": "एह्‌‌ सैह्‌‌मती खतम होई चुकी ऐ।"
+      }
     },
     "actions": {
       "view": "दिक्खो",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "देने दी तरीक {{date}}",
       "dueToday": "अज्ज आखरी तरीक ऐ",
-      "overdueSingular": "{{count}} दिन उप्पर होई गेआ",
-      "overduePlural": "{{count}} दिन उप्पर होई गेदे न",
-      "daysLeftSingular": "{{count}} दिन बची गेदा ऐ",
-      "daysLeftPlural": "{{count}} दिन बची गेदे न",
-      "dueLabel": "आखरी तारीख"
+      "daysLeft": "{{count}} दिन बची गेदे न",
+      "daysLeft_one": "{{count}} दिन बची गेदा ऐ",
+      "daysLeft_other": "{{count}} दिन बची गेदे न",
+      "overdueDays": "{{count}} दिन उप्पर होई गेदे न",
+      "overdueDays_one": "{{count}} दिन उप्पर होई गेआ",
+      "overdueDays_other": "{{count}} दिन उप्पर होई गेदे न",
+      "overdue": "लेट",
+      "deadlineLabelDataPrincipal": "आखरी तारीख",
+      "deadlineLabelOfficer": "कानूनी मियाद",
+      "periodDataPrincipal": "संस्था गी तुंदी शिकायत मिलने दे {{count}} दिनें दे अंदर उसदा हल करना पौग।",
+      "periodDataPrincipal_one": "संस्था गी तुंदी शिकायत मिलने दे {{count}} दिन दे अंदर उसदा हल करना पौग।",
+      "periodDataPrincipal_other": "संस्था गी तुंदी शिकायत मिलने दे {{count}} दिनें दे अंदर उसदा हल करना पौग।",
+      "periodOfficer": "शिकायतें दा हल मिलने दे {{count}} दिनें दे अंदर करना जरूरी ऐ। इस तारीख दे बाद बी जेकर शिकायतें दा हल नेईं होंदा, तां उसगी SLA दा उल्लंघन मन्नेआ जंदा ऐ।",
+      "periodOfficer_one": "शिकायतें दा हल मिलने दे {{count}} दिन दे अंदर करना जरूरी ऐ। इस तारीख दे बाद बी जेकर शिकायतें दा हल नेईं होंदा, तां उसगी SLA दा उल्लंघन मन्नेआ जंदा ऐ।",
+      "periodOfficer_other": "शिकायतें दा हल मिलने दे {{count}} दिनें दे अंदर करना जरूरी ऐ। इस तारीख दे बाद बी जेकर शिकायतें दा हल नेईं होंदा, तां उसगी SLA दा उल्लंघन मन्नेआ जंदा ऐ।",
+      "breachedDataPrincipal": "मियाद मुक्की गेई ऐ। जेकर तुसेंगी कोई ठीक जवाब नेईं थिआया ऐ, तां तुस अपनी शिकायत Data Protection Board गी बधा सकदे ओ।",
+      "breachedOfficer": "लेट: इस मामले गी SLA दा उल्लंघन मन्नेआ जंदा ऐ।"
     },
     "timeline": {
       "complaintReceived": "शिकायत मिली",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड पर हस्ताक्षर करने जां पोल अनुरोधें गी प्रमाणित करने लेई इस्तेमाल कीता जंदा ऐ",
       "generateSecret": "नमां गुप्त कोड बनाओ",
       "registering": "पंजीकृत कीता जा करदा ऐ...",
-      "registerSubmit": "सदस्यता पंजीकृत करो"
+      "registerSubmit": "सदस्यता पंजीकृत करो",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता मिटाने दी पुष्टी करो",

@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सगळी संमती",
     "myComplaints": "म्हज्यो कागाळी",
+    "complaints": "कागाळी",
     "complaintManagement": "कागाळी",
     "events": "घडणुको",
+    "eventNotifications": "इव्हेंट नोटिफिकेशन्स",
     "topics": "विशय",
     "subscriptions": "सबस्क्रिप्शन"
   },
   "layout": {
-    "home": "मुखेल पान",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अज्ञात वापरपी",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ह्या संमती खातीर कसलीच अधिकृतताय नोंद केल्ली ना.",
       "noElements": "ह्या उद्देशा कडेन खंयचेच घटक जोडिल्ले नात.",
       "noPurposes": "ह्या संमतीकडेन कसलेच हेत जोडिल्ले नात.",
-      "noProperties": "ह्या संमतीकडेन कसलेच गुणधर्म जोडिल्ले नात."
+      "noProperties": "ह्या संमतीकडेन कसलेच गुणधर्म जोडिल्ले नात.",
+      "statusMessages": {
+        "awaitingApproval": "अधिकृत मान्यतेची वाट पळयता.",
+        "approved": "ही संमती मान्य जाल्या.",
+        "rejected": "ही संमती न्हयकारल्या.",
+        "decisionRecordedWaiting": "तुवें तुजो निर्णय घेतला. बाकीच्यांनी निर्णय घेवपाची वाट पळयता.",
+        "youRejected": "तुवें ही संमती न्हयकारल्या.",
+        "revoked": "ही संमती रद्द केल्या.",
+        "expired": "ही संमती सोंपल्या."
+      }
     },
     "actions": {
       "view": "पळयात",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "मुदत {{date}}",
       "dueToday": "आयज मुदत",
-      "overdueSingular": "{{count}} दीस मुदत सोंपल्या",
-      "overduePlural": "{{count}} दीस मुदत सोंपल्या",
-      "daysLeftSingular": "{{count}} दीस उरला",
-      "daysLeftPlural": "{{count}} दीस उरल्यात",
-      "dueLabel": "मुदत"
+      "daysLeft": "{{count}} दीस उरल्यात",
+      "daysLeft_one": "{{count}} दीस उरला",
+      "daysLeft_other": "{{count}} दीस उरल्यात",
+      "overdueDays": "{{count}} दीस मुदत सोंपल्या",
+      "overdueDays_one": "{{count}} दीस मुदत सोंपल्या",
+      "overdueDays_other": "{{count}} दीस मुदत सोंपल्या",
+      "overdue": "वेळार जावंक ना",
+      "deadlineLabelDataPrincipal": "मुदत",
+      "deadlineLabelOfficer": "कायदेशीर मुदत",
+      "periodDataPrincipal": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसां भितर संस्थेन ती सोडयपाक जाय.",
+      "periodDataPrincipal_one": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसा भितर संस्थेन ती सोडयपाक जाय.",
+      "periodDataPrincipal_other": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसां भितर संस्थेन ती सोडयपाक जाय.",
+      "periodOfficer": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसां भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "periodOfficer_one": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसा भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "periodOfficer_other": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसां भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "breachedDataPrincipal": "मुदत सोंपल्या. तुमकां समाधानकारक जाप मेळूंक ना जाल्यार, तुमी तुमची कागाळ Data Protection Board कडेन वाडोवंक शकतात.",
+      "breachedOfficer": "वेळार जावंक ना: हो खटलो SLA मोडल्या अशें धरतात."
     },
     "timeline": {
       "complaintReceived": "कागाळ मेळ्ळी",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "वापरप्याच्या जीवनचक्राचे विशय आस्पावताना सगळो उद्देश फिल्टर वेंचून काडात.",
       "topicRequired": "विशय गरजेचो आसा.",
       "filterModeLabel": "उद्देश फिल्टर मोड",
-      "purposesLabel": "उद्देशां (स्वल्पविरामान वेगळीं केल्लीं)",
-      "purposesPlaceholder": "देखीक: मार्केटिंग, ॲनालिटिक्स",
-      "purposesHelper": "फिल्टर करपाक संमतीच्या उद्देशांची स्वल्पविराम-वेगळा केल्ली वळेरी",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशेषां वा सगळ्यांक वगळून फिल्टर करतना उद्देशांची गरज आसता",
       "deliveryModeLabel": "वितरण पद्दत",
       "callbackUrlLabel": "वेबहुक परतावप URL",
@@ -726,7 +748,10 @@
       "secretHelper": "वेबहुक पेलोड वा पोल विनंती प्रमाणित करपाक वापरतात",
       "generateSecret": "नवी गुप्त तयार करप",
       "registering": "नोंदणी करतना...",
-      "registerSubmit": "सबस्क्रिप्शन नोंद करात"
+      "registerSubmit": "सबस्क्रिप्शन नोंद करात",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यकेंतली सदस्यता काडून उडोवपाक खात्री करप",

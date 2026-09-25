@@ -32,13 +32,14 @@
     "administration": "প্ৰশাসন",
     "adminConsents": "সকলো সন্মতি",
     "myComplaints": "মোৰ অভিযোগসমূহ",
+    "complaints": "অভিযোগসমূহ",
     "complaintManagement": "অভিযোগসমূহ",
     "events": "ঘটনা",
+    "eventNotifications": "ইভেন্ট নোটিফিকেশন",
     "topics": "বিষয়সমূহ",
     "subscriptions": "চাবস্ক্ৰিপচনসমূহ"
   },
   "layout": {
-    "home": "হ'ম",
     "breadcrumbAriaLabel": "ব্ৰেডক্ৰাম্ব",
     "userMenu": {
       "unknownUser": "অজ্ঞাত ব্যৱহাৰকাৰী",
@@ -114,7 +115,16 @@
       "noAuthorizations": "এই সন্মতিৰ বাবে কোনো অনুমোদন লিপিবদ্ধ কৰা হোৱা নাই।",
       "noElements": "এই উদ্দেশ্যৰ সৈতে কোনো উপাদান জড়িত নহয়।",
       "noPurposes": "এই সন্মতিৰ সৈতে কোনো উদ্দেশ্য জড়িত নাই।",
-      "noProperties": "এই সন্মতিৰ সৈতে কোনো ধৰ্ম-সম্পত্তি জড়িত নাথাকে।"
+      "noProperties": "এই সন্মতিৰ সৈতে কোনো ধৰ্ম-সম্পত্তি জড়িত নাথাকে।",
+      "statusMessages": {
+        "awaitingApproval": "অনুমোদনকাৰীৰ অনুমোদনৰ বাবে অপেক্ষা কৰি আছো।",
+        "approved": "এই সন্মতি মঞ্জুৰ কৰা হৈছে।",
+        "rejected": "এই সন্মতি নাকচ কৰা হৈছে।",
+        "decisionRecordedWaiting": "তুমি তোমাৰ সিদ্ধান্ত লৈছা। বাকীসকলে কি সিদ্ধান্ত লয় তাৰ বাবে অপেক্ষা কৰি আছো।",
+        "youRejected": "আপুনি এই সন্মতি নাকচ কৰিছে।",
+        "revoked": "এই সন্মতি প্ৰত্যাহাৰ কৰা হৈছে।",
+        "expired": "এই সন্মতিৰ ম্যাদ উকলি গৈছে।"
+      }
     },
     "actions": {
       "view": "চাওক",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "অন্তিম তাৰিখ {{date}}",
       "dueToday": "আজি অন্তিম তাৰিখ",
-      "overdueSingular": "{{count}} দিন পাৰ হৈ গৈছে",
-      "overduePlural": "{{count}} দিন পাৰ হৈ গৈছে",
-      "daysLeftSingular": "{{count}} দিন বাকী আছে",
-      "daysLeftPlural": "{{count}} দিন বাকী আছে",
-      "dueLabel": "নিৰ্ধাৰিত তাৰিখ"
+      "daysLeft": "{{count}} দিন বাকী আছে",
+      "daysLeft_one": "{{count}} দিন বাকী আছে",
+      "daysLeft_other": "{{count}} দিন বাকী আছে",
+      "overdueDays": "{{count}} দিন পাৰ হৈ গৈছে",
+      "overdueDays_one": "{{count}} দিন পাৰ হৈ গৈছে",
+      "overdueDays_other": "{{count}} দিন পাৰ হৈ গৈছে",
+      "overdue": "ম্যাদ উকলি গৈছে",
+      "deadlineLabelDataPrincipal": "নিৰ্ধাৰিত তাৰিখ",
+      "deadlineLabelOfficer": "আইনী ম্যাদ",
+      "periodDataPrincipal": "আপোনাৰ অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত সংস্থাই আপোনাৰ অভিযোগৰ সমাধান কৰিব লাগিব।",
+      "periodDataPrincipal_one": "আপোনাৰ অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত সংস্থাই আপোনাৰ অভিযোগৰ সমাধান কৰিব লাগিব।",
+      "periodDataPrincipal_other": "আপোনাৰ অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত সংস্থাই আপোনাৰ অভিযোগৰ সমাধান কৰিব লাগিব।",
+      "periodOfficer": "অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত অভিযোগসমূহৰ সমাধান কৰিব লাগিব। এই তাৰিখৰ পাছত অমীমাংসিত অভিযোগসমূহ SLA উলংঘন হিচাপে গণ্য কৰা হয়।",
+      "periodOfficer_one": "অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত অভিযোগসমূহৰ সমাধান কৰিব লাগিব। এই তাৰিখৰ পাছত অমীমাংসিত অভিযোগসমূহ SLA উলংঘন হিচাপে গণ্য কৰা হয়।",
+      "periodOfficer_other": "অভিযোগ দাখিল কৰাৰ {{count}} দিনৰ ভিতৰত অভিযোগসমূহৰ সমাধান কৰিব লাগিব। এই তাৰিখৰ পাছত অমীমাংসিত অভিযোগসমূহ SLA উলংঘন হিচাপে গণ্য কৰা হয়।",
+      "breachedDataPrincipal": "ম্যাদ উকলি গৈছে। যদি আপুনি সন্তোষজনক সঁহাৰি পোৱা নাই, তেন্তে আপুনি আপোনাৰ অভিযোগ Data Protection Board-লৈ প্ৰেৰণ কৰিব পাৰে।",
+      "breachedOfficer": "ম্যাদ উকলি গৈছে: এই গোচৰটো SLA উলংঘন হিচাপে গণ্য কৰা হয়।"
     },
     "timeline": {
       "complaintReceived": "অভিযোগ পোৱা গৈছে",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "ব্যৱহাৰকাৰীৰ জীৱনচক্ৰৰ বিষয়সমূহ অন্তৰ্ভুক্ত কৰাৰ সময়ত সকলো উদ্দেশ্যৰ ফিল্টাৰ বাছনি কৰক।",
       "topicRequired": "বিষয়ৰ প্ৰয়োজন আছে।",
       "filterModeLabel": "উদ্দেশ্য ফিল্টাৰ মোড",
-      "purposesLabel": "উদ্দেশ্যসমূহ (কমাৰে পৃথক কৰা)",
-      "purposesPlaceholder": "উদাহৰণস্বৰূপে, বিপণন, বিশ্লেষণ",
-      "purposesHelper": "ফিল্টাৰ কৰিবলৈ সন্মতিৰ উদ্দেশ্যসমূহৰ কমা-পৃথক তালিকা",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "নিৰ্দিষ্ট বা সকলো-বাবে-ৰ বাহিৰে ফিল্টাৰ কৰাৰ সময়ত উদ্দেশ্যৰ প্ৰয়োজন।",
       "deliveryModeLabel": "ডেলিভাৰী মোড",
       "callbackUrlLabel": "ৱেবহুক কলবেক URL",
@@ -726,7 +748,10 @@
       "secretHelper": "ৱেবহুক পে'ল্ড ছাইন কৰিবলৈ বা পোল অনুৰোধসমূহ প্ৰমাণিত কৰিবলৈ ব্যৱহাৰ কৰা হৈছিল",
       "generateSecret": "নতুন গোপনীয়তা সৃষ্টি কৰক",
       "registering": "পঞ্জীয়ন কৰি থকা হৈছে...",
-      "registerSubmit": "চাবস্ক্ৰিপচন পঞ্জীয়ন কৰক"
+      "registerSubmit": "চাবস্ক্ৰিপচন পঞ্জীয়ন কৰক",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "চাবস্ক্ৰিপচন মচন নিশ্চিত কৰক",

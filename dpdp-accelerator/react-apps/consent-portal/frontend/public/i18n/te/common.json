@@ -32,13 +32,14 @@
     "administration": "నిర్వహణ",
     "adminConsents": "అన్ని అంగీకారాలు",
     "myComplaints": "నా ఫిర్యాదులు",
+    "complaints": "ఫిర్యాదులు",
     "complaintManagement": "ఫిర్యాదులు",
     "events": "ఈవెంట్‌లు",
+    "eventNotifications": "ఈవెంట్ నోటిఫికేషన్లు",
     "topics": "అంశాలు",
     "subscriptions": "సబ్‌స్క్రిప్షన్‌లు"
   },
   "layout": {
-    "home": "హోమ్",
     "breadcrumbAriaLabel": "బ్రెడ్‌క్రంబ్",
     "userMenu": {
       "unknownUser": "తెలియని వినియోగదారు",
@@ -114,7 +115,16 @@
       "noAuthorizations": "ఈ సమ్మతి కోసం ఎటువంటి అనుమతులు నమోదు చేయబడలేదు.",
       "noElements": "ఈ ఉద్దేశ్యంతో ఏ అంశాలు అనుబంధించబడలేదు.",
       "noPurposes": "ఈ సమ్మతితో ఎటువంటి ఉద్దేశాలు ముడిపడి లేవు.",
-      "noProperties": "ఈ సమ్మతితో ఎటువంటి ఆస్తులు అనుబంధించబడలేదు."
+      "noProperties": "ఈ సమ్మతితో ఎటువంటి ఆస్తులు అనుబంధించబడలేదు.",
+      "statusMessages": {
+        "awaitingApproval": "అధికారిక అనుమతి కోసం ఎదురు చూస్తున్నాను.",
+        "approved": "ఈ సమ్మతి ఆమోదించబడింది.",
+        "rejected": "ఈ సమ్మతి తిరస్కరించబడింది.",
+        "decisionRecordedWaiting": "మీరు మీ నిర్ణయం తీసుకున్నారు. మిగిలిన వారు నిర్ణయించడానికి వేచి ఉన్నారు.",
+        "youRejected": "మీరు ఈ సమ్మతిని తిరస్కరించారు.",
+        "revoked": "ఈ సమ్మతి ఉపసంహరించబడింది.",
+        "expired": "ఈ సమ్మతి గడువు ముగిసింది."
+      }
     },
     "actions": {
       "view": "వీక్షించు",
@@ -393,11 +403,23 @@
     "sla": {
       "dueDate": "గడువు {{date}}",
       "dueToday": "ఈరోజే గడువు",
-      "overdueSingular": "{{count}} రోజు ఆలస్యమైంది",
-      "overduePlural": "{{count}} రోజులు ఆలస్యమైంది",
-      "daysLeftSingular": "{{count}} రోజు మిగిలి ఉంది",
-      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి",
-      "dueLabel": "గడువు"
+      "daysLeft": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "daysLeft_one": "{{count}} రోజు మిగిలి ఉంది",
+      "daysLeft_other": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "overdueDays": "{{count}} రోజులు ఆలస్యమైంది",
+      "overdueDays_one": "{{count}} రోజు ఆలస్యమైంది",
+      "overdueDays_other": "{{count}} రోజులు ఆలస్యమైంది",
+      "overdue": "గడువు దాటింది",
+      "deadlineLabelDataPrincipal": "గడువు",
+      "deadlineLabelOfficer": "చట్టపరమైన గడువు",
+      "periodDataPrincipal": "మీరు ఫిర్యాదు చేసిన {{count}} రోజుల్లోపు సంస్థ మీ ఫిర్యాదును పరిష్కరించాలి.",
+      "periodDataPrincipal_one": "మీరు ఫిర్యాదు చేసిన {{count}} రోజులోపు సంస్థ మీ ఫిర్యాదును పరిష్కరించాలి.",
+      "periodDataPrincipal_other": "మీరు ఫిర్యాదు చేసిన {{count}} రోజుల్లోపు సంస్థ మీ ఫిర్యాదును పరిష్కరించాలి.",
+      "periodOfficer": "ఫిర్యాదు చేసిన {{count}} రోజుల్లోపు ఫిర్యాదులను పరిష్కరించాలి. ఈ తేదీ దాటినా పరిష్కారం కాని ఫిర్యాదులు SLA ఉల్లంఘన కిందకు వస్తాయి.",
+      "periodOfficer_one": "ఫిర్యాదు చేసిన {{count}} రోజులోపు ఫిర్యాదులను పరిష్కరించాలి. ఈ తేదీ దాటినా పరిష్కారం కాని ఫిర్యాదులు SLA ఉల్లంఘన కిందకు వస్తాయి.",
+      "periodOfficer_other": "ఫిర్యాదు చేసిన {{count}} రోజుల్లోపు ఫిర్యాదులను పరిష్కరించాలి. ఈ తేదీ దాటినా పరిష్కారం కాని ఫిర్యాదులు SLA ఉల్లంఘన కిందకు వస్తాయి.",
+      "breachedDataPrincipal": "గడువు ముగిసింది. మీకు సంతృప్తికరమైన స్పందన రాకపోతే, మీరు మీ ఫిర్యాదును డేటా ప్రొటెక్షన్ బోర్డుకు పంపవచ్చు.",
+      "breachedOfficer": "గడువు దాటింది: ఈ కేసు SLA ఉల్లంఘన కిందకు వస్తుంది."
     },
     "timeline": {
       "complaintReceived": "ఫిర్యాదు స్వీకరించబడింది",
@@ -713,9 +735,9 @@
       "multiTopicFilter": "వినియోగదారు లైఫ్‌సైకిల్ అంశాలను చేర్చుతున్నప్పుడు అన్ని ఉద్దేశాల ఫిల్టర్‌ను ఎంచుకోండి.",
       "topicRequired": "అంశం అవసరం.",
       "filterModeLabel": "ఉద్దేశ్య ఫిల్టర్ మోడ్",
-      "purposesLabel": "ఉద్దేశ్యాలు (కామాతో వేరు చేయబడినవి)",
-      "purposesPlaceholder": "ఉదాహరణకు, MARKETING, ANALYTICS",
-      "purposesHelper": "ఫిల్టర్ చేయడానికి సమ్మతి ప్రయోజనాల యొక్క కామాతో వేరు చేయబడిన జాబితా",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "నిర్దిష్ట లేదా అన్నింటినీ మినహాయించి ఫిల్టర్ చేసేటప్పుడు ఉద్దేశ్యాలు అవసరం.",
       "deliveryModeLabel": "పంపిణీ విధానం",
       "callbackUrlLabel": "వెబ్‌హుక్ కాల్‌బ్యాక్ URL",
@@ -726,7 +748,10 @@
       "secretHelper": "వెబ్‌హుక్ పేలోడ్‌లను సైన్ చేయడానికి లేదా పోల్ అభ్యర్థనలను ప్రామాణీకరించడానికి ఉపయోగించబడింది",
       "generateSecret": "కొత్త రహస్యాన్ని ఉత్పత్తి చేయి",
       "registering": "నమోదు చేస్తోంది...",
-      "registerSubmit": "సబ్‌స్క్రిప్షన్‌ను నమోదు చేయు"
+      "registerSubmit": "సబ్‌స్క్రిప్షన్‌ను నమోదు చేయు",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "సభ్యత్వం తొలగింపును నిర్ధారించు",
