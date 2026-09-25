@@ -779,7 +779,9 @@
       "purposesSubtitle": "Consent purposes configured for event filtering",
       "allPurposesNotice": "This subscription receives events for all purposes.",
       "searchPurposes": "Search associated purposes",
-      "noPurposes": "No matching purposes."
+      "noPurposes": "No matching purposes.",
+      "showSecret": "राज़ ॾिखारियो",
+      "hideSecret": "राज़ लुकायो"
     },
     "deliveryEvents": {
       "ariaLabel": "डिलीवरी वाक़िअनि जी लॉग टेबल",

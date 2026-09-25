@@ -779,7 +779,9 @@
       "purposesSubtitle": "ایونٹ فلٹرنگ کے لیے ترتیب دیے گئے رضامندی کے مقاصد",
       "allPurposesNotice": "یہ سبسکرپشن تمام مقاصد کے لیے ایونٹس وصول کرتی ہے۔",
       "searchPurposes": "متعلقہ مقاصد تلاش کریں",
-      "noPurposes": "کوئی مماثل مقاصد نہیں۔"
+      "noPurposes": "کوئی مماثل مقاصد نہیں۔",
+      "showSecret": "راز دکھائیں",
+      "hideSecret": "راز چھپائیں"
     },
     "deliveryEvents": {
       "ariaLabel": "ڈیلیوری ایونٹس لاگ ٹیبل",

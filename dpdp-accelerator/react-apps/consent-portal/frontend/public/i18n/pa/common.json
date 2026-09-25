@@ -779,7 +779,9 @@
       "purposesSubtitle": "ਇਵੈਂਟ ਫਿਲਟਰਿੰਗ ਲਈ ਕੌਂਫਿਗਰ ਕੀਤੇ ਗਏ ਸਹਿਮਤੀ ਮਕਸਦ",
       "allPurposesNotice": "ਇਹ ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਸਾਰੇ ਮਕਸਦਾਂ ਲਈ ਇਵੈਂਟ ਪ੍ਰਾਪਤ ਕਰਦੀ ਹੈ।",
       "searchPurposes": "ਜੁੜੇ ਹੋਏ ਮਕਸਦਾਂ ਦੀ ਖੋਜ ਕਰੋ",
-      "noPurposes": "ਕੋਈ ਮੇਲ ਖਾਂਦਾ ਮਕਸਦ ਨਹੀਂ।"
+      "noPurposes": "ਕੋਈ ਮੇਲ ਖਾਂਦਾ ਮਕਸਦ ਨਹੀਂ।",
+      "showSecret": "ਰਾਜ਼ ਦਿਖਾਓ",
+      "hideSecret": "ਰਾਜ਼ ਲੁਕਾਓ"
     },
     "deliveryEvents": {
       "ariaLabel": "ਡਿਲੀਵਰੀ ਸਮਾਗਮਾਂ ਦਾ ਲੌਗ ਟੇਬਲ",

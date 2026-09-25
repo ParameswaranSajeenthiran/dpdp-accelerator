@@ -779,7 +779,9 @@
       "purposesSubtitle": "ꯏꯚꯦꯟꯠ ꯐꯤꯜꯇꯔꯤꯡꯒꯤꯗꯃꯛ ꯀꯟꯐꯤꯒꯔ ꯇꯧꯔꯕ ꯀꯟꯁꯦꯟꯠ ꯄꯔꯄꯣꯖꯁꯤꯡ",
       "allPurposesNotice": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯁꯤꯅ ꯄꯔꯄꯣꯖ ꯄꯨꯝꯅꯃꯛꯀꯤꯗꯃꯛ ꯏꯚꯦꯟꯠꯁꯤꯡ ꯐꯪꯏ꯫",
       "searchPurposes": "ꯑꯦꯁꯣꯁꯤꯌꯦꯇꯦꯗ ꯄꯔꯄꯣꯖꯁꯤꯡ ꯊꯤꯕꯤꯌꯨ",
-      "noPurposes": "ꯃꯥꯟꯅꯔꯤꯕ ꯄꯔꯄꯣꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫"
+      "noPurposes": "ꯃꯥꯟꯅꯔꯤꯕ ꯄꯔꯄꯣꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
+      "showSecret": "Secret উৎলু",
+      "hideSecret": "Secret লোৎলু"
     },
     "deliveryEvents": {
       "ariaLabel": "ꯗꯦꯂꯤꯚꯔꯤ ꯏꯚꯦꯟꯠꯁ ꯂꯣꯒ ꯇꯦꯕꯜ",
