@@ -32,13 +32,14 @@
     "administration": "ഭരണം",
     "adminConsents": "എല്ലാ സമ്മതങ്ങളും",
     "myComplaints": "എന്റെ പരാതികൾ",
+    "complaints": "പരാതികൾ",
     "complaintManagement": "പരാതികൾ",
     "events": "ഇവന്റുകൾ",
+    "eventNotifications": "ഇവന്റ് അറിയിപ്പുകൾ",
     "topics": "വിഷയങ്ങൾ",
     "subscriptions": "സബ്‌സ്‌ക്രിപ്‌ഷനുകൾ"
   },
   "layout": {
-    "home": "ഹോം",
     "breadcrumbAriaLabel": "ബ്രെഡ്ക്രംബ്",
     "userMenu": {
       "unknownUser": "അജ്ഞാത ഉപയോക്താവ്",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "ഉപയോക്തൃ ലൈഫ്സൈക്കിൾ വിഷയങ്ങൾ ഉൾപ്പെടുത്തുമ്പോൾ എല്ലാ ഉദ്ദേശ്യ ഫിൽട്ടറും തിരഞ്ഞെടുക്കുക.",
       "topicRequired": "വിഷയം ആവശ്യമാണ്.",
       "filterModeLabel": "ഉദ്ദേശ്യ ഫിൽട്ടർ മോഡ്",
-      "purposesLabel": "ഉദ്ദേശ്യങ്ങൾ (കോമ ഉപയോഗിച്ച് വേർതിരിച്ചത്)",
-      "purposesPlaceholder": "ഉദാഹരണത്തിന്, MARKETING, ANALYTICS",
-      "purposesHelper": "ഫിൽട്ടർ ചെയ്യാനുള്ള സമ്മത ലക്ഷ്യങ്ങളുടെ കോമ ഉപയോഗിച്ച് വേർതിരിച്ച ലിസ്റ്റ്",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "നിർദ്ദിഷ്ടമായതോ അല്ലെങ്കിൽ എല്ലാം ഒഴികെയുള്ളതോ ഉപയോഗിച്ച് ഫിൽട്ടർ ചെയ്യുമ്പോൾ ഉദ്ദേശ്യങ്ങൾ ആവശ്യമാണ്.",
       "deliveryModeLabel": "ഡെലിവറി മോഡ്",
       "callbackUrlLabel": "വെബ്ഹൂക്ക് കാൾബാക്ക് URL",
@@ -735,7 +736,10 @@
       "secretHelper": "വെബ്ഹൂക്ക് പേലോഡുകൾ സൈൻ ഇൻ ചെയ്യാൻ അല്ലെങ്കിൽ പോൾ അഭ്യർത്ഥനകൾക്ക് പ്രാമാണീകരണം നൽകാൻ ഉപയോഗിച്ചിരുന്നു",
       "generateSecret": "പുതിയ രഹസ്യം ഉണ്ടാക്കുക",
       "registering": "രജിസ്റ്റർ ചെയ്യുന്നു...",
-      "registerSubmit": "സബ്‌സ്‌ക്രിപ്‌ഷൻ രജിസ്റ്റർ ചെയ്യുക"
+      "registerSubmit": "സബ്‌സ്‌ക്രിപ്‌ഷൻ രജിസ്റ്റർ ചെയ്യുക",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "സബ്സ്ക്രിപ്ഷൻ ഡിലീഷൻ സ്ഥിരീകരിക്കുക",

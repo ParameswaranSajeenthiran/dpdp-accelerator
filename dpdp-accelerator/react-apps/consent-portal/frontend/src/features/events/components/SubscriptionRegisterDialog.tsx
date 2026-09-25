@@ -36,7 +36,7 @@ import {
   Typography,
 } from '@wso2/oxygen-ui'
 import { Key, X, RefreshCw } from '@wso2/oxygen-ui-icons-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   DeliveryMode,
@@ -47,6 +47,7 @@ import { DELIVERY_MODES, PURPOSE_FILTER_MODES } from '../../../types/subscriptio
 import SubscriptionTopicPicker from './SubscriptionTopicPicker'
 import { supportsConsentPurposeFilter } from '../utils/topicCapabilities'
 import { MAX_SUBSCRIPTION_TOPICS } from '../constants'
+import SubscriptionPurposePicker from './SubscriptionPurposePicker'
 
 interface SubscriptionRegisterDialogProps {
   open: boolean
@@ -76,7 +77,7 @@ export default function SubscriptionRegisterDialog({
   const [name, setName] = useState('')
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [filterMode, setFilterMode] = useState<PurposeFilterMode>('all')
-  const [purposesInput, setPurposesInput] = useState('')
+  const [selectedPurposes, setSelectedPurposes] = useState<string[]>([])
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('webhook')
   const [callbackUrl, setCallbackUrl] = useState('')
   const [sharedSecret, setSharedSecret] = useState(() => generateRandomHexSecret())
@@ -87,6 +88,16 @@ export default function SubscriptionRegisterDialog({
   const [purposesError, setPurposesError] = useState('')
   const [secretError, setSecretError] = useState('')
 
+  useEffect(() => {
+    if (open) {
+      setSelectedPurposes([])
+      setPurposesError('')
+      setNameError('')
+      setTopicError('')
+      setCallbackUrlError('')
+      setSecretError('')
+    }
+  }, [open])
   const handleGenerateSecret = (): void => {
     setSharedSecret(generateRandomHexSecret())
     if (secretError) setSecretError('')
@@ -118,16 +129,11 @@ export default function SubscriptionRegisterDialog({
       setTopicError('')
     }
 
-    const trimmedPurposes = purposesInput
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean)
-
     const supportsPurposeFilter =
       selectedTopics.length > 0 && selectedTopics.every(supportsConsentPurposeFilter)
     const effectiveFilterMode: PurposeFilterMode = supportsPurposeFilter ? filterMode : 'all'
 
-    if (supportsPurposeFilter && filterMode !== 'all' && trimmedPurposes.length === 0) {
+    if (supportsPurposeFilter && effectiveFilterMode !== 'all' && selectedPurposes.length === 0) {
       setPurposesError(
         t(
           'subscriptions.dialog.purposesRequired',
@@ -178,7 +184,7 @@ export default function SubscriptionRegisterDialog({
       topics: selectedTopics,
       filter: {
         type: effectiveFilterMode,
-        purposes: effectiveFilterMode !== 'all' ? trimmedPurposes : undefined,
+        purposes: effectiveFilterMode !== 'all' ? selectedPurposes : undefined,
       },
       delivery: {
         mode: deliveryMode,
@@ -299,6 +305,11 @@ export default function SubscriptionRegisterDialog({
               onBusyChange={setSelectionBusy}
               onChange={(values) => {
                 setSelectedTopics(values)
+                if (!values.every(supportsConsentPurposeFilter)) {
+                  setFilterMode('all')
+                  setSelectedPurposes([])
+                  setPurposesError('')
+                }
                 setTopicError('')
               }}
             />
@@ -344,58 +355,15 @@ export default function SubscriptionRegisterDialog({
                 </FormControl>
 
                 {filterMode !== 'all' ? (
-                  <Box>
-                    <InputLabel
-                      htmlFor="subscription-purposes-input"
-                      shrink={false}
-                      sx={{
-                        position: 'static',
-                        transform: 'none',
-                        mb: 0.75,
-                        fontWeight: 500,
-                        fontSize: '0.875rem',
-                        color: 'text.primary',
-                        '&.Mui-focused': { color: 'text.primary' },
-                      }}
-                    >
-                      {t(
-                        'subscriptions.dialog.purposesLabel',
-                        'Consent Purposes (comma-separated)',
-                      )}
-                      <Box component="span" sx={{ color: 'error.main', ml: 0.5 }}>
-                        *
-                      </Box>
-                    </InputLabel>
-                    <TextField
-                      id="subscription-purposes-input"
-                      required
-                      fullWidth
-                      size="small"
-                      placeholder={t(
-                        'subscriptions.dialog.purposesPlaceholder',
-                        'e.g. MARKETING, ANALYTICS',
-                      )}
-                      value={purposesInput}
-                      error={Boolean(purposesError)}
-                      helperText={
-                        purposesError ||
-                        t(
-                          'subscriptions.dialog.purposesHelper',
-                          'Comma-separated list of consent purposes to filter',
-                        )
-                      }
-                      inputProps={{
-                        'aria-label': t(
-                          'subscriptions.dialog.purposesLabel',
-                          'Consent Purposes (comma-separated)',
-                        ),
-                      }}
-                      onChange={(e) => {
-                        setPurposesInput(e.target.value)
-                        if (purposesError) setPurposesError('')
-                      }}
-                    />
-                  </Box>
+                  <SubscriptionPurposePicker
+                    selected={selectedPurposes}
+                    disabled={loading}
+                    error={purposesError}
+                    onChange={(values) => {
+                      setSelectedPurposes(values)
+                      if (purposesError) setPurposesError('')
+                    }}
+                  />
                 ) : null}
               </>
             ) : null}

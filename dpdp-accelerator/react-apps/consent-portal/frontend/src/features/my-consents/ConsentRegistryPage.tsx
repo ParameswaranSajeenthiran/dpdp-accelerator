@@ -25,7 +25,7 @@ import ConsentApprovalDialog from './components/ConsentApprovalDialog'
 import ConsentRegistryFilters from './components/ConsentRegistryFilters'
 import ConsentRegistryTable from './components/ConsentRegistryTable'
 import ConsentRevocationDialog from './components/ConsentRevocationDialog'
-import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from './constants'
+import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS, PENDING_CONSENTS_VIEW_SEARCH } from './constants'
 import type {
   ConsentRegistryFilters as ConsentRegistryFiltersModel,
   ConsentRelation,
@@ -192,6 +192,7 @@ function ConsentRegistryPage(): React.JSX.Element {
             updateParams(filters, DEFAULT_PAGE, nextRowsPerPage)
           }
           onRetry={() => consentListQuery.refetch()}
+          detailSearch={isPendingView ? PENDING_CONSENTS_VIEW_SEARCH : ''}
           showSubject={filters.relation !== 'SUBJECT'}
           currentUserId={currentUser.userId}
           canApprove={canWriteSelf}

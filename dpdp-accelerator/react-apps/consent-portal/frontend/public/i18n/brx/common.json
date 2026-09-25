@@ -32,13 +32,14 @@
     "administration": "सालायनाय",
     "adminConsents": "गासैबो गनायथिनायफोर",
     "myComplaints": "आंनि अजतफोर",
+    "complaints": "अजतफोर",
     "complaintManagement": "अजतफोर",
     "events": "जाथायफोर",
+    "eventNotifications": "इभेन्ट नोटिफिकेशन",
     "topics": "आयदाफोर",
     "subscriptions": "साब्सक्रिपसनफोर"
   },
   "layout": {
-    "home": "न'",
     "breadcrumbAriaLabel": "ब्रेडक्राम्ब",
     "userMenu": {
       "unknownUser": "मिथिमोनै बाहायग्रा",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "बाहायगिरि जिउ-खान्थि टपिकफोरखौ लाफानाय समाव गासैबो थांखि फिल्टरखौ सायख'।",
       "topicRequired": "आयदाया गोनांथार।",
       "filterModeLabel": "थांखि फिल्टर मड",
-      "purposesLabel": "थांखिफोर (खमाजों बोखावजानाय)",
-      "purposesPlaceholder": "बिदिन्थि: मार्केटिं, एनालिटिक्स",
-      "purposesHelper": "साफा खालामनो थाखाय गनायथिनि थांखिफोरनि कमानिजों बोखावजानाय फारिलाइ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "थांखिफोरखौ मोनसे थि एबा गासैखौबो नागारनानै सोदांनाय समाव नांगौ जायो।",
       "deliveryModeLabel": "दैथायहरनाय राहा",
       "callbackUrlLabel": "वेभहक केलबेक इउ.आर.एल.",
@@ -735,7 +736,10 @@
       "secretHelper": "वेभहक पेल्डफोरखौ साइन इन खालामनो एबा प'लनि खावलायनायफोरखौ थारथियारि खालामनो बाहायनाय जादोंमोन।",
       "generateSecret": "गोदान सिरि सोरजि",
       "registering": "रेजिस्टार खालामगासिनो दं...",
-      "registerSubmit": "साब्सक्रिपसनखौ रेजिस्टार खालाम"
+      "registerSubmit": "साब्सक्रिपसनखौ रेजिस्टार खालाम",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "साब्सक्रिपसन फोजोबनायखौ थारथि खालाम",

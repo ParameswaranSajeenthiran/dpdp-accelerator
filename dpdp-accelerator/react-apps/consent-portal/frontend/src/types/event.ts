@@ -21,7 +21,6 @@ export interface EventRecord {
   eventId: string
   subscriptionId?: string
   orgId?: string
-  groupId?: string
   topic?: string
   topicId?: string
   payload?: string
@@ -44,7 +43,6 @@ export interface EventListQueryParams {
   status?: string
   topic?: string
   subscriptionId?: string
-  groupId?: string
   purposes?: string
 }
 
@@ -55,7 +53,6 @@ export interface EventListResponse {
 
 export interface EventInput {
   topic: string
-  groupId?: string
   purposes?: string[]
   payload: Record<string, unknown>
 }
@@ -64,6 +61,5 @@ export interface EventFilters {
   search: string
   status: string
   topic: string
-  groupId: string
   subscriptionId: string
 }

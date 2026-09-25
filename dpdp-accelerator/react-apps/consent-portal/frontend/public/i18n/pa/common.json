@@ -32,13 +32,14 @@
     "administration": "ਪ੍ਰਸ਼ਾਸਨ",
     "adminConsents": "ਸਾਰੀਆਂ ਸਹਿਮਤੀਆਂ",
     "myComplaints": "ਮੇਰੀਆਂ ਸ਼ਿਕਾਇਤਾਂ",
+    "complaints": "ਸ਼ਿਕਾਇਤਾਂ",
     "complaintManagement": "ਸ਼ਿਕਾਇਤਾਂ",
     "events": "ਸਮਾਗਮ",
+    "eventNotifications": "ਇਵੈਂਟ ਨੋਟੀਫਿਕੇਸ਼ਨ",
     "topics": "ਵਿਸ਼ੇ",
     "subscriptions": "ਸਬਸਕ੍ਰਿਪਸ਼ਨਾਂ"
   },
   "layout": {
-    "home": "ਹੋਮ",
     "breadcrumbAriaLabel": "ਬ੍ਰੈੱਡਕ੍ਰੰਬ",
     "userMenu": {
       "unknownUser": "ਅਣਪਛਾਤਾ ਵਰਤੋਂਕਾਰ",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "ਜਦੋਂ ਯੂਜ਼ਰ ਲਾਈਫਸਾਈਕਲ ਟੌਪਿਕਸ ਸ਼ਾਮਲ ਕਰ ਰਹੇ ਹੋਵੋ ਤਾਂ ਸਾਰੇ ਮਕਸਦ ਵਾਲਾ ਫਿਲਟਰ ਚੁਣੋ।",
       "topicRequired": "ਵਿਸ਼ਾ ਦੀ ਲੋੜ ਹੈ।",
       "filterModeLabel": "ਉਦੇਸ਼ ਫਿਲਟਰ ਮੋਡ",
-      "purposesLabel": "ਉਦੇਸ਼ (ਕਾਮੇ ਨਾਲ ਵੱਖ ਕੀਤੇ ਗਏ)",
-      "purposesPlaceholder": "ਜਿਵੇਂ ਕਿ ਮਾਰਕੀਟਿੰਗ, ਵਿਸ਼ਲੇਸ਼ਣ",
-      "purposesHelper": "ਫਿਲਟਰ ਕਰਨ ਲਈ ਸਹਿਮਤੀ ਉਦੇਸ਼ਾਂ ਦੀ ਕਾਮੇ ਨਾਲ ਵੱਖ ਕੀਤੀ ਸੂਚੀ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ਜਦੋਂ ਖਾਸ ਜਾਂ ਸਾਰੇ-ਬਿਨਾਂ ਫਿਲਟਰ ਕਰਦੇ ਹੋ ਤਾਂ ਉਦੇਸ਼ਾਂ ਦੀ ਲੋੜ ਹੁੰਦੀ ਹੈ।",
       "deliveryModeLabel": "ਡਿਲੀਵਰੀ ਢੰਗ",
       "callbackUrlLabel": "ਵੈੱਬਹੁੱਕ ਕਾਲਬੈਕ URL",
@@ -735,7 +736,10 @@
       "secretHelper": "ਵੈੱਬਹੁੱਕ ਪੇਲੋਡਾਂ 'ਤੇ ਦਸਤਖਤ ਕਰਨ ਜਾਂ ਪੋਲ ਬੇਨਤੀਆਂ ਨੂੰ ਪ੍ਰਮਾਣਿਤ ਕਰਨ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ",
       "generateSecret": "ਨਵਾਂ ਗੁਪਤ ਤਿਆਰ ਕਰੋ",
       "registering": "ਰਜਿਸਟਰ ਕਰ ਰਿਹਾ ਹੈ...",
-      "registerSubmit": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਰਜਿਸਟਰ ਕਰੋ"
+      "registerSubmit": "ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਰਜਿਸਟਰ ਕਰੋ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ਗਾਹਕੀ ਮਿਟਾਉਣ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",

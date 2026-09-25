@@ -33,7 +33,6 @@ import {
 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
-import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import useAuthorization from '../auth/useAuthorization'
 import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
 import type { PageCount } from '../../utils/cursorPagination'
@@ -155,7 +154,6 @@ function DashboardPage(): React.JSX.Element {
     <Box component="main" sx={{ p: { xs: 2, md: 4 } }}>
       <Stack spacing={3}>
         <Stack spacing={0.75}>
-          <HeaderBreadcrumbs />
           <Typography variant="h4" fontWeight={700}>
             {t('dashboard.title')}
           </Typography>

@@ -69,6 +69,8 @@ interface ConsentRegistryTableProps {
   onRowsPerPageChange: (rowsPerPage: number) => void
   onRetry: () => void
   detailBasePath?: string
+  /** Appended to detail links so the details page knows which list it was opened from. */
+  detailSearch?: string
   showSubject?: boolean
   showPurposes?: boolean
   /**
@@ -98,6 +100,7 @@ export default function ConsentRegistryTable({
   onRowsPerPageChange,
   onRetry,
   detailBasePath = '/consents',
+  detailSearch = '',
   showSubject = false,
   showPurposes = true,
   currentUserId = '',
@@ -122,10 +125,10 @@ export default function ConsentRegistryTable({
       const consentID = event.currentTarget.dataset.consentId
 
       if (consentID) {
-        navigate(`${detailBasePath}/${encodeURIComponent(consentID)}`)
+        navigate(`${detailBasePath}/${encodeURIComponent(consentID)}${detailSearch}`)
       }
     },
-    [detailBasePath, navigate],
+    [detailBasePath, detailSearch, navigate],
   )
 
   const handleApproveClick = useCallback(
@@ -341,7 +344,7 @@ export default function ConsentRegistryTable({
                           <IconButton
                             size="small"
                             component={RouterLink}
-                            to={`${detailBasePath}/${encodeURIComponent(row.id)}`}
+                            to={`${detailBasePath}/${encodeURIComponent(row.id)}${detailSearch}`}
                             aria-label={t('consentRegistry.actions.view')}
                             onClick={handleStopPropagation}
                           >
@@ -431,6 +434,7 @@ export default function ConsentRegistryTable({
 
 ConsentRegistryTable.defaultProps = {
   detailBasePath: '/consents',
+  detailSearch: '',
   showSubject: false,
   showPurposes: true,
   currentUserId: '',

@@ -32,13 +32,14 @@
     "administration": "ᱥᱟᱥᱚᱱ",
     "adminConsents": "ᱥᱟᱱᱟᱢ ᱨᱟᱡᱤ",
     "myComplaints": "ᱤᱧᱟᱜ ᱚᱵᱷᱤᱡᱳᱜᱽ",
+    "complaints": "ᱚᱵᱷᱤᱡᱳᱜᱽ",
     "complaintManagement": "ᱚᱵᱷᱤᱡᱳᱜᱽ",
     "events": "ᱤᱵᱷᱮᱱᱴᱥ",
     "topics": "ᱴᱚᱯᱤᱠᱥ",
+    "eventNotifications": "ᱤᱵᱷᱮᱱᱴ ᱵᱟᱰᱟᱭ ᱚᱪᱚ ᱠᱚ",
     "subscriptions": "ᱥᱚᱦᱮᱫ"
   },
   "layout": {
-    "home": "ᱳᱲᱟᱜ",
     "breadcrumbAriaLabel": "ᱵᱨᱮᱰᱠᱨᱚᱢᱵᱽ",
     "userMenu": {
       "unknownUser": "ᱚᱡᱟᱱᱟ ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ",
@@ -735,7 +736,10 @@
       "secretHelper": "ᱣᱮᱵᱦᱩᱠ ᱯᱮᱞᱳᱰ ᱥᱟᱭᱤᱱ ᱥᱮ ᱯᱳᱞ ᱨᱤᱠᱷᱤᱥᱴ ᱟᱣᱛᱷᱮᱱᱴᱤᱠᱮᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱾",
       "generateSecret": "ᱱᱟᱣᱟ ᱩᱠᱩ ᱛᱮᱭᱟᱨᱟ",
       "registering": "ᱨᱮᱡᱤᱥᱴᱟᱨ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
-      "registerSubmit": "ᱥᱟᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱨᱮᱡᱤᱥᱴᱟᱨ ᱢᱮ"
+      "registerSubmit": "ᱥᱟᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱨᱮᱡᱤᱥᱴᱟᱨ ᱢᱮ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ᱥᱚᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱢᱤᱥᱟᱹᱣ ᱨᱮᱭᱟᱜ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",

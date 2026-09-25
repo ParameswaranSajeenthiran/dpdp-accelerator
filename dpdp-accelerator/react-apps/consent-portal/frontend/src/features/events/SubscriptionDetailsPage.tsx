@@ -30,15 +30,7 @@ import {
   Stack,
   Typography,
 } from '@wso2/oxygen-ui'
-import {
-  ArrowLeft,
-  Clock3,
-  Globe,
-  RefreshCw,
-  Tag,
-  Trash2,
-  Users,
-} from '@wso2/oxygen-ui-icons-react'
+import { ArrowLeft, Clock3, Globe, RefreshCw, Tag, Trash2 } from '@wso2/oxygen-ui-icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -214,11 +206,6 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                   icon: <Tag size={16} />,
                   label: t('subscriptions.table.subscriptionId'),
                   value: <CopyableText value={sub.subscriptionId} monospace />,
-                },
-                {
-                  icon: <Users size={16} />,
-                  label: t('subscriptions.table.groupId'),
-                  value: sub.groupId ? <CopyableText value={sub.groupId} monospace /> : '-',
                 },
                 {
                   icon: <Globe size={16} />,

@@ -276,9 +276,10 @@ Then confirm which key the component actually renders. Traps that have already c
   identical strings, different pages.
 - `sidebar.myComplaints` renders "My Complaints" (the Data Principal's own item) while
   `sidebar.complaintManagement` renders just **"Complaints"** — not "Complaint Management" as the
-  key name suggests.
-- In the event-notification sidebar, "Events" is both a nav *item* and the *category* heading above
-  it. Target the item by its button role to disambiguate.
+  key name suggests. `sidebar.complaints` is *also* "Complaints": the category heading above
+  "My Complaints". So an exact-text "Complaints" match can be either the heading or the officer's item.
+- In the event-notification sidebar the category heading is `sidebar.eventNotifications`
+  ("Event Notifications"); "Events" is only the nav *item*, targeted by its button role in `09.05`.
 
 Also note the elements and purposes lists have **different** search placeholders ("Search by element
 name" / "Search by purpose name"), so no shared "Search by name" locator can match either.

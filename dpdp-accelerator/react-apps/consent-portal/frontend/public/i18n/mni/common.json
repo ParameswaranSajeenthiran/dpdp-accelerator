@@ -32,13 +32,14 @@
     "administration": "শাসন/পরিচালনা",
     "adminConsents": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯌꯥꯅꯕ",
     "myComplaints": "ইগী ৱাকৎশিং",
+    "complaints": "Complaints",
     "complaintManagement": "ৱাকৎ পরিচালনা",
     "events": "ꯏꯚꯦꯟꯠꯁꯤꯡ",
+    "eventNotifications": "ꯏꯚꯦꯟꯠ ꯈꯪꯍꯟꯕꯁꯤꯡ",
     "topics": "ꯇꯣꯄꯤꯛꯁꯤꯡ",
     "subscriptions": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ"
   },
   "layout": {
-    "home": "য়ুম (Home)",
     "breadcrumbAriaLabel": "ব্রেডক্রম্ব",
     "userMenu": {
       "unknownUser": "খংদবা শীজিন্নবমী",
@@ -735,7 +736,10 @@
       "secretHelper": "ꯋꯦꯕꯍꯨꯛ ꯄꯦꯂꯣꯗꯁꯤꯡ ꯁꯥꯏꯟ ꯇꯧꯅꯕ ꯅꯠꯇ꯭ꯔꯒ ꯄꯣꯜ ꯔꯤꯀ꯭ꯋꯦꯁꯠꯁꯤꯡ ꯑꯣꯊꯦꯟꯇꯤꯀꯦꯠ ꯇꯧꯅꯕ ꯁꯤꯖꯤꯟꯅꯩ",
       "generateSecret": "ꯑꯅꯧꯕ ꯁꯤꯀ꯭ꯔꯦꯠ ꯖꯦꯅꯔꯦꯠ ꯇꯧ꯫",
       "registering": "ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧꯔꯤ...",
-      "registerSubmit": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫"
+      "registerSubmit": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯗꯤꯂꯤꯁꯟ ꯀꯟꯐꯔꯝ ꯇꯧ꯫",

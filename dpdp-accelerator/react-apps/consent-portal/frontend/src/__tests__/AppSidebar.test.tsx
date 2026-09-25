@@ -272,12 +272,32 @@ describe('AppSidebar', () => {
       </OxygenUIThemeProvider>,
     )
 
-    expect(screen.getAllByText('Events').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Event Notifications')).toBeInTheDocument()
+    expect(screen.getByText('Events')).toBeInTheDocument()
     expect(screen.getByText('Topics')).toBeInTheDocument()
     expect(screen.getByText('Subscriptions')).toBeInTheDocument()
     expect(screen.getByText('/events/subscriptions')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Topics'))
     expect(screen.getByText('/events/topics')).toBeInTheDocument()
+  })
+
+  it('groups My Complaints under a Complaints category', () => {
+    render(
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <I18nextProvider i18n={i18n}>
+          <MemoryRouter initialEntries={['/complaints']}>
+            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.COMPLAINTS_READ_SELF]}>
+              <AppSidebar collapsed={false} />
+            </TestAuthorizationProvider>
+          </MemoryRouter>
+        </I18nextProvider>
+      </OxygenUIThemeProvider>,
+    )
+
+    const navigationText = screen.getByRole('navigation').textContent ?? ''
+    expect(navigationText.indexOf('Complaints')).toBeLessThan(
+      navigationText.indexOf('My Complaints'),
+    )
   })
 })

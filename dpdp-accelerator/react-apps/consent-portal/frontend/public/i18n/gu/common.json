@@ -32,13 +32,14 @@
     "administration": "વહીવટ",
     "adminConsents": "બધી સંમતિઓ",
     "myComplaints": "મારી ફરિયાદો",
+    "complaints": "ફરિયાદો",
     "complaintManagement": "ફરિયાદો",
     "events": "ઘટનાઓ",
+    "eventNotifications": "ઇવેન્ટ નોટિફિકેશન્સ",
     "topics": "વિષયો",
     "subscriptions": "સબ્સ્ક્રિપ્શન્સ"
   },
   "layout": {
-    "home": "હોમ",
     "breadcrumbAriaLabel": "બ્રેડક્રમ્બ",
     "userMenu": {
       "unknownUser": "અજ્ઞાત વપરાશકર્તા",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "યુઝર લાઇફસાઇકલ ટોપિક્સનો સમાવેશ કરતી વખતે ઓલ પર્પઝ ફિલ્ટર પસંદ કરો.",
       "topicRequired": "વિષય જરૂરી છે.",
       "filterModeLabel": "હેતુ ફિલ્ટર મોડ",
-      "purposesLabel": "હેતુઓ (અલ્પવિરામથી અલગ કરેલ)",
-      "purposesPlaceholder": "દા.ત. માર્કેટિંગ, એનાલિટિક્સ",
-      "purposesHelper": "ફિલ્ટર કરવા માટે સંમતિ હેતુઓની અલ્પવિરામથી અલગ કરેલી સૂચિ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ચોક્કસ અથવા બધા સિવાય ફિલ્ટર કરતી વખતે હેતુઓ જરૂરી છે.",
       "deliveryModeLabel": "ડિલિવરી મોડ",
       "callbackUrlLabel": "વેબહૂક કૉલબેક URL",
@@ -735,7 +736,10 @@
       "secretHelper": "વેબહૂક પેલોડ્સ સાઇન કરવા અથવા પોલ વિનંતીઓને પ્રમાણિત કરવા માટે વપરાય છે",
       "generateSecret": "નવું સિક્રેટ જનરેટ કરો",
       "registering": "રજીસ્ટર થઈ રહ્યું છે...",
-      "registerSubmit": "સબ્સ્ક્રિપ્શન રજીસ્ટર કરો"
+      "registerSubmit": "સબ્સ્ક્રિપ્શન રજીસ્ટર કરો",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "સબ્સ્ક્રિપ્શન ડિલીટ કરવાની પુષ્ટિ કરો",

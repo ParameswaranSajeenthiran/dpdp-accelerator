@@ -32,13 +32,14 @@
     "administration": "ಆಡಳಿತ",
     "adminConsents": "ಎಲ್ಲಾ ಒಪ್ಪಿಗೆಗಳು",
     "myComplaints": "ನನ್ನ ದೂರುಗಳು",
+    "complaints": "ದೂರುಗಳು",
     "complaintManagement": "ದೂರುಗಳು",
     "events": "ಘಟನೆಗಳು",
+    "eventNotifications": "ಇವೆಂಟ್ ಅಧಿಸೂಚನೆಗಳು",
     "topics": "ವಿಷಯಗಳು",
     "subscriptions": "ಚಂದಾದಾರಿಕೆಗಳು"
   },
   "layout": {
-    "home": "ಮುಖಪುಟ",
     "breadcrumbAriaLabel": "ಬ್ರೆಡ್‌ಕ್ರಂಬ್",
     "userMenu": {
       "unknownUser": "ತಿಳಿಯದ ಬಳಕೆದಾರ",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "ಬಳಕೆದಾರರ ಜೀವನಚಕ್ರದ ವಿಷಯಗಳನ್ನು ಸೇರಿಸುವಾಗ ಎಲ್ಲಾ ಉದ್ದೇಶಗಳ ಫಿಲ್ಟರ್ ಅನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
       "topicRequired": "ವಿಷಯವು ಅಗತ್ಯವಿದೆ.",
       "filterModeLabel": "ಉದ್ದೇಶ ಫಿಲ್ಟರ್ ಮೋಡ್",
-      "purposesLabel": "ಉದ್ದೇಶಗಳು (ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಲಾಗಿದೆ)",
-      "purposesPlaceholder": "ಉದಾಹರಣೆಗೆ MARKETING, ANALYTICS",
-      "purposesHelper": "ಫಿಲ್ಟರ್ ಮಾಡಲು ಒಪ್ಪಿಗೆ ಉದ್ದೇಶಗಳ ಕಾಮಾ-ಬೇರ್ಪಡಿಸಿದ ಪಟ್ಟಿ",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ನಿರ್ದಿಷ್ಟ ಅಥವಾ ಎಲ್ಲವನ್ನೂ ಹೊರತುಪಡಿಸಿ ಫಿಲ್ಟರ್ ಮಾಡುವಾಗ ಉದ್ದೇಶಗಳು ಅಗತ್ಯವಿದೆ.",
       "deliveryModeLabel": "ವಿತರಣಾ ವಿಧಾನ",
       "callbackUrlLabel": "ವೆಬ್‌ಹುಕ್ ಕಾಲ್ಬ್ಯಾಕ್ URL",
@@ -735,7 +736,10 @@
       "secretHelper": "ವೆಬ್‌ಹುಕ್ ಪೇಲೋಡ್‌ಗಳನ್ನು ಸೈನ್ ಮಾಡಲು ಅಥವಾ ಮತದಾನ ವಿನಂತಿಗಳನ್ನು ದೃಢೀಕರಿಸಲು ಬಳಸಲಾಗುತ್ತದೆ",
       "generateSecret": "ಹೊಸ ರಹಸ್ಯವನ್ನು ರಚಿಸಿ",
       "registering": "ನೋಂದಾಯಿಸಲಾಗುತ್ತಿದೆ...",
-      "registerSubmit": "ಚಂದಾದಾರಿಕೆಯನ್ನು ನೋಂದಾಯಿಸಿ"
+      "registerSubmit": "ಚಂದಾದಾರಿಕೆಯನ್ನು ನೋಂದಾಯಿಸಿ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ಚಂದಾದಾರಿಕೆ ಅಳಿಸುವಿಕೆಯನ್ನು ಖಚಿತಪಡಿಸಿ",

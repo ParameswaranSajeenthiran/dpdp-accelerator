@@ -32,13 +32,14 @@
     "administration": "প্রশাসন",
     "adminConsents": "সকল সম্মতি",
     "myComplaints": "আমার অভিযোগ",
+    "complaints": "অভিযোগ",
     "complaintManagement": "অভিযোগ",
     "events": "ইভেন্ট",
+    "eventNotifications": "ইভেন্ট নোটিফিকেশনস",
     "topics": "বিষয়সমূহ",
     "subscriptions": "সদস্যতা"
   },
   "layout": {
-    "home": "হোম",
     "breadcrumbAriaLabel": "ব্রেডক্রাম্ব",
     "userMenu": {
       "unknownUser": "অজানা ব্যবহারকারী",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "ইউজার লাইফসাইকেল টপিক অন্তর্ভুক্ত করার সময় সব উদ্দেশ্যের ফিল্টার নির্বাচন করুন।",
       "topicRequired": "বিষয়টি প্রয়োজন।",
       "filterModeLabel": "উদ্দেশ্য ফিল্টার মোড",
-      "purposesLabel": "উদ্দেশ্য (কমা-পৃথক)",
-      "purposesPlaceholder": "যেমন: মার্কেটিং, অ্যানালিটিক্স",
-      "purposesHelper": "ফিল্টার করার জন্য সম্মতির উদ্দেশ্যগুলির কমা-বিচ্ছিন্ন তালিকা",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "নির্দিষ্ট বা সমস্ত-ব্যতীত দ্বারা ফিল্টার করার সময় উদ্দেশ্যের প্রয়োজন।",
       "deliveryModeLabel": "ডেলিভারি মোড",
       "callbackUrlLabel": "ওয়েবহুক কলব্যাক URL",
@@ -735,7 +736,10 @@
       "secretHelper": "ওয়েবহুক পেলোড সাইন ইন করতে বা পোল অনুরোধ প্রমাণীকরণে ব্যবহৃত হয়",
       "generateSecret": "নতুন গোপন তৈরি করুন",
       "registering": "নিবন্ধন করা হচ্ছে...",
-      "registerSubmit": "সদস্যতা নিবন্ধন করুন"
+      "registerSubmit": "সদস্যতা নিবন্ধন করুন",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "সাবস্ক্রিপশন মুছে ফেলা নিশ্চিত করুন",

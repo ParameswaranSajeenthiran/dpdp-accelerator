@@ -32,13 +32,14 @@
     "administration": "انتظاميه",
     "adminConsents": "सभुई रज़ामंदी",
     "myComplaints": "منهنجون شڪايتون",
+    "complaints": "شڪايتون",
     "complaintManagement": "شڪايتون",
     "events": "वाक़िआ",
+    "eventNotifications": "ايونٽ نوٽيفيڪيشنز",
     "topics": "मौजूअ",
     "subscriptions": "सदस्यताउं"
   },
   "layout": {
-    "home": "گھر",
     "breadcrumbAriaLabel": "بريڊ ڪرمب",
     "userMenu": {
       "unknownUser": "نامعلوم استعمال ڪندڙ",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "Select the all purpose filter when including user lifecycle topics.",
       "topicRequired": "मौजूअ ज़रूरी आहे।",
       "filterModeLabel": "मक़्सद फ़िल्टर मोड",
-      "purposesLabel": "मक़्सद (कॉमा सां जुदा कयल)",
-      "purposesPlaceholder": "मिसाल तौर, मार्केटिंग, एनालिटिक्स",
-      "purposesHelper": "फ़िल्टर करणु लाइ रज़ामंदी जे मक़्सदनि जी कॉमा सां जुदा कयल फ़हरिस्त",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "मक़्सद ज़रूरी आहिनि जॾहिं ख़ास या सभिनी खां सवाइ फ़िल्टर कजे।",
       "deliveryModeLabel": "डिलीवरी जो तरीक़ो",
       "callbackUrlLabel": "वेबहुक कैलबैक यूआरएल",
@@ -735,7 +736,10 @@
       "secretHelper": "वेबहुक पेलोड्स खे साइन इन करणु या पोल रिक्वेस्टनि जी तस्दीक़ करणु लाइ इस्तिमाल कयो वियो",
       "generateSecret": "नओं राज़ ठाहियो",
       "registering": "रजिस्टर कयो पियो वञे...",
-      "registerSubmit": "सदस्यता रजिस्टर करियो"
+      "registerSubmit": "सदस्यता रजिस्टर करियो",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता मिटाइणु जी तस्दीक़ करियो",

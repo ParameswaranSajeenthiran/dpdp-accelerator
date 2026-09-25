@@ -32,13 +32,14 @@
     "administration": "నిర్వహణ",
     "adminConsents": "అన్ని అంగీకారాలు",
     "myComplaints": "నా ఫిర్యాదులు",
+    "complaints": "ఫిర్యాదులు",
     "complaintManagement": "ఫిర్యాదులు",
     "events": "ఈవెంట్‌లు",
+    "eventNotifications": "ఈవెంట్ నోటిఫికేషన్లు",
     "topics": "అంశాలు",
     "subscriptions": "సబ్‌స్క్రిప్షన్‌లు"
   },
   "layout": {
-    "home": "హోమ్",
     "breadcrumbAriaLabel": "బ్రెడ్‌క్రంబ్",
     "userMenu": {
       "unknownUser": "తెలియని వినియోగదారు",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "వినియోగదారు లైఫ్‌సైకిల్ అంశాలను చేర్చుతున్నప్పుడు అన్ని ఉద్దేశాల ఫిల్టర్‌ను ఎంచుకోండి.",
       "topicRequired": "అంశం అవసరం.",
       "filterModeLabel": "ఉద్దేశ్య ఫిల్టర్ మోడ్",
-      "purposesLabel": "ఉద్దేశ్యాలు (కామాతో వేరు చేయబడినవి)",
-      "purposesPlaceholder": "ఉదాహరణకు, MARKETING, ANALYTICS",
-      "purposesHelper": "ఫిల్టర్ చేయడానికి సమ్మతి ప్రయోజనాల యొక్క కామాతో వేరు చేయబడిన జాబితా",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "నిర్దిష్ట లేదా అన్నింటినీ మినహాయించి ఫిల్టర్ చేసేటప్పుడు ఉద్దేశ్యాలు అవసరం.",
       "deliveryModeLabel": "పంపిణీ విధానం",
       "callbackUrlLabel": "వెబ్‌హుక్ కాల్‌బ్యాక్ URL",
@@ -735,7 +736,10 @@
       "secretHelper": "వెబ్‌హుక్ పేలోడ్‌లను సైన్ చేయడానికి లేదా పోల్ అభ్యర్థనలను ప్రామాణీకరించడానికి ఉపయోగించబడింది",
       "generateSecret": "కొత్త రహస్యాన్ని ఉత్పత్తి చేయి",
       "registering": "నమోదు చేస్తోంది...",
-      "registerSubmit": "సబ్‌స్క్రిప్షన్‌ను నమోదు చేయు"
+      "registerSubmit": "సబ్‌స్క్రిప్షన్‌ను నమోదు చేయు",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "సభ్యత్వం తొలగింపును నిర్ధారించు",

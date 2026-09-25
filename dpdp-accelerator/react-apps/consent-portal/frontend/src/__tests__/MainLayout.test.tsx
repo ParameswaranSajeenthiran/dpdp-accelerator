@@ -122,11 +122,9 @@ describe('MainLayout', () => {
     renderHeaderBreadcrumbs('/administration/consents')
 
     const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
-    expect(within(breadcrumbs).getByText('Home')).toBeInTheDocument()
-    expect(within(breadcrumbs).getByRole('link', { name: 'Administration' })).toHaveAttribute(
-      'href',
-      '/administration/consents',
-    )
+    expect(within(breadcrumbs).queryByText('Home')).not.toBeInTheDocument()
+    expect(within(breadcrumbs).getByText('Administration')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Administration' })).toBeNull()
     expect(within(breadcrumbs).getByText('All Consents')).toHaveAttribute('aria-current', 'page')
   })
 
@@ -134,7 +132,7 @@ describe('MainLayout', () => {
     renderHeaderBreadcrumbs('/administration/consents/consent%2F123%3Fdraft')
 
     const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
-    expect(within(breadcrumbs).getByRole('link', { name: 'Administration' })).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Administration' })).toBeNull()
     expect(within(breadcrumbs).getByRole('link', { name: 'All Consents' })).toHaveAttribute(
       'href',
       '/administration/consents',
@@ -149,7 +147,90 @@ describe('MainLayout', () => {
     renderHeaderBreadcrumbs('/consents')
 
     const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Consent')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Consent' })).toBeNull()
     expect(within(breadcrumbs).getByText('My Consents')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('shows Dashboard as the only crumb on the dashboard', () => {
+    renderHeaderBreadcrumbs('/dashboard')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Dashboard')).toHaveAttribute('aria-current', 'page')
+    expect(within(breadcrumbs).queryAllByRole('link')).toHaveLength(0)
+  })
+
+  it('places Purposes and Elements under Definitions', () => {
+    renderHeaderBreadcrumbs('/purposes')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Definitions')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Definitions' })).toBeNull()
+    expect(within(breadcrumbs).getByText('Purposes')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('places element details under Definitions and Elements', () => {
+    renderHeaderBreadcrumbs('/elements/email')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Definitions')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Definitions' })).toBeNull()
+    expect(within(breadcrumbs).getByRole('link', { name: 'Elements' })).toHaveAttribute(
+      'href',
+      '/elements',
+    )
+    expect(within(breadcrumbs).getByText('email')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('places subscription details under Event Notifications and Subscriptions', () => {
+    renderHeaderBreadcrumbs('/events/subscriptions/sub-1')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Event Notifications')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Event Notifications' })).toBeNull()
+    expect(within(breadcrumbs).getByRole('link', { name: 'Subscriptions' })).toHaveAttribute(
+      'href',
+      '/events/subscriptions',
+    )
+    expect(within(breadcrumbs).getByText('sub-1')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('places event details under Event Notifications and Events', () => {
+    renderHeaderBreadcrumbs('/events/event-1')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Event Notifications' })).toBeNull()
+    expect(within(breadcrumbs).getByRole('link', { name: 'Events' })).toHaveAttribute(
+      'href',
+      '/events',
+    )
+    expect(within(breadcrumbs).getByText('event-1')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('places complaint details under Complaints and My Complaints', () => {
+    renderHeaderBreadcrumbs('/complaints/CMP-1')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Complaints')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Complaints' })).toBeNull()
+    expect(within(breadcrumbs).getByRole('link', { name: 'My Complaints' })).toHaveAttribute(
+      'href',
+      '/complaints',
+    )
+    expect(within(breadcrumbs).getByText('CMP-1')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('keeps pending consent details under My Pending Consents', () => {
+    renderHeaderBreadcrumbs('/consents/consent-1?view=pending')
+
+    const breadcrumbs = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(within(breadcrumbs).getByText('Consent')).toBeInTheDocument()
+    expect(within(breadcrumbs).queryByRole('link', { name: 'Consent' })).toBeNull()
+    expect(within(breadcrumbs).getByRole('link', { name: 'My Pending Consents' })).toHaveAttribute(
+      'href',
+      '/consents?view=pending&state=PENDING',
+    )
+    expect(within(breadcrumbs).queryByText('My Consents')).not.toBeInTheDocument()
   })
 
   it('shows My Pending Consents for the dedicated pending view', () => {

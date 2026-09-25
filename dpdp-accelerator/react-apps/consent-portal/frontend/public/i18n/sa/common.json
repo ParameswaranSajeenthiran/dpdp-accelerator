@@ -32,13 +32,14 @@
     "administration": "प्रशासनम्",
     "adminConsents": "सर्वे अनुमतयः",
     "myComplaints": "मम आक्षेपाः",
+    "complaints": "आक्षेपाः",
     "complaintManagement": "आक्षेपाः",
     "events": "घटनानि",
+    "eventNotifications": "इवेन्ट् सूचनाः",
     "topics": "विषयाः",
     "subscriptions": "सदस्यताः"
   },
   "layout": {
-    "home": "गृहम्",
     "breadcrumbAriaLabel": "मार्गदर्शिका",
     "userMenu": {
       "unknownUser": "अज्ञातः उपयोक्ता",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "उपयोक्तृजीवनचक्रविषयान् समावेशयन् सर्वोद्देश्यशोधकं चिनोतु।",
       "topicRequired": "विषयः आवश्यकः।",
       "filterModeLabel": "उद्देश्य-शोधन-विधिः",
-      "purposesLabel": "उद्देश्यानि (अल्पविरामचिह्नैः विभक्तानि)",
-      "purposesPlaceholder": "उदाहरणार्थं, विपणनम्, विश्लेषिकी",
-      "purposesHelper": "शोधयितुं सहमति उद्देश्यानां अल्पविराम-पृथक् सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "उद्देश्यानि आवश्यकानि यदा विशिष्टेन अथवा सर्वैः विना शोधयन्ति।",
       "deliveryModeLabel": "वितरण प्रकारः",
       "callbackUrlLabel": "वेबहुक् प्रतिपुष्टि URL",
@@ -735,7 +736,10 @@
       "secretHelper": "वेबहुक् पेल्ड्स् इत्यस्य साइन-अप् कर्तुं अथवा पोल् अनुरोधान् प्रमाणीकर्तुं प्रयुक्तम्",
       "generateSecret": "नूतनं गुप्तं जनय",
       "registering": "पञ्जीकरणं क्रियते...",
-      "registerSubmit": "सदस्यता पञ्जीकुरु"
+      "registerSubmit": "सदस्यता पञ्जीकुरु",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता विलोपनं निश्चितं कुरु",

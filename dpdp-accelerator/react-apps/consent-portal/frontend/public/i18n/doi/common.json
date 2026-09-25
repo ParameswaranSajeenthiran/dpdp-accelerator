@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सभनें दी मंजूरी",
     "myComplaints": "मेरी शिकायतां",
+    "complaints": "शिकायतां",
     "complaintManagement": "शिकायतां",
     "events": "घटनां",
+    "eventNotifications": "इवेंट नोटिफिकेशन",
     "topics": "विशे।",
     "subscriptions": "सदस्यताएं"
   },
   "layout": {
-    "home": "होम",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अनजाण बरतूनदार",
@@ -735,7 +736,10 @@
       "secretHelper": "वेबहुक पेलोड पर हस्ताक्षर करने जां पोल अनुरोधें गी प्रमाणित करने लेई इस्तेमाल कीता जंदा ऐ",
       "generateSecret": "नमां गुप्त कोड बनाओ",
       "registering": "पंजीकृत कीता जा करदा ऐ...",
-      "registerSubmit": "सदस्यता पंजीकृत करो"
+      "registerSubmit": "सदस्यता पंजीकृत करो",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता मिटाने दी पुष्टी करो",

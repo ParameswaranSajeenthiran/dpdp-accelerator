@@ -32,13 +32,14 @@
     "administration": "انتظامیہ",
     "adminConsents": "تمام رضامندیاں",
     "myComplaints": "میری شکایتیں",
+    "complaints": "شکایتیں",
     "complaintManagement": "شکایتیں",
     "events": "واقعات",
+    "eventNotifications": "ایونٹ نوٹیفکیشنز",
     "topics": "موضوعات",
     "subscriptions": "سبسکرپشنز"
   },
   "layout": {
-    "home": "ہوم",
     "breadcrumbAriaLabel": "بریڈ کرمب",
     "userMenu": {
       "unknownUser": "نامعلوم صارف",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "جب صارف کے لائف سائیکل کے موضوعات شامل کر رہے ہوں تو تمام مقاصد کا فلٹر منتخب کریں۔",
       "topicRequired": "موضوع ضروری ہے۔",
       "filterModeLabel": "مقصد فلٹر موڈ",
-      "purposesLabel": "مقاصد (کمیہ سے جدا)",
-      "purposesPlaceholder": "مثال کے طور پر، مارکیٹنگ، تجزیات",
-      "purposesHelper": "فلٹر کرنے کے لیے رضامندی کے مقاصد کی کوما سے جدا فہرست",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "مخصوص یا تمام کے علاوہ کے ذریعے فلٹر کرتے وقت مقاصد کی ضرورت ہوتی ہے۔",
       "deliveryModeLabel": "ڈیلیوری موڈ",
       "callbackUrlLabel": "ویب ہک کال بیک یو آر ایل",
@@ -735,7 +736,10 @@
       "secretHelper": "ویب ہک پے لوڈز پر دستخط کرنے یا پول کی درخواستوں کی تصدیق کرنے کے لیے استعمال کیا جاتا ہے",
       "generateSecret": "نیا خفیہ بنائیں",
       "registering": "رجسٹر ہو رہا ہے...",
-      "registerSubmit": "سبسکرپشن رجسٹر کریں"
+      "registerSubmit": "سبسکرپشن رجسٹر کریں",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "سبسکرپشن حذف کرنے کی تصدیق کریں",

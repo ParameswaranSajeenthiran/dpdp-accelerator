@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सब सहमति",
     "myComplaints": "हमर शिकायत सभ",
+    "complaints": "Complaints",
     "complaintManagement": "शिकायत प्रबंधन",
     "events": "घटना",
+    "eventNotifications": "इवेंट नोटिफिकेशन",
     "topics": "विषय",
     "subscriptions": "सदस्यता"
   },
   "layout": {
-    "home": "होम",
     "breadcrumbAriaLabel": "ब्रेडक्रंब",
     "userMenu": {
       "unknownUser": "अज्ञात उपयोगकर्ता",
@@ -722,9 +723,9 @@
       "multiTopicFilter": "जखन यूजर लाइफसाइकिल विषय शामिल करी तँ सब उद्देश्य फिल्टर चुनू।",
       "topicRequired": "विषय आवश्यक अछि।",
       "filterModeLabel": "उद्देश्य फिल्टर मोड",
-      "purposesLabel": "उद्देश्य (अल्पविराम सँ अलग कएल गेल)",
-      "purposesPlaceholder": "उदाहरणक लेल, मार्केटिंग, एनालिटिक्स",
-      "purposesHelper": "फ़िल्टर करय लेल सहमति उद्देश्यक अल्पविराम-पृथक सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट या सब-अपवाद द्वारा फिल्टर करैत काल उद्देश्यक आवश्यकता होइत अछि।",
       "deliveryModeLabel": "डिलीवरी मोड",
       "callbackUrlLabel": "वेबहुक कॉलबैक यूआरएल",
@@ -735,7 +736,10 @@
       "secretHelper": "वेबहुक पेलोड पर हस्ताक्षर करबाक या पोल अनुरोधक प्रमाणित करबाक लेल उपयोग कएल गेल",
       "generateSecret": "नव गुप्त बनाबू",
       "registering": "पंजीकरण कएल जा रहल अछि...",
-      "registerSubmit": "सदस्यता पंजीकृत करू"
+      "registerSubmit": "सदस्यता पंजीकृत करू",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता हटाबय कें पुष्टि करू",
