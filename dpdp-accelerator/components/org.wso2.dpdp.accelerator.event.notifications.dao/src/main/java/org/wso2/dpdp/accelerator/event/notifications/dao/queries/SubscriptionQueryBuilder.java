@@ -126,13 +126,15 @@ public class SubscriptionQueryBuilder {
                             + "WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND ")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(t.NAME)")).append(")")
                     .append(" OR EXISTS (SELECT 1 FROM SUBSCRIPTION_PURPOSE sp "
-                            + "WHERE sp.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND ")
+                            + "WHERE sp.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND sp.ORG_ID = s.ORG_ID AND ")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(sp.PURPOSE_NAME)")).append(")")
                     .append(" OR EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd JOIN EVENT e ON e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = wd.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" WHERE wd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = wd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" WHERE wd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = s.")
-                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND e.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND wd.")
                     .append(EventNotificationDBColumns.ORG_ID).append(" = s.")
                     .append(EventNotificationDBColumns.ORG_ID).append(" AND (")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate(
@@ -142,9 +144,11 @@ public class SubscriptionQueryBuilder {
                     .append("))")
                     .append(" OR EXISTS (SELECT 1 FROM POLL_DELIVERY pd JOIN EVENT e ON e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = pd.")
-                    .append(EventNotificationDBColumns.EVENT_ID).append(" WHERE pd.")
+                    .append(EventNotificationDBColumns.EVENT_ID).append(" AND e.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" = pd.")
+                    .append(EventNotificationDBColumns.ORG_ID).append(" WHERE pd.")
                     .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = s.")
-                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND e.")
+                    .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND pd.")
                     .append(EventNotificationDBColumns.ORG_ID).append(" = s.")
                     .append(EventNotificationDBColumns.ORG_ID).append(" AND (")
                     .append(QueryBuilderUtils.buildEscapedLikePredicate(
@@ -178,7 +182,9 @@ public class SubscriptionQueryBuilder {
             if (!validPurposes.isEmpty()) {
                 sql.append(" AND EXISTS (SELECT 1 FROM SUBSCRIPTION_PURPOSE sp2 WHERE sp2.")
                         .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" = s.")
-                        .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND LOWER(sp2.")
+                        .append(EventNotificationDBColumns.SUBSCRIPTION_ID).append(" AND sp2.")
+                        .append(EventNotificationDBColumns.ORG_ID).append(" = s.")
+                        .append(EventNotificationDBColumns.ORG_ID).append(" AND LOWER(sp2.")
                         .append(EventNotificationDBColumns.PURPOSE_NAME).append(") IN (");
                 for (int i = 0; i < validPurposes.size(); i++) {
                     sql.append(i == 0 ? "?" : ", ?");

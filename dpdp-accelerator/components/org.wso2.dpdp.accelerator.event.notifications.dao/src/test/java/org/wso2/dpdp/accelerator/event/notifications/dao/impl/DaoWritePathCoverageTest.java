@@ -211,8 +211,8 @@ public class DaoWritePathCoverageTest {
         Event event = new Event("e", "org", "group", "topic", "{}", now);
         expectThrows(IllegalArgumentException.class, () -> events.addEvent(null, event));
         expectThrows(IllegalArgumentException.class,
-                () -> events.addEventPurposes(null, "e", Arrays.asList("one", " ", null)));
-        events.addEventPurposes(connection, "e", Collections.emptyList());
+                () -> events.addEventPurposes(null, "e", "org", Arrays.asList("one", " ", null)));
+        events.addEventPurposes(connection, "e", "org", Collections.emptyList());
 
         TopicDAOImpl topics = new TopicDAOImpl();
         assertTrue(topics.addTopic(connection, new Topic("t", "org", "name", "desc", "active")));

@@ -66,15 +66,25 @@ public class H2SchemaParityTest {
                         + "TIMESTAMP '2000-01-01 00:00:00')");
                 statement.executeUpdate("INSERT INTO SUBSCRIPTION_TOPIC VALUES ('org-1', 'sub-1', 'topic-1')");
                 statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
-                        + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) VALUES "
-                        + "('delivery-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')");
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) VALUES "
+                        + "('delivery-1', 'org-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')");
 
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
-                        + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
-                        + "VALUES ('delivery-2', 'sub-1', 'event-1', 'pending')"));
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
+                        + "VALUES ('delivery-2', 'org-1', 'sub-1', 'event-1', 'pending')"));
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
-                        + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
-                        + "VALUES ('delivery-3', 'sub-1', 'missing-event', 'pending')"));
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
+                        + "VALUES ('delivery-3', 'org-1', 'sub-1', 'missing-event', 'pending')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
+                        + "VALUES ('delivery-4', 'wrong-org', 'sub-1', 'event-1', 'pending')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO EVENT "
+                        + "(EVENT_ID, ORG_ID, GROUP_ID, TOPIC_ID, PAYLOAD) "
+                        + "VALUES ('event-bad-org', 'wrong-org', 'group-1', 'topic-1', '{}')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO EVENT_PURPOSE "
+                        + "(EVENT_ID, ORG_ID, PURPOSE_NAME) VALUES ('event-1', 'wrong-org', 'marketing')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO SUBSCRIPTION_PURPOSE "
+                        + "(SUBSCRIPTION_ID, ORG_ID, PURPOSE_NAME) VALUES ('sub-1', 'wrong-org', 'marketing')"));
                 expectThrows(SQLException.class, () -> statement.executeUpdate("UPDATE WEBHOOK_DELIVERY "
                         + "SET STATUS = 'invalid' WHERE DELIVERY_ID = 'delivery-1'"));
 
@@ -87,6 +97,18 @@ public class H2SchemaParityTest {
             assertTimestampUpdated(connection, "SUBSCRIPTION", "SUBSCRIPTION_ID", "sub-1");
             assertTimestampUpdated(connection, "WEBHOOK_DELIVERY", "DELIVERY_ID", "delivery-1");
             assertRequiredIndexes(connection);
+            for (String table : new String[] {"EVENT_PURPOSE", "SUBSCRIPTION_PURPOSE", "WEBHOOK_DELIVERY",
+                    "WEBHOOK_DELIVERY_ACK", "POLL_DELIVERY"}) {
+                assertOrgIdNotNull(connection, table);
+            }
+        }
+    }
+
+    private static void assertOrgIdNotNull(Connection connection, String table) throws SQLException {
+        try (ResultSet rs = connection.getMetaData().getColumns(null, null, table, "ORG_ID")) {
+            assertTrue(rs.next(), "Table " + table + " is missing ORG_ID column");
+            org.testng.Assert.assertEquals(rs.getInt("NULLABLE"), java.sql.DatabaseMetaData.columnNoNulls,
+                    "ORG_ID in table " + table + " must be NOT NULL");
         }
     }
 
@@ -103,16 +125,18 @@ public class H2SchemaParityTest {
     private static void assertRequiredIndexes(Connection connection) throws SQLException {
         Set<String> indexes = new HashSet<>();
         for (String table : new String[] {"EVENT", "EVENT_PURPOSE", "SUBSCRIPTION", "SUBSCRIPTION_PURPOSE",
-                "WEBHOOK_DELIVERY", "POLL_DELIVERY"}) {
+                "WEBHOOK_DELIVERY", "WEBHOOK_DELIVERY_ACK", "POLL_DELIVERY"}) {
             try (ResultSet result = connection.getMetaData().getIndexInfo(null, null, table, false, false)) {
                 while (result.next()) {
                     indexes.add(result.getString("INDEX_NAME"));
                 }
             }
         }
-        for (String required : new String[] {"IDX_EVENT_ORG_GROUP_TOPIC_CREATED", "IDX_EVENT_PURPOSE_NAME",
-                "IDX_SUB_STATUS_UPDATED", "IDX_SUB_MATCHING", "IDX_SUB_PURPOSE_NAME", "IDX_EDP_SUB",
-                "IDX_EDPL_SUB"}) {
+        for (String required : new String[] {"IDX_EVENT_ORG_GROUP_TOPIC_CREATED", "IDX_EVENT_ORG_CREATED",
+                "IDX_EVENT_ORG_TOPIC", "IDX_EVENT_PURPOSE_NAME",
+                "IDX_EP_ORG", "IDX_SUB_STATUS_UPDATED", "IDX_SUB_MATCHING", "IDX_SUB_PURPOSE_NAME",
+                "IDX_SP_ORG", "IDX_EDP_SUB", "IDX_WD_ORG", "IDX_EDA_COMPLETION_STATUS", "IDX_EDA_DELIVERY",
+                "IDX_WDA_ORG", "IDX_EDPL_SUB", "IDX_PD_ORG"}) {
             assertTrue(indexes.contains(required), "Missing H2 index: " + required);
         }
     }

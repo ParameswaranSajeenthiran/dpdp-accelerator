@@ -230,7 +230,7 @@ public class SubscriptionServiceReadAndDeleteTest {
         when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq("del-1"), eq("org-1")))
                 .thenReturn(Optional.of(new WebhookDelivery("del-1", "sub-1", "evt-1", "FAILED", 1,
                         new Timestamp(2000), null, null, null)));
-        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq("del-1")))
+        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq("del-1"), eq("org-1")))
                 .thenReturn(Optional.of(new WebhookDeliveryAck("ack", "del-1", null, "COMPLETED", "evidence")));
         when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq("del-1"), eq("org-1")))
                 .thenReturn(Arrays.asList(

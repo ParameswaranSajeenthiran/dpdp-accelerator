@@ -278,7 +278,7 @@ public class EventPublishServiceImpl implements EventPublishService {
             try {
                 deliveryAckDAO.addDeliveryAck(conn,
                         new org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck(
-                                UUID.randomUUID().toString(), safeDeliveryId, completedAt,
+                                UUID.randomUUID().toString(), safeDeliveryId, safeOrgId, completedAt,
                                 completion.getCompletionStatus().trim().toLowerCase(java.util.Locale.ROOT),
                                 completion.getCompletionEvidence().trim()));
             } catch (EventNotificationDuplicateResourceException e) {
@@ -482,7 +482,7 @@ public class EventPublishServiceImpl implements EventPublishService {
                         400);
             }
             if (purposes != null && !purposes.isEmpty()) {
-                eventDAO.addEventPurposes(conn, eventId, purposes);
+                eventDAO.addEventPurposes(conn, eventId, orgId.trim(), purposes);
             }
             fanOutEvent(conn, event, purposes);
 
@@ -554,7 +554,7 @@ public class EventPublishServiceImpl implements EventPublishService {
     private void queueWebhookDelivery(Connection conn, Subscription subscription, Event event, Timestamp now) {
         String deliveryId = UUID.randomUUID().toString();
         WebhookDelivery delivery = new WebhookDelivery(
-                deliveryId, subscription.getSubscriptionId(), event.getEventId(),
+                deliveryId, subscription.getOrgId(), subscription.getSubscriptionId(), event.getEventId(),
                 DeliveryStatus.PENDING.getValue(), 0, null, now, now, null);
         boolean saved = deliveryDAO.addWebhookDelivery(conn, delivery);
         if (saved) {
@@ -572,8 +572,8 @@ public class EventPublishServiceImpl implements EventPublishService {
 
     private void queuePollDelivery(Connection conn, Subscription subscription, Event event, Timestamp now) {
         PollDelivery delivery = new PollDelivery(
-                UUID.randomUUID().toString(), subscription.getSubscriptionId(), event.getEventId(),
-                PollStatus.PENDING.getValue(), now, null);
+                UUID.randomUUID().toString(), subscription.getOrgId(), subscription.getSubscriptionId(),
+                event.getEventId(), PollStatus.PENDING.getValue(), null, null, now, null);
         if (!deliveryDAO.addPollDelivery(conn, delivery)) {
             throw new EventNotificationDaoException("Failed to queue poll delivery for subscription ["
                     + LogSanitizer.sanitize(subscription.getSubscriptionId()) + "] on event ["

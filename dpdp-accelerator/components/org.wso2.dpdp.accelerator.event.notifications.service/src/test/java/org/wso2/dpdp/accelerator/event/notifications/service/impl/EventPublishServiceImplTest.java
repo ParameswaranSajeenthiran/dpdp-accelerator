@@ -158,7 +158,8 @@ public class EventPublishServiceImplTest {
         assertEquals(persisted.getOrgId(), "org1");
         assertEquals(persisted.getTopicId(), "topic-id-1");
 
-        verify(eventDAO, times(1)).addEventPurposes(eq(connection), eq(dto.getEventId()), eq(Arrays.asList("marketing")));
+        verify(eventDAO, times(1)).addEventPurposes(eq(connection), eq(dto.getEventId()), eq("org1"),
+                eq(Arrays.asList("marketing")));
         verify(subscriptionDAO, times(1)).getActiveSubscriptionsForFanOut(eq(connection), eq("org1"),
                 eq("topic-id-1"));
     }
@@ -657,7 +658,7 @@ public class EventPublishServiceImplTest {
 
         assertEquals(exception.getStatusCode(), 400);
         assertEquals(exception.getCode(), EventNotificationServiceConstants.ERROR_CODE_INVALID_REQUEST);
-        verify(eventDAO, never()).addEventPurposes(any(Connection.class), anyString(), any());
+        verify(eventDAO, never()).addEventPurposes(any(Connection.class), anyString(), anyString(), any());
     }
 
     @Test

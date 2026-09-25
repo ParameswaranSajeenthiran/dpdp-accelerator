@@ -117,7 +117,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getAddSubscriptionPurposesQuery() {
-        return "INSERT INTO SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID, PURPOSE_NAME) VALUES (?, ?)";
+        return "INSERT INTO SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID, ORG_ID, PURPOSE_NAME) VALUES (?, ?, ?)";
     }
 
     public String getGetSubscriptionByIdQuery() {
@@ -221,32 +221,32 @@ public class EventNotificationCommonDBQueries {
                 + SQL_SUBSCRIPTION_STALE + ")";
     }
 
-    public String getPurposesBySubscriptionIdQuery() {
-        return "SELECT PURPOSE_NAME FROM SUBSCRIPTION_PURPOSE WHERE SUBSCRIPTION_ID = ?";
+    public String getPurposesBySubscriptionIdAndOrgQuery() {
+        return "SELECT PURPOSE_NAME FROM SUBSCRIPTION_PURPOSE WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ?";
     }
 
     public String getGetSubscriptionPurposesByIdsTemplate() {
-        return "SELECT SUBSCRIPTION_ID, PURPOSE_NAME FROM SUBSCRIPTION_PURPOSE WHERE SUBSCRIPTION_ID IN (%s)";
+        return "SELECT SUBSCRIPTION_ID, PURPOSE_NAME FROM SUBSCRIPTION_PURPOSE WHERE ORG_ID = ? AND SUBSCRIPTION_ID IN (%s)";
     }
 
     public String getHasPendingOrInFlightDeliveriesForSubscriptionQuery() {
-        return "SELECT 1 FROM WEBHOOK_DELIVERY w JOIN SUBSCRIPTION s ON w.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE w.SUBSCRIPTION_ID = ? AND s.ORG_ID = ? AND w.STATUS IN (?, ?) "
+        return "SELECT 1 FROM WEBHOOK_DELIVERY WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS IN (?, ?) "
                 +
                 "UNION ALL " +
-                "SELECT 1 FROM POLL_DELIVERY p JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE p.SUBSCRIPTION_ID = ? AND s.ORG_ID = ? AND p.STATUS = ?";
+                "SELECT 1 FROM POLL_DELIVERY WHERE SUBSCRIPTION_ID = ? AND ORG_ID = ? AND STATUS = ?";
     }
 
     // WEBHOOK_DELIVERY Queries
     public String getAddWebhookDeliveryQuery() {
-        return "INSERT INTO WEBHOOK_DELIVERY (DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, " +
-                "NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return "INSERT INTO WEBHOOK_DELIVERY (DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, " +
+                "NEXT_RETRY_AT, CREATED_AT, UPDATED_AT, DELIVERED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     public String getGetWebhookDeliveryByIdAndOrgQuery() {
-        return "SELECT d.DELIVERY_ID, d.SUBSCRIPTION_ID, d.EVENT_ID, d.STATUS, d.ATTEMPT_COUNT, d.NEXT_RETRY_AT, " +
-                "d.CREATED_AT, d.UPDATED_AT, d.DELIVERED_AT, d.MANUAL_RETRY_USED " +
-                "FROM WEBHOOK_DELIVERY d JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE d.DELIVERY_ID = ? AND s.ORG_ID = ?";
+        return "SELECT DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ATTEMPT_COUNT, NEXT_RETRY_AT, " +
+                "CREATED_AT, UPDATED_AT, DELIVERED_AT, MANUAL_RETRY_USED " +
+                "FROM WEBHOOK_DELIVERY " +
+                "WHERE DELIVERY_ID = ? AND ORG_ID = ?";
     }
 
     public String getUpdateWebhookDeliveryStatusQuery() {
@@ -271,15 +271,15 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getAddEventPurposeQuery() {
-        return "INSERT INTO EVENT_PURPOSE (EVENT_ID, PURPOSE_NAME) VALUES (?, ?)";
+        return "INSERT INTO EVENT_PURPOSE (EVENT_ID, ORG_ID, PURPOSE_NAME) VALUES (?, ?, ?)";
     }
 
-    public String getGetEventPurposesQuery() {
-        return "SELECT PURPOSE_NAME FROM EVENT_PURPOSE WHERE EVENT_ID = ?";
+    public String getGetEventPurposesByOrgQuery() {
+        return "SELECT PURPOSE_NAME FROM EVENT_PURPOSE WHERE EVENT_ID = ? AND ORG_ID = ?";
     }
 
     public String getHasActiveEventsForTopicQuery() {
-        return "SELECT 1 FROM EVENT WHERE TOPIC_ID = ? LIMIT 1";
+        return "SELECT 1 FROM EVENT WHERE ORG_ID = ? AND TOPIC_ID = ? LIMIT 1";
     }
 
     /**
@@ -289,8 +289,8 @@ public class EventNotificationCommonDBQueries {
      */
     public String getListEventsBaseQuery() {
         return "SELECT e.EVENT_ID, e.ORG_ID, e.GROUP_ID, e.TOPIC_ID, t.NAME AS TOPIC_NAME, e.PAYLOAD, e.CREATED_AT, " +
-                "((SELECT COUNT(*) FROM WEBHOOK_DELIVERY wd WHERE wd.EVENT_ID = e.EVENT_ID) + " +
-                "(SELECT COUNT(*) FROM POLL_DELIVERY pd WHERE pd.EVENT_ID = e.EVENT_ID)) AS DELIVERIES_COUNT " +
+                "((SELECT COUNT(*) FROM WEBHOOK_DELIVERY wd WHERE wd.EVENT_ID = e.EVENT_ID AND wd.ORG_ID = e.ORG_ID) + " +
+                "(SELECT COUNT(*) FROM POLL_DELIVERY pd WHERE pd.EVENT_ID = e.EVENT_ID AND pd.ORG_ID = e.ORG_ID)) AS DELIVERIES_COUNT " +
                 "FROM EVENT e " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
                 "WHERE e.ORG_ID = ?";
@@ -311,7 +311,7 @@ public class EventNotificationCommonDBQueries {
     }
 
     public String getGetPurposesByEventIdsTemplate() {
-        return "SELECT EVENT_ID, PURPOSE_NAME FROM EVENT_PURPOSE WHERE EVENT_ID IN (%s)";
+        return "SELECT EVENT_ID, PURPOSE_NAME FROM EVENT_PURPOSE WHERE ORG_ID = ? AND EVENT_ID IN (%s)";
     }
 
     // The dispatch context pulls the public topic name so the
@@ -323,17 +323,17 @@ public class EventNotificationCommonDBQueries {
     // rows whose EVENT was deleted are still returned with PAYLOAD=NULL, which the
     // worker
     // already filters out via isDeliverable(...).
-    private static final String DISPATCH_SELECT = "SELECT d.DELIVERY_ID, d.SUBSCRIPTION_ID, d.EVENT_ID, d.STATUS, " +
+    private static final String DISPATCH_SELECT = "SELECT d.DELIVERY_ID, d.ORG_ID, d.SUBSCRIPTION_ID, d.EVENT_ID, d.STATUS, " +
             "d.ATTEMPT_COUNT, d.NEXT_RETRY_AT, d.CREATED_AT, d.UPDATED_AT, d.DELIVERED_AT, " +
             "d.MANUAL_RETRY_USED, " +
-            "s.ORG_ID, s.GROUP_ID, s.CALLBACK_URL, s.SHARED_SECRET, e.PAYLOAD, " +
+            "s.GROUP_ID, s.CALLBACK_URL, s.SHARED_SECRET, e.PAYLOAD, " +
             "t.NAME AS TOPIC_NAME ";
 
     public String getGetPendingWebhookDispatchContextsQuery() {
         return DISPATCH_SELECT +
                 "FROM WEBHOOK_DELIVERY d " +
-                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
+                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID " +
+                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
                 "WHERE d.STATUS = " + SQL_DELIVERY_PENDING + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE
                 + " AND (d.NEXT_RETRY_AT IS NULL OR d.NEXT_RETRY_AT <= CURRENT_TIMESTAMP) "
@@ -344,8 +344,8 @@ public class EventNotificationCommonDBQueries {
     public String getGetStuckInFlightWebhookDispatchContextsQuery() {
         return DISPATCH_SELECT +
                 "FROM WEBHOOK_DELIVERY d " +
-                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
+                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID " +
+                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
                 "WHERE d.STATUS = " + SQL_DELIVERY_IN_FLIGHT + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE
                 + " AND d.UPDATED_AT <= ? " +
@@ -355,10 +355,10 @@ public class EventNotificationCommonDBQueries {
     public String getGetWebhookDeliveryDispatchContextQuery() {
         return DISPATCH_SELECT +
                 "FROM WEBHOOK_DELIVERY d " +
-                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
+                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID " +
+                "LEFT JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
-                "WHERE d.DELIVERY_ID = ? AND d.SUBSCRIPTION_ID = ? AND s.ORG_ID = ? " +
+                "WHERE d.DELIVERY_ID = ? AND d.SUBSCRIPTION_ID = ? AND d.ORG_ID = ? " +
                 "AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE;
     }
 
@@ -368,19 +368,19 @@ public class EventNotificationCommonDBQueries {
                 "WHERE DELIVERY_ID = ? AND SUBSCRIPTION_ID = ? AND STATUS = " + SQL_DELIVERY_FAILED +
                 " AND MANUAL_RETRY_USED = ? AND ATTEMPT_COUNT > ? " +
                 "AND EXISTS (SELECT 1 FROM SUBSCRIPTION s WHERE s.SUBSCRIPTION_ID = WEBHOOK_DELIVERY.SUBSCRIPTION_ID " +
-                "AND s.ORG_ID = ? AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE + ")";
+                "AND s.ORG_ID = ? AND s.ORG_ID = WEBHOOK_DELIVERY.ORG_ID AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE + ")";
     }
 
     // WEBHOOK_DELIVERY_ACK Queries
     public String getAddWebhookDeliveryAckQuery() {
-        return "INSERT INTO WEBHOOK_DELIVERY_ACK (ACK_ID, DELIVERY_ID, COMPLETED_AT, COMPLETION_STATUS, COMPLETION_EVIDENCE) "
+        return "INSERT INTO WEBHOOK_DELIVERY_ACK (ACK_ID, DELIVERY_ID, ORG_ID, COMPLETED_AT, COMPLETION_STATUS, COMPLETION_EVIDENCE) "
                 +
-                "VALUES (?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     public String getGetWebhookDeliveryAckByDeliveryIdQuery() {
-        return "SELECT ACK_ID, DELIVERY_ID, COMPLETED_AT, COMPLETION_STATUS, COMPLETION_EVIDENCE " +
-                "FROM WEBHOOK_DELIVERY_ACK WHERE DELIVERY_ID = ?";
+        return "SELECT ACK_ID, DELIVERY_ID, ORG_ID, COMPLETED_AT, COMPLETION_STATUS, COMPLETION_EVIDENCE " +
+                "FROM WEBHOOK_DELIVERY_ACK WHERE DELIVERY_ID = ? AND ORG_ID = ?";
     }
 
     // WEBHOOK_DELIVERY_AUDIT Queries
@@ -397,20 +397,20 @@ public class EventNotificationCommonDBQueries {
 
     // POLL_DELIVERY Queries
     public String getAddPollDeliveryQuery() {
-        return "INSERT INTO POLL_DELIVERY (DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ERROR_CODE, ERROR_DETAIL, " +
-                "CREATED_AT, COMPLETED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        return "INSERT INTO POLL_DELIVERY (DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ERROR_CODE, ERROR_DETAIL, " +
+                "CREATED_AT, COMPLETED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
 
     public String getGetPollDeliveryByIdAndOrgQuery() {
-        return "SELECT p.DELIVERY_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.ERROR_CODE, p.ERROR_DETAIL, p.CREATED_AT, p.COMPLETED_AT " +
-                "FROM POLL_DELIVERY p JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE p.DELIVERY_ID = ? AND s.ORG_ID = ?";
+        return "SELECT DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, ERROR_CODE, ERROR_DETAIL, CREATED_AT, COMPLETED_AT " +
+                "FROM POLL_DELIVERY " +
+                "WHERE DELIVERY_ID = ? AND ORG_ID = ?";
     }
 
     public String getGetPendingPollDeliveriesBySubscriptionQuery() {
-        return "SELECT p.DELIVERY_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.ERROR_CODE, p.ERROR_DETAIL, " +
+        return "SELECT p.DELIVERY_ID, p.ORG_ID, p.SUBSCRIPTION_ID, p.EVENT_ID, p.STATUS, p.ERROR_CODE, p.ERROR_DETAIL, " +
                 "p.CREATED_AT, p.COMPLETED_AT FROM POLL_DELIVERY p " +
-                "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
+                "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND p.ORG_ID = s.ORG_ID " +
                 "WHERE s.ORG_ID = ? AND s.GROUP_ID = ? AND s.SUBSCRIPTION_ID = ? " +
                 "AND s.DELIVERY_MODE = " + SQL_POLL_MODE + " AND s.STATUS = " + SQL_SUBSCRIPTION_ACTIVE +
                 " AND p.STATUS = " + SQL_POLL_PENDING + " ORDER BY p.CREATED_AT ASC LIMIT ?";
@@ -507,19 +507,19 @@ public class EventNotificationCommonDBQueries {
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD " +
                 "FROM WEBHOOK_DELIVERY d " +
-                "JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID " +
+                "JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
-                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ? " +
+                "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID " +
+                "WHERE d.ORG_ID = ? " +
                 "UNION ALL " +
                 "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD " +
                 "FROM POLL_DELIVERY p " +
-                "JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID " +
+                "JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID AND p.ORG_ID = e.ORG_ID " +
                 "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID " +
-                "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID " +
-                "WHERE s.ORG_ID = ?";
+                "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND p.ORG_ID = s.ORG_ID " +
+                "WHERE p.ORG_ID = ?";
     }
 
     public String getGetSubscriptionDeliveriesUnionBaseQuery() {
@@ -527,31 +527,31 @@ public class EventNotificationCommonDBQueries {
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD "
                 + "FROM WEBHOOK_DELIVERY d "
-                + "JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID "
+                + "JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID "
                 + "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID "
-                + "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID "
-                + "WHERE d.SUBSCRIPTION_ID = ? AND s.ORG_ID = ? "
+                + "JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID "
+                + "WHERE d.SUBSCRIPTION_ID = ? AND d.ORG_ID = ? "
                 + "UNION ALL "
                 + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD "
                 + "FROM POLL_DELIVERY p "
-                + "JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID "
+                + "JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID AND p.ORG_ID = e.ORG_ID "
                 + "JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID "
-                + "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID "
-                + "WHERE p.SUBSCRIPTION_ID = ? AND s.ORG_ID = ?";
+                + "JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND p.ORG_ID = s.ORG_ID "
+                + "WHERE p.SUBSCRIPTION_ID = ? AND p.ORG_ID = ?";
     }
 
     public String getGetSubscriptionDeliveryByIdQuery() {
         return "SELECT d.DELIVERY_ID, d.EVENT_ID, d.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, d.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.WEBHOOK.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, d.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD "
-                + "FROM WEBHOOK_DELIVERY d JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE d.SUBSCRIPTION_ID = ? AND d.DELIVERY_ID = ? AND s.ORG_ID = ? "
+                + "FROM WEBHOOK_DELIVERY d JOIN EVENT e ON d.EVENT_ID = e.EVENT_ID AND d.ORG_ID = e.ORG_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON d.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND d.ORG_ID = s.ORG_ID WHERE d.SUBSCRIPTION_ID = ? AND d.DELIVERY_ID = ? AND d.ORG_ID = ? "
                 + "UNION ALL "
                 + "SELECT p.DELIVERY_ID, p.EVENT_ID, p.SUBSCRIPTION_ID, e.GROUP_ID AS GROUP_ID, t.NAME AS TOPIC_NAME, p.STATUS AS CURRENT_STATUS, '"
                 + DeliveryMode.POLL.getValue() + "' AS DELIVERY_MODE, "
                 + "e.CREATED_AT AS OCCURRED_AT, p.CREATED_AT AS DELIVERY_CREATED_AT, e.PAYLOAD AS PAYLOAD "
-                + "FROM POLL_DELIVERY p JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID WHERE p.SUBSCRIPTION_ID = ? AND p.DELIVERY_ID = ? AND s.ORG_ID = ?";
+                + "FROM POLL_DELIVERY p JOIN EVENT e ON p.EVENT_ID = e.EVENT_ID AND p.ORG_ID = e.ORG_ID JOIN TOPIC t ON e.TOPIC_ID = t.TOPIC_ID JOIN SUBSCRIPTION s ON p.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND p.ORG_ID = s.ORG_ID WHERE p.SUBSCRIPTION_ID = ? AND p.DELIVERY_ID = ? AND p.ORG_ID = ?";
     }
 
     public String getGetOrgDeliveryByIdQuery() {

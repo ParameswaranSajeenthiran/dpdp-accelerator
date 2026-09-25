@@ -30,11 +30,11 @@ public interface EventDAO {
 
     Optional<Event> getEventById(Connection conn, String eventId, String orgId);
 
-    void addEventPurposes(Connection conn, String eventId, List<String> purposes);
+    void addEventPurposes(Connection conn, String eventId, String orgId, List<String> purposes);
 
-    List<String> getEventPurposes(Connection conn, String eventId);
+    List<String> getEventPurposes(Connection conn, String eventId, String orgId);
 
-    boolean hasActiveEventsForTopic(Connection conn, String topicId);
+    boolean hasActiveEventsForTopic(Connection conn, String topicId, String orgId);
 
     PaginatedDAOResult<Event> searchEvents(Connection conn, String orgId, String topic, String status, String groupId,
             String subscriptionId, String purposes, String search, int limit, int offset);

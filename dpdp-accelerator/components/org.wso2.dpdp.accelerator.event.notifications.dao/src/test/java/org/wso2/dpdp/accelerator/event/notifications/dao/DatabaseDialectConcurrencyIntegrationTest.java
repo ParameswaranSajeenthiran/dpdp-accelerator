@@ -165,7 +165,7 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                         () -> deletion.get(BLOCK_ASSERTION_MILLIS, TimeUnit.MILLISECONDS));
 
                 assertTrue(deliveryDAO.addWebhookDelivery(fanOut,
-                        new WebhookDelivery("delivery-1", "sub-1", "event-fanout",
+                        new WebhookDelivery("delivery-1", "org-1", "sub-1", "event-fanout",
                                 DeliveryStatus.PENDING.getValue(), 0, null, now, now, null)));
                 fanOut.commit();
                 assertFalse(deletion.get(5, TimeUnit.SECONDS));
@@ -229,15 +229,15 @@ public class DatabaseDialectConcurrencyIntegrationTest {
                     "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL)");
             statement.execute("CREATE TABLE SUBSCRIPTION_TOPIC (ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), TOPIC_ID VARCHAR(64), PRIMARY KEY(SUBSCRIPTION_ID, TOPIC_ID))");
             statement.execute("CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64) NOT NULL, " +
-                    "PURPOSE_NAME VARCHAR(128) NOT NULL, PRIMARY KEY (SUBSCRIPTION_ID, PURPOSE_NAME))");
+                    "ORG_ID VARCHAR(128) NOT NULL, PURPOSE_NAME VARCHAR(128) NOT NULL, PRIMARY KEY (SUBSCRIPTION_ID, PURPOSE_NAME))");
             statement.execute("CREATE TABLE WEBHOOK_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, " +
-                    "SUBSCRIPTION_ID VARCHAR(64) NOT NULL, EVENT_ID VARCHAR(64) NOT NULL, STATUS VARCHAR(32) NOT NULL, " +
+                    "ORG_ID VARCHAR(128) NOT NULL, SUBSCRIPTION_ID VARCHAR(64) NOT NULL, EVENT_ID VARCHAR(64) NOT NULL, STATUS VARCHAR(32) NOT NULL, " +
                     "ERROR_DETAIL VARCHAR(1024), " +
                     "ATTEMPT_COUNT INTEGER NOT NULL, MANUAL_RETRY_USED BOOLEAN NOT NULL DEFAULT FALSE, " +
                     "NEXT_RETRY_AT TIMESTAMP, CREATED_AT TIMESTAMP NOT NULL, " +
                     "UPDATED_AT TIMESTAMP NOT NULL, DELIVERED_AT TIMESTAMP)");
             statement.execute("CREATE TABLE POLL_DELIVERY (DELIVERY_ID VARCHAR(64) PRIMARY KEY, " +
-                    "SUBSCRIPTION_ID VARCHAR(64) NOT NULL, EVENT_ID VARCHAR(64) NOT NULL, STATUS VARCHAR(32) NOT NULL, " +
+                    "ORG_ID VARCHAR(128) NOT NULL, SUBSCRIPTION_ID VARCHAR(64) NOT NULL, EVENT_ID VARCHAR(64) NOT NULL, STATUS VARCHAR(32) NOT NULL, " +
                     "ERROR_CODE VARCHAR(64), ERROR_DETAIL VARCHAR(1024), CREATED_AT TIMESTAMP NOT NULL, " +
                     "COMPLETED_AT TIMESTAMP)");
         }

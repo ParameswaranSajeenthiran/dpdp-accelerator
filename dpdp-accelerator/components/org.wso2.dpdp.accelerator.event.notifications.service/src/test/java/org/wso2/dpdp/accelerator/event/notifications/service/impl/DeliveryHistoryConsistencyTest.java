@@ -115,7 +115,7 @@ public class DeliveryHistoryConsistencyTest {
         SubscriptionDeliverySummary summary = summary("failed", "webhook");
         prepareSummary(summary);
         when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Optional.empty());
-        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq(DELIVERY_ID))).thenReturn(Optional.empty());
+        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Optional.empty());
         when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Arrays.asList(
                 new WebhookDeliveryAudit("a1", "event-1", DELIVERY_ID, ORG_ID, " 200 ",
                         new Timestamp(100), new Timestamp(200)),
@@ -143,7 +143,7 @@ public class DeliveryHistoryConsistencyTest {
         SubscriptionDeliverySummary webhook = summary(null, "webhook");
         prepareSummary(webhook);
         when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Optional.empty());
-        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq(DELIVERY_ID))).thenReturn(Optional.empty());
+        when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Optional.empty());
         when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Collections.emptyList());
 
         assertEquals(eventService.getDeliveryHistory(ORG_ID, DELIVERY_ID).getCurrentStatus(), "pending");

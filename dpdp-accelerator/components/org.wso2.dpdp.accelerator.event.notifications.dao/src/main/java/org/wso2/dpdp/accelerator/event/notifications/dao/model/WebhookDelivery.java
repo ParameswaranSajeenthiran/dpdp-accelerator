@@ -23,6 +23,7 @@ import java.sql.Timestamp;
 public class WebhookDelivery {
 
     private String deliveryId;
+    private String orgId;
     private String subscriptionId;
     private String eventId;
     private String status;
@@ -38,14 +39,28 @@ public class WebhookDelivery {
 
     public WebhookDelivery(String deliveryId, String subscriptionId, String eventId, String status, int attemptCount, Timestamp nextRetryAt, Timestamp createdAt, Timestamp updatedAt, Timestamp deliveredAt) {
 
-        this(deliveryId, subscriptionId, eventId, status, attemptCount, nextRetryAt, createdAt, updatedAt,
+        this(deliveryId, null, subscriptionId, eventId, status, attemptCount, nextRetryAt, createdAt, updatedAt,
                 deliveredAt, false);
     }
 
     public WebhookDelivery(String deliveryId, String subscriptionId, String eventId, String status, int attemptCount,
             Timestamp nextRetryAt, Timestamp createdAt, Timestamp updatedAt, Timestamp deliveredAt,
             boolean manualRetryUsed) {
+        this(deliveryId, null, subscriptionId, eventId, status, attemptCount, nextRetryAt, createdAt, updatedAt,
+                deliveredAt, manualRetryUsed);
+    }
+
+    public WebhookDelivery(String deliveryId, String orgId, String subscriptionId, String eventId, String status,
+            int attemptCount, Timestamp nextRetryAt, Timestamp createdAt, Timestamp updatedAt, Timestamp deliveredAt) {
+        this(deliveryId, orgId, subscriptionId, eventId, status, attemptCount, nextRetryAt, createdAt, updatedAt,
+                deliveredAt, false);
+    }
+
+    public WebhookDelivery(String deliveryId, String orgId, String subscriptionId, String eventId, String status,
+            int attemptCount, Timestamp nextRetryAt, Timestamp createdAt, Timestamp updatedAt, Timestamp deliveredAt,
+            boolean manualRetryUsed) {
         this.deliveryId = deliveryId;
+        this.orgId = orgId;
         this.subscriptionId = subscriptionId;
         this.eventId = eventId;
         this.status = status;
@@ -63,6 +78,14 @@ public class WebhookDelivery {
 
     public void setDeliveryId(String deliveryId) {
         this.deliveryId = deliveryId;
+    }
+
+    public String getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
     public String getSubscriptionId() {
