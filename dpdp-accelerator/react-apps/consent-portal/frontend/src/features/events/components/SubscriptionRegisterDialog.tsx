@@ -251,24 +251,47 @@ export default function SubscriptionRegisterDialog({
             {purposesError ? <Alert severity="error">{purposesError}</Alert> : null}
 
             {/* Subscription Name */}
-            <TextField
-              required
-              fullWidth
-              size="small"
-              label={t('subscriptions.dialog.nameLabel', 'Subscription Name')}
-              placeholder={t(
-                'subscriptions.dialog.namePlaceholder',
-                'e.g. Orders Notification Webhook',
-              )}
-              value={name}
-              error={Boolean(nameError)}
-              helperText={nameError}
-              inputProps={{ maxLength: 225 }}
-              onChange={(e) => {
-                setName(e.target.value)
-                if (nameError) setNameError('')
-              }}
-            />
+            <Box>
+              <InputLabel
+                htmlFor="subscription-name-input"
+                shrink={false}
+                sx={{
+                  position: 'static',
+                  transform: 'none',
+                  mb: 0.75,
+                  fontWeight: 500,
+                  fontSize: '0.875rem',
+                  color: 'text.primary',
+                  '&.Mui-focused': { color: 'text.primary' },
+                }}
+              >
+                {t('subscriptions.dialog.nameLabel', 'Subscription Name')}
+                <Box component="span" sx={{ color: 'error.main', ml: 0.5 }}>
+                  *
+                </Box>
+              </InputLabel>
+              <TextField
+                id="subscription-name-input"
+                required
+                fullWidth
+                size="small"
+                placeholder={t(
+                  'subscriptions.dialog.namePlaceholder',
+                  'e.g. Orders Notification Webhook',
+                )}
+                value={name}
+                error={Boolean(nameError)}
+                helperText={nameError}
+                inputProps={{
+                  maxLength: 225,
+                  'aria-label': t('subscriptions.dialog.nameLabel', 'Subscription Name'),
+                }}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  if (nameError) setNameError('')
+                }}
+              />
+            </Box>
 
             {/* Topics Picker with Category */}
             <SubscriptionTopicPicker
@@ -284,12 +307,24 @@ export default function SubscriptionRegisterDialog({
             {supportsPurposeFilter ? (
               <>
                 <FormControl fullWidth size="small">
-                  <InputLabel id="filter-mode-label">
+                  <InputLabel
+                    id="filter-mode-label"
+                    shrink={false}
+                    sx={{
+                      position: 'static',
+                      transform: 'none',
+                      mb: 0.75,
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      color: 'text.primary',
+                      '&.Mui-focused': { color: 'text.primary' },
+                    }}
+                  >
                     {t('subscriptions.dialog.filterModeLabel', 'Consent Purpose Filter Mode')}
                   </InputLabel>
                   <Select
                     labelId="filter-mode-label"
-                    label={t('subscriptions.dialog.filterModeLabel', 'Consent Purpose Filter Mode')}
+                    id="filter-mode-select"
                     value={filterMode}
                     onChange={(e) => setFilterMode(e.target.value as PurposeFilterMode)}
                   >
@@ -309,44 +344,82 @@ export default function SubscriptionRegisterDialog({
                 </FormControl>
 
                 {filterMode !== 'all' ? (
-                  <TextField
-                    required
-                    fullWidth
-                    size="small"
-                    label={t(
-                      'subscriptions.dialog.purposesLabel',
-                      'Consent Purposes (comma-separated)',
-                    )}
-                    placeholder={t(
-                      'subscriptions.dialog.purposesPlaceholder',
-                      'e.g. MARKETING, ANALYTICS',
-                    )}
-                    value={purposesInput}
-                    error={Boolean(purposesError)}
-                    helperText={
-                      purposesError ||
-                      t(
-                        'subscriptions.dialog.purposesHelper',
-                        'Comma-separated list of consent purposes to filter',
-                      )
-                    }
-                    onChange={(e) => {
-                      setPurposesInput(e.target.value)
-                      if (purposesError) setPurposesError('')
-                    }}
-                  />
+                  <Box>
+                    <InputLabel
+                      htmlFor="subscription-purposes-input"
+                      shrink={false}
+                      sx={{
+                        position: 'static',
+                        transform: 'none',
+                        mb: 0.75,
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                        color: 'text.primary',
+                        '&.Mui-focused': { color: 'text.primary' },
+                      }}
+                    >
+                      {t(
+                        'subscriptions.dialog.purposesLabel',
+                        'Consent Purposes (comma-separated)',
+                      )}
+                      <Box component="span" sx={{ color: 'error.main', ml: 0.5 }}>
+                        *
+                      </Box>
+                    </InputLabel>
+                    <TextField
+                      id="subscription-purposes-input"
+                      required
+                      fullWidth
+                      size="small"
+                      placeholder={t(
+                        'subscriptions.dialog.purposesPlaceholder',
+                        'e.g. MARKETING, ANALYTICS',
+                      )}
+                      value={purposesInput}
+                      error={Boolean(purposesError)}
+                      helperText={
+                        purposesError ||
+                        t(
+                          'subscriptions.dialog.purposesHelper',
+                          'Comma-separated list of consent purposes to filter',
+                        )
+                      }
+                      inputProps={{
+                        'aria-label': t(
+                          'subscriptions.dialog.purposesLabel',
+                          'Consent Purposes (comma-separated)',
+                        ),
+                      }}
+                      onChange={(e) => {
+                        setPurposesInput(e.target.value)
+                        if (purposesError) setPurposesError('')
+                      }}
+                    />
+                  </Box>
                 ) : null}
               </>
             ) : null}
 
             {/* Delivery Mode */}
             <FormControl fullWidth size="small">
-              <InputLabel id="delivery-mode-label">
+              <InputLabel
+                id="delivery-mode-label"
+                shrink={false}
+                sx={{
+                  position: 'static',
+                  transform: 'none',
+                  mb: 0.75,
+                  fontWeight: 500,
+                  fontSize: '0.875rem',
+                  color: 'text.primary',
+                  '&.Mui-focused': { color: 'text.primary' },
+                }}
+              >
                 {t('subscriptions.dialog.deliveryModeLabel', 'Delivery Mode')}
               </InputLabel>
               <Select
                 labelId="delivery-mode-label"
-                label={t('subscriptions.dialog.deliveryModeLabel', 'Delivery Mode')}
+                id="delivery-mode-select"
                 value={deliveryMode}
                 onChange={(e) => setDeliveryMode(e.target.value as DeliveryMode)}
               >
@@ -363,61 +436,110 @@ export default function SubscriptionRegisterDialog({
 
             {/* Webhook Callback URL */}
             {deliveryMode === 'webhook' ? (
-              <TextField
-                required
-                fullWidth
-                size="small"
-                label={t('subscriptions.dialog.callbackUrlLabel', 'Webhook Callback URL')}
-                placeholder="https://example.com/webhook"
-                value={callbackUrl}
-                error={Boolean(callbackUrlError)}
-                helperText={callbackUrlError}
-                onChange={(e) => {
-                  setCallbackUrl(e.target.value)
-                  if (callbackUrlError) setCallbackUrlError('')
-                }}
-              />
+              <Box>
+                <InputLabel
+                  htmlFor="subscription-callback-url-input"
+                  shrink={false}
+                  sx={{
+                    position: 'static',
+                    transform: 'none',
+                    mb: 0.75,
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    color: 'text.primary',
+                    '&.Mui-focused': { color: 'text.primary' },
+                  }}
+                >
+                  {t('subscriptions.dialog.callbackUrlLabel', 'Webhook Callback URL')}
+                  <Box component="span" sx={{ color: 'error.main', ml: 0.5 }}>
+                    *
+                  </Box>
+                </InputLabel>
+                <TextField
+                  id="subscription-callback-url-input"
+                  required
+                  fullWidth
+                  size="small"
+                  placeholder="https://example.com/webhook"
+                  value={callbackUrl}
+                  error={Boolean(callbackUrlError)}
+                  helperText={callbackUrlError}
+                  inputProps={{
+                    'aria-label': t(
+                      'subscriptions.dialog.callbackUrlLabel',
+                      'Webhook Callback URL',
+                    ),
+                  }}
+                  onChange={(e) => {
+                    setCallbackUrl(e.target.value)
+                    if (callbackUrlError) setCallbackUrlError('')
+                  }}
+                />
+              </Box>
             ) : null}
 
             {/* Shared Secret */}
-            <TextField
-              required
-              fullWidth
-              size="small"
-              label={t('subscriptions.dialog.secretLabel', 'Shared Secret')}
-              value={sharedSecret}
-              error={Boolean(secretError)}
-              helperText={
-                secretError ||
-                t(
-                  'subscriptions.dialog.secretHelper',
-                  'Used to sign webhook payloads or authenticate poll requests',
-                )
-              }
-              onChange={(e) => {
-                setSharedSecret(e.target.value)
-                if (secretError) setSecretError('')
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Key size={16} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      title={t('subscriptions.dialog.generateSecret', 'Generate new secret')}
-                      onClick={handleGenerateSecret}
-                      edge="end"
-                    >
-                      <RefreshCw size={16} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <Box>
+              <InputLabel
+                htmlFor="subscription-shared-secret-input"
+                shrink={false}
+                sx={{
+                  position: 'static',
+                  transform: 'none',
+                  mb: 0.75,
+                  fontWeight: 500,
+                  fontSize: '0.875rem',
+                  color: 'text.primary',
+                  '&.Mui-focused': { color: 'text.primary' },
+                }}
+              >
+                {t('subscriptions.dialog.secretLabel', 'Shared Secret')}
+                <Box component="span" sx={{ color: 'error.main', ml: 0.5 }}>
+                  *
+                </Box>
+              </InputLabel>
+              <TextField
+                id="subscription-shared-secret-input"
+                required
+                fullWidth
+                size="small"
+                value={sharedSecret}
+                error={Boolean(secretError)}
+                helperText={
+                  secretError ||
+                  t(
+                    'subscriptions.dialog.secretHelper',
+                    'Used to sign webhook payloads or authenticate poll requests',
+                  )
+                }
+                inputProps={{
+                  'aria-label': t('subscriptions.dialog.secretLabel', 'Shared Secret'),
+                }}
+                onChange={(e) => {
+                  setSharedSecret(e.target.value)
+                  if (secretError) setSecretError('')
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Key size={16} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        title={t('subscriptions.dialog.generateSecret', 'Generate new secret')}
+                        onClick={handleGenerateSecret}
+                        edge="end"
+                      >
+                        <RefreshCw size={16} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
           </Stack>
         </DialogContent>
 

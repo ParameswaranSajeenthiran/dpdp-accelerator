@@ -214,14 +214,25 @@ export default function SubscriptionTopicPicker({
     <Stack spacing={2}>
       {/* Category Dropdown */}
       <FormControl fullWidth size="small">
-        <InputLabel id="topic-category-label">
+        <InputLabel
+          id="topic-category-label"
+          shrink={false}
+          sx={{
+            position: 'static',
+            transform: 'none',
+            mb: 0.75,
+            fontWeight: 500,
+            fontSize: '0.875rem',
+            color: 'text.primary',
+            '&.Mui-focused': { color: 'text.primary' },
+          }}
+        >
           {t('subscriptions.topicUi.category', 'Topic Category')}
         </InputLabel>
         <Select
           labelId="topic-category-label"
           id="topic-category-select"
           value={category}
-          label={t('subscriptions.topicUi.category', 'Topic Category')}
           disabled={disabled}
           onChange={(event) => {
             const nextCategory = event.target.value as TopicCategory
@@ -241,82 +252,139 @@ export default function SubscriptionTopicPicker({
       </FormControl>
 
       {/* Topics Autocomplete */}
-      <Autocomplete
-        multiple
-        disabled={disabled || !category}
-        loading={query.isPending}
-        options={pagedOptions}
-        value={selectedOptions}
-        inputValue={inputValue}
-        onOpen={() => {
-          void query.refetch()
-        }}
-        onInputChange={(_event, newInputValue) => setInputValue(newInputValue)}
-        filterOptions={(currentOptions) => currentOptions}
-        getOptionLabel={(option) => option.name}
-        isOptionEqualToValue={(option, val) => option.name === val.name}
-        onChange={(_event, newValue) => {
-          const next = newValue.map((item) => item.name)
-          if (next.length <= MAX_SUBSCRIPTION_TOPICS) {
-            onChange(next)
-          }
-        }}
-        PaperComponent={PaperComponent}
-        renderInput={(params) => (
-          <TextField
-            // eslint-disable-next-line react/jsx-props-no-spreading
-            {...params}
-            size="small"
-            label={t('subscriptions.topicUi.topics', 'Topics')}
-            placeholder={
-              category
-                ? t('subscriptions.topicUi.search', 'Search topics by name')
-                : t(
-                    'subscriptions.topicUi.categoryRequired',
-                    'Select a category first to choose topics',
-                  )
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 0.75,
+          }}
+        >
+          <InputLabel
+            htmlFor="subscription-topics-input"
+            shrink={false}
+            sx={{
+              position: 'static',
+              transform: 'none',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+              color: 'text.primary',
+              '&.Mui-focused': { color: 'text.primary' },
+            }}
+          >
+            {t('subscriptions.topicUi.topics', 'Topics')}
+          </InputLabel>
+          {category ? (
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Button
+                size="small"
+                variant="text"
+                disabled={
+                  disabled ||
+                  selected.length >= MAX_SUBSCRIPTION_TOPICS ||
+                  filteredTopics.length === 0 ||
+                  isAllMatchingSelected
+                }
+                onClick={handleSelectAll}
+                sx={{
+                  minWidth: 'auto',
+                  p: 0,
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  color: '#ff7300',
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                  '&.Mui-disabled': {
+                    color: 'text.disabled',
+                  },
+                }}
+              >
+                {t('subscriptions.topicUi.selectAll', 'Select all')}
+              </Button>
+              <Typography variant="caption" sx={{ color: 'text.secondary', px: 0.25 }}>
+                |
+              </Typography>
+              <Button
+                size="small"
+                variant="text"
+                disabled={disabled || selected.length === 0}
+                onClick={() => onChange([])}
+                sx={{
+                  minWidth: 'auto',
+                  p: 0,
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  color: '#ff7300',
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    textDecoration: 'underline',
+                  },
+                  '&.Mui-disabled': {
+                    color: 'text.disabled',
+                  },
+                }}
+              >
+                {t('subscriptions.topicUi.clear', 'Clear')}
+              </Button>
+            </Stack>
+          ) : null}
+        </Box>
+        <Autocomplete
+          multiple
+          disabled={disabled || !category}
+          loading={query.isPending}
+          options={pagedOptions}
+          value={selectedOptions}
+          inputValue={inputValue}
+          onOpen={() => {
+            void query.refetch()
+          }}
+          onInputChange={(_event, newInputValue) => setInputValue(newInputValue)}
+          filterOptions={(currentOptions) => currentOptions}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(option, val) => option.name === val.name}
+          onChange={(_event, newValue) => {
+            const next = newValue.map((item) => item.name)
+            if (next.length <= MAX_SUBSCRIPTION_TOPICS) {
+              onChange(next)
             }
-          />
-        )}
-      />
-
-      {/* Selection Summary and Actions */}
-      {category ? (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="caption" color="text.secondary">
+          }}
+          PaperComponent={PaperComponent}
+          renderInput={(params) => (
+            <TextField
+              // eslint-disable-next-line react/jsx-props-no-spreading
+              {...params}
+              id="subscription-topics-input"
+              size="small"
+              placeholder={
+                category
+                  ? t('subscriptions.topicUi.search', 'Search topics by name')
+                  : t(
+                      'subscriptions.topicUi.categoryRequired',
+                      'Select a category first to choose topics',
+                    )
+              }
+              inputProps={{
+                ...params.inputProps,
+                'aria-label': t('subscriptions.topicUi.topics', 'Topics'),
+              }}
+            />
+          )}
+        />
+        {category ? (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             {t('subscriptions.topicUi.selected', '{{count}} selected · maximum {{max}}', {
               count: selected.length,
               max: MAX_SUBSCRIPTION_TOPICS,
             })}
           </Typography>
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant="text"
-              disabled={
-                disabled ||
-                selected.length >= MAX_SUBSCRIPTION_TOPICS ||
-                filteredTopics.length === 0 ||
-                isAllMatchingSelected
-              }
-              onClick={handleSelectAll}
-            >
-              {t('subscriptions.topicUi.selectAll', 'Select all')}
-            </Button>
-            {selected.length > 0 ? (
-              <Button
-                size="small"
-                variant="text"
-                color="error"
-                disabled={disabled}
-                onClick={() => onChange([])}
-              >
-                {t('subscriptions.topicUi.clear', 'Clear')}
-              </Button>
-            ) : null}
-          </Stack>
-        </Box>
-      ) : null}
+        ) : null}
+      </Box>
 
       {query.isError ? (
         <Alert severity="error">
