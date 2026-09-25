@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsDpo } from '../../fixtures/auth.fixtures'
 import { ComplaintCaseDetailPage } from '../../pages/ComplaintCaseDetailPage'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
 import { seedComplaintViaApi } from '../../utils/complaintSetup'
@@ -24,8 +24,8 @@ import { seedComplaintViaApi } from '../../utils/complaintSetup'
 /**
  * A Complaint Officer viewing the org-wide queue and one case's detail -
  * ComplaintQueuePage.tsx / ComplaintCaseDetailPage.tsx at /complaint-management and
- * /complaint-management/:id. Reached with the `dpdp-consent-admin` persona ("Consent Admin") -
- * see AGENTS.md for why there's no distinct Complaint Officer persona.
+ * /complaint-management/:id. Reached with the `dpdp-consent-dpo` persona - the only role holding
+ * the `:any` complaint scopes.
  */
 test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
   test('08.05.01 - The queue table shows reference id, user, category, priority, status, SLA and updated columns', async ({
@@ -33,7 +33,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     userComplaintApi,
   }) => {
     await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-columns')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
 
@@ -50,7 +50,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-open-case')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
@@ -64,7 +64,7 @@ test.describe('Complaint Officer viewing the queue and a case (UI)', () => {
   test('08.05.03 - Navigating to an unknown case id shows the not-found state with a way back to the queue', async ({
     browser,
   }) => {
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto('00000000-0000-0000-0000-000000000000')
 

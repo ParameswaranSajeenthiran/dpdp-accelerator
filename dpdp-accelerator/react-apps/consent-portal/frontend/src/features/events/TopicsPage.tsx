@@ -184,7 +184,10 @@ export default function TopicsPage(): React.JSX.Element {
             }}
             onSubmit={(payload) => {
               createMutation.mutate(payload, {
-                onSuccess: () => setIsRegisterOpen(false),
+                onSuccess: () => {
+                  setIsRegisterOpen(false)
+                  updateParams(filters)
+                },
               })
             }}
           />

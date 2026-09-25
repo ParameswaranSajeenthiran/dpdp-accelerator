@@ -129,9 +129,10 @@ merge leaves them quietly wrong.
 ```ts
 const page = await loginAsUser(browser)          // any signed-in user; manages only their own consents
 const page = await loginAsConsentAdmin(browser)  // holds dpdp-consent-admin; every internal_consent_mgt_* scope
+const page = await loginAsDpo(browser)           // holds dpdp-consent-dpo; only complaints:read:any/write:any
 ```
 
-Both take the worker-scoped `browser` fixture and return an already-signed-in `Page`. **You own the
+All three take the worker-scoped `browser` fixture and return an already-signed-in `Page`. **You own the
 returned page's context and must close it**: `await page.context().close()` at the end of the test.
 Leaking contexts is the fastest way to make the suite flaky.
 
@@ -139,8 +140,9 @@ A persona logs in for real at most **once per run**, cached to `.auth/<persona>.
 across workers. Do not add your own login flow, and do not call `getPersonaState` unless you need a
 persona with no fixture (only `user-2` qualifies).
 
-"Officer" in the complaint tests is not a separate persona — it is any `dpdp-consent-admin` holder,
-so `loginAsConsentAdmin` doubles as the complaint officer and the event-notification admin.
+"Officer" in the complaint tests is the `dpdp-consent-dpo` persona (`loginAsDpo`) — the only role
+holding the `complaints:*:any` scopes. `dpdp-consent-admin` holds no complaint scope at all.
+`loginAsConsentAdmin` doubles as the event-notification admin.
 
 A second user account (`personas.user2`) is required, same as `personas.user` - it is provisioned
 unconditionally alongside it. Tests needing two distinct real users just read

@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 171 across 46 spec files in 9 areas |
+| **Tests** | 172 across 46 spec files in 9 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -325,11 +325,11 @@ Destructive and irreversible, so each test creates and signs in as its own throw
 
 ## `08-complaints/` — Grievance redressal
 
-Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona **is** `dpdp-consent-admin` - there is no distinct Complaint Officer persona. Complaints are seeded via `seedComplaintViaApi`; status moves via `moveComplaintToStatusViaApi`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
+Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-management`. The officer persona is `dpdp-consent-dpo`, the only role holding the `:any` complaint scopes; `dpdp-consent-admin` holds none. Complaints are seeded via `seedComplaintViaApi`; status moves via `moveComplaintToStatusViaApi`, which hops through `WAITING_ON_CLIENT` to reach `AWAITING_INTERNAL_REVIEW` and always sends a note (a null note would blank the whole activity feed).
 
 **Not covered:** the list's true empty state - the shared `user` persona always has history.
 
-**43 tests, 9 spec files.**
+**44 tests, 9 spec files.**
 
 ### `08.01-data-principal-creating-complaints.spec.ts`
 

@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsDpo } from '../../fixtures/auth.fixtures'
 import { ComplaintQueuePage } from '../../pages/ComplaintQueuePage'
 import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 
@@ -40,7 +40,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     const inProgressComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-in-progress')
     await moveComplaintToStatusViaApi(officerComplaintApi, inProgressComplaint.id, 'IN_PROGRESS')
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
@@ -58,7 +58,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     const criticalComplaint = await seedComplaintViaApi(userComplaintApi, 'DATA_BREACH', 'queue-filter-critical')
     const lowComplaint = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-filter-low')
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
@@ -78,7 +78,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
     await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'RESOLVED', 'Resolved for this test.')
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
@@ -98,7 +98,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'queue-search-reference')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)
@@ -119,7 +119,7 @@ test.describe('Complaint Officer searching/filtering the queue (UI)', () => {
     const record = await (await userComplaintApi.getMyComplaint(seeded.id)).json()
     const dataPrincipalName = (record.userName as string | null) ?? (record.userId as string)
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const queuePage = new ComplaintQueuePage(officerPage)
     await queuePage.goto()
     await queuePage.setRowsPerPage(25)

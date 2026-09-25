@@ -16,20 +16,7 @@
  * under the License.
  */
 
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Chip,
-  Divider,
-  Skeleton,
-  Stack,
-  StatCard,
-  Typography,
-} from '@wso2/oxygen-ui'
+import { Alert, Box, Button, Stack, StatCard, Typography } from '@wso2/oxygen-ui'
 import {
   ArrowRight,
   Ban,
@@ -38,20 +25,17 @@ import {
   Clock3,
   Hourglass,
   Inbox,
-  Layers,
   RefreshCw,
   ShieldCheck,
   Target,
   UserCheck,
   XCircle,
 } from '@wso2/oxygen-ui-icons-react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
+import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { PENDING_CONSENTS_PATH, PENDING_CONSENTS_VIEW_SEARCH } from '../my-consents/constants'
 import useAuthorization from '../auth/useAuthorization'
-import type { ConsentSummary } from '../../types/consent'
-import { formatEpochTimestamp } from '../../utils/dateTime'
 import { REQUIRED_SCOPES, isDpoOnlyProfile } from '../../utils/scopes'
 import type { PageCount } from '../../utils/cursorPagination'
 import useDashboardSelfConsentStateCountsQuery from './hooks/useDashboardSelfConsentStateCountsQuery'
@@ -60,64 +44,9 @@ import type { ConsentStateCounts } from './hooks/consentStateCounts'
 import useDashboardPurposesCountQuery, {
   useDashboardElementsCountQuery,
 } from './hooks/useDashboardCatalogCountsQuery'
-import useDashboardPendingConsentsQuery from './hooks/useDashboardPendingConsentsQuery'
 import useDashboardMyComplaintCountsQuery, {
   type ComplaintStateCounts,
 } from './hooks/useDashboardMyComplaintCountsQuery'
-
-const ATTENTION_ITEM_LIMIT = 5
-
-function summarizePurposes(consent: ConsentSummary): string {
-  const labels = (consent.purposes ?? []).map((purpose) => purpose.name)
-
-  if (labels.length === 0) return '-'
-  if (labels.length === 1) return labels[0]
-  return `${labels[0]} +${String(labels.length - 1)}`
-}
-
-function PendingConsentRow({ consent }: { consent: ConsentSummary }): React.JSX.Element {
-  const navigate = useNavigate()
-  const consentPath = `/consents/${encodeURIComponent(consent.id)}${PENDING_CONSENTS_VIEW_SEARCH}`
-
-  return (
-    <Box
-      role="link"
-      tabIndex={0}
-      onClick={() => navigate(consentPath)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          navigate(consentPath)
-        }
-      }}
-      sx={{
-        py: 1.25,
-        px: 1,
-        mx: -1,
-        borderRadius: 1,
-        cursor: 'pointer',
-        '&:hover': { bgcolor: 'action.hover' },
-      }}
-    >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-        <Stack spacing={0.25} minWidth={0}>
-          <Typography variant="body2" fontWeight={600} noWrap>
-            {consent.serviceId}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {summarizePurposes(consent)}
-          </Typography>
-        </Stack>
-        <Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
-          <Typography variant="caption" color="text.secondary">
-            {formatEpochTimestamp(consent.timestamp)}
-          </Typography>
-          <ArrowRight size={16} />
-        </Stack>
-      </Stack>
-    </Box>
-  )
-}
 
 /** "42" when exact, "100+" when the count hit its cap - see PageCount. */
 function formatPageCount(pageCount: PageCount | undefined): string {
@@ -148,16 +77,10 @@ function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): Re
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
         gap: 2,
       }}
     >
-      <StatCard
-        value={value(counts?.total)}
-        label={t('dashboard.totalConsents')}
-        icon={<Layers size={22} />}
-        iconColor="primary"
-      />
       <StatCard
         value={value(counts?.pending)}
         label={t('consentRegistry.status.pending')}
@@ -186,7 +109,7 @@ function ConsentStateCards({ counts, isLoading, t }: ConsentStateCardsProps): Re
         value={value(counts?.expired)}
         label={t('consentRegistry.status.expired')}
         icon={<Hourglass size={22} />}
-        iconColor="secondary"
+        iconColor="info"
       />
     </Box>
   )
@@ -215,21 +138,11 @@ function DashboardPage(): React.JSX.Element {
   const purposesCountQuery = useDashboardPurposesCountQuery(showPurposesCount)
   const elementsCountQuery = useDashboardElementsCountQuery(showElementsCount)
 
-  const pendingConsentsQuery = useDashboardPendingConsentsQuery(showSelfConsentDetail)
-  const pendingConsents = useMemo(
-    () =>
-      [...(pendingConsentsQuery.data ?? [])]
-        .sort((left, right) => right.timestamp - left.timestamp)
-        .slice(0, ATTENTION_ITEM_LIMIT),
-    [pendingConsentsQuery.data],
-  )
-
   const complaintCountsQuery = useDashboardMyComplaintCountsQuery(showMyComplaints)
 
   const consentSectionError =
     showConsentSection &&
     (stateCountsQuery.isError ||
-      (showSelfConsentDetail && pendingConsentsQuery.isError) ||
       (showPurposesCount && purposesCountQuery.isError) ||
       (showElementsCount && elementsCountQuery.isError))
   const complaintSectionError = showMyComplaints && complaintCountsQuery.isError
@@ -251,13 +164,24 @@ function DashboardPage(): React.JSX.Element {
         {showConsentSection ? (
           <>
             <Typography variant="h6" fontWeight={700}>
-              {t('dashboard.consentsByStatus')}
+              {t('dashboard.consentsTitle')}
             </Typography>
             <ConsentStateCards
               counts={stateCountsQuery.data}
               isLoading={stateCountsQuery.isLoading}
               t={t}
             />
+
+            <Box>
+              <Button
+                component={RouterLink}
+                to={isTenantConsentView ? '/administration/consents' : '/consents'}
+                size="small"
+                endIcon={<ArrowRight size={15} />}
+              >
+                {t('dashboard.viewConsents')}
+              </Button>
+            </Box>
 
             {showPurposesCount || showElementsCount ? (
               <>
@@ -292,61 +216,10 @@ function DashboardPage(): React.JSX.Element {
                       }
                       label={t('sidebar.elements')}
                       icon={<Blocks size={22} />}
-                      iconColor="secondary"
+                      iconColor="info"
                     />
                   ) : null}
                 </Box>
-              </>
-            ) : null}
-
-            {showSelfConsentDetail ? (
-              <>
-                <Typography variant="h6" fontWeight={700}>
-                  {t('dashboard.attention')}
-                </Typography>
-
-                <Card sx={{ boxShadow: 1 }}>
-                  <CardHeader
-                    avatar={<Clock3 size={20} />}
-                    title={
-                      <Typography fontWeight={600}>{t('dashboard.pendingConsents')}</Typography>
-                    }
-                    action={
-                      <Chip size="small" label={formatPageCount(stateCountsQuery.data?.pending)} />
-                    }
-                  />
-                  <Divider />
-                  <CardContent>
-                    {pendingConsentsQuery.isLoading ? (
-                      <Stack spacing={1}>
-                        <Skeleton height={40} />
-                        <Skeleton height={40} />
-                        <Skeleton height={40} />
-                      </Stack>
-                    ) : null}
-                    {!pendingConsentsQuery.isLoading &&
-                    !pendingConsentsQuery.isError &&
-                    pendingConsents.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        {t('dashboard.noPending')}
-                      </Typography>
-                    ) : null}
-                    {pendingConsents.map((consent) => (
-                      <PendingConsentRow key={consent.id} consent={consent} />
-                    ))}
-                    {pendingConsents.length > 0 ? (
-                      <Button
-                        component={RouterLink}
-                        to={PENDING_CONSENTS_PATH}
-                        size="small"
-                        endIcon={<ArrowRight size={15} />}
-                        sx={{ mt: 1 }}
-                      >
-                        {t('dashboard.viewPending')}
-                      </Button>
-                    ) : null}
-                  </CardContent>
-                </Card>
               </>
             ) : null}
           </>
@@ -365,16 +238,10 @@ function DashboardPage(): React.JSX.Element {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
+                gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
                 gap: 2,
               }}
             >
-              <StatCard
-                value={formatComplaintCount(complaintCountsQuery, (data) => data.total)}
-                label={t('dashboard.totalComplaints')}
-                icon={<Layers size={22} />}
-                iconColor="primary"
-              />
               <StatCard
                 value={formatComplaintCount(complaintCountsQuery, (data) => data.open)}
                 label={t('complaints.status.open')}
@@ -398,7 +265,7 @@ function DashboardPage(): React.JSX.Element {
                   complaintCountsQuery,
                   (data) => data.waitingOnInternalReview,
                 )}
-                label={t('complaints.status.waitingOnDpo')}
+                label={t('dashboard.waitingOnDpo')}
                 icon={<Clock3 size={22} />}
                 iconColor="warning"
               />
