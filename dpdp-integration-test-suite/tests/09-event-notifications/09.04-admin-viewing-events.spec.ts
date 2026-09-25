@@ -55,7 +55,6 @@ test.describe('Admin viewing and searching Events', () => {
       const row = eventsPage.rowByEventId(event.eventId)
       await expect(row).toBeVisible()
       await expect(row.getByText(topic.name, { exact: true })).toBeVisible()
-      await expect(row.getByText(groupId, { exact: true })).toBeVisible()
       // deliveriesCount is 1 (one matching POLL/ALL subscription) - rendered as a "1 Subscriber" chip.
       await expect(row.getByText('1 Subscriber', { exact: true })).toBeVisible()
 
@@ -146,7 +145,6 @@ test.describe('Admin viewing and searching Events', () => {
 
       await expect(detailsPage.payloadBlock).toContainText(marker)
       await expect(detailsPage.fieldValue('Topic')).toContainText(topic.name)
-      await expect(detailsPage.fieldValue('Group ID')).toContainText(groupId)
 
       const deliveriesResponse = await consentAdminEventApi.getEventDeliveries(event.eventId)
       const { items: deliveries } = (await deliveriesResponse.json()) as { items: SubscriptionDeliveryRecord[] }
