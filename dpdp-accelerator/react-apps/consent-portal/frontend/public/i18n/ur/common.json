@@ -89,6 +89,7 @@
       "validUntil": "تک درست",
       "back": "رجسٹری پر واپس جائیں",
       "notFound": "رضامندی کا ریکارڈ نہیں ملا",
+      "managed": "منظم",
       "section": {
         "purposes": "رضامندی کے مقاصد",
         "authorizations": "اختیارات",
@@ -187,8 +188,8 @@
       "relation": "تعلق",
       "relationOptions": {
         "any": "تمام",
-        "subject": "میری اپنی",
-        "authorizer": "میرے زیر انتظام"
+        "subject": "ذاتی",
+        "authorizer": "منظم"
       }
     },
     "messages": {

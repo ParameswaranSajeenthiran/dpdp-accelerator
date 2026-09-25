@@ -89,6 +89,7 @@
       "validUntil": "અહીં સુધી માન્ય",
       "back": "રજિસ્ટ્રી પર પાછા જાઓ",
       "notFound": "સંમતિ રેકોર્ડ મળ્યો નથી",
+      "managed": "સંચાલિત",
       "section": {
         "purposes": "સંમતિના હેતુઓ",
         "authorizations": "અધિકૃતતાઓ",
@@ -187,8 +188,8 @@
       "relation": "સંબંધ",
       "relationOptions": {
         "any": "બધું",
-        "subject": "મારી પોતાની",
-        "authorizer": "મારા દ્વારા સંચાલિત"
+        "subject": "વ્યક્તિગત",
+        "authorizer": "સંચાલિત"
       }
     },
     "messages": {

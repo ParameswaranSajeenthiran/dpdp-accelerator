@@ -274,7 +274,7 @@ describe('ConsentRegistryPage', () => {
     await screen.findByRole('heading', { name: 'My Consents' })
     expect(screen.getByRole('combobox', { name: 'State' })).not.toHaveAttribute('aria-disabled')
     expect(screen.getByRole('combobox', { name: 'Relation' })).not.toHaveAttribute('aria-disabled')
-    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveTextContent('Managed by Me')
+    expect(screen.getByRole('combobox', { name: 'Relation' })).toHaveTextContent('Managed')
     expect(consentsApi.fetchMyConsents.mock.calls[0]?.[0]).toMatchObject({
       state: 'PENDING',
       relation: 'AUTHORIZER',

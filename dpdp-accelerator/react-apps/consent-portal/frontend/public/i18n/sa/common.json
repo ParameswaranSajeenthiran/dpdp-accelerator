@@ -89,6 +89,7 @@
       "validUntil": "यावत् वैधम्",
       "back": "पञ्जिकां प्रति गच्छन्तु",
       "notFound": "सहमति-अभिलेखः न प्राप्तः",
+      "managed": "प्रबन्धित",
       "section": {
         "purposes": "सहमति-उद्देश्यानि",
         "authorizations": "प्राधिकृतयः",
@@ -187,8 +188,8 @@
       "relation": "सम्बन्धः",
       "relationOptions": {
         "any": "सर्वे",
-        "subject": "मम स्वकीयम्",
-        "authorizer": "मया प्रबन्धितम्"
+        "subject": "व्यक्तिगत",
+        "authorizer": "प्रबन्धित"
       }
     },
     "messages": {

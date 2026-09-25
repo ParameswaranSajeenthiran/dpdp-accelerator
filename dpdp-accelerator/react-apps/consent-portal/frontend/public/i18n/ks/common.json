@@ -89,6 +89,7 @@
       "validUntil": "میعاد تام",
       "back": "رجسٹری مَنٛز واپس گَچھیو",
       "notFound": "رضامندی ریکارڈ لَبنہٕ نہٕ آو",
+      "managed": "زیرِ انتظام",
       "section": {
         "purposes": "رضامندی مقاصِد",
         "authorizations": "اِجازَت نامہٕ",
@@ -187,8 +188,8 @@
       "relation": "رِشتہٕ",
       "relationOptions": {
         "any": "سٲری",
-        "subject": "میٲنۍ پنُن",
-        "authorizer": "میٲنِس دٔسۍ اِنتِظام کَرنہٕ آمُت"
+        "subject": "ذاتی",
+        "authorizer": "زیرِ انتظام"
       }
     },
     "messages": {

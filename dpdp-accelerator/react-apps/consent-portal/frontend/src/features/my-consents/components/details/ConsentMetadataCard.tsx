@@ -43,6 +43,7 @@ import { getConsentStateChipColor, getConsentStateLabelKey } from '../../utils/s
 interface ConsentMetadataCardProps {
   consentId: string
   detail: ConsentDetail
+  managed?: boolean
 }
 
 interface MetadataFieldProps {
@@ -77,7 +78,11 @@ function MetadataField({ icon, label, value }: MetadataFieldProps): React.JSX.El
   )
 }
 
-function ConsentMetadataCard({ consentId, detail }: ConsentMetadataCardProps): React.JSX.Element {
+function ConsentMetadataCard({
+  consentId,
+  detail,
+  managed = false,
+}: ConsentMetadataCardProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const hasExpiryTime = detail.expiryTime != null && detail.expiryTime !== 0
 
@@ -108,12 +113,24 @@ function ConsentMetadataCard({ consentId, detail }: ConsentMetadataCardProps): R
           </Stack>
         }
         action={
-          <Chip
-            label={t(`consentRegistry.status.${getConsentStateLabelKey(detail.state)}`)}
-            color={getConsentStateChipColor(detail.state)}
-            size="small"
-            variant="outlined"
-          />
+          <Stack direction="row" spacing={1} alignItems="center">
+            {managed ? (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  {t('consentRegistry.details.managed')}
+                </Typography>
+                <Typography variant="body2" color="text.disabled" aria-hidden="true">
+                  ·
+                </Typography>
+              </>
+            ) : null}
+            <Chip
+              label={t(`consentRegistry.status.${getConsentStateLabelKey(detail.state)}`)}
+              color={getConsentStateChipColor(detail.state)}
+              size="small"
+              variant="outlined"
+            />
+          </Stack>
         }
         sx={{ pb: 1 }}
       />
@@ -164,6 +181,10 @@ function ConsentMetadataCard({ consentId, detail }: ConsentMetadataCardProps): R
       </CardContent>
     </Card>
   )
+}
+
+ConsentMetadataCard.defaultProps = {
+  managed: false,
 }
 
 export default ConsentMetadataCard

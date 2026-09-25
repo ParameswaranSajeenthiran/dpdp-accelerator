@@ -89,6 +89,7 @@
       "validUntil": "ପର୍ଯ୍ୟନ୍ତ ବୈଧ",
       "back": "ରେଜିଷ୍ଟ୍ରିକୁ ଫେରନ୍ତୁ",
       "notFound": "ସମ୍ମତି ରେକର୍ଡ ମିଳିଲା ନାହିଁ",
+      "managed": "ପରିଚାଳିତ",
       "section": {
         "purposes": "ସମ୍ମତି ଉଦ୍ଦେଶ୍ୟ",
         "authorizations": "ପ୍ରାଧିକରଣ",
@@ -187,8 +188,8 @@
       "relation": "ସମ୍ପର୍କ",
       "relationOptions": {
         "any": "ସମସ୍ତ",
-        "subject": "ମୋର ନିଜସ୍ୱ",
-        "authorizer": "ମୋ ଦ୍ୱାରା ପରିଚାଳିତ"
+        "subject": "ବ୍ୟକ୍ତିଗତ",
+        "authorizer": "ପରିଚାଳିତ"
       }
     },
     "messages": {

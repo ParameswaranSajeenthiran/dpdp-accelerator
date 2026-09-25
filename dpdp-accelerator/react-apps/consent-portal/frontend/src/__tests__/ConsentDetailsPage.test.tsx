@@ -253,6 +253,20 @@ describe('ConsentDetailsPage content', () => {
     expect(screen.getByText('dpdp-portal')).toBeInTheDocument()
   })
 
+  it('shows no Managed label on a consent the caller is the subject of', async () => {
+    renderConsentDetailsPage('ACTIVE', undefined, { subjectId: 'test-user' })
+
+    expect(await screen.findByRole('heading', { name: 'Consent Details' })).toBeInTheDocument()
+    expect(screen.queryByText('Managed')).not.toBeInTheDocument()
+  })
+
+  it('shows a Managed label beside the state on a consent the caller authorizes for someone else', async () => {
+    renderConsentDetailsPage('PENDING', undefined, { subjectId: 'ward' })
+
+    expect(await screen.findByText('Managed')).toBeInTheDocument()
+    expect(screen.getByText('Pending')).toBeInTheDocument()
+  })
+
   it('renders consent properties in a key/value table', async () => {
     renderConsentDetailsPage('ACTIVE', Object.values(REQUIRED_SCOPES), {
       properties: { dataCategory: 'financial', region: 'EU' },

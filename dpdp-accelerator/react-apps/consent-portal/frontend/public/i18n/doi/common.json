@@ -89,6 +89,7 @@
       "validUntil": "इस तकर मान्य",
       "back": "रजिस्ट्री च वापस",
       "notFound": "सहमति रिकार्ड नेईं लब्भेआ",
+      "managed": "प्रबंधित",
       "section": {
         "purposes": "सहमति उद्देश्य",
         "authorizations": "अधिकार",
@@ -187,8 +188,8 @@
       "relation": "संबंध",
       "relationOptions": {
         "any": "सभनें",
-        "subject": "अपनी आपूं दी",
-        "authorizer": "मेरे आसेआ प्रबंधत"
+        "subject": "निजी",
+        "authorizer": "प्रबंधित"
       }
     },
     "messages": {

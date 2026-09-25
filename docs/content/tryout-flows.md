@@ -350,8 +350,8 @@ authorization.
 ![Delegated consent flow from connected-application creation through guardian approval and data-subject verification](../assets/dpdp-consent-delegation-flow.svg)
 
 **Portal:** The guardian or delegate uses **My Pending Consents** and can filter
-**My Consents** by **Managed by Me**. The data subject can filter the same page
-by **My Own**. A connected application creates the prerequisite consent using
+**My Consents** by **Managed**. The data subject can filter the same page
+by **Personal**. A connected application creates the prerequisite consent using
 the Consent Management API.
 
 #### Create a delegated consent
@@ -413,7 +413,7 @@ the normal `ACTIVE` default.
 
 1. Sign in as the guardian or delegated authorizer.
 2. Open **My Pending Consents**. Alternatively, open **My Consents**, choose
-   **Managed by Me**, and filter by `PENDING`.
+   **Managed**, and filter by `PENDING`.
 3. Open the delegated consent and confirm the data subject, service, purposes,
    elements, and authorization entry.
 4. Select **Approve** and confirm the action.
@@ -447,7 +447,7 @@ again to verify the authorization and aggregate consent states.
 #### Verify as the data subject
 
 1. Sign out and sign in as the data subject.
-2. Open **My Consents** and choose **My Own**.
+2. Open **My Consents** and choose **Personal**.
 3. Open the consent and verify that it is `ACTIVE` and records the guardian's
    approved authorization.
 4. Inspect **Consent Lifecycle** and **View Full History** to confirm that the

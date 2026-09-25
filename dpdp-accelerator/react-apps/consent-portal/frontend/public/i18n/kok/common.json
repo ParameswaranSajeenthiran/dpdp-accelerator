@@ -89,6 +89,7 @@
       "validUntil": "ह्या वेळामेरेन वैध",
       "back": "नोंदणी कडेन परत वचात",
       "notFound": "संमतीची नोंद मेळ्ळी ना",
+      "managed": "वेवस्थापीत",
       "section": {
         "purposes": "संमतीचे उद्देश",
         "authorizations": "अधिकार",
@@ -187,8 +188,8 @@
       "relation": "संबंध",
       "relationOptions": {
         "any": "सगळें",
-        "subject": "म्हजें स्वताचें",
-        "authorizer": "म्हाका वेवस्थापीत केल्लें"
+        "subject": "वैयक्तिक",
+        "authorizer": "वेवस्थापीत"
       }
     },
     "messages": {

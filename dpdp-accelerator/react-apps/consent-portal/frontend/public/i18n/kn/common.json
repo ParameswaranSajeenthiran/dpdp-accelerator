@@ -89,6 +89,7 @@
       "validUntil": "ಅಂತ್ಯ ದಿನಾಂಕ",
       "back": "ರಿಜಿಸ್ಟ್ರಿಗೆ ಹಿಂತಿರುಗಿ",
       "notFound": "ಸಮ್ಮತಿ ದಾಖಲೆ ಕಂಡುಬಂದಿಲ್ಲ",
+      "managed": "ನಿರ್ವಹಿಸಿದ",
       "section": {
         "purposes": "ಸಮ್ಮತಿ ಉದ್ದೇಶಗಳು",
         "authorizations": "ಅಧಿಕಾರಗಳು",
@@ -187,8 +188,8 @@
       "relation": "ಸಂಬಂಧ",
       "relationOptions": {
         "any": "ಎಲ್ಲಾ",
-        "subject": "ನನ್ನ ಸ್ವಂತ",
-        "authorizer": "ನನ್ನಿಂದ ನಿರ್ವಹಿಸಲ್ಪಟ್ಟಿದೆ"
+        "subject": "ವೈಯಕ್ತಿಕ",
+        "authorizer": "ನಿರ್ವಹಿಸಿದ"
       }
     },
     "messages": {

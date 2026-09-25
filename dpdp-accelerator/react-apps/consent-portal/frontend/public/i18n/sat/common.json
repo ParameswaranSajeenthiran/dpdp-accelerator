@@ -89,6 +89,7 @@
       "validUntil": "ᱱᱚᱣᱟ ᱦᱟᱹᱵᱤᱡ ᱪᱟᱹᱞᱩ",
       "back": "ᱨᱮᱡᱤᱥᱴᱨᱤ ᱛᱮ ᱨᱩᱣᱟᱹᱲ",
       "notFound": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱨᱮᱠᱳᱨᱰ ᱵᱟᱝ ᱧᱟᱢ ᱞᱮᱱᱟ",
+      "managed": "ᱪᱟᱪᱞᱟᱣ ᱟᱠᱟᱱ",
       "section": {
         "purposes": "ᱥᱟᱹᱢᱟᱹᱛᱤ ᱩᱫᱽᱫᱮᱥ",
         "authorizations": "ᱚᱛᱷᱚᱨᱟᱭᱤᱡᱮᱥᱚᱱ",
@@ -187,8 +188,8 @@
       "relation": "ᱡᱚᱯᱚᱲᱟᱣ",
       "relationOptions": {
         "any": "ᱡᱚᱛᱚ",
-        "subject": "ᱤᱧᱟᱜ ᱱᱤᱡᱮᱨᱟᱜ",
-        "authorizer": "ᱤᱧ ᱫᱟᱨᱟᱭᱛᱮ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱟᱠᱟᱱᱟ"
+        "subject": "ᱟᱯᱱᱟᱨᱟᱜ",
+        "authorizer": "ᱪᱟᱪᱞᱟᱣ ᱟᱠᱟᱱ"
       }
     },
     "messages": {

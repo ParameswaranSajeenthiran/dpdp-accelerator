@@ -89,6 +89,7 @@
       "validUntil": "ਇਸ ਤਾਰੀਖ ਤੱਕ ਵੈਧ",
       "back": "ਰਜਿਸਟਰੀ 'ਤੇ ਵਾਪਸ ਜਾਓ",
       "notFound": "ਸਹਿਮਤੀ ਰਿਕਾਰਡ ਨਹੀਂ ਮਿਲਿਆ",
+      "managed": "ਪ੍ਰਬੰਧਿਤ",
       "section": {
         "purposes": "ਸਹਿਮਤੀ ਦੇ ਉਦੇਸ਼",
         "authorizations": "ਅਧਿਕਾਰ",
@@ -187,8 +188,8 @@
       "relation": "ਸੰਬੰਧ",
       "relationOptions": {
         "any": "ਸਾਰੇ",
-        "subject": "ਮੇਰਾ ਆਪਣਾ",
-        "authorizer": "ਮੇਰੇ ਦੁਆਰਾ ਪ੍ਰਬੰਧਿਤ"
+        "subject": "ਨਿੱਜੀ",
+        "authorizer": "ਪ੍ਰਬੰਧਿਤ"
       }
     },
     "messages": {

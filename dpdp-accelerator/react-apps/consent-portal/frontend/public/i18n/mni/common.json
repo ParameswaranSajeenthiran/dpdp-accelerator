@@ -89,6 +89,7 @@
       "validUntil": "চৎনগদবা নুমিৎ",
       "back": "রেজিস্ত্রিদা হনবা",
       "notFound": "য়ানবা রেকোর্দ থেংনদ্রে",
+      "managed": "ꯃꯦꯅꯦꯖ ꯇꯧꯕ",
       "section": {
         "purposes": "য়ানবা পান্দমশিং",
         "authorizations": "অয়াবাসিং",
@@ -187,8 +188,8 @@
       "relation": "ꯔꯤꯂꯦꯁꯟ",
       "relationOptions": {
         "any": "ꯄꯨꯝꯅꯃꯛ",
-        "subject": "ꯑꯩꯒꯤ ꯑꯣꯏꯕ",
-        "authorizer": "ꯑꯩꯅ ꯃꯦꯅꯦꯖ ꯇꯧꯈꯤ"
+        "subject": "ꯃꯤꯑꯣꯏꯕꯒꯤ",
+        "authorizer": "ꯃꯦꯅꯦꯖ ꯇꯧꯕ"
       }
     },
     "messages": {

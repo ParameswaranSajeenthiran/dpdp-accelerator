@@ -89,6 +89,7 @@
       "validUntil": "বৈধ অৱধি",
       "back": "ৰেজিস্ট্ৰীলৈ উভতি যাওক",
       "notFound": "সন্মতিৰ ৰেকৰ্ড পোৱা নগ'ল",
+      "managed": "পৰিচালিত",
       "section": {
         "purposes": "সন্মতিৰ উদ্দেশ্যসমূহ",
         "authorizations": "অনুমোদনসমূহ",
@@ -187,8 +188,8 @@
       "relation": "সম্পৰ্ক",
       "relationOptions": {
         "any": "সকলো",
-        "subject": "মোৰ নিজৰ",
-        "authorizer": "মোৰ দ্বাৰা পৰিচালিত"
+        "subject": "ব্যক্তিগত",
+        "authorizer": "পৰিচালিত"
       }
     },
     "messages": {

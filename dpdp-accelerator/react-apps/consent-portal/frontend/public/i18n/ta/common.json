@@ -89,6 +89,7 @@
       "validUntil": "செல்லுபடியாகும் காலம்",
       "back": "பதிவேட்டிற்குத் திரும்பு",
       "notFound": "சம்மதப் பதிவு கிடைக்கவில்லை",
+      "managed": "நிர்வகிக்கப்பட்ட",
       "section": {
         "purposes": "சம்மத நோக்கங்கள்",
         "authorizations": "அங்கீகாரங்கள் (Authorizations)",
@@ -187,8 +188,8 @@
       "relation": "உறவு",
       "relationOptions": {
         "any": "அனைத்தும்",
-        "subject": "என்னுடையது",
-        "authorizer": "என்னால் நிர்வகிக்கப்பட்டது"
+        "subject": "தனிப்பட்ட",
+        "authorizer": "நிர்வகிக்கப்பட்ட"
       }
     },
     "messages": {

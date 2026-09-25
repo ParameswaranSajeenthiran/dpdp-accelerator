@@ -89,6 +89,7 @@
       "validUntil": "वैधता तिथि",
       "back": "रजिस्ट्री पर वापस जाएं",
       "notFound": "सहमति रिकॉर्ड नहीं मिला",
+      "managed": "प्रबंधित",
       "section": {
         "purposes": "सहमति के उद्देश्य",
         "authorizations": "प्राधिकरण",
@@ -187,8 +188,8 @@
       "relation": "संबंध",
       "relationOptions": {
         "any": "सभी",
-        "subject": "मेरा अपना",
-        "authorizer": "मेरे द्वारा प्रबंधित"
+        "subject": "व्यक्तिगत",
+        "authorizer": "प्रबंधित"
       }
     },
     "messages": {

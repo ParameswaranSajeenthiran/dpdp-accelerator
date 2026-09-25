@@ -191,3 +191,16 @@ export function getAdminConsentStatusMessageKey(
   if (state === 'EXPIRED') return 'expired'
   return null
 }
+
+/**
+ * Whether the signed-in user is deciding on this consent for someone else - one
+ * of its authorizers rather than its subject. Only meaningful on the
+ * self-service surfaces, where every consent is one or the other. False when
+ * either ID is missing, since guessing would mislabel the caller's own consent.
+ */
+export function isManagedByCurrentUser(
+  subjectId: string | undefined,
+  currentUserId: string,
+): boolean {
+  return Boolean(subjectId) && Boolean(currentUserId) && subjectId !== currentUserId
+}

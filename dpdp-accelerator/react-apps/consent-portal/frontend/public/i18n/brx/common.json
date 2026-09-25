@@ -89,6 +89,7 @@
       "validUntil": "बेसेबां समसिम गोहो थानाय",
       "back": "रजिस्ट्रियाव फिन थां",
       "notFound": "गनायथिनि रेकर्ड मोनाखै",
+      "managed": "सामलायजानाय",
       "section": {
         "purposes": "गनायथिनि थांखिफोर",
         "authorizations": "गोहो होनायफोर",
@@ -187,8 +188,8 @@
       "relation": "सोमोन्दो",
       "relationOptions": {
         "any": "गासै",
-        "subject": "आंनि गावबागावनि",
-        "authorizer": "आंनिफ्राय सामलायजानाय"
+        "subject": "गावनि",
+        "authorizer": "सामलायजानाय"
       }
     },
     "messages": {
