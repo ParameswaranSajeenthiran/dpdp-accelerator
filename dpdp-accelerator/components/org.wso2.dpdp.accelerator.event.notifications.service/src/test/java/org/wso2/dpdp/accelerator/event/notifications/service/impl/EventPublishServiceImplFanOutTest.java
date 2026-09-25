@@ -28,7 +28,6 @@ import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.Ev
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -175,9 +174,21 @@ public class EventPublishServiceImplFanOutTest {
 
     private static Subscription subscription(String id, String groupId, String deliveryMode,
             String purposeFilterMode, List<String> purposes, String status) {
-        return new Subscription(id, "org1", groupId, "topic-1", purposeFilterMode, purposes,
-                "", deliveryMode, "https://example.test/callback", "shared-secret", status,
-                new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
+        Subscription s = new Subscription();
+        s.setSubscriptionId(id);
+        s.setOrgId("org1");
+        s.setGroupId(groupId);
+        s.setTopicIds(Collections.singletonList("topic-1"));
+        s.setTopicNames(Collections.emptyList());
+        s.setPurposeFilterMode(purposeFilterMode);
+        s.setPurposes(purposes);
+        s.setDeliveryMode(deliveryMode);
+        s.setCallbackUrl("https://example.test/callback");
+        s.setSharedSecret("shared-secret");
+        s.setStatus(status);
+        s.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        s.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        return s;
     }
 
     private static void setStaticDataSource(DataSource dataSource) throws Exception {

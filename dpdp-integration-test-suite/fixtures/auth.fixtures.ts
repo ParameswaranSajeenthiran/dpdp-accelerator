@@ -30,6 +30,7 @@ import {
 } from '../utils/authStorage'
 import { consentPurposesApiUrl, env, type Persona, type PersonaName } from '../utils/env'
 import { resolveTarget, type Target } from '../utils/targets'
+import { createThrowawayUser, deleteThrowawayUser, type ThrowawayUser } from '../utils/throwawayUser'
 
 /**
  * Every fixture here represents an already-authenticated "state" (per the fixtures/ folder's job
@@ -60,6 +61,9 @@ interface Fixtures {
   // dpdp-consent-user holds NO notifications:* scope - used only to prove every event-notification
   // endpoint rejects a token that lacks the relevant scope.
   userEventApi: EventNotificationApiClient
+  // Fresh, signed-in portal users that exist for one test and are deleted after it - see
+  // ThrowawayAccounts.
+  throwawayAccounts: ThrowawayAccounts
 }
 
 /**
@@ -482,6 +486,50 @@ export async function loginAsThrowawayUser(
   return { page, bearerToken: authorization.replace(/^Bearer\s+/i, '') }
 }
 
+export interface ThrowawayApiClients {
+  consentApi: ConsentApiClient
+  complaintApi: ComplaintApiClient
+}
+
+/**
+ * Self-service API clients acting as a throwaway account, for tests that must seed or act on data
+ * as that account - the dashboard tests' exact counts only hold for an account nothing else writes
+ * to. Built from the session's own token and its `atbv` binding cookie, the same pair
+ * authHeadersFromPersonaState uses for the cached personas.
+ */
+export async function apiClientsForThrowawaySession(
+  session: ThrowawaySession,
+  request: APIRequestContext,
+): Promise<ThrowawayApiClients> {
+  const target = resolveTarget(test.info().project.name)
+  const headers = authHeadersFromPersonaState({
+    storageState: await session.page.context().storageState(),
+    bearerToken: session.bearerToken,
+  })
+  return {
+    consentApi: new ConsentApiClient(request, headers, target.tenantDomain),
+    complaintApi: new ComplaintApiClient(request, headers, target.tenantDomain),
+  }
+}
+
+export interface ThrowawayAccount extends ThrowawayApiClients {
+  user: ThrowawayUser
+  session: ThrowawaySession
+}
+
+/**
+ * For tests that assert exact per-user totals (the dashboard's counts), which only hold for an
+ * account nothing else writes to - never true of the cached personas, which every test and every
+ * previous run shares. Each `create()` makes a new `dpdp-consent-user` account and signs it in; the
+ * fixture closes its context and deletes the account when the test ends, so a retry starts from a
+ * fresh account too.
+ */
+export interface ThrowawayAccounts {
+  create(usernamePrefix: string): Promise<ThrowawayAccount>
+}
+
+const PORTAL_USER_ROLE = 'dpdp-consent-user'
+
 export async function loginAsUser(browser: Browser): Promise<Page> {
   const target = resolveTarget(test.info().project.name)
   return loginAs(browser, 'user', target.personas.user)
@@ -546,6 +594,24 @@ export const test = base.extend<Fixtures>({
     )
   },
 
+  throwawayAccounts: async ({ browser, request }, use) => {
+    const created: Array<{ user: ThrowawayUser; session?: ThrowawaySession }> = []
+    await use({
+      create: async (usernamePrefix) => {
+        const entry: { user: ThrowawayUser; session?: ThrowawaySession } = {
+          user: await createThrowawayUser(PORTAL_USER_ROLE, usernamePrefix),
+        }
+        created.push(entry)
+        entry.session = await loginAsThrowawayUser(browser, entry.user)
+        const clients = await apiClientsForThrowawaySession(entry.session, request)
+        return { user: entry.user, session: entry.session, ...clients }
+      },
+    })
+    for (const { user, session } of created) {
+      await session?.page.context().close()
+      await deleteThrowawayUser(user.id, user.username)
+    }
+  },
 })
 
 export { expect } from '@playwright/test'

@@ -38,7 +38,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -264,6 +267,60 @@ public class TopicDAOImpl implements TopicDAO {
             throw new EventNotificationDaoException(
                     String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
         }
+    }
+
+    @Override
+    public List<Topic> getTopicsByIds(Connection conn, List<String> topicIds, String orgId) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        if (topicIds == null || topicIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Topic> topics = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getTopicsByIdsQuery(topicIds.size()))) {
+            ps.setString(1, orgId);
+            for (int i = 0; i < topicIds.size(); i++) {
+                ps.setString(i + 2, topicIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    topics.add(mapTopic(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDaoException(
+                    String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
+        }
+        return topics;
+    }
+
+    @Override
+    public Map<String, Topic> getTopicsByOrgAndNames(Connection conn, String orgId, List<String> lowerNames) {
+        if (conn == null) {
+            throw new IllegalArgumentException("Connection cannot be null.");
+        }
+        Map<String, Topic> result = new HashMap<>();
+        if (lowerNames == null || lowerNames.isEmpty()) {
+            return result;
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                getQueries(conn).getTopicsByOrgAndNamesQuery(lowerNames.size()))) {
+            ps.setString(1, orgId);
+            for (int i = 0; i < lowerNames.size(); i++) {
+                ps.setString(i + 2, lowerNames.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Topic t = mapTopic(rs);
+                    result.put(t.getName().toLowerCase(Locale.ROOT), t);
+                }
+            }
+        } catch (SQLException e) {
+            throw new EventNotificationDaoException(
+                    String.format(EventNotificationCommonConstants.ERROR_LISTING_TOPICS, orgId), e);
+        }
+        return result;
     }
 
     private Topic mapTopic(ResultSet rs) throws SQLException {

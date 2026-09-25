@@ -34,8 +34,6 @@ import {
   ArrowLeft,
   Clock3,
   Globe,
-  Layers,
-  Radio,
   RefreshCw,
   Tag,
   Trash2,
@@ -44,6 +42,8 @@ import {
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
+import SubscriptionTopicsSection from './components/SubscriptionTopicsSection'
+import SubscriptionPurposesSection from './components/SubscriptionPurposesSection'
 import CopyableText from '../../components/CopyableText'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { formatEpochTimestamp } from '../../utils/dateTime'
@@ -151,7 +151,7 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                 {t('subscriptions.actions.backToList')}
               </Button>
               <Typography variant="h4" fontWeight={700}>
-                {sub.topic}
+                {t('subscriptions.topicUi.detailsTitle')}
               </Typography>
               <Chip
                 size="small"
@@ -207,13 +207,13 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
               fields={[
                 {
                   icon: <Tag size={16} />,
-                  label: t('subscriptions.table.subscriptionId'),
-                  value: <CopyableText value={sub.subscriptionId} monospace />,
+                  label: t('subscriptions.details.name'),
+                  value: sub.name || '-',
                 },
                 {
-                  icon: <Radio size={16} />,
-                  label: t('subscriptions.table.topic'),
-                  value: sub.topic,
+                  icon: <Tag size={16} />,
+                  label: t('subscriptions.table.subscriptionId'),
+                  value: <CopyableText value={sub.subscriptionId} monospace />,
                 },
                 {
                   icon: <Users size={16} />,
@@ -238,22 +238,6 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                   value: sub.delivery?.callbackUrl || '-',
                 },
                 {
-                  icon: <Layers size={16} />,
-                  label: t('subscriptions.table.filter'),
-                  value: (
-                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={t(`subscriptions.filterType.${filterType}`, filterType)}
-                      />
-                      {sub.filter?.purposes?.map((purpose) => (
-                        <Chip key={purpose} size="small" label={purpose} />
-                      ))}
-                    </Stack>
-                  ),
-                },
-                {
                   icon: <Clock3 size={16} />,
                   label: t('subscriptions.details.createdAt'),
                   value: formatEpochTimestamp(sub.createdAt),
@@ -268,6 +252,11 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
           </CardContent>
         </Card>
 
+        <SubscriptionTopicsSection topics={sub.topics ?? (sub.topic ? [sub.topic] : [])} />
+        <SubscriptionPurposesSection
+          purposes={sub.filter?.purposes ?? []}
+          filterType={filterType}
+        />
         <Card sx={{ border: 1, borderColor: 'divider', boxShadow: 1 }}>
           <CardHeader
             title={

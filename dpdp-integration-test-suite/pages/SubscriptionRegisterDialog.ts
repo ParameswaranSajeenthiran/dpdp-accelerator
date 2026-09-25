@@ -28,7 +28,9 @@ import { type Locator, type Page } from '@playwright/test'
  */
 export class SubscriptionRegisterDialog {
   readonly root: Locator
-  readonly topicSelect: Locator
+  readonly nameField: Locator
+  readonly categorySelect: Locator
+  readonly topicsInput: Locator
   readonly filterModeSelect: Locator
   readonly purposesField: Locator
   readonly deliveryModeSelect: Locator
@@ -37,6 +39,14 @@ export class SubscriptionRegisterDialog {
   readonly generateSecretButton: Locator
   readonly submitButton: Locator
   readonly cancelButton: Locator
+  readonly selectAllTopicsButton: Locator
+  readonly clearTopicsButton: Locator
+  readonly topicsPagerBack: Locator
+  readonly topicsPagerNext: Locator
+  readonly categoryConfirmDialog: Locator
+  readonly confirmCategoryChangeButton: Locator
+  readonly cancelCategoryChangeButton: Locator
+  readonly nameRequiredError: Locator
   readonly topicRequiredError: Locator
   readonly purposesRequiredError: Locator
   readonly callbackUrlRequiredError: Locator
@@ -44,16 +54,26 @@ export class SubscriptionRegisterDialog {
   readonly secretRequiredError: Locator
 
   constructor(private readonly page: Page) {
-    this.root = page.getByRole('dialog')
-    this.topicSelect = this.root.getByRole('combobox', { name: 'Topic' })
-    this.filterModeSelect = this.root.getByRole('combobox', { name: 'Purpose Filter Mode' })
-    this.purposesField = this.root.getByLabel('Purposes (comma-separated)')
+    this.root = page.getByRole('dialog', { name: 'Register Subscription' })
+    this.nameField = this.root.getByLabel('Subscription Name')
+    this.categorySelect = this.root.getByRole('combobox', { name: 'Topic Category' })
+    this.topicsInput = this.root.getByLabel('Topics')
+    this.selectAllTopicsButton = this.root.getByRole('button', { name: 'Select all' })
+    this.clearTopicsButton = this.root.getByRole('button', { name: 'Clear' })
+    this.topicsPagerBack = page.getByRole('button', { name: 'Back' })
+    this.topicsPagerNext = page.getByRole('button', { name: 'Next' })
+    this.categoryConfirmDialog = page.getByRole('dialog', { name: 'Change topic category?' })
+    this.confirmCategoryChangeButton = this.categoryConfirmDialog.getByRole('button', { name: 'Change Category' })
+    this.cancelCategoryChangeButton = this.categoryConfirmDialog.getByRole('button', { name: 'Cancel' })
+    this.filterModeSelect = this.root.getByRole('combobox', { name: 'Consent Purpose Filter Mode' })
+    this.purposesField = this.root.getByLabel('Consent Purposes (comma-separated)')
     this.deliveryModeSelect = this.root.getByRole('combobox', { name: 'Delivery Mode' })
     this.callbackUrlField = this.root.getByLabel('Webhook Callback URL')
     this.sharedSecretField = this.root.getByLabel('Shared Secret')
     this.generateSecretButton = this.root.getByRole('button', { name: 'Generate new secret' })
     this.submitButton = this.root.getByRole('button', { name: /^Register/ })
     this.cancelButton = this.root.getByRole('button', { name: 'Cancel' })
+    this.nameRequiredError = this.root.getByText('Subscription name is required.')
     this.topicRequiredError = this.root.getByText('Topic is required.')
     this.purposesRequiredError = this.root.getByText(
       'Purposes are required when filtering by specific or all-except.',
@@ -63,12 +83,45 @@ export class SubscriptionRegisterDialog {
     this.secretRequiredError = this.root.getByText('Shared secret is required.')
   }
 
+  async fillName(name: string): Promise<void> {
+    await this.nameField.fill(name)
+  }
+
+  async selectCategory(label: 'Consent Topics' | 'User Topics' | 'Custom Topics'): Promise<void> {
+    await this.categorySelect.click()
+    await this.page.getByRole('option', { name: label, exact: true }).click()
+  }
+
+  async confirmCategoryChange(): Promise<void> {
+    await this.confirmCategoryChangeButton.click()
+  }
+
+  async cancelCategoryChange(): Promise<void> {
+    await this.cancelCategoryChangeButton.click()
+  }
+
+  async clickSelectAllTopics(): Promise<void> {
+    await this.selectAllTopicsButton.click()
+  }
+
+  async clickClearTopics(): Promise<void> {
+    await this.clearTopicsButton.click()
+  }
+
   async selectTopic(name: string): Promise<void> {
-    await this.topicSelect.click()
+    await this.topicsInput.click()
     await this.page.getByRole('option', { name, exact: true }).click()
   }
 
-  async selectFilterMode(label: 'All Events' | 'Specific Purposes' | 'All Except Purposes'): Promise<void> {
+  topicChip(name: string): Locator {
+    return this.root.locator('.MuiChip-root', { hasText: name })
+  }
+
+  async deleteTopic(name: string): Promise<void> {
+    await this.topicChip(name).locator('.MuiChip-deleteIcon').click()
+  }
+
+  async selectFilterMode(label: 'All Purposes' | 'Specific Purposes' | 'All Except Purposes'): Promise<void> {
     await this.filterModeSelect.click()
     await this.page.getByRole('option', { name: label, exact: true }).click()
   }

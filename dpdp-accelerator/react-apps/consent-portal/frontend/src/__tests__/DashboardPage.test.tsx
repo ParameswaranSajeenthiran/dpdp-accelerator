@@ -74,6 +74,13 @@ function rawConsents(count: number): unknown[] {
   }))
 }
 
+function renderedStats(): string[] {
+  return Array.from(
+    document.querySelectorAll('[data-stat]'),
+    (card) => card.getAttribute('data-stat') ?? '',
+  )
+}
+
 describe('DashboardPage', () => {
   it('shows a regular user their own consent and complaint counts', async () => {
     // Active (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
@@ -108,6 +115,19 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Complaints')).toBeInTheDocument()
     expect(await screen.findByText('61')).toBeInTheDocument() // open complaints
     expect(screen.getByText('Waiting on DPO')).toBeInTheDocument()
+    // The E2E suite's page object locates every card by this attribute (tests/10-dashboard).
+    expect(renderedStats()).toEqual([
+      'consent-pending',
+      'consent-active',
+      'consent-rejected',
+      'consent-revoked',
+      'consent-expired',
+      'complaint-open',
+      'complaint-in-progress',
+      'complaint-waiting-on-client',
+      'complaint-waiting-on-dpo',
+      'complaint-resolved',
+    ])
     expect(screen.queryByText('Waiting on Internal Review')).not.toBeInTheDocument()
     // No Total cards, so no unfiltered count is fetched for either section.
     expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
@@ -177,6 +197,15 @@ describe('DashboardPage', () => {
     })
     expect(screen.getByText('12')).toBeInTheDocument()
     expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
+    expect(renderedStats()).toEqual([
+      'consent-pending',
+      'consent-active',
+      'consent-rejected',
+      'consent-revoked',
+      'consent-expired',
+      'catalog-purposes',
+      'catalog-elements',
+    ])
     expect(adminConsentsApi.fetchAdminConsents).toHaveBeenCalledTimes(5)
     adminConsentsApi.fetchAdminConsents.mock.calls.forEach(([params]) => {
       expect(params).toMatchObject({ state: expect.any(String) })

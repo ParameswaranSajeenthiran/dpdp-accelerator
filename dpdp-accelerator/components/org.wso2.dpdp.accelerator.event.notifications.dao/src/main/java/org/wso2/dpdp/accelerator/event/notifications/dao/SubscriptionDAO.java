@@ -59,6 +59,12 @@ public interface SubscriptionDAO {
     List<Subscription> getLiveSubscriptionsByOrgAndTopic(Connection conn, String orgId, String topicId);
 
     /**
+     * Same semantics as getLiveSubscriptionsByOrgAndTopic, batched across topic IDs.
+     * A subscription already covering more than one of the given topics is returned once.
+     */
+    List<Subscription> getLiveSubscriptionsByOrgAndTopics(Connection conn, String orgId, List<String> topicIds);
+
+    /**
      * Returns and locks active subscriptions that are eligible for event fan-out.
      * The caller must hold the supplied transaction until all delivery rows have
      * been inserted.
@@ -66,8 +72,6 @@ public interface SubscriptionDAO {
     List<Subscription> getActiveSubscriptionsForFanOut(Connection conn, String orgId, String topicId);
 
     long countActiveSubscriptionsForTopic(Connection connection, String orgId, String topicId);
-
-    List<String> getPurposesBySubscriptionId(Connection connection, String subscriptionId, String orgId);
 
     Map<String, List<String>> getPurposesBySubscriptionIds(Connection connection, List<String> subscriptionIds);
 

@@ -101,16 +101,16 @@
         "updated": "নৌহোংবা",
         "date": "তারিখ",
         "time": "তম্পাক/সময়",
-        "state": "State"
+        "state": "ꯁ꯭ꯇꯦꯠ"
       },
       "lifecycle": {
         "tableAriaLabel": "য়ানবা পুন্সি চৎনবী",
         "empty": "লাইফসাইকলগী থৌদোক লৈত্রে।"
       },
       "service": "ꯁꯔꯚꯤꯁ",
-      "elementCount": "{{count}} elements",
-      "elementCount_one": "{{count}} element",
-      "elementCount_other": "{{count}} elements",
+      "elementCount": "{{count}} ꯑꯦꯂꯤꯃꯦꯟꯠꯁꯤꯡ",
+      "elementCount_one": "{{count}} ꯑꯦꯂꯤꯃꯦꯟꯠ",
+      "elementCount_other": "{{count}} ꯑꯦꯂꯤꯃꯦꯟꯠꯁꯤꯡ",
       "noAuthorizations": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒꯤꯗꯃꯛ ꯑꯌꯥꯕ ꯄꯤꯕꯒꯤ ꯔꯦꯀꯣꯔꯗ ꯂꯩꯇꯦ",
       "noElements": "ꯍꯥꯏꯅꯕ ꯑꯁꯤꯒ ꯃꯔꯤ ꯂꯩꯅꯕ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯃꯠꯇ ꯂꯩꯇꯦ",
       "noPurposes": "ꯃꯁꯤꯒꯤ ꯌꯥꯅꯕꯒꯤꯗꯃꯛ ꯄꯔꯄꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫",
@@ -173,7 +173,7 @@
       "clear": "পুম্নমক সেংদোকপা",
       "clearAriaLabel": "ফিল্টর পুম্নমক সেংদোকপা",
       "serviceSearchPlaceholder": "ꯁꯔꯚꯤꯁꯀꯤ ꯃꯈꯥꯗ ꯁꯔꯆ ꯇꯧ꯫",
-      "state": "State",
+      "state": "ꯁ꯭ꯇꯦꯠ",
       "relation": "ꯔꯤꯂꯦꯁꯟ",
       "relationOptions": {
         "any": "ꯄꯨꯝꯅꯃꯛ",
@@ -199,7 +199,7 @@
         "purposes": "পান্দমশিং",
         "actions": "থবকশিং",
         "service": "ꯁꯔꯚꯤꯁ",
-        "state": "State"
+        "state": "ꯁ꯭ꯇꯦꯠ"
       }
     },
     "history": {
@@ -288,7 +288,7 @@
         "nameHelp": "ꯑꯈꯟꯅꯕ ꯃꯦꯁꯤꯟ ꯑꯥꯏꯗꯦꯟꯇꯤꯐꯥꯏꯌꯔ, ꯈꯨꯗꯝ ꯑꯣꯏꯅ \"email-address\"।",
         "submitting": "ꯁꯦꯝꯃꯤꯡ...",
         "duplicateName": "\"{{name}}\" ꯀꯧꯕ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯃ ꯍꯥꯟꯅꯗꯒꯤ ꯂꯩꯔꯦ꯫ ꯑꯇꯣꯞꯄ ꯃꯃꯤꯡ ꯑꯃ ꯈꯟꯎ꯫",
-        "createFailed": "Something went wrong and the element could not be created. Please try again.",
+        "createFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯗꯨ ꯁꯦꯝꯕ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
         "propertyDuplicateKey": "ꯃꯁꯤꯒꯤ ꯀꯤ ꯑꯁꯤ ꯑꯃꯗꯒꯤ ꯍꯦꯟꯅ ꯁꯤꯖꯤꯟꯅꯩ꯫ ꯄ꯭ꯔꯣꯄꯔꯇꯤ ꯈꯨꯗꯤꯡꯃꯛꯀꯤꯗꯃꯛ ꯈꯦꯠꯅꯕ ꯀꯤ ꯑꯃ ꯁꯤꯖꯤꯟꯅꯎ꯫",
         "propertyKeyRequired": "ꯀꯤ ꯑꯃ ꯍꯥꯞꯄ, ꯅꯠꯇ꯭ꯔꯒ ꯃꯁꯤꯒꯤ ꯚꯦꯜꯌꯨ ꯑꯁꯤ ꯁꯦꯚ ꯇꯧꯔꯣꯏ꯫"
       },
@@ -298,7 +298,7 @@
         "note": "ꯃꯁꯤꯒꯤ ꯑꯦꯛꯁꯟ ꯑꯁꯤ ꯄꯔꯃꯥꯟꯦꯟꯠ ꯑꯣꯏ ꯑꯃꯁꯨꯡ ꯑꯟꯗꯨꯟ ꯇꯧꯕ ꯌꯥꯔꯣꯏ꯫",
         "confirm": "ꯑꯦꯂꯤꯃꯦꯟꯠ ꯗꯤꯂꯤꯠ ꯇꯧ꯫",
         "conflict": "ꯃꯁꯤꯒꯤ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯁꯤ ꯂꯤꯞꯊꯣꯛꯄ ꯌꯥꯔꯣꯏ ꯃꯔꯃꯗꯤ ꯃꯁꯤ ꯑꯃ ꯅꯠꯇ꯭ꯔꯒ ꯃꯁꯤꯗꯒꯤ ꯍꯦꯟꯅ ꯄꯔꯄꯁꯀꯤꯗꯃꯛ ꯁꯤꯖꯤꯟꯅꯔꯤ꯫ ꯃꯗꯨꯒꯤ ꯄꯔꯄꯁꯁꯤꯡ ꯑꯗꯨꯗꯒꯤ ꯃꯁꯤ ꯂꯧꯊꯣꯛꯎ꯫",
-        "deleteFailed": "Something went wrong and the element could not be deleted. Please try again."
+        "deleteFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯑꯦꯂꯤꯃꯦꯟꯠ ꯑꯗꯨ ꯃꯨꯠꯊꯠꯄ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
       },
       "emptySearch": "ꯑꯦꯜꯤꯃꯦꯟꯠ ꯑꯃꯠꯇ \"{{term}}\" ꯒ ꯃꯥꯟꯅꯗꯦ"
     },
@@ -324,7 +324,7 @@
         "versionRequired": "ꯚꯔꯁꯟ ꯃꯊꯧ ꯇꯥꯏ꯫",
         "versionHelp": "ꯚꯔꯁꯟ ꯑꯥꯏꯗꯦꯟꯇꯤꯐꯥꯏꯌꯔ, ꯈꯨꯗꯝ ꯑꯣꯏꯅ \"v1\"।",
         "submitting": "ꯁꯦꯝꯃꯤꯡ...",
-        "createFailed": "Something went wrong and the purpose could not be created. Please try again."
+        "createFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯄꯥꯟꯗꯝ ꯑꯗꯨ ꯁꯦꯝꯕ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
       },
       "versionForm": {
         "versionLabel": "ভার্সন",
@@ -332,9 +332,9 @@
         "versionRequired": "ꯚꯔꯁꯟ ꯃꯊꯧ ꯇꯥꯏ꯫",
         "versionDuplicate": "ꯃꯁꯤꯒꯤ ꯄꯔꯄꯁ ꯑꯁꯤ ꯃꯃꯤꯡ ꯑꯁꯤꯒ ꯂꯣꯏꯅꯅ ꯍꯥꯟꯅꯗꯒꯤ ꯚꯔꯁꯟ ꯑꯃ ꯂꯩꯔꯦ꯫",
         "versionHelp": "ꯚꯔꯁꯟ ꯑꯥꯏꯗꯦꯟꯇꯤꯐꯥꯏꯌꯔ, ꯈꯨꯗꯝ ꯑꯣꯏꯅ \"v2\"।",
-        "setAsLatestLabel": "Set as the latest version",
+        "setAsLatestLabel": "ꯈ꯭ꯋꯥꯏꯗꯒꯤ ꯅꯧꯕ ꯚꯔꯖꯟ ꯑꯣꯏꯅ ꯁꯦꯠ ꯇꯧꯕꯤꯌꯨ",
         "submitting": "ꯁꯦꯝꯃꯤꯡ...",
-        "createFailed": "Something went wrong and the version could not be created. Please try again."
+        "createFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯚꯔꯖꯟ ꯑꯗꯨ ꯁꯦꯝꯕ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
       },
       "delete": {
         "title": "ꯄꯔꯄꯁ ꯗꯤꯂꯤꯠ ꯇꯧ꯫",
@@ -342,12 +342,12 @@
         "note": "ꯃꯁꯤꯒꯤ ꯑꯦꯛꯁꯟ ꯑꯁꯤ ꯄꯔꯃꯥꯟꯦꯟꯠ ꯑꯣꯏ ꯑꯃꯁꯨꯡ ꯑꯟꯗꯨꯟ ꯇꯧꯕ ꯌꯥꯔꯣꯏ꯫",
         "confirm": "ꯄꯔꯄꯁ ꯗꯤꯂꯤꯠ ꯇꯧ꯫",
         "conflict": "ꯃꯁꯤꯒꯤ ꯄꯔꯄꯁ ꯑꯁꯤ ꯀꯔꯤꯒꯤ ꯂꯧꯊꯣꯛꯄ ꯌꯥꯗꯦ ꯃꯔꯝꯗꯤ ꯃꯁꯤ ꯍꯧꯖꯤꯛꯁꯨ ꯑꯃ ꯅꯠꯇ꯭ꯔꯒ ꯑꯃꯗꯒꯤ ꯍꯦꯟꯅ ꯀꯟꯁꯦꯟꯠ ꯇꯧꯔꯤ꯫",
-        "deleteFailed": "Something went wrong and the purpose could not be deleted. Please try again."
+        "deleteFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯄꯥꯟꯗꯝ ꯑꯗꯨ ꯃꯨꯠꯊꯠꯄ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫"
       },
       "versionDelete": {
         "message": "ꯅꯍꯥꯛꯅ ꯚꯔꯁꯟ \"{{version}}\" ꯑꯁꯤ ꯗꯤꯂꯤꯠ ꯇꯧꯕ ꯄꯥꯝꯃꯤ ꯍꯥꯏꯕ ꯁꯣꯔ ꯇꯧꯔꯕ꯭ꯔꯥ?",
         "note": "ꯃꯁꯤꯒꯤ ꯑꯦꯛꯁꯟ ꯑꯁꯤ ꯄꯔꯃꯥꯟꯦꯟꯠ ꯑꯣꯏ ꯑꯃꯁꯨꯡ ꯑꯟꯗꯨꯟ ꯇꯧꯕ ꯌꯥꯔꯣꯏ꯫",
-        "deleteFailed": "Something went wrong and the version could not be deleted. Please try again.",
+        "deleteFailed": "ꯑꯔꯥꯟꯕ ꯈꯔ ꯊꯣꯛꯈꯤ ꯑꯃꯁꯨꯡ ꯚꯔꯖꯟ ꯑꯗꯨ ꯃꯨꯠꯊꯠꯄ ꯌꯥꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
         "latestBlocked": "ꯂꯦꯇꯦꯁꯠ ꯚꯔꯁꯟ ꯑꯗꯨ ꯂꯤꯞꯊꯣꯛꯄ ꯌꯥꯔꯣꯏ꯫ ꯑꯇꯣꯞꯄ ꯚꯔꯁꯟ ꯑꯃ ꯂꯦꯇꯦꯁꯠ ꯑꯣꯏꯅ ꯍꯥꯞꯄꯨ꯫"
       },
       "emptySearch": "ꯄꯔꯄꯖ ꯑꯃꯠꯇ ꯁꯔꯆ ꯑꯁꯤꯒ ꯃꯥꯟꯅꯗꯦ꯫"
@@ -564,7 +564,7 @@
     },
     "filters": {
       "searchPlaceholder": "ꯇꯣꯄꯤꯛ ꯃꯃꯤꯡ, ꯑꯥꯏ.ꯗꯤ., ꯅꯠꯇ꯭ꯔꯒ ꯗꯤꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯒꯤ ꯃꯈꯥꯗ ꯁꯔꯆ ꯇꯧ꯫",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "allStatuses": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯁ꯭ꯇꯦꯇꯁꯁꯤꯡ",
       "search": "ꯁꯔꯆ",
       "clear": "ꯐꯤꯜꯇꯔꯁꯤꯡ ꯁꯦꯡꯗꯣꯛꯄ"
@@ -574,7 +574,7 @@
       "name": "ꯇꯣꯄꯤꯛ ꯅꯦꯝ",
       "topicId": "ꯇꯣꯄꯤꯛ ꯑꯥꯏ.ꯗꯤ.",
       "description": "ꯐꯣꯡꯗꯣꯛꯄ",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "actions": "ꯑꯦꯛꯁꯟꯁꯤꯡ",
       "empty": "ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧꯔꯕ ꯇꯣꯄꯤꯛ ꯑꯃꯠꯇ ꯐꯪꯗꯦ꯫"
     },
@@ -587,7 +587,7 @@
       "registerTitle": "ꯔꯦꯖꯤꯁꯇꯔ ꯇꯣꯄꯤꯛ",
       "registerSubtitle": "ꯅꯍꯥꯛꯀꯤ ꯑꯣꯔꯒꯥꯅꯥꯏꯖꯦꯁꯟꯒꯤꯗꯃꯛ ꯑꯅꯧꯕ ꯏꯚꯦꯟꯠ ꯅꯣꯇꯤꯐꯤꯀꯦꯁꯟ ꯇꯣꯄꯤꯛ ꯑꯃ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫",
       "nameLabel": "ꯇꯣꯄꯤꯛ ꯅꯦꯝ",
-      "namePlaceholder": "e.g. consent.revoke",
+      "namePlaceholder": "ꯈꯨꯗꯝ ꯑꯣꯏꯅ consent.revoke",
       "nameRequired": "ꯇꯣꯄꯤꯛ ꯅꯦꯝ ꯑꯁꯤ ꯃꯊꯧ ꯇꯥꯏ꯫",
       "descriptionLabel": "ꯐꯣꯡꯗꯣꯛꯄ",
       "descriptionPlaceholder": "ꯍꯥꯏꯖꯔꯤꯕ ꯍꯤꯔꯝ ꯑꯗꯨꯒꯤ ꯃꯇꯥꯡꯗ ꯑꯄꯥꯝꯕ ꯋꯥꯔꯣꯟ ꯄꯤꯕ ꯌꯥꯏ",
@@ -602,13 +602,61 @@
     }
   },
   "subscriptions": {
+    "topicUi": {
+      "selectionLimit": "ꯈꯟꯕ ꯑꯁꯤ {{max}}-ꯇꯣꯄꯤꯛ ꯂꯤꯃꯤꯠꯇꯒꯤ ꯍꯦꯜꯂꯦ꯫ ꯅꯍꯥꯛꯀꯤ ꯊꯤꯕꯥ ꯑꯗꯨ ꯍꯟꯊꯍꯟꯕꯤꯌꯨ ꯅꯠꯇ꯭ꯔꯒ ꯈꯟꯂꯕ ꯇꯣꯄꯤꯛ ꯈꯔ ꯀ꯭ꯂꯤꯌꯔ ꯇꯧꯕꯤꯌꯨ꯫ ꯈꯟꯕ ꯑꯃꯠꯇ ꯍꯣꯡꯗꯣꯛꯈꯤꯗꯦ꯫",
+      "subscribedCount": "Subscribed Topics ({{count}})",
+      "close": "ꯔꯦꯖꯤꯁꯇ꯭ꯔꯦꯁꯟ ꯊꯤꯡꯖꯤꯟꯕꯤꯌꯨ",
+      "topics": "ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "delivery": "ꯗꯦꯂꯤꯚꯔꯤ",
+      "chooseTopics": "ꯁ꯭ꯇꯦꯞ ꯱ ꯑꯣꯐ ꯲ — ꯇꯣꯄꯤꯛꯁ ꯈꯟꯕ",
+      "configureDelivery": "ꯁ꯭ꯇꯦꯞ ꯲ ꯑꯣꯐ ꯲ — ꯗꯦꯂꯤꯚꯔꯤ ꯀꯟꯐꯤꯒꯔ ꯇꯧꯕ",
+      "search": "ꯃꯃꯤꯡꯅ ꯇꯣꯄꯤꯛꯁ ꯊꯤꯕꯤꯌꯨ",
+      "searchAssociated": "ꯑꯦꯁꯣꯁꯤꯌꯦꯇꯦꯗ ꯇꯣꯄꯤꯛꯁ ꯊꯤꯕꯤꯌꯨ",
+      "selected": "{{count}} ꯈꯟꯈ꯭ꯔꯦ · ꯃꯦꯛꯁꯤꯃꯝ {{max}}",
+      "clear": "ꯀ꯭ꯂꯤꯌꯔ",
+      "loading": "ꯇꯣꯄꯤꯛꯁ ꯂꯣꯗ ꯇꯧꯔꯤ",
+      "retry": "ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕ",
+      "fetchError": "ꯇꯣꯄꯤꯛꯁ ꯂꯣꯗ ꯇꯧꯕ ꯉꯝꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
+      "noMatches": "ꯃꯥꯟꯅꯕ ꯇꯣꯄꯤꯛꯁ ꯂꯩꯇꯦ꯫",
+      "noTopics": "ꯑꯦꯛꯇꯤꯚ ꯇꯣꯄꯤꯛꯁ ꯐꯪꯗꯦ꯫",
+      "loadMore": "ꯇꯣꯄꯤꯛꯁ ꯍꯦꯟꯅ ꯂꯣꯗ ꯇꯧꯕ",
+      "selectionHelp": "ꯅꯍꯥꯛꯅ ꯇꯣꯄꯤꯛꯁ ꯊꯤꯕ ꯅꯠꯇ꯭ꯔꯒ ꯍꯦꯟꯅ ꯂꯣꯗ ꯇꯧꯕ ꯃꯇꯝꯗ ꯁꯦꯂꯦꯛꯁꯟꯁꯤꯡ ꯑꯗꯨ ꯈꯟꯗꯨꯅ ꯂꯩꯒꯅꯤ꯫",
+      "showLess": "ꯍꯟꯊꯅ ꯎꯠꯄꯥ",
+      "more": "+{{count}} ꯍꯦꯟꯅ",
+      "topicCount": "ꯇꯣꯄꯤꯛꯁ ({{count}})",
+      "edit": "ꯇꯣꯄꯤꯛ ꯁꯦꯂꯦꯛꯁꯟ ꯑꯦꯗꯤꯠ ꯇꯧꯕ",
+      "next": "ꯃꯊꯪꯗ",
+      "back": "ꯃꯇꯨꯡꯗ",
+      "selectAll": "ꯄꯨꯝꯅꯃꯛ ꯈꯟꯕꯤꯌꯨ",
+      "showingRange": "{{from}}–{{to}} of {{total}} ꯎꯠꯂꯤ",
+      "switchCategoryTitle": "ꯇꯣꯄꯤꯛ ꯀꯦꯇꯦꯒꯣꯔꯤ ꯍꯣꯡꯗꯣꯛꯀꯗ꯭ꯔꯥ?",
+      "switchCategoryConfirm": "ꯀꯦꯇꯦꯒꯣꯔꯤ ꯍꯣꯡꯗꯣꯛꯄꯅ ꯅꯍꯥꯛꯅ ꯈꯟꯒꯠꯂꯕ {{count}} ꯇꯣꯄꯤꯛ(ꯁꯤꯡ) ꯃꯨꯠꯊꯠꯀꯅꯤ꯫ ꯃꯈꯥ ꯆꯠꯊꯅꯤꯡꯕ꯭ꯔꯥ?",
+      "switchCategoryProceed": "ꯀꯦꯇꯦꯒꯣꯔꯤ ꯍꯣꯡꯗꯣꯛꯎ",
+      "detailsTitle": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯀꯨꯞꯄ ꯃꯔꯣꯜ",
+      "noSelected": "ꯇꯣꯄꯤꯛ ꯑꯃꯠꯇ ꯈꯟꯒꯠꯂꯗꯦ",
+      "selectedPrefix": "ꯈꯟꯒꯠꯂꯕ:",
+      "selectedCount": "{{count}} ꯇꯣꯄꯤꯛ ꯈꯟꯒꯠꯂꯦ",
+      "excluding": "ꯌꯥꯎꯍꯟꯗꯕ",
+      "selectedTopics": "ꯈꯟꯒꯠꯂꯕ ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "availableTopics": "ꯐꯪꯂꯤꯕ ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "allSelected": "ꯃꯥꯟꯅꯕ ꯇꯣꯄꯤꯛ ꯄꯨꯝꯅꯃꯛ ꯈꯟꯒꯠꯂꯦ꯫",
+      "category": "ꯇꯣꯄꯤꯛ ꯀꯦꯇꯦꯒꯣꯔꯤ",
+      "categoryPlaceholder": "ꯇꯣꯄꯤꯛ ꯀꯦꯇꯦꯒꯣꯔꯤ ꯈꯟꯕꯤꯌꯨ",
+      "categoryConsent": "ꯌꯥꯅꯕꯒꯤ ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "categoryUser": "ꯌꯨꯖꯔ ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "categoryCustom": "ꯀꯁꯇꯝ ꯇꯣꯄꯤꯛꯁꯤꯡ",
+      "categoryRequired": "ꯇꯣꯄꯤꯛꯁꯤꯡ ꯈꯟꯅꯕꯒꯤꯗꯃꯛ ꯑꯍꯥꯟꯕꯗ ꯀꯦꯇꯦꯒꯣꯔꯤ ꯑꯃ ꯈꯟꯕꯤꯌꯨ",
+      "searchPurposes": "ꯄꯥꯟꯗꯝꯁꯤꯡ ꯊꯤꯕꯤꯌꯨ",
+      "purposesCount": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯥꯏꯕ ꯇꯧꯔꯕ ꯄꯥꯟꯗꯝꯁꯤꯡ",
+      "noPurposesMatches": "ꯃꯥꯟꯅꯕ ꯄꯥꯟꯗꯝꯁꯤꯡ ꯂꯩꯇꯦ꯫"
+    },
     "title": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ",
     "subtitle": "ꯅꯍꯥꯛꯀꯤ ꯑꯣꯔꯒꯥꯅꯥꯏꯖꯦꯁꯟꯒꯤꯗꯃꯛ ꯏꯚꯦꯟꯠ ꯅꯣꯇꯤꯐꯤꯀꯦꯁꯟ ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ ꯃꯦꯅꯦꯖ ꯑꯃꯁꯨꯡ ꯃꯣꯅꯤꯇꯔ ꯇꯧ꯫",
     "loadFailed": "ꯍꯧꯖꯤꯛ ꯁꯕꯁꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ ꯂꯣꯗ ꯇꯧꯕ ꯌꯥꯔꯛꯇꯦ꯫",
     "status": {
       "active": "ꯑꯦꯛꯇꯤꯕ",
       "pending": "ꯄꯦꯟꯗꯤꯡ",
-      "stale": "Stale",
+      "stale": "ꯑꯔꯤꯕ",
       "deleted": "ꯗꯤꯂꯤꯠ ꯇꯧꯔꯦ"
     },
     "deliveryMode": {
@@ -618,12 +666,12 @@
     "filterType": {
       "all": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯊꯧꯔꯝꯁꯤꯡ",
       "allDescription": "ꯃꯁꯤꯒꯤ ꯇꯣꯄꯤꯛ ꯑꯁꯤꯗ ꯐꯣꯡꯗꯣꯛꯈꯤꯕ ꯏꯚꯦꯟꯠ ꯄꯨꯝꯅꯃꯛ ꯇꯥꯏ",
-      "specific": "Specific Purposes",
+      "specific": "ꯑꯀꯛꯅꯕ ꯄꯥꯟꯗꯝꯁꯤꯡ",
       "all_except": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯄꯔꯄꯁꯁꯤꯡ ꯅꯠꯇꯅ"
     },
     "filters": {
       "searchPlaceholder": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯑꯥꯏ.ꯗꯤ., ꯇꯣꯄꯤꯛ, ꯒ꯭ꯔꯨꯞ, ꯄꯔꯄꯖ, ꯅꯠꯇ꯭ꯔꯒ ꯌꯨ.ꯑꯥꯔ.ꯑꯦꯜ.ꯀꯤ ꯃꯈꯥꯗ ꯁꯔꯆ ꯇꯧ꯫",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "allStatuses": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯁ꯭ꯇꯦꯇꯁꯁꯤꯡ",
       "deliveryMode": "ꯗꯦꯂꯤꯚꯔꯤ ꯃꯣꯗ",
       "allModes": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯃꯣꯗꯁꯤꯡ",
@@ -632,12 +680,13 @@
     },
     "table": {
       "ariaLabel": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡ ꯃꯦꯅꯦꯖꯃꯦꯟꯠ ꯇꯦꯕꯜ",
+      "name": "ꯃꯃꯤꯡ",
       "subscriptionId": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯑꯥꯏ.ꯗꯤ.",
       "topic": "ꯇꯣꯄꯤꯛ",
       "groupId": "ꯒ꯭ꯔꯨꯞ ꯑꯥꯏ.ꯗꯤ.",
       "filter": "ꯐꯤꯜꯇꯔ",
       "deliveryMode": "ꯗꯦꯂꯤꯚꯔꯤ ꯃꯣꯗ",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "occurredAt": "ꯊꯣꯛꯈꯤꯕ ꯃꯇꯝꯗ꯫",
       "deliveryId": "ꯗꯦꯂꯤꯚꯔꯤ ꯑꯥꯏ.ꯗꯤ.",
       "eventId": "ꯏꯚꯦꯟꯠ ꯑꯥꯏ.ꯗꯤ.",
@@ -656,19 +705,24 @@
     "dialog": {
       "registerTitle": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧ꯫",
       "registerSubtitle": "ꯑꯅꯧꯕ ꯏꯚꯦꯟꯠ ꯅꯣꯇꯤꯐꯤꯀꯦꯁꯟ ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯑꯃꯁꯨꯡ ꯗꯦꯂꯤꯚꯔꯤ ꯃꯣꯗ ꯑꯃ ꯀꯟꯐꯤꯒꯔ ꯇꯧ꯫",
+      "nameLabel": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯃꯃꯤꯡ",
+      "namePlaceholder": "ꯈꯨꯗꯝ ꯑꯣꯏꯅ. ꯑꯣꯔꯗꯔꯁ ꯅꯣꯇꯤꯐꯤꯀꯦꯁꯟ ꯋꯦꯕꯍꯨꯛ",
+      "nameRequired": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯃꯃꯤꯡ ꯃꯊꯧ ꯇꯥꯏ꯫",
+      "nameTooLong": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯃꯃꯤꯡ ꯑꯁꯤ ꯀꯦꯔꯦꯛꯇꯔ ꯲꯲꯵ ꯗꯒꯤ ꯍꯦꯟꯕ ꯌꯥꯔꯣꯏ꯫",
       "topicLabel": "ꯇꯣꯄꯤꯛ",
+      "multiTopicFilter": "ꯌꯨꯖꯔ ꯂꯥꯏꯐꯁꯥꯏꯀꯜ ꯇꯣꯄꯤꯛꯁ ꯌꯥꯎꯍꯟꯕ ꯃꯇꯝꯗ ꯄꯥꯟꯗꯝ ꯄꯨꯝꯅꯃꯛꯀꯤ ꯐꯤꯜꯇꯔ ꯈꯟꯒꯠꯂꯨ꯫",
       "topicRequired": "ꯇꯣꯄꯤꯛ ꯑꯁꯤ ꯃꯊꯧ ꯇꯥꯏ꯫",
       "filterModeLabel": "ꯄꯔꯄꯖ ꯐꯤꯂꯇꯔ ꯃꯣꯗ",
       "purposesLabel": "ꯄꯔꯄꯖꯁꯤꯡ (ꯀꯣꯃꯥꯅ ꯈꯦꯠꯅꯍꯟꯕ)",
-      "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
+      "purposesPlaceholder": "ꯈꯨꯗꯝ ꯑꯣꯏꯅ. ꯃꯥꯔꯀꯦꯇꯤꯡ, ꯑꯦꯅꯥꯂꯤꯇꯤꯛꯁ",
       "purposesHelper": "ꯐꯤꯜꯇꯔ ꯇꯧꯅꯕ ꯀꯟꯁꯦꯟꯠ ꯄꯔꯄꯁꯁꯤꯡꯒꯤ ꯀꯣꯃꯥꯅ ꯁꯦꯄꯔꯦꯠ ꯇꯧꯔꯕ ꯂꯤꯁꯠ",
       "purposesRequired": "ꯄꯔꯄꯖꯁꯤꯡ ꯑꯁꯤ ꯑꯀꯛꯅꯕ ꯅꯠꯇ꯭ꯔꯒ ꯄꯨꯝꯅꯃꯛ ꯈꯦꯠꯅꯕꯒꯤ ꯃꯈꯥꯗ ꯐꯤꯜꯇꯔ ꯇꯧꯕ ꯃꯇꯝꯗ ꯃꯊꯧ ꯇꯥꯏ꯫",
       "deliveryModeLabel": "ꯗꯦꯂꯤꯚꯔꯤ ꯃꯣꯗ",
       "callbackUrlLabel": "ꯋꯦꯕꯍꯨꯛ ꯀꯦꯜꯕꯦꯛ ꯌꯨ.ꯑꯥꯔ.ꯑꯦꯜ.",
       "callbackUrlRequired": "ꯋꯦꯚꯍꯨꯛ ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟꯁꯤꯡꯒꯤꯗꯃꯛ ꯀꯦꯜꯕꯦꯛ ꯌꯨ.ꯑꯥꯔ.ꯑꯦꯜ. ꯃꯊꯧ ꯇꯥꯏ꯫",
       "callbackUrlInvalid": "ꯚꯦꯂꯤꯗ ꯑꯣꯏꯕ ꯑꯦꯕꯁꯣꯂꯨꯠ ꯌꯨ.ꯑꯥꯔ.ꯑꯦꯜ. (http:// ꯅꯠꯇ꯭ꯔꯒ https://) ꯑꯃ ꯄꯤꯌꯨ",
-      "secretLabel": "Shared Secret",
-      "secretRequired": "Shared secret is required.",
+      "secretLabel": "ꯁꯦꯌꯔ ꯇꯧꯔꯕ ꯁꯤꯀ꯭ꯔꯦꯠ",
+      "secretRequired": "ꯁꯦꯌꯔ ꯇꯧꯔꯕ ꯁꯤꯀ꯭ꯔꯦꯠ ꯃꯊꯧ ꯇꯥꯏ꯫",
       "secretHelper": "ꯋꯦꯕꯍꯨꯛ ꯄꯦꯂꯣꯗꯁꯤꯡ ꯁꯥꯏꯟ ꯇꯧꯅꯕ ꯅꯠꯇ꯭ꯔꯒ ꯄꯣꯜ ꯔꯤꯀ꯭ꯋꯦꯁꯠꯁꯤꯡ ꯑꯣꯊꯦꯟꯇꯤꯀꯦꯠ ꯇꯧꯅꯕ ꯁꯤꯖꯤꯟꯅꯩ",
       "generateSecret": "ꯑꯅꯧꯕ ꯁꯤꯀ꯭ꯔꯦꯠ ꯖꯦꯅꯔꯦꯠ ꯇꯧ꯫",
       "registering": "ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧꯔꯤ...",
@@ -682,17 +736,24 @@
     },
     "verification": {
       "success": "ꯚꯦꯔꯤꯐꯤꯀꯦꯁꯟ ꯄꯤꯡ ꯃꯥꯏꯄꯥꯛꯅ ꯊꯥꯈꯤ꯫",
-      "failed": "Webhook verification failed. Please check endpoint reachability.",
-      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
+      "failed": "ꯋꯦꯕꯍꯨꯛ ꯚꯦꯔꯤꯐꯤꯀꯦꯁꯟ ꯃꯥꯏꯄꯥꯛꯈꯤꯗꯦ꯫ ꯆꯥꯟꯕꯤꯗꯨꯅ ꯑꯦꯟꯗꯄꯣꯏꯟꯠ ꯌꯧꯕ ꯌꯥꯕ꯭ꯔꯥ ꯌꯦꯡꯎ꯫",
+      "retriesExhausted": "ꯔꯤꯇ꯭ꯔꯥꯏ ꯇꯧꯕꯒꯤ ꯍꯣꯠꯅꯕ ꯄꯨꯝꯅꯃꯛ ꯇꯧꯔꯕ ꯃꯇꯨꯡꯗ ꯀꯣꯜꯕꯦꯛ ꯌꯨꯑꯦꯜ ꯚꯦꯔꯤꯐꯥꯏ ꯇꯧꯕ ꯉꯝꯈꯤꯗꯦ꯫ ꯌꯨꯑꯦꯜ ꯑꯗꯨ ꯌꯧꯕ ꯌꯥꯕ꯭ꯔꯥ ꯌꯦꯡꯎ ꯑꯃꯁꯨꯡ ꯑꯆꯨꯝꯕ ꯚꯦꯔꯤꯐꯤꯀꯦꯁꯟ ꯆꯦꯂꯦꯟꯖ ꯍꯟꯂꯛꯏ꯫"
     },
     "details": {
       "loadFailed": "ꯁꯕꯁꯀ꯭ꯔꯤꯞꯁꯟ ꯗꯤꯇꯦꯜꯁꯤꯡ ꯂꯣꯗ ꯇꯧꯕ ꯌꯥꯔꯛꯇꯦ꯫",
+      "name": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯃꯃꯤꯡ",
       "configTitle": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯞꯁꯟ ꯀꯟꯐꯤꯒꯔꯦꯁꯟ",
       "configSubtitle": "ꯖꯦꯅꯔꯦꯜ ꯃꯦꯇꯥꯗꯦꯇꯥ, ꯔꯥꯎꯇꯤꯡ ꯄꯦꯔꯥꯃꯤꯇꯔꯁꯤꯡ, ꯑꯃꯁꯨꯡ ꯐꯤꯜꯇꯔꯤꯡ ꯔꯨꯜꯁꯤꯡ",
       "eventsTitle": "ꯗꯦꯂꯤꯚꯔꯤ ꯍꯤꯁ꯭ꯇꯔꯤ ꯑꯃꯁꯨꯡ ꯑꯦꯛꯁꯤꯀ꯭ꯌꯨꯁꯟ ꯂꯣꯒ",
       "eventsSubtitle": "ꯃꯁꯤꯒꯤ ꯁꯕꯁ꯭ꯀ꯭ꯔꯥꯏꯕꯔ ꯑꯁꯤꯗ ꯊꯥꯈꯤꯕ ꯅꯧꯕ ꯏꯚꯦꯟꯠ ꯗꯦꯂꯤꯚꯔꯤꯁꯤꯡ ꯑꯃꯁꯨꯡ ꯑꯅꯤꯁꯨꯕ ꯑꯣꯏꯅ ꯍꯣꯠꯅꯕꯁꯤꯡ",
       "createdAt": "ꯁꯦꯝꯈꯤꯕ ꯃꯇꯝ",
-      "updatedAt": "ꯃꯈꯥ ꯇꯥꯅ ꯑꯞꯗꯦꯠ ꯇꯧꯈꯤ"
+      "updatedAt": "ꯃꯈꯥ ꯇꯥꯅ ꯑꯞꯗꯦꯠ ꯇꯧꯈꯤ",
+      "topicsSubtitle": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯁꯤꯗ ꯗꯦꯂꯤꯚꯔꯤꯒꯤꯗꯃꯛ ꯔꯦꯖꯤꯁꯇꯔ ꯇꯧꯔꯕ ꯑꯦꯛꯇꯤꯚ ꯏꯚꯦꯟꯠ ꯇꯣꯄꯤꯛꯁ",
+      "purposesTitle": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯥꯏꯕ ꯇꯧꯔꯕ ꯄꯥꯟꯗꯝꯁꯤꯡ",
+      "purposesSubtitle": "ꯏꯚꯦꯟꯠ ꯐꯤꯜꯇꯔꯤꯡꯒꯤꯗꯃꯛ ꯀꯟꯐꯤꯒꯔ ꯇꯧꯔꯕ ꯀꯟꯁꯦꯟꯠ ꯄꯔꯄꯣꯖꯁꯤꯡ",
+      "allPurposesNotice": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯁꯤꯅ ꯄꯔꯄꯣꯖ ꯄꯨꯝꯅꯃꯛꯀꯤꯗꯃꯛ ꯏꯚꯦꯟꯠꯁꯤꯡ ꯐꯪꯏ꯫",
+      "searchPurposes": "ꯑꯦꯁꯣꯁꯤꯌꯦꯇꯦꯗ ꯄꯔꯄꯣꯖꯁꯤꯡ ꯊꯤꯕꯤꯌꯨ",
+      "noPurposes": "ꯃꯥꯟꯅꯔꯤꯕ ꯄꯔꯄꯣꯖ ꯑꯃꯠꯇ ꯂꯩꯇꯦ꯫"
     },
     "deliveryEvents": {
       "ariaLabel": "ꯗꯦꯂꯤꯚꯔꯤ ꯏꯚꯦꯟꯠꯁ ꯂꯣꯒ ꯇꯦꯕꯜ",
@@ -705,7 +766,7 @@
       "completion": "ꯂꯣꯏꯔꯕꯒꯤ ꯈꯨꯗꯝ",
       "attemptsTitle": "ꯗꯦꯂꯤꯚꯔꯤ ꯑꯦꯇꯦꯝꯞꯁꯤꯡ ꯀ꯭ꯔꯣꯅꯣꯂꯣꯖꯤ",
       "attemptNumber": "ꯑꯦꯇꯦꯝꯞꯠ",
-      "attemptStatus": "Status",
+      "attemptStatus": "ꯁ꯭ꯇꯦꯇꯁ",
       "httpStatus": "ꯑꯦꯆ.ꯇꯤ.ꯇꯤ.ꯄꯤ. ꯁ꯭ꯇꯦꯇꯁ",
       "timestamp": "ꯇꯥꯏꯝꯁ꯭ꯇꯥꯛ",
       "errorDetails": "ꯑꯦꯔꯔ ꯗꯤꯇꯦꯜꯁꯤꯡ",
@@ -718,14 +779,14 @@
     "loadFailed": "ꯏꯚꯦꯟꯠꯁꯤꯡ ꯂꯣꯗ ꯇꯧꯕ ꯌꯥꯔꯛꯇꯦ꯫",
     "filters": {
       "searchPlaceholder": "ꯗꯦꯂꯤꯚꯔꯤ ꯑꯥꯏ.ꯗꯤ., ꯏꯚꯦꯟꯠ ꯑꯥꯏ.ꯗꯤ., ꯅꯠꯇ꯭ꯔꯒ ꯇꯣꯄꯤꯛ ꯑꯗꯨꯒꯤ ꯃꯈꯥꯗ ꯁꯔꯆ ꯇꯧ꯫",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "allStatuses": "ꯄꯨꯝꯅꯃꯛꯀꯤ ꯁ꯭ꯇꯦꯇꯁꯁꯤꯡ",
       "topic": "ꯇꯣꯄꯤꯛ",
       "allTopics": "ꯇꯣꯄꯤꯛ ꯄꯨꯝꯅꯃꯛ",
       "search": "ꯁꯔꯆ",
       "clear": "ꯁꯦꯡꯗꯣꯛꯄ",
-      "subscriptionId": "Subscription ID",
-      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
+      "subscriptionId": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯥꯏꯗꯤ",
+      "subscriptionIdPlaceholder": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯤꯄꯁꯟ ꯑꯥꯏꯗꯤꯅ ꯐꯤꯜꯇꯔ ꯇꯧꯕꯤꯌꯨ..."
     },
     "status": {
       "all": "ꯄꯨꯝꯅꯃꯛ",
@@ -752,7 +813,7 @@
       "subscriber": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯥꯏꯕꯔ",
       "subscribers": "ꯁꯕꯁ꯭ꯀ꯭ꯔꯥꯏꯕꯔꯁꯤꯡ",
       "noSubscribers": "ꯊꯕꯛ ꯇꯧꯔꯤꯕ ꯃꯤꯑꯣꯏ ꯑꯃꯠꯇ ꯂꯩꯇꯦ",
-      "status": "Status",
+      "status": "ꯁ꯭ꯇꯦꯇꯁ",
       "occurredAt": "ꯊꯣꯛꯈꯤꯕ ꯃꯇꯝꯗ꯫",
       "actions": "ꯑꯦꯛꯁꯟꯁꯤꯡ",
       "empty": "ꯊꯧꯔꯝ ꯑꯃꯠꯇ ꯐꯪꯗꯦ꯫"
@@ -786,8 +847,8 @@
   "account": {
     "deleteMenuItem": "ꯑꯩꯒꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯗꯤꯂꯤꯠ ꯇꯧ꯫",
     "deleteError": "ꯅꯍꯥꯛꯀꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯑꯗꯨ ꯂꯧꯊꯣꯛꯄ ꯌꯥꯔꯛꯇꯦ꯫ ꯑꯗꯣꯝꯅ ꯑꯃꯨꯛ ꯍꯟꯅ ꯍꯣꯠꯅꯕꯤꯌꯨ꯫",
-    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
-    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deletePendingApproval": "ꯅꯍꯥꯛꯀꯤ ꯗꯤꯂꯤꯁꯟ ꯔꯤꯀ꯭ꯋꯦꯁ꯭ꯠ ꯑꯁꯤ ꯑꯦꯄ꯭ꯔꯨꯚꯦꯜꯒꯤꯗꯃꯛ ꯁꯕꯃꯤꯠ ꯇꯧꯈ꯭ꯔꯦ꯫ ꯑꯦꯗꯃꯤꯅꯤꯁ꯭ꯇ꯭ꯔꯦꯇꯔ ꯑꯃꯅ ꯃꯁꯤ ꯑꯦꯄ꯭ꯔꯨꯚ ꯇꯧꯗ꯭ꯔꯤꯐꯥꯎꯕ ꯅꯍꯥꯛꯀꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯑꯁꯤ ꯑꯦꯛꯇꯤꯚ ꯑꯣꯏꯅ ꯂꯩꯒꯅꯤ꯫",
+    "deleteAlreadyRequested": "ꯅꯍꯥꯛꯀꯤ ꯑꯦꯀꯥꯎꯟꯠꯇ ꯍꯥꯟꯅꯅ ꯑꯦꯄ꯭ꯔꯨꯚꯦꯜ ꯉꯥꯏꯔꯤꯕ ꯗꯤꯂꯤꯁꯟ ꯔꯤꯀ꯭ꯋꯦꯁ꯭ꯠ ꯑꯃ ꯂꯩꯔꯦ꯫",
     "deleteDialog": {
       "accountLabel": "ꯑꯦꯀꯥꯎꯟꯠ",
       "title": "ꯑꯗꯣꯝꯒꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯗꯤꯂꯤꯠ ꯇꯧꯒꯅꯤ꯫",
@@ -796,8 +857,8 @@
       "confirm": "ꯑꯩꯒꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯗꯤꯂꯤꯠ ꯇꯧ꯫"
     },
     "deletedPage": {
-      "title": "Your account has been deleted",
-      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "title": "ꯅꯍꯥꯛꯀꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯗꯤꯂꯤꯠ ꯇꯧꯈ꯭ꯔꯦ",
+      "body": "ꯅꯍꯥꯛꯀꯤ ꯑꯦꯀꯥꯎꯟꯠ ꯑꯃꯁꯨꯡ ꯁꯥꯏꯟ-ꯏꯟ ꯂꯧꯊꯣꯛꯈ꯭ꯔꯦ꯫ ꯃꯁꯤ ꯑꯁꯣꯏꯕ ꯑꯃ ꯑꯣꯏꯔꯕꯗꯤ, ꯅꯍꯥꯛꯀꯤ ꯑꯦꯗꯃꯤꯅꯤꯁ꯭ꯇ꯭ꯔꯦꯇꯔꯒ ꯀꯟꯇꯦꯛ ꯇꯧꯕꯤꯌꯨ꯫",
       "signInLink": "ꯁꯥꯏꯟ-ꯏꯟ ꯇꯧꯅꯕ ꯆꯠꯎ"
     }
   }

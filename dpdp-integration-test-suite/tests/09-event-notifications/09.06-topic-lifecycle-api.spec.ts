@@ -77,4 +77,32 @@ test.describe('Topic lifecycle rules', () => {
     expect(oldRow?.status.toUpperCase()).toBe('DEREGISTERED')
     expect(newRow?.status.toUpperCase()).toBe('ACTIVE')
   })
+
+  test('09.06.04 - Any topic linked to a multi-topic subscription cannot be deregistered until the subscription is deleted', async ({
+    consentAdminEventApi,
+  }) => {
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-sub-guard-a')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-sub-guard-b')
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, [topicA.name, topicB.name])
+
+    // Both topics are blocked from deregistration while the multi-topic subscription is live
+    const deleteA = await consentAdminEventApi.deleteTopic(topicA.topicId)
+    expect(deleteA.status()).toBe(409)
+    expect((await deleteA.json()).description).toContain('has active subscriptions')
+
+    const deleteB = await consentAdminEventApi.deleteTopic(topicB.topicId)
+    expect(deleteB.status()).toBe(409)
+    expect((await deleteB.json()).description).toContain('has active subscriptions')
+
+    // Delete the subscription (no pending deliveries)
+    const deleteSubResponse = await consentAdminEventApi.deleteSubscription(subscription.subscriptionId)
+    expect(deleteSubResponse.status()).toBe(200)
+
+    // Now both topics can be safely deregistered
+    const retryDeleteA = await consentAdminEventApi.deleteTopic(topicA.topicId)
+    expect(retryDeleteA.status()).toBe(200)
+
+    const retryDeleteB = await consentAdminEventApi.deleteTopic(topicB.topicId)
+    expect(retryDeleteB.status()).toBe(200)
+  })
 })

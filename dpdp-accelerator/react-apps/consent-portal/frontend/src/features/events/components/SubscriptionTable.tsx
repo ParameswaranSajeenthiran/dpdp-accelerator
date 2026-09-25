@@ -35,6 +35,7 @@ import {
 } from '@wso2/oxygen-ui'
 import { Eye, RefreshCw, Trash2 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
+import SubscriptionTopicChips from './SubscriptionTopicChips'
 import CopyableText from '../../../components/CopyableText'
 import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import type { SubscriptionRecord } from '../../../types/subscription'
@@ -107,20 +108,23 @@ export default function SubscriptionTable({
             })}
           >
             <TableRow>
-              <TableCell>{t('subscriptions.table.subscriptionId')}</TableCell>
-              <TableCell>{t('subscriptions.table.topic')}</TableCell>
-              <TableCell>{t('subscriptions.table.groupId')}</TableCell>
-              <TableCell>{t('subscriptions.table.filter')}</TableCell>
-              <TableCell>{t('subscriptions.table.deliveryMode')}</TableCell>
-              <TableCell>{t('subscriptions.table.status')}</TableCell>
-              <TableCell align="right">{t('subscriptions.table.actions')}</TableCell>
+              <TableCell>{t('subscriptions.table.name', 'Name')}</TableCell>
+              <TableCell>{t('subscriptions.table.subscriptionId', 'Subscription ID')}</TableCell>
+              <TableCell>{t('subscriptions.topicUi.topics', 'Topics')}</TableCell>
+              <TableCell>{t('subscriptions.table.groupId', 'Group ID')}</TableCell>
+              <TableCell>{t('subscriptions.table.filter', 'Filter')}</TableCell>
+              <TableCell>{t('subscriptions.table.deliveryMode', 'Delivery Mode')}</TableCell>
+              <TableCell>{t('subscriptions.table.status', 'Status')}</TableCell>
+              <TableCell align="right">{t('subscriptions.table.actions', 'Actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.length === 0 && !isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">{t('subscriptions.table.empty')}</Typography>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    {t('subscriptions.table.empty', 'No subscriptions found.')}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : null}
@@ -132,7 +136,8 @@ export default function SubscriptionTable({
               const filterType = sub.filter?.type || 'all'
               const purposeCount = sub.filter?.purposes?.length ?? 0
 
-              let filterLabel = t(`subscriptions.filterType.${filterType}`, filterType)
+              const defaultFilterName = filterType === 'all' ? 'All Purposes' : filterType
+              let filterLabel = t(`subscriptions.filterType.${filterType}`, defaultFilterName)
               if (filterType !== 'all' && purposeCount > 0) {
                 filterLabel += ` (${purposeCount})`
               }
@@ -140,12 +145,23 @@ export default function SubscriptionTable({
               return (
                 <TableRow key={sub.subscriptionId} hover>
                   <TableCell>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{
+                        wordBreak: 'break-word',
+                        maxWidth: 180,
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      {sub.name || '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
                     <CopyableText value={sub.subscriptionId} truncateAt={14} monospace />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {sub.topic}
-                    </Typography>
+                    <SubscriptionTopicChips topics={sub.topics ?? (sub.topic ? [sub.topic] : [])} />
                   </TableCell>
                   <TableCell>
                     {sub.groupId ? (
@@ -161,7 +177,7 @@ export default function SubscriptionTable({
                       title={
                         sub.filter?.purposes?.length
                           ? sub.filter.purposes.join(', ')
-                          : t('subscriptions.filterType.allDescription')
+                          : t('subscriptions.filterType.allDescription', 'Listens to all purposes')
                       }
                     >
                       <Chip size="small" variant="outlined" label={filterLabel} />
@@ -262,4 +278,8 @@ export default function SubscriptionTable({
       />
     </Paper>
   )
+}
+
+SubscriptionTable.defaultProps = {
+  isMutating: false,
 }

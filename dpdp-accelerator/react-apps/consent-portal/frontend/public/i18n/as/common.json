@@ -602,6 +602,54 @@
     }
   },
   "subscriptions": {
+    "topicUi": {
+      "selectionLimit": "এই নিৰ্বাচনে {{max}}-বিষয়ৰ সীমাতকৈ অধিক হৈছে। আপোনাৰ সন্ধান সীমিত কৰক বা নিৰ্বাচিত কিছুমান বিষয় পৰিষ্কাৰ কৰক। কোনো নিৰ্বাচন সলনি কৰা হোৱা নাই।",
+      "subscribedCount": "Subscribed Topics ({{count}})",
+      "close": "পঞ্জীয়ন বন্ধ কৰক",
+      "topics": "বিষয়সমূহ",
+      "delivery": "প্ৰদান",
+      "chooseTopics": "২ টা পদক্ষেপৰ ১ নং — বিষয়সমূহ বাছনি কৰক",
+      "configureDelivery": "২ টা পদক্ষেপৰ ২ নং — প্ৰদান কনফিগাৰ কৰক",
+      "search": "নামৰ দ্বাৰা বিষয়সমূহ বিচাৰক",
+      "searchAssociated": "সংলগ্ন বিষয়সমূহ বিচাৰক",
+      "selected": "{{count}} নিৰ্বাচিত · সৰ্বাধিক {{max}}",
+      "clear": "পৰিষ্কাৰ কৰক",
+      "loading": "বিষয়সমূহ লোড কৰা হৈছে",
+      "retry": "পুনৰ চেষ্টা কৰক",
+      "fetchError": "বিষয়সমূহ লোড কৰিব পৰা নগ'ল। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+      "noMatches": "কোনো মিলি থকা বিষয় পোৱা নগ'ল।",
+      "noTopics": "কোনো সক্ৰিয় বিষয় উপলব্ধ নাই।",
+      "loadMore": "অধিক বিষয় লোড কৰক",
+      "selectionHelp": "আপুনি বিষয়সমূহ বিচাৰিলে বা অধিক বিষয় লোড কৰিলে নিৰ্বাচনসমূহ নিৰ্বাচিত হৈয়ে থাকিব।",
+      "showLess": "কম দেখুৱাওক",
+      "more": "+{{count}} অধিক",
+      "topicCount": "বিষয়সমূহ ({{count}})",
+      "edit": "বিষয় নিৰ্বাচন সম্পাদনা কৰক",
+      "next": "পৰৱৰ্তী",
+      "back": "পিছলৈ",
+      "selectAll": "সকলো নিৰ্বাচন কৰক",
+      "showingRange": "{{total}} ৰ ভিতৰত {{from}}–{{to}} দেখুৱাই আছে",
+      "switchCategoryTitle": "বিষয়ৰ শ্ৰেণী সলনি কৰিব নেকি?",
+      "switchCategoryConfirm": "শ্ৰেণী সলনি কৰিলে আপুনি নিৰ্বাচন কৰা {{count}} টা বিষয় পৰিষ্কাৰ হৈ যাব। আপুনি আগবাঢ়িব বিচাৰে নেকি?",
+      "switchCategoryProceed": "শ্ৰেণী সলনি কৰক",
+      "detailsTitle": "চাবস্ক্ৰিপচনৰ সবিশেষ",
+      "noSelected": "কোনো বিষয় নিৰ্বাচন কৰা হোৱা নাই",
+      "selectedPrefix": "নিৰ্বাচন কৰা:",
+      "selectedCount": "{{count}} টা বিষয় নিৰ্বাচন কৰা হৈছে",
+      "excluding": "বাদ দি",
+      "selectedTopics": "নিৰ্বাচিত বিষয়সমূহ",
+      "availableTopics": "উপলব্ধ বিষয়সমূহ",
+      "allSelected": "সকলো মিলি থকা বিষয় নিৰ্বাচন কৰা হৈছে।",
+      "category": "বিষয়ৰ শ্ৰেণী",
+      "categoryPlaceholder": "বিষয়ৰ শ্ৰেণী নিৰ্বাচন কৰক",
+      "categoryConsent": "সন্মতিৰ বিষয়সমূহ",
+      "categoryUser": "ব্যৱহাৰকাৰীৰ বিষয়সমূহ",
+      "categoryCustom": "কাষ্টম বিষয়সমূহ",
+      "categoryRequired": "বিষয় বাছনি কৰিবলৈ প্ৰথমে এটা শ্ৰেণী বাছনি কৰক",
+      "searchPurposes": "উদ্দেশ্যসমূহ বিচাৰক",
+      "purposesCount": "{{count}} টা চাবস্ক্ৰাইব কৰা উদ্দেশ্যসমূহ",
+      "noPurposesMatches": "কোনো মিলি থকা উদ্দেশ্য পোৱা হোৱা নাই।"
+    },
     "title": "চাবস্ক্ৰিপচনসমূহ",
     "subtitle": "আপোনাৰ সংস্থাৰ বাবে ইভেণ্টৰ জাননী চাবস্ক্ৰিপচনসমূহ পৰিচালনা আৰু নিৰীক্ষণ কৰক",
     "loadFailed": "এতিয়া চందా লোড কৰিবলৈ অসমৰ্থ।",
@@ -632,6 +680,7 @@
     },
     "table": {
       "ariaLabel": "চাবস্ক্ৰিপচন পৰিচালনা টেবুল",
+      "name": "নাম",
       "subscriptionId": "চাবস্ক্ৰিপচন ID",
       "topic": "বিষয়",
       "groupId": "গ্ৰুপ আইডি",
@@ -656,7 +705,12 @@
     "dialog": {
       "registerTitle": "চাবস্ক্ৰিপচন পঞ্জীয়ন কৰক",
       "registerSubtitle": "এটা নতুন ঘটনাৰ জাননী চাবস্ক্ৰিপচন আৰু ডেলিভাৰী মোড কনফিগাৰ কৰক",
+      "nameLabel": "চাবস্ক্ৰিপচনৰ নাম",
+      "namePlaceholder": "উদাহৰণস্বৰূপে, অৰ্ডাৰ জাননী ৱেবহুক",
+      "nameRequired": "চাবস্ক্ৰিপচনৰ নাম প্ৰয়োজনীয়।",
+      "nameTooLong": "চাবস্ক্ৰিপচনৰ নাম ২২৫ টা আখৰতকৈ বেছি হ'ব নোৱাৰে।",
       "topicLabel": "বিষয়",
+      "multiTopicFilter": "ব্যৱহাৰকাৰীৰ জীৱনচক্ৰৰ বিষয়সমূহ অন্তৰ্ভুক্ত কৰাৰ সময়ত সকলো উদ্দেশ্যৰ ফিল্টাৰ বাছনি কৰক।",
       "topicRequired": "বিষয়ৰ প্ৰয়োজন আছে।",
       "filterModeLabel": "উদ্দেশ্য ফিল্টাৰ মোড",
       "purposesLabel": "উদ্দেশ্যসমূহ (কমাৰে পৃথক কৰা)",
@@ -683,16 +737,23 @@
     "verification": {
       "success": "ভেৰিফিকেচন পিং সফলতাৰে প্ৰেৰণ কৰা হৈছে।",
       "failed": "ৱেবহুক ভেৰিফিকেচন ব্যৰ্থ হৈছে। অনুগ্ৰহ কৰি এণ্ডপইণ্টৰ উপলব্ধতা পৰীক্ষা কৰক।",
-      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
+      "retriesExhausted": "সকলো পুনৰ চেষ্টা কৰাৰ পিছতো কলবেক URL পৰীক্ষা কৰিব পৰা নগ'ল। নিশ্চিত কৰক যে URL টো পাব পৰা যায় আৰু সঠিক পৰীক্ষণৰ প্ৰত্যাহ্বান ঘূৰাই দিয়ে।"
     },
     "details": {
       "loadFailed": "চందాৰ বিৱৰণ লোড কৰিবলৈ অসমৰ্থ।",
+      "name": "চাবস্ক্ৰিপচনৰ নাম",
       "configTitle": "চাবস্ক্ৰিপচন কনফিগাৰেচন",
       "configSubtitle": "সাধাৰণ মেটাডাটা, ৰাউটিং পেৰামিটাৰ, আৰু ফিল্টাৰিং নিয়ম",
       "eventsTitle": "ডেলিভাৰীৰ ইতিহাস আৰু কাৰ্যকৰীকৰণৰ লগ",
       "eventsSubtitle": "এই চাবস্ক্ৰাইবাৰলৈ প্ৰেৰণ কৰা শেহতীয়া ইভেণ্ট ডেলিভাৰী আৰু পুনৰ চেষ্টাৰ প্ৰচেষ্টা",
       "createdAt": "সৃষ্টি কৰা হৈছে",
-      "updatedAt": "শেষ আপডেট কৰা হৈছে"
+      "updatedAt": "শেষ আপডেট কৰা হৈছে",
+      "topicsSubtitle": "এই চাবস্ক্ৰিপচনত ডেলিভাৰীৰ বাবে পঞ্জীয়নভুক্ত সক্ৰিয় ইভেণ্ট বিষয়সমূহ",
+      "purposesTitle": "চাবস্ক্ৰাইব কৰা উদ্দেশ্যসমূহ",
+      "purposesSubtitle": "ইভেণ্ট ফিল্টাৰ কৰিবলৈ সন্মতিৰ উদ্দেশ্যসমূহ কনফিগাৰ কৰা হৈছে",
+      "allPurposesNotice": "এই চাবস্ক্ৰিপচনটোৱে সকলো উদ্দেশ্যৰ বাবে ইভেণ্ট লাভ কৰে।",
+      "searchPurposes": "সংলগ্ন উদ্দেশ্যসমূহ বিচাৰক",
+      "noPurposes": "কোনো মিলি থকা উদ্দেশ্য নাই।"
     },
     "deliveryEvents": {
       "ariaLabel": "ডেলিভাৰী ঘটনাৰ লগ টেবুল",
@@ -708,7 +769,7 @@
       "attemptStatus": "স্থিতি",
       "httpStatus": "HTTP স্থিতি",
       "timestamp": "সময়মোহ",
-      "errorDetails": "Error Details",
+      "errorDetails": "ত্ৰুটিৰ বিৱৰণ",
       "noAttempts": "কোনো কাৰ্যকৰী কৰাৰ চেষ্টা ৰেকৰ্ড কৰা হোৱা নাই।"
     }
   },
@@ -724,8 +785,8 @@
       "allTopics": "সকলো বিষয়",
       "search": "অনুসন্ধান কৰক",
       "clear": "পৰিষ্কাৰ কৰক",
-      "subscriptionId": "Subscription ID",
-      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
+      "subscriptionId": "চাবস্ক্ৰিপচন আইডি",
+      "subscriptionIdPlaceholder": "চাবস্ক্ৰিপচন আইডি অনুসৰি ফিল্টাৰ কৰক..."
     },
     "status": {
       "all": "সকলো",

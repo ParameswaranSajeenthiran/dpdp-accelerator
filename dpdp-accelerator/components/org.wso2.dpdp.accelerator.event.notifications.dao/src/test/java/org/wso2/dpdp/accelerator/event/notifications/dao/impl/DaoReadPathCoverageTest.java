@@ -51,7 +51,6 @@ public class DaoReadPathCoverageTest {
         SubscriptionDAOImpl subscriptions = new SubscriptionDAOImpl();
         subscriptions.getSubscriptionById(connection, "missing", "org");
         subscriptions.listSubscriptions(connection, "org", null, null, null, 20, 0, null);
-        subscriptions.getPurposesBySubscriptionId(connection, "sub", "org");
         subscriptions.countActiveSubscriptionsForTopic(connection, "org", "topic");
         subscriptions.getPurposesBySubscriptionIds(connection, java.util.Collections.singletonList("sub"));
         subscriptions.hasPendingOrInFlightDeliveries(connection, "sub", "org");
@@ -92,7 +91,6 @@ public class DaoReadPathCoverageTest {
         SubscriptionDAOImpl subscriptions = new SubscriptionDAOImpl();
         expectThrows(RuntimeException.class, () -> subscriptions.getSubscriptionById(connection, "sub", "org"));
         expectThrows(RuntimeException.class, () -> subscriptions.listSubscriptions(connection, "org", null, null, null, 20, 0, null));
-        expectThrows(RuntimeException.class, () -> subscriptions.getPurposesBySubscriptionId(connection, "sub", "org"));
         expectThrows(RuntimeException.class, () -> subscriptions.countActiveSubscriptionsForTopic(connection, "org", "topic"));
         expectThrows(RuntimeException.class, () -> subscriptions.hasPendingOrInFlightDeliveries(connection, "sub", "org"));
         expectThrows(RuntimeException.class, () -> subscriptions.getPendingSubscriptionsForRecovery(connection, new Timestamp(1), 10));
