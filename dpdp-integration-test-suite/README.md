@@ -225,17 +225,17 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 `tests/04-consents/04.06-*.spec.ts`. See [`AGENTS.md`](AGENTS.md), "Numbering and layout".
 
 | Directory | Tests | Covers |
-| --- |-------| --- |
-| `01-provisioning/` | 3     | Per-run setup: creates the throwaway tenant, provisions its personas and the super tenant's |
-| `02-elements/` | 12    | Element catalog: admin creating, viewing, searching, and deleting Elements |
-| `03-purposes/` | 18    | Purpose catalog: admin creating, viewing, searching, deleting Purposes, and managing versions |
-| `04-consents/` | 49    | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
-| `05-authorization/` | 8     | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
-| `06-multi-tenancy/` | 1     | Cross-tenant Purpose data isolation - "multi-tenant" project only |
-| `07-account/` | 5     | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
-| `08-complaints/` | 44    | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
-| `09-event-notifications/` | 51    | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
-| `10-dashboard/` | 9     | Dashboard counts and links: per-state and per-relation consent counts and complaint counts for throwaway users, the admin view's shape |
+| --- | --- | --- |
+| `01-provisioning/` | 3 | Per-run setup: creates the throwaway tenant, provisions its personas and the super tenant's |
+| `02-elements/` | 12 | Element catalog: admin creating, viewing, searching, and deleting Elements |
+| `03-purposes/` | 18 | Purpose catalog: admin creating, viewing, searching, deleting Purposes, and managing versions |
+| `04-consents/` | 49 | Consent records: user and admin registries (view/search/act), consent history, expiry reconciliation |
+| `05-authorization/` | 8 | The global route-guard and sidebar-visibility mechanism, per persona's scopes |
+| `06-multi-tenancy/` | 1 | Cross-tenant Purpose data isolation - "multi-tenant" project only |
+| `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
+| `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
+| `09-event-notifications/` | 51 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `10-dashboard/` | 9 | Dashboard counts and links: per-state and per-relation consent counts and complaint counts for throwaway users, the admin view's shape |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 

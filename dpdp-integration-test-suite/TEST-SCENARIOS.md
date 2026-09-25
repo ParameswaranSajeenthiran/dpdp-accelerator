@@ -8,13 +8,13 @@ in CI was actually checking.
 > this file in the same commit. `npm run verify:ids` fails the build if an ID here has no test, or
 > a test has no entry here — see [`AGENTS.md`](AGENTS.md), "Keeping TEST-SCENARIOS.md current".
 
-| |                                                                                                                           |
-|---|---------------------------------------------------------------------------------------------------------------------------|
-| **Tests** | 200 across 53 spec files in 10 areas                                                                                      |
+| | |
+|---|---|
+| **Tests** | 200 across 53 spec files in 10 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
-| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff)                                                      |
-| **Rules and conventions** | [`AGENTS.md`](AGENTS.md)                                                                                                  |
-| **Setup and how to run** | [`README.md`](README.md)                                                                                                  |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
+| **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
+| **Setup and how to run** | [`README.md`](README.md) |
 
 ## Finding a test from a failure
 
