@@ -45,9 +45,7 @@ test.describe('Event Notification authorization and access control', () => {
     const sidebar = new AppSidebarPage(adminPage)
     await expect(sidebar.label('Topics')).toBeVisible()
     await expect(sidebar.label('Subscriptions')).toBeVisible()
-    // "Events" the nav ITEM and "Events" the CATEGORY heading it lives under render identical
-    // text (sidebar.events names both) - AppSidebarPage.label() alone is ambiguous here, so this
-    // targets the item specifically by its button role to disambiguate the two.
+    await expect(sidebar.label('Event Notifications')).toBeVisible()
     await expect(sidebar.nav.getByRole('button', { name: 'Events', exact: true })).toBeVisible()
 
     const topicsPage = new TopicsPage(adminPage)

@@ -32,13 +32,14 @@
     "administration": "நிர்வாகம்",
     "adminConsents": "அனைத்து ஒப்புதல்களும்",
     "myComplaints": "எனது புகார்கள்",
+    "complaints": "புகார்கள்",
     "complaintManagement": "புகார்கள்",
     "events": "நிகழ்வுகள்",
+    "eventNotifications": "நிகழ்வு அறிவிப்புகள்",
     "topics": "தலைப்புகள்",
     "subscriptions": "சந்தாக்கள்"
   },
   "layout": {
-    "home": "முகப்பு",
     "breadcrumbAriaLabel": "வழித்தடப் பாதை (Breadcrumb)",
     "userMenu": {
       "unknownUser": "தெரியாத பயனர்",

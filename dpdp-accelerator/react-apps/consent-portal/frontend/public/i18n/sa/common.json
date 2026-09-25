@@ -32,13 +32,14 @@
     "administration": "प्रशासनम्",
     "adminConsents": "सर्वे अनुमतयः",
     "myComplaints": "मम आक्षेपाः",
+    "complaints": "आक्षेपाः",
     "complaintManagement": "आक्षेपाः",
     "events": "घटनानि",
+    "eventNotifications": "इवेन्ट् सूचनाः",
     "topics": "विषयाः",
     "subscriptions": "सदस्यताः"
   },
   "layout": {
-    "home": "गृहम्",
     "breadcrumbAriaLabel": "मार्गदर्शिका",
     "userMenu": {
       "unknownUser": "अज्ञातः उपयोक्ता",

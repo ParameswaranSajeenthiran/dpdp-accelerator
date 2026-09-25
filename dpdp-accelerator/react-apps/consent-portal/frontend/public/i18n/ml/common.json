@@ -32,13 +32,14 @@
     "administration": "ഭരണം",
     "adminConsents": "എല്ലാ സമ്മതങ്ങളും",
     "myComplaints": "എന്റെ പരാതികൾ",
+    "complaints": "പരാതികൾ",
     "complaintManagement": "പരാതികൾ",
     "events": "ഇവന്റുകൾ",
+    "eventNotifications": "ഇവന്റ് അറിയിപ്പുകൾ",
     "topics": "വിഷയങ്ങൾ",
     "subscriptions": "സബ്‌സ്‌ക്രിപ്‌ഷനുകൾ"
   },
   "layout": {
-    "home": "ഹോം",
     "breadcrumbAriaLabel": "ബ്രെഡ്ക്രംബ്",
     "userMenu": {
       "unknownUser": "അജ്ഞാത ഉപയോക്താവ്",

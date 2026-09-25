@@ -32,13 +32,14 @@
     "administration": "प्रशासन",
     "adminConsents": "सबै सहमतिहरू",
     "myComplaints": "मेरो उजुरीहरू",
+    "complaints": "उजुरीहरू",
     "complaintManagement": "उजुरीहरू",
     "events": "घटनाहरू",
+    "eventNotifications": "इभेन्ट सूचनाहरू",
     "topics": "विषयहरू",
     "subscriptions": "सदस्यताहरू"
   },
   "layout": {
-    "home": "गृहपृष्ठ",
     "breadcrumbAriaLabel": "ब्रेडक्रम्ब",
     "userMenu": {
       "unknownUser": "अज्ञात प्रयोगकर्ता",

@@ -16,4 +16,8 @@
  * under the License.
  */
 
+export const PENDING_CONSENTS_VIEW_SEARCH = '?view=pending'
+
+export const PENDING_CONSENTS_PATH = '/consents?view=pending&state=PENDING'
+
 export const CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const

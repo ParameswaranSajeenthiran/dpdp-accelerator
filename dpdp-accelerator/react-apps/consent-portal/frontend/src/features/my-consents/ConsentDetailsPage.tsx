@@ -30,7 +30,7 @@ import {
 import { Ban, CircleCheckBig } from '@wso2/oxygen-ui-icons-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import useAuthorization from '../auth/useAuthorization'
 import ConsentApprovalDialog from './components/ConsentApprovalDialog'
@@ -53,6 +53,7 @@ import {
   isRejectableByCurrentUser,
 } from './utils/consentAuthorization'
 import { isConsentRevokableState } from './utils/statusChip'
+import { PENDING_CONSENTS_PATH } from './constants'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import {
   useAdminConsentDetailQuery,
@@ -95,6 +96,7 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   const { t } = useTranslation('common')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const selfConsentDetailQuery = useConsentDetailQuery(variant === 'self' ? id : undefined)
   const adminConsentDetailQuery = useAdminConsentDetailQuery(variant === 'admin' ? id : undefined)
   const { currentUser, hasScope } = useAuthorization()
@@ -108,7 +110,13 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const canWriteAny = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_ANY)
   const consentDetailQuery = variant === 'admin' ? adminConsentDetailQuery : selfConsentDetailQuery
-  const backPath = variant === 'admin' ? '/administration/consents' : '/consents'
+  const isPendingView = variant === 'self' && searchParams.get('view') === 'pending'
+  let backPath = '/consents'
+  if (variant === 'admin') {
+    backPath = '/administration/consents'
+  } else if (isPendingView) {
+    backPath = PENDING_CONSENTS_PATH
+  }
   const revokePending =
     variant === 'admin' ? adminRevokeMutation.isPending : revokeMutation.isPending
   const revokeError =
