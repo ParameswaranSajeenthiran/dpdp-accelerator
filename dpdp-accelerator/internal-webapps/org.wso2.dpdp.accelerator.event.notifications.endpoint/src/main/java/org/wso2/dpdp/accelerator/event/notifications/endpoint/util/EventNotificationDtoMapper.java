@@ -92,7 +92,7 @@ public final class EventNotificationDtoMapper {
         target.setGroupId(source.getGroupId());
         target.setStatus(source.getStatus() == null ? null :
                 org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus
-                        .fromValue(source.getStatus().toString()));
+                        .fromValueOrDefault(source.getStatus().toString(), null));
         target.setCreatedAt(source.getCreatedAt());
         target.setUpdatedAt(source.getUpdatedAt());
         target.setAlreadyExists(source.getAlreadyExists());

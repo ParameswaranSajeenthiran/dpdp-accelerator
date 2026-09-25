@@ -70,14 +70,20 @@ public class H2SchemaParityTest {
                         + "('delivery-1', 'org-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')");
 
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
-                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
-                        + "VALUES ('delivery-2', 'org-1', 'sub-1', 'event-1', 'pending')"));
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) "
+                        + "VALUES ('delivery-2', 'org-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')"));
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
-                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
-                        + "VALUES ('delivery-3', 'org-1', 'sub-1', 'missing-event', 'pending')"));
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) "
+                        + "VALUES ('delivery-3', 'org-1', 'sub-1', 'missing-event', 'pending', TIMESTAMP '2000-01-01 00:00:00')"));
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
+                        + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) "
+                        + "VALUES ('delivery-4', 'wrong-org', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY_ACK "
+                        + "(ACK_ID, DELIVERY_ID, ORG_ID, COMPLETION_STATUS, COMPLETION_EVIDENCE) "
+                        + "VALUES ('ack-bad-org', 'delivery-1', 'wrong-org', 'completed', 'evidence')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO POLL_DELIVERY "
                         + "(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS) "
-                        + "VALUES ('delivery-4', 'wrong-org', 'sub-1', 'event-1', 'pending')"));
+                        + "VALUES ('poll-bad-org', 'wrong-org', 'sub-1', 'event-1', 'pending')"));
                 expectThrows(SQLException.class, () -> statement.executeUpdate("INSERT INTO EVENT "
                         + "(EVENT_ID, ORG_ID, GROUP_ID, TOPIC_ID, PAYLOAD) "
                         + "VALUES ('event-bad-org', 'wrong-org', 'group-1', 'topic-1', '{}')"));

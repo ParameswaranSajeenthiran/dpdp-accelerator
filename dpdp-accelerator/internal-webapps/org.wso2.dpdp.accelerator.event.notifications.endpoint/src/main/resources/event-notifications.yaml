@@ -1357,7 +1357,7 @@ components:
     SubscriptionCreateRequest:
       type: object
       required: [delivery, name]
-      description: Supply topics (array) or the legacy singleton topic field; topics takes precedence.
+      description: Supply topics (array) or the legacy singleton topic field, but not both.
       properties:
         name:
           type: string
