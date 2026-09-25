@@ -88,7 +88,8 @@ describe('subscriptionsApi', () => {
     respondWith({ subscriptionId: 'sub-new', status: 'ACTIVE' })
 
     const payload = {
-      topic: 'consent.revoke',
+      name: 'Revoke Webhook',
+      topics: ['consent.revoke'],
       filter: { type: 'specific' as const, purposes: ['MARKETING'] },
       delivery: {
         mode: 'webhook' as const,

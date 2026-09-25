@@ -22,6 +22,8 @@ import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface TopicDAO {
@@ -40,4 +42,16 @@ public interface TopicDAO {
 
     PaginatedDAOResult<Topic> listTopics(Connection conn, String orgId, String status, String search, int limit, int offset,
             String sort);
+
+    /**
+     * Batch-fetches topics by ID list. Returns only rows found; missing IDs are silently skipped.
+     * Connection first — the caller owns the transaction.
+     */
+    List<Topic> getTopicsByIds(Connection conn, List<String> topicIds, String orgId);
+
+    /**
+     * Batch-resolves active topics by (lowercased) name. Returns only matches;
+     * missing names are the caller's responsibility to detect via a set-difference.
+     */
+    Map<String, Topic> getTopicsByOrgAndNames(Connection conn, String orgId, List<String> lowerNames);
 }

@@ -180,8 +180,20 @@ public class DeliveryRecoveryServiceTest {
     }
 
     private Subscription subscription(String id, String callbackUrl) {
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        return new Subscription(id, "org1", "group1", "topic1", "ALL", Collections.emptyList(),
-                "WEBHOOK", callbackUrl, "secret", "PENDING", now, now);
+        Subscription s = new Subscription();
+        s.setSubscriptionId(id);
+        s.setOrgId("org1");
+        s.setGroupId("group1");
+        s.setTopicIds(Collections.singletonList("topic1"));
+        s.setTopicNames(Collections.emptyList());
+        s.setPurposeFilterMode("ALL");
+        s.setPurposes(Collections.emptyList());
+        s.setDeliveryMode("WEBHOOK");
+        s.setCallbackUrl(callbackUrl);
+        s.setSharedSecret("secret");
+        s.setStatus("PENDING");
+        s.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        s.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        return s;
     }
 }

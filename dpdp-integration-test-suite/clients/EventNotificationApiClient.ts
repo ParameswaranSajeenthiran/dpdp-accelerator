@@ -81,9 +81,11 @@ export interface DeliveryConfig {
 
 export interface SubscriptionRecord {
   subscriptionId: string
+  name?: string
   orgId?: string
   groupId?: string
-  topic: string
+  topic?: string
+  topics?: string[]
   filter?: FilterConfig
   delivery?: DeliveryConfig
   status: SubscriptionStatus | string
@@ -94,8 +96,10 @@ export interface SubscriptionRecord {
 }
 
 export interface SubscriptionCreateRequest {
+  name: string
   groupId?: string
-  topic: string
+  topic?: string
+  topics?: string[]
   filter: FilterConfig
   delivery: DeliveryConfig
 }

@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 172 across 46 spec files in 9 areas |
+| **Tests** | 179 across 46 spec files in 9 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -424,7 +424,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**44 tests, 11 spec files.**
+**51 tests, 11 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -452,6 +452,7 @@ Mixed UI and API. Two server behaviours drive most of the test design: `groupId`
 | `09.03.03` | Searching by a partial subscription, topic, or callback value finds matching rows |  |
 | `09.03.04` | Subscription details show configuration, timestamps, and deliveries | Delivery verified via the API first; a poll delivery's empty attempt-history modal opens cleanly. |
 | `09.03.05` | An unknown subscription id shows load failure without leaking data |  |
+| `09.03.06` | The subscriptions list and details view display multiple topic chips and support topic search | Chip expander (+1 more) displays remaining topics; details view supports associated topic search. |
 
 ### `09.04-admin-viewing-events.spec.ts`
 
@@ -481,6 +482,7 @@ Server-side rules the Topics UI cannot reach.
 | `09.06.01` | A topic with a live subscription cannot be deregistered | 409 "has active subscriptions"; the topic stays Active. |
 | `09.06.02` | Deregistering the same topic twice does not mutate it again |  |
 | `09.06.03` | Re-registering a previously deregistered topic name creates a new topic | A new topic id; the old row stays Deregistered. |
+| `09.06.04` | Any topic linked to a multi-topic subscription cannot be deregistered until the subscription is deleted | 409 "has active subscriptions" on all associated topics until subscription row is deleted. |
 
 ### `09.07-subscription-lifecycle-api.spec.ts` · API-only
 
@@ -494,6 +496,10 @@ Register conflicts, re-verification, and delete guards.
 | `09.07.04` | Deleting a subscription soft-deletes it while preserving its record | A soft delete: status becomes `deleted` but the record and its delivery list stay readable. |
 | `09.07.05` | A subscription with a pending delivery cannot be deleted | 409 EN-4090; the subscription stays active. |
 | `09.07.06` | Deleting an already-deleted subscription returns not found |  |
+| `09.07.07` | Registering with empty topics or duplicate topic names is rejected | 400 with descriptive error message. |
+| `09.07.08` | Registering with a non-existent or inactive topic is rejected | 404 with topic not active in organization error. |
+| `09.07.09` | Multi-topic subscriptions containing user lifecycle topics require the all purpose filter | 422 with lifecycle topic filter requirement error. |
+| `09.07.10` | Delivery mode conflict is rejected when any topic overlaps in the same group | 409 across shared topic associations. |
 
 ### `09.08-publishing-events-api.spec.ts` · API-only
 
@@ -508,6 +514,7 @@ Register conflicts, re-verification, and delete guards.
 | `09.08.05` | An ALL-filter subscription receives every event regardless of purposes | No/one/many purposes, exactly one delivery each. |
 | `09.08.06` | SPECIFIC purpose matching is case-insensitive and requires overlap | Overlapping purposes deliver; unrelated ones do not. |
 | `09.08.07` | ALL_EXCEPT matches only when the event carries a purpose outside the exclusion set |  |
+| `09.08.08` | A multi-topic subscription receives fan-out deliveries across all registered topics | Events on multiple topics match and deliver to the same subscription. |
 
 ### `09.09-event-queries-api.spec.ts` · API-only
 

@@ -78,6 +78,7 @@ test.describe('Admin viewing Subscriptions', () => {
     // EventNotificationUrlValidator and get a genuinely distinct delivery-mode/status row without
     // needing this suite's own WebhookReceiver (see README's "Webhook-dependent tests").
     const webhookResponse = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: webhookTopic.name,
       filter: { type: 'all' },
       delivery: {
@@ -178,13 +179,18 @@ test.describe('Admin viewing Subscriptions', () => {
       await detailsPage.goto(subscription.subscriptionId)
 
       await expect(detailsPage.fieldValue('Subscription ID')).toContainText(subscription.subscriptionId)
-      await expect(detailsPage.fieldValue('Topic')).toHaveText(topic.name)
+      if (subscription.name) {
+        await expect(detailsPage.fieldValue('Subscription Name')).toContainText(subscription.name)
+      }
       await expect(detailsPage.fieldValue('Group ID')).toContainText(subscription.groupId!)
       await expect(detailsPage.fieldValue('Delivery Mode')).toContainText('Poll')
       await expect(detailsPage.fieldValue('Created At')).not.toHaveText('-')
       await expect(detailsPage.fieldValue('Last Updated')).not.toHaveText('-')
 
-      await expect(page.getByRole('heading', { name: topic.name })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Subscription details' })).toBeVisible()
+
+      await detailsPage.expandSubscribedTopics()
+      await expect(detailsPage.topicChip(topic.name)).toBeVisible()
 
       const deliveryRow = detailsPage.deliveryEventRowByDeliveryId(delivery!.deliveryId)
       await expect(deliveryRow).toBeVisible()
@@ -215,5 +221,54 @@ test.describe('Admin viewing Subscriptions', () => {
     // Cross-tenant coverage (a real tenant-B subscription id read from tenant A) lives in
     // 09.11-tenant-isolation-api.spec.ts (09.11.02) at the API level, using the two-tenant
     // fixtures - not duplicated here to avoid paying for a second tenant's setup twice.
+  })
+
+  test('09.03.06 - The subscriptions list and details view display multiple topic chips and support topic search', async ({
+    browser,
+    consentAdminEventApi,
+  }) => {
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-a')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-b')
+    const topicC = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-c')
+
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, [
+      topicA.name,
+      topicB.name,
+      topicC.name,
+    ])
+
+    const page = await loginAsConsentAdmin(browser)
+    try {
+      const subscriptionsPage = new SubscriptionsPage(page)
+      await subscriptionsPage.goto()
+      await subscriptionsPage.search(subscription.subscriptionId)
+
+      const row = subscriptionsPage.rowBySubscriptionId(subscription.subscriptionId)
+      await expect(row).toBeVisible()
+
+      // +1 more expander chip is rendered when more than 2 topics exist
+      const expandButton = subscriptionsPage.topicExpandButton(row)
+      await expect(expandButton).toBeVisible()
+      await expandButton.click()
+      await expect(row).toContainText(topicA.name)
+      await expect(row).toContainText(topicB.name)
+      await expect(row).toContainText(topicC.name)
+
+      // Navigate to details page
+      await subscriptionsPage.openDetailsBySubscriptionId(subscription.subscriptionId)
+      const detailsPage = new SubscriptionDetailsPage(page)
+
+      await expect(detailsPage.topicChip(topicA.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicB.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicC.name)).toBeVisible()
+
+      // Filter associated topics in the section search
+      await detailsPage.searchTopics(topicA.name)
+      await expect(detailsPage.topicChip(topicA.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicB.name)).toHaveCount(0)
+      await expect(detailsPage.topicChip(topicC.name)).toHaveCount(0)
+    } finally {
+      await page.context().close()
+    }
   })
 })

@@ -205,4 +205,50 @@ test.describe('Publisher publishing events', () => {
     ).items
     expect(mixedDeliveries.some((delivery) => delivery.subscriptionId === subscription.subscriptionId)).toBe(true)
   })
+
+  test('09.08.08 - A multi-topic subscription receives fan-out deliveries across all registered topics', async ({
+    consentAdminEventApi,
+  }) => {
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-topic-a')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-topic-b')
+
+    const response = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('multi-sub'),
+      topics: [topicA.name, topicB.name],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(response.status(), await response.text()).toBe(201)
+    const subscription = (await response.json()) as { subscriptionId: string; groupId: string; topics?: string[] }
+    expect(subscription.topics).toEqual(expect.arrayContaining([topicA.name, topicB.name]))
+
+    const groupId = subscription.groupId
+
+    // Event on topicA delivers to this subscription
+    const { event: eventA } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicA.name)
+    const deliveriesA = (
+      (await (await consentAdminEventApi.getEventDeliveries(eventA.eventId)).json()) as {
+        items: SubscriptionDeliveryRecord[]
+      }
+    ).items
+    expect(deliveriesA.some((delivery) => delivery.subscriptionId === subscription.subscriptionId)).toBe(true)
+
+    // Event on topicB delivers to the very same subscription
+    const { event: eventB } = await publishMarkedEventViaApi(consentAdminEventApi, groupId, topicB.name)
+    const deliveriesB = (
+      (await (await consentAdminEventApi.getEventDeliveries(eventB.eventId)).json()) as {
+        items: SubscriptionDeliveryRecord[]
+      }
+    ).items
+    expect(deliveriesB.some((delivery) => delivery.subscriptionId === subscription.subscriptionId)).toBe(true)
+
+    // Subscription's own event history reflects deliveries from both topics
+    const subscriptionEvents = (
+      (await (await consentAdminEventApi.listSubscriptionEvents(subscription.subscriptionId)).json()) as {
+        items: SubscriptionDeliveryRecord[]
+      }
+    ).items
+    expect(subscriptionEvents.some((delivery) => delivery.eventId === eventA.eventId)).toBe(true)
+    expect(subscriptionEvents.some((delivery) => delivery.eventId === eventB.eventId)).toBe(true)
+  })
 })
