@@ -196,7 +196,8 @@ paths:
             examples:
               webhook:
                 value:
-                  topic: consent-status-changed
+                  name: Consent Webhook
+                  topics: [consent-status-changed]
                   filter:
                     type: specific
                     purposes: [account-management]
@@ -206,6 +207,7 @@ paths:
                     sharedSecret: replace-with-a-strong-secret
               multipleTopics:
                 value:
+                  name: Multi-Topic Webhook
                   topics: [consent-status-changed, user.account.delete]
                   filter:
                     type: all
@@ -215,7 +217,8 @@ paths:
                     sharedSecret: replace-with-a-strong-secret
               poll:
                 value:
-                  topic: consent-status-changed
+                  name: Consent Poller
+                  topics: [consent-status-changed]
                   filter:
                     type: all
                     purposes: []
@@ -235,7 +238,8 @@ paths:
                     subscriptionId: 70f63b63-7ec4-4e42-a956-fca89bfeb351
                     orgId: example.com
                     groupId: processor-1
-                    topic: consent-status-changed
+                    name: Consent Webhook
+                    topics: [consent-status-changed]
                     filter:
                       type: specific
                       purposes: [account-management]
@@ -245,13 +249,13 @@ paths:
                     status: pending
                     createdAt: 1787651970000
                     updatedAt: 1787651970000
-                    alreadyExists: false
                 poll:
                   value:
                     subscriptionId: ec2727d2-a335-409c-ac76-ed094f52fc7f
                     orgId: example.com
                     groupId: processor-1
-                    topic: consent-status-changed
+                    name: Consent Poller
+                    topics: [consent-status-changed]
                     filter:
                       type: all
                       purposes: []
@@ -260,7 +264,6 @@ paths:
                     status: active
                     createdAt: 1787651970000
                     updatedAt: 1787651970000
-                    alreadyExists: false
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -349,7 +352,8 @@ paths:
                       - subscriptionId: 70f63b63-7ec4-4e42-a956-fca89bfeb351
                         orgId: example.com
                         groupId: processor-1
-                        topic: consent-status-changed
+                        name: Consent Poller
+                        topics: [consent-status-changed]
                         filter:
                           type: all
                           purposes: []
@@ -358,7 +362,6 @@ paths:
                         status: active
                         createdAt: 1787651970000
                         updatedAt: 1787651970000
-                        alreadyExists: false
                     total: 1
                 empty:
                   value:
@@ -392,7 +395,8 @@ paths:
                 subscriptionId: 70f63b63-7ec4-4e42-a956-fca89bfeb351
                 orgId: example.com
                 groupId: processor-1
-                topic: consent-status-changed
+                name: Consent Webhook
+                topics: [consent-status-changed]
                 filter:
                   type: all_except
                   purposes: [marketing]
@@ -402,7 +406,6 @@ paths:
                 status: active
                 createdAt: 1787651970000
                 updatedAt: 1787651970000
-                alreadyExists: false
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -432,7 +435,8 @@ paths:
                 subscriptionId: 70f63b63-7ec4-4e42-a956-fca89bfeb351
                 orgId: example.com
                 groupId: processor-1
-                topic: consent-status-changed
+                name: Consent Poller
+                topics: [consent-status-changed]
                 filter:
                   type: all
                   purposes: []
@@ -441,7 +445,6 @@ paths:
                 status: deleted
                 createdAt: 1787651970000
                 updatedAt: 1787652970000
-                alreadyExists: false
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -482,7 +485,8 @@ paths:
                 subscriptionId: 70f63b63-7ec4-4e42-a956-fca89bfeb351
                 orgId: example.com
                 groupId: processor-1
-                topic: consent-status-changed
+                name: Consent Webhook
+                topics: [consent-status-changed]
                 filter:
                   type: all
                   purposes: []
@@ -492,7 +496,6 @@ paths:
                 status: active
                 createdAt: 1787651970000
                 updatedAt: 1787652970000
-                alreadyExists: false
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -1274,15 +1277,12 @@ components:
       properties:
         topicId:
           type: string
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         status:
           type: string
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         initiatedBy:
           type: string
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         name:
           type: string
@@ -1357,7 +1357,7 @@ components:
     SubscriptionCreateRequest:
       type: object
       required: [delivery, name]
-      description: Supply exactly one of topics or the deprecated singleton topic.
+      description: Supply topics (array) or the legacy singleton topic field; topics takes precedence.
       properties:
         name:
           type: string
@@ -1365,40 +1365,33 @@ components:
           description: Unique display name for the subscription within the organization.
         subscriptionId:
           type: string
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         orgId:
           type: string
-          deprecated: true
           description: Accepted for compatibility; tenant context determines the organization.
         groupId:
           type: string
-          deprecated: true
           description: Accepted for compatibility; the handler derives the group from tenant context.
         status:
-          $ref: "#/components/schemas/SubscriptionStatus"
+          type: string
+          description: Accepted for compatibility; ignored on creation.
         createdAt:
           type: integer
           format: int64
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         updatedAt:
           type: integer
           format: int64
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         alreadyExists:
           type: boolean
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         message:
           type: string
-          deprecated: true
           description: Accepted for compatibility; ignored on creation.
         topic:
           type: string
-          deprecated: true
-          description: Singleton compatibility field; absent for multi-topic subscriptions.
+          description: Singleton compatibility field; use topics for new integrations.
         topics:
           type: array
           minItems: 1
@@ -1427,8 +1420,7 @@ components:
         topic:
           type: string
           x-field-extra-annotation: '@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)'
-          deprecated: true
-          description: Singleton compatibility field; absent for multi-topic subscriptions.
+          description: Singleton compatibility field; present only for single-topic subscriptions.
         topics:
           type: array
           minItems: 1
