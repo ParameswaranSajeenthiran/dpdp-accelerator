@@ -81,6 +81,7 @@ export interface AdminConsentListParams {
   subjectId?: string
   serviceId?: string
   state?: string
+  purposeId?: string
 }
 
 export interface MyConsentListParams {
