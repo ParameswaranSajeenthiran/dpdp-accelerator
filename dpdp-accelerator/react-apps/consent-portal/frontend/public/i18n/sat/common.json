@@ -393,11 +393,23 @@
     "sla": {
       "dueDate": "{{date}} ᱦᱟᱹᱵᱤᱡ ᱚᱠᱛᱚ ᱢᱮᱱᱟᱜᱼᱟ",
       "dueToday": "ᱛᱮᱦᱮᱧ ᱜᱮ ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ",
-      "overdueSingular": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
-      "overduePlural": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
-      "daysLeftSingular": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
-      "daysLeftPlural": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
-      "dueLabel": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ"
+      "daysLeft": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
+      "daysLeft_one": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
+      "daysLeft_other": "{{count}} ᱢᱟᱦᱟᱸ ᱥᱟᱨᱮᱡ ᱢᱮᱱᱟᱜᱼᱟ",
+      "overdueDays": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
+      "overdueDays_one": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
+      "overdueDays_other": "{{count}} ᱢᱟᱦᱟᱸ ᱯᱟᱨᱚᱢ ᱮᱱᱟ",
+      "overdue": "Overdue",
+      "deadlineLabelDataPrincipal": "ᱢᱩᱪᱟᱹᱫ ᱢᱟᱹᱦᱤᱛ",
+      "deadlineLabelOfficer": "Statutory deadline",
+      "periodDataPrincipal": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodDataPrincipal_one": "The organisation must resolve your complaint within {{count}} day of submitting it.",
+      "periodDataPrincipal_other": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodOfficer": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_one": "Complaints must be resolved within {{count}} day of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_other": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "breachedDataPrincipal": "The deadline has passed. If you have not had a satisfactory response, you can escalate your complaint to the Data Protection Board.",
+      "breachedOfficer": "Overdue: this case counts as an SLA breach."
     },
     "timeline": {
       "complaintReceived": "ᱚᱵᱷᱤᱡᱳᱜᱽ ᱧᱟᱢ ᱮᱱᱟ",

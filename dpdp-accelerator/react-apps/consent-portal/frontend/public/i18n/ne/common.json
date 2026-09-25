@@ -393,11 +393,23 @@
     "sla": {
       "dueDate": "अन्तिम मिति {{date}}",
       "dueToday": "आज अन्तिम दिन",
-      "overdueSingular": "{{count}} दिन ढिलो",
-      "overduePlural": "{{count}} दिन ढिलो",
-      "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी",
-      "dueLabel": "अन्तिम मिति"
+      "daysLeft": "{{count}} दिन बाँकी",
+      "daysLeft_one": "{{count}} दिन बाँकी",
+      "daysLeft_other": "{{count}} दिन बाँकी",
+      "overdueDays": "{{count}} दिन ढिलो",
+      "overdueDays_one": "{{count}} दिन ढिलो",
+      "overdueDays_other": "{{count}} दिन ढिलो",
+      "overdue": "Overdue",
+      "deadlineLabelDataPrincipal": "अन्तिम मिति",
+      "deadlineLabelOfficer": "Statutory deadline",
+      "periodDataPrincipal": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodDataPrincipal_one": "The organisation must resolve your complaint within {{count}} day of submitting it.",
+      "periodDataPrincipal_other": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodOfficer": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_one": "Complaints must be resolved within {{count}} day of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_other": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "breachedDataPrincipal": "The deadline has passed. If you have not had a satisfactory response, you can escalate your complaint to the Data Protection Board.",
+      "breachedOfficer": "Overdue: this case counts as an SLA breach."
     },
     "timeline": {
       "complaintReceived": "उजुरी प्राप्त भयो",

@@ -393,11 +393,23 @@
     "sla": {
       "dueDate": "గడువు {{date}}",
       "dueToday": "ఈరోజే గడువు",
-      "overdueSingular": "{{count}} రోజు ఆలస్యమైంది",
-      "overduePlural": "{{count}} రోజులు ఆలస్యమైంది",
-      "daysLeftSingular": "{{count}} రోజు మిగిలి ఉంది",
-      "daysLeftPlural": "{{count}} రోజులు మిగిలి ఉన్నాయి",
-      "dueLabel": "గడువు"
+      "daysLeft": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "daysLeft_one": "{{count}} రోజు మిగిలి ఉంది",
+      "daysLeft_other": "{{count}} రోజులు మిగిలి ఉన్నాయి",
+      "overdueDays": "{{count}} రోజులు ఆలస్యమైంది",
+      "overdueDays_one": "{{count}} రోజు ఆలస్యమైంది",
+      "overdueDays_other": "{{count}} రోజులు ఆలస్యమైంది",
+      "overdue": "Overdue",
+      "deadlineLabelDataPrincipal": "గడువు",
+      "deadlineLabelOfficer": "Statutory deadline",
+      "periodDataPrincipal": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodDataPrincipal_one": "The organisation must resolve your complaint within {{count}} day of submitting it.",
+      "periodDataPrincipal_other": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodOfficer": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_one": "Complaints must be resolved within {{count}} day of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_other": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "breachedDataPrincipal": "The deadline has passed. If you have not had a satisfactory response, you can escalate your complaint to the Data Protection Board.",
+      "breachedOfficer": "Overdue: this case counts as an SLA breach."
     },
     "timeline": {
       "complaintReceived": "ఫిర్యాదు స్వీకరించబడింది",
