@@ -774,12 +774,15 @@
       "eventsSubtitle": "Recent event deliveries and retry attempts dispatched to this subscriber",
       "createdAt": "Created At",
       "updatedAt": "Last Updated",
+      "sharedSecret": "Shared Secret",
       "topicsSubtitle": "Active event topics registered for delivery on this subscription",
       "purposesTitle": "Subscribed Purposes",
       "purposesSubtitle": "Consent purposes configured for event filtering",
       "allPurposesNotice": "This subscription receives events for all purposes.",
       "searchPurposes": "Search associated purposes",
-      "noPurposes": "No matching purposes."
+      "noPurposes": "No matching purposes.",
+      "showSecret": "Show secret",
+      "hideSecret": "Hide secret"
     },
     "deliveryEvents": {
       "ariaLabel": "Delivery events log table",

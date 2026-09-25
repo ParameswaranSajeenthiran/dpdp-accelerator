@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.EventCreateRequest;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionPage;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.exception.EventNotificationExceptionMapper;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.util.EventNotificationDtoMapper;
@@ -101,12 +102,24 @@ public class DtoContractTest {
         mapped.setAlreadyExists(true);
         mapped.setMessage("existing");
         Subscription response = EventNotificationDtoMapper.toApi(mapped);
-        assertNull(response.getDelivery().getSharedSecret());
-        mapped.getDelivery().setSharedSecret(null);
+        assertEquals(response.getDelivery().getSharedSecret(), "secret");
         equivalent(mapped, response);
-        equivalent(new PaginatedResult<>(Collections.singletonList(mapped), 5),
-                EventNotificationDtoMapper.subscriptions(new PaginatedResult<>(Collections.singletonList(mapped), 5)));
+
+        Subscription summaryResponse = EventNotificationDtoMapper.toSummaryApi(mapped);
+        assertNull(summaryResponse.getDelivery().getSharedSecret());
+        SubscriptionDTO summaryDto = json.readValue(json.writeValueAsString(mapped), SubscriptionDTO.class);
+        summaryDto.getDelivery().setSharedSecret(null);
+        equivalent(summaryDto, summaryResponse);
+
+        PaginatedResult<SubscriptionDTO> paginated = new PaginatedResult<>(Collections.singletonList(mapped), 5);
+        SubscriptionPage pageResponse = EventNotificationDtoMapper.subscriptions(paginated);
+        assertEquals(pageResponse.getTotal().intValue(), 5);
+        assertEquals(pageResponse.getItems().size(), 1);
+        assertNull(pageResponse.getItems().get(0).getDelivery().getSharedSecret());
+        equivalent(new PaginatedResult<>(Collections.singletonList(summaryDto), 5), pageResponse);
+
         equivalent(new SubscriptionDTO(), EventNotificationDtoMapper.toApi(new SubscriptionDTO()));
+        equivalent(new SubscriptionDTO(), EventNotificationDtoMapper.toSummaryApi(new SubscriptionDTO()));
     }
 
     @Test

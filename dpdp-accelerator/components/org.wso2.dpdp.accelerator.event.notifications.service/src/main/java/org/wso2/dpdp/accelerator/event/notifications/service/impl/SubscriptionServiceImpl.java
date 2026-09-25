@@ -1008,7 +1008,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         FilterDTO filter = new FilterDTO(filterType, sub.getPurposes());
 
         DeliveryMode deliveryMode = DeliveryMode.fromValueOrDefault(sub.getDeliveryMode(), DeliveryMode.WEBHOOK);
-        DeliveryConfigDTO delivery = new DeliveryConfigDTO(deliveryMode, sub.getCallbackUrl(), null);
+        DeliveryConfigDTO delivery = new DeliveryConfigDTO(deliveryMode, sub.getCallbackUrl(), sub.getSharedSecret());
 
         SubscriptionDTO dto = new SubscriptionDTO(
                 sub.getSubscriptionId(),

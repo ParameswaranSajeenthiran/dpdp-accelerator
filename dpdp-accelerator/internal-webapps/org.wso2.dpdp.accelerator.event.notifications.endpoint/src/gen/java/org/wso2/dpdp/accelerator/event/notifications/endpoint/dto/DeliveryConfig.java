@@ -8,9 +8,8 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+public class DeliveryConfig {
 
-public class DeliveryConfig  {
-  
   @ApiModelProperty(required = true, value = "")
 
   private DeliveryMode mode;
@@ -19,16 +18,18 @@ public class DeliveryConfig  {
 
   private String callbackUrl;
 
- /**
-  * Always null in service responses.
-  */
-  @ApiModelProperty(value = "Always null in service responses.")
+  /**
+   * Shared secret used for payload signing or poll authentication. Present in subscription detail responses; omitted from list responses.
+   */
+  @ApiModelProperty(value = "Shared secret used for payload signing or poll authentication. Present in subscription detail responses; omitted from list responses.")
 
   private String sharedSecret;
- /**
+
+  /**
    * Get mode
+   * 
    * @return mode
-  **/
+   **/
   @JsonProperty("mode")
   public DeliveryMode getMode() {
     return mode;
@@ -43,10 +44,11 @@ public class DeliveryConfig  {
     return this;
   }
 
- /**
+  /**
    * Get callbackUrl
+   * 
    * @return callbackUrl
-  **/
+   **/
   @JsonProperty("callbackUrl")
   public String getCallbackUrl() {
     return callbackUrl;
@@ -61,15 +63,22 @@ public class DeliveryConfig  {
     return this;
   }
 
- /**
-   * Always null in service responses.
+  /**
    * @return sharedSecret
-  **/
+   **/
   @JsonProperty("sharedSecret")
   public String getSharedSecret() {
     return sharedSecret;
   }
 
+  public void setSharedSecret(String sharedSecret) {
+    this.sharedSecret = sharedSecret;
+  }
+
+  public DeliveryConfig sharedSecret(String sharedSecret) {
+    this.sharedSecret = sharedSecret;
+    return this;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -94,7 +103,7 @@ public class DeliveryConfig  {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class DeliveryConfig {\n");
-    
+
     sb.append("    mode: ").append(toIndentedString(mode)).append("\n");
     sb.append("    callbackUrl: ").append(toIndentedString(callbackUrl)).append("\n");
     sb.append("    sharedSecret: ").append(toIndentedString(sharedSecret)).append("\n");
@@ -110,4 +119,3 @@ public class DeliveryConfig  {
     return o == null ? "null" : o.toString().replace("\n", "\n    ");
   }
 }
-

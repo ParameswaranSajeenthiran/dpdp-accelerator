@@ -130,6 +130,14 @@ public final class EventNotificationDtoMapper {
     }
 
     public static Subscription toApi(SubscriptionDTO source) {
+        return toApi(source, true);
+    }
+
+    public static Subscription toSummaryApi(SubscriptionDTO source) {
+        return toApi(source, false);
+    }
+
+    private static Subscription toApi(SubscriptionDTO source, boolean includeSecret) {
         if (source == null) {
             return null;
         }
@@ -158,7 +166,9 @@ public final class EventNotificationDtoMapper {
             delivery.setMode(source.getDelivery().getMode() == null ? null :
                     DeliveryMode.fromValue(source.getDelivery().getMode().getValue()));
             delivery.setCallbackUrl(source.getDelivery().getCallbackUrl());
-            // The public response never exposes the subscription shared secret.
+            if (includeSecret) {
+                delivery.setSharedSecret(source.getDelivery().getSharedSecret());
+            }
             target.setDelivery(delivery);
         }
         return target;
@@ -256,7 +266,7 @@ public final class EventNotificationDtoMapper {
             return null;
         }
         SubscriptionPage target = new SubscriptionPage();
-        target.setItems(map(source.getItems(), EventNotificationDtoMapper::toApi));
+        target.setItems(map(source.getItems(), EventNotificationDtoMapper::toSummaryApi));
         target.setTotal(source.getTotal());
         return target;
     }

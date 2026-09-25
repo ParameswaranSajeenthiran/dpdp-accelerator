@@ -232,7 +232,13 @@ export default function SubscriptionRegisterDialog({
           <X size={20} />
         </IconButton>
         <Stack spacing={0.75}>
-          <Typography variant="h6" fontWeight={700}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: '1.25rem', sm: '1.375rem' },
+            }}
+          >
             {t('subscriptions.dialog.registerTitle', 'Register Subscription')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -482,6 +488,7 @@ export default function SubscriptionRegisterDialog({
                 }
                 inputProps={{
                   'aria-label': t('subscriptions.dialog.secretLabel', 'Shared Secret'),
+                  style: { fontFamily: 'monospace', fontSize: '0.85rem' },
                 }}
                 onChange={(e) => {
                   setSharedSecret(e.target.value)
