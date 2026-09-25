@@ -177,8 +177,8 @@
       "relation": "सम्बन्धः",
       "relationOptions": {
         "any": "सर्वे",
-        "subject": "My Own",
-        "authorizer": "Managed by Me"
+        "subject": "मम स्वकीयम्",
+        "authorizer": "मया प्रबन्धितम्"
       }
     },
     "messages": {
@@ -219,7 +219,7 @@
       "viewFullSnapshot": "पूर्णं स्नैपशॉट् इतिहासं पश्यन्तु",
       "close": "निमीलितम्",
       "snapshot": {
-        "noChanges": "No changes were recorded in this update.",
+        "noChanges": "अस्मिन् नवीनीकरणे कापि परिवर्तनं न पञ्जीकृतम्।",
         "needsMoreHistory": "अद्यतने किं परिवर्तितम् इति द्रष्टुं अधिकं इतिहासं भारय।",
         "initial": "प्रारम्भिक स्नैपशॉट्",
         "added": "योजित",
@@ -602,8 +602,56 @@
     }
   },
   "subscriptions": {
+    "topicUi": {
+      "selectionLimit": "एतत् चयनं {{max}}-विषय-सीमाम् अतिक्रामति। स्वस्य अन्वेषणं सङ्कुचितं करोतु अथवा कानिचित् चितानि विषयाणि स्वच्छानि करोतु। कानिचित् अपि चयनं न परिवर्तितम्।",
+      "subscribedCount": "Subscribed Topics ({{count}})",
+      "close": "पञ्जीकरणं पिदधातु",
+      "topics": "विषयाः",
+      "delivery": "वितरणम्",
+      "chooseTopics": "चरणम् १/२ — विषयान् चिनोतु",
+      "configureDelivery": "चरणम् २/२ — वितरणं विन्यासं करोतु",
+      "search": "नाम्ना विषयान् अन्विष्यतु",
+      "searchAssociated": "सम्बद्धान् विषयान् अन्विष्यतु",
+      "selected": "{{count}} चिताः · अधिकतमम् {{max}}",
+      "clear": "स्वच्छं करोतु",
+      "loading": "विषयान् आरोपयति",
+      "retry": "पुनः प्रयासं करोतु",
+      "fetchError": "विषयान् भारयितुं न शक्तम्। कृपया पुनः प्रयासं करोतु।",
+      "noMatches": "कोऽपि समानः विषयः नास्ति।",
+      "noTopics": "कोऽपि सक्रियः विषयः उपलब्धः नास्ति।",
+      "loadMore": "अधिकान् विषयान् भारयतु",
+      "selectionHelp": "यदा भवान् अन्वेषणं करोति अथवा अधिकान् विषयान् भारयति तदा चयनं चितम् एव तिष्ठति।",
+      "showLess": "अल्पं दर्शय",
+      "more": "+{{count}} अधिकम्",
+      "topicCount": "विषयाः ({{count}})",
+      "edit": "विषय-चयनं सम्पादय",
+      "next": "अग्रे",
+      "back": "पृष्ठतः",
+      "selectAll": "सर्वान् चिनोतु",
+      "showingRange": "{{from}}–{{to}} मध्ये {{total}} दृश्यते",
+      "switchCategoryTitle": "विषय-वर्गं परिवर्तयितुम् इच्छसि?",
+      "switchCategoryConfirm": "वर्गस्य परिवर्तनेन तव {{count}} चिताः विषयाः निष्कासिताः भविष्यन्ति। किं त्वम् अनुवर्तितुम् इच्छसि?",
+      "switchCategoryProceed": "वर्गं परिवर्तय",
+      "detailsTitle": "सदस्यता-विवरणम्",
+      "noSelected": "कोऽपि विषयः न चयनितः",
+      "selectedPrefix": "चितानि:",
+      "selectedCount": "{{count}} विषयाः चिताः",
+      "excluding": "विहाय",
+      "selectedTopics": "चिताः विषयाः",
+      "availableTopics": "उपलब्धाः विषयाः",
+      "allSelected": "सर्वे मिलिताः विषयाः चिताः सन्ति।",
+      "category": "विषय-वर्गः",
+      "categoryPlaceholder": "विषयवर्गं चिनोतु",
+      "categoryConsent": "सहमतिविषयाः",
+      "categoryUser": "उपयोक्तृविषयाः",
+      "categoryCustom": "स्वविषयाः",
+      "categoryRequired": "विषयान् चेतुं प्रथमं वर्गं चिनोतु",
+      "searchPurposes": "उद्देश्यानि अन्विष्यताम्",
+      "purposesCount": "{{count}} सदस्यताप्राप्तानि उद्देश्यानि",
+      "noPurposesMatches": "{{count}} मेलितानि उद्देश्यानि न सन्ति।"
+    },
     "title": "सदस्यताः",
-    "subtitle": "Manage and monitor event notification subscriptions for your organization",
+    "subtitle": "भवतः सङ्घटनस्य कृते घटनासूचनासदस्यताः प्रबन्धयतु निरीक्षयतु च",
     "loadFailed": "सदस्यताः भारयितुं न शक्यन्ते।",
     "status": {
       "active": "सक्रिया",
@@ -632,6 +680,7 @@
     },
     "table": {
       "ariaLabel": "सदस्यता प्रबन्धन सारणी",
+      "name": "नाम",
       "subscriptionId": "सदस्यता आईडी",
       "topic": "विषयः",
       "groupId": "समूह परिचय संख्या",
@@ -656,7 +705,12 @@
     "dialog": {
       "registerTitle": "सदस्यता पञ्जीकुरु",
       "registerSubtitle": "नवीनघटनासूचनासदस्यता वितरणविधिं च संरूप्यताम्",
+      "nameLabel": "सदस्यतानाम",
+      "namePlaceholder": "उदा. आदेशसूचनावेबहुक",
+      "nameRequired": "सदस्यतानाम आवश्यकम् अस्ति।",
+      "nameTooLong": "सदस्यतानाम २२५ अक्षरेभ्यः अधिकं न भवेत्।",
       "topicLabel": "विषयः",
+      "multiTopicFilter": "उपयोक्तृजीवनचक्रविषयान् समावेशयन् सर्वोद्देश्यशोधकं चिनोतु।",
       "topicRequired": "विषयः आवश्यकः।",
       "filterModeLabel": "उद्देश्य-शोधन-विधिः",
       "purposesLabel": "उद्देश्यानि (अल्पविरामचिह्नैः विभक्तानि)",
@@ -683,16 +737,23 @@
     "verification": {
       "success": "सत्यापन पिङ्ग् सफलतापूर्वकं प्रेषितम्।",
       "failed": "वेबहुक् सत्यापनं विफलम्। कृपया अन्तिमबिन्दुं प्राप्यतां परीक्ष्यन्तु।",
-      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
+      "retriesExhausted": "सर्वासु पुनःप्रयासप्रयासेषु अपि प्रतिपुराविलम्बसङ्केतस्य (Callback URL) सत्यापनं न अभवत्। सङ्केतः प्राप्यः अस्ति तथा च सम्यक् सत्यापनचुनौतीं प्रतिददाति इति सुनिश्चितं करोतु।"
     },
     "details": {
       "loadFailed": "सदस्यताविवरणानि भारयितुं न शक्यते।",
+      "name": "सदस्यतानाम",
       "configTitle": "सदस्यता विन्यासः",
       "configSubtitle": "सामान्य मेटाडेटा, मार्गनिर्देशन प्राचलानि, शोधन नियमाः च",
       "eventsTitle": "वितरण इतिहासः तथा कार्यान्वयन अभिलेखः",
       "eventsSubtitle": "अद्यतनघटनावितरणानि अस्य ग्राहकस्य कृते प्रेषिताः पुनःप्रयत्नप्रयत्नाः",
       "createdAt": "कदा सृष्टम्",
-      "updatedAt": "अन्तिम अद्यतनम्"
+      "updatedAt": "अन्तिम अद्यतनम्",
+      "topicsSubtitle": "अस्यां सदस्यतायां वितरणार्थं पञ्जीकृताः सक्रियाः घटनाविषयाः",
+      "purposesTitle": "सदस्यताप्राप्तानि उद्देश्यानि",
+      "purposesSubtitle": "घटनाशोधनाय विन्यासितानि सहमति-उद्देश्यानि",
+      "allPurposesNotice": "इदं सदस्यता सर्वकार्यार्थम् घटनाः प्राप्नोति।",
+      "searchPurposes": "सम्बद्धकार्याणि अन्विष्यतु",
+      "noPurposes": "अनुरूपाणि कार्याणि न सन्ति।"
     },
     "deliveryEvents": {
       "ariaLabel": "वितरण घटना अभिलेख सारणी",
@@ -724,8 +785,8 @@
       "allTopics": "सर्वे विषयाः",
       "search": "अन्वेषणम्",
       "clear": "स्पष्टम्",
-      "subscriptionId": "Subscription ID",
-      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
+      "subscriptionId": "सदस्यता-परिचयः",
+      "subscriptionIdPlaceholder": "सदस्यता-परिचयेन शोधयतु..."
     },
     "status": {
       "all": "सर्वे",
@@ -746,12 +807,12 @@
       "eventId": "घटना परिचय संख्या",
       "topic": "विषयः",
       "groupId": "समूह परिचय संख्या",
-      "mode": "Mode",
+      "mode": "प्रकारः",
       "purposes": "उद्देश्यानि",
       "deliveries": "वितरणानि",
       "subscriber": "ग्राहकः",
       "subscribers": "ग्राहकाः",
-      "noSubscribers": "No Subscribers",
+      "noSubscribers": "ग्राहकाः न सन्ति",
       "status": "स्थितिः",
       "occurredAt": "घटितम्।",
       "actions": "क्रियाः",
@@ -775,8 +836,8 @@
       "allPurposes": "सर्वे प्रयोजनाः",
       "deliveriesTitle": "अधोमुखी सदस्यायाः वितरणानि",
       "deliveriesSubtitle": "सर्वे वितरणानि तथा पूर्णतास्थितयः अस्याः घटनायाः कृते उत्पादिताः",
-      "noDeliveries": "No Deliveries Generated",
-      "noDeliveriesMessage": "No active subscriptions matched this topic when the event occurred.",
+      "noDeliveries": "उत्पादितानि प्रेषणानि न सन्ति",
+      "noDeliveriesMessage": "यदा घटना अभवत् तदा अस्य विषयस्य कृते कापि सक्रिया सदस्यता न मिलिता।",
       "copyPayloadSuccess": "भारः क्लिपबोर्ड् प्रति प्रतिलिपितः",
       "copyPayloadFailed": "भारणम् क्लिपबोर्ड् प्रति प्रतिलिपि कर्तुं विफलम्।",
       "subscriber": "ग्राहकः",

@@ -16,6 +16,7 @@
  * under the License.
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { OxygenTheme, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
 import { I18nextProvider } from 'react-i18next'
@@ -35,16 +36,18 @@ afterEach(() => {
 })
 
 describe('SubscriptionRegisterDialog', () => {
-  it.each(['user.account.delete', 'user.data.change'])(
-    'hides consent-purpose controls and submits the all filter for %s',
-    async (topic) => {
-      topicsApi.fetchTopics.mockResolvedValue({
-        items: [{ topicId: 'topic-1', name: topic, status: 'ACTIVE' }],
-        total: 1,
-      })
-      const onSubmit = vi.fn()
-
-      render(
+  it('validates name and required fields before registering', async () => {
+    topicsApi.fetchTopics.mockResolvedValue({
+      items: [
+        { topicId: 'topic-1', name: 'consent.update', status: 'ACTIVE', initiatedBy: 'SYSTEM' },
+      ],
+      total: 1,
+    })
+    const onSubmit = vi.fn()
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
         <I18nextProvider i18n={i18n}>
           <OxygenUIThemeProvider theme={OxygenTheme}>
             <SubscriptionRegisterDialog
@@ -54,10 +57,146 @@ describe('SubscriptionRegisterDialog', () => {
               onSubmit={onSubmit}
             />
           </OxygenUIThemeProvider>
-        </I18nextProvider>,
+        </I18nextProvider>
+      </QueryClientProvider>,
+    )
+
+    // Register button is disabled initially because no topics are selected
+    expect(screen.getByRole('button', { name: 'Register Subscription' })).toBeDisabled()
+
+    // Select category and topic
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Topic Category/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Consent Topics' }))
+
+    const topicInput = screen.getByPlaceholderText('Search topics by name')
+    fireEvent.focus(topicInput)
+    fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+    fireEvent.click(await screen.findByRole('option', { name: 'consent.update' }))
+
+    // Now Register button is enabled, but name is still blank
+    expect(screen.getByRole('button', { name: 'Register Subscription' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    expect(await screen.findByText('Subscription name is required.')).toBeInTheDocument()
+
+    // Fill in name
+    fireEvent.change(screen.getByLabelText(/Subscription Name/), {
+      target: { value: 'My Subscription' },
+    })
+
+    // Fill in webhook URL
+    fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
+      target: { value: 'https://example.com/events' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'My Subscription',
+        topics: ['consent.update'],
+      }),
+    )
+  })
+
+  it('selects consent topics and submits subscription with filter and delivery configuration', async () => {
+    topicsApi.fetchTopics.mockResolvedValue({
+      items: [
+        { topicId: 'topic-1', name: 'consent.update', status: 'ACTIVE', initiatedBy: 'SYSTEM' },
+        { topicId: 'topic-2', name: 'consent.revoke', status: 'ACTIVE', initiatedBy: 'SYSTEM' },
+      ],
+      total: 2,
+    })
+    const onSubmit = vi.fn()
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog
+              open
+              loading={false}
+              onClose={vi.fn()}
+              onSubmit={onSubmit}
+            />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(screen.getByLabelText(/Subscription Name/), {
+      target: { value: 'Test Webhook Sub' },
+    })
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Topic Category/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Consent Topics' }))
+
+    const topicInput = screen.getByPlaceholderText('Search topics by name')
+    fireEvent.focus(topicInput)
+    fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+    fireEvent.click(await screen.findByRole('option', { name: 'consent.update' }))
+
+    fireEvent.focus(topicInput)
+    fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+    fireEvent.click(await screen.findByRole('option', { name: 'consent.revoke' }))
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
+      target: { value: 'https://receiver.example/callback' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Test Webhook Sub',
+        topics: ['consent.update', 'consent.revoke'],
+        filter: { type: 'all', purposes: undefined },
+        delivery: expect.objectContaining({
+          mode: 'webhook',
+          callbackUrl: 'https://receiver.example/callback',
+        }),
+      }),
+    )
+  })
+
+  it.each(['user.account.delete', 'user.data.change'])(
+    'hides consent-purpose controls and submits the all filter for %s',
+    async (topic) => {
+      topicsApi.fetchTopics.mockResolvedValue({
+        items: [{ topicId: 'topic-1', name: topic, status: 'ACTIVE', initiatedBy: 'SYSTEM' }],
+        total: 1,
+      })
+      const onSubmit = vi.fn()
+
+      render(
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        >
+          <I18nextProvider i18n={i18n}>
+            <OxygenUIThemeProvider theme={OxygenTheme}>
+              <SubscriptionRegisterDialog
+                open
+                loading={false}
+                onClose={vi.fn()}
+                onSubmit={onSubmit}
+              />
+            </OxygenUIThemeProvider>
+          </I18nextProvider>
+        </QueryClientProvider>,
       )
 
-      await screen.findByText(topic)
+      fireEvent.change(screen.getByLabelText(/Subscription Name/), {
+        target: { value: 'User Event Sub' },
+      })
+
+      fireEvent.mouseDown(screen.getByRole('combobox', { name: /Topic Category/i }))
+      fireEvent.click(await screen.findByRole('option', { name: 'User Topics' }))
+
+      const topicInput = screen.getByPlaceholderText('Search topics by name')
+      fireEvent.focus(topicInput)
+      fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+      fireEvent.click(await screen.findByRole('option', { name: topic }))
+
       expect(screen.queryByLabelText('Consent Purpose Filter Mode')).not.toBeInTheDocument()
       expect(screen.queryByLabelText('Consent Purposes (comma-separated)')).not.toBeInTheDocument()
 
@@ -69,28 +208,153 @@ describe('SubscriptionRegisterDialog', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
       expect(onSubmit).toHaveBeenCalledWith(
         expect.objectContaining({
-          topic,
+          name: 'User Event Sub',
+          topics: [topic],
           filter: { type: 'all', purposes: undefined },
         }),
       )
     },
   )
 
-  it('shows the consent-purpose filter for consent topics', async () => {
+  it('shows consent-purpose filter controls for consent topics and submits specific purposes', async () => {
     topicsApi.fetchTopics.mockResolvedValue({
-      items: [{ topicId: 'topic-1', name: 'consent.status.update', status: 'ACTIVE' }],
+      items: [
+        {
+          topicId: 'topic-1',
+          name: 'consent.status.update',
+          status: 'ACTIVE',
+          initiatedBy: 'SYSTEM',
+        },
+      ],
       total: 1,
     })
+    const onSubmit = vi.fn()
 
     render(
-      <I18nextProvider i18n={i18n}>
-        <OxygenUIThemeProvider theme={OxygenTheme}>
-          <SubscriptionRegisterDialog open loading={false} onClose={vi.fn()} onSubmit={vi.fn()} />
-        </OxygenUIThemeProvider>
-      </I18nextProvider>,
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog
+              open
+              loading={false}
+              onClose={vi.fn()}
+              onSubmit={onSubmit}
+            />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
     )
 
-    await screen.findByText('consent.status.update')
+    fireEvent.change(screen.getByLabelText(/Subscription Name/), {
+      target: { value: 'Specific Consent Sub' },
+    })
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Topic Category/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Consent Topics' }))
+
+    const topicInput = screen.getByPlaceholderText('Search topics by name')
+    fireEvent.focus(topicInput)
+    fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+    fireEvent.click(await screen.findByRole('option', { name: 'consent.status.update' }))
+
     expect(screen.getByLabelText('Consent Purpose Filter Mode')).toBeInTheDocument()
+
+    // Change filter mode to Specific Purposes
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Consent Purpose Filter Mode/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Specific Purposes' }))
+
+    // Enter purposes
+    fireEvent.change(screen.getByLabelText(/Consent Purposes \(comma-separated\)/), {
+      target: { value: 'MARKETING, ANALYTICS' },
+    })
+
+    // Switch delivery mode to Poll
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Delivery Mode/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Poll' }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Specific Consent Sub',
+        topics: ['consent.status.update'],
+        filter: { type: 'specific', purposes: ['MARKETING', 'ANALYTICS'] },
+        delivery: expect.objectContaining({ mode: 'poll' }),
+      }),
+    )
+  })
+
+  it('shows consent-purpose filter controls for custom topics and submits specific purposes', async () => {
+    topicsApi.fetchTopics.mockResolvedValue({
+      items: [
+        {
+          topicId: 'topic-custom-1',
+          name: 'custom.order.events',
+          status: 'ACTIVE',
+          initiatedBy: 'USER',
+        },
+      ],
+      total: 1,
+    })
+    const onSubmit = vi.fn()
+
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog
+              open
+              loading={false}
+              onClose={vi.fn()}
+              onSubmit={onSubmit}
+            />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(screen.getByLabelText(/Subscription Name/), {
+      target: { value: 'Custom Topic Sub' },
+    })
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Topic Category/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Custom Topics' }))
+
+    const topicInput = screen.getByPlaceholderText('Search topics by name')
+    fireEvent.focus(topicInput)
+    fireEvent.keyDown(topicInput, { key: 'ArrowDown' })
+    fireEvent.click(await screen.findByRole('option', { name: 'custom.order.events' }))
+
+    // Purpose filter mode must be available for custom topics
+    expect(screen.getByLabelText('Consent Purpose Filter Mode')).toBeInTheDocument()
+
+    // Select Specific Purposes
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: /Consent Purpose Filter Mode/i }))
+    fireEvent.click(await screen.findByRole('option', { name: 'Specific Purposes' }))
+
+    // Enter purposes
+    fireEvent.change(screen.getByLabelText(/Consent Purposes \(comma-separated\)/), {
+      target: { value: 'ORDER_FULFILLMENT' },
+    })
+
+    fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
+      target: { value: 'https://orders.example/callback' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Custom Topic Sub',
+        topics: ['custom.order.events'],
+        filter: { type: 'specific', purposes: ['ORDER_FULFILLMENT'] },
+      }),
+    )
   })
 })

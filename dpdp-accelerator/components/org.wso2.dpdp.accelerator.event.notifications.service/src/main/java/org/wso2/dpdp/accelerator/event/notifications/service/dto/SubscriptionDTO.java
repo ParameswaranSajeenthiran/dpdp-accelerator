@@ -18,6 +18,12 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
+import java.util.List;
+
+import java.util.Collections;
+
+import java.util.ArrayList;
+
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 
 /**
@@ -28,7 +34,9 @@ public class SubscriptionDTO {
     private String subscriptionId;
     private String orgId;
     private String groupId;
+    private String name;
     private String topic;
+    private List<String> topics;
     private FilterDTO filter;
     private DeliveryConfigDTO delivery;
     private SubscriptionStatus status;
@@ -90,12 +98,30 @@ public class SubscriptionDTO {
         this.groupId = groupId;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     public String getTopic() {
         return topic;
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public List<String> getTopics() {
+        return topics != null ? topics : topic == null ? Collections.emptyList()
+                : Collections.singletonList(topic);
+    }
+
+    public void setTopics(List<String> topics) {
+        this.topics = topics == null ? null : new ArrayList<>(topics);
     }
 
     public FilterDTO getFilter() {

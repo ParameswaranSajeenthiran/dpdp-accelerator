@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -59,10 +60,11 @@ public class H2SchemaParityTest {
                         + "(EVENT_ID, ORG_ID, GROUP_ID, TOPIC_ID, PAYLOAD) "
                         + "VALUES ('event-1', 'org-1', 'group-1', 'topic-1', '{}')");
                 statement.executeUpdate("INSERT INTO SUBSCRIPTION "
-                        + "(SUBSCRIPTION_ID, ORG_ID, GROUP_ID, TOPIC_ID, STATUS, PURPOSE_FILTER_MODE, "
+                        + "(SUBSCRIPTION_ID, ORG_ID, NAME, GROUP_ID, STATUS, PURPOSE_FILTER_MODE, "
                         + "PURPOSE_SET_HASH, DELIVERY_MODE, UPDATED_AT) VALUES "
-                        + "('sub-1', 'org-1', 'group-1', 'topic-1', 'active', 'all', '', 'webhook', "
+                        + "('sub-1', 'org-1', 'Sub 1', 'group-1', 'active', 'all', '', 'webhook', "
                         + "TIMESTAMP '2000-01-01 00:00:00')");
+                statement.executeUpdate("INSERT INTO SUBSCRIPTION_TOPIC VALUES ('org-1', 'sub-1', 'topic-1')");
                 statement.executeUpdate("INSERT INTO WEBHOOK_DELIVERY "
                         + "(DELIVERY_ID, SUBSCRIPTION_ID, EVENT_ID, STATUS, UPDATED_AT) VALUES "
                         + "('delivery-1', 'sub-1', 'event-1', 'pending', TIMESTAMP '2000-01-01 00:00:00')");
@@ -125,5 +127,154 @@ public class H2SchemaParityTest {
             current = current.getParent();
         }
         throw new IllegalStateException("Could not locate " + SCHEMA_PATH);
+    }
+
+    @Test
+    public void multiTopicSubscriptionMatchesBothTopicsAndPreservesPageCardinality() throws Exception {
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:multi_topic_schema");
+                Reader schema = Files.newBufferedReader(findSchema(), StandardCharsets.UTF_8)) {
+            RunScript.execute(connection, schema);
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("INSERT INTO TOPIC (TOPIC_ID, ORG_ID, NAME) VALUES "
+                        + "('a', 'org', 'accounts'), ('b', 'org', 'billing'), ('c', 'other', 'private')");
+            }
+            org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl dao =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl();
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription subscription =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            subscription.setSubscriptionId("sub");
+            subscription.setName("Subscription Alpha");
+            subscription.setOrgId("org");
+            subscription.setGroupId("group");
+            subscription.setTopicIds(java.util.Arrays.asList("a"));
+            subscription.setPurposeFilterMode("all");
+            subscription.setPurposes(java.util.Collections.emptyList());
+            subscription.setDeliveryMode("poll");
+            subscription.setSharedSecret("secret");
+            subscription.setStatus("active");
+            subscription.setTopicIds(java.util.Arrays.asList("b", "a"));
+            dao.addSubscription(connection, subscription);
+            connection.commit();
+            org.testng.Assert.assertEquals(dao.getSubscriptionById(connection, "sub", "org").get().getTopicIds(),
+                    java.util.Arrays.asList("a", "b"));
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "org", "a").size(), 1);
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "org", "b").size(), 1);
+            org.testng.Assert.assertEquals(dao.getActiveSubscriptionsForFanOut(connection, "other", "a").size(), 0);
+            PaginatedDAOResult<org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription> page =
+                    dao.listSubscriptions(connection, "org", null, null, "billing", 1, 0, null);
+            org.testng.Assert.assertEquals(page.getTotal(), 1L);
+            org.testng.Assert.assertEquals(page.getItems().get(0).getTopicNames(),
+                    java.util.Arrays.asList("accounts", "billing"));
+            try (Statement statement = connection.createStatement()) {
+                expectThrows(SQLException.class, () -> statement.executeUpdate(
+                        "INSERT INTO SUBSCRIPTION_TOPIC VALUES ('org', 'sub', 'c')"));
+                expectThrows(SQLException.class, () -> statement.executeUpdate(
+                        "INSERT INTO SUBSCRIPTION_TOPIC VALUES ('other', 'sub', 'c')"));
+            }
+            connection.rollback();
+            subscription.setSubscriptionId("rollback");
+            subscription.setName("Rollback Sub");
+            subscription.setGroupId("new-group");
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE SUBSCRIPTION_TOPIC ADD CONSTRAINT FAIL_SECOND "
+                        + "CHECK (SUBSCRIPTION_ID <> 'rollback' OR TOPIC_ID <> 'b')");
+            }
+            expectThrows(
+                    org.wso2.dpdp.accelerator.event.notifications.common.exception.dao
+                            .EventNotificationDuplicateResourceException.class,
+                    () -> dao.addSubscription(connection, subscription));
+            connection.rollback();
+            assertTrue(!dao.getSubscriptionById(connection, "rollback", "org").isPresent());
+        }
+    }
+
+    @Test
+    public void subscriptionNameUniquenessAndReuseAfterDelete() throws Exception {
+        try (Connection connection = DriverManager.getConnection("jdbc:h2:mem:sub_name_test");
+                Reader schema = Files.newBufferedReader(findSchema(), StandardCharsets.UTF_8)) {
+            RunScript.execute(connection, schema);
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("INSERT INTO TOPIC (TOPIC_ID, ORG_ID, NAME) VALUES "
+                        + "('t1', 'org-1', 'orders'), ('t2', 'org-2', 'orders')");
+            }
+
+            org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl dao =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.impl.SubscriptionDAOImpl();
+
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription sub1 =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            sub1.setSubscriptionId("sub-1");
+            sub1.setName("Orders Webhook");
+            sub1.setOrgId("org-1");
+            sub1.setGroupId("group-1");
+            sub1.setTopicIds(Collections.singletonList("t1"));
+            sub1.setPurposeFilterMode("all");
+            sub1.setPurposes(Collections.emptyList());
+            sub1.setDeliveryMode("poll");
+            sub1.setStatus("active");
+            dao.addSubscription(connection, sub1);
+            connection.commit();
+
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription fetched =
+                    dao.getSubscriptionById(connection, "sub-1", "org-1").get();
+            org.testng.Assert.assertEquals(fetched.getName(), "Orders Webhook");
+
+            // Case-insensitive duplicate in same org fails
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription sub2 =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            sub2.setSubscriptionId("sub-2");
+            sub2.setName("orders webhook");
+            sub2.setOrgId("org-1");
+            sub2.setGroupId("group-1");
+            sub2.setTopicIds(Collections.singletonList("t1"));
+            sub2.setPurposeFilterMode("all");
+            sub2.setPurposes(Collections.emptyList());
+            sub2.setDeliveryMode("poll");
+            sub2.setStatus("active");
+            expectThrows(org.wso2.dpdp.accelerator.event.notifications.common.exception.dao
+                    .EventNotificationDuplicateResourceException.class,
+                    () -> dao.addSubscription(connection, sub2));
+            connection.rollback();
+
+            // Same name in different org succeeds
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription sub3 =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            sub3.setSubscriptionId("sub-3");
+            sub3.setName("Orders Webhook");
+            sub3.setOrgId("org-2");
+            sub3.setGroupId("group-2");
+            sub3.setTopicIds(Collections.singletonList("t2"));
+            sub3.setPurposeFilterMode("all");
+            sub3.setPurposes(Collections.emptyList());
+            sub3.setDeliveryMode("poll");
+            sub3.setStatus("active");
+            dao.addSubscription(connection, sub3);
+            connection.commit();
+
+            // Soft-delete sub1 in org-1
+            org.testng.Assert.assertTrue(dao.deleteSubscriptionAtomic(connection, "sub-1", "org-1", "active"));
+            connection.commit();
+
+            // Name is freed and reusable after delete
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription sub4 =
+                    new org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription();
+            sub4.setSubscriptionId("sub-4");
+            sub4.setName("ORDERS WEBHOOK");
+            sub4.setOrgId("org-1");
+            sub4.setGroupId("group-1");
+            sub4.setTopicIds(Collections.singletonList("t1"));
+            sub4.setPurposeFilterMode("all");
+            sub4.setPurposes(Collections.emptyList());
+            sub4.setDeliveryMode("poll");
+            sub4.setStatus("active");
+            dao.addSubscription(connection, sub4);
+            connection.commit();
+
+            org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription fetched4 =
+                    dao.getSubscriptionById(connection, "sub-4", "org-1").get();
+            org.testng.Assert.assertEquals(fetched4.getName(), "ORDERS WEBHOOK");
+        }
     }
 }

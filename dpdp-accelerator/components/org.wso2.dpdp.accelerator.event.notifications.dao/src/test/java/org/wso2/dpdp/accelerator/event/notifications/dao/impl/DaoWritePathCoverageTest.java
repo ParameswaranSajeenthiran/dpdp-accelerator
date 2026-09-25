@@ -12,7 +12,9 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAu
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Event;
+import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
@@ -147,8 +150,20 @@ public class DaoWritePathCoverageTest {
         TopicDAOImpl topicDao = new TopicDAOImpl();
         assertTrue(topicDao.addTopic(connection, new Topic("t-1", "org-1", "accounts", "desc", "active")));
         assertTrue(topicDao.updateTopicStatus(connection, "t-1", "org-1", TopicStatus.ACTIVE));
-        Subscription subscription = new Subscription("s-1", "org-1", "group-1", "t-1", "all",
-                Arrays.asList("marketing"), "webhook", "https://example.com/hook", "secret", "pending", now, now);
+        Subscription subscription = new Subscription();
+        subscription.setSubscriptionId("s-1");
+        subscription.setName("sub-write-coverage");
+        subscription.setOrgId("org-1");
+        subscription.setGroupId("group-1");
+        subscription.setTopicIds(Collections.singletonList("t-1"));
+        subscription.setPurposeFilterMode("all");
+        subscription.setPurposes(Arrays.asList("marketing"));
+        subscription.setDeliveryMode("webhook");
+        subscription.setCallbackUrl("https://example.com/hook");
+        subscription.setSharedSecret("secret");
+        subscription.setStatus("pending");
+        subscription.setCreatedAt(now);
+        subscription.setUpdatedAt(now);
         SubscriptionDAOImpl subscriptionDao = new SubscriptionDAOImpl();
         try {
             subscriptionDao.addSubscription(connection, subscription);
@@ -221,6 +236,54 @@ public class DaoWritePathCoverageTest {
         expectThrows(IllegalArgumentException.class,
                 () -> deliveries.updatePollDeliveryStatusesByDeliveryIds(null, "", "group", "subscription",
                         null, null));
+    }
+
+    @Test
+    public void addSubscriptionDuplicateNameConstraintThrowsSubscriptionNameAlreadyExists() throws Exception {
+        when(resultSet.next()).thenReturn(false, true, false);
+        when(resultSet.getString(1)).thenReturn("active");
+        when(statement.executeUpdate()).thenReturn(1)
+                .thenThrow(new java.sql.SQLException("Duplicate entry for key 'UQ_SUB_ORG_ACTIVE_NAME'", "23505"));
+
+        Subscription subscription = new Subscription();
+        subscription.setSubscriptionId("s-1");
+        subscription.setName("sub-name");
+        subscription.setOrgId("org-1");
+        subscription.setGroupId("group-1");
+        subscription.setTopicIds(Collections.singletonList("t-1"));
+        subscription.setDeliveryMode("webhook");
+        subscription.setCallbackUrl("https://example.com/hook");
+
+        SubscriptionDAOImpl subscriptionDao = new SubscriptionDAOImpl();
+        EventNotificationDuplicateResourceException ex = expectThrows(
+                EventNotificationDuplicateResourceException.class,
+                () -> subscriptionDao.addSubscription(connection, subscription));
+        assertEquals(ex.getMessage(),
+                String.format(EventNotificationCommonConstants.ERROR_SUBSCRIPTION_NAME_ALREADY_EXISTS, "sub-name"));
+    }
+
+    @Test
+    public void addSubscriptionOtherIntegrityConstraintThrowsDuplicateSubscription() throws Exception {
+        when(resultSet.next()).thenReturn(false, true, false);
+        when(resultSet.getString(1)).thenReturn("active");
+        when(statement.executeUpdate()).thenReturn(1)
+                .thenThrow(new java.sql.SQLException("Duplicate entry for key 'FK_SUB_TOPIC_NAME'", "23505"));
+
+        Subscription subscription = new Subscription();
+        subscription.setSubscriptionId("s-1");
+        subscription.setName("sub-name");
+        subscription.setOrgId("org-1");
+        subscription.setGroupId("group-1");
+        subscription.setTopicIds(Collections.singletonList("t-1"));
+        subscription.setDeliveryMode("webhook");
+        subscription.setCallbackUrl("https://example.com/hook");
+
+        SubscriptionDAOImpl subscriptionDao = new SubscriptionDAOImpl();
+        EventNotificationDuplicateResourceException ex = expectThrows(
+                EventNotificationDuplicateResourceException.class,
+                () -> subscriptionDao.addSubscription(connection, subscription));
+        assertEquals(ex.getMessage(),
+                EventNotificationCommonConstants.ERROR_DUPLICATE_SUBSCRIPTION);
     }
 
     private void setManagerDataSource(Object value) throws Exception {

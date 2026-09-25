@@ -109,6 +109,8 @@ public final class DPDPCommonConstants {
             "EventNotifications.Polling.MaxEventsLimit";
     public static final String EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED =
             "EventNotifications.Polling.RequestHmacValidationEnabled";
+    public static final String EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS =
+            "EventNotifications.Subscription.MaxTopics";
 
     public static final int DEFAULT_EVENT_NOTIFICATIONS_THREAD_POOL_SIZE = 4;
     public static final long DEFAULT_EVENT_NOTIFICATIONS_BASE_BACKOFF_SECONDS = 5L;
@@ -134,6 +136,7 @@ public final class DPDPCommonConstants {
     public static final int DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS = 20;
     public static final int DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT = 100;
     public static final boolean DEFAULT_EVENT_NOTIFICATIONS_POLLING_REQUEST_HMAC_VALIDATION_ENABLED = false;
+    public static final int DEFAULT_EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS = 100;
 
     public static final String CONSENT_HISTORY_ENABLED = "ConsentHistory.Enabled";
     public static final String CONSENT_HISTORY_SNAPSHOT_ENABLED = "ConsentHistory.SnapshotEnabled";

@@ -334,6 +334,12 @@ public final class DPDPConfigParser {
                 DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_POLLING_MAX_EVENTS_LIMIT);
     }
 
+    public int getEventNotificationMaxSubscriptionTopics() {
+
+        return getPositiveInt(DPDPCommonConstants.EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS,
+                DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS);
+    }
+
     public boolean isEventNotificationPollingRequestHmacValidationEnabled() {
 
         return getValidatedBoolean(

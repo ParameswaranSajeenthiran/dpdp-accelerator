@@ -82,7 +82,11 @@ public final class EventNotificationDtoMapper {
         if (source == null) {
             return null;
         }
+        if (source.getTopic() != null && source.getTopics() != null) {
+            throw new IllegalArgumentException("Supply topic or topics, not both.");
+        }
         SubscriptionDTO target = new SubscriptionDTO();
+        target.setName(source.getName());
         target.setSubscriptionId(source.getSubscriptionId());
         target.setOrgId(source.getOrgId());
         target.setGroupId(source.getGroupId());
@@ -94,6 +98,7 @@ public final class EventNotificationDtoMapper {
         target.setAlreadyExists(source.getAlreadyExists());
         target.setMessage(source.getMessage());
         target.setTopic(source.getTopic());
+        target.setTopics(source.getTopics());
         if (source.getFilter() != null) {
             Filter filter = source.getFilter();
             target.setFilter(new FilterDTO(filter.getType() == null ? null :
@@ -129,10 +134,12 @@ public final class EventNotificationDtoMapper {
             return null;
         }
         Subscription target = new Subscription();
+        target.setName(source.getName());
         target.setSubscriptionId(source.getSubscriptionId());
         target.setOrgId(source.getOrgId());
         target.setGroupId(source.getGroupId());
         target.setTopic(source.getTopic());
+        target.setTopics(source.getTopics());
         target.setStatus(source.getStatus() == null ? null :
                 SubscriptionStatus.fromValue(source.getStatus().getValue()));
         target.setCreatedAt(source.getCreatedAt());

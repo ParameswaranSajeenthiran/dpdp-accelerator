@@ -137,7 +137,7 @@ The normal webhook flow is:
 | Resource | Purpose |
 |---|---|
 | Topic | A named event category, such as `consent-status-changed`. |
-| Subscription | Selects a topic, purpose filter, and delivery configuration. |
+| Subscription | Associates one or more topics with one shared purpose filter and delivery configuration. |
 | Event | The payload published to a topic for a group. |
 | Delivery | One subscription-specific attempt to deliver an event. |
 
@@ -256,7 +256,7 @@ Implement both behaviors before registering the subscription.
 
 ### Respond to verification
 
-Identity Server verifies a callback URL with an HTTP `GET` request. It appends
+For a singleton subscription, Identity Server verifies a callback URL with an HTTP `GET` request. It appends
 these query parameters while preserving any existing query parameters:
 
 | Parameter | Value |
@@ -268,6 +268,49 @@ these query parameters while preserving any existing query parameters:
 The receiver must return HTTP `200` with the exact `hub.challenge` value as the
 response body. Surrounding whitespace is ignored, but additional content causes
 verification to fail.
+
+For a subscription with multiple topics, verification uses one HTTP `POST` to the
+same callback URL with `Content-Type: application/json`:
+
+```json
+{
+  "type": "subscription.verification",
+  "subscriptionId": "<subscription-id>",
+  "topics": ["consent.update", "consent.revoke"],
+  "challenge": "<one-time-challenge>"
+}
+```
+
+Validate the complete topic array against the receiver's configured allowed topics,
+then return HTTP `200` with the challenge as plain text. Each verification attempt
+sends one request, including when the subscription contains 100 topics. A failed
+attempt can be retried. The subscription becomes active only after successful
+verification of the complete set.
+
+Verification messages must not enter the event inbox or change configured receiver
+identity. Ordinary event POSTs still require the HMAC and JWS checks below.
+The sample receiver accepts `EXPECTED_TOPICS` as a JSON array; `EXPECTED_TOPIC`
+remains the singleton fallback.
+
+### Register multiple topics
+
+Supply `topics: ["consent.update", "consent.revoke"]` in the subscription creation
+body, together with the usual `filter` and `delivery` objects. Supply between one
+and 100 unique topic names. The deprecated `topic` field remains accepted for
+singleton creation; supplying both fields is rejected.
+
+Creation is atomic: an invalid or conflicting topic rejects the entire request.
+One subscription owns all selected topics, its shared filter and delivery settings,
+and one lifecycle status. Its details return `topics`; the compatibility `topic`
+field is present only for singleton subscriptions. Clients displaying multi-topic
+subscriptions must use `topics`.
+
+A multi-topic selection containing `user.account.delete` or `user.data.change`
+requires the `all` purpose filter. Topics are fixed at creation. Deletion applies
+to the whole subscription and retains the pending-delivery protections. Each event
+still carries its own single topic; polling and delivery history combine matching
+events under the same subscription ID. Referenced topics cannot be deregistered
+while the subscription is active, pending, or stale.
 
 ### Receive and verify deliveries
 

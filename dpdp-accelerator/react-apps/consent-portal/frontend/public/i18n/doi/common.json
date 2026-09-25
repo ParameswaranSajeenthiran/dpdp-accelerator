@@ -216,7 +216,7 @@
         "unknown": "अपडेट कीता गेआ।"
       },
       "description": "{{action}} by {{actor}}",
-      "viewFullSnapshot": "View Full Snapshot History",
+      "viewFullSnapshot": "पूरा स्नैपशॉट इतिहास दिक्खो",
       "close": "बंद करो",
       "snapshot": {
         "noChanges": "इस अपडेट च कोई बदलाव दर्ज नेईं कीता गेआ।",
@@ -226,7 +226,7 @@
         "removed": "हटाया गेआ",
         "changed": "बदलेआ गेदा",
         "field": {
-          "expiryTime": "Valid until"
+          "expiryTime": "तकर मान्य"
         }
       },
       "empty": "इस सहमति आस्तै कोई इतिहास दर्ज नेईं कीता गेआ।"
@@ -556,7 +556,7 @@
   },
   "topics": {
     "title": "विशे।",
-    "subtitle": "View and manage registered event notification topics across your organization",
+    "subtitle": "अपनी संस्था च रजिस्टर्ड इवेंट नोटिफिकेशन टॉपिक्स गी दिक्खो ते प्रबंधित करो",
     "loadFailed": "हुनै विशे लोड करने च असमर्थ।",
     "status": {
       "active": "सक्रिय",
@@ -587,7 +587,7 @@
       "registerTitle": "विषे पंजीकृत करो",
       "registerSubtitle": "अपने संगठन आस्तै इक नमां इवेंट सूचना विशे पंजीकृत करो",
       "nameLabel": "विशे दा नांऽ।",
-      "namePlaceholder": "e.g. consent.revoke",
+      "namePlaceholder": "उदा. consent.revoke",
       "nameRequired": "विशे दा नांऽ जरूरी ऐ।",
       "descriptionLabel": "विवरण",
       "descriptionPlaceholder": "विषे दे मकसद दा वैकल्पिक ब्योरा",
@@ -602,6 +602,54 @@
     }
   },
   "subscriptions": {
+    "topicUi": {
+      "selectionLimit": "एह् चुनाव {{max}}-टॉपिक दी सीमा शा बद्ध ऐ। अपनी खोज गी घट्ट करो जां कुसै चुने दे टॉपिक्स गी साफ करो। कोई चुनाव नेईं बदलेआ गेआ।",
+      "subscribedCount": "Subscribed Topics ({{count}})",
+      "close": "रजिस्ट्रेशन बंद करो",
+      "topics": "टॉपिक्स",
+      "delivery": "डिलीवरी",
+      "chooseTopics": "2 चों स्टेप 1 — टॉपिक्स चुनो",
+      "configureDelivery": "2 चों स्टेप 2 — डिलीवरी कॉन्फ़िगर करो",
+      "search": "नां दे आधार पर टॉपिक्स खोजो",
+      "searchAssociated": "जुड़े दे टॉपिक्स खोजो",
+      "selected": "{{count}} चुने दे · बद्ध शा बद्ध {{max}}",
+      "clear": "साफ करो",
+      "loading": "टॉपिक्स लोड होआ करदे न",
+      "retry": "फिरी कोशश करो",
+      "fetchError": "टॉपिक्स लोड नेईं होई सके। किरपा करियै फिरी कोशश करो।",
+      "noMatches": "कोई मेल खांदा टॉपिक नेईं ऐ।",
+      "noTopics": "कोई सक्रिय टॉपिक उपलब्ध नेईं ऐ।",
+      "loadMore": "होर विषय लोड करो",
+      "selectionHelp": "जदूं तुस खोजन जां होर विषय लोड करदे ओ तां चुनाव चुने दे रौहंदे न।",
+      "showLess": "घट्ट दस्सो",
+      "more": "+{{count}} होर",
+      "topicCount": "विषय ({{count}})",
+      "edit": "विषय चुनाव एडिट करो",
+      "next": "अगला",
+      "back": "पिच्छे",
+      "selectAll": "सारे चुनो",
+      "showingRange": "{{total}} चों {{from}}–{{to}} दस्सा करदे न",
+      "switchCategoryTitle": "विषय श्रेणी बदलनी ऐ?",
+      "switchCategoryConfirm": "श्रेणी बदलने कन्नै तुंदे {{count}} चुने दे विषय(विषयें) गी साफ करी दित्ता जाग। के तुस जारी रखना चांदे ओ?",
+      "switchCategoryProceed": "श्रेणी बदलो",
+      "detailsTitle": "सब्सक्रिप्शन दा ब्योरा",
+      "noSelected": "कोई विषय नेईं चुने दा",
+      "selectedPrefix": "चुने दा:",
+      "selectedCount": "{{count}} विषय चुने दे न",
+      "excluding": "छड्डीयै",
+      "selectedTopics": "चुने दे विषय",
+      "availableTopics": "उपलब्ध विषय",
+      "allSelected": "सारे मेल खांदे विषय चुने दे न।",
+      "category": "विषय श्रेणी",
+      "categoryPlaceholder": "विषय श्रेणी चुनो",
+      "categoryConsent": "सहमति विषय",
+      "categoryUser": "यूज़र विषय",
+      "categoryCustom": "कस्टम विषय",
+      "categoryRequired": "विषय चुनने लेई पैहलें इक श्रेणी चुनो",
+      "searchPurposes": "मकसद खोजो",
+      "purposesCount": "सब्सक्राइब कीते दे मकसद",
+      "noPurposesMatches": "कोई मेल खांदा मकसद नेईं ऐ।"
+    },
     "title": "सदस्यताएं",
     "subtitle": "अपने संगठन आस्तै इवेंट सूचना सदस्यताएं दा प्रबंधन ते निगरानी करो",
     "loadFailed": "हुनै सदस्यता लोड करने च असमर्थ।",
@@ -612,7 +660,7 @@
       "deleted": "मिटाया गेदा"
     },
     "deliveryMode": {
-      "webhook": "Webhook",
+      "webhook": "वेबहुक",
       "poll": "पोल"
     },
     "filterType": {
@@ -632,6 +680,7 @@
     },
     "table": {
       "ariaLabel": "सदस्यताएं प्रबंधन तालिका",
+      "name": "नां",
       "subscriptionId": "सदस्यता आईडी",
       "topic": "विशे।",
       "groupId": "समूह आईडी",
@@ -646,7 +695,7 @@
     },
     "actions": {
       "register": "सदस्यता पंजीकृत करो",
-      "view": "View Details",
+      "view": "विवरण दिक्खो",
       "verify": "वेबहूक गी परतियै सत्यापित करो",
       "delete": "सदस्यता मिटाओ",
       "alreadyDeleted": "एह्‌ सदस्यता पैह्‌लें गै मिटाई दित्ती गेई ऐ।",
@@ -656,20 +705,25 @@
     "dialog": {
       "registerTitle": "सदस्यता पंजीकृत करो",
       "registerSubtitle": "इक नमीं घटना अधिसूचना सदस्यता ते डिलीवरी मोड कन्फिगर करो",
+      "nameLabel": "सब्सक्रिप्शन दा नां",
+      "namePlaceholder": "मसलन. आर्डर नोटिफिकेशन वेबहुक",
+      "nameRequired": "सब्सक्रिप्शन दा नां जरूरी ऐ।",
+      "nameTooLong": "सब्सक्रिप्शन दा नां 225 अक्षरें शा मता नेईं होना चाहिदा।",
       "topicLabel": "विशे।",
+      "multiTopicFilter": "यूज़र लाइफसाइकिल विषयें गी शामल करदे बेल्लै सारे मकसद आह्‌ला फिल्टर चुनो।",
       "topicRequired": "विशे जरूरी ऐ।",
       "filterModeLabel": "मक्सद फिल्टर मोड",
       "purposesLabel": "मक्सद (कोमा कन्नै बक्ख कीते गेदे)",
-      "purposesPlaceholder": "e.g. MARKETING, ANALYTICS",
+      "purposesPlaceholder": "मसलन. MARKETING, ANALYTICS",
       "purposesHelper": "फिल्टर करने आस्तै सहमति दे मकसदें दी अल्पविराम कन्नै बक्ख कीती गेदी सूची",
       "purposesRequired": "मक्सद लोड़चदे न जिसलै खास जां सभनें गी छोड़ियै फिल्टर कीता जा करदा ऐ।",
       "deliveryModeLabel": "डिलीवरी मोड",
-      "callbackUrlLabel": "Webhook Callback URL",
+      "callbackUrlLabel": "वेबहुक कॉलबैक URL",
       "callbackUrlRequired": "वेबहुक सदस्यता आस्तै कॉलबैक यूआरऐल्ल जरूरी ऐ।",
       "callbackUrlInvalid": "कृपा करियै इक मान्य निरपेक्ष यूआरऐल्ल (http:// जां https://) देओ।",
       "secretLabel": "साझा रहस्य",
       "secretRequired": "साझा रहस्य जरूरी ऐ।",
-      "secretHelper": "Used to sign webhook payloads or authenticate poll requests",
+      "secretHelper": "वेबहुक पेलोड पर हस्ताक्षर करने जां पोल अनुरोधें गी प्रमाणित करने लेई इस्तेमाल कीता जंदा ऐ",
       "generateSecret": "नमां गुप्त कोड बनाओ",
       "registering": "पंजीकृत कीता जा करदा ऐ...",
       "registerSubmit": "सदस्यता पंजीकृत करो"
@@ -681,24 +735,31 @@
       "confirm": "मिटाओ सदस्यता"
     },
     "verification": {
-      "success": "Verification ping dispatched successfully.",
-      "failed": "Webhook verification failed. Please check endpoint reachability.",
-      "retriesExhausted": "Callback URL could not be verified after all retry attempts. Ensure the URL is reachable and returns the exact verification challenge."
+      "success": "वेरिफिकेशन पिंग सफलतापूर्वक भेजी दित्ता गेआ ऐ।",
+      "failed": "वेबहुक वेरिफिकेशन फेल होई गेई। कृपया एंडपॉइंट दी पहुंच चेक करो।",
+      "retriesExhausted": "सारे रिट्राई प्रयासें दे बाद बी कॉलबैक URL गी वेरिफाई नेईं कीता जाई सकेआ। सुनिश्चित करो जे URL पहुंच जोग ऐ ते सटीक वेरिफिकेशन चैलेंज वापस करदा ऐ।"
     },
     "details": {
       "loadFailed": "सदस्यता दे ब्यौरे लोड करने च असमर्थ।",
+      "name": "सब्सक्रिप्शन दा नां",
       "configTitle": "सदस्यता कन्फिगरेशन",
       "configSubtitle": "आम मेटाडेटा, रूटिंग पैरामीटर, ते फिल्टरिंग नियम",
       "eventsTitle": "डिलीवरी इतिहास ते निष्पादन लाग",
       "eventsSubtitle": "इस सदस्य गी भेजे गेदे हालिया इवेंट डिलीवरी ते परतियै कोशशें",
       "createdAt": "बनाया गेदा:",
-      "updatedAt": "आखरी बारी अपडेट कीता गेदा"
+      "updatedAt": "आखरी बारी अपडेट कीता गेदा",
+      "topicsSubtitle": "इस सब्सक्रिप्शन पर डिलीवरी लेई रजिस्टर कीते गेदे एक्टिव इवेंट टॉपिक",
+      "purposesTitle": "सब्सक्राइब कीते गेदे उद्देश्य",
+      "purposesSubtitle": "इवेंट फिल्टरिंग लेई कॉन्फ़िगर कीते गेदे कंसेंट उद्देश्य",
+      "allPurposesNotice": "इस सब्सक्रिप्शन गी सारे उद्देशें लेई इवेंट मिलदे न।",
+      "searchPurposes": "जुड़े दे उद्देशें गी खोजो",
+      "noPurposes": "कोई मेल खांदा उद्देश्य नेईं ऐ।"
     },
     "deliveryEvents": {
       "ariaLabel": "डिलीवरी घटनां लाग टेबल",
       "empty": "हुनै तक्कर कोई डिलीवरी इवेंट दर्ज नेईं कीता गेआ।",
       "auditAction": "कोशशां",
-      "viewHistory": "View Delivery Attempts"
+      "viewHistory": "डिलीवरी प्रयासें गी दिक्खो"
     },
     "deliveryHistory": {
       "loadFailed": "डिलीवरी दा इतिहास लोड करने च असमर्थ।",
@@ -714,7 +775,7 @@
   },
   "events": {
     "title": "घटनां",
-    "subtitle": "View published events and monitor event notifications across your organization",
+    "subtitle": "प्रकाशित इवेंटें गी दिक्खो ते अपनी संस्था च इवेंट नोटिफिकेशनें दी निगरानी करो",
     "loadFailed": "इवेंटें लोड करने च असमर्थ।",
     "filters": {
       "searchPlaceholder": "डिलीवरी आईडी, इवेंट आईडी, जां विशे राहें खोजो...",
@@ -724,8 +785,8 @@
       "allTopics": "सभनें विशे",
       "search": "खोजो",
       "clear": "साफ करो",
-      "subscriptionId": "Subscription ID",
-      "subscriptionIdPlaceholder": "Filter by Subscription ID..."
+      "subscriptionId": "सब्सक्रिप्शन ID",
+      "subscriptionIdPlaceholder": "सब्सक्रिप्शन ID कन्नै फिल्टर करो..."
     },
     "status": {
       "all": "सभनें",
@@ -758,7 +819,7 @@
       "empty": "कोई इवेंट नेईं लब्भेआ गेआ।"
     },
     "actions": {
-      "view": "View Details",
+      "view": "विवरण दिक्खो",
       "copyPayload": "पेलोड कापी करो",
       "close": "बंद करो"
     },
@@ -786,8 +847,8 @@
   "account": {
     "deleteMenuItem": "मिटाओ मेरा खाता",
     "deleteError": "तुंदा खाता मिटाने च असमर्थ। कृपा करियै परतियै कोशश करो।",
-    "deletePendingApproval": "Your deletion request has been submitted for approval. Your account stays active until an administrator approves it.",
-    "deleteAlreadyRequested": "Your account already has a deletion request awaiting approval.",
+    "deletePendingApproval": "तुंदी डिलीशन रिक्वेस्ट मंजूरी लेई जमा करी दित्ती गेई ऐ। प्रशासक दी मंजूरी मिलने तकर तुंदा खाता सक्रिय रौह्ग।",
+    "deleteAlreadyRequested": "तुंदे खाते च पैहलें गै मंजूरी दा इंतजार करदी इक डिलीशन रिक्वेस्ट ऐ।",
     "deleteDialog": {
       "accountLabel": "खाता",
       "title": "तुंदा खाता मिटाओ?",
@@ -796,8 +857,8 @@
       "confirm": "मिटाओ मेरा खाता"
     },
     "deletedPage": {
-      "title": "Your account has been deleted",
-      "body": "Your account and sign-in have been removed. If this was a mistake, contact your administrator.",
+      "title": "तुंदा खाता डिलीट करी दित्ता गेआ ऐ",
+      "body": "तुंदा खाता ते साइन-इन हटाई दित्ता गेआ ऐ। जेकर एह् कोई गलती ही, तां अपने प्रशासक कन्नै संपर्क करो।",
       "signInLink": "साइन-इन पर जाओ"
     }
   }

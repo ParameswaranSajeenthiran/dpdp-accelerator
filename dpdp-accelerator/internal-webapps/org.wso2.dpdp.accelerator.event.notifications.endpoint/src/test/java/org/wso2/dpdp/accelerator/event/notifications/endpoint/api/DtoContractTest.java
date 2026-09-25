@@ -50,6 +50,23 @@ import static org.testng.Assert.fail;
 public class DtoContractTest {
     private final ObjectMapper json = new ObjectMapper();
 
+    @Test
+    public void multiTopicContractPreservesArrayAndRejectsAmbiguousInput() throws Exception {
+        SubscriptionCreateRequest request = json.readValue(
+                "{\"name\":\"my-sub\",\"topics\":[\"consent.update\",\"consent.revoke\"],\"delivery\":{\"mode\":\"poll\"}}",
+                SubscriptionCreateRequest.class);
+        SubscriptionDTO mapped = EventNotificationDtoMapper.toService(request);
+        assertEquals(mapped.getName(), "my-sub");
+        assertEquals(mapped.getTopics(), java.util.Arrays.asList("consent.update", "consent.revoke"));
+        JsonNode response = json.valueToTree(EventNotificationDtoMapper.toApi(mapped));
+        assertEquals(response.get("name").asText(), "my-sub");
+        assertEquals(response.get("topics").size(), 2);
+        org.testng.Assert.assertFalse(response.has("topic"));
+        request.setTopic("consent.update");
+        org.testng.Assert.expectThrows(IllegalArgumentException.class,
+                () -> EventNotificationDtoMapper.toService(request));
+    }
+
     private void equivalent(Object service, Object api) {
         assertEquals((Object) json.valueToTree(api), (Object) json.valueToTree(service));
     }
@@ -68,7 +85,7 @@ public class DtoContractTest {
 
     @Test
     public void subscriptionsPreserveNestedFieldsAndSuppressSecrets() throws Exception {
-        String body = "{\"topic\":\"topic\",\"filter\":{\"type\":\"all_except\",\"purposes\":[\"p\"]},"
+        String body = "{\"name\":\"my-sub\",\"topic\":\"topic\",\"filter\":{\"type\":\"all_except\",\"purposes\":[\"p\"]},"
                 + "\"delivery\":{\"mode\":\"webhook\",\"callbackUrl\":\"https://receiver.example/callback\","
                 + "\"sharedSecret\":\"secret\"}}";
         SubscriptionDTO oldRequest = json.readValue(body, SubscriptionDTO.class);

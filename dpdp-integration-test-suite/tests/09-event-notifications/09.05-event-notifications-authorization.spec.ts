@@ -121,6 +121,7 @@ test.describe('Event Notification authorization and access control', () => {
     const topicResponse = await userEventApi.createTopic({ name: 'should-not-be-created' })
     expect(topicResponse.status()).toBe(403)
     const subscriptionResponse = await userEventApi.createSubscription({
+      name: 'should-not-be-created',
       topic: 'consent.update',
       filter: { type: 'ALL' },
       delivery: { mode: 'POLL', sharedSecret: 'unused' },
