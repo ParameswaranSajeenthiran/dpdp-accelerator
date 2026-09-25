@@ -1348,7 +1348,7 @@ components:
         sharedSecret:
           type: string
           nullable: true
-          description: Shared secret used for payload signing or poll authentication.
+          description: Shared secret used for payload signing or poll authentication. Present in subscription detail responses; omitted from list responses.
     SubscriptionStatus:
       type: string
       description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.

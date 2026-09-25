@@ -19,9 +19,9 @@ public class DeliveryConfig {
   private String callbackUrl;
 
   /**
-   * Always null in service responses.
+   * Shared secret used for payload signing or poll authentication. Present in subscription detail responses; omitted from list responses.
    */
-  @ApiModelProperty(value = "Always null in service responses.")
+  @ApiModelProperty(value = "Shared secret used for payload signing or poll authentication. Present in subscription detail responses; omitted from list responses.")
 
   private String sharedSecret;
 
