@@ -89,6 +89,7 @@
       "validUntil": "చెల్లుబాటు తేదీ",
       "back": "రిజిస్ట్రీకి తిరిగి వెళ్ళు",
       "notFound": "సమ్మతి రికార్డు కనుగొనబడలేదు",
+      "managed": "నిర్వహించబడిన",
       "section": {
         "purposes": "సమ్మతి ప్రయోజనాలు",
         "authorizations": "అధికారాలు",
@@ -187,8 +188,8 @@
       "relation": "సంబంధం",
       "relationOptions": {
         "any": "అన్నీ",
-        "subject": "నా స్వంతం",
-        "authorizer": "నాచే నిర్వహించబడింది"
+        "subject": "వ్యక్తిగత",
+        "authorizer": "నిర్వహించబడిన"
       }
     },
     "messages": {

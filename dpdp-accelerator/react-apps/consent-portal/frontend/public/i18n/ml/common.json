@@ -89,6 +89,7 @@
       "validUntil": "ഇതുവരെ സാധുതയുണ്ട്",
       "back": "രജിസ്ട്രിയിലേക്ക് മടങ്ങുക",
       "notFound": "സമ്മത രേഖ കണ്ടെത്തിയില്ല",
+      "managed": "നിയന്ത്രിത",
       "section": {
         "purposes": "സമ്മത ലക്ഷ്യങ്ങൾ",
         "authorizations": "അധികാരപ്പെടുത്തലുകൾ",
@@ -187,8 +188,8 @@
       "relation": "ബന്ധം",
       "relationOptions": {
         "any": "എല്ലാം",
-        "subject": "എന്റേത്",
-        "authorizer": "എന്നെ നിയന്ത്രിക്കുന്നത്"
+        "subject": "വ്യക്തിഗത",
+        "authorizer": "നിയന്ത്രിത"
       }
     },
     "messages": {

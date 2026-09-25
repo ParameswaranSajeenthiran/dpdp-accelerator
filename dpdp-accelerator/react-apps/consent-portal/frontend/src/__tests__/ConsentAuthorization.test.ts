@@ -21,6 +21,7 @@ import {
   getAdminConsentStatusMessageKey,
   getSelfConsentActionView,
   isApprovableByCurrentUser,
+  isManagedByCurrentUser,
   isRejectableByCurrentUser,
   isRevokableByAdmin,
 } from '../features/my-consents/utils/consentAuthorization'
@@ -189,5 +190,20 @@ describe('admin oversight gating', () => {
     expect(getAdminConsentStatusMessageKey('REJECTED')).toBe('rejected')
     expect(getAdminConsentStatusMessageKey('REVOKED')).toBe('revoked')
     expect(getAdminConsentStatusMessageKey('EXPIRED')).toBe('expired')
+  })
+})
+
+describe('isManagedByCurrentUser', () => {
+  it("is false when the caller is the consent's subject", () => {
+    expect(isManagedByCurrentUser('alice', 'alice')).toBe(false)
+  })
+
+  it('is true when the caller is not the subject', () => {
+    expect(isManagedByCurrentUser('alice', 'bob')).toBe(true)
+  })
+
+  it('is false when the subject is unknown, rather than guessing managed', () => {
+    expect(isManagedByCurrentUser(undefined, 'alice')).toBe(false)
+    expect(isManagedByCurrentUser('', 'alice')).toBe(false)
   })
 })

@@ -51,6 +51,7 @@ import type { ConsentStatusMessageKey } from './utils/consentAuthorization'
 import {
   getAdminConsentStatusMessageKey,
   getSelfConsentActionView,
+  isManagedByCurrentUser,
   isRevokableByAdmin,
 } from './utils/consentAuthorization'
 import { PENDING_CONSENTS_PATH } from './constants'
@@ -249,7 +250,11 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
         </Stack>
       </Stack>
 
-      <ConsentMetadataCard consentId={id} detail={detail} />
+      <ConsentMetadataCard
+        consentId={id}
+        detail={detail}
+        managed={variant === 'self' && isManagedByCurrentUser(detail.subjectId, currentUser.userId)}
+      />
       <ConsentPropertiesSection properties={detail.properties} />
       <ConsentPurposesSection purposes={detail.purposes} />
       <ConsentAuthorizationsSection authorizations={detail.authorizations ?? []} />

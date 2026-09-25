@@ -89,6 +89,7 @@
       "validUntil": "Valid Until",
       "back": "Back to Registry",
       "notFound": "Consent record not found",
+      "managed": "Managed",
       "section": {
         "purposes": "Consent Purposes",
         "authorizations": "Authorizations",
@@ -187,8 +188,8 @@
       "relation": "Relation",
       "relationOptions": {
         "any": "All",
-        "subject": "My Own",
-        "authorizer": "Managed by Me"
+        "subject": "Personal",
+        "authorizer": "Managed"
       }
     },
     "messages": {

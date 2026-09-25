@@ -89,6 +89,7 @@
       "validUntil": "इथपर्यंत वैध",
       "back": "नोंदणीकडे परत जा",
       "notFound": "संमती रेकॉर्ड सापडला नाही",
+      "managed": "व्यवस्थापित",
       "section": {
         "purposes": "संमतीचे उद्देश",
         "authorizations": "अधिकार",
@@ -187,8 +188,8 @@
       "relation": "संबंध",
       "relationOptions": {
         "any": "सर्व",
-        "subject": "माझे स्वतःचे",
-        "authorizer": "माझ्याद्वारे व्यवस्थापित"
+        "subject": "वैयक्तिक",
+        "authorizer": "व्यवस्थापित"
       }
     },
     "messages": {

@@ -89,6 +89,7 @@
       "validUntil": "मान्य अवधि",
       "back": "दर्ता सूचीमा फर्कनुहोस्",
       "notFound": "सहमति रेकर्ड भेटिएन",
+      "managed": "व्यवस्थापित",
       "section": {
         "purposes": "सहमति उद्देश्यहरू",
         "authorizations": "प्राधिकरणहरू",
@@ -187,8 +188,8 @@
       "relation": "सम्बन्ध",
       "relationOptions": {
         "any": "सबै",
-        "subject": "मेरो आफ्नै",
-        "authorizer": "म द्वारा व्यवस्थित"
+        "subject": "व्यक्तिगत",
+        "authorizer": "व्यवस्थापित"
       }
     },
     "messages": {

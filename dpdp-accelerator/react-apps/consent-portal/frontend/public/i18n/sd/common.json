@@ -89,6 +89,7 @@
       "validUntil": "تائين صحيح آهي",
       "back": "رجسٽري ڏانهن واپس",
       "notFound": "رضامندي جو رڪارڊ نه مليو",
+      "managed": "انتظام ڪيل",
       "section": {
         "purposes": "رضامندي جا مقصد",
         "authorizations": "اجازتون",
@@ -187,8 +188,8 @@
       "relation": "लाॻापो",
       "relationOptions": {
         "any": "सभुं",
-        "subject": "मुंहिंजी पंहिंजी",
-        "authorizer": "मुंहिंजे पारां संभालियल"
+        "subject": "ذاتي",
+        "authorizer": "انتظام ڪيل"
       }
     },
     "messages": {
