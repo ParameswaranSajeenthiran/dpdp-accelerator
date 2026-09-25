@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser, loginAsDpo } from '../../fixtures/auth.fixtures'
 import { ComplaintCaseDetailPage } from '../../pages/ComplaintCaseDetailPage'
 import { ComplaintDetailPage } from '../../pages/ComplaintDetailPage'
 import { ComplaintListPage } from '../../pages/ComplaintListPage'
@@ -45,7 +45,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
     // tight once that compounds across this test's many sequential steps.
     test.setTimeout(60_000)
     const dataPrincipalPage = await loginAsUser(browser)
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
 
     const listPage = new ComplaintListPage(dataPrincipalPage)
     await listPage.goto()
@@ -128,7 +128,7 @@ test.describe('Real-world complaint scenarios (UI)', () => {
 
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'thread-roundtrip')
     const dataPrincipalPage = await loginAsUser(browser)
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const detailPage = new ComplaintDetailPage(dataPrincipalPage)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
 

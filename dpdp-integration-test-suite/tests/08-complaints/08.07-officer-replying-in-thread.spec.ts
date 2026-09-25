@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsDpo } from '../../fixtures/auth.fixtures'
 import { ComplaintCaseDetailPage } from '../../pages/ComplaintCaseDetailPage'
 import { moveComplaintToStatusViaApi, seedComplaintViaApi } from '../../utils/complaintSetup'
 import { uniqueMarker } from '../../utils/testData'
@@ -40,7 +40,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-reply-basic')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -55,7 +55,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-reply-with-transition')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -70,7 +70,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-status-menu')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -89,7 +89,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     userComplaintApi,
   }) => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-internal-note')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -112,7 +112,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-resolve-cancel')
     await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -143,7 +143,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-resolve-confirm')
     await moveComplaintToStatusViaApi(officerComplaintApi, seeded.id, 'IN_PROGRESS')
 
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 
@@ -163,7 +163,7 @@ test.describe("Complaint Officer replying in a case thread (UI)", () => {
     // resolving-with-evidence workflow does - 08.07.01/08.07.02 cover message/nextStatus alone,
     // 08.04.07 covers attachment staging alone on the self surface.
     const seeded = await seedComplaintViaApi(userComplaintApi, 'OTHER', 'officer-reply-with-evidence')
-    const officerPage = await loginAsConsentAdmin(browser)
+    const officerPage = await loginAsDpo(browser)
     const caseDetailPage = new ComplaintCaseDetailPage(officerPage)
     await caseDetailPage.goto(seeded.id)
 

@@ -48,7 +48,9 @@ export function superTenantScimSurface(): ScimSurface {
     userResourceIdentifier: '/scim2/Users',
     roleResourceIdentifier: '/scim2/Roles',
     userScopes: ['internal_user_mgt_list', 'internal_user_mgt_create'],
-    roleScopes: ['internal_role_mgt_view', 'internal_role_mgt_users_update'],
+    // permissions_update: revokeRolePermissions below - a PATCH touching `permissions` is gated on
+    // it separately from users_update (resource-access-control-v2.xml's updateRolePermissions).
+    roleScopes: ['internal_role_mgt_view', 'internal_role_mgt_users_update', 'internal_role_mgt_permissions_update'],
   }
 }
 
@@ -67,7 +69,11 @@ export function secondaryTenantScimSurface(domain: string): ScimSurface {
       'internal_org_user_mgt_view',
       'internal_org_user_mgt_delete',
     ],
-    roleScopes: ['internal_org_role_mgt_view', 'internal_org_role_mgt_users_update'],
+    roleScopes: [
+      'internal_org_role_mgt_view',
+      'internal_org_role_mgt_users_update',
+      'internal_org_role_mgt_permissions_update',
+    ],
   }
 }
 
@@ -187,5 +193,48 @@ export async function ensureRoleMembership(
   })
   if (!response.ok()) {
     throw new Error(`Assigning role "${roleName}" returned HTTP ${String(response.status())}: ${await response.text()}`)
+  }
+}
+
+/**
+ * Removes whichever of `permissions` `roleName` currently holds; a no-op (no PATCH at all) when it
+ * holds none of them, which is the case on any freshly provisioned target.
+ */
+export async function revokeRolePermissions(
+  request: APIRequestContext,
+  surface: ScimSurface,
+  token: string,
+  roleName: string,
+  permissions: string[],
+): Promise<void> {
+  const roleId = await findScimRoleId(request, surface, token, roleName)
+  if (!roleId) {
+    throw new Error(`Role "${roleName}" does not exist at ${surface.rolesUrl}.`)
+  }
+  const roleResponse = await request.get(`${surface.rolesUrl}/${roleId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: 20_000,
+  })
+  if (!roleResponse.ok()) {
+    throw new Error(`Reading role "${roleName}" returned HTTP ${String(roleResponse.status())}: ${await roleResponse.text()}`)
+  }
+  const role = JSON.parse(await roleResponse.text()) as { permissions?: { value: string }[] }
+  const held = new Set((role.permissions ?? []).map((permission) => permission.value))
+  const toRemove = permissions.filter((permission) => held.has(permission))
+  if (toRemove.length === 0) {
+    return
+  }
+  const response = await request.patch(`${surface.rolesUrl}/${roleId}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    data: {
+      Operations: toRemove.map((permission) => ({ op: 'remove', path: `permissions[value eq ${permission}]` })),
+    },
+    timeout: 20_000,
+  })
+  if (!response.ok()) {
+    throw new Error(
+      `Removing ${toRemove.join(', ')} from role "${roleName}" returned HTTP ${String(response.status())}: ` +
+        (await response.text()),
+    )
   }
 }
