@@ -10,8 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 174 across 47 spec files in 9 areas |
-| **Tests** | 188 across 50 spec files in 10 areas |
+| **Tests** | 190 across 51 spec files in 10 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -267,7 +266,7 @@ Pins the shipped `[consent_mgt] revoke_active_consents_on_create = false`. Asser
 
 | ID | Scenario | Notes |
 | --- | --- | --- |
-| `04.10.01` | Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE | The later consent reuses the earlier one's `serviceId`, purpose id and element id. Checks the earlier consent's state and that its status history has no REVOKED entry. Fails on a deployment with the switch `true`, or on an Identity Server below U2 update level 17, which ignores the key. |
+| `04.10.01` | Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE | Both consents are seeded against one catalog (`seedCatalogViaApi`) under a shared `serviceId`. States are read from the admin list filtered by `serviceId` + `purposeId`, which proves both carry that purpose; the earlier consent's status history must have no REVOKED entry. Fails on a deployment with the switch `true`, or on an Identity Server below U2 update level 17, which ignores the key. |
 | `04.10.02` | Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING | Same as `04.10.01` for a PENDING earlier consent - the product's auto-revoke covers PENDING as well as ACTIVE. |
 
 ## `05-authorization/` — Route guards and sidebar visibility

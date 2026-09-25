@@ -22,9 +22,7 @@ import { randomElementProfile, randomPurposeProfile, randomServiceId } from './t
 
 export interface SeededConsent {
   consentId: string
-  purposeId: string
   purposeName: string
-  elementId: string
   elementDisplayName: string
   serviceId: string
 }
@@ -215,5 +213,4 @@ export async function waitUntilConsentExpiredViaApi(api: ConsentApiClient, conse
       { timeout: SHORT_EXPIRY_MS + 15_000, intervals: [1_000] },
     )
     .toBe('EXPIRED')
-  return { consentId: consent.id, purposeId, purposeName, elementId, elementDisplayName, serviceId }
 }

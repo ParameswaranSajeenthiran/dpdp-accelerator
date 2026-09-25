@@ -18,7 +18,8 @@
 
 import { test, expect } from '../../fixtures/auth.fixtures'
 import type { ConsentApiClient } from '../../clients/ConsentApiClient'
-import { seedConsentViaApi, type SeededConsent } from '../../utils/consentSetup'
+import { randomServiceId } from '../../utils/testData'
+import { seedCatalogViaApi, seedConsentForCatalogViaApi, type SeededCatalog } from '../../utils/consentSetup'
 
 /**
  * With the product default (`[consent_mgt] revoke_active_consents_on_create = true`), creating a
@@ -29,29 +30,14 @@ import { seedConsentViaApi, type SeededConsent } from '../../utils/consentSetup'
  * switch `true`, or the Identity Server is below U2 update level 17, which ignores the key.
  */
 test.describe('Consent creation keeps earlier consents (API)', () => {
-  async function createSameConsentAgain(
-    adminApi: ConsentApiClient,
-    subjectId: string,
-    earlier: SeededConsent,
-  ): Promise<string> {
-    const response = await adminApi.createConsent({
-      subjectId,
-      serviceId: earlier.serviceId,
-      language: 'en',
-      purposes: [{ id: earlier.purposeId, elements: [{ id: earlier.elementId }] }],
-      state: 'ACTIVE',
-    })
-    expect(response.status()).toBe(201)
-    return ((await response.json()) as { id: string }).id
-  }
-
   /** Filtered server-side by service and purpose, so finding a consent here proves it carries that purpose. */
   async function expectStates(
     adminApi: ConsentApiClient,
-    earlier: SeededConsent,
+    serviceId: string,
+    catalog: SeededCatalog,
     expected: Record<string, string>,
   ): Promise<void> {
-    const response = await adminApi.listAdminConsents({ serviceId: earlier.serviceId, purposeId: earlier.purposeId })
+    const response = await adminApi.listAdminConsents({ serviceId, purposeId: catalog.purposeId })
     expect(response.status()).toBe(200)
     const { Consents } = (await response.json()) as { Consents: Array<{ id: string; state: string }> }
     for (const [consentId, state] of Object.entries(expected)) {
@@ -66,35 +52,35 @@ test.describe('Consent creation keeps earlier consents (API)', () => {
     expect(statusHistory.some((entry) => entry.currentStatus === 'REVOKED')).toBe(false)
   }
 
+  async function expectEarlierConsentKept(
+    adminApi: ConsentApiClient,
+    subjectId: string,
+    earlierState: 'ACTIVE' | 'PENDING',
+  ): Promise<void> {
+    const serviceId = randomServiceId()
+    const catalog = await seedCatalogViaApi(adminApi)
+    const earlier = await seedConsentForCatalogViaApi(adminApi, catalog, { subjectId, state: earlierState, serviceId })
+
+    const later = await seedConsentForCatalogViaApi(adminApi, catalog, { subjectId, state: 'ACTIVE', serviceId })
+
+    await expectStates(adminApi, serviceId, catalog, {
+      [later.consentId]: 'ACTIVE',
+      [earlier.consentId]: earlierState,
+    })
+    await expectNoRevokeInStatusHistory(adminApi, earlier.consentId)
+  }
+
   test('04.10.01 - Creating a consent for the same subject, service and purpose leaves the earlier ACTIVE consent ACTIVE', async ({
     target,
     consentAdminConsentApi,
   }) => {
-    const subjectId = target.personas.user.username
-    const earlier = await seedConsentViaApi(consentAdminConsentApi, subjectId, 'ACTIVE')
-
-    const laterId = await createSameConsentAgain(consentAdminConsentApi, subjectId, earlier)
-
-    await expectStates(consentAdminConsentApi, earlier, {
-      [laterId]: 'ACTIVE',
-      [earlier.consentId]: 'ACTIVE',
-    })
-    await expectNoRevokeInStatusHistory(consentAdminConsentApi, earlier.consentId)
+    await expectEarlierConsentKept(consentAdminConsentApi, target.personas.user.username, 'ACTIVE')
   })
 
   test('04.10.02 - Creating a consent for the same subject, service and purpose leaves the earlier PENDING consent PENDING', async ({
     target,
     consentAdminConsentApi,
   }) => {
-    const subjectId = target.personas.user.username
-    const earlier = await seedConsentViaApi(consentAdminConsentApi, subjectId, 'PENDING')
-
-    const laterId = await createSameConsentAgain(consentAdminConsentApi, subjectId, earlier)
-
-    await expectStates(consentAdminConsentApi, earlier, {
-      [laterId]: 'ACTIVE',
-      [earlier.consentId]: 'PENDING',
-    })
-    await expectNoRevokeInStatusHistory(consentAdminConsentApi, earlier.consentId)
+    await expectEarlierConsentKept(consentAdminConsentApi, target.personas.user.username, 'PENDING')
   })
 })
