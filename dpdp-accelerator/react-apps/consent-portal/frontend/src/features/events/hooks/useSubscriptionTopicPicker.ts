@@ -17,42 +17,75 @@
  */
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
 import { fetchTopics } from '../api/topicsApi'
-import { MAX_SUBSCRIPTION_TOPICS } from '../constants'
-import type { TopicListResponse } from '../../../types/topic'
+import type { TopicListResponse, TopicRecord } from '../../../types/topic'
 
-export async function collectMatchingTopics(search: string, selected: string[]): Promise<string[]> {
-  const names = new Set(selected)
-  const page = await fetchTopics({
+const PAGE_SIZE = 100
+
+/**
+ * Fetches all active topics across all pages up to `total`.
+ *
+ * Every page fetch explicitly pins `sort: 'name'` to guarantee deterministic,
+ * non-overlapping page boundaries across SQL database engines, preventing
+ * row jitter and missing/duplicate topics that would arise on tie-breaking
+ * status sorts.
+ */
+export async function fetchAllActiveTopics(): Promise<TopicListResponse> {
+  const firstPage = await fetchTopics({
     status: 'ACTIVE',
-    search: search.trim() || undefined,
-    limit: 100,
+    sort: 'name',
+    limit: PAGE_SIZE,
     offset: 0,
   })
-  page.items.forEach((topic) => names.add(topic.name))
-  if (page.total > MAX_SUBSCRIPTION_TOPICS || names.size > MAX_SUBSCRIPTION_TOPICS) {
-    throw new RangeError('Topic selection exceeds the subscription limit')
+
+  const total = firstPage.total
+  const allItems = [...firstPage.items]
+
+  if (total > PAGE_SIZE) {
+    const remainingOffsets: number[] = []
+    for (let offset = PAGE_SIZE; offset < total; offset += PAGE_SIZE) {
+      remainingOffsets.push(offset)
+    }
+
+    const remainingPages = await Promise.all(
+      remainingOffsets.map((offset) =>
+        fetchTopics({
+          status: 'ACTIVE',
+          sort: 'name',
+          limit: PAGE_SIZE,
+          offset,
+        }),
+      ),
+    )
+
+    for (const page of remainingPages) {
+      allItems.push(...page.items)
+    }
   }
-  return [...names]
+
+  // Defensive deduplication by topic name
+  const seen = new Set<string>()
+  const uniqueItems: TopicRecord[] = []
+  for (const item of allItems) {
+    if (!seen.has(item.name)) {
+      seen.add(item.name)
+      uniqueItems.push(item)
+    }
+  }
+
+  return {
+    items: uniqueItems,
+    total: uniqueItems.length,
+  }
 }
 
 export default function useSubscriptionTopicPicker(
-  search: string,
+  _search?: string,
 ): UseQueryResult<TopicListResponse> {
-  const [debouncedSearch, setDebouncedSearch] = useState(search)
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
-    return () => window.clearTimeout(timer)
-  }, [search])
   return useQuery({
-    queryKey: ['subscription-topic-picker', debouncedSearch],
-    queryFn: () =>
-      fetchTopics({
-        status: 'ACTIVE',
-        search: debouncedSearch.trim() || undefined,
-        limit: 100,
-        offset: 0,
-      }),
+    queryKey: ['topics', 'picker'],
+    queryFn: fetchAllActiveTopics,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   })
 }

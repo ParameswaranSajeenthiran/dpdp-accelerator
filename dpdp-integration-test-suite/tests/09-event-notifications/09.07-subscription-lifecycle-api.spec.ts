@@ -178,4 +178,107 @@ test.describe('Subscription lifecycle rules', () => {
     const secondDelete = await consentAdminEventApi.deleteSubscription(subscription.subscriptionId)
     expect(secondDelete.status()).toBe(404)
   })
+
+  test('09.07.07 - Registering with empty topics or duplicate topic names is rejected', async ({
+    consentAdminEventApi,
+  }) => {
+    const emptyResponse = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
+      topics: [],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(emptyResponse.status()).toBe(400)
+    expect((await emptyResponse.json()).description).toContain('Supply between 1 and')
+
+    const topic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-dupe-topics')
+    const duplicateNamesResponse = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
+      topics: [topic.name, topic.name.toUpperCase()],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(duplicateNamesResponse.status()).toBe(400)
+    expect((await duplicateNamesResponse.json()).description).toContain('Topics must contain unique non-blank names')
+  })
+
+  test('09.07.08 - Registering with a non-existent or inactive topic is rejected', async ({
+    consentAdminEventApi,
+  }) => {
+    const activeTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'sub-valid-topic')
+    const response = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
+      topics: [activeTopic.name, 'non.existent.topic.' + uniqueMarker('bad')],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(response.status()).toBe(404)
+    expect((await response.json()).description).toContain('A requested topic is not active in this organization')
+  })
+
+  test('09.07.09 - Multi-topic subscriptions containing user lifecycle topics require the all purpose filter', async ({
+    consentAdminEventApi,
+  }) => {
+    // Clean up any lingering subscription from earlier runs that covers user.data.change
+    const existingList = await consentAdminEventApi.listSubscriptions({ limit: 100 })
+    if (existingList.ok()) {
+      const { items } = (await existingList.json()) as { items?: { subscriptionId: string; topic?: string; topics?: string[] }[] }
+      for (const item of items ?? []) {
+        if (item.topics?.includes('user.data.change') || item.topic === 'user.data.change') {
+          await consentAdminEventApi.deleteSubscription(item.subscriptionId)
+        }
+      }
+    }
+
+    const customTopic = await seedActiveTopicViaApi(consentAdminEventApi, 'user-lifecycle-mix')
+    // user.data.change is a system-seeded user lifecycle topic present in every tenant
+    const rejected = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
+      topics: ['user.data.change', customTopic.name],
+      filter: { type: 'specific', purposes: ['marketing'] },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(rejected.status()).toBe(422)
+    expect((await rejected.json()).description).toContain(
+      'Subscriptions containing user lifecycle topics require the all purpose filter',
+    )
+
+    const accepted = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
+      topics: ['user.data.change', customTopic.name],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(accepted.status(), await accepted.text()).toBe(201)
+    await consentAdminEventApi.deleteSubscription((await accepted.json()).subscriptionId)
+  })
+
+  test('09.07.10 - Delivery mode conflict is rejected when any topic overlaps in the same group', async ({
+    consentAdminEventApi,
+  }) => {
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'overlap-a')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'overlap-b')
+    const topicC = await seedActiveTopicViaApi(consentAdminEventApi, 'overlap-c')
+
+    const webhookResponse = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub-hook'),
+      topics: [topicA.name, topicB.name],
+      filter: { type: 'all' },
+      delivery: {
+        mode: 'webhook',
+        callbackUrl: `https://example.com/${uniqueMarker('hook')}`,
+        sharedSecret: uniqueMarker('secret'),
+      },
+    })
+    expect(webhookResponse.status()).toBe(201)
+
+    // Second subscription shares topicB with the webhook subscription above; cannot register in poll mode
+    const pollConflict = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub-poll'),
+      topics: [topicB.name, topicC.name],
+      filter: { type: 'all' },
+      delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
+    })
+    expect(pollConflict.status()).toBe(409)
+  })
 })

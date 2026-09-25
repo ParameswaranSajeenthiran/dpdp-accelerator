@@ -603,7 +603,6 @@
   },
   "subscriptions": {
     "topicUi": {
-      "selectMatching": "Select all",
       "selectionLimit": "This selection exceeds the {{max}}-topic limit. Narrow your search or clear some selected topics. No selections were changed.",
       "subscribedCount": "Subscribed Topics",
       "close": "Close registration",
@@ -628,6 +627,11 @@
       "edit": "Edit topic selection",
       "next": "Next",
       "back": "Back",
+      "selectAll": "Select all",
+      "showingRange": "Showing {{from}}–{{to}} of {{total}}",
+      "switchCategoryTitle": "Change topic category?",
+      "switchCategoryConfirm": "Changing the category will clear your {{count}} selected topic(s). Do you want to continue?",
+      "switchCategoryProceed": "Change Category",
       "detailsTitle": "Subscription details",
       "noSelected": "No topics selected",
       "selectedPrefix": "Selected:",
@@ -642,8 +646,6 @@
       "categoryUser": "User Topics",
       "categoryCustom": "Custom Topics",
       "categoryRequired": "Select a category first to choose topics",
-      "selectAllShown": "Select all shown",
-      "clearCategory": "Clear category topics",
       "searchPurposes": "Search purposes",
       "purposesCount": "Subscribed Purposes",
       "noPurposesMatches": "No matching purposes."

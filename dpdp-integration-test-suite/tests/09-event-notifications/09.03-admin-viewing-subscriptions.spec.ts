@@ -222,4 +222,53 @@ test.describe('Admin viewing Subscriptions', () => {
     // 09.11-tenant-isolation-api.spec.ts (09.11.02) at the API level, using the two-tenant
     // fixtures - not duplicated here to avoid paying for a second tenant's setup twice.
   })
+
+  test('09.03.06 - The subscriptions list and details view display multiple topic chips and support topic search', async ({
+    browser,
+    consentAdminEventApi,
+  }) => {
+    const topicA = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-a')
+    const topicB = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-b')
+    const topicC = await seedActiveTopicViaApi(consentAdminEventApi, 'multi-view-c')
+
+    const subscription = await seedPollSubscriptionViaApi(consentAdminEventApi, [
+      topicA.name,
+      topicB.name,
+      topicC.name,
+    ])
+
+    const page = await loginAsConsentAdmin(browser)
+    try {
+      const subscriptionsPage = new SubscriptionsPage(page)
+      await subscriptionsPage.goto()
+      await subscriptionsPage.search(subscription.subscriptionId)
+
+      const row = subscriptionsPage.rowBySubscriptionId(subscription.subscriptionId)
+      await expect(row).toBeVisible()
+
+      // +1 more expander chip is rendered when more than 2 topics exist
+      const expandButton = subscriptionsPage.topicExpandButton(row)
+      await expect(expandButton).toBeVisible()
+      await expandButton.click()
+      await expect(row).toContainText(topicA.name)
+      await expect(row).toContainText(topicB.name)
+      await expect(row).toContainText(topicC.name)
+
+      // Navigate to details page
+      await subscriptionsPage.openDetailsBySubscriptionId(subscription.subscriptionId)
+      const detailsPage = new SubscriptionDetailsPage(page)
+
+      await expect(detailsPage.topicChip(topicA.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicB.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicC.name)).toBeVisible()
+
+      // Filter associated topics in the section search
+      await detailsPage.searchTopics(topicA.name)
+      await expect(detailsPage.topicChip(topicA.name)).toBeVisible()
+      await expect(detailsPage.topicChip(topicB.name)).toHaveCount(0)
+      await expect(detailsPage.topicChip(topicC.name)).toHaveCount(0)
+    } finally {
+      await page.context().close()
+    }
+  })
 })

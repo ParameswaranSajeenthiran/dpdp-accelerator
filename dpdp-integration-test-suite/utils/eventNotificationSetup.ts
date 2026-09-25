@@ -58,13 +58,14 @@ export async function seedActiveTopicViaApi(api: EventNotificationApiClient, lab
  */
 export async function seedPollSubscriptionViaApi(
   api: EventNotificationApiClient,
-  topic: string,
+  topicOrTopics: string | string[],
   filter: FilterConfig = { type: 'all' },
   name: string = uniqueMarker('sub'),
 ): Promise<SubscriptionRecord> {
+  const isMulti = Array.isArray(topicOrTopics)
   const response = await api.createSubscription({
     name,
-    topic,
+    ...(isMulti ? { topics: topicOrTopics } : { topic: topicOrTopics }),
     filter,
     delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
   })
