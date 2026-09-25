@@ -37,7 +37,6 @@ export async function fetchEvents(params: EventListQueryParams): Promise<EventLi
       status: params.status,
       topic: params.topic,
       subscriptionId: params.subscriptionId,
-      groupId: params.groupId,
       purposes: params.purposes,
     },
   })

@@ -30,7 +30,6 @@ const DEFAULT_FILTERS: EventFiltersModel = {
   search: '',
   status: 'All',
   topic: 'All',
-  groupId: '',
   subscriptionId: '',
 }
 
@@ -42,7 +41,6 @@ function getFiltersFromSearchParams(searchParams: URLSearchParams): EventFilters
     search: searchParams.get('search') ?? DEFAULT_FILTERS.search,
     status: searchParams.get('status') ?? DEFAULT_FILTERS.status,
     topic: searchParams.get('topic') ?? DEFAULT_FILTERS.topic,
-    groupId: searchParams.get('groupId') ?? DEFAULT_FILTERS.groupId,
     subscriptionId: searchParams.get('subscriptionId') ?? DEFAULT_FILTERS.subscriptionId,
   }
 }
@@ -74,10 +72,6 @@ function toSearchParams(
 
   if (filters.topic && filters.topic !== 'All') {
     params.set('topic', filters.topic)
-  }
-
-  if (filters.groupId.trim()) {
-    params.set('groupId', filters.groupId.trim())
   }
 
   if (filters.subscriptionId.trim()) {

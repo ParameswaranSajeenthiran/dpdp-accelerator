@@ -111,7 +111,6 @@ export default function SubscriptionTable({
               <TableCell>{t('subscriptions.table.name', 'Name')}</TableCell>
               <TableCell>{t('subscriptions.table.subscriptionId', 'Subscription ID')}</TableCell>
               <TableCell>{t('subscriptions.topicUi.topics', 'Topics')}</TableCell>
-              <TableCell>{t('subscriptions.table.groupId', 'Group ID')}</TableCell>
               <TableCell>{t('subscriptions.table.filter', 'Filter')}</TableCell>
               <TableCell>{t('subscriptions.table.deliveryMode', 'Delivery Mode')}</TableCell>
               <TableCell>{t('subscriptions.table.status', 'Status')}</TableCell>
@@ -121,10 +120,8 @@ export default function SubscriptionTable({
           <TableBody>
             {rows.length === 0 && !isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">
-                    {t('subscriptions.table.empty', 'No subscriptions found.')}
-                  </Typography>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">{t('subscriptions.table.empty')}</Typography>
                 </TableCell>
               </TableRow>
             ) : null}
@@ -162,15 +159,6 @@ export default function SubscriptionTable({
                   </TableCell>
                   <TableCell>
                     <SubscriptionTopicChips topics={sub.topics ?? (sub.topic ? [sub.topic] : [])} />
-                  </TableCell>
-                  <TableCell>
-                    {sub.groupId ? (
-                      <CopyableText value={sub.groupId} truncateAt={12} monospace />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        -
-                      </Typography>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Tooltip

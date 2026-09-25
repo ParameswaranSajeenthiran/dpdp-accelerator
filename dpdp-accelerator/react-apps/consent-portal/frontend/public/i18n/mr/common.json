@@ -713,9 +713,9 @@
       "multiTopicFilter": "युझर लाइफसायकल टॉपिक्स समाविष्ट करताना सर्व उद्दिष्ट फिल्टर निवडा.",
       "topicRequired": "विषय आवश्यक आहे.",
       "filterModeLabel": "उद्देश फिल्टर मोड",
-      "purposesLabel": "उद्देश (स्वल्पविराम-विभक्त)",
-      "purposesPlaceholder": "उदा. मार्केटिंग, ॲनालिटिक्स",
-      "purposesHelper": "फिल्टर करण्यासाठी संमतीच्या उद्देशांची स्वल्पविराम-विभक्त सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट किंवा सर्व-अपवाद फिल्टर करताना उद्देश आवश्यक आहेत.",
       "deliveryModeLabel": "वितरण मोड",
       "callbackUrlLabel": "वेबहुक कॉलबॅक URL",
@@ -726,7 +726,10 @@
       "secretHelper": "वेबहुक पेलोड साइन इन करण्यासाठी किंवा पोल विनंती प्रमाणित करण्यासाठी वापरले जाते",
       "generateSecret": "नवीन गुप्त कोड तयार करा",
       "registering": "नोंदणी करत आहे...",
-      "registerSubmit": "सबस्क्रिप्शन नोंदवा"
+      "registerSubmit": "सबस्क्रिप्शन नोंदवा",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता हटवणे निश्चित करा",

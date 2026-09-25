@@ -713,9 +713,9 @@
       "multiTopicFilter": "प्रयोगकर्ता जीवनचक्र विषयहरू समावेश गर्दा सबै उद्देश्य फिल्टर छनोट गर्नुहोस्।",
       "topicRequired": "विषय आवश्यक छ।",
       "filterModeLabel": "उद्देश्य फिल्टर मोड",
-      "purposesLabel": "उद्देश्यहरू (अल्पविराम-पृथक)",
-      "purposesPlaceholder": "उदाहरणका लागि, MARKETING, ANALYTICS",
-      "purposesHelper": "छान्नको लागि सहमति उद्देश्यहरूको अल्पविराम-पृथक सूची",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "विशिष्ट वा सबै-बाहेक द्वारा फिल्टर गर्दा उद्देश्यहरू आवश्यक छ",
       "deliveryModeLabel": "डेलिभरी मोड",
       "callbackUrlLabel": "वेभहक कल ब्याक URL",
@@ -726,7 +726,10 @@
       "secretHelper": "वेभहक पेलोडहरू साइन इन गर्न वा पोल अनुरोधहरू प्रमाणीकरण गर्न प्रयोग गरिन्छ",
       "generateSecret": "नयाँ गोप्य कुञ्जी उत्पन्न गर्नुहोस्",
       "registering": "दर्ता गर्दै...",
-      "registerSubmit": "सदस्यता दर्ता गर्नुहोस्"
+      "registerSubmit": "सदस्यता दर्ता गर्नुहोस्",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "सदस्यता मेटाउने कुराको पुष्टि गर्नुहोस्",

@@ -726,7 +726,10 @@
       "secretHelper": "ᱣᱮᱵᱦᱩᱠ ᱯᱮᱞᱳᱰ ᱥᱟᱭᱤᱱ ᱥᱮ ᱯᱳᱞ ᱨᱤᱠᱷᱤᱥᱴ ᱟᱣᱛᱷᱮᱱᱴᱤᱠᱮᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱾",
       "generateSecret": "ᱱᱟᱣᱟ ᱩᱠᱩ ᱛᱮᱭᱟᱨᱟ",
       "registering": "ᱨᱮᱡᱤᱥᱴᱟᱨ ᱦᱩᱭᱩᱜ ᱠᱟᱱᱟ...",
-      "registerSubmit": "ᱥᱟᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱨᱮᱡᱤᱥᱴᱟᱨ ᱢᱮ"
+      "registerSubmit": "ᱥᱟᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱨᱮᱡᱤᱥᱴᱟᱨ ᱢᱮ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ᱥᱚᱵᱥᱠᱨᱤᱯᱥᱚᱱ ᱢᱤᱥᱟᱹᱣ ᱨᱮᱭᱟᱜ ᱯᱩᱨᱟᱹᱣ ᱢᱮ",

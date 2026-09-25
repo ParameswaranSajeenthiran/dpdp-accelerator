@@ -713,9 +713,9 @@
       "multiTopicFilter": "ୟୁଜର୍ ଲାଇଫସାଇକେଲ୍ ଟପିକ୍ସ ସାମିଲ କରିବା ସମୟରେ ସବୁ ଉଦ୍ଦେଶ୍ୟ ଫିଲ୍ଟର୍ ବାଛନ୍ତୁ।",
       "topicRequired": "ବିଷୟ ଆବଶ୍ୟକ।",
       "filterModeLabel": "ଉଦ୍ଦେଶ୍ୟ ଫିଲ୍ଟର୍ ମୋଡ୍",
-      "purposesLabel": "ଉଦ୍ଦେଶ୍ୟ (କମା ଦ୍ୱାରା ପୃଥକ କରାଯାଇଛି)",
-      "purposesPlaceholder": "ଉଦାହରଣ ସ୍ୱରୂପ, MARKETING, ANALYTICS",
-      "purposesHelper": "ଫିଲ୍ଟର୍ କରିବାକୁ ସମ୍ମତି ଉଦ୍ଦେଶ୍ୟଗୁଡ଼ିକର କମା-ବିଭାଜିତ ତାଲିକା",
+      "purposesLabel": "Consent Purposes",
+      "purposesPlaceholder": "Search and select purposes...",
+      "purposesHelper": "Select one or more purposes to filter events.",
       "purposesRequired": "ନିର୍ଦ୍ଦିଷ୍ଟ କିମ୍ବା ସମସ୍ତଙ୍କୁ ବାଦ୍ ଦେଇ ଫିଲ୍ଟର୍ କରିବା ସମୟରେ ଉଦ୍ଦେଶ୍ୟ ଆବଶ୍ୟକ",
       "deliveryModeLabel": "ଡେଲିଭରି ମୋଡ୍",
       "callbackUrlLabel": "ୱେବହକ୍ କଲ୍‌ବ୍ୟାକ୍ URL",
@@ -726,7 +726,10 @@
       "secretHelper": "ୱେବହକ୍ ପେଲୋଡ୍ ସାଇନ୍ କରିବା କିମ୍ବା ପୋଲ୍ ଅନୁରୋଧକୁ ପ୍ରାମାଣିକ କରିବା ପାଇଁ ବ୍ୟବହୃତ ହୁଏ",
       "generateSecret": "ନୂଆ ସିକ୍ରେଟ୍ ଜେନେରେଟ୍ କର",
       "registering": "ପଞ୍ଜୀକରଣ କରାଯାଉଛି ...",
-      "registerSubmit": "ସଦସ୍ୟତା ପଞ୍ଜୀକରଣ କରନ୍ତୁ"
+      "registerSubmit": "ସଦସ୍ୟତା ପଞ୍ଜୀକରଣ କରନ୍ତୁ",
+      "purposesLoadFailed": "Unable to load purposes right now.",
+      "purposesEmpty": "No purposes available.",
+      "purposesNoMatches": "No purposes match your search."
     },
     "deleteModal": {
       "title": "ସବସ୍କ୍ରିପସନ୍ ଡିଲିସନ୍ ନିଶ୍ଚିତ କର",
