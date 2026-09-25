@@ -20,7 +20,11 @@ import { Box, Stack, Typography } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintStatus } from '../../../types/complaint'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
-import { getComplaintSlaState, getComplaintStatutoryPeriodDays } from '../utils/complaintDisplay'
+import {
+  getComplaintSlaState,
+  getComplaintStatutoryPeriodDays,
+  SLA_DEADLINE_FORMAT_OPTIONS,
+} from '../utils/complaintDisplay'
 import ComplaintSlaIndicator from './ComplaintSlaIndicator'
 
 interface ComplaintDeadlineProps {
@@ -28,12 +32,6 @@ interface ComplaintDeadlineProps {
   statutoryDueDate: number
   status: ComplaintStatus
   audience: 'dataPrincipal' | 'officer'
-}
-
-const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
-  month: 'short',
-  day: '2-digit',
-  year: 'numeric',
 }
 
 const LABEL_KEYS = {
@@ -76,7 +74,7 @@ function ComplaintDeadline({
       </Typography>
       <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
         <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-          {formatEpochTimestamp(statutoryDueDate, DATE_FORMAT_OPTIONS)}
+          {formatEpochTimestamp(statutoryDueDate, SLA_DEADLINE_FORMAT_OPTIONS)}
         </Typography>
         {/* The status chip beside the title already says "Resolved". */}
         {slaState !== 'met' ? (

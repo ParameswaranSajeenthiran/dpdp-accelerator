@@ -62,6 +62,8 @@ describe('ComplaintDeadline', () => {
     renderDeadline('dataPrincipal', 'OPEN', SUBMITTED_AT + 30 * DAY_IN_MS)
 
     expect(screen.getByText('Due date')).toBeInTheDocument()
+    // The deadline is an exact moment, so its time is shown alongside the date.
+    expect(screen.getByText(/12:00/)).toBeInTheDocument()
     expect(screen.getByText('5 days left')).toBeInTheDocument()
     expect(
       screen.getByText(

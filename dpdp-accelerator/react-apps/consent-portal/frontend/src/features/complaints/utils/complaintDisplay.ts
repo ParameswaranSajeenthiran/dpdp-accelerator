@@ -89,6 +89,16 @@ export function getComplaintStatusAccentColor(
   return CHIP_COLOR_TO_SX_PATH[getComplaintStatusChipColor(status, viewerRole)]
 }
 
+// The deadline is an exact moment (submission + N x 24h), not the end of a day, so the time is
+// shown too - otherwise the badge can turn "Overdue" while the page still shows today's date.
+export const SLA_DEADLINE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: 'short',
+  day: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+}
+
 const SLA_AT_RISK_THRESHOLD_HOURS = 24 * 14
 const DAY_IN_MS = 1000 * 60 * 60 * 24
 

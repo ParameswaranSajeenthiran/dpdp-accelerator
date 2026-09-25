@@ -21,19 +21,13 @@ import { CircleAlert, CircleCheckBig, Clock } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import type { ComplaintSlaState, ComplaintStatus } from '../../../types/complaint'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
-import { getComplaintSlaSummary } from '../utils/complaintDisplay'
+import { getComplaintSlaSummary, SLA_DEADLINE_FORMAT_OPTIONS } from '../utils/complaintDisplay'
 
 interface ComplaintSlaIndicatorProps {
   statutoryDueDate: number
   status: ComplaintStatus
   // null where a tooltip would only repeat what is already on screen.
   tooltip: string | null
-}
-
-const SLA_DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
-  month: 'short',
-  day: '2-digit',
-  year: 'numeric',
 }
 
 // Only the states an officer must act on get a colour, so red and amber stay meaningful in a
@@ -62,7 +56,7 @@ function ComplaintSlaIndicator({
   const { state, labelKey, count } = getComplaintSlaSummary(statutoryDueDate, status)
   const label = t(labelKey, { count })
   const dueDate = t('complaints.sla.dueDate', {
-    date: formatEpochTimestamp(statutoryDueDate, SLA_DATE_FORMAT_OPTIONS),
+    date: formatEpochTimestamp(statutoryDueDate, SLA_DEADLINE_FORMAT_OPTIONS),
   })
 
   const chip = (
