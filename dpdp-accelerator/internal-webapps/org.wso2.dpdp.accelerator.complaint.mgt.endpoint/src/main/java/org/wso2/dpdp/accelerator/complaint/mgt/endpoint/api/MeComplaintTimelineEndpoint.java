@@ -19,7 +19,7 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.TimelineListResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.TimelineListResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintTimelineHandler;
 
 import javax.ws.rs.GET;
@@ -58,7 +58,7 @@ public class MeComplaintTimelineEndpoint {
             @QueryParam("offset") Integer offset) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        TimelineListResponseDTO response = timelineHandler.getOwnTimeline(callerOrgId, complaintId,
+        TimelineListResponse response = timelineHandler.getOwnTimeline(callerOrgId, complaintId,
                 callerUsername, fromTime, toTime, order, limit, offset);
         return Response.ok(response).build();
     }

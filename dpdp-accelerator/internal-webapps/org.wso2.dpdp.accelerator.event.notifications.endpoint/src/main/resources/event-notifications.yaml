@@ -97,11 +97,11 @@ paths:
         - $ref: "#/components/parameters/Offset"
         - name: sort
           in: query
-          description: Sort by name or status; prefix with a minus sign for descending order.
+          description: Sort by creation time, name, or status; prefix with a minus sign for descending order.
           schema:
             type: string
-            pattern: "^-?(name|status)$"
-            default: name
+            pattern: "^-?(createdAt|name|status)$"
+            default: -createdAt
       responses:
         "200":
           description: Topic page

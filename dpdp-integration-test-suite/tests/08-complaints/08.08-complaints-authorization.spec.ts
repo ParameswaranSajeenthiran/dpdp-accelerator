@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { test, expect, loginAsUser, loginAsConsentAdmin } from '../../fixtures/auth.fixtures'
+import { test, expect, loginAsUser, loginAsConsentAdmin, loginAsDpo } from '../../fixtures/auth.fixtures'
 import { AppSidebarPage } from '../../pages/AppSidebarPage'
 
 /**
@@ -30,11 +30,11 @@ import { AppSidebarPage } from '../../pages/AppSidebarPage'
  * renders just "Complaints" (nested under the "Administration" category, alongside
  * `sidebar.adminConsents` - not "Complaint Management" as the key's own name might suggest).
  *
- * The two entries never appear together for either persona: DPDPIdentityExtensionTenantMgtListener
+ * The two entries never appear together for any persona: DPDPIdentityExtensionTenantMgtListener
  * routes every `:self` complaint scope to `dpdp-consent-user` and every `:any` one to
- * `dpdp-consent-admin`, so an admin-only account sees "Complaints" and not "My Complaints" - the
- * same split 04.02's sidebar tests assert for "My Consents" vs "All Consents". An operator who
- * wants both grants the account both roles; no persona in this suite does.
+ * `dpdp-consent-dpo` alone, so a DPO-only account sees "Complaints" and not "My Complaints", and
+ * `dpdp-consent-admin` gets neither. An operator who wants both grants the account both roles; no
+ * persona in this suite does.
  */
 test.describe('Complaints route-level access control and sidebar visibility (UI)', () => {
   test('08.08.01 - A Data Principal navigating directly to /complaints is not redirected away', async ({
@@ -68,15 +68,28 @@ test.describe('Complaints route-level access control and sidebar visibility (UI)
     await dataPrincipalPage.context().close()
   })
 
-  test('08.08.04 - A Consent Admin can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints"', async ({
+  test('08.08.04 - A DPO can reach /complaint-management directly, and their sidebar shows "Complaints", not "My Complaints"', async ({
+    browser,
+  }) => {
+    const dpoPage = await loginAsDpo(browser)
+    await dpoPage.goto('complaint-management')
+    await expect(dpoPage).toHaveURL(/\/complaint-management$/)
+
+    const sidebar = new AppSidebarPage(dpoPage)
+    await expect(sidebar.label('Complaints')).toBeVisible()
+    await expect(sidebar.label('My Complaints')).toHaveCount(0)
+    await dpoPage.context().close()
+  })
+
+  test('08.08.05 - A Consent Admin navigating directly to /complaint-management is redirected away, and their sidebar shows no complaint entry', async ({
     browser,
   }) => {
     const consentAdminPage = await loginAsConsentAdmin(browser)
     await consentAdminPage.goto('complaint-management')
-    await expect(consentAdminPage).toHaveURL(/\/complaint-management$/)
+    await expect(consentAdminPage).not.toHaveURL(/\/complaint-management$/)
 
     const sidebar = new AppSidebarPage(consentAdminPage)
-    await expect(sidebar.label('Complaints')).toBeVisible()
+    await expect(sidebar.label('Complaints')).toHaveCount(0)
     await expect(sidebar.label('My Complaints')).toHaveCount(0)
     await consentAdminPage.context().close()
   })

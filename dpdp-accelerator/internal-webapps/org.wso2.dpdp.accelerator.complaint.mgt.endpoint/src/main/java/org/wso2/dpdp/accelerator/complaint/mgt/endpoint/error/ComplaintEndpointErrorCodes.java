@@ -22,6 +22,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.error;
  * service layer's own {@code ComplaintErrorCode} domain codes. */
 public final class ComplaintEndpointErrorCodes {
 
+    /** Any client error the framework raises that has no code of its own (405, 406, 415, ...). */
+    public static final String CLIENT_ERROR = "CO-4000";
     public static final String INTERNAL_ERROR = "CO-5000";
 
     private ComplaintEndpointErrorCodes() {

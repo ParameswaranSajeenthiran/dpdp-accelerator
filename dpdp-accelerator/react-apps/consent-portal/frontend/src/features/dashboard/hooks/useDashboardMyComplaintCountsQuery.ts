@@ -20,7 +20,6 @@ import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 import { fetchMyComplaintsTotal } from '../../complaints/api/complaintsApi'
 
 export interface ComplaintStateCounts {
-  total: number
   open: number
   inProgress: number
   waitingOnClient: number
@@ -35,16 +34,14 @@ export interface ComplaintStateCounts {
  * is both cheap and exact.
  */
 async function fetchMyComplaintStateCounts(): Promise<ComplaintStateCounts> {
-  const [total, open, inProgress, waitingOnClient, waitingOnInternalReview, resolved] =
-    await Promise.all([
-      fetchMyComplaintsTotal(),
-      fetchMyComplaintsTotal('OPEN'),
-      fetchMyComplaintsTotal('IN_PROGRESS'),
-      fetchMyComplaintsTotal('WAITING_ON_CLIENT'),
-      fetchMyComplaintsTotal('AWAITING_INTERNAL_REVIEW'),
-      fetchMyComplaintsTotal('RESOLVED'),
-    ])
-  return { total, open, inProgress, waitingOnClient, waitingOnInternalReview, resolved }
+  const [open, inProgress, waitingOnClient, waitingOnInternalReview, resolved] = await Promise.all([
+    fetchMyComplaintsTotal('OPEN'),
+    fetchMyComplaintsTotal('IN_PROGRESS'),
+    fetchMyComplaintsTotal('WAITING_ON_CLIENT'),
+    fetchMyComplaintsTotal('AWAITING_INTERNAL_REVIEW'),
+    fetchMyComplaintsTotal('RESOLVED'),
+  ])
+  return { open, inProgress, waitingOnClient, waitingOnInternalReview, resolved }
 }
 
 export default function useDashboardMyComplaintCountsQuery(

@@ -21,8 +21,8 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentDownloadResponseDTO;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.dto.ComplaintAttachmentResponseDTO;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintAttachmentHandler;
 
 import javax.ws.rs.Consumes;
@@ -64,7 +64,7 @@ public class ComplaintAttachmentEndpoint {
             @Multipart("isPublic") Boolean isPublic) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        List<ComplaintAttachmentResponseDTO> response = attachmentHandler.uploadComplaintAttachments(
+        List<ComplaintAttachmentResponse> response = attachmentHandler.uploadComplaintAttachments(
                 callerOrgId, complaintId, fileParts, isPublic, callerUsername, callerUsername);
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -76,7 +76,7 @@ public class ComplaintAttachmentEndpoint {
             @PathParam("complaintId") String complaintId,
             @PathParam("attachmentId") String attachmentId) {
         String orgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
-        ComplaintAttachmentDownloadResponseDTO response =
+        ComplaintAttachmentDownloadResponse response =
                 attachmentHandler.downloadAttachment(orgId, complaintId, attachmentId);
         return Response.ok(response).build();
     }

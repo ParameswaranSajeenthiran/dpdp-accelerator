@@ -76,26 +76,21 @@ function rawConsents(count: number): unknown[] {
 
 describe('DashboardPage', () => {
   it('shows a regular user their own consent and complaint counts', async () => {
-    // Total (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
+    // Active (101, over the 100 cap - "100+"), Pending (3, exact); every other count uses its
     // own distinct number so assertions can't accidentally match the wrong tile.
     myConsentsApi.fetchMyConsentsRaw.mockImplementation(
       (params: { state?: string }): Promise<unknown[]> => {
         if (params.state === 'PENDING') return Promise.resolve(rawConsents(3))
-        if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(35))
+        if (params.state === 'ACTIVE') return Promise.resolve(rawConsents(101))
         if (params.state === 'REJECTED') return Promise.resolve(rawConsents(36))
         if (params.state === 'REVOKED') return Promise.resolve(rawConsents(37))
         if (params.state === 'EXPIRED') return Promise.resolve(rawConsents(38))
-        return Promise.resolve(rawConsents(101)) // total, unfiltered
+        return Promise.resolve(rawConsents(35))
       },
     )
-    myConsentsApi.fetchMyConsents.mockResolvedValue({
-      data: [{ id: 'p1', subjectId: 'user-1', serviceId: 'svc', state: 'PENDING', timestamp: 1 }],
-      metadata: { total: 1, offset: 0, count: 1, limit: 100 },
-    })
     complaintsApi.fetchMyComplaintsTotal.mockImplementation((status?: string) =>
       Promise.resolve(
         {
-          undefined: 60,
           OPEN: 61,
           IN_PROGRESS: 62,
           WAITING_ON_CLIENT: 63,
@@ -107,14 +102,31 @@ describe('DashboardPage', () => {
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
-    expect(screen.getByText('Consents by status')).toBeInTheDocument()
-    expect(await screen.findByText('100+')).toBeInTheDocument() // total
-    // The pending count appears twice: the status tile and the "Needs your attention" badge.
-    await waitFor(() => {
-      expect(screen.getAllByText('3')).toHaveLength(2)
-    })
-    expect(screen.getByText('Needs your attention')).toBeInTheDocument()
+    expect(screen.getByText('Consents')).toBeInTheDocument()
+    expect(await screen.findByText('100+')).toBeInTheDocument() // active
+    expect(await screen.findByText('3')).toBeInTheDocument() // pending
     expect(screen.getByText('Complaints')).toBeInTheDocument()
+    expect(await screen.findByText('61')).toBeInTheDocument() // open complaints
+    expect(screen.getByText('Waiting on DPO')).toBeInTheDocument()
+    expect(screen.queryByText('Waiting on Internal Review')).not.toBeInTheDocument()
+    // No Total cards, so no unfiltered count is fetched for either section.
+    expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
+    expect(screen.queryByText('Total complaints')).not.toBeInTheDocument()
+    expect(complaintsApi.fetchMyComplaintsTotal).toHaveBeenCalledTimes(5)
+    expect(complaintsApi.fetchMyComplaintsTotal).not.toHaveBeenCalledWith()
+    // Pending consents have their own page - the dashboard shows only the count, not a list.
+    expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'View all consents' })).toHaveAttribute(
+      'href',
+      '/consents',
+    )
+    expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
+    // Without relation=ANY the server counts only consents the user is the subject of, leaving
+    // out the ones awaiting their decision as an authorizer (wso2/dpdp-accelerator#274).
+    expect(myConsentsApi.fetchMyConsentsRaw).toHaveBeenCalledTimes(5)
+    myConsentsApi.fetchMyConsentsRaw.mock.calls.forEach(([params]) => {
+      expect(params).toMatchObject({ relation: 'ANY', state: expect.any(String) })
+    })
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
     expect(catalogApi.fetchPurposes).not.toHaveBeenCalled()
     expect(catalogApi.fetchElements).not.toHaveBeenCalled()
@@ -123,8 +135,8 @@ describe('DashboardPage', () => {
   it('shows an admin exact tenant-wide consent, purposes, and elements counts', async () => {
     adminConsentsApi.fetchAdminConsents.mockImplementation(
       (params: { state?: string }): Promise<unknown> => {
-        if (params.state === undefined) {
-          // Total: a full page with a next link still available - "100+".
+        if (params.state === 'ACTIVE') {
+          // A full page with a next link still available - "100+".
           return Promise.resolve({
             totalResults: 100,
             links: [{ rel: 'next', href: 'https://x?after=Mg==' }],
@@ -132,13 +144,12 @@ describe('DashboardPage', () => {
           })
         }
         const counts: Record<string, number> = {
-          ACTIVE: 29,
-          PENDING: 6,
+          PENDING: 29,
           REJECTED: 0,
           REVOKED: 0,
           EXPIRED: 0,
         }
-        const count = counts[params.state] ?? 0
+        const count = counts[params.state ?? ''] ?? 0
         return Promise.resolve({ totalResults: count, links: [], Consents: rawConsents(count) })
       },
     )
@@ -165,49 +176,41 @@ describe('DashboardPage', () => {
       expect(screen.getByText('8')).toBeInTheDocument()
     })
     expect(screen.getByText('12')).toBeInTheDocument()
+    expect(screen.queryByText('Total consents')).not.toBeInTheDocument()
+    expect(adminConsentsApi.fetchAdminConsents).toHaveBeenCalledTimes(5)
+    adminConsentsApi.fetchAdminConsents.mock.calls.forEach(([params]) => {
+      expect(params).toMatchObject({ state: expect.any(String) })
+    })
     expect(
       screen.getByText('An overview of consent activity across all users.'),
     ).toBeInTheDocument()
     expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(myConsentsApi.fetchMyConsents).not.toHaveBeenCalled()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
-    expect(screen.queryByText('Needs your attention')).not.toBeInTheDocument()
-  })
-
-  it('shows an error, not a false "no pending consents" empty state, when that fetch fails', async () => {
-    myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
-    // The pending-list fetch (fetchMyConsents, not fetchMyConsentsRaw) fails independently of
-    // the state-count queries, which still succeed.
-    myConsentsApi.fetchMyConsents.mockRejectedValue(new Error('network error'))
-    complaintsApi.fetchMyComplaintsTotal.mockResolvedValue(0)
-
-    renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF])
-
-    expect(await screen.findByText('Unable to load your dashboard right now.')).toBeInTheDocument()
-    expect(screen.queryByText('You have no pending consents to review.')).not.toBeInTheDocument()
+    // The counts are tenant-wide, so the link goes to the admin registry, not My Consents.
+    expect(screen.getByRole('link', { name: 'View all consents' })).toHaveAttribute(
+      'href',
+      '/administration/consents',
+    )
   })
 
   it('shows "-", not a false 0, for complaint counts when that fetch fails', async () => {
     myConsentsApi.fetchMyConsentsRaw.mockResolvedValue(rawConsents(1))
-    myConsentsApi.fetchMyConsents.mockResolvedValue({
-      data: [],
-      metadata: { total: 0, offset: 0, count: 0, limit: 100 },
-    })
     complaintsApi.fetchMyComplaintsTotal.mockRejectedValue(new Error('network error'))
 
     renderDashboard([REQUIRED_SCOPES.CONSENTS_READ_SELF, REQUIRED_SCOPES.COMPLAINTS_READ_SELF])
 
     expect(await screen.findByText('Unable to load your complaints right now.')).toBeInTheDocument()
-    expect(screen.getByText('Total complaints')).toBeInTheDocument()
-    // Six complaint tiles - all "-", never a false "0" implying a real (empty) count.
+    expect(screen.getByText('Resolved')).toBeInTheDocument()
+    // Five complaint tiles - all "-", never a false "0" implying a real (empty) count.
     expect(screen.queryAllByText('0')).toHaveLength(0)
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(6)
+    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(5)
   })
 
   it('shows a DPO-only session no consent, catalog, or complaint widgets', () => {
     renderDashboard([REQUIRED_SCOPES.COMPLAINTS_READ_ANY])
 
-    expect(screen.queryByText('Consents by status')).not.toBeInTheDocument()
+    expect(screen.queryByText('Consents')).not.toBeInTheDocument()
     expect(screen.queryByText('Complaints')).not.toBeInTheDocument()
     expect(myConsentsApi.fetchMyConsentsRaw).not.toHaveBeenCalled()
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()

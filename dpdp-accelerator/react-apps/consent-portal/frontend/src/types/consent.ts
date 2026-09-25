@@ -157,7 +157,7 @@ export interface ConsentListQueryParams {
   /** One state, or undefined for all: the filter is a single-select. */
   state?: ConsentState
   serviceId?: string
-  /** Always paired with the signed-in user's own ID; defaults to `ANY` server-side. */
+  /** Relative to the signed-in user; defaults to `SUBJECT` server-side, not `ANY`. */
   relation?: ConsentRelation
   /** A `timestamp ge/le <epoch-ms>` clause built by `buildTimestampFilter`. */
   filter?: string

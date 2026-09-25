@@ -150,15 +150,13 @@ public class DPDPIdentityExtensionTenantMgtListener implements TenantMgtListener
                             DPDPApiResourceProvisioningUtil.HISTORY_VIEW_SELF));
             userScopes.addAll(DPDPApiResourceProvisioningUtil
                     .authorizeAccountSelfServiceApi(applicationId, tenantDomain));
-            // The DPO role only ever needs the "any" complaint scopes - never the full admin set,
-            // so it's built directly from the constants rather than filtered out of adminScopes.
+            // Org-wide complaint handling belongs to the DPO alone - the admin role gets no
+            // complaint scopes, so complaint oversight stays separate from portal administration.
             List<String> dpoScopes = Arrays.asList(DPDPApiResourceProvisioningUtil.COMPLAINTS_READ_ANY,
                     DPDPApiResourceProvisioningUtil.COMPLAINTS_WRITE_ANY);
             for (String complaintScope : complaintScopes) {
                 if (complaintScope.endsWith(":self")) {
                     userScopes.add(complaintScope);
-                } else {
-                    adminScopes.add(complaintScope);
                 }
             }
             List<RoleV2> roles = DPDPConsentPortalRoleProvisioningUtil.createRoles(tenantDomain, adminScopes,

@@ -66,8 +66,8 @@ export const env = {
   consentAdmin: persona('consentAdmin'),
 
   // Holds only the complaints:read:any/write:any scopes - see
-  // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE. Provisioned on every tenant automatically;
-  // no test used it before this persona existed.
+  // DPDPConsentPortalRoleProvisioningUtil.DPO_ROLE, the only role that does. The complaint
+  // officer in every 08-complaints test.
   dpo: persona('dpo'),
 
   // A second, distinct real user account - required, same as `user` above, so
