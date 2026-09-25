@@ -141,7 +141,13 @@ export async function createThrowawayUser(
     throw new Error(`SCIM2 created "${username}" but returned no resource id.`)
   }
 
-  await assignRole(ctx, created.id, roleName)
+  try {
+    await assignRole(ctx, created.id, roleName)
+  } catch (error) {
+    // The account exists but the caller never gets it back, so nothing else could clean it up.
+    await deleteThrowawayUser(created.id, username).catch(() => undefined)
+    throw error
+  }
   return { id: created.id, username, password }
 }
 
