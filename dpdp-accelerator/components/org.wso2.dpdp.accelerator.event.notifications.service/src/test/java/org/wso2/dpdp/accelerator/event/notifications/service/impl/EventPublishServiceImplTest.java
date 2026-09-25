@@ -169,8 +169,7 @@ public class EventPublishServiceImplTest {
                 new Timestamp(System.currentTimeMillis()));
         event.setTopic("accounts");
         event.setPurposes(Collections.singletonList("payments"));
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
         when(eventDAO.getEventById(any(Connection.class), eq("event-1"), eq("org1"))).thenReturn(Optional.of(event));
@@ -203,8 +202,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsWithZeroMaxEventsOnlyAcknowledgesAndReportsAvailability() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
         when(deliveryDAO.getPendingPollDeliveries(any(Connection.class), eq("org1"), eq("group-1"), eq("subscription-1"), eq(1)))
@@ -221,8 +219,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsRejectsInvalidRequestHmacBeforeUpdatingDeliveries() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
         when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
@@ -240,8 +237,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsAuthenticatesAnEmptyFirstPollBeforeApplyingDefaults() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
         when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
@@ -258,8 +254,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsDoesNotTreatAnEmptyBodyAsAJsonObjectForHmacVerification() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
         when(configurationService.isEventNotificationPollingRequestHmacValidationEnabled()).thenReturn(true);
@@ -277,8 +272,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsRejectsOrganizationThatDiffersFromTenantContext() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "group-1", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("group-1");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
 
@@ -295,8 +289,7 @@ public class EventPublishServiceImplTest {
 
     @Test
     public void pollEventsRejectsSubscriptionFromAnotherGroup() {
-        Subscription subscription = new Subscription("subscription-1", "org1", "another-group", "topic-1",
-                "all", Collections.emptyList(), "poll", null, "shared-secret", "active", null, null);
+        Subscription subscription = pollSub("another-group");
         when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("subscription-1"), eq("org1")))
                 .thenReturn(Optional.of(subscription));
 
@@ -914,5 +907,20 @@ public class EventPublishServiceImplTest {
         assertNotNull(result);
         assertEquals(result.getItems().size(), 1);
         assertEquals(result.getItems().get(0).getDeliveryId(), "dlv-1");
+    }
+
+    private static Subscription pollSub(String groupId) {
+        Subscription s = new Subscription();
+        s.setSubscriptionId("subscription-1");
+        s.setOrgId("org1");
+        s.setGroupId(groupId);
+        s.setTopicIds(Collections.singletonList("topic-1"));
+        s.setTopicNames(Collections.emptyList());
+        s.setPurposeFilterMode("all");
+        s.setPurposes(Collections.emptyList());
+        s.setDeliveryMode("poll");
+        s.setSharedSecret("shared-secret");
+        s.setStatus("active");
+        return s;
     }
 }

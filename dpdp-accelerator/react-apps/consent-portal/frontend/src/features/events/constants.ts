@@ -20,3 +20,5 @@ export const WEBHOOK_VERIFICATION_MONITOR_POLICY = {
   pollIntervalMs: 5_000,
   observationTimeoutMs: 4 * 60 * 1_000,
 } as const
+
+export const MAX_SUBSCRIPTION_TOPICS = 100

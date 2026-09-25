@@ -128,6 +128,10 @@ export class SubscriptionsPage {
     return row.getByRole('button', { name: 'Delete subscription' })
   }
 
+  topicExpandButton(row: Locator): Locator {
+    return row.getByRole('button', { name: /\+\d+ more|Show less/ })
+  }
+
   async openDetailsBySubscriptionId(subscriptionId: string): Promise<void> {
     await this.viewDetailsButton(this.rowBySubscriptionId(subscriptionId)).click()
   }

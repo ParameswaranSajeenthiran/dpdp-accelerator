@@ -273,6 +273,13 @@ public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {
     }
 
     @Override
+    public int getEventNotificationMaxSubscriptionTopics() {
+
+        return configParser == null ? DPDPCommonConstants.DEFAULT_EVENT_NOTIFICATIONS_MAX_SUBSCRIPTION_TOPICS
+                : configParser.getEventNotificationMaxSubscriptionTopics();
+    }
+
+    @Override
     public boolean isEventNotificationPollingRequestHmacValidationEnabled() {
 
         return configParser == null

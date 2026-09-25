@@ -61,6 +61,7 @@ test.describe('Webhook delivery', () => {
     const started = await receiver.start()
     const secret = uniqueMarker('secret')
     const response = await consentAdminEventApi.createSubscription({
+      name: uniqueMarker('sub'),
       topic: topic.name,
       filter: { type: 'all' },
       delivery: { mode: 'webhook', callbackUrl: started.url, sharedSecret: secret },

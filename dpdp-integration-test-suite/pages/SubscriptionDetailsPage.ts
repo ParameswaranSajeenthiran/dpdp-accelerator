@@ -31,6 +31,7 @@ export class SubscriptionDetailsPage {
   readonly verifyButton: Locator
   readonly deleteButton: Locator
   readonly deliveryEventsTable: Locator
+  readonly topicsSearchInput: Locator
   readonly verificationSuccessToast: Locator
   readonly verificationFailedToast: Locator
 
@@ -40,6 +41,7 @@ export class SubscriptionDetailsPage {
     this.verifyButton = page.getByRole('button', { name: 'Re-verify webhook' })
     this.deleteButton = page.getByRole('button', { name: 'Delete subscription' })
     this.deliveryEventsTable = page.getByRole('table', { name: 'Delivery events log table' })
+    this.topicsSearchInput = page.getByLabel('Search associated topics')
     this.verificationSuccessToast = page.getByText('Verification ping dispatched successfully.')
     this.verificationFailedToast = page.getByText('Webhook verification failed. Please check endpoint reachability.')
   }
@@ -86,5 +88,23 @@ export class SubscriptionDetailsPage {
       .getByRole('button', { name: 'View Delivery Attempts' })
       .click()
     return new SubscriptionDeliveryHistoryModal(this.page)
+  }
+
+  async expandSubscribedTopics(): Promise<void> {
+    const toggle = this.page.getByRole('button', { name: 'Subscribed Topics' })
+    if ((await toggle.count()) > 0) {
+      const expanded = await toggle.getAttribute('aria-expanded')
+      if (expanded !== 'true') {
+        await toggle.click()
+      }
+    }
+  }
+
+  topicChip(topicName: string): Locator {
+    return this.page.locator('#subscribed-topic-content').getByText(topicName, { exact: true })
+  }
+
+  async searchTopics(query: string): Promise<void> {
+    await this.topicsSearchInput.fill(query)
   }
 }

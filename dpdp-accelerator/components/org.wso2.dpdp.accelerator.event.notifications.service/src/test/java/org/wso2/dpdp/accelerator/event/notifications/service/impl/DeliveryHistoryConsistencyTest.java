@@ -79,9 +79,17 @@ public class DeliveryHistoryConsistencyTest {
                 deliveryAckDAO);
         subscriptionService = new SubscriptionServiceImpl(subscriptionDAO, topicDAO, deliveryDAO, deliveryAckDAO,
                 mock(DPDPConfigurationService.class));
-        when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq(SUBSCRIPTION_ID), eq(ORG_ID))).thenReturn(Optional.of(
-                new Subscription(SUBSCRIPTION_ID, ORG_ID, ORG_ID, "topic-1", "all",
-                        Collections.emptyList(), "webhook", null, null, "active", null, null)));
+        Subscription sub = new Subscription();
+        sub.setSubscriptionId(SUBSCRIPTION_ID);
+        sub.setOrgId(ORG_ID);
+        sub.setGroupId(ORG_ID);
+        sub.setTopicIds(Collections.singletonList("topic-1"));
+        sub.setTopicNames(Collections.emptyList());
+        sub.setPurposeFilterMode("all");
+        sub.setPurposes(Collections.emptyList());
+        sub.setDeliveryMode("webhook");
+        sub.setStatus("active");
+        when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq(SUBSCRIPTION_ID), eq(ORG_ID))).thenReturn(Optional.of(sub));
     }
 
     @AfterMethod

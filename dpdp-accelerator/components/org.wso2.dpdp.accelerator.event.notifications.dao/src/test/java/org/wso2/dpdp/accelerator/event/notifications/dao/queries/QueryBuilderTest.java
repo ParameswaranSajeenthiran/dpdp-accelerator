@@ -125,7 +125,8 @@ public class QueryBuilderTest {
         assertTrue(result.getSql().contains("POLL_DELIVERY pd JOIN EVENT e"));
         assertTrue(result.getSql().contains("LOWER(pd.DELIVERY_ID) LIKE ? ESCAPE '!'"));
         assertTrue(result.getSql().contains("LOWER(e.EVENT_ID) LIKE ? ESCAPE '!'"));
-        assertEquals(result.getParameters().size(), 11);
+        assertTrue(result.getSql().contains("LOWER(s.NAME) LIKE ? ESCAPE '!'"));
+        assertEquals(result.getParameters().size(), 12);
     }
 
     @Test

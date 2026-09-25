@@ -50,6 +50,7 @@ public class TopicAndSubscriptionEndpointTest {
     @Test
     public void subscriptionOperationsForwardTenantAndReturnOk() {
         SubscriptionDTO subscription = new SubscriptionDTO();
+        subscription.setName("sub-name");
         PaginatedResult<SubscriptionDTO> page = new PaginatedResult<>(Collections.singletonList(subscription), 1);
         SubscriptionEventHistoryDTO history = new SubscriptionEventHistoryDTO();
         when(subscriptionHandler.createSubscription(eq("org-1"), any())).thenReturn(subscription);
@@ -61,7 +62,7 @@ public class TopicAndSubscriptionEndpointTest {
         when(subscriptionHandler.getSubscriptionEventHistory("org-1", "sub-1", "delivery-1")).thenReturn(history);
         when(subscriptionHandler.retryDelivery("org-1", "sub-1", "delivery-1")).thenReturn(history);
 
-        assertEquals(subscriptionEndpoint.createSubscription(new org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest().topic(subscription.getTopic())).getStatus(), 201);
+        assertEquals(subscriptionEndpoint.createSubscription(new org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.SubscriptionCreateRequest().name("sub-name").topic(subscription.getTopic())).getStatus(), 201);
         assertJsonEquals(subscriptionEndpoint.listSubscriptions("active", "marketing", "search", 20, 0, "createdAt").getEntity(), page);
         assertJsonEquals(subscriptionEndpoint.getSubscription("sub-1").getEntity(), subscription);
         assertJsonEquals(subscriptionEndpoint.deleteSubscription("sub-1").getEntity(), subscription);

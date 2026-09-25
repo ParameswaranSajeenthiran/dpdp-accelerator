@@ -75,16 +75,13 @@ public class SubscriptionQueryBuilder {
         StringBuilder sql = new StringBuilder(
                 "SELECT DISTINCT s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ", s." +
                 EventNotificationDBColumns.ORG_ID + ", s." + EventNotificationDBColumns.GROUP_ID + ", s." +
-                EventNotificationDBColumns.TOPIC_ID + ", s." + EventNotificationDBColumns.PURPOSE_FILTER_MODE + ", s." +
+                EventNotificationDBColumns.NAME + ", s." +
+                EventNotificationDBColumns.PURPOSE_FILTER_MODE + ", s." +
                 EventNotificationDBColumns.PURPOSE_SET_HASH + ", s." + EventNotificationDBColumns.DELIVERY_MODE +
                 ", s." + EventNotificationDBColumns.CALLBACK_URL + ", s." + EventNotificationDBColumns.SHARED_SECRET +
                 ", s." + EventNotificationDBColumns.STATUS + ", s." + EventNotificationDBColumns.CREATED_AT +
                 ", s." + EventNotificationDBColumns.UPDATED_AT + " " +
                 "FROM SUBSCRIPTION s " +
-                "LEFT JOIN TOPIC t ON s." + EventNotificationDBColumns.TOPIC_ID + " = t." +
-                EventNotificationDBColumns.TOPIC_ID + " " +
-                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s." + EventNotificationDBColumns.SUBSCRIPTION_ID +
-                " = sp." + EventNotificationDBColumns.SUBSCRIPTION_ID + " " +
                 "WHERE s." + EventNotificationDBColumns.ORG_ID + " = ?"
         );
         List<Object> params = buildWhereClauseAndParams(sql);
@@ -97,10 +94,6 @@ public class SubscriptionQueryBuilder {
     public QueryResult buildCountQuery() {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(DISTINCT s." + EventNotificationDBColumns.SUBSCRIPTION_ID + ") FROM SUBSCRIPTION s " +
-                "LEFT JOIN TOPIC t ON s." + EventNotificationDBColumns.TOPIC_ID + " = t." +
-                EventNotificationDBColumns.TOPIC_ID + " " +
-                "LEFT JOIN SUBSCRIPTION_PURPOSE sp ON s." + EventNotificationDBColumns.SUBSCRIPTION_ID +
-                " = sp." + EventNotificationDBColumns.SUBSCRIPTION_ID + " " +
                 "WHERE s." + EventNotificationDBColumns.ORG_ID + " = ?"
         );
         List<Object> params = buildWhereClauseAndParams(sql);
@@ -123,13 +116,18 @@ public class SubscriptionQueryBuilder {
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.GROUP_ID + ")"))
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
+                            "LOWER(s." + EventNotificationDBColumns.NAME + ")"))
+                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.STATUS + ")"))
                     .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
                             "LOWER(s." + EventNotificationDBColumns.CALLBACK_URL + ")"))
-                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
-                            "LOWER(t." + EventNotificationDBColumns.NAME + ")"))
-                    .append(" OR ").append(QueryBuilderUtils.buildEscapedLikePredicate(
-                            "LOWER(sp." + EventNotificationDBColumns.PURPOSE_NAME + ")"))
+                    .append(" OR EXISTS (SELECT 1 FROM SUBSCRIPTION_TOPIC st JOIN TOPIC t "
+                            + "ON t.TOPIC_ID = st.TOPIC_ID AND t.ORG_ID = st.ORG_ID "
+                            + "WHERE st.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND st.ORG_ID = s.ORG_ID AND ")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(t.NAME)")).append(")")
+                    .append(" OR EXISTS (SELECT 1 FROM SUBSCRIPTION_PURPOSE sp "
+                            + "WHERE sp.SUBSCRIPTION_ID = s.SUBSCRIPTION_ID AND ")
+                    .append(QueryBuilderUtils.buildEscapedLikePredicate("LOWER(sp.PURPOSE_NAME)")).append(")")
                     .append(" OR EXISTS (SELECT 1 FROM WEBHOOK_DELIVERY wd JOIN EVENT e ON e.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" = wd.")
                     .append(EventNotificationDBColumns.EVENT_ID).append(" WHERE wd.")
@@ -156,6 +154,7 @@ public class SubscriptionQueryBuilder {
                     .append("))")
                     .append(")");
             String term = QueryBuilderUtils.buildCaseInsensitiveContainsPattern(search);
+            params.add(term);
             params.add(term);
             params.add(term);
             params.add(term);
