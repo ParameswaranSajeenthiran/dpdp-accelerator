@@ -47,12 +47,12 @@ import {
   useRejectConsentMutation,
   useRevokeConsentMutation,
 } from './hooks/useConsentQueries'
+import type { ConsentStatusMessageKey } from './utils/consentAuthorization'
 import {
-  isApprovableByCurrentUser,
-  isCurrentUserInvolved,
-  isRejectableByCurrentUser,
+  getAdminConsentStatusMessageKey,
+  getSelfConsentActionView,
+  isRevokableByAdmin,
 } from './utils/consentAuthorization'
-import { isConsentRevokableState } from './utils/statusChip'
 import { PENDING_CONSENTS_PATH } from './constants'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import {
@@ -139,27 +139,33 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
   }
 
   const detail = consentDetailQuery.data
-  // The self-service endpoint only ever returns consents the caller is
-  // already involved in, so this check is only meaningful for the admin
-  // registry, which can open any consent regardless of who's viewing it.
-  const isInvolved =
-    variant === 'admin' && detail
-      ? isCurrentUserInvolved(detail.subjectId, detail.authorizations, currentUser.userId)
-      : true
-  const canApprove =
-    detail && isInvolved
-      ? canWriteSelf &&
-        isApprovableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
-      : false
-  const canReject =
-    detail && isInvolved
-      ? canWriteSelf &&
-        isRejectableByCurrentUser(detail.state, detail.authorizations, currentUser.userId)
-      : false
+  // Gated on the caller's own stake in the consent (their `authorizations`
+  // entry, if any) rather than its aggregate state - see "Approve / Reject /
+  // Revoke rules" in CLAUDE.md. Computed the same way for both variants: the
+  // admin surface additionally grants Revoke via `canWriteAny` alone (an
+  // oversight power, never Approve/Reject), and otherwise falls back to this
+  // same personal-stake view when the admin has no such oversight scope.
+  const selfView = detail
+    ? getSelfConsentActionView(
+        detail.subjectId,
+        detail.state,
+        detail.authorizations,
+        currentUser.userId,
+      )
+    : null
+  const canApprove = Boolean(detail) && canWriteSelf && Boolean(selfView?.canApprove)
+  const canReject = Boolean(detail) && canWriteSelf && Boolean(selfView?.canReject)
   const canRevoke = detail
-    ? (variant === 'admin' ? canWriteAny || (isInvolved && canWriteSelf) : canWriteSelf) &&
-      isConsentRevokableState(detail.state)
+    ? (variant === 'admin' && canWriteAny && isRevokableByAdmin(detail.state)) ||
+      (canWriteSelf && Boolean(selfView?.canRevoke))
     : false
+  const isAdminOversight = variant === 'admin' && canWriteAny
+  let statusMessageKey: ConsentStatusMessageKey | null = null
+  if (detail && !canApprove && !canReject && !canRevoke) {
+    statusMessageKey = isAdminOversight
+      ? getAdminConsentStatusMessageKey(detail.state)
+      : (selfView?.statusMessageKey ?? null)
+  }
 
   if (consentDetailQuery.isLoading) {
     return <ConsentDetailsLoading />
@@ -234,6 +240,11 @@ function ConsentDetailsPage({ variant = 'self' }: ConsentDetailsPageProps): Reac
             >
               {t('consentRegistry.actions.revoke')}
             </Button>
+          ) : null}
+          {statusMessageKey ? (
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              {t(`consentRegistry.details.statusMessages.${statusMessageKey}`)}
+            </Typography>
           ) : null}
         </Stack>
       </Stack>

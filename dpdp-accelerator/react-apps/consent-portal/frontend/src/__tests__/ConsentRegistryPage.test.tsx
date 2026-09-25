@@ -192,13 +192,18 @@ describe('ConsentRegistryPage', () => {
     expect(await screen.findByText('Unable to load consents right now.')).toBeInTheDocument()
   })
 
-  it('offers approve (not revoke) for a rejected consent, so it can be reconsidered', async () => {
-    mockConsentSearch([buildConsent({ state: 'REJECTED' })])
+  it('offers no action for a rejected consent - rejection is final, not reconsiderable', async () => {
+    mockConsentSearch([
+      buildConsent({
+        state: 'REJECTED',
+        authorizations: [{ userId: 'test-user', state: 'REJECTED', updatedTime: 1 }],
+      }),
+    ])
 
     renderConsentRegistryPage(createQueryClient())
 
     expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
-    expect(screen.getAllByLabelText('Approve').length).toBeGreaterThan(0)
+    expect(screen.queryByLabelText('Approve')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
   })
 
@@ -212,9 +217,13 @@ describe('ConsentRegistryPage', () => {
     expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
   })
 
-  it('renders approve and revoke actions from the consent state alone', async () => {
+  it('renders approve for a consent the caller can act on, and revoke for an active one', async () => {
     mockConsentSearch([
-      buildConsent({ id: 'pending-consent', state: 'PENDING' }),
+      buildConsent({
+        id: 'pending-consent',
+        state: 'PENDING',
+        authorizations: [{ userId: 'test-user', state: 'PENDING', updatedTime: 1 }],
+      }),
       buildConsent({ id: 'active-consent', state: 'ACTIVE' }),
     ])
 
