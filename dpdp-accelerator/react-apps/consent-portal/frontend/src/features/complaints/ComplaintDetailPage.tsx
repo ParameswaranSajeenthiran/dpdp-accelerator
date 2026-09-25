@@ -37,8 +37,8 @@ import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcr
 import { formatEpochTimestamp } from '../../utils/dateTime'
 import ComplaintActivityFeed from './components/ComplaintActivityFeed'
 import ComplaintAttachmentsPanel from './components/ComplaintAttachmentsPanel'
+import ComplaintDeadline from './components/ComplaintDeadline'
 import ComplaintReplyComposer from './components/ComplaintReplyComposer'
-import ComplaintSlaDot from './components/ComplaintSlaDot'
 import ComplaintStatusChip from './components/ComplaintStatusChip'
 import {
   useMyComplaintDetailQuery,
@@ -50,9 +50,6 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   month: 'short',
   day: '2-digit',
   year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
 }
 
 function ComplaintDetailLoading(): React.JSX.Element {
@@ -176,25 +173,12 @@ function ComplaintDetailPage(): React.JSX.Element {
                   {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={600}
-                  sx={{ display: 'block', textTransform: 'uppercase' }}
-                >
-                  {t('complaints.sla.dueLabel')}
-                </Typography>
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  <ComplaintSlaDot
-                    statutoryDueDate={complaint.statutoryDueDate}
-                    status={complaint.status}
-                  />
-                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                    {formatEpochTimestamp(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
-                  </Typography>
-                </Stack>
-              </Box>
+              <ComplaintDeadline
+                submittedAt={complaint.submittedAt}
+                statutoryDueDate={complaint.statutoryDueDate}
+                status={complaint.status}
+                audience="dataPrincipal"
+              />
             </Box>
           </Stack>
         </CardContent>

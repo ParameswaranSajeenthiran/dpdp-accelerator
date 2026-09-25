@@ -229,6 +229,10 @@ function ComplaintQueueTable({
                     <ComplaintSlaIndicator
                       statutoryDueDate={row.statutoryDueDate}
                       status={row.status}
+                      // The queue has no due-date column, so the tooltip carries it.
+                      tooltip={t('complaints.sla.dueDate', {
+                        date: formatEpochTimestamp(row.statutoryDueDate, DATE_FORMAT_OPTIONS),
+                      })}
                     />
                   </TableCell>
                   <TableCell>{formatEpochTimestamp(row.updatedAt, DATE_FORMAT_OPTIONS)}</TableCell>

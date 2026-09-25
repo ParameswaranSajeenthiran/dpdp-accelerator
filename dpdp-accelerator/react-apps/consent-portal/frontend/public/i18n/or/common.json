@@ -401,11 +401,23 @@
     "sla": {
       "dueDate": "ଦେୟ {{date}}",
       "dueToday": "ଆଜି ଦେୟ",
-      "overdueSingular": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "overduePlural": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "daysLeftSingular": "{{count}} ଦିନ ବାକି",
-      "daysLeftPlural": "{{count}} ଦିନ ବାକି",
-      "dueLabel": "ଶେଷ ତାରିଖ"
+      "daysLeft": "{{count}} ଦିନ ବାକି",
+      "daysLeft_one": "{{count}} ଦିନ ବାକି",
+      "daysLeft_other": "{{count}} ଦିନ ବାକି",
+      "overdueDays": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_one": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_other": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdue": "Overdue",
+      "deadlineLabelDataPrincipal": "ଶେଷ ତାରିଖ",
+      "deadlineLabelOfficer": "Statutory deadline",
+      "periodDataPrincipal": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodDataPrincipal_one": "The organisation must resolve your complaint within {{count}} day of submitting it.",
+      "periodDataPrincipal_other": "The organisation must resolve your complaint within {{count}} days of submitting it.",
+      "periodOfficer": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_one": "Complaints must be resolved within {{count}} day of submission. Unresolved complaints past this date count as an SLA breach.",
+      "periodOfficer_other": "Complaints must be resolved within {{count}} days of submission. Unresolved complaints past this date count as an SLA breach.",
+      "breachedDataPrincipal": "The deadline has passed. If you have not had a satisfactory response, you can escalate your complaint to the Data Protection Board.",
+      "breachedOfficer": "Overdue: this case counts as an SLA breach."
     },
     "timeline": {
       "complaintReceived": "ଅଭିଯୋଗ ଗ୍ରହଣ କରାଗଲା",
