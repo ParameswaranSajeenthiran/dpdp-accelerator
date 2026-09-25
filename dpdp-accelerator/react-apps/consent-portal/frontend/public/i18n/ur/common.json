@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "آخری تاریخ: {{date}}",
       "dueToday": "آج آخری دن ہے",
-      "overdueSingular": "{{count}} دن کی تاخیر",
-      "overduePlural": "{{count}} دنوں کی تاخیر",
-      "daysLeftSingular": "{{count}} دن باقی ہے",
-      "daysLeftPlural": "{{count}} دن باقی ہیں",
-      "dueLabel": "آخری تاریخ"
+      "daysLeft": "{{count}} دن باقی ہیں",
+      "daysLeft_one": "{{count}} دن باقی ہے",
+      "daysLeft_other": "{{count}} دن باقی ہیں",
+      "overdueDays": "{{count}} دنوں کی تاخیر",
+      "overdueDays_one": "{{count}} دن کی تاخیر",
+      "overdueDays_other": "{{count}} دنوں کی تاخیر",
+      "overdue": "تاخیر کا شکار",
+      "deadlineLabelDataPrincipal": "آخری تاریخ",
+      "deadlineLabelOfficer": "قانونی ڈیڈلائن",
+      "periodDataPrincipal": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دنوں کے اندر حل کرنا ہوگا۔",
+      "periodDataPrincipal_one": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دن کے اندر حل کرنا ہوگا۔",
+      "periodDataPrincipal_other": "تنظیم کو آپ کی شکایت موصول ہونے کے {{count}} دنوں کے اندر حل کرنا ہوگا۔",
+      "periodOfficer": "شکایات موصول ہونے کے {{count}} دنوں کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "periodOfficer_one": "شکایات موصول ہونے کے {{count}} دن کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "periodOfficer_other": "شکایات موصول ہونے کے {{count}} دنوں کے اندر حل کی جانی چاہئیں۔ اس تاریخ کے بعد حل نہ ہونے والی شکایات کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔",
+      "breachedDataPrincipal": "ڈیڈلائن گزر چکی ہے۔ اگر آپ کو تسلی بخش جواب نہیں ملا ہے، تو آپ اپنی شکایت ڈیٹا پروٹیکشن بورڈ کو بھیج سکتے ہیں۔",
+      "breachedOfficer": "تاخیر کا شکار: اس کیس کو SLA کی خلاف ورزی شمار کیا جاتا ہے۔"
     },
     "timeline": {
       "complaintReceived": "شکایت موصول ہوئی",

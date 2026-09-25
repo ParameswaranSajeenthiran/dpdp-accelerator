@@ -89,18 +89,29 @@ export function getComplaintStatusAccentColor(
   return CHIP_COLOR_TO_SX_PATH[getComplaintStatusChipColor(status, viewerRole)]
 }
 
+// The deadline is an exact moment (submission + N x 24h), not the end of a day, so the time is
+// shown too - otherwise the badge can turn "Overdue" while the page still shows today's date.
+export const SLA_DEADLINE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  month: 'short',
+  day: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+}
+
 const SLA_AT_RISK_THRESHOLD_HOURS = 24 * 14
 const DAY_IN_MS = 1000 * 60 * 60 * 24
 
 export function getComplaintSlaState(
   statutoryDueDate: number,
   status: ComplaintStatus,
+  now: number = Date.now(),
 ): ComplaintSlaState {
   if (status === 'RESOLVED') {
     return 'met'
   }
 
-  const hoursRemaining = (statutoryDueDate - Date.now()) / (1000 * 60 * 60)
+  const hoursRemaining = (statutoryDueDate - now) / (1000 * 60 * 60)
 
   if (hoursRemaining < 0) {
     return 'breached'
@@ -113,6 +124,55 @@ export function getComplaintSlaState(
   return 'onTrack'
 }
 
-export function getComplaintSlaDaysRemaining(statutoryDueDate: number): number {
-  return Math.ceil((statutoryDueDate - Date.now()) / DAY_IN_MS)
+// Derived per complaint rather than read from config, so it stays right for complaints filed
+// before an operator changed statutory_due_period_days.
+export function getComplaintStatutoryPeriodDays(
+  submittedAt: number,
+  statutoryDueDate: number,
+): number {
+  return Math.round((statutoryDueDate - submittedAt) / DAY_IN_MS)
+}
+
+// Counted in local calendar days so the wording always agrees with the due date printed beside
+// it, which a raw 24-hour division does not (3 hours before a midnight deadline is "today").
+function getCalendarDaysBetween(from: number, to: number): number {
+  const fromDay = new Date(from).setHours(0, 0, 0, 0)
+  const toDay = new Date(to).setHours(0, 0, 0, 0)
+
+  // Rounded because a DST change makes one calendar day 23 or 25 hours long.
+  return Math.round((toDay - fromDay) / DAY_IN_MS)
+}
+
+export interface ComplaintSlaSummary {
+  state: ComplaintSlaState
+  labelKey: string
+  count: number
+}
+
+// The single source for the SLA colour and its wording, so the two can never disagree (a red
+// "breached" state beside "Due today").
+export function getComplaintSlaSummary(
+  statutoryDueDate: number,
+  status: ComplaintStatus,
+  now: number = Date.now(),
+): ComplaintSlaSummary {
+  const state = getComplaintSlaState(statutoryDueDate, status, now)
+
+  if (state === 'met') {
+    return { state, labelKey: `complaints.status.${getComplaintStatusLabelKey(status)}`, count: 0 }
+  }
+
+  if (state === 'breached') {
+    const overdueDays = getCalendarDaysBetween(statutoryDueDate, now)
+
+    return overdueDays === 0
+      ? { state, labelKey: 'complaints.sla.overdue', count: 0 }
+      : { state, labelKey: 'complaints.sla.overdueDays', count: overdueDays }
+  }
+
+  const daysLeft = getCalendarDaysBetween(now, statutoryDueDate)
+
+  return daysLeft === 0
+    ? { state, labelKey: 'complaints.sla.dueToday', count: 0 }
+    : { state, labelKey: 'complaints.sla.daysLeft', count: daysLeft }
 }

@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "मुदत {{date}}",
       "dueToday": "आयज मुदत",
-      "overdueSingular": "{{count}} दीस मुदत सोंपल्या",
-      "overduePlural": "{{count}} दीस मुदत सोंपल्या",
-      "daysLeftSingular": "{{count}} दीस उरला",
-      "daysLeftPlural": "{{count}} दीस उरल्यात",
-      "dueLabel": "मुदत"
+      "daysLeft": "{{count}} दीस उरल्यात",
+      "daysLeft_one": "{{count}} दीस उरला",
+      "daysLeft_other": "{{count}} दीस उरल्यात",
+      "overdueDays": "{{count}} दीस मुदत सोंपल्या",
+      "overdueDays_one": "{{count}} दीस मुदत सोंपल्या",
+      "overdueDays_other": "{{count}} दीस मुदत सोंपल्या",
+      "overdue": "वेळार जावंक ना",
+      "deadlineLabelDataPrincipal": "मुदत",
+      "deadlineLabelOfficer": "कायदेशीर मुदत",
+      "periodDataPrincipal": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसां भितर संस्थेन ती सोडयपाक जाय.",
+      "periodDataPrincipal_one": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसा भितर संस्थेन ती सोडयपाक जाय.",
+      "periodDataPrincipal_other": "तुमची कागाळ मेळ्ळ्या उपरांत {{count}} दिसां भितर संस्थेन ती सोडयपाक जाय.",
+      "periodOfficer": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसां भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "periodOfficer_one": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसा भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "periodOfficer_other": "कागाळी मेळ्ळ्या उपरांत {{count}} दिसां भितर त्यो सोडयपाक जाय. ह्या तारखे उपरांत सुटनात त्यो कागाळी SLA मोडल्या अशें धरतात.",
+      "breachedDataPrincipal": "मुदत सोंपल्या. तुमकां समाधानकारक जाप मेळूंक ना जाल्यार, तुमी तुमची कागाळ Data Protection Board कडेन वाडोवंक शकतात.",
+      "breachedOfficer": "वेळार जावंक ना: हो खटलो SLA मोडल्या अशें धरतात."
     },
     "timeline": {
       "complaintReceived": "कागाळ मेळ्ळी",

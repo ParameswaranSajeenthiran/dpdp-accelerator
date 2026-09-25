@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "नियत तिथि {{date}}",
       "dueToday": "आजुक नियत तिथि",
-      "overdueSingular": "{{count}} दिन विलंब",
-      "overduePlural": "{{count}} दिन विलंब",
-      "daysLeftSingular": "{{count}} दिन बाँकी",
-      "daysLeftPlural": "{{count}} दिन बाँकी",
-      "dueLabel": "समय सीमा"
+      "daysLeft": "{{count}} दिन बाँकी",
+      "daysLeft_one": "{{count}} दिन बाँकी",
+      "daysLeft_other": "{{count}} दिन बाँकी",
+      "overdueDays": "{{count}} दिन विलंब",
+      "overdueDays_one": "{{count}} दिन विलंब",
+      "overdueDays_other": "{{count}} दिन विलंब",
+      "overdue": "विलंब",
+      "deadlineLabelDataPrincipal": "समय सीमा",
+      "deadlineLabelOfficer": "वैधानिक समय-सीमा",
+      "periodDataPrincipal": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodDataPrincipal_one": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodDataPrincipal_other": "संस्था केँ अहाँक शिकायत जमा करबाक {{count}} दिनक भीतर एकरा सुलझेबाक चाही।",
+      "periodOfficer": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "periodOfficer_one": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "periodOfficer_other": "शिकायत जमा करबाक {{count}} दिनक भीतर ओकरा सुलझाओल जेबाक चाही। एहि तारीखक बादो नहि सुलझल शिकायत SLA उल्लंघन मानल जाइत अछि।",
+      "breachedDataPrincipal": "समय-सीमा बीति गेल अछि। जँ अहाँकेँ कोनो संतोषजनक जवाब नहि भेटल अछि, तँ अहाँ अपन शिकायत डेटा प्रोटेक्शन बोर्ड केँ पठा सकैत छी।",
+      "breachedOfficer": "विलंब: एहि मामला केँ SLA उल्लंघन मानल जाइत अछि।"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त भेल",

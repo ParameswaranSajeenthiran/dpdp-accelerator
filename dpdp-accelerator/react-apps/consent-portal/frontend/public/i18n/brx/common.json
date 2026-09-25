@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "जोबनाय अक्ट' {{date}}",
       "dueToday": "दिनैनो जोबगोन",
-      "overdueSingular": "{{count}} सान हाहैबाय",
-      "overduePlural": "{{count}} सानफोर हाहैबाय",
-      "daysLeftSingular": "{{count}} सान आगोनां",
-      "daysLeftPlural": "{{count}} सानफोर आगोनां",
-      "dueLabel": "थि अक्ट'"
+      "daysLeft": "{{count}} सानफोर आगोनां",
+      "daysLeft_one": "{{count}} सान आगोनां",
+      "daysLeft_other": "{{count}} सानफोर आगोनां",
+      "overdueDays": "{{count}} सानफोर हाहैबाय",
+      "overdueDays_one": "{{count}} सान हाहैबाय",
+      "overdueDays_other": "{{count}} सानफोर हाहैबाय",
+      "overdue": "गोबाव जानाय",
+      "deadlineLabelDataPrincipal": "थि अक्ट'",
+      "deadlineLabelOfficer": "आइनारी सम सिमा",
+      "periodDataPrincipal": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodDataPrincipal_one": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodDataPrincipal_other": "आफादा नोंथांनि अजदखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन।",
+      "periodOfficer": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "periodOfficer_one": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "periodOfficer_other": "अजदफोरखौ जमा होनायनि {{count}} साननि गेजेराव सुस्रांनांगोन। बे अक्ट'नि उनाव सुस्रांआजासे थानाय अजदफोरखौ SLA सिफायनाय होनना साननाय जायो।",
+      "breachedDataPrincipal": "सम सिमाया बारलांबाय। जुदि नोंथाङा गोजोनथाव फिननाय मोनाखै, अब्ला नोंथाङा गावनि अजदखौ Data Protection Board सिम दैथायहरनो हागोन।",
+      "breachedOfficer": "गोबाव जानाय: बे केसखौ SLA सिफायनाय होनना साननाय जायो।"
     },
     "timeline": {
       "complaintReceived": "अजत मोनबाय",

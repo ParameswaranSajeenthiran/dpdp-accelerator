@@ -39,7 +39,7 @@ import ComplaintActivityFeed from '../complaints/components/ComplaintActivityFee
 import ComplaintAttachmentsPanel from '../complaints/components/ComplaintAttachmentsPanel'
 import ComplaintPriorityChip from '../complaints/components/ComplaintPriorityChip'
 import ComplaintReplyComposer from '../complaints/components/ComplaintReplyComposer'
-import ComplaintSlaIndicator from '../complaints/components/ComplaintSlaIndicator'
+import ComplaintDeadline from '../complaints/components/ComplaintDeadline'
 import ComplaintStatusChip from '../complaints/components/ComplaintStatusChip'
 import { COMPLAINT_NEXT_STATUSES } from '../complaints/constants'
 import {
@@ -54,9 +54,6 @@ const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   month: 'short',
   day: '2-digit',
   year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
 }
 
 interface PendingResolveSend {
@@ -147,10 +144,6 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
         <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
           <ComplaintPriorityChip priority={complaint.priority} />
           <ComplaintStatusChip status={complaint.status} viewerRole="ComplaintOfficer" />
-          <ComplaintSlaIndicator
-            statutoryDueDate={complaint.statutoryDueDate}
-            status={complaint.status}
-          />
         </Stack>
       </Stack>
 
@@ -197,19 +190,12 @@ function ComplaintCaseDetailPage(): React.JSX.Element {
                   {formatEpochTimestamp(complaint.submittedAt, DATE_FORMAT_OPTIONS)}
                 </Typography>
               </Box>
-              <Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={600}
-                  sx={{ display: 'block', textTransform: 'uppercase' }}
-                >
-                  {t('complaints.sla.dueLabel')}
-                </Typography>
-                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  {formatEpochTimestamp(complaint.statutoryDueDate, DATE_FORMAT_OPTIONS)}
-                </Typography>
-              </Box>
+              <ComplaintDeadline
+                submittedAt={complaint.submittedAt}
+                statutoryDueDate={complaint.statutoryDueDate}
+                status={complaint.status}
+                audience="officer"
+              />
             </Box>
 
             <Box>

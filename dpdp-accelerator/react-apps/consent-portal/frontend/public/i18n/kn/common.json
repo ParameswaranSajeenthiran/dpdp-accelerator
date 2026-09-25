@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "ಗಡುವು {{date}}",
       "dueToday": "ಇಂದು ಗಡುವು",
-      "overdueSingular": "{{count}} ದಿನ ಮೀರಿದೆ",
-      "overduePlural": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
-      "daysLeftSingular": "{{count}} ದಿನ ಉಳಿದಿದೆ",
-      "daysLeftPlural": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
-      "dueLabel": "ಗಡುವು"
+      "daysLeft": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
+      "daysLeft_one": "{{count}} ದಿನ ಉಳಿದಿದೆ",
+      "daysLeft_other": "{{count}} ದಿನಗಳು ಉಳಿದಿವೆ",
+      "overdueDays": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
+      "overdueDays_one": "{{count}} ದಿನ ಮೀರಿದೆ",
+      "overdueDays_other": "{{count}} ದಿನಗಳು ಮೀರಿವೆ",
+      "overdue": "ವಿಳಂಬವಾಗಿದೆ",
+      "deadlineLabelDataPrincipal": "ಗಡುವು",
+      "deadlineLabelOfficer": "ಶಾಸನಬದ್ಧ ಗಡುವು",
+      "periodDataPrincipal": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodDataPrincipal_one": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನದ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodDataPrincipal_other": "ನೀವು ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ಸಂಸ್ಥೆಯು ನಿಮ್ಮ ದೂರಿನ ಬಗ್ಗೆ ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕು.",
+      "periodOfficer": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "periodOfficer_one": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನದ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "periodOfficer_other": "ದೂರು ಸಲ್ಲಿಸಿದ {{count}} ದಿನಗಳ ಒಳಗೆ ದೂರುಗಳನ್ನು ಬಗೆಹರಿಸಬೇಕು. ಈ ದಿನಾಂಕದ ನಂತರ ಬಗೆಹರಿಯದ ದೂರುಗಳು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ.",
+      "breachedDataPrincipal": "ಗಡುವು ಮುಗಿದಿದೆ. ನಿಮಗೆ ತೃಪ್ತಿದಾಯಕ ಉತ್ತರ ಸಿಗದಿದ್ದರೆ, ನಿಮ್ಮ ದೂರನ್ನು ಡೇಟಾ ಪ್ರೊಟೆಕ್ಷನ್ ಬೋರ್ಡ್‌ಗೆ ಮೇಲ್ದರ್ಜೆಗೇರಿಸಬಹುದು.",
+      "breachedOfficer": "ವಿಳಂಬವಾಗಿದೆ: ಈ ಪ್ರಕರಣವು SLA ಉಲ್ಲಂಘನೆ ಎಂದು ಪರಿಗಣಿಸಲಾಗುತ್ತದೆ."
     },
     "timeline": {
       "complaintReceived": "ದೂರು ಸ್ವೀಕರಿಸಲಾಗಿದೆ",

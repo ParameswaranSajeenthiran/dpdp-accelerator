@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "{{date}} तक देय",
       "dueToday": "आज ही देय है",
-      "overdueSingular": "{{count}} दिन की देरी",
-      "overduePlural": "{{count}} दिनों की देरी",
-      "daysLeftSingular": "{{count}} दिन शेष",
-      "daysLeftPlural": "{{count}} दिन शेष",
-      "dueLabel": "नियत तिथि"
+      "daysLeft": "{{count}} दिन शेष",
+      "daysLeft_one": "{{count}} दिन शेष",
+      "daysLeft_other": "{{count}} दिन शेष",
+      "overdueDays": "{{count}} दिनों की देरी",
+      "overdueDays_one": "{{count}} दिन की देरी",
+      "overdueDays_other": "{{count}} दिनों की देरी",
+      "overdue": "ओवरड्यू",
+      "deadlineLabelDataPrincipal": "नियत तिथि",
+      "deadlineLabelOfficer": "वैधानिक समय-सीमा",
+      "periodDataPrincipal": "संगठन को आपकी शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा।",
+      "periodDataPrincipal_one": "संगठन को आपकी शिकायत मिलने के {{count}} दिन के भीतर उसे सुलझाना होगा।",
+      "periodDataPrincipal_other": "संगठन को आपकी शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा।",
+      "periodOfficer": "शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "periodOfficer_one": "शिकायत मिलने के {{count}} दिन के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "periodOfficer_other": "शिकायत मिलने के {{count}} दिनों के भीतर उसे सुलझाना होगा। इस तारीख के बाद भी अनसुलझी शिकायतों को SLA उल्लंघन माना जाएगा।",
+      "breachedDataPrincipal": "समय-सीमा समाप्त हो चुकी है। यदि आपको संतोषजनक जवाब नहीं मिला है, तो आप अपनी शिकायत को डेटा प्रोटेक्शन बोर्ड के पास भेज सकते हैं।",
+      "breachedOfficer": "ओवरड्यू: इस मामले को SLA उल्लंघन माना जाएगा।"
     },
     "timeline": {
       "complaintReceived": "शिकायत प्राप्त हुई",

@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "تاریخ تام {{date}}",
       "dueToday": "ازِ چھُ واجِبُ الادا",
-      "overdueSingular": "{{count}} دۄہ زیاتہٕ گۆومُت",
-      "overduePlural": "{{count}} دۄہ زیاتہٕ گۆومُت",
-      "daysLeftSingular": "{{count}} دۄہ باقائے",
-      "daysLeftPlural": "{{count}} دۄہ باقائے",
-      "dueLabel": "آخری تٲریٖخ"
+      "daysLeft": "{{count}} دۄہ باقائے",
+      "daysLeft_one": "{{count}} دۄہ باقائے",
+      "daysLeft_other": "{{count}} دۄہ باقائے",
+      "overdueDays": "{{count}} دۄہ زیاتہٕ گۆومُت",
+      "overdueDays_one": "{{count}} دۄہ زیاتہٕ گۆومُت",
+      "overdueDays_other": "{{count}} دۄہ زیاتہٕ گۆومُت",
+      "overdue": "اوورڈیو",
+      "deadlineLabelDataPrincipal": "آخری تٲریٖخ",
+      "deadlineLabelOfficer": "قانونی ڈیڈلائن",
+      "periodDataPrincipal": "تنظیمس پزِ تُہنٛز شِکایت {{count}} دۄہن منٛز حَل کرٕنؠ ییلہِ یہِ جمع کرنہٕ یِیہِ۔",
+      "periodDataPrincipal_one": "تنظیمس پزِ تُہنٛز شِکایت {{count}} دۄہس منٛز حَل کرٕنؠ ییلہِ یہِ جمع کرنہٕ یِیہِ۔",
+      "periodDataPrincipal_other": "تنظیمس پزِ تُہنٛز شِکایت {{count}} دۄہن منٛز حَل کرٕنؠ ییلہِ یہِ جمع کرنہٕ یِیہِ۔",
+      "periodOfficer": "شِکایت پزِ جمع کرنہٕ کِس {{count}} دۄہن منٛز حَل کرٕنؠ۔ یم شِکایت یمن دۄہن پتہٕ تہِ حَل نہٕ گژھن، تِم چھِ SLA بریف ماننہٕ یِوان۔",
+      "periodOfficer_one": "شِکایت پزِ جمع کرنہٕ کِس {{count}} دۄہس منٛز حَل کرٕنؠ۔ یم شِکایت یمن دۄہن پتہٕ تہِ حَل نہٕ گژھن، تِم چھِ SLA بریف ماننہٕ یِوان۔",
+      "periodOfficer_other": "شِکایت پزِ جمع کرنہٕ کِس {{count}} دۄہن منٛز حَل کرٕنؠ۔ یم شِکایت یمن دۄہن پتہٕ تہِ حَل نہٕ گژھن، تِم چھِ SLA بریف ماننہٕ یِوان۔",
+      "breachedDataPrincipal": "ڈیڈلائن چھِ ختم گٔمٕژ۔ اگر تُہنٛد جواب تسلی بخش چھُ نہٕ، تُہؠ ہیکیو پنٕنۍ شِکایت Data Protection Board تام بَڈٲوِتھ۔",
+      "breachedOfficer": "اوورڈیو: یہِ کیس چھُ SLA بریف ماننہٕ یِوان۔"
     },
     "timeline": {
       "complaintReceived": "شِکایَت مِلییہِ",

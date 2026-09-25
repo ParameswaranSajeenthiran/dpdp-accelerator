@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "ଦେୟ {{date}}",
       "dueToday": "ଆଜି ଦେୟ",
-      "overdueSingular": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "overduePlural": "{{count}} ଦିନ ବିଳମ୍ବ",
-      "daysLeftSingular": "{{count}} ଦିନ ବାକି",
-      "daysLeftPlural": "{{count}} ଦିନ ବାକି",
-      "dueLabel": "ଶେଷ ତାରିଖ"
+      "daysLeft": "{{count}} ଦିନ ବାକି",
+      "daysLeft_one": "{{count}} ଦିନ ବାକି",
+      "daysLeft_other": "{{count}} ଦିନ ବାକି",
+      "overdueDays": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_one": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdueDays_other": "{{count}} ଦିନ ବିଳମ୍ବ",
+      "overdue": "ଡେରି ହୋଇଛି",
+      "deadlineLabelDataPrincipal": "ଶେଷ ତାରିଖ",
+      "deadlineLabelOfficer": "ଆଇନଗତ ସମୟସୀମା",
+      "periodDataPrincipal": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodDataPrincipal_one": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodDataPrincipal_other": "ଆପଣଙ୍କ ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ସଂସ୍ଥା ଆପଣଙ୍କ ଅଭିଯୋଗର ସମାଧାନ କରିବା ଆବଶ୍ୟକ।",
+      "periodOfficer": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "periodOfficer_one": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "periodOfficer_other": "ଅଭିଯୋଗ ଦାଖଲ କରିବାର {{count}} ଦିନ ମଧ୍ୟରେ ଅଭିଯୋଗର ସମାଧାନ ହେବା ଆବଶ୍ୟକ। ଏହି ତାରିଖ ପରେ ଅସମାହିତ ଅଭିଯୋଗଗୁଡ଼ିକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।",
+      "breachedDataPrincipal": "ସମୟସୀମା ଶେଷ ହୋଇଯାଇଛି। ଯଦି ଆପଣ ଏକ ସନ୍ତୋଷଜନକ ଉତ୍ତର ପାଇନାହାଁନ୍ତି, ତେବେ ଆପଣ ନିଜର ଅଭିଯୋଗକୁ ଡାଟା ପ୍ରୋଟେକ୍ସନ୍ ବୋର୍ଡ (Data Protection Board) କୁ ପଠାଇପାରିବେ।",
+      "breachedOfficer": "ଡେରି ହୋଇଛି: ଏହି ମାମଲାଟି ଏକ SLA ଉଲ୍ଲଂଘନ ଭାବରେ ଗଣାଯାଏ।"
     },
     "timeline": {
       "complaintReceived": "ଅଭିଯୋଗ ଗ୍ରହଣ କରାଗଲା",

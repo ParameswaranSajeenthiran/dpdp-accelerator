@@ -403,11 +403,23 @@
     "sla": {
       "dueDate": "મર્યાદા તારીખ {{date}}",
       "dueToday": "આજે જ મર્યાદા પૂરી થાય છે",
-      "overdueSingular": "{{count}} દિવસ વિલંબિત",
-      "overduePlural": "{{count}} દિવસો વિલંબિત",
-      "daysLeftSingular": "{{count}} દિવસ બાકી",
-      "daysLeftPlural": "{{count}} દિવસો બાકી",
-      "dueLabel": "અંતિમ તારીખ"
+      "daysLeft": "{{count}} દિવસો બાકી",
+      "daysLeft_one": "{{count}} દિવસ બાકી",
+      "daysLeft_other": "{{count}} દિવસો બાકી",
+      "overdueDays": "{{count}} દિવસો વિલંબિત",
+      "overdueDays_one": "{{count}} દિવસ વિલંબિત",
+      "overdueDays_other": "{{count}} દિવસો વિલંબિત",
+      "overdue": "વિલંબિત",
+      "deadlineLabelDataPrincipal": "અંતિમ તારીખ",
+      "deadlineLabelOfficer": "વૈધાનિક સમયમર્યાદા",
+      "periodDataPrincipal": "સંસ્થાએ તમારી ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે.",
+      "periodDataPrincipal_one": "સંસ્થાએ તમારી ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે.",
+      "periodDataPrincipal_other": "સંસ્થાએ તમારી ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે.",
+      "periodOfficer": "ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે. આ તારીખ પસાર થયા પછી પણ વણઉકેલાયેલી ફરિયાદો SLA ભંગ તરીકે ગણાશે.",
+      "periodOfficer_one": "ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે. આ તારીખ પસાર થયા પછી પણ વણઉકેલાયેલી ફરિયાદો SLA ભંગ તરીકે ગણાશે.",
+      "periodOfficer_other": "ફરિયાદ સબમિટ કર્યાના {{count}} દિવસની અંદર તેનો ઉકેલ લાવવો જ પડશે. આ તારીખ પસાર થયા પછી પણ વણઉકેલાયેલી ફરિયાદો SLA ભંગ તરીકે ગણાશે.",
+      "breachedDataPrincipal": "સમયમર્યાદા પૂરી થઈ ગઈ છે. જો તમને સંતોષકારક જવાબ ન મળ્યો હોય, તો તમે તમારી ફરિયાદ Data Protection Board ને મોકલી શકો છો.",
+      "breachedOfficer": "વિલંબિત: આ કેસ SLA ભંગ તરીકે ગણાશે."
     },
     "timeline": {
       "complaintReceived": "ફરિયાદ પ્રાપ્ત થઈ",
