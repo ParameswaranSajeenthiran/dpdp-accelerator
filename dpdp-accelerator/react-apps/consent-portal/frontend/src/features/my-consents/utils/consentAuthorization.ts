@@ -102,7 +102,10 @@ export function getSelfConsentActionView(
       return { ...NO_ACTIONS, canRevoke: subjectId === currentUserId }
     }
     if (state === 'REJECTED') {
-      return { ...NO_ACTIONS, statusMessageKey: 'youRejected' }
+      return {
+        ...NO_ACTIONS,
+        statusMessageKey: subjectId === currentUserId ? 'youRejected' : 'rejected',
+      }
     }
     return NO_ACTIONS
   }

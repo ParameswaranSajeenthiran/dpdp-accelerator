@@ -4,6 +4,9 @@ Adds a DPDP consent self-care portal on top of WSO2 Identity Server 7.3, backed 
 the Identity Server's own consent management APIs. No separate consent server is
 involved.
 
+Full documentation: **https://wso2.github.io/dpdp-accelerator/**. This zip does not
+carry a copy of the docs — the links below go to the source repository instead.
+
 ## What it deploys
 
 | Artifact | Location |

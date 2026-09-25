@@ -360,7 +360,8 @@ convention existed. Everything below is decided by one thing: whether the viewer
 entry in the consent's `authorizations` list.
 
 - **Direct Consent** — `authorizations` is empty. The subject consents for herself; the consent is
-  created `ACTIVE` (no `PENDING` step) and only she can revoke it.
+  created `ACTIVE` (no `PENDING` step). She can revoke it through self-service, and an admin can
+  also revoke it via oversight — the admin rule below applies to every scenario, Direct included.
 - **Delegated Consent** — `authorizations` names one or more people other than the subject (e.g. a
   child's mother and father). The subject has no entry, so she's an observer: no approve, reject,
   or revoke. IS requires **every** named authoriser to approve before the consent goes `ACTIVE`; a
@@ -370,8 +371,9 @@ entry in the consent's `authorizations` list.
   least one other. She decides for herself exactly like any other authoriser.
 
 State machine: a Direct consent only ever goes `ACTIVE → {REVOKED, EXPIRED}` (both terminal). A
-Delegated/Co-Authorized consent starts `PENDING → {EXPIRED, REJECTED}` (terminal) or
-`PENDING → ACTIVE → REVOKED` (terminal).
+Delegated/Co-Authorized consent starts `PENDING → {EXPIRED, REJECTED, REVOKED}` (terminal — the
+last only via admin oversight, which can revoke a still-pending request outright) or
+`PENDING → ACTIVE → {REVOKED, EXPIRED}` (terminal).
 
 Rules that hold regardless of how the code is structured:
 

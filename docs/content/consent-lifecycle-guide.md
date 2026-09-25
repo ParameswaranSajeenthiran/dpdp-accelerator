@@ -102,7 +102,7 @@ the button:
 |---|---|
 | "Waiting for authoriser approval." | You're the subject of a Delegated Consent, still `PENDING`. |
 | "This consent has been approved." / "...rejected." | You're the subject of a Delegated Consent, and a decision has been made. |
-| "You've made your decision. Waiting for the rest to decide." | You're a named authoriser who has already approved or rejected, and the consent is still `PENDING` on someone else. |
+| "You've made your decision. Waiting for the rest to decide." | You're a named authoriser who has already approved, and the consent is still `PENDING` on someone else. |
 | "You've rejected this consent." | You're the authoriser whose rejection ended it. |
 | "This consent has been revoked." / "...expired." | The consent has reached a final state — no further action is possible for anyone. |
 

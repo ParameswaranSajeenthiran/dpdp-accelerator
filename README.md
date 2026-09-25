@@ -21,6 +21,9 @@ installation.
 
 ## Documentation
 
+Published at **https://wso2.github.io/dpdp-accelerator/**. The accelerator zip
+does not carry a copy — use the hosted site, or the source links below.
+
 The `docs/` directory is a [Docusaurus](https://docusaurus.io/) site whose
 content lives in `docs/content/`. Run `npm install` then `npm run start` inside
 `docs/` to preview it locally.

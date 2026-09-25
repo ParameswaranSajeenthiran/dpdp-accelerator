@@ -40,12 +40,5 @@
             <directory>${project.basedir}/carbon-home</directory>
             <outputDirectory>carbon-home</outputDirectory>
         </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../../../docs/content</directory>
-            <outputDirectory>docs</outputDirectory>
-            <includes>
-                <include>*.md</include>
-            </includes>
-        </fileSet>
     </fileSets>
 </assembly>

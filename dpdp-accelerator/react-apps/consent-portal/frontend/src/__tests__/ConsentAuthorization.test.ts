@@ -54,6 +54,14 @@ describe('getSelfConsentActionView', () => {
       expect(view.statusMessageKey).toBe('youRejected')
     })
 
+    it('shows the generic rejected message to an uninvolved caller, not "you rejected"', () => {
+      // Same reachability note as the ACTIVE/mallory case above - only the admin surface's
+      // fallback can put a non-subject caller here at all.
+      expect(getSelfConsentActionView('alice', 'REJECTED', [], 'mallory').statusMessageKey).toBe(
+        'rejected',
+      )
+    })
+
     it('offers no approve or reject, since a Direct consent never passes through PENDING', () => {
       const view = getSelfConsentActionView('alice', 'ACTIVE', [], 'alice')
       expect(view.canApprove).toBe(false)
