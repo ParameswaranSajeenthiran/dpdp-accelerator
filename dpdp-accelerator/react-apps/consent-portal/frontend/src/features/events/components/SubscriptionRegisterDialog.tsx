@@ -22,7 +22,6 @@ import {
   Button,
   CircularProgress,
   Dialog,
-  Box,
   DialogActions,
   DialogContent,
   DialogTitle,
