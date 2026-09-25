@@ -1348,8 +1348,7 @@ components:
         sharedSecret:
           type: string
           nullable: true
-          readOnly: true
-          description: Always null in service responses.
+          description: Shared secret used for payload signing or poll authentication.
     SubscriptionStatus:
       type: string
       description: Exact lowercase value required; case variants, surrounding whitespace, and aliases are not accepted.

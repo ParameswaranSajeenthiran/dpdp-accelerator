@@ -25,13 +25,28 @@ import {
   CardHeader,
   Chip,
   Divider,
+  IconButton,
   Skeleton,
   Snackbar,
   Stack,
+  Tooltip,
   Typography,
 } from '@wso2/oxygen-ui'
-import { ArrowLeft, Clock3, Globe, RefreshCw, Tag, Trash2 } from '@wso2/oxygen-ui-icons-react'
-import { useState } from 'react'
+import {
+  ArrowLeft,
+  Check,
+  Clock3,
+  Copy,
+  Eye,
+  EyeOff,
+  Globe,
+  Layers,
+  Lock,
+  RefreshCw,
+  Tag,
+  Trash2,
+} from '@wso2/oxygen-ui-icons-react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import SubscriptionTopicsSection from './components/SubscriptionTopicsSection'
@@ -65,6 +80,76 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
 
   const { hasScope } = useAuthorization()
   const canWrite = hasScope(REQUIRED_SCOPES.EVENT_SUBSCRIPTIONS_WRITE)
+
+  function SecretField({ secret }: { secret: string }) {
+    const [isVisible, setIsVisible] = useState(false)
+    const [copied, setCopied] = useState(false)
+    const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+    useEffect(
+      () => () => {
+        if (resetTimer.current) clearTimeout(resetTimer.current)
+      },
+      [],
+    )
+
+    if (!secret || secret === '-') {
+      return <Typography variant="body2">{'-'}</Typography>
+    }
+
+    const handleCopy = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      navigator.clipboard?.writeText(secret).then(() => {
+        setCopied(true)
+        if (resetTimer.current) clearTimeout(resetTimer.current)
+        resetTimer.current = setTimeout(() => setCopied(false), 2000)
+      })
+    }
+
+    const maskedSecret = '•'.repeat(Math.min(secret.length, 24))
+
+    return (
+      <Box
+        component="span"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0.5,
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Typography
+          component="span"
+          variant="body2"
+          sx={{
+            fontFamily: 'monospace',
+            letterSpacing: isVisible ? undefined : 1.5,
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-all',
+          }}
+        >
+          {isVisible ? secret : maskedSecret}
+        </Typography>
+        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+          <Tooltip title={isVisible ? 'Hide secret' : 'Show secret'}>
+            <IconButton
+              size="small"
+              onClick={() => setIsVisible(!isVisible)}
+              aria-label={isVisible ? 'Hide secret' : 'Show secret'}
+            >
+              {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={copied ? t('copyableText.copied') : t('copyableText.copy')}>
+            <IconButton size="small" onClick={handleCopy} aria-label={t('copyableText.copy')}>
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+    )
+  }
 
   const sub = detailQuery.data
 
@@ -223,6 +308,27 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
                   icon: <Globe size={16} />,
                   label: t('subscriptions.dialog.callbackUrlLabel'),
                   value: sub.delivery?.callbackUrl || '-',
+                },
+                {
+                  icon: <Lock size={16} />,
+                  label: t('subscriptions.details.sharedSecret', 'Shared Secret'),
+                  value: <SecretField secret={sub.delivery?.sharedSecret || '-'} />,
+                },
+                {
+                  icon: <Layers size={16} />,
+                  label: t('subscriptions.table.filter'),
+                  value: (
+                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={t(`subscriptions.filterType.${filterType}`, filterType)}
+                      />
+                      {sub.filter?.purposes?.map((purpose) => (
+                        <Chip key={purpose} size="small" label={purpose} />
+                      ))}
+                    </Stack>
+                  ),
                 },
                 {
                   icon: <Clock3 size={16} />,

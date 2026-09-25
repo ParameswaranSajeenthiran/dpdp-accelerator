@@ -158,7 +158,7 @@ public final class EventNotificationDtoMapper {
             delivery.setMode(source.getDelivery().getMode() == null ? null :
                     DeliveryMode.fromValue(source.getDelivery().getMode().getValue()));
             delivery.setCallbackUrl(source.getDelivery().getCallbackUrl());
-            // The public response never exposes the subscription shared secret.
+            delivery.setSharedSecret(source.getDelivery().getSharedSecret());
             target.setDelivery(delivery);
         }
         return target;

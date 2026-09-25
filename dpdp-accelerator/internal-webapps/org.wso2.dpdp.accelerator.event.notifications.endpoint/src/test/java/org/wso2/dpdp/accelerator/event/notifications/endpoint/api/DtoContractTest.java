@@ -101,8 +101,7 @@ public class DtoContractTest {
         mapped.setAlreadyExists(true);
         mapped.setMessage("existing");
         Subscription response = EventNotificationDtoMapper.toApi(mapped);
-        assertNull(response.getDelivery().getSharedSecret());
-        mapped.getDelivery().setSharedSecret(null);
+        assertEquals(response.getDelivery().getSharedSecret(), "secret");
         equivalent(mapped, response);
         equivalent(new PaginatedResult<>(Collections.singletonList(mapped), 5),
                 EventNotificationDtoMapper.subscriptions(new PaginatedResult<>(Collections.singletonList(mapped), 5)));
