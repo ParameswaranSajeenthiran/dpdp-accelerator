@@ -43,7 +43,6 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-
 describe('SubscriptionRegisterDialog', () => {
   it('validates name and required fields before registering', async () => {
     topicsApi.fetchTopics.mockResolvedValue({

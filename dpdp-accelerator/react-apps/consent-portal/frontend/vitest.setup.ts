@@ -43,7 +43,7 @@ vi.mock('i18next-http-backend', () => ({
     // i18next's BackendModule interface requires instance methods here; this
     // implementation genuinely needs no instance state.
     // eslint-disable-next-line class-methods-use-this
-    init = (): void => { }
+    init = (): void => {}
 
     // eslint-disable-next-line class-methods-use-this
     read = (language: string, namespace: string, callback: ReadCallback): void => {
@@ -69,13 +69,13 @@ if (typeof globalThis.Worker === 'undefined') {
 
     public onerror: ((this: AbstractWorker, event: ErrorEvent) => unknown) | null = null
 
-    public postMessage(): void { }
+    public postMessage(): void {}
 
-    public terminate(): void { }
+    public terminate(): void {}
 
-    public addEventListener(): void { }
+    public addEventListener(): void {}
 
-    public removeEventListener(): void { }
+    public removeEventListener(): void {}
 
     public dispatchEvent(): boolean {
       return false
@@ -87,7 +87,7 @@ if (typeof globalThis.Worker === 'undefined') {
 
 if (typeof URL.createObjectURL !== 'function') {
   URL.createObjectURL = () => 'blob:test'
-  URL.revokeObjectURL = () => { }
+  URL.revokeObjectURL = () => {}
 }
 
 /*
@@ -102,13 +102,13 @@ if (typeof Element.prototype.hasPointerCapture !== 'function') {
   Element.prototype.hasPointerCapture = (): boolean => false
 }
 if (typeof Element.prototype.setPointerCapture !== 'function') {
-  Element.prototype.setPointerCapture = (): void => { }
+  Element.prototype.setPointerCapture = (): void => {}
 }
 if (typeof Element.prototype.releasePointerCapture !== 'function') {
-  Element.prototype.releasePointerCapture = (): void => { }
+  Element.prototype.releasePointerCapture = (): void => {}
 }
 if (typeof Element.prototype.scrollIntoView !== 'function') {
-  Element.prototype.scrollIntoView = (): void => { }
+  Element.prototype.scrollIntoView = (): void => {}
 }
 
 /*
@@ -119,13 +119,13 @@ if (typeof Element.prototype.scrollIntoView !== 'function') {
 if (typeof globalThis.ResizeObserver === 'undefined') {
   class ResizeObserverStub implements ResizeObserver {
     // eslint-disable-next-line class-methods-use-this
-    observe(): void { }
+    observe(): void {}
 
     // eslint-disable-next-line class-methods-use-this
-    unobserve(): void { }
+    unobserve(): void {}
 
     // eslint-disable-next-line class-methods-use-this
-    disconnect(): void { }
+    disconnect(): void {}
   }
 
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
