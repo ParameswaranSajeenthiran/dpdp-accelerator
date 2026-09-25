@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 179 across 46 spec files in 9 areas |
+| **Tests** | 188 across 50 spec files in 10 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -546,6 +546,49 @@ Two independently provisioned throwaway tenants; `TENANT.ORG_ID` is the isolatio
 | `09.11.02` | Tenant A cannot read, delete, verify, or list history for tenant B resources | 404 - never 403 - on every cross-tenant operation, and tenant B's own view is unaffected. |
 | `09.11.03` | A newly created tenant receives Event Notification authorization and default topics | The five system topics exist as active/system, and the owner can create user topics and subscriptions with no manual API-resource registration. |
 
+## `10-dashboard/` — Dashboard counts and links
+
+What the dashboard renders, and nothing else: every assertion is on its cards and links; API calls
+are setup plus setup-precondition checks. Every exact count runs as a throwaway account created for
+that one test (the `throwawayAccounts` fixture), because only an account nothing else writes to
+has predictable totals - the one deliberate exception to "no totals on shared data". Cards are
+located by their `data-stat` attribute, pinned by `DashboardPage.test.tsx`.
+
+**9 tests, 4 spec files.**
+
+### `10.01-user-dashboard-consent-counts.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `10.01.01` | A new user sees zero in every consent and complaint status card | Also asserts the internal-review card reads **Waiting on DPO** and that the removed Total cards are gone. |
+| `10.01.02` | Each consent status card counts the user's own consents in that state | Subject-only consents, no authorizations: 2 ACTIVE, 1 REJECTED, 1 revoked by the user, 1 lapsed. The lapsed one needs no expiry job - IS resolves EXPIRED at read time for an ACTIVE/PENDING receipt past `EXPIRY_TIME` - so it is seeded first with a 5s expiry and polled via the API until EXPIRED. |
+| `10.01.03` | "View all consents" opens My Consents | Cached `user` persona - asserts no counts. |
+
+### `10.02-user-dashboard-consent-relations.spec.ts`
+
+Two throwaway accounts, U and V, whose dashboards are both asserted; the `user` persona is an
+unrelated third party. Guards #273/#274 (the dashboard once sent no `relation`, and IS defaults to
+SUBJECT).
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `10.02.01` | The dashboard counts every consent the user is the subject or an authorizer of, once each, and no others | Nine consents covering every relation: own; own but decided by V; V's decided by U; U as subject and authorizer; U as subject and one of two authorizers; a third party's with U and V as authorizers; V's with U as a `PARENT` authorizer; a third party's; V's own. U expects Pending 6 / Active 1, V Pending 5 / Active 1 - distinct so a missed relation, a double count, or a leaked unrelated consent each change a number. |
+| `10.02.02` | Consent state changes by any party are reflected on every party's dashboard | One of two authorizers approving keeps it Pending for both; both approving makes it Active; one rejecting makes it Rejected while the other is still undecided; an authorizer revoking shows Revoked to the subject; a pending consent lapsing shows Expired to both. The revoke comes from the authorizer, not the subject - see "Product bugs the tests work around". Each ends in a different state, so each card maps to one scenario. |
+
+### `10.03-user-dashboard-complaint-counts.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `10.03.01` | Each complaint status card counts only the user's own complaints in that status | One throwaway complaint per status (RESOLVED via IN_PROGRESS - OPEN -> RESOLVED isn't a direct transition), plus an OPEN complaint by the `user` persona that must not count. Seeded one at a time - see "Product bugs the tests work around". |
+| `10.03.02` | "View all complaints" opens My Complaints | Cached `user` persona. |
+
+### `10.04-admin-dashboard.spec.ts`
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `10.04.01` | An admin sees tenant-wide consent status cards and Purposes/Elements counts | Each card loads a real value (`^\d+\+?$`), not an exact one - see "What this suite cannot verify". No Total card, no complaints section. |
+| `10.04.02` | "View all consents" opens the admin consent registry |  |
+
 ---
 
 # Known gaps
@@ -621,6 +664,14 @@ suite cannot verify".
 
 ## What this suite cannot verify
 
+**Exact admin dashboard counts.** The admin dashboard counts the whole tenant, which every parallel
+test writes to - and on the super tenant, every earlier run too - so no exact or before/after value
+is stable. `10.04.01` checks every card loads a real value instead. Considered and rejected: a
+Playwright project that runs last (there is still no known expected value, and a dependent project
+is skipped whenever any test it depends on fails) and a dedicated throwaway tenant (slow Console-UI
+setup for no counting logic the user dashboard's `10.01`-`10.03` don't already prove). The admin
+view's query shape is pinned by `DashboardPage.test.tsx`.
+
 Both removed cases are genuinely unreachable from a black-box HTTP test, and both are already
 covered one layer down by Java unit tests with a mocked DAO - so removing the dead
 `test.skip()`'d E2E placeholder loses no real verification.
@@ -669,6 +720,8 @@ Real defects that dictate how tests above are written. Recorded here so nobody
 | **Deleting a Purpose version referenced by a consent is rejected server-side, but `PurposeDetailsPage.tsx`'s `deleteVersionErrorMessage` treats every failure as unexpected** and shows a generic "Something went wrong" message - unlike the whole-Purpose delete, which has its own "still referenced by one or more consents" text. | `03.05.05` asserts the generic text, since that is what the product actually shows. |
 | **`ComplaintActivityFeed.tsx` calls `entry.message.trim()` with no null guard**, blanking the whole feed for any complaint whose timeline holds a note-less status change. | `moveComplaintToStatusViaApi` always sends a note, even where the API does not require one. |
 | **`TopicRegisterDialog.tsx`'s custom "Topic name is required." branch is unreachable** — the form has no `noValidate` and the field is natively `required`, so the browser blocks submit before React sees it. | `09.01.02` asserts `validity.valid === false`, the observable outcome. |
+| **A subject's self-service revoke of a consent that has authorizers returns success and changes nothing.** `/me/consents/{id}/revoke` is IS's `authorizeConsent(id, caller, REVOKED)`: with authorizations present it updates only the caller's own authorization row, and a subject who isn't an authorizer has none, so the UPDATE matches nothing and the recomputed state is unchanged. | `10.02.02` revokes through the authorizer; `revokeConsentViaApi` re-reads the state so a silent no-op fails as setup. |
+| **Simultaneous complaint creates in one org can fail with `CO-5000`.** The reference ID is count-then-insert (`ComplaintServiceUtil.generateReferenceId`); `createComplaint` retries a duplicate with a fresh ID, but a burst of creates recounting the same rows exhausts `MAX_REFERENCE_ID_ATTEMPTS`. | `10.03.01` seeds its complaints sequentially. |
 
 ---
 

@@ -16,12 +16,14 @@
  * under the License.
  */
 
+import { randomBytes } from 'node:crypto'
 import { request as playwrightRequest, test } from '@playwright/test'
 import { env, scim2UsersUrl, type Persona } from './env'
 import { provisioningHeaders } from './provisioningClient'
 import { readRunState } from './runState'
 import { mintScimToken, secondaryTenantScimSurface, superTenantScimSurface, type ScimSurface } from './scimProvisioning'
 import { resolveTarget } from './targets'
+import { generatePassword } from './testData'
 
 /**
  * Creates and removes disposable user accounts through SCIM2, for the account-deletion test.
@@ -102,9 +104,13 @@ export async function createThrowawayUser(
   const ctx = await resolveScimAdminContext()
 
   // Unique per run: a leftover account from an interrupted run must not collide with this one.
+  // The random part matters too - two accounts created in the same millisecond (a test making a
+  // pair, or two workers at once) would otherwise get the same name and the second create fails.
+  // randomBytes, not Math.random, for the same CodeQL js/insecure-randomness reason as
+  // utils/testData.ts's uniqueMarker - both values here are sign-in credentials.
   // Email-shaped because the accelerator enforces it - SCIM2 rejects a bare name with 31301.
-  const username = `${usernamePrefix}-${Date.now().toString(36)}@dpdp.test`
-  const password = `Throwaway#${Math.random().toString(36).slice(2, 10)}A1`
+  const username = `${usernamePrefix}-${Date.now().toString(36)}${randomBytes(3).toString('hex')}@dpdp.test`
+  const password = generatePassword()
 
   const response = await fetch(ctx.surface.usersUrl, {
     method: 'POST',
@@ -135,7 +141,13 @@ export async function createThrowawayUser(
     throw new Error(`SCIM2 created "${username}" but returned no resource id.`)
   }
 
-  await assignRole(ctx, created.id, roleName)
+  try {
+    await assignRole(ctx, created.id, roleName)
+  } catch (error) {
+    // The account exists but the caller never gets it back, so nothing else could clean it up.
+    await deleteThrowawayUser(created.id, username).catch(() => undefined)
+    throw error
+  }
   return { id: created.id, username, password }
 }
 

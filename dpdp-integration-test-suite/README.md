@@ -178,6 +178,7 @@ Equivalent npm scripts:
 | `npm run test:account` | `tests/07-account` |
 | `npm run test:complaints` | `tests/08-complaints` |
 | `npm run test:event-notifications` | `tests/09-event-notifications` |
+| `npm run test:dashboard` | `tests/10-dashboard` |
 | `npm run test:ui` | any of the above, in Playwright's [UI mode](https://playwright.dev/docs/test-ui-mode) |
 | `npm run report` | opens the last HTML report |
 
@@ -234,6 +235,7 @@ Test IDs are derived from location — `<area>.<file>.<test>`, so `04.06.04` is 
 | `07-account/` | 5 | Self-service account deletion, and who is offered it. Destructive, so each test uses its own throwaway user |
 | `08-complaints/` | 44 | Grievance redressal: the Data Principal's list and the officer's queue — submit, view, search, reply, resolve, authorization |
 | `09-event-notifications/` | 51 | Topics, subscriptions, event publishing and fan-out, webhook delivery, authorization and tenant isolation |
+| `10-dashboard/` | 9 | Dashboard counts and links: per-state and per-relation consent counts and complaint counts for throwaway users, the admin view's shape |
 
 A filename ending `-api.spec.ts` drives no browser at all.
 
