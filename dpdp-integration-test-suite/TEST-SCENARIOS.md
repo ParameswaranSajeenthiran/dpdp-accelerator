@@ -10,9 +10,9 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 200 across 53 spec files in 10 areas |
+| **Tests** | 201 across 53 spec files in 10 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
-| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02` (shortened backoff) |
+| **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02`, `09.10.03` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
 | **Setup and how to run** | [`README.md`](README.md) |
 
@@ -457,7 +457,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**51 tests, 11 spec files.**
+**52 tests, 11 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -560,7 +560,7 @@ Query and delivery-scoping rules on the read endpoints.
 
 ### `09.10-webhook-delivery-api.spec.ts` · API-only
 
-Every test needs a network-reachable receiver (`webhook.receiverHost`). `09.10.01`/`09.10.02` also
+Every test needs a network-reachable receiver (`webhook.receiverHost`). `09.10.01`/`09.10.02`/`09.10.03` also
 need `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride`. See "Known gaps" for the
 stuck-in-flight reclamation case removed from this file.
 
@@ -568,6 +568,7 @@ stuck-in-flight reclamation case removed from this file.
 | --- | --- | --- |
 | `09.10.01` | A non-2xx response records failure and retries with the same delivery id | **Skipped unless `webhook.baseBackoffSecondsOverride`/`maxRetriesOverride` are set** - real elapsed time scales with those values. |
 | `09.10.02` | Persistent receiver failure transitions the delivery to failed | Same opt-in as `09.10.01` - exhausts every retry, so scales with `maxRetriesOverride` too. |
+| `09.10.03` | Manual retry on a failed delivery dispatches a new attempt and re-exposes retry when it fails | Same opt-in as `09.10.01` - triggers manual retry on a failed delivery, executes retry attempt, and verifies retry remains available upon repeated failure. |
 
 ### `09.11-tenant-isolation-api.spec.ts` · API-only
 
