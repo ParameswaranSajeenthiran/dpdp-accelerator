@@ -156,7 +156,7 @@ describe('subscriptionsApi', () => {
   })
 
   it('submits a manual delivery retry', async () => {
-    respondWith({ deliveryId: 'dlv/1', manualRetryUsed: true, manualRetryAvailable: false })
+    respondWith({ deliveryId: 'dlv/1', manualRetryAvailable: false })
 
     await retrySubscriptionDelivery('sub/1', 'dlv/1')
 

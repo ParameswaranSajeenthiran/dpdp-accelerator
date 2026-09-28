@@ -142,7 +142,7 @@ public class DeliveryHistoryConsistencyTest {
         prepareSummary(summary);
         when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID))).thenReturn(Optional.of(
                 new WebhookDelivery(DELIVERY_ID, SUBSCRIPTION_ID, "event-1", "failed", 10,
-                        null, null, null, null, false)));
+                        null, null, null, null)));
         when(deliveryAckDAO.getDeliveryAckByDeliveryId(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID)))
                 .thenReturn(Optional.empty());
         when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID)))

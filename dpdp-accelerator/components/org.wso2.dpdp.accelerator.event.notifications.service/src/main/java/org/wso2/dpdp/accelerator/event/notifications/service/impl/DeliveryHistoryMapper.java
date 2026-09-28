@@ -80,7 +80,6 @@ final class DeliveryHistoryMapper {
             if (delivery.getNextRetryAt() != null) {
                 dto.setNextRetryAt(delivery.getNextRetryAt().getTime());
             }
-            dto.setManualRetryUsed(delivery.isManualRetryUsed());
             boolean isSubscriptionActive = SubscriptionStatus.ACTIVE.getValue().equalsIgnoreCase(subscriptionStatus);
             dto.setManualRetryAvailable(isSubscriptionActive
                     && DeliveryStatus.FAILED.getValue().equalsIgnoreCase(delivery.getStatus())

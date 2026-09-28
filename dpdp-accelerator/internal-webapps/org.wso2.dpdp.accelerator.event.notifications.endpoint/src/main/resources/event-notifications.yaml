@@ -1233,7 +1233,6 @@ components:
                 occurredAt: 1787651970000
                 completionStatus: completed
                 completionEvidence: https://processor.example/evidence/receipt.pdf
-                manualRetryUsed: false
                 manualRetryAvailable: false
                 history:
                   - attempt: 1
@@ -1249,7 +1248,6 @@ components:
                 currentStatus: acknowledged
                 occurredAt: 1787651970000
                 completionStatus: acknowledged
-                manualRetryUsed: false
                 manualRetryAvailable: false
                 history:
                   - attempt: 1
@@ -1537,7 +1535,7 @@ components:
           nullable: true
     DeliveryHistory:
       type: object
-      required: [deliveryId, eventId, deliveryMode, currentStatus, occurredAt, manualRetryUsed,
+      required: [deliveryId, eventId, deliveryMode, currentStatus, occurredAt,
         manualRetryAvailable, history]
       properties:
         deliveryId:
@@ -1568,9 +1566,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DeliveryAttempt"
-        manualRetryUsed:
-          type: boolean
-          default: false
         manualRetryAvailable:
           type: boolean
           default: false
