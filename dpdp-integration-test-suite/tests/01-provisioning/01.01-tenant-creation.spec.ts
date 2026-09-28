@@ -39,9 +39,8 @@ test.describe('Per-run tenant creation', () => {
     browser,
   }) => {
     // Two Console sign-ins plus tenant creation, and the first Console load on a freshly started
-    // server - far more than the 30s default. loginToConsole alone can wait ~80s per attempt;
-    // fixtures/tenant.fixtures.ts gives its longer version of this chain 240s.
-    test.setTimeout(180_000)
+    // server: measured at 24-31s in CI, right on the 30s default. 60s gives about double that.
+    test.setTimeout(60_000)
 
     if (!readRunState().tenant) {
       const domain = uniqueTenantDomain()
