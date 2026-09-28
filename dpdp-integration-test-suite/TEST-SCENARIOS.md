@@ -760,15 +760,6 @@ persona's consent count passed one page, and a filter-panel remount race after "
 could silently wipe a just-typed value. Verified with 8 consecutive clean runs (zero retries)
 after the fix, versus a measured ~30-60% failure rate before it.
 
-**`01.01.01`'s first-attempt timeout was a budget, not a bug** (#310). As the run's first test it
-does two Console sign-ins, tenant creation and the Console's first load on a freshly started
-server, all inside Playwright's default 30s. It timed out on the owner sign-in on every database
-type and passed only on retry, because the retry resumes from `.e2e-run-state.json` and skips
-straight to that sign-in. It now sets its own 60s timeout, about double the measured run, and
-`createTenant` waits for the dialog's `POST /api/server/v1/tenants` rather than a fixed 2s. Before:
-a first-attempt timeout in 3 of 6 CI database legs. After: 6 of 6 passed first time, in 24-31s -
-at or just past the old limit.
-
 **Still open:** a deep-linked `goto()` occasionally lands on `/dashboard` instead of the requested
 route, so the test times out waiting for an element on a page that never rendered. Not slowness —
 extra waiting does not help. Not reproduced or specifically diagnosed since the worker-count fix
