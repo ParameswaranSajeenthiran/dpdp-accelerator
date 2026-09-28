@@ -158,13 +158,16 @@ export default function SubscriptionDeliveryHistoryModal({
                       </TableRow>
                     ) : (
                       historyData.history?.map((attempt) => (
-                        <TableRow key={attempt.attempt} hover>
+                        <TableRow key={attempt.attempt}>
                           <TableCell>#{attempt.attempt}</TableCell>
                           <TableCell>
                             <Chip
                               size="small"
                               color={getSubscriptionStatusChipColor(attempt.status)}
-                              label={attempt.status}
+                              label={t(
+                                `events.status.${attempt.status?.toLowerCase()}`,
+                                attempt.status,
+                              )}
                             />
                           </TableCell>
                           <TableCell>{attempt.httpStatus ?? '-'}</TableCell>

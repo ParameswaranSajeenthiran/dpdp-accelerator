@@ -245,7 +245,7 @@ export default function SubscriptionDetailsPage(): React.JSX.Element {
             </Stack>
 
             <Stack direction="row" spacing={1}>
-              {canWrite && isWebhook && !isDeleted ? (
+              {canWrite && isWebhook && statusStr === 'STALE' ? (
                 <Button
                   variant="outlined"
                   color="secondary"

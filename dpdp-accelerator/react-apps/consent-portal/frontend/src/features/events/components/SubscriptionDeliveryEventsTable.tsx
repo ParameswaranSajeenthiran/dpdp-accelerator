@@ -102,7 +102,12 @@ export default function SubscriptionDeliveryEventsTable({
               </TableRow>
             ) : null}
             {rows.map((event) => (
-              <TableRow key={event.deliveryId} hover>
+              <TableRow
+                key={event.deliveryId}
+                hover
+                sx={{ cursor: 'pointer' }}
+                onClick={() => setSelectedDeliveryId(event.deliveryId)}
+              >
                 <TableCell>
                   <CopyableText value={event.deliveryId} truncateAt={14} monospace />
                 </TableCell>
@@ -121,11 +126,14 @@ export default function SubscriptionDeliveryEventsTable({
                   <Chip
                     size="small"
                     color={getSubscriptionStatusChipColor(event.currentStatus)}
-                    label={event.currentStatus}
+                    label={t(
+                      `events.status.${event.currentStatus?.toLowerCase()}`,
+                      event.currentStatus,
+                    )}
                   />
                 </TableCell>
                 <TableCell>{formatEpochTimestamp(event.occurredAt)}</TableCell>
-                <TableCell align="right">
+                <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                   <Tooltip title={t('subscriptions.deliveryEvents.viewHistory')}>
                     <span>
                       <IconButton

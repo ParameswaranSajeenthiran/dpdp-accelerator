@@ -40,7 +40,6 @@ import {
   useCreateSubscriptionMutation,
   useDeleteSubscriptionMutation,
   useSubscriptionsQuery,
-  useVerifySubscriptionMutation,
 } from './hooks/useSubscriptionQueries'
 import {
   normalizeSubscriptionStatus,
@@ -136,7 +135,6 @@ export default function SubscriptionsPage(): React.JSX.Element {
   const subscriptionsQuery = useSubscriptionsQuery(filters, page, rowsPerPage)
   const createMutation = useCreateSubscriptionMutation()
   const deleteMutation = useDeleteSubscriptionMutation()
-  const verifyMutation = useVerifySubscriptionMutation()
   const verificationMonitor = useWebhookVerificationMonitor(verificationSubscriptionId)
 
   const { hasScope } = useAuthorization()
@@ -178,23 +176,6 @@ export default function SubscriptionsPage(): React.JSX.Element {
     nextRowsPerPage = rowsPerPage,
   ): void => {
     setSearchParams(toSearchParams(nextFilters, nextPage, nextRowsPerPage), { replace: true })
-  }
-
-  const handleVerify = (sub: SubscriptionRecord): void => {
-    verifyMutation.mutate(sub.subscriptionId, {
-      onSuccess: () => {
-        setNotification({
-          severity: 'success',
-          message: t('subscriptions.verification.success', 'Verification triggered successfully.'),
-        })
-      },
-      onError: (err) => {
-        setNotification({
-          severity: 'error',
-          message: err.message || t('subscriptions.verification.failed', 'Verification failed.'),
-        })
-      },
-    })
   }
 
   return (
@@ -243,9 +224,7 @@ export default function SubscriptionsPage(): React.JSX.Element {
           hasPreviousPage={page > DEFAULT_PAGE}
           hasNextPage={subscriptionsQuery.data?.hasNextPage ?? false}
           canWrite={canWrite}
-          isMutating={
-            createMutation.isPending || deleteMutation.isPending || verifyMutation.isPending
-          }
+          isMutating={createMutation.isPending || deleteMutation.isPending}
           onPreviousPage={() => updateParams(filters, page - 1)}
           onNextPage={() => updateParams(filters, page + 1)}
           onRowsPerPageChange={(nextRowsPerPage) =>
@@ -255,7 +234,6 @@ export default function SubscriptionsPage(): React.JSX.Element {
           onViewDetails={(sub) =>
             navigate(`/events/subscriptions/${encodeURIComponent(sub.subscriptionId)}`)
           }
-          onVerify={handleVerify}
           onDelete={setSelectedDeleteSubscription}
         />
 
