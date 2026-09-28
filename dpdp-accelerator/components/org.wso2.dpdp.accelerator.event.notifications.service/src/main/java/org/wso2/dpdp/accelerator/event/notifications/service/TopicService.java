@@ -18,8 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service;
 
-import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 public interface TopicService {
     TopicDTO createTopic(String orgId, String name, String description);

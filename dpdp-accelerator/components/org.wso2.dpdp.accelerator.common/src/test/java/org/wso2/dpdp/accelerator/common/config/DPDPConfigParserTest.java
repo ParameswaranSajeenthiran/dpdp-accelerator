@@ -18,15 +18,15 @@
 
 package org.wso2.dpdp.accelerator.common.config;
 
-import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
-import org.wso2.dpdp.accelerator.common.test.CarbonTestEnvironment;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
+import org.wso2.dpdp.accelerator.common.test.CarbonTestEnvironment;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;

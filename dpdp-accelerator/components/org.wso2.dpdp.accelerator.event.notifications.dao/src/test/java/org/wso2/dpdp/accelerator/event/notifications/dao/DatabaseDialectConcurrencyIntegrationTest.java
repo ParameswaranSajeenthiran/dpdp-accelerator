@@ -18,11 +18,11 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao;
 
-import org.testng.SkipException;
-import org.testng.annotations.Test;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testng.SkipException;
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;

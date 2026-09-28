@@ -32,11 +32,11 @@ import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentHistoryDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataInsertionException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentHistoryDataRetrievalException;
-import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.internal.DPDPConsentExtensionDataHolder;
 import org.wso2.dpdp.accelerator.consent.extensions.service.constants.ConsentHistoryServiceConstants.ActionType;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.lang.reflect.Field;

@@ -7,10 +7,10 @@
  */
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
+import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PurposeFilterMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
-import org.testng.annotations.Test;
 
 import java.sql.Timestamp;
 import java.util.Collections;
