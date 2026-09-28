@@ -155,7 +155,7 @@ describe('subscriptionsApi', () => {
     expect(req.method).toBe('GET')
   })
 
-  it('submits a one-time manual delivery retry', async () => {
+  it('submits a manual delivery retry', async () => {
     respondWith({ deliveryId: 'dlv/1', manualRetryUsed: true, manualRetryAvailable: false })
 
     await retrySubscriptionDelivery('sub/1', 'dlv/1')

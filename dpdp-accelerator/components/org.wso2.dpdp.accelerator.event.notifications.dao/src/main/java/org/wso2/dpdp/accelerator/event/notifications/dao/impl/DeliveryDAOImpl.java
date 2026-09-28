@@ -171,9 +171,8 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             ps.setBoolean(1, true);
             ps.setString(2, deliveryId);
             ps.setString(3, subscriptionId);
-            ps.setBoolean(4, false);
-            ps.setInt(5, maxRetries);
-            ps.setString(6, orgId);
+            ps.setInt(4, maxRetries);
+            ps.setString(5, orgId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(

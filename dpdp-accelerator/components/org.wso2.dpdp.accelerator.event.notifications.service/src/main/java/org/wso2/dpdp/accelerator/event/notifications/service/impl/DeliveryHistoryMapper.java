@@ -80,7 +80,7 @@ final class DeliveryHistoryMapper {
             }
             dto.setManualRetryUsed(delivery.isManualRetryUsed());
             dto.setManualRetryAvailable(DeliveryStatus.FAILED.getValue().equalsIgnoreCase(delivery.getStatus())
-                    && delivery.getAttemptCount() > maxRetries && !delivery.isManualRetryUsed());
+                    && delivery.getAttemptCount() > maxRetries);
         }
 
         Optional<WebhookDeliveryAck> deliveryAck = deliveryAckDAO.getDeliveryAckByDeliveryId(conn, deliveryId, orgId);

@@ -268,6 +268,27 @@ public class SubscriptionServiceReadAndDeleteTest {
     }
 
     @Test
+    public void webhookHistoryExposesManualRetryAvailabilityEvenWhenManualRetryUsedIsTrue() {
+        Subscription sub = subscription("sub-1", "topic-1", "active");
+        when(subscriptionDAO.getSubscriptionById(any(Connection.class), eq("sub-1"), eq("org-1")))
+                .thenReturn(Optional.of(sub));
+        SubscriptionDeliverySummary summary = new SubscriptionDeliverySummary("del-1", "evt-1", "sub-1",
+                "topic", "failed", "webhook", new Timestamp(1000), new Timestamp(900), null);
+        when(deliveryDAO.getSubscriptionDeliveryById(any(Connection.class), eq("org-1"), eq("sub-1"),
+                eq("del-1"))).thenReturn(Optional.of(summary));
+        when(deliveryDAO.getWebhookDeliveryById(any(Connection.class), eq("del-1"), eq("org-1")))
+                .thenReturn(Optional.of(new WebhookDelivery("del-1", "sub-1", "evt-1", "failed", 3,
+                        null, null, null, null, true)));
+        when(deliveryDAO.getWebhookDeliveryAudits(any(Connection.class), eq("del-1"), eq("org-1")))
+                .thenReturn(Collections.emptyList());
+
+        SubscriptionEventHistoryDTO result = service.getSubscriptionEventHistory("org-1", "sub-1", "del-1");
+
+        assertTrue(result.isManualRetryAvailable());
+        assertTrue(result.isManualRetryUsed());
+    }
+
+    @Test
     public void retryDeliveryMapsMissingDeliveryToNotFound() {
         service.setManualRetryDispatcher((orgId, subscriptionId, deliveryId) ->
                 WebhookDeliveryWorker.ManualRetrySubmissionResult.NOT_FOUND);
