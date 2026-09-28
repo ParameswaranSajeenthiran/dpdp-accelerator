@@ -24,13 +24,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.WebApplicationException;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import java.util.Collections;
 import java.util.Map;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

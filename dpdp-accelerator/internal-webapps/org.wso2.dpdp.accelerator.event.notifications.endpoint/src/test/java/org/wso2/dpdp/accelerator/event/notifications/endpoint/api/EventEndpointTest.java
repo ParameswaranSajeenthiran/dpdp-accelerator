@@ -23,22 +23,22 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.EventCreateRequest;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.EventPollingResponseDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Response;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;

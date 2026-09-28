@@ -21,6 +21,8 @@ import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.EventHandler;
 
+import java.util.function.Supplier;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -29,7 +31,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.function.Supplier;
 
 /** Endpoint for externally submitted delivery completion reports. */
 @Path("/deliveries")
