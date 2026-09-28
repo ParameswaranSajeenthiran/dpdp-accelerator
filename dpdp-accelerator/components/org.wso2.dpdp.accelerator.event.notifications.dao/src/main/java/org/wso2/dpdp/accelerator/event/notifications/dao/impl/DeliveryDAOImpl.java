@@ -109,8 +109,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                             rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
                             rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                             rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT),
-                            rs.getBoolean(EventNotificationDBColumns.MANUAL_RETRY_USED));
+                            rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
                     return Optional.of(delivery);
                 }
             }
@@ -168,12 +167,10 @@ public class DeliveryDAOImpl implements DeliveryDAO {
             throw new IllegalArgumentException("Connection cannot be null.");
         }
         try (PreparedStatement ps = conn.prepareStatement(getQueries(conn).getPrepareManualRetryQuery())) {
-            ps.setBoolean(1, true);
-            ps.setString(2, deliveryId);
-            ps.setString(3, subscriptionId);
-            ps.setBoolean(4, false);
-            ps.setInt(5, maxRetries);
-            ps.setString(6, orgId);
+            ps.setString(1, deliveryId);
+            ps.setString(2, subscriptionId);
+            ps.setInt(3, maxRetries);
+            ps.setString(4, orgId);
             return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new EventNotificationDaoException(
@@ -232,8 +229,7 @@ public class DeliveryDAOImpl implements DeliveryDAO {
                 rs.getTimestamp(EventNotificationDBColumns.NEXT_RETRY_AT),
                 rs.getTimestamp(EventNotificationDBColumns.CREATED_AT),
                 rs.getTimestamp(EventNotificationDBColumns.UPDATED_AT),
-                rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT),
-                rs.getBoolean(EventNotificationDBColumns.MANUAL_RETRY_USED));
+                rs.getTimestamp(EventNotificationDBColumns.DELIVERED_AT));
         return new WebhookDeliveryDispatchContext(
                 delivery,
                 rs.getString(EventNotificationDBColumns.ORG_ID),
