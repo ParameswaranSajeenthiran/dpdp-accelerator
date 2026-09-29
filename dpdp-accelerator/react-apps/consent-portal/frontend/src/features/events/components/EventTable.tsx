@@ -127,7 +127,7 @@ export default function EventTable({
                   sx={{ cursor: 'pointer' }}
                   onClick={() => onViewDetails(event)}
                 >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell>
                     <CopyableText value={event.eventId} truncateAt={14} monospace />
                   </TableCell>
                   <TableCell>

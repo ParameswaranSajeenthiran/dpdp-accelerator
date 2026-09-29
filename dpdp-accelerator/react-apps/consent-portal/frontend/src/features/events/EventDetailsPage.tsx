@@ -348,14 +348,14 @@ export default function EventDetailsPage(): React.JSX.Element {
                         sx={{ cursor: 'pointer' }}
                         onClick={() => setSelectedDelivery(del)}
                       >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell>
                           <CopyableText
                             value={del.deliveryId || del.eventId}
                             truncateAt={14}
                             monospace
                           />
                         </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell>
                           <CopyableText
                             value={del.subscriptionId || '-'}
                             truncateAt={14}

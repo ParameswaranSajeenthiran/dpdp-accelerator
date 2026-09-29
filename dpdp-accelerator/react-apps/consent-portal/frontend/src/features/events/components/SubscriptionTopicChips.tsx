@@ -32,7 +32,14 @@ export default function SubscriptionTopicChips({ topics }: Props): React.JSX.Ele
         <Chip key={topic} label={topic} title={topic} size="small" sx={{ maxWidth: '100%' }} />
       ))}
       {topics.length > 2 ? (
-        <Button size="small" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+        <Button
+          size="small"
+          aria-expanded={expanded}
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded(!expanded)
+          }}
+        >
           {t(expanded ? 'subscriptions.topicUi.showLess' : 'subscriptions.topicUi.more', {
             count: topics.length - 2,
           })}
