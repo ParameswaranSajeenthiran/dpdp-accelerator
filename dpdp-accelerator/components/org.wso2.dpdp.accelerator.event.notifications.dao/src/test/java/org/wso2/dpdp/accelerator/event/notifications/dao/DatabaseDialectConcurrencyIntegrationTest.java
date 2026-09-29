@@ -73,7 +73,7 @@ public class DatabaseDialectConcurrencyIntegrationTest {
             mysql.start();
             runConcurrencyScenarios(
                     () -> openConnection(mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword(), "mysql"),
-                    "JSON", EventNotificationMysqlDBQueries.class);
+                    "mysql", "JSON", EventNotificationMysqlDBQueries.class);
         }
     }
 
@@ -83,13 +83,13 @@ public class DatabaseDialectConcurrencyIntegrationTest {
         try (PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.2-alpine")) {
             postgres.start();
             runConcurrencyScenarios(() -> openConnection(postgres.getJdbcUrl(), postgres.getUsername(),
-                    postgres.getPassword(), "postgres"), "TEXT", EventNotificationPostgresDBQueries.class);
+                    postgres.getPassword(), "postgres"), "postgres", "TEXT", EventNotificationPostgresDBQueries.class);
         }
     }
 
-    private void runConcurrencyScenarios(ConnectionFactory connectionFactory, String payloadType,
+    private void runConcurrencyScenarios(ConnectionFactory connectionFactory, String dialect, String payloadType,
             Class<?> expectedQueryProvider) throws Exception {
-        initializeSchema(connectionFactory, payloadType);
+        initializeSchema(connectionFactory, dialect, payloadType);
         TopicDAOImpl topicDAO = new TopicDAOImpl();
         SubscriptionDAOImpl subscriptionDAO = new SubscriptionDAOImpl();
         EventDAOImpl eventDAO = new EventDAOImpl();
@@ -198,19 +198,38 @@ public class DatabaseDialectConcurrencyIntegrationTest {
         }
     }
 
-    private void initializeSchema(ConnectionFactory connectionFactory, String payloadType) throws Exception {
+    private void initializeSchema(ConnectionFactory connectionFactory, String dialect, String payloadType)
+            throws Exception {
         try (Connection connection = connectionFactory.open(); Statement statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, " +
-                    "NAME VARCHAR(225) NOT NULL, DESCRIPTION VARCHAR(255), STATUS VARCHAR(32) NOT NULL, " +
-                    "INITIATED_BY VARCHAR(32) NOT NULL)");
-            statement.execute("CREATE TABLE EVENT (EVENT_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, " +
-                    "GROUP_ID VARCHAR(128) NOT NULL, TOPIC_ID VARCHAR(64) NOT NULL, PAYLOAD " + payloadType +
-                    " NOT NULL, CREATED_AT TIMESTAMP NOT NULL)");
-            statement.execute("CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, " +
-                    "ORG_ID VARCHAR(128) NOT NULL, NAME VARCHAR(225) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
-                    "PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, PURPOSE_SET_HASH VARCHAR(64) NOT NULL, " +
-                    "DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), SHARED_SECRET VARCHAR(512), " +
-                    "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL)");
+            if ("mysql".equals(dialect)) {
+                statement.execute("CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, " +
+                        "NAME VARCHAR(225) NOT NULL, DESCRIPTION VARCHAR(255), STATUS VARCHAR(32) NOT NULL, " +
+                        "INITIATED_BY VARCHAR(32) NOT NULL, " +
+                        "ACTIVE_NAME VARCHAR(225) GENERATED ALWAYS AS " +
+                        "(CASE WHEN STATUS = 'active' THEN LOWER(NAME) ELSE NULL END) STORED, " +
+                        "UNIQUE KEY UQ_TOPIC_ORG_ACTIVE_NAME (ORG_ID, ACTIVE_NAME))");
+                statement.execute("CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, " +
+                        "ORG_ID VARCHAR(128) NOT NULL, NAME VARCHAR(225) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
+                        "PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, PURPOSE_SET_HASH VARCHAR(64) NOT NULL, " +
+                        "DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), SHARED_SECRET VARCHAR(512), " +
+                        "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL, " +
+                        "ACTIVE_NAME VARCHAR(225) GENERATED ALWAYS AS " +
+                        "(CASE WHEN STATUS <> 'deleted' THEN LOWER(NAME) ELSE NULL END) STORED, " +
+                        "UNIQUE KEY UQ_SUB_ORG_ACTIVE_NAME (ORG_ID, ACTIVE_NAME))");
+            } else {
+                statement.execute("CREATE TABLE TOPIC (TOPIC_ID VARCHAR(64) PRIMARY KEY, ORG_ID VARCHAR(128) NOT NULL, " +
+                        "NAME VARCHAR(225) NOT NULL, DESCRIPTION VARCHAR(255), STATUS VARCHAR(32) NOT NULL, " +
+                        "INITIATED_BY VARCHAR(32) NOT NULL)");
+                statement.execute("CREATE TABLE SUBSCRIPTION (SUBSCRIPTION_ID VARCHAR(64) PRIMARY KEY, " +
+                        "ORG_ID VARCHAR(128) NOT NULL, NAME VARCHAR(225) NOT NULL, GROUP_ID VARCHAR(128) NOT NULL, " +
+                        "PURPOSE_FILTER_MODE VARCHAR(32) NOT NULL, PURPOSE_SET_HASH VARCHAR(64) NOT NULL, " +
+                        "DELIVERY_MODE VARCHAR(32) NOT NULL, CALLBACK_URL VARCHAR(512), SHARED_SECRET VARCHAR(512), " +
+                        "STATUS VARCHAR(32) NOT NULL, CREATED_AT TIMESTAMP NOT NULL, UPDATED_AT TIMESTAMP NOT NULL)");
+                if ("postgres".equals(dialect)) {
+                    statement.execute("CREATE UNIQUE INDEX IF NOT EXISTS UQ_TOPIC_ORG_ACTIVE_NAME ON TOPIC (ORG_ID, LOWER(NAME)) WHERE STATUS = 'active'");
+                    statement.execute("CREATE UNIQUE INDEX IF NOT EXISTS UQ_SUB_ORG_ACTIVE_NAME ON SUBSCRIPTION (ORG_ID, LOWER(NAME)) WHERE STATUS <> 'deleted'");
+                }
+            }
             statement.execute("CREATE TABLE SUBSCRIPTION_TOPIC (ORG_ID VARCHAR(128), SUBSCRIPTION_ID VARCHAR(64), TOPIC_ID VARCHAR(64), PRIMARY KEY(SUBSCRIPTION_ID, TOPIC_ID))");
             statement.execute("CREATE TABLE SUBSCRIPTION_PURPOSE (SUBSCRIPTION_ID VARCHAR(64) NOT NULL, " +
                     "ORG_ID VARCHAR(128) NOT NULL, PURPOSE_NAME VARCHAR(128) NOT NULL, PRIMARY KEY (SUBSCRIPTION_ID, PURPOSE_NAME))");
