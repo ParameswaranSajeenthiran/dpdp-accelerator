@@ -87,6 +87,7 @@ test.describe('09.12 — MySQL publish/subscribe deadlock reproduction', () => {
       const groupId: string = (topic as unknown as Record<string, string>).groupId ?? topic.topicId
 
       const deadlockFailures: Array<{ attempt: number; worker: number; body: unknown }> = []
+      let successfulSubscriptionCreates = 0
 
       // ── worker factory ─────────────────────────────────────────────────
       async function runWorkerPair(workerId: number): Promise<void> {
@@ -131,7 +132,7 @@ test.describe('09.12 — MySQL publish/subscribe deadlock reproduction', () => {
               // even when uniqueMarker's timestamp component has the same millisecond value.
               name: `w${workerId}-i${i}-${uniqueMarker('dl-sub')}`,
               topic: topic.name,
-              filter: { type: 'all' },
+              filter: { type: 'specific', purposes: [uniqueMarker(`dl-p-w${workerId}-i${i}`)] },
               delivery: { mode: 'poll', sharedSecret: uniqueMarker('secret') },
             })
 
@@ -156,15 +157,14 @@ test.describe('09.12 — MySQL publish/subscribe deadlock reproduction', () => {
               continue
             }
 
+            successfulSubscriptionCreates++
             const sub = await createResp.json()
             // Delete immediately so we don't accumulate subscriptions that widen fan-out.
             const deleteResp: APIResponse = await api.deleteSubscription(sub.subscriptionId)
-            if (deleteResp.status() !== 204 && deleteResp.status() !== 200) {
-              // Delete failure means the subscription stays active, which may cause the next
-              // iteration's create to return 409 (see above). Still not a test failure.
+            if (deleteResp.status() !== 204 && deleteResp.status() !== 200 && deleteResp.status() !== 409) {
+              // Delete failure (other than 409 in-flight/pending delivery conflict) is unexpected.
               console.warn(
-                `[worker ${workerId}] subscribe iteration ${i}: delete returned HTTP ${deleteResp.status()} — ` +
-                `next iteration may see EN-4090`,
+                `[worker ${workerId}] subscribe iteration ${i}: delete returned unexpected HTTP ${deleteResp.status()}`,
               )
             }
           }
@@ -202,6 +202,14 @@ test.describe('09.12 — MySQL publish/subscribe deadlock reproduction', () => {
         `UQ_TOPIC_ORG_ACTIVE_NAME, causing a range scan + gap locks on all org topics. ` +
         `Fix: use ACTIVE_NAME = LOWER(?) in a MySQL dialect override.`,
       ).toBe(0)
+
+      // ── assert subscription churn actually occurred ──────────────────
+      const expectedMinCreates = Math.floor(WORKERS * SUBSCRIBE_ITERATIONS * 0.7)
+      expect(
+        successfulSubscriptionCreates,
+        `Expected at least ${expectedMinCreates} successful subscription creates to exercise ` +
+        `concurrent churn, but only got ${successfulSubscriptionCreates}.`,
+      ).toBeGreaterThanOrEqual(expectedMinCreates)
     },
   )
 })
