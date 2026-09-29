@@ -303,6 +303,25 @@ describe('recovering from a rejected sign-in', () => {
     expect(takeReturnPath()).toBe('/purposes')
   })
 
+  it('clears a pending retry when that retry ends in an error that is not retryable', async () => {
+    // A retried sign-in that comes back access_denied must not leave the marker behind, or the
+    // next rejection after the user's own "Try again" would be treated as the second attempt.
+    sessionStorage.setItem(RETRY_KEY, 'true')
+    window.history.replaceState({}, '', '/consent-portal/?error=access_denied&state=s-5')
+    sdk.signIn.mockRejectedValue(new Error('access_denied'))
+    const { ensureSignedIn } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).rejects.toThrow('access_denied')
+    expect(sessionStorage.getItem(RETRY_KEY)).toBeNull()
+
+    window.history.replaceState({}, '', '/consent-portal/?error=invalid_request&state=s-6')
+    sdk.signIn.mockResolvedValue(undefined)
+
+    await expect(ensureSignedIn()).resolves.toBe(false)
+    expect(window.location.search).toBe('')
+    expect(sessionStorage.getItem(RETRY_KEY)).toBe('true')
+  })
+
   it('never remembers the error redirect as the route to return to', async () => {
     window.history.replaceState({}, '', '/consent-portal/?error=invalid_request&state=s-4')
     const { ensureSignedIn, takeReturnPath } = await loadAuthClient()

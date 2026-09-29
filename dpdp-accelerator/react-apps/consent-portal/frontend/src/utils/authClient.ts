@@ -264,9 +264,19 @@ function signInErrorInUrl(): string | undefined {
   return error && params.get('state') !== 'sign_out_success' ? error : undefined
 }
 
+function clearSignInRetry(): void {
+  try {
+    sessionStorage.removeItem(SIGN_IN_RETRY_KEY)
+  } catch {
+    // Nothing to clear when storage is unavailable.
+  }
+}
+
 /** True the first time a retryable error is seen; the next one is final. */
 function claimSignInRetry(error: string): boolean {
   if (!RETRYABLE_SIGN_IN_ERRORS.has(error)) {
+    // A retry this error ended must not count against the next, unrelated one.
+    clearSignInRetry()
     return false
   }
   try {
@@ -280,14 +290,6 @@ function claimSignInRetry(error: string): boolean {
   } catch {
     // Without storage a retry could not be bounded, so fail as before.
     return false
-  }
-}
-
-function clearSignInRetry(): void {
-  try {
-    sessionStorage.removeItem(SIGN_IN_RETRY_KEY)
-  } catch {
-    // Nothing to clear when storage is unavailable.
   }
 }
 
