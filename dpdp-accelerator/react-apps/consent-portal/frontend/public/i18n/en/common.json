@@ -758,7 +758,7 @@
     "deleteModal": {
       "title": "Confirm Subscription Deletion",
       "message": "Are you sure you want to delete subscription \"{{id}}\"?",
-      "note": "Deleting this subscription prevents new events from being dispatched to this subscriber endpoint.",
+      "note": "Deleting this subscription prevents new events from being dispatched to this subscriber.",
       "confirm": "Delete Subscription"
     },
     "verification": {
