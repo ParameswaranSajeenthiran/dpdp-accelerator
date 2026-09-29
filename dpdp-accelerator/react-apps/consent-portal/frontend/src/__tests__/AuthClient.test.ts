@@ -254,6 +254,89 @@ describe('returning to the requested route', () => {
   })
 })
 
+describe('recovering from a rejected sign-in', () => {
+  const RETRY_KEY = 'consent-portal.signInRetried'
+  const RETURN_PATH_KEY = 'consent-portal.returnPath'
+
+  it('retries once when the Identity Server rejects the request, keeping the route asked for', async () => {
+    sessionStorage.setItem(RETURN_PATH_KEY, '/purposes')
+    window.history.replaceState(
+      {},
+      '',
+      '/consent-portal/?error=invalid_request&error_description=Invalid%20authorization%20request&state=s-1',
+    )
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).resolves.toBe(false)
+
+    expect(sdk.signIn).toHaveBeenCalledWith()
+    // The SDK refuses to sign in while the error is still in the URL.
+    expect(window.location.search).toBe('')
+    expect(sessionStorage.getItem(RETRY_KEY)).toBe('true')
+    expect(takeReturnPath()).toBe('/purposes')
+  })
+
+  it('treats a second rejection as final and lets the next manual attempt retry again', async () => {
+    sessionStorage.setItem(RETRY_KEY, 'true')
+    sessionStorage.setItem(RETURN_PATH_KEY, '/purposes')
+    window.history.replaceState({}, '', '/consent-portal/?error=invalid_request&state=s-2')
+    sdk.signIn.mockRejectedValue(new Error('invalid_request'))
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).rejects.toThrow('invalid_request')
+
+    expect(window.location.search).toContain('error=invalid_request')
+    expect(sessionStorage.getItem(RETRY_KEY)).toBeNull()
+    expect(takeReturnPath()).toBe('/purposes')
+  })
+
+  it('does not retry an error a new request cannot fix', async () => {
+    sessionStorage.setItem(RETURN_PATH_KEY, '/purposes')
+    window.history.replaceState({}, '', '/consent-portal/?error=access_denied&state=s-3')
+    sdk.signIn.mockRejectedValue(new Error('access_denied'))
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).rejects.toThrow('access_denied')
+
+    expect(window.location.search).toContain('error=access_denied')
+    expect(sessionStorage.getItem(RETRY_KEY)).toBeNull()
+    expect(takeReturnPath()).toBe('/purposes')
+  })
+
+  it('never remembers the error redirect as the route to return to', async () => {
+    window.history.replaceState({}, '', '/consent-portal/?error=invalid_request&state=s-4')
+    const { ensureSignedIn, takeReturnPath } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(takeReturnPath()).toBeUndefined()
+  })
+
+  it('clears the retry marker once a session is established', async () => {
+    sessionStorage.setItem(RETRY_KEY, 'true')
+    sdk.isAuthenticated.mockResolvedValue(true)
+    const { ensureSignedIn } = await loadAuthClient()
+
+    await expect(ensureSignedIn()).resolves.toBe(true)
+
+    expect(sessionStorage.getItem(RETRY_KEY)).toBeNull()
+  })
+
+  it('leaves a failed sign-out alone', async () => {
+    window.history.replaceState(
+      {},
+      '',
+      '/consent-portal/?error=server_error&state=sign_out_success',
+    )
+    const { ensureSignedIn } = await loadAuthClient()
+
+    await ensureSignedIn()
+
+    expect(sessionStorage.getItem(RETRY_KEY)).toBeNull()
+    expect(window.location.search).toContain('error=server_error')
+  })
+})
+
 describe('session helpers', () => {
   it('signs out through the SDK', async () => {
     const { logout } = await loadAuthClient()
