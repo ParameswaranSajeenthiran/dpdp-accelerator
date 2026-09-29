@@ -761,6 +761,10 @@ persona's consent count passed one page, and a filter-panel remount race after "
 could silently wipe a just-typed value. Verified with 8 consecutive clean runs (zero retries)
 after the fix, versus a measured ~30-60% failure rate before it.
 
+**CI fails a flaky run.** A test that fails and then passes on its retry still fails the run
+(`failOnFlakyTests` in `playwright.config.ts`); the report marks it flaky rather than failed.
+Local runs keep passing on a retry.
+
 Run with `--workers=1` to distinguish a real failure from a flake.
 
 ---
