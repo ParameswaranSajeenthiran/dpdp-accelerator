@@ -110,8 +110,10 @@ test.describe('09.12 — MySQL publish/subscribe deadlock reproduction', () => {
                 body = await response.text()
               }
               deadlockFailures.push({ attempt: i, worker: workerId, body })
+            } else {
+              expect(response.status(), await response.text()).toBe(201)
             }
-            // Do NOT throw here — collect all failures so both loops run to completion.
+            // Do NOT throw here for 500 — collect all failures so both loops run to completion.
           }
         }
 
