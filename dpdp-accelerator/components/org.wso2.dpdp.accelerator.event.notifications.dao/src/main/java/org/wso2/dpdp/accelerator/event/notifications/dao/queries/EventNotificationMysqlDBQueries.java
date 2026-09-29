@@ -24,36 +24,11 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 public class EventNotificationMysqlDBQueries extends EventNotificationCommonDBQueries {
 
     /**
-     * Returns a query that locks exactly the one active TOPIC row identified by
-     * {@code (ORG_ID, LOWER(name))} without acquiring gap locks on neighbouring rows.
-     *
-     * <h3>Why this override is necessary</h3>
-     * The common implementation filters on {@code LOWER(NAME) = LOWER(?)}, which MySQL cannot
-     * satisfy with the {@code UQ_TOPIC_ORG_ACTIVE_NAME (ORG_ID, ACTIVE_NAME)} index because the
-     * predicate is applied to a function call rather than to the stored generated column. MySQL
-     * therefore falls back to a range scan over {@code UQ_TOPIC_ORG_ID} and, in InnoDB's default
-     * REPEATABLE READ isolation, acquires next-key (gap + record) locks on <em>every</em> topic row
-     * in the org's range.
-     *
-     * <p>When a concurrent subscription-creation transaction inserts into {@code SUBSCRIPTION_TOPIC}
-     * it needs a shared lock on the referenced {@code TOPIC} row (via {@code FK_ST_TOPIC}). If the
-     * subscription transaction holds that shared lock while the publish transaction holds the range
-     * lock and is waiting to upgrade it, InnoDB detects an AB-BA deadlock and rolls back one of the
-     * transactions — surfaced to the caller as {@code EN-5001 "Event publish failed"}.
-     *
-     * <h3>The fix</h3>
-     * By filtering on {@code ACTIVE_NAME = LOWER(?)} instead, MySQL resolves the predicate against
-     * the stored generated column and uses {@code UQ_TOPIC_ORG_ACTIVE_NAME} for a single-row index
-     * seek. Only the one matching row is locked; no gap locks are acquired; the deadlock cannot
-     * occur.
-     *
-     * <p>The {@code STATUS = 'active'} guard is still present because {@code ACTIVE_NAME} is
-     * {@code NULL} for non-active topics (see the DDL's {@code CASE WHEN STATUS = 'active' THEN
-     * LOWER(NAME) ELSE NULL END}), so the predicate already implies active status. The explicit
-     * guard is kept for clarity and defence-in-depth.
-     *
-     * @return MySQL-specific {@code SELECT … FOR UPDATE} query that performs a point lookup on
-     *         {@code UQ_TOPIC_ORG_ACTIVE_NAME}.
+     * Filters on the stored generated column {@code ACTIVE_NAME = LOWER(?)} so MySQL uses
+     * {@code UQ_TOPIC_ORG_ACTIVE_NAME} for a single-row index seek instead of falling back to
+     * a range scan over {@code UQ_TOPIC_ORG_ID}. Without this override, {@code LOWER(NAME) = LOWER(?)}
+     * bypasses the index, causing InnoDB to gap-lock every topic row in the org — which creates an
+     * AB-BA deadlock with concurrent {@code SUBSCRIPTION_TOPIC} inserts (FK_ST_TOPIC shared lock).
      */
     @Override
     public String getActiveTopicByOrgAndNameForUpdateQuery() {
