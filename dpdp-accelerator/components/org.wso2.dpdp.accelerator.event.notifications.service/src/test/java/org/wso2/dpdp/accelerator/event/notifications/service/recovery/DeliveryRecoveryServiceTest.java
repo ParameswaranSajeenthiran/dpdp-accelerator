@@ -19,7 +19,6 @@ import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Subscription;
 import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -27,6 +26,8 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import javax.sql.DataSource;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;

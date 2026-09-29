@@ -18,12 +18,12 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.api;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
@@ -31,11 +31,12 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequ
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler.ComplaintCommentHandler;
 
 import java.io.IOException;
+
 import javax.ws.rs.core.Response;
 
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
-import static org.mockito.Mockito.when;
 
 class ComplaintCommentEndpointTest {
 

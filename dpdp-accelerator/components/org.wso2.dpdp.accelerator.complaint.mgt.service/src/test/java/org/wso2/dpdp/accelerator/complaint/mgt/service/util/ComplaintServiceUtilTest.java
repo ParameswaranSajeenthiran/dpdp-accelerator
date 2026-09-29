@@ -18,14 +18,14 @@
 
 package org.wso2.dpdp.accelerator.complaint.mgt.service.util;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.Complaint;
@@ -39,15 +39,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.expectThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 /**
  * Outside a real Carbon environment (no dpdp-accelerator.xml on disk), DPDPConfigurationService

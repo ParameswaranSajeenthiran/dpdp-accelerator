@@ -22,8 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 
-import java.util.Map;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 public class DPDPConfigurationServiceImpl implements DPDPConfigurationService {

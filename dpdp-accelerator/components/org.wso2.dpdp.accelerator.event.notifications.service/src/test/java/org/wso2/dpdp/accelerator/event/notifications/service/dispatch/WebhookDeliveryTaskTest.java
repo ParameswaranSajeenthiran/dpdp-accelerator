@@ -500,7 +500,6 @@ public class WebhookDeliveryTaskTest {
         task(delivery, rawPayload).run();
 
         HttpRequest request = captureRequest();
-        String body = bodyOf(request);
         String signatureHeader = request.headers().firstValue("event-signature").orElseThrow();
 
         String signedOverRawPayload = "sha256=" + HmacSigner.sign(SHARED_SECRET, rawPayload);

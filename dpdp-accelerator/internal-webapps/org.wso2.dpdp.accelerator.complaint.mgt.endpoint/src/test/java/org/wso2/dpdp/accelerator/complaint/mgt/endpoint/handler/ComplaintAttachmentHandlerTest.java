@@ -20,28 +20,26 @@ package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationServiceImpl;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.constants.DAOConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.model.ComplaintAttachment;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentDownloadResponse;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
-import javax.activation.DataHandler;
-import javax.ws.rs.core.MediaType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,16 +47,19 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.expectThrows;
-import static org.testng.Assert.assertTrue;
+import javax.activation.DataHandler;
+import javax.ws.rs.core.MediaType;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 class ComplaintAttachmentHandlerTest {
 

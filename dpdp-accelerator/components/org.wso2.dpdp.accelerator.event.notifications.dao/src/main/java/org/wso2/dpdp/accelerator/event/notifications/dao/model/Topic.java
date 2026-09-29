@@ -19,6 +19,7 @@
 package org.wso2.dpdp.accelerator.event.notifications.dao.model;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
+
 import java.sql.Timestamp;
 
 public class Topic {

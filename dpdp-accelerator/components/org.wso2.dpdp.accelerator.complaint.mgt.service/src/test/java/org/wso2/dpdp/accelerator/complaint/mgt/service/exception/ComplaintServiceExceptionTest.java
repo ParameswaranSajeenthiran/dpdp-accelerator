@@ -19,7 +19,6 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.exception;
 
 import org.testng.annotations.Test;
-
 import org.wso2.dpdp.accelerator.common.exception.DPDPException;
 
 import static org.testng.Assert.assertEquals;

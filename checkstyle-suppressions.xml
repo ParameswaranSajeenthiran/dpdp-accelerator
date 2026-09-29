@@ -32,8 +32,6 @@
     <!-- wso2/dpdp-accelerator#276: pre-existing violations across the tree, too large to fix in
          the PR that added this gate. Remove each line as its backlog is cleared. -->
     <suppress checks="LineLength" files=".*"/>
-    <suppress checks="ImportOrder" files=".*"/>
-    <suppress checks="JavadocType" files=".*"/>
 
     <suppress checks="Javadoc.*" files=".*/src/test/java/.*"/>
     <suppress checks="JavadocStyle" files=".*/src/(main|internal)/java/.*"/>

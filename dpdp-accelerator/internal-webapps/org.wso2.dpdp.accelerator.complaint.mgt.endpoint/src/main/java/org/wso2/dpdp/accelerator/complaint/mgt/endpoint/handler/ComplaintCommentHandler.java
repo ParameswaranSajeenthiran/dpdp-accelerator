@@ -19,15 +19,15 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.endpoint.handler;
 
 import org.wso2.carbon.context.PrivilegedCarbonContext;
-import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintCommentCreateResponse;
+import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.MeComplaintMessageRequest;
 import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.util.ComplaintDtoMapper;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintEventService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintErrorCode;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
+import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 
 /**
  * Shared business logic behind both /me/complaints/{id}/comments (Data Principal, always

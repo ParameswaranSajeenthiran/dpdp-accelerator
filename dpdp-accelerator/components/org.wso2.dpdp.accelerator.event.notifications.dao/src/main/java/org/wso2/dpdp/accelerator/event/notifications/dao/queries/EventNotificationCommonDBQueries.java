@@ -18,13 +18,13 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
 
-import java.util.Collections;
-
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryMode;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.PollStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
+
+import java.util.Collections;
 
 /**
  * Common ANSI SQL queries base provider for DPDP Event Notification Framework.

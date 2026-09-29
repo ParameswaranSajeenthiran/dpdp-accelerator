@@ -18,11 +18,9 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.dao.model;
 
-import java.util.Collections;
-
-import java.util.ArrayList;
-
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Subscription {

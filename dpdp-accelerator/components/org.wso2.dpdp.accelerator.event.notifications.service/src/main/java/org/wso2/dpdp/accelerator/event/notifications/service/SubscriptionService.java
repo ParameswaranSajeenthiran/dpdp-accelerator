@@ -18,14 +18,14 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service;
 
-import java.util.List;
-
-import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
-import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.DeliveryConfigDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
+import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+
+import java.util.List;
 
 public interface SubscriptionService {
 

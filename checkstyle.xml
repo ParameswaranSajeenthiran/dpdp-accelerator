@@ -82,6 +82,7 @@
             <property name="illegalPkgs" value="junit.framework"/>
         </module>
         <module name="UnusedImports"/>
+        <module name="UnusedLocalVariable"/>
 
         <!-- Length -->
         <module name="MethodLength">

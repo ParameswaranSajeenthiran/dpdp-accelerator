@@ -13,10 +13,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import javax.sql.DataSource;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;

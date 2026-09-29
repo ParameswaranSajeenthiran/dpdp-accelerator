@@ -28,8 +28,8 @@ import org.testng.annotations.Test;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.ConsentExpiryTrackerDAO;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.exceptions.ConsentExpiryDataAccessException;
-import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentExpiryRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.service.exception.ConsentExtensionsServiceException;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;

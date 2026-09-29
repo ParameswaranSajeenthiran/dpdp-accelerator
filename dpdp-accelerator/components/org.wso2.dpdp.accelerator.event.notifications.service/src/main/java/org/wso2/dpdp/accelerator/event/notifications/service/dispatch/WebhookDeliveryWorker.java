@@ -18,23 +18,22 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dispatch;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
-import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.common.util.HTTPClientUtils;
+import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.DeliveryStatus;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDelivery;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryDispatchContext;
 
 import java.net.http.HttpClient;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Batch driver for the webhook dispatch loop. One tick:

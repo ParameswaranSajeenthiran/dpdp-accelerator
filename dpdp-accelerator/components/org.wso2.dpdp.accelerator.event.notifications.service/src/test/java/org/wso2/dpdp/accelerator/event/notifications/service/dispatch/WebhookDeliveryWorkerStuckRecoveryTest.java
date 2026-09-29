@@ -23,8 +23,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
+import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
+
 import java.net.http.HttpClient;
 import java.sql.Connection;
 import java.sql.Timestamp;

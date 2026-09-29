@@ -23,10 +23,11 @@ import org.wso2.dpdp.accelerator.common.config.DPDPConfigParser;
 import org.wso2.dpdp.accelerator.common.constant.DPDPCommonConstants;
 import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 
 /**
  * Resolves the shared DPDP datasource and hands out JDBC connections to accelerator modules.

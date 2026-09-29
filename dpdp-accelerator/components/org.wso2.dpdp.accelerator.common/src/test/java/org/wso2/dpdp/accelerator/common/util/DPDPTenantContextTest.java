@@ -18,11 +18,11 @@
 
 package org.wso2.dpdp.accelerator.common.util;
 
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.dpdp.accelerator.common.exception.DPDPSystemException;
 import org.wso2.dpdp.accelerator.common.test.CarbonTestEnvironment;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import java.io.IOException;
 

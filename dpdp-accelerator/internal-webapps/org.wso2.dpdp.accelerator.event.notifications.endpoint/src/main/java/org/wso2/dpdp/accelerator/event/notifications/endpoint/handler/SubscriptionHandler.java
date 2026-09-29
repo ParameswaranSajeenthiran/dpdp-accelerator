@@ -25,7 +25,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.FilterDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDeliveryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
-
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
 
 import java.util.Collections;

@@ -555,7 +555,7 @@
                             <suppressionsLocation>
                                 ${maven.multiModuleProjectDirectory}/checkstyle-suppressions.xml
                             </suppressionsLocation>
-                            <encoding>UTF-8</encoding>
+                            <inputEncoding>UTF-8</inputEncoding>
                             <consoleOutput>true</consoleOutput>
                             <failsOnError>true</failsOnError>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>

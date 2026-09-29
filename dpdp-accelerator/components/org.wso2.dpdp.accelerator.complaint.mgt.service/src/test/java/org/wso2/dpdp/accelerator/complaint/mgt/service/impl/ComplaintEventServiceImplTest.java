@@ -19,13 +19,13 @@
 package org.wso2.dpdp.accelerator.complaint.mgt.service.impl;
 
 import org.h2.jdbcx.JdbcDataSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintDAO;
 import org.wso2.dpdp.accelerator.complaint.mgt.dao.ComplaintEventDAO;
@@ -39,9 +39,6 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.expectThrows;
-import static org.testng.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -51,6 +48,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 class ComplaintEventServiceImplTest {
 
