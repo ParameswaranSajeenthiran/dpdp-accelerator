@@ -63,6 +63,21 @@ describe('SubscriptionDeleteDialog', () => {
       />,
     )
 
+    // Accessible dialog name is strictly the title (does not conflate description)
+    const dialog = screen.getByRole('dialog', { name: 'Confirm Subscription Deletion' })
+    expect(dialog).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Confirm Subscription Deletion' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 6 })).not.toBeInTheDocument()
+
+    // Confirmation question is associated with the dialog via aria-describedby
+    const describedById = dialog.getAttribute('aria-describedby')
+    expect(describedById).toBeTruthy()
+    expect(document.getElementById(describedById ?? '')).toHaveTextContent(
+      /Are you sure you want to delete subscription/i,
+    )
+
     // Confirm Subscription Deletion title is present
     expect(screen.getByText('Confirm Subscription Deletion')).toBeInTheDocument()
 

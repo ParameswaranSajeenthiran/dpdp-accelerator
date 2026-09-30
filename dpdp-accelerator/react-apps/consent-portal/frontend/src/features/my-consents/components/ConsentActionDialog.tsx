@@ -27,19 +27,22 @@ import {
   Stack,
   Typography,
 } from '@wso2/oxygen-ui'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export interface ConsentActionDialogProps {
   open: boolean
-  consentId: string
+  consentId?: string
   /** Caption before the identifier; defaults to the consent ID label. */
   idLabel?: string
+  /** Whether to render the identifier caption line; defaults to true when consentId is present. */
+  showId?: boolean
   title: string
-  message: string
+  message: React.ReactNode
   note: string
   confirmLabel: string
   color: 'primary' | 'error'
-  icon: React.ReactNode
+  icon?: React.ReactNode
   loading: boolean
   error?: string
   onClose: () => void
@@ -56,6 +59,7 @@ function ConsentActionDialog({
   open,
   consentId,
   idLabel,
+  showId = true,
   title,
   message,
   note,
@@ -68,11 +72,15 @@ function ConsentActionDialog({
   onConfirm,
 }: ConsentActionDialogProps): React.JSX.Element {
   const { t } = useTranslation('common')
+  const titleId = useId()
+  const descriptionId = useId()
 
   return (
     <Dialog
       open={open}
       onClose={loading ? undefined : onClose}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       maxWidth="xs"
       fullWidth
       PaperProps={{
@@ -84,29 +92,34 @@ function ConsentActionDialog({
       }}
     >
       <DialogTitle
+        id={titleId}
         sx={{
           p: 3,
           borderBottom: 1,
           borderColor: 'divider',
           textAlign: 'center',
+          typography: 'h6',
+          fontWeight: 700,
         }}
       >
-        <Stack spacing={0.75}>
-          <Typography variant="h6" fontWeight={700}>
-            {title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {message}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 300 }}>
-            {idLabel ?? t('consentRegistry.modals.consentId')}: {consentId}
-          </Typography>
-        </Stack>
+        {title}
       </DialogTitle>
 
-      <DialogContent sx={{ px: 3, pt: 3.5, pb: 3 }}>
-        <Stack spacing={2} sx={{ mt: 3 }}>
+      <DialogContent sx={{ px: 3, pt: 3, pb: 3 }}>
+        <Stack spacing={2}>
+          <Stack spacing={0.75} sx={{ textAlign: 'center' }}>
+            <Typography id={descriptionId} variant="body2" color="text.secondary">
+              {message}
+            </Typography>
+            {showId && consentId ? (
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 300 }}>
+                {idLabel ?? t('consentRegistry.modals.consentId')}: {consentId}
+              </Typography>
+            ) : null}
+          </Stack>
+
           {error ? <Alert severity="error">{error}</Alert> : null}
+
           <Box
             sx={{
               width: '100%',
@@ -120,20 +133,22 @@ function ConsentActionDialog({
               gap: 1.5,
             }}
           >
-            <Box
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                color: color === 'error' ? 'error.main' : 'primary.main',
-                bgcolor: 'background.paper',
-                flexShrink: 0,
-              }}
-            >
-              {icon}
-            </Box>
+            {icon ? (
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: color === 'error' ? 'error.main' : 'primary.main',
+                  bgcolor: 'background.paper',
+                  flexShrink: 0,
+                }}
+              >
+                {icon}
+              </Box>
+            ) : null}
             <Typography variant="body2" color="text.secondary">
               {note}
             </Typography>
@@ -171,8 +186,11 @@ function ConsentActionDialog({
 }
 
 ConsentActionDialog.defaultProps = {
+  consentId: undefined,
   error: undefined,
+  icon: undefined,
   idLabel: undefined,
+  showId: true,
 }
 
 export default ConsentActionDialog

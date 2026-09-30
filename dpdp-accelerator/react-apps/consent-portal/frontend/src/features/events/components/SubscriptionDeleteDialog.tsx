@@ -16,18 +16,9 @@
  * under the License.
  */
 
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from '@wso2/oxygen-ui'
+import { Box } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
+import ConsentActionDialog from '../../my-consents/components/ConsentActionDialog'
 import type { SubscriptionRecord } from '../../../types/subscription'
 
 interface SubscriptionDeleteDialogProps {
@@ -66,84 +57,20 @@ export default function SubscriptionDeleteDialog({
     )
 
   return (
-    <Dialog
+    <ConsentActionDialog
       open={open}
-      onClose={loading ? undefined : onClose}
-      maxWidth="xs"
-      fullWidth
-      PaperProps={{
-        sx: (theme) => ({
-          borderRadius: 1,
-          ...theme.applyStyles('light', { bgcolor: theme.palette.grey[50] }),
-          ...theme.applyStyles('dark', { bgcolor: 'rgba(255, 255, 255, 0.06)' }),
-        }),
-      }}
-    >
-      <DialogTitle
-        sx={{
-          p: 3,
-          borderBottom: 1,
-          borderColor: 'divider',
-          textAlign: 'center',
-        }}
-      >
-        <Stack spacing={0.75}>
-          <Typography variant="h6" fontWeight={700}>
-            {t('subscriptions.deleteModal.title')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {message}
-          </Typography>
-        </Stack>
-      </DialogTitle>
-
-      <DialogContent sx={{ px: 3, pt: 3.5, pb: 3 }}>
-        <Stack spacing={2} sx={{ mt: 3 }}>
-          {error ? <Alert severity="error">{error}</Alert> : null}
-          <Box
-            sx={{
-              width: '100%',
-              p: 2,
-              border: 1,
-              borderColor: 'error.light',
-              borderRadius: 1,
-              bgcolor: 'error.lighter',
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {t('subscriptions.deleteModal.note')}
-            </Typography>
-          </Box>
-        </Stack>
-      </DialogContent>
-
-      <DialogActions
-        sx={{
-          p: 3,
-          pt: 2,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.default',
-          flexDirection: 'column',
-          gap: 1.25,
-        }}
-      >
-        <Button
-          fullWidth
-          color="error"
-          variant="contained"
-          disabled={loading}
-          onClick={() => onConfirm()}
-        >
-          {loading
-            ? t('consentRegistry.modals.actions.processing')
-            : t('subscriptions.deleteModal.confirm')}
-        </Button>
-        <Button fullWidth variant="outlined" disabled={loading} onClick={onClose}>
-          {t('consentRegistry.modals.actions.cancel')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      consentId={subscription.subscriptionId}
+      showId={false}
+      title={t('subscriptions.deleteModal.title')}
+      message={message}
+      note={t('subscriptions.deleteModal.note')}
+      confirmLabel={t('subscriptions.deleteModal.confirm')}
+      color="error"
+      loading={loading}
+      error={error}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />
   )
 }
 
