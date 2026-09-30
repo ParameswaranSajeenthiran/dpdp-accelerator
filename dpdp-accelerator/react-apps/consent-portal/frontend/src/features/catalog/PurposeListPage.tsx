@@ -39,6 +39,7 @@ import CursorPaginationFooter from '../../components/CursorPaginationFooter'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
 import { useCatalogText } from '../../i18n/catalogText'
 import type { CursorPageParams } from '../../types/catalog'
+import { APIError } from '../../utils/apiClient'
 import { getNextCursor, getPreviousCursor } from '../../utils/cursorPagination'
 import { REQUIRED_SCOPES } from '../../utils/scopes'
 import useAuthorization from '../auth/useAuthorization'
@@ -73,12 +74,15 @@ function PurposeListPage(): React.JSX.Element {
   const [createOpen, setCreateOpen] = useState(false)
   const createMutation = useCreatePurposeMutation()
 
-  // Unlike elements, purpose names aren't unique -- there is no well-known
-  // cause for a create failure here, so any error gets the generic message
-  // rather than surfacing raw server text.
-  const createErrorMessage = createMutation.error
-    ? t('catalog.purposes.form.createFailed')
-    : undefined
+  // IS maps ERROR_CODE_PURPOSE_ALREADY_EXIST to a 409, so a duplicate gets a
+  // precise message regardless of the upstream's own wording.
+  let createErrorMessage: string | undefined
+  if (createMutation.error) {
+    createErrorMessage =
+      createMutation.error instanceof APIError && createMutation.error.status === 409
+        ? t('catalog.purposes.form.duplicateName', { name: createMutation.variables?.name ?? '' })
+        : t('catalog.purposes.form.createFailed')
+  }
 
   // Paging must keep the active search; only a new search resets to page one.
   const updateParams = (nextParams: CursorPageParams): void => {

@@ -33,7 +33,7 @@ import {
   Tooltip,
   Typography,
 } from '@wso2/oxygen-ui'
-import { Eye, RefreshCw, Trash2 } from '@wso2/oxygen-ui-icons-react'
+import { Eye, Trash2 } from '@wso2/oxygen-ui-icons-react'
 import { useTranslation } from 'react-i18next'
 import SubscriptionTopicChips from './SubscriptionTopicChips'
 import CopyableText from '../../../components/CopyableText'
@@ -57,7 +57,6 @@ interface SubscriptionTableProps {
   onRowsPerPageChange: (rowsPerPage: number) => void
   onRetry: () => void
   onViewDetails: (subscription: SubscriptionRecord) => void
-  onVerify: (subscription: SubscriptionRecord) => void
   onDelete: (subscription: SubscriptionRecord) => void
 }
 
@@ -75,7 +74,6 @@ export default function SubscriptionTable({
   onRowsPerPageChange,
   onRetry,
   onViewDetails,
-  onVerify,
   onDelete,
 }: SubscriptionTableProps): React.JSX.Element {
   const { t } = useTranslation('common')
@@ -140,7 +138,12 @@ export default function SubscriptionTable({
               }
 
               return (
-                <TableRow key={sub.subscriptionId} hover>
+                <TableRow
+                  key={sub.subscriptionId}
+                  hover
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => onViewDetails(sub)}
+                >
                   <TableCell>
                     <Typography
                       variant="body2"
@@ -194,7 +197,7 @@ export default function SubscriptionTable({
                       label={t(`subscriptions.status.${statusStr.toLowerCase()}`, statusStr)}
                     />
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                       <Tooltip title={t('subscriptions.actions.view')}>
                         <span>
@@ -208,22 +211,6 @@ export default function SubscriptionTable({
                           </IconButton>
                         </span>
                       </Tooltip>
-
-                      {canWrite && isWebhook && !isDeleted ? (
-                        <Tooltip title={t('subscriptions.actions.verify')}>
-                          <span>
-                            <IconButton
-                              size="small"
-                              color="secondary"
-                              disabled={isMutating}
-                              onClick={() => onVerify(sub)}
-                              aria-label={t('subscriptions.actions.verify')}
-                            >
-                              <RefreshCw size={16} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      ) : null}
 
                       {canWrite ? (
                         <Tooltip

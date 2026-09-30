@@ -22,11 +22,11 @@ import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotif
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.Initiator;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
-import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationInvalidStateException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.PaginatedDAOResult;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationQueryFactory;

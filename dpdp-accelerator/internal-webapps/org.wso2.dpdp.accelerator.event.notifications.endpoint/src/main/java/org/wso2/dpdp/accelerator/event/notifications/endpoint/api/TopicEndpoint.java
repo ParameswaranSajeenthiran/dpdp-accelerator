@@ -18,14 +18,15 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.endpoint.api;
 
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.util.EventNotificationDtoMapper;
-
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.TopicHandler;
+import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointConstants;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.TopicCreateRequest;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.handler.TopicHandler;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.util.EventNotificationDtoMapper;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
-import org.wso2.dpdp.accelerator.common.util.DPDPTenantContext;
+
+import java.util.function.Supplier;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -38,7 +39,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.function.Supplier;
 
 @Path("/topics")
 @Consumes(MediaType.APPLICATION_JSON)

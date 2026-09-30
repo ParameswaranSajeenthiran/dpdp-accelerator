@@ -335,6 +335,7 @@
         "versionRequired": "Version is required.",
         "versionHelp": "A version identifier, e.g. \"v1\".",
         "submitting": "Creating...",
+        "duplicateName": "A purpose named \"{{name}}\" already exists. Choose a different name.",
         "createFailed": "Something went wrong and the purpose could not be created. Please try again."
       },
       "versionForm": {
@@ -757,7 +758,7 @@
     "deleteModal": {
       "title": "Confirm Subscription Deletion",
       "message": "Are you sure you want to delete subscription \"{{id}}\"?",
-      "note": "Deleting this subscription prevents new events from being dispatched to this subscriber endpoint.",
+      "note": "Deleting this subscription prevents new events from being dispatched to this subscriber.",
       "confirm": "Delete Subscription"
     },
     "verification": {

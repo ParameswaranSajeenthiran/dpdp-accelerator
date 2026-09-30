@@ -20,9 +20,16 @@ package org.wso2.dpdp.accelerator.event.notifications.endpoint.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.endpoint.constants.EventNotificationEndpointErrorCodes;
+import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Error;
+
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.WebApplicationException;
@@ -30,12 +37,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import org.wso2.dpdp.accelerator.event.notifications.endpoint.dto.Error;
-import java.util.Set;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 @Provider
 public class EventNotificationExceptionMapper implements ExceptionMapper<Throwable> {

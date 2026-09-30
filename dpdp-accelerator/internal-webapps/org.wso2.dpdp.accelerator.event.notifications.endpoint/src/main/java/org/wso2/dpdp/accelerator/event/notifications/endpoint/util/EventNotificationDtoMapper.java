@@ -50,6 +50,7 @@ import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionDel
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.SubscriptionEventHistoryDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.dto.TopicDTO;
 import org.wso2.dpdp.accelerator.event.notifications.service.model.PaginatedResult;
+
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;

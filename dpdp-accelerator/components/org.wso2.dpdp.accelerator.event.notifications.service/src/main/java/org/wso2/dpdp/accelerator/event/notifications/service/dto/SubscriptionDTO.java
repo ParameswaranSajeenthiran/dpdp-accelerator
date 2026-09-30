@@ -18,13 +18,11 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.dto;
 
-import java.util.List;
-
-import java.util.Collections;
+import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
 
 import java.util.ArrayList;
-
-import org.wso2.dpdp.accelerator.event.notifications.common.enums.SubscriptionStatus;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Data Transfer Object representing an Event Subscription at the service layer.

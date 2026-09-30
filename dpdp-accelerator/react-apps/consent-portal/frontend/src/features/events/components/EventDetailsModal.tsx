@@ -229,7 +229,10 @@ export default function EventDetailsModal({
                               <Chip
                                 size="small"
                                 color={getSubscriptionStatusChipColor(attempt.status)}
-                                label={attempt.status}
+                                label={t(
+                                  `events.status.${attempt.status?.toLowerCase()}`,
+                                  attempt.status,
+                                )}
                               />
                             </TableCell>
                             <TableCell>{attempt.httpStatus ?? '-'}</TableCell>

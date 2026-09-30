@@ -23,28 +23,29 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 import org.wso2.dpdp.accelerator.event.notifications.common.enums.TopicStatus;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
-import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
+import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.EventDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.SubscriptionDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.TopicDAO;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.Topic;
-import org.wso2.dpdp.accelerator.event.notifications.common.exception.service.EventNotificationServiceException;
-import org.wso2.dpdp.accelerator.common.persistence.JDBCPersistenceManager;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
-import java.sql.Connection;
+
 import javax.sql.DataSource;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 

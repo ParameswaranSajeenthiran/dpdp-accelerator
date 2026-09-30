@@ -96,6 +96,9 @@ describe('SubscriptionRegisterDialog', () => {
       target: { value: 'https://example.com/events' },
     })
 
+    // Generate shared secret
+    fireEvent.click(screen.getByRole('button', { name: /Generate new secret/i }))
+
     fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit).toHaveBeenCalledWith(
@@ -151,6 +154,8 @@ describe('SubscriptionRegisterDialog', () => {
     fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
       target: { value: 'https://receiver.example/callback' },
     })
+
+    fireEvent.click(screen.getByRole('button', { name: /Generate new secret/i }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
@@ -211,6 +216,7 @@ describe('SubscriptionRegisterDialog', () => {
       fireEvent.change(screen.getByRole('textbox', { name: /Webhook Callback URL/ }), {
         target: { value: 'https://receiver.example/callback' },
       })
+      fireEvent.click(screen.getByRole('button', { name: /Generate new secret/i }))
       fireEvent.click(screen.getByRole('button', { name: 'Register Subscription' }))
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
@@ -293,6 +299,8 @@ describe('SubscriptionRegisterDialog', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: /Delivery Mode/i }))
     fireEvent.click(await screen.findByRole('option', { name: 'Poll' }))
 
+    fireEvent.click(screen.getByRole('button', { name: /Generate new secret/i }))
+
     const submitButton = screen.getByRole('button', { name: 'Register Subscription' })
     fireEvent.submit(submitButton.closest('form')!)
 
@@ -372,6 +380,8 @@ describe('SubscriptionRegisterDialog', () => {
       target: { value: 'https://orders.example/callback' },
     })
 
+    fireEvent.click(screen.getByRole('button', { name: /Generate new secret/i }))
+
     const submitButton = screen.getByRole('button', { name: 'Register Subscription' })
     fireEvent.submit(submitButton.closest('form')!)
 
@@ -383,5 +393,28 @@ describe('SubscriptionRegisterDialog', () => {
         filter: { type: 'specific', purposes: ['ORDER_FULFILLMENT'] },
       }),
     )
+  })
+
+  it('initializes shared secret as blank and generates secret when generate button is clicked', () => {
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <I18nextProvider i18n={i18n}>
+          <OxygenUIThemeProvider theme={OxygenTheme}>
+            <SubscriptionRegisterDialog open loading={false} onClose={vi.fn()} onSubmit={vi.fn()} />
+          </OxygenUIThemeProvider>
+        </I18nextProvider>
+      </QueryClientProvider>,
+    )
+
+    const secretInput = screen.getByLabelText(/Shared Secret/)
+    expect(secretInput).toHaveValue('')
+
+    const generateBtn = screen.getByRole('button', { name: /Generate new secret/i })
+    fireEvent.click(generateBtn)
+
+    expect(secretInput).not.toHaveValue('')
+    expect((secretInput as HTMLInputElement).value).toHaveLength(32)
   })
 })

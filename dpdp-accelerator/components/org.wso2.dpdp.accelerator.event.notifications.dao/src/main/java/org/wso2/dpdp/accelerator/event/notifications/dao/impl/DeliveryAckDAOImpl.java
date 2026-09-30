@@ -20,9 +20,9 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.impl;
 
 import org.wso2.dpdp.accelerator.event.notifications.common.constants.EventNotificationCommonConstants;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDaoException;
-import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.common.exception.dao.EventNotificationDuplicateResourceException;
 import org.wso2.dpdp.accelerator.event.notifications.dao.DeliveryAckDAO;
+import org.wso2.dpdp.accelerator.event.notifications.dao.constants.EventNotificationDBColumns;
 import org.wso2.dpdp.accelerator.event.notifications.dao.model.WebhookDeliveryAck;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationCommonDBQueries;
 import org.wso2.dpdp.accelerator.event.notifications.dao.queries.EventNotificationQueryFactory;

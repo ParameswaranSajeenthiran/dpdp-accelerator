@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.wso2.carbon.consent.mgt.core.model.ConsentAuthorization;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentHistoryRecord;
 import org.wso2.dpdp.accelerator.consent.extensions.dao.models.ConsentStatusAuditRecord;
+import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ActionType;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryEntryDTO;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.ConsentHistoryResponseDTO;
@@ -31,7 +32,6 @@ import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.StatusAudit
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.dto.StatusHistoryResponseDTO;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.error.ConsentHistoryErrorCodes;
 import org.wso2.dpdp.accelerator.consent.mgt.extensions.endpoint.exception.ConsentHistoryEndpointException;
-import org.wso2.dpdp.accelerator.consent.extensions.service.models.PagedResult;
 
 import java.io.IOException;
 import java.util.ArrayList;

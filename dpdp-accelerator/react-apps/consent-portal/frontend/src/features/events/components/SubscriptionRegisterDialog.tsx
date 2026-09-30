@@ -80,7 +80,7 @@ export default function SubscriptionRegisterDialog({
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([])
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('webhook')
   const [callbackUrl, setCallbackUrl] = useState('')
-  const [sharedSecret, setSharedSecret] = useState(() => generateRandomHexSecret())
+  const [sharedSecret, setSharedSecret] = useState('')
 
   const [nameError, setNameError] = useState('')
   const [topicError, setTopicError] = useState('')
@@ -96,6 +96,7 @@ export default function SubscriptionRegisterDialog({
       setTopicError('')
       setCallbackUrlError('')
       setSecretError('')
+      setSharedSecret('')
     }
   }, [open])
   const handleGenerateSecret = (): void => {
@@ -505,6 +506,7 @@ export default function SubscriptionRegisterDialog({
                       <IconButton
                         size="small"
                         title={t('subscriptions.dialog.generateSecret', 'Generate new secret')}
+                        aria-label={t('subscriptions.dialog.generateSecret', 'Generate new secret')}
                         onClick={handleGenerateSecret}
                         edge="end"
                       >

@@ -18,6 +18,8 @@
 
 package org.wso2.dpdp.accelerator.event.notifications.service.recovery;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.dpdp.accelerator.common.config.DPDPConfigurationService;
 import org.wso2.dpdp.accelerator.common.util.DatabaseUtils;
 import org.wso2.dpdp.accelerator.common.util.LogSanitizer;
@@ -28,7 +30,6 @@ import org.wso2.dpdp.accelerator.event.notifications.service.SubscriptionService
 import org.wso2.dpdp.accelerator.event.notifications.service.constants.EventNotificationServiceConstants;
 import org.wso2.dpdp.accelerator.event.notifications.service.dispatch.WebhookDeliveryWorker;
 
-
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -37,8 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Dedicated OSGi background recovery service for recovering overdue webhook
