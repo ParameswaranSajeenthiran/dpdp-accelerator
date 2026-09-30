@@ -220,7 +220,7 @@ export class ComplaintApiClient {
     return this.request.post(complaintsApiUrl(`/${complaintId}/status`, this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
-  /** isPublic defaults to true server-side when omitted. */
+  /** isPublic defaults to false (internal) server-side when omitted. */
   async uploadAttachments(complaintId: string, files: UploadFile[], isPublic?: boolean): Promise<APIResponse> {
     return this.request.post(complaintsApiUrl(`/${complaintId}/attachments`, this.tenantDomain), {
       headers: this.headers(),

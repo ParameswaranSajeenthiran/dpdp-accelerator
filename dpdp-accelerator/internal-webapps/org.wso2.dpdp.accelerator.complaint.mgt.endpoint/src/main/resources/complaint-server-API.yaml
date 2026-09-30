@@ -716,11 +716,12 @@ paths:
         COMPLAINT_OFFICER) and binds every attachment in the request to
         it — see ComplaintTimelineEntryResponse.attachments.
 
-        By default, uploaded attachments are `isPublic=true` (visible to
-        the Data Principal via the /me endpoints). Set `isPublic=false`
-        to upload internal evidence that should never be exposed to the
-        Data Principal — this also marks the upload's timeline entry
-        internal.
+        Set `isPublic=true` to make the attachments visible to the Data
+        Principal via the /me endpoints. When `isPublic` is omitted or
+        blank the upload is internal (`isPublic=false`): evidence that
+        should never be exposed to the Data Principal, with its timeline
+        entry marked internal too. Any value other than `true`/`false`
+        is rejected with 422.
 
         Required scope: `complaints:write:any`
       operationId: cmUploadComplaintAttachment
@@ -747,10 +748,10 @@ paths:
                   description: One to five files to upload in a single request.
                 isPublic:
                   type: boolean
-                  default: true
+                  default: false
                   description: >
                     Whether these attachments should be visible to the
-                    Data Principal. Defaults to true.
+                    Data Principal. Defaults to false (internal).
             encoding:
               file:
                 contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg

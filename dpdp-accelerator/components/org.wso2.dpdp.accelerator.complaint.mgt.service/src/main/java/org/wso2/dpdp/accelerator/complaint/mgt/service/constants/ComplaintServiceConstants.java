@@ -79,6 +79,7 @@ public final class ComplaintServiceConstants {
     public static final String MESSAGE_TOO_LONG_ERROR =
             "Field 'message' must not exceed " + MAX_MESSAGE_LENGTH + " characters.";
     public static final String IS_PUBLIC_REQUIRED_ERROR = "Field 'isPublic' is required.";
+    public static final String IS_PUBLIC_INVALID_ERROR = "Field 'isPublic' must be 'true' or 'false'.";
     public static final String ACTOR_ROLE_INVALID_ERROR = "Field 'actorRole' must be one of USER, COMPLAINT_OFFICER.";
     public static final String INTERNAL_NOTE_FORBIDDEN_ERROR =
             "Actor role '%s' cannot set isPublic to false on a timeline entry.";
