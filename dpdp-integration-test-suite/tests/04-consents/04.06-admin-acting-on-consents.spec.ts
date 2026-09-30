@@ -72,7 +72,7 @@ test.describe('Admin acting on Consents (UI)', () => {
     await consentAdminPage.context().close()
   })
 
-  test('04.06.03 - The admin list shows no Approve action for a Pending consent, and no Revoke action either', async ({
+  test('04.06.03 - The admin list shows no Approve action for a Pending consent, but Revoke is visible and enabled', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -90,7 +90,10 @@ test.describe('Admin acting on Consents (UI)', () => {
     const row = registryPage.rowByConsentId(consentId)
     await expect(row).toBeVisible()
     await expect(row.getByRole('button', { name: 'Approve' })).toHaveCount(0)
-    await expect(row.getByRole('button', { name: 'Revoke' })).toHaveCount(0)
+    // The admin list mirrors the detail page's own rule (isRevokableByAdmin,
+    // consentAuthorization.ts): oversight can revoke a still-Pending request outright, not only
+    // wind down an Active one - see 04.06.04 below for the same rule on the detail page.
+    await expect(registryPage.revokeButton(consentId)).toBeEnabled()
     await consentAdminPage.context().close()
   })
 
@@ -107,8 +110,8 @@ test.describe('Admin acting on Consents (UI)', () => {
     )
 
     // Admin oversight (isRevokableByAdmin, consentAuthorization.ts) can revoke a still-Pending
-    // request outright, not only wind down an Active one - unlike the admin list, which only
-    // ever offers Revoke from an Active row (see 04.06.03, deliberately left narrower).
+    // request outright, not only wind down an Active one - the admin list offers the same, per
+    // 04.06.03 above.
     const detailPage = new ConsentDetailPage(consentAdminPage, 'admin')
     await detailPage.goto(consentId)
     await expect(consentAdminPage.getByRole('button', { name: 'Revoke', exact: true })).toBeVisible()

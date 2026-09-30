@@ -36,10 +36,6 @@ export class MyConsentPage extends ConsentRegistryTable {
     await this.page.goto('consents')
   }
 
-  async approveFromList(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).getByRole('button', { name: 'Approve' }).click()
-  }
-
   async searchByService(serviceId: string): Promise<void> {
     await submitFilterValue(
       this.page,

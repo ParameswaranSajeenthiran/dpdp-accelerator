@@ -22,17 +22,20 @@ import { MyConsentPage } from '../../pages/MyConsentPage'
 import { seedConsentViaApi } from '../../utils/consentSetup'
 
 /**
- * Approve/reject/revoke, from both the list and the detail page, plus the terminal-state guard
- * (a Rejected consent offers none of these actions). Only Consent creation goes through the
- * admin API (see utils/consentSetup.ts - it has no create UI at all); the Element and Purpose
- * each seeded consent needs are also created via the admin API, since none of these tests are
- * exercising the create-Element/create-Purpose forms - only `consentAdminConsentApi` is needed
- * for seeding, so there's no admin browser session to log in or close here.
+ * Approve/reject/revoke, all from the detail page - the self-service registry list has no
+ * Actions column at all (see 04.03.01 and 04.03.03 below, which each confirm that directly),
+ * since every row already links to the detail page on click and deciding without reading the
+ * consent first is not a flow this surface offers. Plus the terminal-state guard (a Rejected
+ * consent offers none of these actions). Only Consent creation goes through the admin API (see
+ * utils/consentSetup.ts - it has no create UI at all); the Element and Purpose each seeded
+ * consent needs are also created via the admin API, since none of these tests are exercising the
+ * create-Element/create-Purpose forms - only `consentAdminConsentApi` is needed for seeding, so
+ * there's no admin browser session to log in or close here.
  * `internal_login` alone (granted to every signed-in user, no role needed) is enough for both
  * consent scopes here, so the existing user persona needs no extra role for any of this.
  */
 test.describe('User acting on Consents (UI)', () => {
-  test('04.03.01 - Approving a Pending consent from the list moves it to Active', async ({
+  test('04.03.01 - Approving a Pending consent from its detail page moves it to Active, reflected back in the list', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -50,10 +53,20 @@ test.describe('User acting on Consents (UI)', () => {
     // test below.
     await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toContainText('Pending')
+    // The self-service list has no Actions column at all - decisions happen on the detail page.
+    await expect(
+      registryPage.rowByConsentId(consentId).getByRole('button', { name: 'Approve' }),
+    ).toHaveCount(0)
 
-    await registryPage.approveFromList(consentId)
-    await userPage.getByRole('button', { name: 'Approve Consent' }).click()
+    await registryPage.openByConsentId(consentId)
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.openActionDialog('approve')
+    await expect(detailPage.dialogTitle('approve')).toBeVisible()
+    await detailPage.confirmAction('approve')
+    await expect(userPage.getByText('Active', { exact: true }).first()).toBeVisible()
 
+    await registryPage.goto()
+    await registryPage.searchByService(serviceId)
     await expect(registryPage.rowByConsentId(consentId)).toContainText('Active')
     await userPage.context().close()
   })
@@ -83,7 +96,7 @@ test.describe('User acting on Consents (UI)', () => {
     await userPage.context().close()
   })
 
-  test('04.03.03 - Revoking an Active consent from the list moves it to Revoked and removes the revoke action', async ({
+  test('04.03.03 - Revoking an Active consent from its detail page moves it to Revoked, reflected back in the list', async ({
     browser,
     target,
     consentAdminConsentApi,
@@ -100,17 +113,26 @@ test.describe('User acting on Consents (UI)', () => {
     // Filtered to this test's own unique service id: the unfiltered list is sorted and paged,
     // and a persistent environment can easily push a freshly created row off the first page.
     await registryPage.searchByService(serviceId)
-    await registryPage.revokeFromList(consentId)
-    await userPage.getByRole('button', { name: 'Revoke Consent' }).click()
-
-    await expect(registryPage.rowByConsentId(consentId)).toContainText('Revoked')
+    await expect(registryPage.rowByConsentId(consentId)).toContainText('Active')
+    // The self-service list has no Actions column at all - decisions happen on the detail page.
     await expect(
       registryPage.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }),
     ).toHaveCount(0)
+
+    await registryPage.openByConsentId(consentId)
+    const detailPage = new ConsentDetailPage(userPage, 'self')
+    await detailPage.openActionDialog('revoke')
+    await expect(detailPage.dialogTitle('revoke')).toBeVisible()
+    await detailPage.confirmAction('revoke')
+    await expect(userPage.getByText('Revoked', { exact: true }).first()).toBeVisible()
+
+    await registryPage.goto()
+    await registryPage.searchByService(serviceId)
+    await expect(registryPage.rowByConsentId(consentId)).toContainText('Revoked')
     await userPage.context().close()
   })
 
-  test('04.03.04 - Approving from the detail page works the same way as from the list', async ({
+  test('04.03.04 - The detail page works when navigated to directly, without going through the list first', async ({
     browser,
     target,
     consentAdminConsentApi,

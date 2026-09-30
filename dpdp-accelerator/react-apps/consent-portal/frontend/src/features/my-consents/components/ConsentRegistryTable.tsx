@@ -34,28 +34,17 @@ import {
   Tooltip,
   Typography,
 } from '@wso2/oxygen-ui'
-import {
-  Ban,
-  CircleCheckBig,
-  CircleSlash,
-  Eye,
-  RefreshCw,
-  Search,
-} from '@wso2/oxygen-ui-icons-react'
+import { Ban, CircleSlash, RefreshCw, Search } from '@wso2/oxygen-ui-icons-react'
 import { type MouseEvent, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import CopyableText from '../../../components/CopyableText'
 import CursorPaginationFooter from '../../../components/CursorPaginationFooter'
 import type { ConsentRecord } from '../../../types/consent'
 import { formatEpochTimestamp } from '../../../utils/dateTime'
 import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS } from '../constants'
-import { isApprovableByCurrentUser } from '../utils/consentAuthorization'
-import {
-  getConsentStateChipColor,
-  getConsentStateLabelKey,
-  isConsentRevokableState,
-} from '../utils/statusChip'
+import { isRevokableByAdmin } from '../utils/consentAuthorization'
+import { getConsentStateChipColor, getConsentStateLabelKey } from '../utils/statusChip'
 
 interface ConsentRegistryTableProps {
   rows: ConsentRecord[]
@@ -74,14 +63,12 @@ interface ConsentRegistryTableProps {
   showSubject?: boolean
   showPurposes?: boolean
   /**
-   * The signed-in user's own ID. Required when `canApprove` is set, so the
-   * approve action is gated on the caller's own authorization entry rather
-   * than only the consent's aggregate state - see `consentAuthorization.ts`.
+   * Whether this table offers Revoke at all - only the admin registry passes
+   * this. Self-service decisions (approve/reject/revoke) all happen on the
+   * detail page instead, which every row is already a link to; when this is
+   * false the Actions column is omitted entirely rather than left empty.
    */
-  currentUserId?: string
-  canApprove?: boolean
   canRevoke?: boolean
-  onApprove?: (consentID: string) => void
   onRevoke?: (consentID: string) => void
   isMutating?: boolean
 }
@@ -103,10 +90,7 @@ export default function ConsentRegistryTable({
   detailSearch = '',
   showSubject = false,
   showPurposes = true,
-  currentUserId = '',
-  canApprove = false,
   canRevoke = false,
-  onApprove,
   onRevoke,
   isMutating = false,
 }: ConsentRegistryTableProps): React.JSX.Element {
@@ -114,11 +98,7 @@ export default function ConsentRegistryTable({
   const navigate = useNavigate()
   const [purposesPopoverAnchor, setPurposesPopoverAnchor] = useState<HTMLElement | null>(null)
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([])
-  const columnCount = 4 + (showSubject ? 1 : 0) + (showPurposes ? 1 : 0)
-
-  const handleStopPropagation = (event: MouseEvent<HTMLElement>): void => {
-    event.stopPropagation()
-  }
+  const columnCount = 4 + (showSubject ? 1 : 0) + (showPurposes ? 1 : 0) + (canRevoke ? 1 : 0)
 
   const handleRowClick = useCallback(
     (event: MouseEvent<HTMLElement>): void => {
@@ -129,18 +109,6 @@ export default function ConsentRegistryTable({
       }
     },
     [detailBasePath, detailSearch, navigate],
-  )
-
-  const handleApproveClick = useCallback(
-    (event: MouseEvent<HTMLElement>): void => {
-      event.stopPropagation()
-      const consentID = event.currentTarget.dataset.consentId
-
-      if (consentID) {
-        onApprove?.(consentID)
-      }
-    },
-    [onApprove],
   )
 
   const handleRevokeClick = useCallback(
@@ -184,9 +152,11 @@ export default function ConsentRegistryTable({
             ) : null}
             <TableCell sx={{ width: '12%' }}>{t('consentRegistry.table.headers.state')}</TableCell>
             <TableCell sx={{ width: '16%' }}>{t('consentRegistry.details.created')}</TableCell>
-            <TableCell align="center" sx={{ width: '10%' }}>
-              {t('consentRegistry.table.headers.actions')}
-            </TableCell>
+            {canRevoke ? (
+              <TableCell align="center" sx={{ width: '10%' }}>
+                {t('consentRegistry.table.headers.actions')}
+              </TableCell>
+            ) : null}
           </TableRow>
         </TableHead>
 
@@ -243,10 +213,7 @@ export default function ConsentRegistryTable({
           {!isLoading && !isError
             ? rows.map((row) => {
                 const rowPurposes = row.purposes ?? []
-                const approvable =
-                  canApprove &&
-                  isApprovableByCurrentUser(row.state, row.authorizations, currentUserId)
-                const revokable = canRevoke && isConsentRevokableState(row.state)
+                const revokable = isRevokableByAdmin(row.state)
 
                 return (
                   <TableRow
@@ -329,66 +296,24 @@ export default function ConsentRegistryTable({
                     <TableCell sx={{ fontFamily: 'monospace' }}>
                       {formatEpochTimestamp(row.timestamp)}
                     </TableCell>
-                    <TableCell align="center">
-                      <Box
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: (theme) => `repeat(3, ${theme.spacing(4)})`,
-                          gap: 0.5,
-                          justifyContent: 'center',
-                          justifyItems: 'center',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Tooltip title={t('consentRegistry.actions.view')}>
-                          <IconButton
-                            size="small"
-                            component={RouterLink}
-                            to={`${detailBasePath}/${encodeURIComponent(row.id)}${detailSearch}`}
-                            aria-label={t('consentRegistry.actions.view')}
-                            onClick={handleStopPropagation}
-                          >
-                            <Eye size={16} />
-                          </IconButton>
+                    {canRevoke ? (
+                      <TableCell align="center">
+                        <Tooltip title={t('consentRegistry.actions.revoke')}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              aria-label={t('consentRegistry.actions.revoke')}
+                              disabled={isMutating || !revokable}
+                              data-consent-id={row.id}
+                              onClick={handleRevokeClick}
+                            >
+                              <Ban size={16} />
+                            </IconButton>
+                          </span>
                         </Tooltip>
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                          {approvable ? (
-                            <Tooltip title={t('consentRegistry.actions.approve')}>
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="warning"
-                                  aria-label={t('consentRegistry.actions.approve')}
-                                  disabled={isMutating}
-                                  data-consent-id={row.id}
-                                  onClick={handleApproveClick}
-                                >
-                                  <CircleCheckBig size={16} />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : null}
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                          {revokable ? (
-                            <Tooltip title={t('consentRegistry.actions.revoke')}>
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  aria-label={t('consentRegistry.actions.revoke')}
-                                  disabled={isMutating}
-                                  data-consent-id={row.id}
-                                  onClick={handleRevokeClick}
-                                >
-                                  <Ban size={16} />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          ) : null}
-                        </Box>
-                      </Box>
-                    </TableCell>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 )
               })
@@ -437,10 +362,7 @@ ConsentRegistryTable.defaultProps = {
   detailSearch: '',
   showSubject: false,
   showPurposes: true,
-  currentUserId: '',
-  canApprove: false,
   canRevoke: false,
-  onApprove: undefined,
   onRevoke: undefined,
   isMutating: false,
 }

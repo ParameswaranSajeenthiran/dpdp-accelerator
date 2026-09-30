@@ -69,8 +69,19 @@ export abstract class ConsentRegistryTable {
     await this.rowByConsentId(consentId).click()
   }
 
+  /**
+   * Admin-only: the self-service registry has no Actions column at all (decisions happen on the
+   * detail page, which every row already links to via a row click). The admin registry keeps a
+   * single Revoke action, always rendered but disabled when `isRevokableByAdmin` says the
+   * consent's current state doesn't allow it - see revokeButton below to assert that disabled
+   * state directly, rather than absence.
+   */
+  revokeButton(consentId: string): Locator {
+    return this.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' })
+  }
+
   async revokeFromList(consentId: string): Promise<void> {
-    await this.rowByConsentId(consentId).getByRole('button', { name: 'Revoke' }).click()
+    await this.revokeButton(consentId).click()
   }
 
   get emptyStateMessage(): Locator {

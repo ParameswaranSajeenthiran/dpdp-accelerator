@@ -130,10 +130,6 @@ describe('ConsentRegistryPage', () => {
     expect(screen.getByRole('combobox', { name: 'State' })).toBeInTheDocument()
     expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
     expect(screen.getByText('dpdp-portal')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'View' })).toHaveAttribute(
-      'href',
-      '/consents/db1f6e7a-2107-438c-a4cf-b62588c50259',
-    )
     expect(
       screen.getByLabelText('Consent ID: db1f6e7a-2107-438c-a4cf-b62588c50259'),
     ).toHaveTextContent('db1f6e7a…')
@@ -192,45 +188,34 @@ describe('ConsentRegistryPage', () => {
     expect(await screen.findByText('Unable to load consents right now.')).toBeInTheDocument()
   })
 
-  it('offers no action for a rejected consent - rejection is final, not reconsiderable', async () => {
+  it('never renders an Actions column or any per-row action button, regardless of state - decisions happen on the detail page', async () => {
     mockConsentSearch([
-      buildConsent({
-        state: 'REJECTED',
-        authorizations: [{ userId: 'test-user', state: 'REJECTED', updatedTime: 1 }],
-      }),
-    ])
-
-    renderConsentRegistryPage(createQueryClient())
-
-    expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Approve')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
-  })
-
-  it('does not render approve action for a revoked consent - a withdrawal stays final', async () => {
-    mockConsentSearch([buildConsent({ state: 'REVOKED' })])
-
-    renderConsentRegistryPage(createQueryClient())
-
-    expect(await screen.findByText('marketing-spike')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Approve')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
-  })
-
-  it('renders approve for a consent the caller can act on, and revoke for an active one', async () => {
-    mockConsentSearch([
-      buildConsent({
-        id: 'pending-consent',
-        state: 'PENDING',
-        authorizations: [{ userId: 'test-user', state: 'PENDING', updatedTime: 1 }],
-      }),
+      buildConsent({ id: 'pending-consent', state: 'PENDING' }),
       buildConsent({ id: 'active-consent', state: 'ACTIVE' }),
+      buildConsent({ id: 'rejected-consent', state: 'REJECTED' }),
+      buildConsent({ id: 'revoked-consent', state: 'REVOKED' }),
     ])
 
     renderConsentRegistryPage(createQueryClient())
 
-    expect((await screen.findAllByLabelText('Approve')).length).toBeGreaterThan(0)
-    expect(screen.getAllByLabelText('Revoke').length).toBeGreaterThan(0)
+    expect(await screen.findAllByLabelText(/^Consent ID: /)).toHaveLength(4)
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'View' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Approve')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Revoke')).not.toBeInTheDocument()
+  })
+
+  it('navigates to the consent detail page when a row is clicked', async () => {
+    mockConsentSearch([buildConsent()])
+
+    renderConsentRegistryPage(createQueryClient())
+
+    const idCell = await screen.findByLabelText('Consent ID: db1f6e7a-2107-438c-a4cf-b62588c50259')
+    fireEvent.click(idCell.closest('tr')!)
+
+    expect(screen.getByTestId('current-location')).toHaveTextContent(
+      '/consents/db1f6e7a-2107-438c-a4cf-b62588c50259',
+    )
   })
 
   it('maps URL filters to the supported self-service query parameters', async () => {

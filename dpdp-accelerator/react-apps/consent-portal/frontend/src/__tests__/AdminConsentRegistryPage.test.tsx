@@ -18,13 +18,14 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AcrylicOrangeTheme, CssBaseline, OxygenUIThemeProvider } from '@wso2/oxygen-ui'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import AdminConsentRegistryPage from '../features/admin-consents/AdminConsentRegistryPage'
 import i18n from '../i18n/i18n'
 import type { AdminConsentListQueryParams } from '../types/consent'
+import type { ScopeRequirement } from '../utils/scopes'
 import { REQUIRED_SCOPES } from '../utils/scopes'
 import TestAuthorizationProvider from './TestAuthorizationProvider'
 
@@ -51,7 +52,10 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-function renderAdminPage(initialEntry = '/administration/consents'): void {
+function renderAdminPage(
+  initialEntry = '/administration/consents',
+  scopes: ScopeRequirement[] = [REQUIRED_SCOPES.CONSENTS_READ_ANY],
+): void {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   render(
@@ -60,7 +64,7 @@ function renderAdminPage(initialEntry = '/administration/consents'): void {
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={[initialEntry]}>
-            <TestAuthorizationProvider scopes={[REQUIRED_SCOPES.CONSENTS_READ_ANY]}>
+            <TestAuthorizationProvider scopes={scopes}>
               <Routes>
                 <Route path="/administration/consents" element={<AdminConsentRegistryPage />} />
               </Routes>
@@ -201,9 +205,70 @@ describe('AdminConsentRegistryPage', () => {
     // A Consent ID search reads the one consent instead of listing.
     expect(adminConsentsApi.fetchAdminConsentByID).toHaveBeenCalledWith('consent/123')
     expect(adminConsentsApi.fetchAdminConsents).not.toHaveBeenCalled()
-    expect(screen.getByRole('link', { name: 'View' })).toHaveAttribute(
-      'href',
-      '/administration/consents/consent%2F123',
+  })
+
+  it('offers an enabled Revoke for Pending and Active consents - admin oversight can wind down either', async () => {
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 2,
+      links: [],
+      Consents: [
+        { id: 'pending-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'PENDING' },
+        { id: 'active-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'ACTIVE' },
+      ],
+    })
+
+    renderAdminPage('/administration/consents', [
+      REQUIRED_SCOPES.CONSENTS_READ_ANY,
+      REQUIRED_SCOPES.CONSENTS_WRITE_ANY,
+    ])
+
+    const pendingRow = (await screen.findByLabelText('Consent ID: pending-consent')).closest('tr')!
+    const activeRow = screen.getByLabelText('Consent ID: active-consent').closest('tr')!
+
+    expect(within(pendingRow).getByRole('button', { name: 'Revoke' })).toBeEnabled()
+    expect(within(activeRow).getByRole('button', { name: 'Revoke' })).toBeEnabled()
+  })
+
+  it('disables Revoke for a Rejected, Revoked, or Expired consent instead of hiding it', async () => {
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 3,
+      links: [],
+      Consents: [
+        { id: 'rejected-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'REJECTED' },
+        { id: 'revoked-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'REVOKED' },
+        { id: 'expired-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'EXPIRED' },
+      ],
+    })
+
+    renderAdminPage('/administration/consents', [
+      REQUIRED_SCOPES.CONSENTS_READ_ANY,
+      REQUIRED_SCOPES.CONSENTS_WRITE_ANY,
+    ])
+
+    const rows = await Promise.all(
+      ['rejected-consent', 'revoked-consent', 'expired-consent'].map(async (id) =>
+        (await screen.findByLabelText(`Consent ID: ${id}`)).closest('tr'),
+      ),
     )
+
+    rows.forEach((row) => {
+      expect(within(row!).getByRole('button', { name: 'Revoke' })).toBeDisabled()
+    })
+  })
+
+  it('renders no Actions column at all without the write-any scope', async () => {
+    adminConsentsApi.fetchAdminConsents.mockResolvedValue({
+      totalResults: 1,
+      links: [],
+      Consents: [
+        { id: 'active-consent', subjectId: 'user1', serviceId: 'dpdp-portal', state: 'ACTIVE' },
+      ],
+    })
+
+    renderAdminPage()
+
+    expect(await screen.findByLabelText('Consent ID: active-consent')).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Actions' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument()
   })
 })
