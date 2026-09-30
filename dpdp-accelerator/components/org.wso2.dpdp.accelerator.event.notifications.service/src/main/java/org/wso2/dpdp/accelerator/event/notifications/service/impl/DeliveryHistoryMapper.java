@@ -137,14 +137,39 @@ final class DeliveryHistoryMapper {
                 : PollStatus.PENDING.getValue();
         long timestamp = summary.getOccurredAt() != null ? summary.getOccurredAt().getTime()
                 : System.currentTimeMillis();
-        if (pollDelivery.isPresent() && pollDelivery.get().getCompletedAt() != null) {
-            timestamp = pollDelivery.get().getCompletedAt().getTime();
+        String error = null;
+        if (pollDelivery.isPresent()) {
+            PollDelivery delivery = pollDelivery.get();
+            if (delivery.getCompletedAt() != null) {
+                timestamp = delivery.getCompletedAt().getTime();
+            }
+            error = formatPollError(delivery.getErrorCode(), delivery.getErrorDetail());
+            if (error != null) {
+                dto.setCompletionEvidence(error);
+            }
         }
 
         dto.setCompletionStatus(pollStatus);
         List<SubscriptionDeliveryAttemptDTO> attempts = new ArrayList<>();
-        attempts.add(new SubscriptionDeliveryAttemptDTO(1, pollStatus, timestamp, null, null));
+        attempts.add(new SubscriptionDeliveryAttemptDTO(1, pollStatus, timestamp, null, error));
         dto.setHistory(attempts);
+    }
+
+    private static String formatPollError(String code, String detail) {
+        String trimmedCode = (code != null && !code.trim().isEmpty()) ? code.trim() : null;
+        String trimmedDetail = (detail != null && !detail.trim().isEmpty()) ? detail.trim() : null;
+
+        if (trimmedCode == null) {
+            return trimmedDetail;
+        }
+        if (trimmedDetail == null) {
+            return trimmedCode;
+        }
+        if ("err".equalsIgnoreCase(trimmedCode) || "error".equalsIgnoreCase(trimmedCode)
+                || trimmedDetail.toLowerCase().startsWith(trimmedCode.toLowerCase())) {
+            return trimmedDetail;
+        }
+        return trimmedCode + ": " + trimmedDetail;
     }
 
     static String defaultStatus(String deliveryMode) {
