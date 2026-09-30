@@ -27,7 +27,7 @@ const CONFIRM_LABEL = {
 } as const
 
 const DIALOG_TITLE = {
-  approve: 'Confirm Approval',
+  approve: 'Review & Approve Consent',
   reject: 'Confirm Rejection',
   revoke: 'Confirm Revocation',
 } as const
