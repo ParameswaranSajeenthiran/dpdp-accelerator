@@ -207,7 +207,9 @@ rather than reaching for SCIM2.
 
 Tenant creation has no REST shortcut worth using either: `POST /api/server/v1/tenants`'s
 `owners[].password` doesn't become usable for login without a separate follow-up call, while
-Console's "New Root Organization" form's password works immediately.
+Console's "New Root Organization" form's password works immediately. Its `createTenant` also
+serializes every creation across workers - two at once can fail in IS (wso2/product-is#28519) - so
+create tenants only through it.
 
 ## Non-negotiable rules for writing a test
 

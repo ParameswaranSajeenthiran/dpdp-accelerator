@@ -17,6 +17,7 @@
  */
 
 import { type Locator, type Page } from '@playwright/test'
+import { withCrossProcessLock } from '../utils/crossProcessLock'
 
 export interface NewTenantFields {
   domain: string
@@ -81,12 +82,18 @@ export class ConsoleRootOrganizationWizard {
     // Returns once the dialog's own POST has answered rather than after a fixed delay. Provisioning,
     // the accelerator's onTenantCreate included, finishes within that request, so the caller can
     // close the context straight away.
-    const created = this.page.waitForResponse(
-      (response) =>
-        response.url().includes('/api/server/v1/tenants') && response.request().method() === 'POST',
-    )
-    await this.createButton.click()
-    const response = await created
+    //
+    // One creation at a time across workers: two overlapping tenant creations can fail one of them
+    // with a 500 (TM-65002, a ConcurrentModificationException in IS's OIDC-scope setup during
+    // onTenantCreate) - wso2/product-is#28519. Remove the lock once that is fixed.
+    const response = await withCrossProcessLock('tenant-creation', async () => {
+      const created = this.page.waitForResponse(
+        (candidate) =>
+          candidate.url().includes('/api/server/v1/tenants') && candidate.request().method() === 'POST',
+      )
+      await this.createButton.click()
+      return created
+    })
     if (!response.ok()) {
       throw new Error(`Tenant creation failed: POST /api/server/v1/tenants returned ${String(response.status())}`)
     }
