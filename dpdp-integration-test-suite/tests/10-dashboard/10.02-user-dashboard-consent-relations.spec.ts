@@ -109,6 +109,10 @@ test.describe('User dashboard consent relations', () => {
     consentAdminConsentApi,
     target,
   }) => {
+    // Two throwaway accounts each sign in through a real browser, plus the short-expiry consent's
+    // wait: measured at 30s+ against a remotely deployed server, over the 30s default.
+    test.setTimeout(60_000)
+
     const u = await throwawayAccounts.create('dpdp-e2e-dash-chg-u')
     const v = await throwawayAccounts.create('dpdp-e2e-dash-chg-v')
     const U = u.user.username
