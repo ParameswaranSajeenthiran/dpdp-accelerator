@@ -38,6 +38,12 @@ export class LoginPage {
   }
 
   async signIn(persona: Persona): Promise<void> {
+    // The form posts a hidden #username that the page's $(document).ready handler fills from
+    // #usernameUserInput on submit; that same handler then clears the buttons' "loading" class.
+    // Clicking any earlier submits the field's rendered placeholder, "null", which the server
+    // rejects as "Username should be an email address".
+    await this.page.locator('#sign-in-button:not(.loading)').waitFor()
+
     const dismissBanner = this.page.getByRole('button', { name: 'Got it' })
     if (await dismissBanner.isVisible().catch(() => false)) {
       await dismissBanner.click()
