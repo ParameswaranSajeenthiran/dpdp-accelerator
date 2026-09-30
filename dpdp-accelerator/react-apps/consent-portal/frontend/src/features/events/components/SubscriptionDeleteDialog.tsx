@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { Trash2 } from '@wso2/oxygen-ui-icons-react'
+import { Box } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import ConsentActionDialog from '../../my-consents/components/ConsentActionDialog'
 import type { SubscriptionRecord } from '../../../types/subscription'
@@ -40,20 +40,40 @@ export default function SubscriptionDeleteDialog({
 }: SubscriptionDeleteDialogProps): React.JSX.Element {
   const { t } = useTranslation('common')
 
+  const rawMessage = t('subscriptions.deleteModal.message', { id: subscription.subscriptionId })
+  const [prefix, ...rest] = rawMessage.split(subscription.subscriptionId)
+  const suffix = rest.join(subscription.subscriptionId)
+  const message =
+    rest.length > 0 ? (
+      <>
+        {prefix}
+        <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          {subscription.subscriptionId}
+        </Box>
+        {suffix}
+      </>
+    ) : (
+      rawMessage
+    )
+
   return (
     <ConsentActionDialog
       open={open}
       consentId={subscription.subscriptionId}
+      showId={false}
       title={t('subscriptions.deleteModal.title')}
-      message={t('subscriptions.deleteModal.message', { id: subscription.subscriptionId })}
+      message={message}
       note={t('subscriptions.deleteModal.note')}
       confirmLabel={t('subscriptions.deleteModal.confirm')}
       color="error"
-      icon={<Trash2 size={20} />}
       loading={loading}
       error={error}
       onClose={onClose}
       onConfirm={onConfirm}
     />
   )
+}
+
+SubscriptionDeleteDialog.defaultProps = {
+  error: undefined,
 }
