@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { Trash2 } from '@wso2/oxygen-ui-icons-react'
+import { Box } from '@wso2/oxygen-ui'
 import { useTranslation } from 'react-i18next'
 import ConsentActionDialog from '../../my-consents/components/ConsentActionDialog'
 import type { TopicRecord } from '../../../types/topic'
@@ -40,20 +40,40 @@ export default function TopicDeleteDialog({
 }: TopicDeleteDialogProps): React.JSX.Element {
   const { t } = useTranslation('common')
 
+  const rawMessage = t('topics.deleteModal.message', { name: topic.name })
+  const [prefix, ...rest] = rawMessage.split(topic.name)
+  const suffix = rest.join(topic.name)
+  const message =
+    rest.length > 0 ? (
+      <>
+        {prefix}
+        <Box component="span" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          {topic.name}
+        </Box>
+        {suffix}
+      </>
+    ) : (
+      rawMessage
+    )
+
   return (
     <ConsentActionDialog
       open={open}
       consentId={topic.name}
+      showId={false}
       title={t('topics.deleteModal.title')}
-      message={t('topics.deleteModal.message', { name: topic.name })}
+      message={message}
       note={t('topics.deleteModal.note')}
       confirmLabel={t('topics.deleteModal.confirm')}
       color="error"
-      icon={<Trash2 size={20} />}
       loading={loading}
       error={error}
       onClose={onClose}
       onConfirm={onConfirm}
     />
   )
+}
+
+TopicDeleteDialog.defaultProps = {
+  error: undefined,
 }
