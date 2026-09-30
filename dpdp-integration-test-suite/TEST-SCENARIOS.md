@@ -10,7 +10,7 @@ in CI was actually checking.
 
 | | |
 |---|---|
-| **Tests** | 201 across 53 spec files in 10 areas |
+| **Tests** | 202 across 54 spec files in 10 areas |
 | **Removed, not skipped** | `09.08`'s fan-out persistence rollback case, `09.10`'s stuck-in-flight reclaim case - see "What this suite cannot verify" |
 | **Skipped when unconfigured** | `04.09.03` (expiry cron); `09.10.01`, `09.10.02`, `09.10.03` (shortened backoff) |
 | **Rules and conventions** | [`AGENTS.md`](AGENTS.md) |
@@ -457,7 +457,7 @@ Two surfaces: the Data Principal's `/complaints` and the officer's `/complaint-m
 
 Mixed UI and API. Two server behaviours drive most of the test design: `groupId` is silently forced to the org id on every subscription, so tests read the *returned* `groupId` back and use two topics (or disjoint purpose filters) when they need two distinct subscriptions; and `GET /events` hardcodes the caller's orgId as `GROUP_ID`, so an event published under any other group id can never be found through it at all.
 
-**52 tests, 11 spec files.**
+**53 tests, 12 spec files.**
 
 ### `09.01-admin-managing-topics.spec.ts`
 
@@ -579,6 +579,18 @@ Two independently provisioned throwaway tenants; `TENANT.ORG_ID` is the isolatio
 | `09.11.01` | Tenants with the same topic name receive separate topic identities and lists | Different topic ids and disjoint lists. |
 | `09.11.02` | Tenant A cannot read, delete, verify, or list history for tenant B resources | 404 - never 403 - on every cross-tenant operation, and tenant B's own view is unaffected. |
 | `09.11.03` | A newly created tenant receives Event Notification authorization and default topics | The five system topics exist as active/system, and the owner can create user topics and subscriptions with no manual API-resource registration. |
+
+### `09.12-deadlock-repro.spec.ts` · API-only
+
+Concurrency stress test that reproduces the MySQL InnoDB deadlock between `POST /events` and
+`POST /subscriptions`. Runs 3 concurrent pairs of publish/subscribe loops against one shared topic
+to trigger the AB-BA lock-order inversion. Fails on an unpatched MySQL deployment; passes on
+PostgreSQL, H2, and any deployment where the `ACTIVE_NAME` index fix is applied.
+
+| ID | Scenario | Notes |
+| --- | --- | --- |
+| `09.12.01` | Concurrent publish and subscribe must not produce EN-5001 (MySQL deadlock) | 3 worker pairs × 30 publish + 30 subscribe iterations; asserts zero HTTP 500 responses on POST /events. |
+
 
 ## `10-dashboard/` — Dashboard counts and links
 

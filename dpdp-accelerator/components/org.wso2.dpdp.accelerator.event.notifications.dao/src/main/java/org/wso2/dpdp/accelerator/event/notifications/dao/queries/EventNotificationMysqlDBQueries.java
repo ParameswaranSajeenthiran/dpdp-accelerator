@@ -22,4 +22,19 @@ package org.wso2.dpdp.accelerator.event.notifications.dao.queries;
  * MySQL dialect query provider for DPDP Event Notification Framework.
  */
 public class EventNotificationMysqlDBQueries extends EventNotificationCommonDBQueries {
+
+    /**
+     * Filters on the stored generated column {@code ACTIVE_NAME = LOWER(?)} so MySQL uses
+     * {@code UQ_TOPIC_ORG_ACTIVE_NAME} for a single-row index seek instead of falling back to
+     * a range scan over {@code UQ_TOPIC_ORG_ID}. Without this override, {@code LOWER(NAME) = LOWER(?)}
+     * bypasses the index, causing InnoDB to gap-lock every topic row in the org — which creates an
+     * AB-BA deadlock with concurrent {@code SUBSCRIPTION_TOPIC} inserts (FK_ST_TOPIC shared lock).
+     */
+    @Override
+    public String getActiveTopicByOrgAndNameForUpdateQuery() {
+        return "SELECT TOPIC_ID, ORG_ID, NAME, DESCRIPTION, STATUS, INITIATED_BY " +
+                "FROM TOPIC WHERE ORG_ID = ? AND ACTIVE_NAME = LOWER(?) AND STATUS = " +
+                SQL_TOPIC_ACTIVE + " FOR UPDATE";
+    }
 }
+
