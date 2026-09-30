@@ -49,6 +49,7 @@ describe('Subscription domain helpers & status chips', () => {
     expect(getSubscriptionStatusChipColor('IN_FLIGHT')).toBe('warning')
     expect(getSubscriptionStatusChipColor('STALE')).toBe('error')
     expect(getSubscriptionStatusChipColor('FAILED')).toBe('error')
+    expect(getSubscriptionStatusChipColor('ERR')).toBe('error')
     expect(getSubscriptionStatusChipColor('EXPIRED')).toBe('error')
     expect(getSubscriptionStatusChipColor('DELETED')).toBe('default')
     expect(getSubscriptionStatusChipColor('UNKNOWN')).toBe('default')

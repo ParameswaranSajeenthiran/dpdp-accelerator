@@ -826,7 +826,9 @@
       "completed": "પૂર્ણ થયું",
       "acknowledged": "સ્વીકૃત",
       "in_flight": "ઇન ફ્લાઇટ",
-      "expired": "સમાપ્ત થઈ"
+      "expired": "સમાપ્ત થઈ",
+      "err": "ભૂલ",
+      "error": "ભૂલ"
     },
     "purposes": {
       "all": "બધું"

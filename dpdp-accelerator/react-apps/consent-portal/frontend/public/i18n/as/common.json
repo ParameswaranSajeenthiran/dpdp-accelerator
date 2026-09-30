@@ -826,7 +826,9 @@
       "completed": "সম্পূৰ্ণ হৈছে",
       "acknowledged": "স্বীকৃত",
       "in_flight": "উৰণত",
-      "expired": "মেয়াদ উকলি গৈছে"
+      "expired": "মেয়াদ উকলি গৈছে",
+      "err": "ত্ৰুটি",
+      "error": "ত্ৰুটি"
     },
     "purposes": {
       "all": "সকলো"

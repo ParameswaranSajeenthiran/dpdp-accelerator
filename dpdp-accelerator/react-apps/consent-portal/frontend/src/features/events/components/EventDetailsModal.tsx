@@ -74,7 +74,8 @@ export default function EventDetailsModal({
 
   const displayDeliveryId = event.deliveryId || event.eventId
   const displayStatus = historyData?.currentStatus || event.currentStatus || 'PENDING'
-  const displayMode = (event.deliveryMode || historyData?.deliveryMode || 'webhook').toUpperCase()
+  const rawMode = (event.deliveryMode || historyData?.deliveryMode || 'webhook').toLowerCase()
+  const displayMode = t(`subscriptions.deliveryMode.${rawMode}`, rawMode)
 
   return (
     <Dialog
@@ -178,7 +179,12 @@ export default function EventDetailsModal({
                     {t('events.details.completionTitle')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    <strong>{historyData.completionStatus}</strong>
+                    <strong>
+                      {t(
+                        `events.status.${historyData.completionStatus.toLowerCase()}`,
+                        historyData.completionStatus,
+                      )}
+                    </strong>
                     {historyData.completionEvidence ? ` — ${historyData.completionEvidence}` : ''}
                   </Typography>
                 </Box>

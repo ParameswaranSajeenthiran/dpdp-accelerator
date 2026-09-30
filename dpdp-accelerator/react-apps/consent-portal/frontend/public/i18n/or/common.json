@@ -826,7 +826,9 @@
       "completed": "ସମାପ୍ତ",
       "acknowledged": "ସ୍ୱୀକୃତ",
       "in_flight": "ଉଡ଼ାଣରେ",
-      "expired": "ଅବଧି ସରିଗଲା"
+      "expired": "ଅବଧି ସରିଗଲା",
+      "err": "ତ୍ରୁଟି",
+      "error": "ତ୍ରୁଟି"
     },
     "purposes": {
       "all": "ସମସ୍ତ"

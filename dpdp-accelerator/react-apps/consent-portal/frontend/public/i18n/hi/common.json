@@ -826,7 +826,9 @@
       "completed": "पूर्ण",
       "acknowledged": "स्वीकृत",
       "in_flight": "उड़ान में",
-      "expired": "समाप्त"
+      "expired": "समाप्त",
+      "err": "त्रुटि",
+      "error": "त्रुटि"
     },
     "purposes": {
       "all": "सभी"

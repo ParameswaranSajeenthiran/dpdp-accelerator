@@ -826,7 +826,9 @@
       "completed": "पुराय जाल्लें",
       "acknowledged": "मान्य केल्लें",
       "in_flight": "उडनांत",
-      "expired": "समाप्त जाल्लें"
+      "expired": "समाप्त जाल्लें",
+      "err": "चूक",
+      "error": "चूक"
     },
     "purposes": {
       "all": "सगळें"

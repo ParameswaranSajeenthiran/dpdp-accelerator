@@ -178,4 +178,32 @@ describe('SubscriptionDeliveryHistoryModal manual retry', () => {
     await screen.findByText('#1')
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   })
+
+  it('localizes completionStatus and attempt status correctly when status is err', async () => {
+    const pollHistory: SubscriptionEventHistoryRecord = {
+      deliveryId: 'del-2',
+      eventId: 'evt-2',
+      topic: 'user.events',
+      deliveryMode: 'poll',
+      currentStatus: 'err',
+      completionStatus: 'err',
+      completionEvidence: 'Poll error: invalid payload',
+      occurredAt: 1700000000000,
+      manualRetryAvailable: false,
+      history: [
+        {
+          attempt: 1,
+          status: 'err',
+          timestamp: 1700000001000,
+        },
+      ],
+    }
+    subscriptionsApi.fetchSubscriptionEventHistory.mockResolvedValue(pollHistory)
+
+    renderModal({ subscriptionId: 'sub-1', deliveryId: 'del-2' })
+
+    const errorElements = await screen.findAllByText('Error')
+    expect(errorElements.length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByText(/Poll error: invalid payload/)).toBeInTheDocument()
+  })
 })

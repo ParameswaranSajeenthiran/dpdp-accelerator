@@ -140,4 +140,44 @@ describe('EventDetailsModal manual retry', () => {
       expect(subscriptionsApi.retrySubscriptionDelivery).toHaveBeenCalledWith('sub-1', 'del-1')
     })
   })
+
+  it('renders delivery mode in Title Case and maps err status to Error', async () => {
+    const pollHistory: SubscriptionEventHistoryRecord = {
+      deliveryId: 'del-2',
+      eventId: 'evt-2',
+      topic: 'user.events',
+      deliveryMode: 'poll',
+      currentStatus: 'err',
+      completionStatus: 'err',
+      completionEvidence: 'Poll error: invalid payload',
+      occurredAt: 1700000000000,
+      manualRetryAvailable: false,
+      history: [
+        {
+          attempt: 1,
+          status: 'err',
+          timestamp: 1700000001000,
+        },
+      ],
+    }
+    eventsApi.fetchEventDeliveryHistory.mockResolvedValue(pollHistory)
+
+    renderModal({
+      ...mockEvent,
+      deliveryId: 'del-2',
+      eventId: 'evt-2',
+      deliveryMode: 'poll',
+      currentStatus: 'err',
+    })
+
+    // Wait for history to load
+    expect(await screen.findByText(/Poll error: invalid payload/)).toBeInTheDocument()
+
+    // Mode is rendered in Title Case
+    expect(screen.getByText('Poll')).toBeInTheDocument()
+
+    // Status 'err' is localized as 'Error' (header chip, completion status, attempt row)
+    const errorElements = screen.getAllByText('Error')
+    expect(errorElements.length).toBeGreaterThanOrEqual(2)
+  })
 })

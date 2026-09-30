@@ -826,7 +826,9 @@
       "completed": "ਪੂਰਾ ਹੋ ਗਿਆ",
       "acknowledged": "ਮੰਨਿਆ ਗਿਆ",
       "in_flight": "ਉਡਾਣ ਵਿੱਚ",
-      "expired": "ਮਿਆਦ ਪੁੱਗ ਗਈ"
+      "expired": "ਮਿਆਦ ਪੁੱਗ ਗਈ",
+      "err": "ਗਲਤੀ",
+      "error": "ਗਲਤੀ"
     },
     "purposes": {
       "all": "ਸਾਰੇ"
