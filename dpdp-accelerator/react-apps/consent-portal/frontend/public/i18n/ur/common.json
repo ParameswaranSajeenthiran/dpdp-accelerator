@@ -826,7 +826,9 @@
       "completed": "مکمل ہوا",
       "acknowledged": "تسلیم شدہ",
       "in_flight": "پرواز میں",
-      "expired": "ختم شدہ"
+      "expired": "ختم شدہ",
+      "err": "خرابی",
+      "error": "خرابی"
     },
     "purposes": {
       "all": "تمام"

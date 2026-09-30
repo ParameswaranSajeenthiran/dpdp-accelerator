@@ -340,7 +340,8 @@ export default function EventDetailsPage(): React.JSX.Element {
                 <TableBody>
                   {deliveries.map((del) => {
                     const status = del.currentStatus || 'PENDING'
-                    const mode = (del.deliveryMode || 'webhook').toUpperCase()
+                    const rawMode = del.deliveryMode || 'webhook'
+                    const mode = t(`subscriptions.deliveryMode.${rawMode.toLowerCase()}`, rawMode)
                     return (
                       <TableRow
                         key={del.deliveryId || del.eventId}

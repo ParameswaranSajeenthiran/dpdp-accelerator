@@ -826,7 +826,9 @@
       "completed": "सम्पूर्णम्",
       "acknowledged": "स्वीकृता",
       "in_flight": "उड्डयने",
-      "expired": "समाप्ता"
+      "expired": "समाप्ता",
+      "err": "दोषः",
+      "error": "दोषः"
     },
     "purposes": {
       "all": "सर्वे"

@@ -115,7 +115,12 @@ export default function SubscriptionDeliveryHistoryModal({
                   {t('subscriptions.deliveryHistory.completion')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>{historyData.completionStatus}</strong>
+                  <strong>
+                    {t(
+                      `events.status.${historyData.completionStatus.toLowerCase()}`,
+                      historyData.completionStatus,
+                    )}
+                  </strong>
                   {historyData.completionEvidence ? ` — ${historyData.completionEvidence}` : ''}
                 </Typography>
               </Box>

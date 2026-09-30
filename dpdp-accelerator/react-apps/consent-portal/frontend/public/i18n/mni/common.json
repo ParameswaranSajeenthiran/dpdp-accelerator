@@ -826,7 +826,9 @@
       "completed": "ꯂꯣꯏꯔꯦ",
       "acknowledged": "ꯑꯦꯛꯅꯣꯂꯣꯖꯗ",
       "in_flight": "ꯏꯟ ꯐ꯭ꯂꯥꯏꯠ",
-      "expired": "ꯃꯇꯝ ꯂꯣꯏꯔꯦ"
+      "expired": "ꯃꯇꯝ ꯂꯣꯏꯔꯦ",
+      "err": "ꯑꯁꯣꯏꯕ",
+      "error": "ꯑꯁꯣꯏꯕ"
     },
     "purposes": {
       "all": "ꯄꯨꯝꯅꯃꯛ"

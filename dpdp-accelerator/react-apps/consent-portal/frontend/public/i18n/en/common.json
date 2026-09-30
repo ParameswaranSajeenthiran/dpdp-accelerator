@@ -826,7 +826,9 @@
       "completed": "Completed",
       "acknowledged": "Acknowledged",
       "in_flight": "In Flight",
-      "expired": "Expired"
+      "expired": "Expired",
+      "err": "Error",
+      "error": "Error"
     },
     "purposes": {
       "all": "ALL"
