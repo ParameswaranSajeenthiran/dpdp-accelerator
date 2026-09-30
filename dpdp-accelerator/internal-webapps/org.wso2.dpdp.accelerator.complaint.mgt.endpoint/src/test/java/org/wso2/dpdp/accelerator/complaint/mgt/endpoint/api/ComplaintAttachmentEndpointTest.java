@@ -73,10 +73,10 @@ class ComplaintAttachmentEndpointTest {
     @Test
     void uploadComplaintAttachmentReturns201WithHandlerResponse() {
         List<ComplaintAttachmentResponse> handlerResponse = List.of();
-        when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), "true", "officer1",
+        when(attachmentHandler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                 "officer1")).thenReturn(handlerResponse);
 
-        Response response = endpoint.uploadComplaintAttachment("c1", List.of(filePart), "true");
+        Response response = endpoint.uploadComplaintAttachment("c1", List.of(filePart), true);
 
         assertEquals(201, response.getStatus());
         assertSame(handlerResponse, response.getEntity());

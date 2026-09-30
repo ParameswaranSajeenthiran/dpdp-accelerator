@@ -81,6 +81,16 @@ describe('fetchMyComplaintsTotal', () => {
   })
 })
 
+// jsdom's Blob has no text(); FileReader is supported.
+function readBlobText(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (): void => resolve(reader.result as string)
+    reader.onerror = (): void => reject(reader.error ?? new Error('read failed'))
+    reader.readAsText(blob)
+  })
+}
+
 describe('complaintsApi attachment uploads', () => {
   it('uploadManagedComplaintAttachments appends every file under repeated "file" fields', async () => {
     respondWith([])
@@ -92,7 +102,23 @@ describe('complaintsApi attachment uploads', () => {
     const formData = sentFormData()
     const filesSent = formData.getAll('file') as File[]
     expect(filesSent.map((file) => file.name)).toEqual(['a.png', 'b.pdf'])
-    expect(formData.get('isPublic')).toBe('true')
+    const isPublicPart = formData.get('isPublic') as File
+    expect(isPublicPart.type).toBe('text/plain')
+    expect(await readBlobText(isPublicPart)).toBe('true')
+  })
+
+  it('uploadManagedComplaintAttachments sends isPublic=false as a text/plain part for an internal note', async () => {
+    respondWith([])
+
+    await uploadManagedComplaintAttachments(
+      'complaint-1',
+      [new File(['a'], 'a.png', { type: 'image/png' })],
+      false,
+    )
+
+    const isPublicPart = sentFormData().get('isPublic') as File
+    expect(isPublicPart.type).toBe('text/plain')
+    expect(await readBlobText(isPublicPart)).toBe('false')
   })
 
   it('uploadMyComplaintAttachments appends every file under repeated "file" fields', async () => {

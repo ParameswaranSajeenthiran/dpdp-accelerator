@@ -56,13 +56,13 @@ public class ComplaintAttachmentEndpoint {
         this.attachmentHandler = attachmentHandler;
     }
 
-    /** Officers set isPublic=true to share evidence with the Data Principal; omitted, it stays internal. */
+    /** Officers must send isPublic: true shares the evidence with the Data Principal, false keeps it internal. */
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadComplaintAttachment(
             @PathParam("complaintId") String complaintId,
             @Multipart("file") List<Attachment> fileParts,
-            @Multipart(value = "isPublic", required = false) String isPublic) {
+            @Multipart(value = "isPublic", required = true) Boolean isPublic) {
         String callerUsername = PrivilegedCarbonContext.getThreadLocalCarbonContext().getUsername();
         String callerOrgId = PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantDomain();
         List<ComplaintAttachmentResponse> response = attachmentHandler.uploadComplaintAttachments(

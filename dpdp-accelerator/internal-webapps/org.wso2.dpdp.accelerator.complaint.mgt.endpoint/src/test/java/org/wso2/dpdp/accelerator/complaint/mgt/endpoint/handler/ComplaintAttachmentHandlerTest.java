@@ -37,7 +37,6 @@ import org.wso2.dpdp.accelerator.complaint.mgt.endpoint.dto.ComplaintAttachmentR
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintAttachmentService.UploadedFile;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.ComplaintService;
-import org.wso2.dpdp.accelerator.complaint.mgt.service.constants.ComplaintServiceConstants;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.exception.ComplaintServiceException;
 import org.wso2.dpdp.accelerator.complaint.mgt.service.internal.ComplaintServiceDataHolder;
 
@@ -121,7 +120,7 @@ class ComplaintAttachmentHandlerTest {
                 .thenReturn(List.of(attachment("att1", false)));
 
         List<ComplaintAttachmentResponse> result = handler.uploadComplaintAttachments(ORG_ID, "c1",
-                List.of(filePart), "false", "officer1", "Officer One");
+                List.of(filePart), false, "officer1", "Officer One");
 
         assertEquals(1, result.size());
         assertEquals("att1", result.get(0).getAttachmentId());
@@ -147,31 +146,6 @@ class ComplaintAttachmentHandlerTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsDefaultsBlankIsPublicToFalse() {
-        handler.uploadComplaintAttachments(ORG_ID, "c1", null, "  ", "officer1", "Officer One");
-
-        verify(complaintAttachmentService).uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
-                eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"));
-    }
-
-    @Test
-    void uploadComplaintAttachmentsParsesIsPublicCaseInsensitivelyAndTrimmed() {
-        handler.uploadComplaintAttachments(ORG_ID, "c1", null, " TRUE ", "officer1", "Officer One");
-
-        verify(complaintAttachmentService).uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
-                eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"));
-    }
-
-    @Test
-    void uploadComplaintAttachmentsRejectsUnrecognisedIsPublicWithoutUploading() {
-        ComplaintServiceException exception = expectThrows(ComplaintServiceException.class,
-                () -> handler.uploadComplaintAttachments(ORG_ID, "c1", null, "0", "officer1", "Officer One"));
-
-        assertEquals(exception.getDescription(), ComplaintServiceConstants.IS_PUBLIC_INVALID_ERROR);
-        verifyNoInteractions(complaintAttachmentService);
-    }
-
-    @Test
     void uploadComplaintAttachmentsDefaultsContentTypeToOctetStreamWhenMediaTypeMissing() throws IOException {
         when(filePart.getDataHandler()).thenReturn(dataHandler);
         when(dataHandler.getInputStream()).thenReturn(new ByteArrayInputStream("x".getBytes()));
@@ -180,7 +154,7 @@ class ComplaintAttachmentHandlerTest {
         when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"))).thenReturn(List.of());
 
-        handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), "true", "officer1", "Officer One");
+        handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1", "Officer One");
 
         ArgumentCaptor<List<UploadedFile>> captor = ArgumentCaptor.forClass(List.class);
         verify(complaintAttachmentService).uploadComplaintAttachments(eq(ORG_ID), eq("c1"), captor.capture(),
@@ -201,7 +175,7 @@ class ComplaintAttachmentHandlerTest {
         }
 
         ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
-                () -> handler.uploadComplaintAttachments(ORG_ID, "c1", parts, "true", "officer1", "Officer One"));
+                () -> handler.uploadComplaintAttachments(ORG_ID, "c1", parts, true, "officer1", "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());
         // The count must be checked before any part is read - otherwise the exact memory-exhaustion
@@ -225,7 +199,7 @@ class ComplaintAttachmentHandlerTest {
         when(filePart.getContentDisposition()).thenReturn(new ContentDisposition("form-data; filename=\"big.pdf\""));
 
         ComplaintServiceException ex = expectThrows(ComplaintServiceException.class,
-                () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), "true", "officer1",
+                () -> handler.uploadComplaintAttachments(ORG_ID, "c1", List.of(filePart), true, "officer1",
                         "Officer One"));
 
         assertEquals("CO-4002", ex.getCode());

@@ -73,10 +73,12 @@ public class ComplaintAttachmentHandler {
     // ---- Officer/admin ----
 
     public List<ComplaintAttachmentResponse> uploadComplaintAttachments(String orgId, String complaintId,
-            List<Attachment> fileParts, String isPublic, String actorUserId, String actorUserName) {
+            List<Attachment> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
+        // null - an isPublic part CXF couldn't read because it wasn't text/plain - stays internal,
+        // so evidence is shared with the Data Principal only when explicitly asked to be.
         return ComplaintDtoMapper.toAttachments(complaintAttachmentService.uploadComplaintAttachments(orgId,
-                complaintId, files, parseIsPublic(isPublic), actorUserId, actorUserName,
+                complaintId, files, Boolean.TRUE.equals(isPublic), actorUserId, actorUserName,
                 ComplaintActorRole.COMPLAINT_OFFICER.name()));
     }
 
@@ -102,26 +104,6 @@ public class ComplaintAttachmentHandler {
     }
 
     // ---- shared ----
-
-    /**
-     * Absent or blank means internal: an officer upload is shared with the Data Principal only
-     * when explicitly asked to be. Anything other than true/false is rejected rather than
-     * defaulted, so a value that can't be read never exposes internal evidence.
-     */
-    private static boolean parseIsPublic(String isPublic) {
-        if (isPublic == null || isPublic.trim().isEmpty()) {
-            return false;
-        }
-        String value = isPublic.trim();
-        if (Boolean.TRUE.toString().equalsIgnoreCase(value)) {
-            return true;
-        }
-        if (Boolean.FALSE.toString().equalsIgnoreCase(value)) {
-            return false;
-        }
-        throw new ComplaintServiceException(ComplaintErrorCode.VALIDATION_FAILED,
-                ComplaintServiceConstants.IS_PUBLIC_INVALID_ERROR);
-    }
 
     private List<UploadedFile> toUploadedFiles(List<Attachment> fileParts) {
         List<UploadedFile> files = new ArrayList<>();

@@ -716,12 +716,18 @@ paths:
         COMPLAINT_OFFICER) and binds every attachment in the request to
         it — see ComplaintTimelineEntryResponse.attachments.
 
-        Set `isPublic=true` to make the attachments visible to the Data
-        Principal via the /me endpoints. When `isPublic` is omitted or
-        blank the upload is internal (`isPublic=false`): evidence that
-        should never be exposed to the Data Principal, with its timeline
-        entry marked internal too. Any value other than `true`/`false`
-        is rejected with 422.
+        `isPublic` is required. `true` makes the attachments visible to
+        the Data Principal via the /me endpoints; `false` keeps them
+        internal: evidence that should never be exposed to the Data
+        Principal, with its timeline entry marked internal too. A request
+        without an `isPublic` part is rejected with 400.
+
+        The `isPublic` part must carry `Content-Type: text/plain`. A part
+        without it (a plain browser FormData string field, or
+        `curl -F isPublic=true`) can't be read, and the upload is stored
+        internal. In a browser, append it as
+        `new Blob(['true'], { type: 'text/plain' })`; with curl, use
+        `-F 'isPublic=true;type=text/plain'`.
 
         Required scope: `complaints:write:any`
       operationId: cmUploadComplaintAttachment
@@ -736,7 +742,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [file]
+              required: [file, isPublic]
               properties:
                 file:
                   type: array
@@ -748,11 +754,13 @@ paths:
                   description: One to five files to upload in a single request.
                 isPublic:
                   type: boolean
-                  default: false
                   description: >
                     Whether these attachments should be visible to the
-                    Data Principal. Defaults to false (internal).
+                    Data Principal. Must be sent as a text/plain part -
+                    see the operation description.
             encoding:
+              isPublic:
+                contentType: text/plain
               file:
                 contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/png, image/jpeg
       responses:
