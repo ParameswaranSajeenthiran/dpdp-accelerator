@@ -20,6 +20,7 @@ import { Box, IconButton, Tooltip, Typography } from '@wso2/oxygen-ui'
 import { Check, Copy } from '@wso2/oxygen-ui-icons-react'
 import { type MouseEvent, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link as RouterLink } from 'react-router-dom'
 
 interface CopyableTextProps {
   value: string
@@ -29,6 +30,12 @@ interface CopyableTextProps {
   copyAriaLabel?: string
   copyTooltip?: string
   monospace?: boolean
+  /**
+   * When set, the visible text becomes a router link to this path instead of plain text - so a
+   * keyboard user can Tab and Enter into it, not just click it. The copy button stays a sibling
+   * (never nested inside the link, which would be invalid HTML and confuse tab order).
+   */
+  linkTo?: string
 }
 
 function CopyableText({
@@ -39,6 +46,7 @@ function CopyableText({
   copyAriaLabel,
   copyTooltip,
   monospace = false,
+  linkTo,
 }: CopyableTextProps): React.JSX.Element {
   const { t } = useTranslation('common')
   const [copied, setCopied] = useState(false)
@@ -75,18 +83,38 @@ function CopyableText({
       sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, minWidth: 0 }}
     >
       <Tooltip title={value}>
-        <Typography
-          component="span"
-          variant="body2"
-          aria-label={textAriaLabel ?? value}
-          sx={{
-            fontFamily: monospace ? 'monospace' : undefined,
-            overflowWrap: 'anywhere',
-            whiteSpace: truncateAt ? 'nowrap' : undefined,
-          }}
-        >
-          {visibleValue}
-        </Typography>
+        {linkTo ? (
+          <Typography
+            component={RouterLink}
+            to={linkTo}
+            onClick={(event: MouseEvent) => event.stopPropagation()}
+            variant="body2"
+            aria-label={textAriaLabel ?? value}
+            sx={{
+              fontFamily: monospace ? 'monospace' : undefined,
+              overflowWrap: 'anywhere',
+              whiteSpace: truncateAt ? 'nowrap' : undefined,
+              color: 'inherit',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            {visibleValue}
+          </Typography>
+        ) : (
+          <Typography
+            component="span"
+            variant="body2"
+            aria-label={textAriaLabel ?? value}
+            sx={{
+              fontFamily: monospace ? 'monospace' : undefined,
+              overflowWrap: 'anywhere',
+              whiteSpace: truncateAt ? 'nowrap' : undefined,
+            }}
+          >
+            {visibleValue}
+          </Typography>
+        )}
       </Tooltip>
       <Tooltip title={copied ? t('copyableText.copied') : (copyTooltip ?? t('copyableText.copy'))}>
         <IconButton
@@ -108,6 +136,7 @@ CopyableText.defaultProps = {
   copyAriaLabel: undefined,
   copyTooltip: undefined,
   monospace: false,
+  linkTo: undefined,
 }
 
 export default CopyableText

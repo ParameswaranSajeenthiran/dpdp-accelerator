@@ -228,6 +228,7 @@ export default function ConsentRegistryTable({
                         value={row.id}
                         truncateAt={8}
                         monospace
+                        linkTo={`${detailBasePath}/${encodeURIComponent(row.id)}${detailSearch}`}
                         textAriaLabel={t('consentRegistry.table.consentIdAriaLabel', {
                           id: row.id,
                         })}

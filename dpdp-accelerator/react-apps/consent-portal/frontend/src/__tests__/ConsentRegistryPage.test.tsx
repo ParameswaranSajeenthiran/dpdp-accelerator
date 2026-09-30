@@ -218,6 +218,26 @@ describe('ConsentRegistryPage', () => {
     )
   })
 
+  it('makes the consent ID a real, focusable link so keyboard users can reach the detail page without relying on a row click', async () => {
+    mockConsentSearch([buildConsent()])
+
+    renderConsentRegistryPage(createQueryClient())
+
+    const link = await screen.findByRole('link', {
+      name: 'Consent ID: db1f6e7a-2107-438c-a4cf-b62588c50259',
+    })
+    expect(link).toHaveAttribute('href', '/consents/db1f6e7a-2107-438c-a4cf-b62588c50259')
+
+    link.focus()
+    expect(link).toHaveFocus()
+
+    fireEvent.click(link)
+
+    expect(screen.getByTestId('current-location')).toHaveTextContent(
+      '/consents/db1f6e7a-2107-438c-a4cf-b62588c50259',
+    )
+  })
+
   it('maps URL filters to the supported self-service query parameters', async () => {
     mockConsentSearch([])
 
