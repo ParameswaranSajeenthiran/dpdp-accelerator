@@ -17,14 +17,12 @@
  */
 
 import { Box, Stack, Typography } from '@wso2/oxygen-ui'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import HeaderBreadcrumbs from '../../components/layout/main-layout/HeaderBreadcrumbs'
-import ConsentApprovalDialog from './components/ConsentApprovalDialog'
 import ConsentRegistryFilters from './components/ConsentRegistryFilters'
 import ConsentRegistryTable from './components/ConsentRegistryTable'
-import ConsentRevocationDialog from './components/ConsentRevocationDialog'
 import { CONSENT_REGISTRY_ROWS_PER_PAGE_OPTIONS, PENDING_CONSENTS_VIEW_SEARCH } from './constants'
 import type {
   ConsentRegistryFilters as ConsentRegistryFiltersModel,
@@ -32,13 +30,7 @@ import type {
   ConsentState,
 } from '../../types/consent'
 import { CONSENT_RELATIONS, isConsentState } from '../../types/consent'
-import { REQUIRED_SCOPES } from '../../utils/scopes'
-import useAuthorization from '../auth/useAuthorization'
-import {
-  useApproveConsentMutation,
-  useConsentListQuery,
-  useRevokeConsentMutation,
-} from './hooks/useConsentQueries'
+import { useConsentListQuery } from './hooks/useConsentQueries'
 
 const DEFAULT_FILTERS: ConsentRegistryFiltersModel = {
   state: 'All',
@@ -135,8 +127,6 @@ function toSearchParams(
 function ConsentRegistryPage(): React.JSX.Element {
   const { t } = useTranslation('common')
   const [searchParams, setSearchParams] = useSearchParams()
-  const [approvalConsentID, setApprovalConsentID] = useState<string>()
-  const [revocationConsentID, setRevocationConsentID] = useState<string>()
   const isPendingView = searchParams.get('view') === 'pending'
   const filters = useMemo(
     () => getFiltersFromSearchParams(searchParams, isPendingView),
@@ -145,10 +135,6 @@ function ConsentRegistryPage(): React.JSX.Element {
   const page = useMemo(() => getPageFromSearchParams(searchParams), [searchParams])
   const rowsPerPage = useMemo(() => getRowsPerPageFromSearchParams(searchParams), [searchParams])
   const consentListQuery = useConsentListQuery(filters, page, rowsPerPage)
-  const { currentUser, hasScope } = useAuthorization()
-  const approveMutation = useApproveConsentMutation(currentUser.userId)
-  const revokeMutation = useRevokeConsentMutation()
-  const canWriteSelf = hasScope(REQUIRED_SCOPES.CONSENTS_WRITE_SELF)
   const isTableLoading = consentListQuery.isPending || consentListQuery.isPlaceholderData
 
   const updateParams = (
@@ -194,49 +180,7 @@ function ConsentRegistryPage(): React.JSX.Element {
           onRetry={() => consentListQuery.refetch()}
           detailSearch={isPendingView ? PENDING_CONSENTS_VIEW_SEARCH : ''}
           showSubject={filters.relation !== 'SUBJECT'}
-          currentUserId={currentUser.userId}
-          canApprove={canWriteSelf}
-          canRevoke={canWriteSelf}
-          onApprove={setApprovalConsentID}
-          onRevoke={setRevocationConsentID}
-          isMutating={approveMutation.isPending || revokeMutation.isPending}
         />
-
-        {approvalConsentID ? (
-          <ConsentApprovalDialog
-            open
-            consentId={approvalConsentID}
-            loading={approveMutation.isPending}
-            error={approveMutation.error?.message}
-            onClose={() => {
-              setApprovalConsentID(undefined)
-              approveMutation.reset()
-            }}
-            onConfirm={() => {
-              approveMutation.mutate(approvalConsentID, {
-                onSuccess: () => setApprovalConsentID(undefined),
-              })
-            }}
-          />
-        ) : null}
-
-        {revocationConsentID ? (
-          <ConsentRevocationDialog
-            open
-            consentId={revocationConsentID}
-            loading={revokeMutation.isPending}
-            error={revokeMutation.error?.message}
-            onClose={() => {
-              setRevocationConsentID(undefined)
-              revokeMutation.reset()
-            }}
-            onConfirm={() => {
-              revokeMutation.mutate(revocationConsentID, {
-                onSuccess: () => setRevocationConsentID(undefined),
-              })
-            }}
-          />
-        ) : null}
       </Stack>
     </Box>
   )
