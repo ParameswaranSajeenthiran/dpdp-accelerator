@@ -135,13 +135,13 @@ class ComplaintAttachmentHandlerTest {
     }
 
     @Test
-    void uploadComplaintAttachmentsDefaultsNullIsPublicToTrue() {
-        when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
+    void uploadComplaintAttachmentsDefaultsNullIsPublicToFalse() {
+        when(complaintAttachmentService.uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"))).thenReturn(List.of());
 
         handler.uploadComplaintAttachments(ORG_ID, "c1", null, null, "officer1", "Officer One");
 
-        verify(complaintAttachmentService).uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(true),
+        verify(complaintAttachmentService).uploadComplaintAttachments(eq(ORG_ID), eq("c1"), any(), eq(false),
                 eq("officer1"), eq("Officer One"), eq("COMPLAINT_OFFICER"));
     }
 

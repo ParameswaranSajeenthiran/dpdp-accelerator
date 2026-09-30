@@ -75,8 +75,10 @@ public class ComplaintAttachmentHandler {
     public List<ComplaintAttachmentResponse> uploadComplaintAttachments(String orgId, String complaintId,
             List<Attachment> fileParts, Boolean isPublic, String actorUserId, String actorUserName) {
         List<UploadedFile> files = toUploadedFiles(fileParts);
+        // null - an isPublic part CXF couldn't read because it wasn't text/plain - stays internal,
+        // so evidence is shared with the Data Principal only when explicitly asked to be.
         return ComplaintDtoMapper.toAttachments(complaintAttachmentService.uploadComplaintAttachments(orgId,
-                complaintId, files, isPublic == null || isPublic, actorUserId, actorUserName,
+                complaintId, files, Boolean.TRUE.equals(isPublic), actorUserId, actorUserName,
                 ComplaintActorRole.COMPLAINT_OFFICER.name()));
     }
 

@@ -102,7 +102,8 @@ export class ComplaintApiClient {
     }
     if (extra) {
       for (const [key, value] of Object.entries(extra)) {
-        form.append(key, value)
+        // text/plain: the complaint API reads isPublic only from a typed part.
+        form.append(key, new Blob([value], { type: 'text/plain' }))
       }
     }
     return form
@@ -220,11 +221,11 @@ export class ComplaintApiClient {
     return this.request.post(complaintsApiUrl(`/${complaintId}/status`, this.tenantDomain), { headers: this.jsonHeaders(), data: body })
   }
 
-  /** isPublic defaults to true server-side when omitted. */
-  async uploadAttachments(complaintId: string, files: UploadFile[], isPublic?: boolean): Promise<APIResponse> {
+  /** isPublic is required; the server rejects an upload without it (400). */
+  async uploadAttachments(complaintId: string, files: UploadFile[], isPublic: boolean): Promise<APIResponse> {
     return this.request.post(complaintsApiUrl(`/${complaintId}/attachments`, this.tenantDomain), {
       headers: this.headers(),
-      multipart: this.toFormData(files, isPublic === undefined ? undefined : { isPublic: String(isPublic) }),
+      multipart: this.toFormData(files, { isPublic: String(isPublic) }),
     })
   }
 

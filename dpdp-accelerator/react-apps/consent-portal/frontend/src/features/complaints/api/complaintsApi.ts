@@ -53,7 +53,9 @@ function uploadFilesFormData(files: File[], isPublic?: boolean): FormData {
   const formData = new FormData()
   files.forEach((file) => formData.append('file', file))
   if (isPublic !== undefined) {
-    formData.append('isPublic', String(isPublic))
+    // Sent as a typed part: a plain string field has no Content-Type, and the server can only
+    // read isPublic from a text/plain part - without one it treats the upload as internal.
+    formData.append('isPublic', new Blob([String(isPublic)], { type: 'text/plain' }))
   }
   return formData
 }
@@ -207,7 +209,7 @@ export async function sendManagedComplaintMessage(
 export async function uploadManagedComplaintAttachments(
   complaintId: string,
   files: File[],
-  isPublic?: boolean,
+  isPublic: boolean,
 ): Promise<ComplaintAttachmentAPI[]> {
   return apiRequest<ComplaintAttachmentAPI[]>(
     `${COMPLAINT_MGT_V1}/complaints/${encodeURIComponent(complaintId)}/attachments`,
