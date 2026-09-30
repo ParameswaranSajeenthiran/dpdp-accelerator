@@ -826,7 +826,9 @@
       "completed": "সম্পন্ন",
       "acknowledged": "স্বীকৃত",
       "in_flight": "ইন ফ্লাইট",
-      "expired": "মেয়াদ উত্তীর্ণ"
+      "expired": "মেয়াদ উত্তীর্ণ",
+      "err": "ত্রুটি",
+      "error": "ত্রুটি"
     },
     "purposes": {
       "all": "সমস্ত"

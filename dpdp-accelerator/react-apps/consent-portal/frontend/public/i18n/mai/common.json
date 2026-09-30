@@ -826,7 +826,9 @@
       "completed": "पूरा भेल",
       "acknowledged": "स्वीकृत",
       "in_flight": "उड़ान मे",
-      "expired": "समाप्त भेल"
+      "expired": "समाप्त भेल",
+      "err": "त्रुटि",
+      "error": "त्रुटि"
     },
     "purposes": {
       "all": "सब"

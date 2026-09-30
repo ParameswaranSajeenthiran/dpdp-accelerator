@@ -188,6 +188,30 @@ public class DeliveryHistoryConsistencyTest {
         assertEquals(pollResult.getCompletionStatus(), "pending");
     }
 
+    @Test
+    public void pollDeliveryWithErrorDetailsMapsCompletionEvidenceAndAttemptError() {
+        SubscriptionDeliverySummary poll = summary("err", "poll");
+        prepareSummary(poll);
+
+        PollDelivery pollDelivery = new PollDelivery(DELIVERY_ID, ORG_ID, SUBSCRIPTION_ID, "event-1", "err",
+                "INVALID_PAYLOAD", "Failed to parse JSON body", new Timestamp(100), new Timestamp(150));
+        when(deliveryDAO.getPollDeliveryById(any(Connection.class), eq(DELIVERY_ID), eq(ORG_ID)))
+                .thenReturn(Optional.of(pollDelivery));
+
+        SubscriptionEventHistoryDTO eventHistory = eventService.getDeliveryHistory(ORG_ID, DELIVERY_ID);
+        SubscriptionEventHistoryDTO subscriptionHistory = subscriptionService.getSubscriptionEventHistory(
+                ORG_ID, SUBSCRIPTION_ID, DELIVERY_ID);
+
+        assertEquivalent(eventHistory, subscriptionHistory);
+        assertEquals(eventHistory.getCurrentStatus(), "err");
+        assertEquals(eventHistory.getCompletionStatus(), "err");
+        assertEquals(eventHistory.getCompletionEvidence(), "INVALID_PAYLOAD: Failed to parse JSON body");
+        assertEquals(eventHistory.getHistory().size(), 1);
+        assertEquals(eventHistory.getHistory().get(0).getStatus(), "err");
+        assertEquals(eventHistory.getHistory().get(0).getTimestamp(), 150L);
+        assertEquals(eventHistory.getHistory().get(0).getError(), "INVALID_PAYLOAD: Failed to parse JSON body");
+    }
+
     private void prepareSummary(SubscriptionDeliverySummary summary) {
         when(deliveryDAO.getOrgDeliveryById(any(Connection.class), eq(ORG_ID), eq(DELIVERY_ID))).thenReturn(Optional.of(summary));
         when(deliveryDAO.getSubscriptionDeliveryById(any(Connection.class), eq(ORG_ID), eq(SUBSCRIPTION_ID), eq(DELIVERY_ID)))

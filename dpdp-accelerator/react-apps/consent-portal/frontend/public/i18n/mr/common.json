@@ -826,7 +826,9 @@
       "completed": "पूर्ण झाले",
       "acknowledged": "स्वीकृत",
       "in_flight": "उडानमध्ये",
-      "expired": "मुदत संपली"
+      "expired": "मुदत संपली",
+      "err": "त्रुटी",
+      "error": "त्रुटी"
     },
     "purposes": {
       "all": "सर्व"

@@ -120,7 +120,14 @@ export default function SubscriptionDeliveryEventsTable({
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip size="small" variant="outlined" label={event.deliveryMode} />
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={t(
+                      `subscriptions.deliveryMode.${(event.deliveryMode || 'webhook').toLowerCase()}`,
+                      event.deliveryMode || 'webhook',
+                    )}
+                  />
                 </TableCell>
                 <TableCell>
                   <Chip

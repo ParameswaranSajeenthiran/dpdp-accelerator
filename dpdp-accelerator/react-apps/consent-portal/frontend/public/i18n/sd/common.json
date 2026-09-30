@@ -826,7 +826,9 @@
       "completed": "मुकम्मल थियल",
       "acknowledged": "तस्लीम कयल",
       "in_flight": "उॾाम ते",
-      "expired": "मुदत ख़त्म थी वेई"
+      "expired": "मुदत ख़त्म थी वेई",
+      "err": "गलती",
+      "error": "गलती"
     },
     "purposes": {
       "all": "सभुं"

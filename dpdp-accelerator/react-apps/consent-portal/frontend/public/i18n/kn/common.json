@@ -826,7 +826,9 @@
       "completed": "ಪೂರ್ಣಗೊಂಡಿದೆ",
       "acknowledged": "ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
       "in_flight": "ಹಾರಾಟದಲ್ಲಿ",
-      "expired": "ಅವಧಿ ಮೀರಿದೆ"
+      "expired": "ಅವಧಿ ಮೀರಿದೆ",
+      "err": "ದೋಷ",
+      "error": "ದೋಷ"
     },
     "purposes": {
       "all": "ಎಲ್ಲಾ"
