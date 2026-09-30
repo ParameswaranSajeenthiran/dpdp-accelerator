@@ -69,6 +69,23 @@ const DEFAULT_CLIENT_ID = 'DPDP_CONSENT_PORTAL'
 /** Where the route being visited is kept across the trip to the Identity Server. */
 const RETURN_PATH_KEY = 'consent-portal.returnPath'
 
+/** Set while a sign-in the Identity Server rejected is retried, so it is retried only once. */
+const SIGN_IN_RETRY_KEY = 'consent-portal.signInRetried'
+
+/**
+ * Authorization errors a fresh request can recover from. A silent sign-in comes back with
+ * invalid_request when the Identity Server has lost the cached result of the login it is reusing
+ * ("Cannot find AuthenticationResult from the cache"), even though that login is still valid.
+ */
+const RETRYABLE_SIGN_IN_ERRORS = new Set([
+  'invalid_request',
+  'server_error',
+  'temporarily_unavailable',
+])
+
+/** The query parameters an authorization error redirect carries. */
+const SIGN_IN_ERROR_PARAMS = ['error', 'error_description', 'state', 'session_state']
+
 const DEFAULT_SCOPE: string[] = [
   'openid',
   'profile',
@@ -237,6 +254,52 @@ export function takeReturnPath(): string | undefined {
   }
 }
 
+/**
+ * The OAuth error this page load was redirected back with, if any. A failed sign-out also
+ * returns an error, but with the SDK's sign-out state, and is not a sign-in to retry.
+ */
+function signInErrorInUrl(): string | undefined {
+  const params = new URLSearchParams(window.location.search)
+  const error = params.get('error')
+  return error && params.get('state') !== 'sign_out_success' ? error : undefined
+}
+
+function clearSignInRetry(): void {
+  try {
+    sessionStorage.removeItem(SIGN_IN_RETRY_KEY)
+  } catch {
+    // Nothing to clear when storage is unavailable.
+  }
+}
+
+/** True the first time a retryable error is seen; the next one is final. */
+function claimSignInRetry(error: string): boolean {
+  if (!RETRYABLE_SIGN_IN_ERRORS.has(error)) {
+    // A retry this error ended must not count against the next, unrelated one.
+    clearSignInRetry()
+    return false
+  }
+  try {
+    if (sessionStorage.getItem(SIGN_IN_RETRY_KEY)) {
+      // Cleared so that the user's own "Try again" gets a retry of its own.
+      sessionStorage.removeItem(SIGN_IN_RETRY_KEY)
+      return false
+    }
+    sessionStorage.setItem(SIGN_IN_RETRY_KEY, 'true')
+    return true
+  } catch {
+    // Without storage a retry could not be bounded, so fail as before.
+    return false
+  }
+}
+
+/** The SDK rejects any sign-in while the error is still in the URL. */
+function removeSignInErrorFromUrl(): void {
+  const url = new URL(window.location.href)
+  SIGN_IN_ERROR_PARAMS.forEach((param) => url.searchParams.delete(param))
+  window.history.replaceState(window.history.state, '', url.toString())
+}
+
 export async function isAuthenticated(): Promise<boolean> {
   await initAuth()
   return (await spaClient().isAuthenticated()) ?? false
@@ -254,6 +317,7 @@ export async function ensureSignedIn(): Promise<boolean> {
   await initAuth()
   const client = spaClient()
   if (await client.isAuthenticated()) {
+    clearSignInRetry()
     return true
   }
 
@@ -266,6 +330,7 @@ export async function ensureSignedIn(): Promise<boolean> {
       handoff.state,
     )
     if (await client.isAuthenticated()) {
+      clearSignInRetry()
       return true
     }
     // Nothing is navigating on this path, so returning false would leave the
@@ -277,7 +342,16 @@ export async function ensureSignedIn(): Promise<boolean> {
 
   // No pending code: hand over to the Identity Server. In dev the SDK picks
   // the code up from the redirect's query parameters instead.
-  rememberReturnPath()
+  const signInError = signInErrorInUrl()
+  if (signInError === undefined) {
+    rememberReturnPath()
+  } else if (claimSignInRetry(signInError)) {
+    // This page is only the error redirect: the route the user asked for was
+    // remembered before the first attempt, so it is kept rather than replaced.
+    removeSignInErrorFromUrl()
+  }
+  // With the error still in the URL, the SDK rejects and the caller shows
+  // the failure; otherwise this leaves for the Identity Server.
   await client.signIn()
   return (await client.isAuthenticated()) ?? false
 }

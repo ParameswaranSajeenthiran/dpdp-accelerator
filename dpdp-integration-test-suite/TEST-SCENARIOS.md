@@ -773,11 +773,9 @@ persona's consent count passed one page, and a filter-panel remount race after "
 could silently wipe a just-typed value. Verified with 8 consecutive clean runs (zero retries)
 after the fix, versus a measured ~30-60% failure rate before it.
 
-**Still open:** a deep-linked `goto()` occasionally lands on `/dashboard` instead of the requested
-route, so the test times out waiting for an element on a page that never rendered. Not slowness —
-extra waiting does not help. Not reproduced or specifically diagnosed since the worker-count fix
-above; it may turn out to be the same class of contention issue, or something distinct — treat it
-as open until it recurs at 2 workers.
+**CI fails a flaky run.** A test that fails and then passes on its retry still fails the run
+(`failOnFlakyTests` in `playwright.config.ts`); the report marks it flaky rather than failed.
+Local runs keep passing on a retry.
 
 Run with `--workers=1` to distinguish a real failure from a flake.
 
