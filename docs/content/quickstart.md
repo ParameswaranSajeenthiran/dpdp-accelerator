@@ -1,113 +1,244 @@
-# DPDP Accelerator quickstart
+# Quickstart
 
-Use this guide for a local evaluation: install the accelerator with its default
-embedded H2 databases, open the Consent Portal, and verify initial access.
-Use the [Setup Guide](setup-guide.md) for external databases and the
-[Configuration Guide](configuration-guide.md) for roles and runtime settings.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-`configure.sh`, used below, is for evaluation and development: it replaces
-`deployment.toml` and sets up the databases for you. For a production deployment,
-run `merge.sh` as below, then follow the [Setup Guide](setup-guide.md) in place
-of `configure.sh`.
+## Overview
+
+The WSO2 DPDP Accelerator is a set of extensions that speeds up building a
+solution for India's
+[Digital Personal Data Protection Act, 2023](introduction.md). Built on WSO2
+Identity Server, it adds consent management, grievance handling, consent audit
+history, and event notifications, along with a Consent Portal for end users and
+administrators.
+
+This guide sets up the accelerator in a local environment with the default
+**embedded H2 databases**, so you can quickly try it out.
+
+:::info Setting up for production?
+
+This quickstart is for local evaluation only. For a production deployment,
+follow the [Setup Guide](setup-guide.md) instead.
+
+:::
 
 ## Prerequisites
 
-- WSO2 Identity Server 7.3.0 at U2 update level 17 or later
-- JDK 21 or later
-- A released `wso2-dpdpiam-accelerator-<version>.zip`, or a ZIP built from the
-  repository with `mvn clean install`
+1. **Java Development Kit:** JDK 21 or later.
+2. **Environment variables:** set `JAVA_HOME` to the JDK 21 folder and add its
+   `bin` folder to your `PATH`.
 
-The extracted Identity Server directory is referred to as `<IS_HOME>` below.
-
-## 1. Install the accelerator
-
-Extract the accelerator ZIP, enter its directory, and run the two installation
-scripts while Identity Server is stopped:
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
 
 ```sh
-bash bin/merge.sh <IS_HOME>
-bash bin/configure.sh <IS_HOME>
+export JAVA_HOME="<JDK_LOCATION>"
+export PATH=$JAVA_HOME/bin:$PATH
+java -version
 ```
 
-`configure.sh` backs up and then replaces
-`<IS_HOME>/repository/conf/deployment.toml`; review that backup before using the
-same process on an existing deployment.
-
-Expected result: both scripts finish successfully and the accelerator
-configuration is applied.
-
-For source-build prerequisites, see the [repository README](https://github.com/wso2/dpdp-accelerator#build).
-For automated MySQL and manual external database setup, see the
-[Setup Guide](setup-guide.md).
-
-### Set the local administrator password
-
-For a fresh local installation, configure
-`[super_admin]` in `<IS_HOME>/repository/conf/deployment.toml` before the first
-server start, replacing the password placeholder with a unique password:
-
-```toml
-[super_admin]
-username = "admin@wso2.com"
-password = "<unique-local-administrator-password>"
-create_admin_account = true
-```
-
-Replace the existing `[super_admin]` values instead of adding a duplicate table.
-If the administrator already exists, use its current credentials
-and change its password through Identity Server; editing the bootstrap setting
-does not reset an existing account. Rotate evaluation credentials before any
-production use.
-
-## 2. Start Identity Server
+</TabItem>
+<TabItem value="macos" label="macOS">
 
 ```sh
-sh <IS_HOME>/bin/wso2server.sh
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+export PATH=$JAVA_HOME/bin:$PATH
+java -version
 ```
 
-After WSO2 Identity Server starts, open the Console:
+</TabItem>
+<TabItem value="windows" label="Windows">
 
-```text
-https://localhost:9443/console
+```powershell
+$env:JAVA_HOME = "<JDK_LOCATION>"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+java -version
 ```
 
-## 3. Sign in to the Console
+</TabItem>
+</Tabs>
 
-Sign in with the administrator account and password configured in step 1.
+`java -version` should report version 21 or later.
 
-## 4. Create users and assign portal access
+## Install the base product
 
-Open **User Management → Users** and create three users for portal access.
-Assign one of the three provisioned roles to each user:
+[Download WSO2 Identity Server 7.3.0](https://wso2.com/products/downloads/?product=wso2is)
+and extract the ZIP.
 
-- `dpdp-consent-admin` for portal administrators, including the user who will
-  verify the portal in this quickstart
-- `dpdp-consent-user` for regular users who need personal consent history,
-  complaint, or account-deletion features
-- `dpdp-consent-dpo` for Data Protection Officers and complaint-handling users
+## Install the accelerator
 
-The roles are created automatically, but users and role memberships are not.
-After assigning a role, have each user sign out and sign in again so the new
-access token contains the role's scopes.
+Download the latest `wso2-dpdpiam-accelerator-<version>.zip` from the
+[releases page](https://github.com/wso2/dpdp-accelerator/releases). To build it
+from source instead, see the
+[repository README](https://github.com/wso2/dpdp-accelerator#build).
 
-See the [Role Management Guide](role-guide.md) before assigning roles. Basic
-self-service consent management does not require a portal role.
+Extract it, and copy the extracted `wso2-dpdpiam-accelerator-<version>`
+directory into the root directory of Identity Server.
 
-## 5. Open the Portal
+The rest of this guide refers to the directories as follows:
 
-Open:
+| Directory | Placeholder |
+| --- | --- |
+| Identity Server | `<IS_HOME>` |
+| DPDP Accelerator, inside `<IS_HOME>` | `<DPDP_ACCELERATOR_HOME>` |
 
-```text
-https://localhost:9443/consent-portal/
+## Apply updates
+
+The accelerator needs Identity Server at U2 update level 17 or later. A freshly
+downloaded Identity Server doesn't include the
+[update tool](https://updates.docs.wso2.com/en/latest/updates/update-tool/)
+yet, so get it first:
+
+Go to `<IS_HOME>/bin` and run the setup script. It downloads the update tool
+that matches your operating system and processor into the same folder:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
+```sh
+./update_tool_setup.sh
 ```
 
-Sign in as the user holding `dpdp-consent-admin` and confirm that the portal
-loads.
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```sh
+./update_tool_setup.sh
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+.\update_tool_setup.ps1
+```
+
+</TabItem>
+</Tabs>
+
+Then, in the same folder, run the update tool it downloaded:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
+```sh
+./wso2update_linux        # ARM64: ./wso2update_linux_arm64
+```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```sh
+./wso2update_darwin_arm64  # Intel: ./wso2update_darwin
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+.\wso2update_windows.exe   # ARM64: .\wso2update_windows_arm64.exe
+```
+
+</TabItem>
+</Tabs>
+
+If the tool reports that it updated itself, run the same command again to
+update Identity Server.
+
+For more information about WSO2 updates and the update tool, see
+[WSO2 Updates](https://wso2.com/updates).
+
+## Configure the accelerator
+
+Go to `<IS_HOME>/<DPDP_ACCELERATOR_HOME>/bin` and run the merge script, then
+the configure script:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
+```sh
+./merge.sh
+./configure.sh
+```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```sh
+./merge.sh
+./configure.sh
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+The accelerator's scripts are Bash scripts, so run them from Git Bash or
+WSL (Windows Subsystem for Linux):
+
+```sh
+./merge.sh
+./configure.sh
+```
+
+</TabItem>
+</Tabs>
+
+## Start the server
+
+Go to `<IS_HOME>/bin` and start Identity Server:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
+```sh
+./wso2server.sh
+```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```sh
+./wso2server.sh
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+.\wso2server.bat
+```
+
+</TabItem>
+</Tabs>
+
+Once the server starts, open the Console at `https://localhost:9443/console`
+and sign in with the default administrator account: username `admin@wso2.com`,
+password `wso2123`.
+
+## Set up portal users
+
+To fully try out the accelerator, create users and assign them these roles by
+following [Assign portal roles](configuration-guide.md#4-assign-portal-roles):
+
+| User | Role | What they can do in the portal |
+| --- | --- | --- |
+| Portal administrator | `dpdp-consent-admin` | Manage purposes and elements, view and revoke any user's consents, view consent history, manage Event Notifications, and handle all complaints. Use this user to check the portal in the next step. |
+| Data Principal | `dpdp-consent-user` | Exercise their data protection rights: review the history of their consents, raise and track grievances, and delete their own account. |
+| Data Protection Officer | `dpdp-consent-dpo` | View and respond to every complaint in the organization, without access to consents or other administration. |
+
+Any signed-in user can view and manage their own consents without a role. The
+roles add the extra features above.
+
+## Open the Consent Portal
+
+Open `https://localhost:9443/consent-portal/` and sign in as the user holding
+`dpdp-consent-admin`.
 
 ## Next steps
 
-- [Learn through real stories](learn.md) — understand how the major areas fit
-  together from the perspectives of a Data Principal, administrator, processor,
-  and grievance officer
-- [Tryout Flows](tryout-flows.md) — catalog, consent lifecycle, complaint,
-  automatic event, and account-deletion walkthroughs
+- [Learn through real stories](learn.md) — see how the main features fit
+  together from each participant's point of view
+- [Tryout Flows](tryout-flows.md) — walk through the catalog, consent
+  lifecycle, complaint, event, and account-deletion flows
+- [Setup Guide](setup-guide.md) — move to a production deployment with an
+  external MySQL or PostgreSQL database
