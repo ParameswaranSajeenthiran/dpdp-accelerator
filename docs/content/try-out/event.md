@@ -212,8 +212,10 @@ in the portal. To create one test consent, follow these steps.
    ![Purpose details page with the Purpose ID and its Contact email element](/img/try-out/event/00-purpose-id.png)
 
 2. **Get an access token with the `internal_consent_mgt_consent_create`
-   scope**, which creating a consent requires. Follow
-   [Manage API access](#manage-api-access-link-pending) to get one. Get it from
+   scope**, which creating a consent requires. The accelerator provisions the
+   **DPDP Consent API Invoker** application for this. See
+   [Consent API Invoker provisioning](../configuration-guide.md#consent-api-invoker-provisioning)
+   for how to get its credentials. Get the token from
    the same tenant the consent belongs to, because a token issued by one
    tenant isn't accepted by another. Then set it, along with your server and
    tenant, for the next step:
@@ -412,7 +414,8 @@ inspects the result. Publishing and polling are API calls made by the
 integrating applications, not actions in the portal.
 
 You need two access tokens. See
-[Manage API access](#manage-api-access-link-pending) for how to get them:
+[Event Notification roles and scopes](../role-guide.md#event-notification-roles-and-scopes)
+for the roles that grant them:
 
 | Token | Scope | Used by |
 | --- | --- | --- |
