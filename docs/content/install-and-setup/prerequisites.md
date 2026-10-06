@@ -1,61 +1,63 @@
 # Prerequisites
 
-Use the **Install and Set Up** pages to set up the DPDP Accelerator on WSO2
-Identity Server for a production deployment. Work through them in order:
+## WSO2 Identity Server
 
-1. Prerequisites
-2. [Setting up servers](setting-up-servers.md)
-3. [Setting up the database](setting-up-the-database.md)
-4. [Configuring deployment.toml](configuring-deployment-toml.md)
-5. [Configuring users](configuring-users.md)
+[Download WSO2 Identity Server 7.3.0](https://wso2.com/identity-server/) with **update level 17 or higher**. The consent v2 migration tables shipped in update level 17+ are required; older update levels ignore the `revoke_active_consents_on_create` setting without a warning.
 
-`<IS_HOME>` is the Identity Server directory, and `<ACCELERATOR_HOME>` is the
-extracted accelerator ZIP.
+If you already have WSO2 Identity Server 7.3.0 installed:
 
-## Requirements
+1. **Check your current update level**:
+   Inspect `<IS_HOME>/updates/product.txt` to verify whether your installation is at update level 17 or higher.
 
-- WSO2 Identity Server 7.3.0 at U2 update level 17 or later. Apply the U2 updates
-  *before* installing the accelerator, because the consent v2 migration used in
-  step 5 ships with them.
-- JDK 21 or later.
-- A MySQL 8.0 or PostgreSQL server. The supported PostgreSQL versions are 15, 16
-  and 17, the versions Identity Server 7.3.0 is tested on. The embedded H2
-  databases are for evaluation, development and testing only.
-- A database administrator account, and the database's command-line client
-  (`mysql` or `psql`).
+2. **Update to level 17 or later**:
+   If your current level is below 17, run the update tool setup script from `<IS_HOME>`:
+   ```sh
+   <IS_HOME>/bin/update_tool_setup.sh
+   ```
+   *(Use `<IS_HOME>\bin\update_tool_setup.bat` on Windows.)*
 
-Stop the Identity Server. Back up `<IS_HOME>/repository/conf/deployment.toml`,
-and back up the databases too if this is an upgrade.
+The extracted Identity Server directory is referred to as `<IS_HOME>` throughout this guide.
 
-## Choose automated or manual setup
+## JDK
 
-The accelerator ships two scripts:
+JDK 21 or later is required. The Identity Server and the accelerator build and run on JDK 21.
 
-- **`bin/merge.sh`** installs the accelerator's artifacts
-  ([step 1](../setup-guide.md#1-install-the-accelerator-artifacts)). It changes no configuration,
-  so use it in every environment, production included.
-- **`bin/configure.sh`** automates steps 2 to 5 for evaluation and development.
+## Database server
 
-The supported databases are H2, MySQL and PostgreSQL, and the installer has an
-`h2`, `mysql` and `postgresql` profile for each in
-`repository/conf/dbprofiles.properties`. For automated MySQL or PostgreSQL setup,
-edit `repository/conf/configure.properties` before running `bin/configure.sh`:
-set `DB_TYPE=mysql` or `DB_TYPE=postgresql`, `DB_HOST`, `DB_PORT` if needed,
-`DB_USER`, and `DB_PASS`. Install the matching command-line client (`mysql` or
-`psql`) and give the configured account permission to create the databases on the
-first run.
+| Database | Supported Versions | Usage |
+|:---|:---|:---|
+| **MySQL** | 8.0 | Production and staging environments |
+| **PostgreSQL** | 15, 16, 17 | Production and staging environments (tested with Identity Server 7.3.0) |
+| **Embedded H2** | Pre-packaged | Evaluation, development, and testing only |
 
-The script downloads the configured JDBC driver into
-`<IS_HOME>/repository/components/lib`, configures the datasource URLs, creates
-missing databases, and applies the Identity Server schemas to databases it
-creates. It applies the consent migration to a newly created identity database
-when `APPLY_IS_CONSENT_MGT_V2_MIGRATION=true`, and the DPDP schemas when
-`APPLY_DPDP_DB_MIGRATION=true`. Keep `RECREATE_DATABASES=false` to preserve
-existing databases; setting it to `true` drops and recreates all four. See the
-[Quickstart](../quickstart.md) for the commands.
+## DPDP Accelerator pack
 
-**Don't use `configure.sh` in production.** It replaces `deployment.toml`
-wholesale, and creates and migrates the databases with whatever account it is
-given. For production, run `merge.sh` and then follow steps 2 to 7 yourself, so
-you decide what goes into `deployment.toml`, which account owns the databases, and
-when each schema change is applied. Apply each schema change only once.
+Obtain the accelerator as one of:
+
+- **Release ZIP** - download `wso2-dpdpiam-accelerator-<version>.zip` from the
+  [GitHub Releases page](https://github.com/wso2/dpdp-accelerator/releases).
+- **Source build** - clone the [wso2/dpdp-accelerator](https://github.com/wso2/dpdp-accelerator)
+  repository and run:
+
+  ```sh
+  mvn clean install
+  ```
+
+  The ZIP is produced at `accelerator/target/wso2-dpdpiam-accelerator-<version>.zip`.
+  See the [repository README](https://github.com/wso2/dpdp-accelerator#build) for
+  full build prerequisites.
+
+The extracted accelerator directory is referred to as `<ACCELERATOR_HOME>` throughout this guide.
+
+## Before you begin
+
+Ensure you have downloaded and extracted both the WSO2 Identity Server distribution (`<IS_HOME>`) and the DPDP Accelerator distribution (`<ACCELERATOR_HOME>`).
+
+Keep the Identity Server stopped while copying files and applying configurations. For a production deployment, follow each section of this guide in sequence:
+
+1. [Setting Up Servers](setting-up-servers.md)
+2. [Setting up the database](setting-up-the-database.md)
+3. [Configuring deployment.toml](configuring-deployment-toml.md)
+4. [Configuring Users](configuring-users.md)
+
+For a local evaluation with embedded H2 databases, use the [Quickstart](../quickstart.md) instead.

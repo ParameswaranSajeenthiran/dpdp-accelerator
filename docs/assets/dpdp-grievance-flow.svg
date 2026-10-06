@@ -1,18 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" role="img" aria-labelledby="title desc">
   <title id="title">DPDP grievance submission and resolution flow</title>
-  <desc id="desc">A Data Principal submits a complaint through My Complaints. The Complaint Service creates the tenant-scoped case, reference ID, and statutory due date. A Complaint Officer opens the case in Complaint Management, sends a public reply, updates the status, adds an internal note, and resolves the complaint. The Data Principal then reviews the shared activity and final status, while the internal note remains visible only to complaint officers.</desc>
+  <desc id="desc">A Data Principal submits a complaint through My Complaints. The Complaint Service creates the tenant-scoped case, reference ID, and statutory due date. A Complaint Officer opens the case in Complaint Management, sends a public reply, updates the status, adds an internal note, and resolves the complaint. The Data Principal then reviews the shared activity and final status.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#5B6B76"/>
     </marker>
     <style>
-      .actor-label { font: 600 15px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #16222B; text-anchor: middle; }
-      .actor-sub   { font: 400 12.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #8A97A0; text-anchor: middle; }
-      .step-label  { font: 500 14px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #3A4750; }
-      .step-num    { font: 700 13px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #FFFFFF; text-anchor: middle; }
-      .icon        { fill: none; stroke: #FF7300; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-      .lifeline    { stroke: #DCE1E4; stroke-width: 2; stroke-dasharray: 4 5; }
-      .arrow       { fill: none; stroke: #5B6B76; stroke-width: 2; marker-end: url(#arrow); }
+      .actor-label     { font: 600 15px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #16222B; text-anchor: middle; }
+      .actor-sub       { font: 400 12.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #8A97A0; text-anchor: middle; }
+      .step-label      { font: 500 14px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #3A4750; }
+      .step-num        { font: 700 13px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #FFFFFF; text-anchor: middle; }
+      .icon            { fill: none; stroke: #FF7300; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .lifeline        { stroke: #DCE1E4; stroke-width: 2; stroke-dasharray: 4 5; }
+      .arrow           { fill: none; stroke: #5B6B76; stroke-width: 2; marker-end: url(#arrow); }
+      .state-highlight { font-weight: 600; fill: #16222B; }
     </style>
 
     <g id="icon-person">
@@ -37,95 +38,89 @@
     </g>
   </defs>
 
-  <rect width="1200" height="900" fill="#FAFAF8"/>
-  <text x="40" y="40" style="font:700 22px 'Segoe UI', Helvetica, Arial, sans-serif; fill:#16222B; text-anchor:start;">DPDP grievance submission and resolution</text>
-  <text x="40" y="64" style="font:400 12.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill:#8A97A0; text-anchor:start;">Numbered in the order the Data Principal and complaint officer complete the shared case</text>
+  <rect width="1200" height="730" rx="12" fill="#FAFAF8" stroke="#E2E8F0" stroke-width="1.5"/>
 
   <!-- Actor headers -->
-  <g transform="translate(100,120)"><use href="#icon-person"/></g>
-  <text x="100" y="170" class="actor-label">Data Principal</text>
-  <text x="100" y="188" class="actor-sub">Raises and tracks grievance</text>
+  <g transform="translate(100,60)"><use href="#icon-person"/></g>
+  <text x="100" y="110" class="actor-label">Data Principal</text>
+  <text x="100" y="128" class="actor-sub">Raises and tracks grievance</text>
 
-  <g transform="translate(350,120)"><use href="#icon-portal"/></g>
-  <text x="350" y="170" class="actor-label">My Complaints</text>
-  <text x="350" y="188" class="actor-sub">Principal portal view</text>
+  <g transform="translate(350,60)"><use href="#icon-portal"/></g>
+  <text x="350" y="110" class="actor-label">My Complaints</text>
+  <text x="350" y="128" class="actor-sub">Principal portal view</text>
 
-  <g transform="translate(600,120)"><use href="#icon-complaint"/></g>
-  <text x="600" y="170" class="actor-label">Complaint Service</text>
-  <text x="600" y="188" class="actor-sub">Tenant-scoped case history</text>
+  <g transform="translate(600,60)"><use href="#icon-complaint"/></g>
+  <text x="600" y="110" class="actor-label">Complaint Service</text>
+  <text x="600" y="128" class="actor-sub">Tenant-scoped case history</text>
 
-  <g transform="translate(850,120)"><use href="#icon-portal"/></g>
-  <text x="850" y="170" class="actor-label">Complaint Management</text>
-  <text x="850" y="188" class="actor-sub">Officer portal view</text>
+  <g transform="translate(850,60)"><use href="#icon-portal"/></g>
+  <text x="850" y="110" class="actor-label">Complaint Management</text>
+  <text x="850" y="128" class="actor-sub">Officer portal view</text>
 
-  <g transform="translate(1100,120)"><use href="#icon-officer"/></g>
-  <text x="1100" y="170" class="actor-label">Complaint Officer</text>
-  <text x="1100" y="188" class="actor-sub">DPO or administrator</text>
+  <g transform="translate(1100,60)"><use href="#icon-officer"/></g>
+  <text x="1100" y="110" class="actor-label">Complaint Officer</text>
+  <text x="1100" y="128" class="actor-sub">DPO / Grievance Officer</text>
 
   <!-- Lifelines -->
-  <line class="lifeline" x1="100" y1="205" x2="100" y2="760"/>
-  <line class="lifeline" x1="350" y1="205" x2="350" y2="760"/>
-  <line class="lifeline" x1="600" y1="205" x2="600" y2="760"/>
-  <line class="lifeline" x1="850" y1="205" x2="850" y2="760"/>
-  <line class="lifeline" x1="1100" y1="205" x2="1100" y2="760"/>
+  <line class="lifeline" x1="100" y1="145" x2="100" y2="700"/>
+  <line class="lifeline" x1="350" y1="145" x2="350" y2="700"/>
+  <line class="lifeline" x1="600" y1="145" x2="600" y2="700"/>
+  <line class="lifeline" x1="850" y1="145" x2="850" y2="700"/>
+  <line class="lifeline" x1="1100" y1="145" x2="1100" y2="700"/>
 
   <!-- Step 1: Data Principal starts the grievance -->
-  <path class="arrow" d="M 100 245 H 350"/>
-  <circle cx="100" cy="245" r="11" fill="#16222B"/>
-  <text x="100" y="249" class="step-num">1</text>
-  <text x="225" y="235" class="step-label" text-anchor="middle">Submit complaint + optional attachment</text>
+  <path class="arrow" d="M 100 185 H 350"/>
+  <circle cx="100" cy="185" r="11" fill="#16222B"/>
+  <text x="100" y="189" class="step-num">1</text>
+  <text x="225" y="160" class="step-label" text-anchor="middle">Submit complaint</text>
+  <text x="225" y="176" class="step-label" text-anchor="middle" font-size="13px" fill="#5B6B76">+ optional attachment</text>
 
   <!-- Step 2: Portal creates the case -->
-  <path class="arrow" d="M 350 305 H 600"/>
-  <circle cx="350" cy="305" r="11" fill="#16222B"/>
-  <text x="350" y="309" class="step-num">2</text>
-  <text x="475" y="295" class="step-label" text-anchor="middle">Create tenant-scoped complaint</text>
-  <text x="475" y="320" class="actor-sub">Reference ID and statutory due date</text>
+  <path class="arrow" d="M 350 245 H 600"/>
+  <circle cx="350" cy="245" r="11" fill="#16222B"/>
+  <text x="350" y="249" class="step-num">2</text>
+  <text x="475" y="235" class="step-label" text-anchor="middle">Create tenant-scoped complaint</text>
+  <text x="475" y="260" class="actor-sub">Reference ID and statutory due date</text>
 
   <!-- Step 3: Officer opens the queue -->
-  <path class="arrow" d="M 1100 370 H 850"/>
-  <circle cx="1100" cy="370" r="11" fill="#16222B"/>
-  <text x="1100" y="374" class="step-num">3</text>
-  <text x="975" y="360" class="step-label" text-anchor="middle">Find and open the case</text>
+  <path class="arrow" d="M 1100 310 H 850"/>
+  <circle cx="1100" cy="310" r="11" fill="#16222B"/>
+  <text x="1100" y="314" class="step-num">3</text>
+  <text x="975" y="300" class="step-label" text-anchor="middle">Find and open the case</text>
 
   <!-- Step 4: Officer view loads the complaint -->
-  <path class="arrow" d="M 850 430 H 600"/>
-  <circle cx="850" cy="430" r="11" fill="#16222B"/>
-  <text x="850" y="434" class="step-num">4</text>
-  <text x="725" y="420" class="step-label" text-anchor="middle">Load details, attachments, activity</text>
+  <path class="arrow" d="M 850 370 H 600"/>
+  <circle cx="850" cy="370" r="11" fill="#16222B"/>
+  <text x="850" y="374" class="step-num">4</text>
+  <text x="725" y="360" class="step-label" text-anchor="middle">Load details, attachments, activity</text>
 
   <!-- Step 5: Officer composes the public response -->
-  <path class="arrow" d="M 1100 490 H 850"/>
-  <circle cx="1100" cy="490" r="11" fill="#16222B"/>
-  <text x="1100" y="494" class="step-num">5</text>
-  <text x="975" y="480" class="step-label" text-anchor="middle">Public reply + status update</text>
+  <path class="arrow" d="M 1100 430 H 850"/>
+  <circle cx="1100" cy="430" r="11" fill="#16222B"/>
+  <text x="1100" y="434" class="step-num">5</text>
+  <text x="975" y="420" class="step-label" text-anchor="middle">Public reply + status update</text>
 
   <!-- Step 6: Public response is persisted -->
-  <path class="arrow" d="M 850 550 H 600"/>
-  <circle cx="850" cy="550" r="11" fill="#16222B"/>
-  <text x="850" y="554" class="step-num">6</text>
-  <text x="725" y="540" class="step-label" text-anchor="middle">Persist shared reply and IN_PROGRESS</text>
+  <path class="arrow" d="M 850 490 H 600"/>
+  <circle cx="850" cy="490" r="11" fill="#16222B"/>
+  <text x="850" y="494" class="step-num">6</text>
+  <text x="725" y="480" class="step-label" text-anchor="middle">Persist shared reply and <tspan class="state-highlight">In Progress</tspan></text>
 
   <!-- Step 7: Officer adds private material and resolves -->
-  <path class="arrow" d="M 1100 615 H 850"/>
-  <circle cx="1100" cy="615" r="11" fill="#16222B"/>
-  <text x="1100" y="619" class="step-num">7</text>
-  <text x="975" y="605" class="step-label" text-anchor="middle">Add internal note, then resolve</text>
+  <path class="arrow" d="M 1100 555 H 850"/>
+  <circle cx="1100" cy="555" r="11" fill="#16222B"/>
+  <text x="1100" y="559" class="step-num">7</text>
+  <text x="975" y="545" class="step-label" text-anchor="middle">Add internal note, then resolve</text>
 
   <!-- Step 8: Service records visibility and final status -->
-  <path class="arrow" d="M 850 675 H 600"/>
-  <circle cx="850" cy="675" r="11" fill="#16222B"/>
-  <text x="850" y="679" class="step-num">8</text>
-  <text x="725" y="665" class="step-label" text-anchor="middle">Store officer-only note and RESOLVED</text>
+  <path class="arrow" d="M 850 615 H 600"/>
+  <circle cx="850" cy="615" r="11" fill="#16222B"/>
+  <text x="850" y="619" class="step-num">8</text>
+  <text x="725" y="605" class="step-label" text-anchor="middle">Store officer-only note and <tspan class="state-highlight">Resolved</tspan></text>
 
   <!-- Step 9: Data Principal verifies the result -->
-  <path class="arrow" d="M 100 735 H 350"/>
-  <circle cx="100" cy="735" r="11" fill="#16222B"/>
-  <text x="100" y="739" class="step-num">9</text>
-  <text x="225" y="725" class="step-label" text-anchor="middle">Review shared reply and final status</text>
-
-  <!-- Visibility note -->
-  <rect x="40" y="785" width="1120" height="85" rx="14" fill="#16222B"/>
-  <text x="70" y="818" fill="#C7D5DC" style="font:400 14px 'Segoe UI', Helvetica, Arial, sans-serif;">Both portal views use one ordered complaint activity timeline. Public replies and attachments are shared with the Data Principal.</text>
-  <text x="70" y="844" fill="#C7D5DC" style="font:400 14px 'Segoe UI', Helvetica, Arial, sans-serif;">Internal notes remain visible only in Complaint Management; a resolved case can still receive a Data Principal reply.</text>
+  <path class="arrow" d="M 100 675 H 350"/>
+  <circle cx="100" cy="675" r="11" fill="#16222B"/>
+  <text x="100" y="679" class="step-num">9</text>
+  <text x="225" y="665" class="step-label" text-anchor="middle">Review shared reply and final status</text>
 </svg>

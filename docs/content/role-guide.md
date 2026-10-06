@@ -22,8 +22,9 @@ The DPDP Accelerator introduces three roles to manage access to the Consent Port
 | **Personal Complaint Management** | Grants `complaints:read:self` and `complaints:write:self`, allowing users to file and track their own complaints. |
 | **Personal Consent History** | Grants `consent:status-history:view:self` and `consent:history:view:self`, allowing users to view the status and snapshot history of their own consents. |
 
-> [!NOTE]
-> **Basic Consent Management requires no role.** Users can sign in, view their dashboard, and authorize or revoke their own consents without any specific portal role. Assign `dpdp-consent-user` when they also need personal consent history, account deletion, or complaint features.
+:::note
+**Basic Consent Management requires no role.** Users can sign in, view their dashboard, and authorize or revoke their own consents without any specific portal role. Assign `dpdp-consent-user` when they also need personal consent history, account deletion, or complaint features.
+:::
 
 ### 2. `dpdp-consent-admin`
 
@@ -37,8 +38,9 @@ The DPDP Accelerator introduces three roles to manage access to the Consent Port
 | **Event Notification Management** | Grants read and write access to topics, subscriptions, and events. Polling and delivery completion are receiver operations and are not permissions of this portal role. |
 | **Global Complaint Oversight** | Grants `complaints:read:any` and `complaints:write:any`, allowing the admin to view every complaint in the organization, including internal notes and status transitions. |
 
-> [!TIP]
-> Administrators do **not** automatically receive the `dpdp-consent-user` role. If an administrator needs to be able to delete their own account, you must assign both `dpdp-consent-admin` and `dpdp-consent-user` to them.
+:::tip
+Administrators do **not** automatically receive the `dpdp-consent-user` role. If an administrator needs to be able to delete their own account, you must assign both `dpdp-consent-admin` and `dpdp-consent-user` to them.
+:::
 
 ### 3. `dpdp-consent-dpo`
 
