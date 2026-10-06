@@ -101,7 +101,7 @@ password `wso2123`.
 ## Set up portal users
 
 To fully try out the accelerator, create users and assign them these roles by
-following [Configuring users](#configuring-users-link-pending):
+following [Assign portal roles](configuration-guide.md#4-assign-portal-roles):
 
 | User | Role | Used for |
 | --- | --- | --- |
