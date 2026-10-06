@@ -14,24 +14,22 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Install and Setup',
+      label: 'Install and Set Up',
       items: [
-        { type: 'doc', id: 'setup-guide', label: 'Setup' },
-        { type: 'doc', id: 'configuration-guide', label: 'Configure' },
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Learn and Tryout',
-      items: [
-        { type: 'doc', id: 'learn', label: 'Learn' },
-        { type: 'doc', id: 'tryout-flows', label: 'Tryout' },
+        { type: 'doc', id: 'install-and-setup/prerequisites', label: '1. Prerequisites' },
+        { type: 'doc', id: 'install-and-setup/setting-up-servers', label: '2. Setting Up Servers' },
+        { type: 'doc', id: 'install-and-setup/setting-up-the-database', label: '3. Setting Up the Database' },
+        { type: 'doc', id: 'install-and-setup/configuring-deployment-toml', label: '4. Configuring deployment.toml' },
+        { type: 'doc', id: 'install-and-setup/configuring-users', label: '5. Configuring Users' },
       ],
     },
     {
       type: 'category',
       label: 'Learn',
       items: [
+        { type: 'doc', id: 'learn/manage-api-access', label: 'Manage API Access' },
+        { type: 'doc', id: 'learn/consent', label: 'Consent' },
+        { type: 'doc', id: 'learn/complaint', label: 'Complaint' },
         { type: 'doc', id: 'learn/event', label: 'Event Notifications' },
       ],
     },
@@ -39,6 +37,8 @@ const sidebars = {
       type: 'category',
       label: 'Try Out',
       items: [
+        { type: 'doc', id: 'try-out/consent', label: 'Consent' },
+        { type: 'doc', id: 'try-out/complaint', label: 'Complaint' },
         { type: 'doc', id: 'try-out/event', label: 'Event Notifications' },
       ],
     },
