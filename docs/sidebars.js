@@ -30,6 +30,20 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Learn',
+      items: [
+        { type: 'doc', id: 'learn/event', label: 'Event Notifications' },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Try Out',
+      items: [
+        { type: 'doc', id: 'try-out/event', label: 'Event Notifications' },
+      ],
+    },
+    {
+      type: 'category',
       label: 'Developer Guide',
       link: {
         type: 'generated-index',

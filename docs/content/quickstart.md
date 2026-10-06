@@ -1,113 +1,124 @@
-# DPDP Accelerator quickstart
+# Quickstart
 
-Use this guide for a local evaluation: install the accelerator with its default
-embedded H2 databases, open the Consent Portal, and verify initial access.
-Use the [Setup Guide](setup-guide.md) for external databases and the
-[Configuration Guide](configuration-guide.md) for roles and runtime settings.
+## Overview
 
-`configure.sh`, used below, is for evaluation and development: it replaces
-`deployment.toml` and sets up the databases for you. For a production deployment,
-run `merge.sh` as below, then follow the [Setup Guide](setup-guide.md) in place
-of `configure.sh`.
+The WSO2 DPDP Accelerator is a set of extensions that speeds up building a
+solution for India's
+[Digital Personal Data Protection Act, 2023](introduction.md). Built on WSO2
+Identity Server, it adds consent management, grievance handling, consent audit
+history, and event notifications, along with a Consent Portal for end users and
+administrators.
+
+This guide sets up the accelerator in a local environment with the default
+**embedded H2 databases**, so you can quickly try it out.
+
+:::info Setting up for production?
+
+This quickstart is for local evaluation only. For a production deployment,
+follow the [Setup Guide](setup-guide.md) instead.
+
+:::
 
 ## Prerequisites
 
-- WSO2 Identity Server 7.3.0 at U2 update level 17 or later
-- JDK 21 or later
-- A released `wso2-dpdpiam-accelerator-<version>.zip`, or a ZIP built from the
-  repository with `mvn clean install`
+1. **Java Development Kit:** JDK 21 or later.
+2. **Environment variables:** set `JAVA_HOME` and add it to your `PATH`:
 
-The extracted Identity Server directory is referred to as `<IS_HOME>` below.
+   ```sh
+   export JAVA_HOME="<JDK_LOCATION>"
+   export PATH=$PATH:$JAVA_HOME/bin
+   ```
 
-## 1. Install the accelerator
+## Install the base product
 
-Extract the accelerator ZIP, enter its directory, and run the two installation
-scripts while Identity Server is stopped:
+[Download WSO2 Identity Server 7.3.0](https://wso2.com/products/downloads/?product=wso2is)
+and extract the ZIP.
+
+## Install the accelerator
+
+Download the latest `wso2-dpdpiam-accelerator-<version>.zip` from the
+[releases page](https://github.com/wso2/dpdp-accelerator/releases). To build it
+from source instead, see the
+[repository README](https://github.com/wso2/dpdp-accelerator#build).
+
+Extract it, and copy the extracted `wso2-dpdpiam-accelerator-<version>`
+directory into the root directory of Identity Server.
+
+The rest of this guide refers to the directories as follows:
+
+| Directory | Placeholder |
+| --- | --- |
+| Identity Server | `<IS_HOME>` |
+| DPDP Accelerator, inside `<IS_HOME>` | `<DPDP_ACCELERATOR_HOME>` |
+
+## Apply updates
+
+The accelerator needs Identity Server at U2 update level 17 or later. A freshly
+downloaded Identity Server doesn't include the
+[update tool](https://updates.docs.wso2.com/en/latest/updates/update-tool/)
+yet, so get it first:
+
+1. Go to `<IS_HOME>/bin` and run the setup script. It downloads the update tool
+   that matches your operating system and processor into the same folder:
+
+   ```sh
+   ./update_tool_setup.sh
+   ```
+
+2. In the same folder, run the update tool it downloaded. Its name ends with
+   your operating system and processor, such as `wso2update_linux` or
+   `wso2update_darwin_arm64` (macOS on Apple silicon):
+
+   ```sh
+   ./wso2update_darwin_arm64
+   ```
+
+   If the tool reports that it updated itself, run the same command again to
+   update Identity Server.
+
+## Configure the accelerator
+
+Go to `<IS_HOME>/<DPDP_ACCELERATOR_HOME>/bin` and run the merge script, then
+the configure script:
 
 ```sh
-bash bin/merge.sh <IS_HOME>
-bash bin/configure.sh <IS_HOME>
+./merge.sh
+./configure.sh
 ```
 
-`configure.sh` backs up and then replaces
-`<IS_HOME>/repository/conf/deployment.toml`; review that backup before using the
-same process on an existing deployment.
+## Start the server
 
-Expected result: both scripts finish successfully and the accelerator
-configuration is applied.
-
-For source-build prerequisites, see the [repository README](https://github.com/wso2/dpdp-accelerator#build).
-For automated MySQL and manual external database setup, see the
-[Setup Guide](setup-guide.md).
-
-### Set the local administrator password
-
-For a fresh local installation, configure
-`[super_admin]` in `<IS_HOME>/repository/conf/deployment.toml` before the first
-server start, replacing the password placeholder with a unique password:
-
-```toml
-[super_admin]
-username = "admin@wso2.com"
-password = "<unique-local-administrator-password>"
-create_admin_account = true
-```
-
-Replace the existing `[super_admin]` values instead of adding a duplicate table.
-If the administrator already exists, use its current credentials
-and change its password through Identity Server; editing the bootstrap setting
-does not reset an existing account. Rotate evaluation credentials before any
-production use.
-
-## 2. Start Identity Server
+Go to `<IS_HOME>/bin` and start Identity Server:
 
 ```sh
-sh <IS_HOME>/bin/wso2server.sh
+./wso2server.sh
 ```
 
-After WSO2 Identity Server starts, open the Console:
+Once the server starts, open the Console at `https://localhost:9443/console`
+and sign in with the default administrator account: username `admin@wso2.com`,
+password `wso2123`.
 
-```text
-https://localhost:9443/console
-```
+## Set up portal users
 
-## 3. Sign in to the Console
+To fully try out the accelerator, create users and assign them these roles by
+following [Configuring users](#configuring-users-link-pending):
 
-Sign in with the administrator account and password configured in step 1.
+| User | Role | Used for |
+| --- | --- | --- |
+| Portal administrator | `dpdp-consent-admin` | Portal administration, including verifying the portal in this quickstart |
+| Data Principal | `dpdp-consent-user` | Personal consent history, complaint, and account-deletion features |
+| Data Protection Officer | `dpdp-consent-dpo` | Handling complaints |
 
-## 4. Create users and assign portal access
+## Open the Consent Portal
 
-Open **User Management → Users** and create three users for portal access.
-Assign one of the three provisioned roles to each user:
-
-- `dpdp-consent-admin` for portal administrators, including the user who will
-  verify the portal in this quickstart
-- `dpdp-consent-user` for regular users who need personal consent history,
-  complaint, or account-deletion features
-- `dpdp-consent-dpo` for Data Protection Officers and complaint-handling users
-
-The roles are created automatically, but users and role memberships are not.
-After assigning a role, have each user sign out and sign in again so the new
-access token contains the role's scopes.
-
-See the [Role Management Guide](role-guide.md) before assigning roles. Basic
-self-service consent management does not require a portal role.
-
-## 5. Open the Portal
-
-Open:
-
-```text
-https://localhost:9443/consent-portal/
-```
-
-Sign in as the user holding `dpdp-consent-admin` and confirm that the portal
-loads.
+Open `https://localhost:9443/consent-portal/` and sign in as the user holding
+`dpdp-consent-admin`.
 
 ## Next steps
 
-- [Learn through real stories](learn.md) — understand how the major areas fit
-  together from the perspectives of a Data Principal, administrator, processor,
-  and grievance officer
-- [Tryout Flows](tryout-flows.md) — catalog, consent lifecycle, complaint,
-  automatic event, and account-deletion walkthroughs
+- [Learn through real stories](learn.md) — see how the main features fit
+  together from each participant's point of view
+- [Tryout Flows](tryout-flows.md) — walk through the catalog, consent
+  lifecycle, complaint, event, and account-deletion flows
+- [Setup Guide](setup-guide.md) — move to a production deployment with an
+  external MySQL or PostgreSQL database
