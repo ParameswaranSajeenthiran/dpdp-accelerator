@@ -389,15 +389,18 @@ The listener prints the challenge it answered:
 [INFO] <-- Returned HTTP 200 OK with challenge: 'ec09e7a8-fb5b-4eec-9670-c3c1fbe529b9'
 ```
 
-The equivalent registration request is:
+The equivalent registration request uses the administrator's access token, which carries
+`notifications:subscriptions:write`:
 
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux" default>
 
 ```bash
+export ADMIN_TOKEN="<admin-access-token>"
+
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
     "topics": ["consent.revoke"],
@@ -417,9 +420,11 @@ curl -X POST \
 <TabItem value="macos" label="macOS">
 
 ```bash
+export ADMIN_TOKEN="<admin-access-token>"
+
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
     "topics": ["consent.revoke"],
@@ -439,6 +444,8 @@ curl -X POST \
 <TabItem value="windows" label="Windows">
 
 ```powershell
+$env:ADMIN_TOKEN = "<admin-access-token>"
+
 $Body = @'
 {
   "topics": ["consent.revoke"],
@@ -456,7 +463,7 @@ $Body = @'
 
 Invoke-RestMethod -Method Post `
   -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/dpdp/event-notifications/v1/subscriptions" `
-  -Headers @{ Authorization = "Bearer $env:ACCESS_TOKEN" } `
+  -Headers @{ Authorization = "Bearer $env:ADMIN_TOKEN" } `
   -ContentType "application/json" `
   -Body $Body | ConvertTo-Json -Depth 10
 ```
@@ -483,27 +490,33 @@ request body:
 <TabItem value="linux" label="Linux" default>
 
 ```bash
+export PRIYA_TOKEN="<priya-access-token>"
+
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+  -H "Authorization: Bearer ${PRIYA_TOKEN}"
 ```
 
 </TabItem>
 <TabItem value="macos" label="macOS">
 
 ```bash
+export PRIYA_TOKEN="<priya-access-token>"
+
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
-  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+  -H "Authorization: Bearer ${PRIYA_TOKEN}"
 ```
 
 </TabItem>
 <TabItem value="windows" label="Windows">
 
 ```powershell
+$env:PRIYA_TOKEN = "<priya-access-token>"
+
 Invoke-RestMethod -Method Post `
   -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/users/v1/me/consents/<consent-id>/revoke" `
-  -Headers @{ Authorization = "Bearer $env:ACCESS_TOKEN" }
+  -Headers @{ Authorization = "Bearer $env:PRIYA_TOKEN" }
 ```
 
 </TabItem>
@@ -817,7 +830,7 @@ curl -sk -X POST "${API_BASE}/events/poll" \
 ```powershell
 $PollBody = ''
 $Hmac = [System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($env:SHARED_SECRET))
-$PollSignature = 'sha256=' + [Convert]::ToHexString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).ToLower()
+$PollSignature = 'sha256=' + [BitConverter]::ToString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).Replace('-', '').ToLower()
 
 Invoke-RestMethod -SkipCertificateCheck -Method Post -Uri "$env:API_BASE/events/poll" `
   -Headers @{
@@ -910,7 +923,7 @@ curl -sk -X POST "${API_BASE}/events/poll" \
 $DeliveryId = "<delivery-id-from-step-4>"
 $PollBody = '{"ack": ["' + $DeliveryId + '"], "maxEvents": 20}'
 $Hmac = [System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($env:SHARED_SECRET))
-$PollSignature = 'sha256=' + [Convert]::ToHexString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).ToLower()
+$PollSignature = 'sha256=' + [BitConverter]::ToString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).Replace('-', '').ToLower()
 
 Invoke-RestMethod -SkipCertificateCheck -Method Post -Uri "$env:API_BASE/events/poll" `
   -Headers @{
