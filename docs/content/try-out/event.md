@@ -1,5 +1,8 @@
 # Try out Event Notifications
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 When a Data Principal revokes their consent, every Data Processor that holds
 their data needs to know it can no longer use that data. Event Notifications
 tell them automatically.
@@ -52,6 +55,14 @@ Priya, with the username `priya@example.com`, the same person as in the
 [Learn → Event Notifications](../learn/event.md) stories. Use your own user's username
 wherever `priya@example.com` appears.
 
+:::note Windows commands
+
+The Windows commands on this page are for PowerShell 7 or later, which
+`Invoke-RestMethod -SkipCertificateCheck` needs. They call `curl.exe`
+explicitly, because `curl` in PowerShell is a different command.
+
+:::
+
 ### Step 1: Start the webhook listener
 
 Use one of the sample listeners. Each is a single file with no packages to
@@ -60,6 +71,9 @@ delivery's signature with the shared secret, and prints every delivery it
 receives.
 
 **Node.js** ([`webhook-listener.mjs`](pathname:///examples/webhook-listener.mjs)) needs Node.js 18 or later:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
 
 ```bash
 node --version
@@ -70,7 +84,37 @@ export SHARED_SECRET="carepulse-sample-secret-9d3e7b12"
 node webhook-listener.mjs
 ```
 
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+node --version
+
+curl -O https://raw.githubusercontent.com/wso2/dpdp-accelerator/main/docs/static/examples/webhook-listener.mjs
+
+export SHARED_SECRET="carepulse-sample-secret-9d3e7b12"
+node webhook-listener.mjs
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+node --version
+
+curl.exe -O https://raw.githubusercontent.com/wso2/dpdp-accelerator/main/docs/static/examples/webhook-listener.mjs
+
+$env:SHARED_SECRET = "carepulse-sample-secret-9d3e7b12"
+node webhook-listener.mjs
+```
+
+</TabItem>
+</Tabs>
+
 **Python** ([`webhook-listener.py`](pathname:///examples/webhook-listener.py)) needs Python 3.9 or later:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
 
 ```bash
 python3 --version
@@ -80,6 +124,33 @@ curl -O https://raw.githubusercontent.com/wso2/dpdp-accelerator/main/docs/static
 export SHARED_SECRET="carepulse-sample-secret-9d3e7b12"
 python3 webhook-listener.py
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+python3 --version
+
+curl -O https://raw.githubusercontent.com/wso2/dpdp-accelerator/main/docs/static/examples/webhook-listener.py
+
+export SHARED_SECRET="carepulse-sample-secret-9d3e7b12"
+python3 webhook-listener.py
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+python --version
+
+curl.exe -O https://raw.githubusercontent.com/wso2/dpdp-accelerator/main/docs/static/examples/webhook-listener.py
+
+$env:SHARED_SECRET = "carepulse-sample-secret-9d3e7b12"
+python webhook-listener.py
+```
+
+</TabItem>
+</Tabs>
 
 When it starts, the listener prints its address and confirms that signature
 checks are on:
@@ -131,9 +202,36 @@ uses a Cloudflare Quick Tunnel, which is free and needs no account or server
 setting changes. Quick Tunnels are meant for testing only, so don't use one
 for a real receiver.
 
-1. Install `cloudflared`. On macOS, run `brew install cloudflared`. For other
-   systems, see
+1. Install `cloudflared`. For other systems and processors, see
    [Cloudflare's downloads page](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/).
+
+   <Tabs groupId="operating-systems">
+   <TabItem value="linux" label="Linux" default>
+
+   On Debian or Ubuntu with an x86-64 processor:
+
+   ```bash
+   curl -L -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+   sudo dpkg -i cloudflared.deb
+   ```
+
+   </TabItem>
+   <TabItem value="macos" label="macOS">
+
+   ```bash
+   brew install cloudflared
+   ```
+
+   </TabItem>
+   <TabItem value="windows" label="Windows">
+
+   ```powershell
+   winget install --id Cloudflare.cloudflared
+   ```
+
+   </TabItem>
+   </Tabs>
+
 2. In a second terminal, start a tunnel to the listener:
 
    ```bash
@@ -172,10 +270,39 @@ If Identity Server can't reach the internet, point it at the listener's
 address on your network instead. It takes three steps.
 
 1. **Start the listener on your machine's network IP, not `localhost`.** Find
-   the IP with `ipconfig getifaddr en0` on macOS or `hostname -I` on Linux,
-   then start the listener with it, for example
-   `HOST=192.168.1.20 node webhook-listener.mjs`. The callback URL becomes
-   `http://192.168.1.20:8443/dpdp/events`.
+   the IP, then start the listener with it. With the IP `192.168.1.20`, the
+   callback URL becomes `http://192.168.1.20:8443/dpdp/events`.
+
+   <Tabs groupId="operating-systems">
+   <TabItem value="linux" label="Linux" default>
+
+   ```bash
+   hostname -I
+   HOST=192.168.1.20 node webhook-listener.mjs
+   ```
+
+   </TabItem>
+   <TabItem value="macos" label="macOS">
+
+   ```bash
+   ipconfig getifaddr en0
+   HOST=192.168.1.20 node webhook-listener.mjs
+   ```
+
+   </TabItem>
+   <TabItem value="windows" label="Windows">
+
+   Read the **IPv4 Address** from the output of `ipconfig`:
+
+   ```powershell
+   ipconfig
+   $env:HOST = "192.168.1.20"
+   node webhook-listener.mjs
+   ```
+
+   </TabItem>
+   </Tabs>
+
 2. **Set `allow_private_network_callback_targets = true`** under
    `[dpdp_accelerator.event_notifications.webhook]` in `deployment.toml`.
    Addresses like `192.168.x.x` and `10.x.x.x` belong to private networks, and
@@ -220,11 +347,35 @@ in the portal. To create one test consent, follow these steps.
    tenant isn't accepted by another. Then set it, along with your server and
    tenant, for the next step:
 
+   <Tabs groupId="operating-systems">
+   <TabItem value="linux" label="Linux" default>
+
    ```bash
    export BASE_URL="https://localhost:9443"
    export TENANT_DOMAIN="example.com"
    export TOKEN="<access-token>"
    ```
+
+   </TabItem>
+   <TabItem value="macos" label="macOS">
+
+   ```bash
+   export BASE_URL="https://localhost:9443"
+   export TENANT_DOMAIN="example.com"
+   export TOKEN="<access-token>"
+   ```
+
+   </TabItem>
+   <TabItem value="windows" label="Windows">
+
+   ```powershell
+   $env:BASE_URL = "https://localhost:9443"
+   $env:TENANT_DOMAIN = "example.com"
+   $env:TOKEN = "<access-token>"
+   ```
+
+   </TabItem>
+   </Tabs>
 
    Set `TENANT_DOMAIN` to your own tenant's domain.
 
@@ -232,6 +383,9 @@ in the portal. To create one test consent, follow these steps.
    Principal's username, `priya@example.com`, and must belong to a user in the
    same tenant. On the highlighted line, replace **`<purpose-id>`** and
    **`<element-id>`** with the IDs you copied in step 1:
+
+   <Tabs groupId="operating-systems">
+   <TabItem value="linux" label="Linux" default>
 
    ```bash {10}
    curl -sk -X POST "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
@@ -248,10 +402,54 @@ in the portal. To create one test consent, follow these steps.
      }'
    ```
 
+   </TabItem>
+   <TabItem value="macos" label="macOS">
+
+   ```bash {10}
+   curl -sk -X POST "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+     -H "Authorization: Bearer ${TOKEN}" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "subjectId": "priya@example.com",
+       "serviceId": "carepulse-marketing",
+       "language": "en",
+       "state": "ACTIVE",
+       "purposes": [
+         { "id": "<purpose-id>", "elements": [ { "id": "<element-id>" } ] }
+       ]
+     }'
+   ```
+
+   </TabItem>
+   <TabItem value="windows" label="Windows">
+
+   ```powershell {8}
+   $Body = @'
+   {
+     "subjectId": "priya@example.com",
+     "serviceId": "carepulse-marketing",
+     "language": "en",
+     "state": "ACTIVE",
+     "purposes": [
+       { "id": "<purpose-id>", "elements": [ { "id": "<element-id>" } ] }
+     ]
+   }
+   '@
+
+   Invoke-RestMethod -SkipCertificateCheck -Method Post `
+     -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/identity/consent-mgt/v2.0/consents" `
+     -Headers @{ Authorization = "Bearer $env:TOKEN" } `
+     -ContentType "application/json" `
+     -Body $Body | ConvertTo-Json -Depth 10
+   ```
+
+   </TabItem>
+   </Tabs>
+
    The response contains the new consent's `id`. Keep it for Step 4.
 
-`-k` skips certificate checks and is only for a local server with a
-self-signed certificate.
+`-k` (`-SkipCertificateCheck` on Windows) skips certificate checks and is only
+for a local server with a self-signed certificate.
 
 ### Step 3: Subscribe the listener to consent revocations
 
@@ -298,6 +496,9 @@ The listener prints the challenge it answered:
 
 The equivalent registration request is:
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
@@ -317,6 +518,57 @@ curl -X POST \
   }'
 ```
 
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+curl -X POST \
+  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topics": ["consent.revoke"],
+    "filter": {
+      "type": "specific",
+      "purposes": ["marketing-email"]
+    },
+    "delivery": {
+      "mode": "webhook",
+      "callbackUrl": "https://example-words-here.trycloudflare.com/dpdp/events",
+      "sharedSecret": "<shared-secret>"
+    }
+  }'
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$Body = @'
+{
+  "topics": ["consent.revoke"],
+  "filter": {
+    "type": "specific",
+    "purposes": ["marketing-email"]
+  },
+  "delivery": {
+    "mode": "webhook",
+    "callbackUrl": "https://example-words-here.trycloudflare.com/dpdp/events",
+    "sharedSecret": "<shared-secret>"
+  }
+}
+'@
+
+Invoke-RestMethod -Method Post `
+  -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/dpdp/event-notifications/v1/subscriptions" `
+  -Headers @{ Authorization = "Bearer $env:ACCESS_TOKEN" } `
+  -ContentType "application/json" `
+  -Body $Body | ConvertTo-Json -Depth 10
+```
+
+</TabItem>
+</Tabs>
+
 ### Step 4: Revoke the consent
 
 1. Sign in to the portal as Priya (`priya@example.com`).
@@ -332,11 +584,35 @@ curl -X POST \
 The consent now shows **Revoked**. The portal sends the revocation without a
 request body:
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 curl -X POST \
   "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+curl -X POST \
+  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/users/v1/me/consents/<consent-id>/revoke" `
+  -Headers @{ Authorization = "Bearer $env:ACCESS_TOKEN" }
+```
+
+</TabItem>
+</Tabs>
 
 Use Priya's access token for this request, not the
 administrator's.
@@ -422,6 +698,9 @@ for the roles that grant them:
 | Publisher | `notifications:events:write` | The application that publishes the event. Users with `dpdp-consent-admin` already have this scope. |
 | Receiver | `notifications:events:poll` | The polling receiver. No default role has this scope, so grant it to a dedicated receiver role or application. |
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 export BASE_URL="https://localhost:9443"
 export TENANT_DOMAIN="example.com"
@@ -429,6 +708,31 @@ export API_BASE="${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
 export PUBLISHER_TOKEN="<publisher-access-token>"
 export RECEIVER_TOKEN="<receiver-access-token>"
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+export BASE_URL="https://localhost:9443"
+export TENANT_DOMAIN="example.com"
+export API_BASE="${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
+export PUBLISHER_TOKEN="<publisher-access-token>"
+export RECEIVER_TOKEN="<receiver-access-token>"
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$env:BASE_URL = "https://localhost:9443"
+$env:TENANT_DOMAIN = "example.com"
+$env:API_BASE = "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/dpdp/event-notifications/v1"
+$env:PUBLISHER_TOKEN = "<publisher-access-token>"
+$env:RECEIVER_TOKEN = "<receiver-access-token>"
+```
+
+</TabItem>
+</Tabs>
 
 Set `TENANT_DOMAIN` to your own tenant's domain, and get both tokens from that
 same tenant.
@@ -465,16 +769,41 @@ away. Copy its **Subscription ID** with the copy icon in the list:
 
 ![Subscriptions list with the active poll subscription](/img/try-out/event/12-poll-subscription-active.png)
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 export SUBSCRIPTION_ID="<subscription-id>"
 export SHARED_SECRET="medexpress-sample-secret-4f8a2c91"
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+export SUBSCRIPTION_ID="<subscription-id>"
+export SHARED_SECRET="medexpress-sample-secret-4f8a2c91"
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$env:SUBSCRIPTION_ID = "<subscription-id>"
+$env:SHARED_SECRET = "medexpress-sample-secret-4f8a2c91"
+```
+
+</TabItem>
+</Tabs>
 
 ### Step 3: Publish an event
 
 The order system publishes the change with the publisher token. The
 `group-id` header must match the subscription's group, which is the tenant
 domain:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
 
 ```bash
 curl -sk -X POST "${API_BASE}/events" \
@@ -489,6 +818,49 @@ curl -sk -X POST "${API_BASE}/events" \
     }
   }'
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+curl -sk -X POST "${API_BASE}/events" \
+  -H "Authorization: Bearer ${PUBLISHER_TOKEN}" \
+  -H "group-id: ${TENANT_DOMAIN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "delivery.preferences.update",
+    "payload": {
+      "customerReference": "cust-0001",
+      "change": "DELIVERY_WINDOW_UPDATED"
+    }
+  }'
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$Body = @'
+{
+  "topic": "delivery.preferences.update",
+  "payload": {
+    "customerReference": "cust-0001",
+    "change": "DELIVERY_WINDOW_UPDATED"
+  }
+}
+'@
+
+Invoke-RestMethod -SkipCertificateCheck -Method Post -Uri "$env:API_BASE/events" `
+  -Headers @{
+    Authorization = "Bearer $env:PUBLISHER_TOKEN"
+    "group-id"    = $env:TENANT_DOMAIN
+  } `
+  -ContentType "application/json" `
+  -Body $Body | ConvertTo-Json -Depth 10
+```
+
+</TabItem>
+</Tabs>
 
 The response returns the stored event and its `eventId`:
 
@@ -512,6 +884,9 @@ the receiver can look up, as `customerReference` does here.
 MedExpress polls with the receiver token. The first poll can have an empty
 body:
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 POLL_BODY=''
 POLL_SIGNATURE="sha256=$(printf %s "${POLL_BODY}" | openssl dgst -sha256 -hmac "${SHARED_SECRET}" -hex | awk '{print $2}')"
@@ -524,6 +899,44 @@ curl -sk -X POST "${API_BASE}/events/poll" \
   -H "event-signature: ${POLL_SIGNATURE}" \
   -d "${POLL_BODY}"
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+POLL_BODY=''
+POLL_SIGNATURE="sha256=$(printf %s "${POLL_BODY}" | openssl dgst -sha256 -hmac "${SHARED_SECRET}" -hex | awk '{print $2}')"
+
+curl -sk -X POST "${API_BASE}/events/poll" \
+  -H "Authorization: Bearer ${RECEIVER_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "group-id: ${TENANT_DOMAIN}" \
+  -H "subscription-id: ${SUBSCRIPTION_ID}" \
+  -H "event-signature: ${POLL_SIGNATURE}" \
+  -d "${POLL_BODY}"
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$PollBody = ''
+$Hmac = [System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($env:SHARED_SECRET))
+$PollSignature = 'sha256=' + [Convert]::ToHexString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).ToLower()
+
+Invoke-RestMethod -SkipCertificateCheck -Method Post -Uri "$env:API_BASE/events/poll" `
+  -Headers @{
+    Authorization     = "Bearer $env:RECEIVER_TOKEN"
+    "group-id"        = $env:TENANT_DOMAIN
+    "subscription-id" = $env:SUBSCRIPTION_ID
+    "event-signature" = $PollSignature
+  } `
+  -ContentType "application/json" `
+  -Body $PollBody | ConvertTo-Json -Depth 10
+```
+
+</TabItem>
+</Tabs>
 
 `event-signature` is an HMAC-SHA256 of the exact request body, made with the
 subscription's shared secret. For an empty body, it's calculated over zero
@@ -561,6 +974,9 @@ the event. Its `payload` claim then carries your event, under
 After processing the event, send its delivery ID back in the next poll's
 `ack` array, signing the new body the same way:
 
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
 ```bash
 DELIVERY_ID="<delivery-id-from-step-4>"
 POLL_BODY="{\"ack\": [\"${DELIVERY_ID}\"], \"maxEvents\": 20}"
@@ -574,6 +990,46 @@ curl -sk -X POST "${API_BASE}/events/poll" \
   -H "event-signature: ${POLL_SIGNATURE}" \
   -d "${POLL_BODY}"
 ```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```bash
+DELIVERY_ID="<delivery-id-from-step-4>"
+POLL_BODY="{\"ack\": [\"${DELIVERY_ID}\"], \"maxEvents\": 20}"
+POLL_SIGNATURE="sha256=$(printf %s "${POLL_BODY}" | openssl dgst -sha256 -hmac "${SHARED_SECRET}" -hex | awk '{print $2}')"
+
+curl -sk -X POST "${API_BASE}/events/poll" \
+  -H "Authorization: Bearer ${RECEIVER_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -H "group-id: ${TENANT_DOMAIN}" \
+  -H "subscription-id: ${SUBSCRIPTION_ID}" \
+  -H "event-signature: ${POLL_SIGNATURE}" \
+  -d "${POLL_BODY}"
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+$DeliveryId = "<delivery-id-from-step-4>"
+$PollBody = '{"ack": ["' + $DeliveryId + '"], "maxEvents": 20}'
+$Hmac = [System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($env:SHARED_SECRET))
+$PollSignature = 'sha256=' + [Convert]::ToHexString($Hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($PollBody))).ToLower()
+
+Invoke-RestMethod -SkipCertificateCheck -Method Post -Uri "$env:API_BASE/events/poll" `
+  -Headers @{
+    Authorization     = "Bearer $env:RECEIVER_TOKEN"
+    "group-id"        = $env:TENANT_DOMAIN
+    "subscription-id" = $env:SUBSCRIPTION_ID
+    "event-signature" = $PollSignature
+  } `
+  -ContentType "application/json" `
+  -Body $PollBody | ConvertTo-Json -Depth 10
+```
+
+</TabItem>
+</Tabs>
 
 The acknowledged event isn't returned again, so with nothing else pending the
 response is empty:
