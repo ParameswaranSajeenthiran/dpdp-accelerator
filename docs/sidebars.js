@@ -15,6 +15,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Install and Set Up',
+      link: { type: 'doc', id: 'install-and-setup/prerequisites' },
       items: [
         { type: 'doc', id: 'install-and-setup/prerequisites', label: '1. Prerequisites' },
         { type: 'doc', id: 'install-and-setup/setting-up-servers', label: '2. Setting Up Servers' },
@@ -26,6 +27,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Learn',
+      link: { type: 'doc', id: 'learn/manage-api-access' },
       items: [
         { type: 'doc', id: 'learn/manage-api-access', label: 'Manage API Access' },
         { type: 'doc', id: 'learn/consent', label: 'Consent' },
