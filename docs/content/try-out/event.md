@@ -195,129 +195,24 @@ payloads.
 
 #### Make the listener reachable
 
-Identity Server never delivers to `localhost` or `127.0.0.1`, so it can't call
-the listener at the address it just printed. The quickest way around this is a
-tunnel, which gives the listener a temporary public HTTPS address. This flow
-uses a Cloudflare Quick Tunnel, which is free and needs no account or server
-setting changes. Quick Tunnels are meant for testing only, so don't use one
-for a real receiver.
+Identity Server never delivers to `localhost` or `127.0.0.1`, so the listener
+needs a public HTTPS URL. For testing, a tunnel such as
+[ngrok](https://ngrok.com/) or a
+[Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/)
+gives it one. Point the tunnel at `http://localhost:8443` and add
+`/dpdp/events` to the public address it prints. That is your callback URL for
+Step 3, for example
+`https://example-words-here.trycloudflare.com/dpdp/events`.
 
-1. Install `cloudflared`. For other systems and processors, see
-   [Cloudflare's downloads page](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/).
+Test events pass through the tunnel provider, so send only sample data, and
+don't use a tunnel for a real receiver.
 
-   <Tabs groupId="operating-systems">
-   <TabItem value="linux" label="Linux" default>
-
-   On Debian or Ubuntu with an x86-64 processor:
-
-   ```bash
-   curl -L -o cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-   sudo dpkg -i cloudflared.deb
-   ```
-
-   </TabItem>
-   <TabItem value="macos" label="macOS">
-
-   ```bash
-   brew install cloudflared
-   ```
-
-   </TabItem>
-   <TabItem value="windows" label="Windows">
-
-   ```powershell
-   winget install --id Cloudflare.cloudflared
-   ```
-
-   </TabItem>
-   </Tabs>
-
-2. In a second terminal, start a tunnel to the listener:
-
-   ```bash
-   cloudflared tunnel --url http://localhost:8443
-   ```
-
-3. Find the address in the box near the top of the output, under
-   **Your quick Tunnel has been created!**:
-
-   ```text
-   2026-10-06T02:32:23Z INF +--------------------------------------------------------------------------------------------+
-   2026-10-06T02:32:23Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
-   2026-10-06T02:32:23Z INF |  https://example-words-here.trycloudflare.com                                              |
-   2026-10-06T02:32:23Z INF +--------------------------------------------------------------------------------------------+
-   ```
-
-   The lines after the box are connection logs, and you can ignore them. A
-   "QUIC connection failed" warning just means `cloudflared` switched to
-   another connection method, and the tunnel still works.
-
-   Add `/dpdp/events` to the end of the address to get your callback URL,
-   which you enter in Step 3:
-
-   ```text
-   https://example-words-here.trycloudflare.com/dpdp/events
-   ```
-
-Keep both terminals open while you try the flow. The tunnel address changes
-every time you start it, and test events pass through Cloudflare on their way
-to you, so send only sample data. ngrok and similar tunnel tools work the same
-way.
-
-#### No internet access?
-
-If Identity Server can't reach the internet, point it at the listener's
-address on your network instead. It takes three steps.
-
-1. **Start the listener on your machine's network IP, not `localhost`.** Find
-   the IP, then start the listener with it. With the IP `192.168.1.20`, the
-   callback URL becomes `http://192.168.1.20:8443/dpdp/events`.
-
-   <Tabs groupId="operating-systems">
-   <TabItem value="linux" label="Linux" default>
-
-   ```bash
-   hostname -I
-   HOST=192.168.1.20 node webhook-listener.mjs
-   ```
-
-   </TabItem>
-   <TabItem value="macos" label="macOS">
-
-   ```bash
-   ipconfig getifaddr en0
-   HOST=192.168.1.20 node webhook-listener.mjs
-   ```
-
-   </TabItem>
-   <TabItem value="windows" label="Windows">
-
-   Read the **IPv4 Address** from the output of `ipconfig`:
-
-   ```powershell
-   ipconfig
-   $env:HOST = "192.168.1.20"
-   node webhook-listener.mjs
-   ```
-
-   </TabItem>
-   </Tabs>
-
-2. **Set `allow_private_network_callback_targets = true`** under
-   `[dpdp_accelerator.event_notifications.webhook]` in `deployment.toml`.
-   Addresses like `192.168.x.x` and `10.x.x.x` belong to private networks, and
-   by default the server refuses them too, so that it can't be used to reach
-   machines inside a company network. This setting lifts that block. Keep it
-   `false` in production.
-3. **Restart Identity Server**, because `deployment.toml` changes only take
-   effect after a restart.
-
-Your network IP changes when you switch networks. If deliveries stop arriving,
-check the IP and update the subscription's callback URL.
-
-If the listener runs on a cloud server with its own public IP, start it with
-`HOST=0.0.0.0`, open port 8443 in the server's firewall, and use
-`http://<public-ip>:8443/dpdp/events` as the callback URL.
+If Identity Server can't reach the internet, start the listener with `HOST`
+set to your machine's network IP and use that address as the callback URL.
+Identity Server refuses private network addresses by default, so also set
+`allow_private_network_callback_targets = true` under
+`[dpdp_accelerator.event_notifications.webhook]` in `deployment.toml` and
+restart it. Keep that setting `false` in production.
 
 See
 [Run a sample reference listener](../event-notification-guide.md#run-the-sample-listener)
