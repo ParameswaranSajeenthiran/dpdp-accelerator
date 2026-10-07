@@ -257,7 +257,7 @@ Identity Server sends all HTTP `POST` requests directly to this `callbackUrl`. T
 
 1. **Verification Handshake:** Sent upon subscription registration or retry to verify endpoint ownership.
 2. **Event Delivery:** Sent when events matching your subscription occur.
-![Webhook receiver request routing flow for verification handshake and event delivery](../assets/dpdp-webhook-receiver-flow.svg)
+![Webhook receiver request routing flow for verification handshake and event delivery](../assets/images/diagrams/dpdp-webhook-receiver-flow.svg)
 
 ### Respond to verification
 

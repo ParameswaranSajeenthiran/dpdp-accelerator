@@ -1,29 +1,121 @@
-# Setting up servers
+---
+title: Setting Up Servers
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Setting Up Servers
 
 Complete the [Prerequisites](prerequisites.md) first.
 
-## Install the accelerator artifacts
+This section explains how to install the DPDP Accelerator distribution, merge its artifacts into WSO2 Identity Server, and configure the base `deployment.toml` file.
 
-Run `merge.sh` from `<ACCELERATOR_HOME>`, with the Identity Server stopped:
+:::note
+Ensure the Identity Server is stopped before extracting files, running scripts, or applying configurations.
+:::
+
+---
+
+## 1. Install the Accelerator
+
+Download the latest `wso2-dpdpiam-accelerator-<version>.zip` from the [releases page](https://github.com/wso2/dpdp-accelerator/releases). To build it from source instead, see the [repository README](https://github.com/wso2/dpdp-accelerator#build).
+
+Extract it, and copy the extracted `wso2-dpdpiam-accelerator-<version>` directory into the root directory of Identity Server.
+
+The rest of this guide refers to the directories as follows:
+
+| Directory | Placeholder |
+| --- | --- |
+| Identity Server | `<IS_HOME>` |
+| DPDP Accelerator, inside `<IS_HOME>` | `<DPDP_ACCELERATOR_HOME>` |
+
+---
+
+## 2. Merge Accelerator Artifacts
+
+Go to `<IS_HOME>/<DPDP_ACCELERATOR_HOME>/bin` and run the merge script:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
 
 ```sh
-bash bin/merge.sh <IS_HOME>
+./merge.sh
 ```
 
-It first removes any previous accelerator version:
-- the four webapps below, whether deployed as directories or `.war` files;
-- every `org.wso2.dpdp.accelerator.*` bundle in `dropins`.
+</TabItem>
+<TabItem value="macos" label="macOS">
 
-It then copies `<ACCELERATOR_HOME>/carbon-home/` over `<IS_HOME>`. The removal matters on an
-upgrade, because copying only adds or overwrites files, so an old bundle or webapp left behind
-would be loaded alongside the new one.
+```sh
+./merge.sh
+```
 
-`carbon-home/` mirrors the Identity Server's layout:
+</TabItem>
+<TabItem value="windows" label="Windows">
 
-| Path under `carbon-home/` | Contents |
-| --- | --- |
-| `repository/components/dropins/` | The accelerator's OSGi bundles (`org.wso2.dpdp.accelerator.*.jar`) |
-| `repository/deployment/server/webapps/` | The Consent Portal and three API webapps: `consent-portal`, `api#dpdp#complaints#v1`, `api#dpdp#consent-mgt#v1`, `api#dpdp#event-notifications#v1` |
-| `repository/resources/conf/templates/repository/conf/dpdp-accelerator.xml.j2` | The template the server renders the accelerator's own configuration from |
-| `repository/conf/email/email-dpdp-config.xml` | Email templates for complaint notifications |
-| `dbscripts/dpdp-accelerator/` | The accelerator's database scripts, used in step 5 |
+The accelerator's scripts are Bash scripts, so run them from Git Bash or WSL (Windows Subsystem for Linux):
+
+```sh
+./merge.sh
+```
+
+</TabItem>
+</Tabs>
+
+This script copies the accelerator's artifacts—including OSGi bundles, webapps, configuration templates, and database scripts—into their respective directories in `<IS_HOME>`.
+
+---
+
+## 3. Copy `deployment.toml`
+
+Server-level configurations in WSO2 Identity Server are managed through `<IS_HOME>/repository/conf/deployment.toml`.
+
+The accelerator provides a preconfigured, fully commented template for WSO2 Identity Server 7.3.0:
+
+```text
+<IS_HOME>/<DPDP_ACCELERATOR_HOME>/repository/resources/wso2is-7.3.0-deployment.toml
+```
+
+To apply the configuration:
+
+1. **Back up existing configuration**:
+   Back up your current `<IS_HOME>/repository/conf/deployment.toml` file.
+
+2. **Copy the template**:
+   Copy the accelerator's template to `<IS_HOME>/repository/conf/` and rename it to `deployment.toml`, replacing the existing file:
+
+<Tabs groupId="operating-systems">
+<TabItem value="linux" label="Linux" default>
+
+```sh
+cp <IS_HOME>/<DPDP_ACCELERATOR_HOME>/repository/resources/wso2is-7.3.0-deployment.toml <IS_HOME>/repository/conf/deployment.toml
+```
+
+</TabItem>
+<TabItem value="macos" label="macOS">
+
+```sh
+cp <IS_HOME>/<DPDP_ACCELERATOR_HOME>/repository/resources/wso2is-7.3.0-deployment.toml <IS_HOME>/repository/conf/deployment.toml
+```
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+```powershell
+Copy-Item "<IS_HOME>\<DPDP_ACCELERATOR_HOME>\repository\resources\wso2is-7.3.0-deployment.toml" "<IS_HOME>\repository\conf\deployment.toml"
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+This template contains the baseline settings for the DPDP Accelerator, including datasource definitions, Consent Portal configurations, and event notification settings. Database connection URLs and credentials will be configured in subsequent steps.
+:::
+
+---
+
+## Next Steps
+
+Once the server artifacts are installed and the base `deployment.toml` template is copied, proceed to configure the databases before starting the server:
+
+- Continue with [Setting up the database](setting-up-the-database.md) to create the required databases and execute the database scripts.

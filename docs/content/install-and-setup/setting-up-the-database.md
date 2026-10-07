@@ -1,8 +1,21 @@
+---
+title: Setting up the database
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Setting up the database
 
-Complete [Setting up servers](setting-up-servers.md) first.
+This section explains how to create the required physical databases, populate them with the necessary database scripts, and configure the datasources for WSO2 Identity Server and the DPDP Accelerator.
 
-## Create the databases
+Throughout this guide:
+- `<IS_HOME>` refers to the root directory of the WSO2 Identity Server 7.3.0 installation.
+- `<ACCELERATOR_HOME>` refers to the root directory of the extracted DPDP Accelerator distribution.
+
+---
+
+## 1. Create the databases
 
 Create four databases:
 
@@ -10,152 +23,205 @@ Create four databases:
 |---|---|
 | `WSO2IDENTITY_DB` | Identity Server identity and consent data |
 | `WSO2SHARED_DB` | Identity Server shared data |
-| `WSO2AGENTIDENTITY_DB` | the Identity Server `AgentIdentity` datasource |
+| `WSO2AGENTIDENTITY_DB` | Identity Server `AgentIdentity` datasource |
 | `WSO2DPDP_DB` | DPDP Accelerator data |
 
-Create a separate account for the Identity Server to connect with, and use the
-administrator account only to create the databases.
+<Tabs groupId="database">
+<TabItem value="mysql" label="MySQL" default>
 
-<details>
-<summary>MySQL</summary>
-
-Keep the three Identity Server databases on `latin1`. The shipped Identity Server
-scripts mix tables that are explicitly `latin1` with tables that inherit the
-database's character set, including in foreign keys, and MySQL rejects those keys
-if the character sets differ. `WSO2DPDP_DB` holds the portal's multilingual data,
-so it uses `utf8mb4`.
+Keep the three Identity Server databases on `latin1`. The shipped Identity Server scripts mix tables that are explicitly `latin1` with tables that inherit the database's character set, including in foreign keys, and MySQL rejects those keys if the character sets differ. `WSO2DPDP_DB` holds multilingual data, so it uses `utf8mb4`.
 
 ```sql
 CREATE DATABASE WSO2IDENTITY_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
 CREATE DATABASE WSO2SHARED_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
 CREATE DATABASE WSO2AGENTIDENTITY_DB CHARACTER SET latin1 COLLATE latin1_swedish_ci;
 CREATE DATABASE WSO2DPDP_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-
-CREATE USER '<database-user>'@'<identity-server-host>' IDENTIFIED BY '<database-password>';
-GRANT ALL PRIVILEGES ON WSO2IDENTITY_DB.* TO '<database-user>'@'<identity-server-host>';
-GRANT ALL PRIVILEGES ON WSO2SHARED_DB.* TO '<database-user>'@'<identity-server-host>';
-GRANT ALL PRIVILEGES ON WSO2AGENTIDENTITY_DB.* TO '<database-user>'@'<identity-server-host>';
-GRANT ALL PRIVILEGES ON WSO2DPDP_DB.* TO '<database-user>'@'<identity-server-host>';
-FLUSH PRIVILEGES;
 ```
 
-</details>
+</TabItem>
+<TabItem value="postgresql" label="PostgreSQL">
 
-<details>
-<summary>PostgreSQL</summary>
-
-Quote the database names. Without quotes, PostgreSQL folds them to lowercase, and
-the JDBC URLs in step 4, which name `WSO2IDENTITY_DB` and so on, then fail to
-connect. If you prefer lowercase names, use them consistently everywhere.
-
-Making the Identity Server's account the owner of each database also gives it the
-right to create tables. That matters from PostgreSQL 15, where the `public` schema
-no longer lets every user create objects.
+Quote the database names. Without quotes, PostgreSQL folds them to lowercase, and the JDBC URLs in datasource configurations that reference `WSO2IDENTITY_DB` and so on will fail to connect. If you prefer lowercase names, use them consistently everywhere.
 
 ```sql
-CREATE USER "<database-user>" WITH PASSWORD '<database-password>';
-
-CREATE DATABASE "WSO2IDENTITY_DB" OWNER "<database-user>" ENCODING 'UTF8' TEMPLATE template0;
-CREATE DATABASE "WSO2SHARED_DB" OWNER "<database-user>" ENCODING 'UTF8' TEMPLATE template0;
-CREATE DATABASE "WSO2AGENTIDENTITY_DB" OWNER "<database-user>" ENCODING 'UTF8' TEMPLATE template0;
-CREATE DATABASE "WSO2DPDP_DB" OWNER "<database-user>" ENCODING 'UTF8' TEMPLATE template0;
+CREATE DATABASE "WSO2IDENTITY_DB" ENCODING 'UTF8' TEMPLATE template0;
+CREATE DATABASE "WSO2SHARED_DB" ENCODING 'UTF8' TEMPLATE template0;
+CREATE DATABASE "WSO2AGENTIDENTITY_DB" ENCODING 'UTF8' TEMPLATE template0;
+CREATE DATABASE "WSO2DPDP_DB" ENCODING 'UTF8' TEMPLATE template0;
 ```
 
-Run the step 5 scripts as `<database-user>`, so that it also owns the tables.
+</TabItem>
+</Tabs>
 
-</details>
+---
 
-## Install the JDBC driver
+## 2. Create the database tables
 
-Copy the JDBC driver JAR for your database into
-`<IS_HOME>/repository/components/lib` before starting the server. The `dropins`
-directory is for OSGi bundles, not for drivers.
+To create the database tables, navigate to the script locations within `<IS_HOME>/dbscripts` and execute the scripts that correspond to your DBMS against the respective databases.
 
-| DBMS | Driver the installer uses |
+<Tabs groupId="database">
+<TabItem value="mysql" label="MySQL" default>
+
+| Database | Script Location |
 |---|---|
-| MySQL 8.0 | [`mysql-connector-j-9.2.0.jar`](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.2.0/mysql-connector-j-9.2.0.jar) |
-| PostgreSQL 15, 16 or 17 | [`postgresql-42.7.13.jar`](https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.13/postgresql-42.7.13.jar) |
+| `WSO2SHARED_DB` | `<IS_HOME>/dbscripts/mysql.sql` |
+| `WSO2IDENTITY_DB` | `<IS_HOME>/dbscripts/identity/mysql.sql` |
+| `WSO2IDENTITY_DB` | `<IS_HOME>/dbscripts/consent/mysql.sql` |
+| `WSO2AGENTIDENTITY_DB` | `<IS_HOME>/dbscripts/identity/agent/mysql.sql` |
+| `WSO2DPDP_DB` | `<IS_HOME>/dbscripts/dpdp-accelerator/complaint/mysql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/consent-history/mysql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/event-notification/mysql.sql` |
 
-## Create the database tables
+:::note Consent Migration Script
+For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/mysql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/7.3.0/deploy/upgrade/upgrade-overview/).
+:::
 
-Apply these scripts, in this order:
+</TabItem>
+<TabItem value="postgresql" label="PostgreSQL">
 
-| Script | Database |
+| Database | Script Location |
 |---|---|
-| `<IS_HOME>/dbscripts/<db>.sql` | `WSO2SHARED_DB` |
-| `<IS_HOME>/dbscripts/identity/<db>.sql` | `WSO2IDENTITY_DB` |
-| `<IS_HOME>/dbscripts/consent/<db>.sql` | `WSO2IDENTITY_DB` |
-| `<IS_HOME>/dbscripts/migrations/consent/<db>-migration.txt` | `WSO2IDENTITY_DB` |
-| `<IS_HOME>/dbscripts/identity/agent/<db>.sql` | `WSO2AGENTIDENTITY_DB` |
-| `dbscripts/dpdp-accelerator/{complaint,consent-history,event-notification}/<db>.sql` | `WSO2DPDP_DB` |
+| `WSO2SHARED_DB` | `<IS_HOME>/dbscripts/postgresql.sql` |
+| `WSO2IDENTITY_DB` | `<IS_HOME>/dbscripts/identity/postgresql.sql` |
+| `WSO2IDENTITY_DB` | `<IS_HOME>/dbscripts/consent/postgresql.sql` |
+| `WSO2AGENTIDENTITY_DB` | `<IS_HOME>/dbscripts/identity/agent/postgresql.sql` |
+| `WSO2DPDP_DB` | `<IS_HOME>/dbscripts/dpdp-accelerator/complaint/postgresql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/consent-history/postgresql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/event-notification/postgresql.sql` |
 
-`<db>` is `mysql` or `postgresql`.
+:::note Consent Migration Script
+For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/postgresql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/7.3.0/deploy/upgrade/upgrade-overview/).
+:::
 
-**The consent migration is required.** It is the only source of the consent v2
-tables (`CM_CONSENT_AUTHORIZATION`, `CM_PURPOSE_VERSION` and others): neither the
-base scripts nor the embedded H2 database contain them. It ships with the U2
-updates. Strip its `#` comment lines before running it, as shown below. On MySQL
-it needs U2 update level 17 or later.
+</TabItem>
+</Tabs>
 
-**The accelerator's scripts** are in `<ACCELERATOR_HOME>/carbon-home/dbscripts/`.
-After [step 1](../setup-guide.md#1-install-the-accelerator-artifacts),
-they are also in `<IS_HOME>/dbscripts/`.
+---
 
-**The command blocks below stop at the first failing command.** They run in a
-subshell with `set -e`, so a failure (the consent migration, for example) stops
-the remaining scripts instead of leaving the schema half-applied, and the
-subshell keeps a pasted block from closing your terminal.
+## 3. Configure the datasources
 
-**Apply the Identity Server's scripts once, to new, empty databases.** They are
-not safe to re-run: some `CREATE TABLE` statements are unguarded, and the
-PostgreSQL agent script starts by dropping its tables. The accelerator's own
-scripts use `CREATE ... IF NOT EXISTS` throughout, so they can be re-run.
+Configure the datasources by following the sample below:
 
-<details>
-<summary>MySQL</summary>
+<Tabs groupId="database">
+<TabItem value="mysql" label="MySQL" default>
 
-```sh
-(
-  set -e
-  IS=<IS_HOME>
-  DPDP=<ACCELERATOR_HOME>/carbon-home/dbscripts/dpdp-accelerator
-  MYSQL="mysql -h <database-host> -u <database-user> -p"
+Open the `<IS_HOME>/repository/conf/deployment.toml` file and update the datasource configurations:
 
-  $MYSQL WSO2SHARED_DB        < "$IS/dbscripts/mysql.sql"
-  $MYSQL WSO2IDENTITY_DB      < "$IS/dbscripts/identity/mysql.sql"
-  $MYSQL WSO2IDENTITY_DB      < "$IS/dbscripts/consent/mysql.sql"
-  grep -v '^#' "$IS/dbscripts/migrations/consent/mysql-migration.txt" | $MYSQL WSO2IDENTITY_DB
-  $MYSQL WSO2AGENTIDENTITY_DB < "$IS/dbscripts/identity/agent/mysql.sql"
-  for feature in complaint consent-history event-notification; do
-    $MYSQL WSO2DPDP_DB < "$DPDP/$feature/mysql.sql"
-  done
-)
+```toml
+[database.identity_db]
+url = "jdbc:mysql://<database-host>:3306/WSO2IDENTITY_DB?autoReconnect=true&amp;useSSL=false"
+username = "<database-user>"
+password = "<database-password>"
+driver = "com.mysql.cj.jdbc.Driver"
+
+[database.identity_db.pool_options]
+maxActive = "150"
+maxWait = "60000"
+minIdle = "5"
+testOnBorrow = true
+validationQuery = "SELECT 1"
+validationInterval = "30000"
+defaultAutoCommit = false
 ```
 
-</details>
+Map the created databases to the corresponding TOML configuration sections:
 
-<details>
-<summary>PostgreSQL</summary>
+| Database | TOML Configuration |
+|---|---|
+| `WSO2IDENTITY_DB` | `[database.identity_db]` |
+| `WSO2SHARED_DB` | `[database.shared_db]` |
+| `WSO2AGENTIDENTITY_DB` | `[datasource.AgentIdentity]` |
+| `WSO2DPDP_DB` | `[datasource.WSO2DPDP_DB]` |
 
-`ON_ERROR_STOP` makes `psql` stop at the first failing statement. Without it,
-`psql` carries on and still exits successfully.
+For custom datasources (`[datasource.AgentIdentity]` and `[datasource.WSO2DPDP_DB]`), configure them using the following format:
 
-```sh
-(
-  set -e
-  IS=<IS_HOME>
-  DPDP=<ACCELERATOR_HOME>/carbon-home/dbscripts/dpdp-accelerator
-  PSQL="psql -h <database-host> -U <database-user> -v ON_ERROR_STOP=1"
-
-  $PSQL -d WSO2SHARED_DB        -f "$IS/dbscripts/postgresql.sql"
-  $PSQL -d WSO2IDENTITY_DB      -f "$IS/dbscripts/identity/postgresql.sql"
-  $PSQL -d WSO2IDENTITY_DB      -f "$IS/dbscripts/consent/postgresql.sql"
-  grep -v '^#' "$IS/dbscripts/migrations/consent/postgresql-migration.txt" | $PSQL -d WSO2IDENTITY_DB
-  $PSQL -d WSO2AGENTIDENTITY_DB -f "$IS/dbscripts/identity/agent/postgresql.sql"
-  for feature in complaint consent-history event-notification; do
-    $PSQL -d WSO2DPDP_DB -f "$DPDP/$feature/postgresql.sql"
-  done
-)
+```toml
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:mysql://<database-host>:3306/WSO2DPDP_DB?autoReconnect=true&amp;useSSL=false"
+username = "<database-user>"
+password = "<database-password>"
+driver = "com.mysql.cj.jdbc.Driver"
+pool_options.maxActive = "150"
+pool_options.maxWait = "60000"
+pool_options.minIdle = "5"
+pool_options.testOnBorrow = true
+pool_options.validationQuery = "SELECT 1"
+pool_options.validationInterval = "30000"
+pool_options.defaultAutoCommit = false
 ```
 
-</details>
+</TabItem>
+<TabItem value="postgresql" label="PostgreSQL">
+
+Open the `<IS_HOME>/repository/conf/deployment.toml` file and update the datasource configurations:
+
+```toml
+[database.identity_db]
+url = "jdbc:postgresql://<database-host>:5432/WSO2IDENTITY_DB?sslmode=verify-full"
+username = "<database-user>"
+password = "<database-password>"
+driver = "org.postgresql.Driver"
+
+[database.identity_db.pool_options]
+maxActive = "150"
+maxWait = "60000"
+minIdle = "5"
+testOnBorrow = true
+validationQuery = "SELECT 1"
+validationInterval = "30000"
+defaultAutoCommit = false
+```
+
+Map the created databases to the corresponding TOML configuration sections:
+
+| Database | TOML Configuration |
+|---|---|
+| `WSO2IDENTITY_DB` | `[database.identity_db]` |
+| `WSO2SHARED_DB` | `[database.shared_db]` |
+| `WSO2AGENTIDENTITY_DB` | `[datasource.AgentIdentity]` |
+| `WSO2DPDP_DB` | `[datasource.WSO2DPDP_DB]` |
+
+For custom datasources (`[datasource.AgentIdentity]` and `[datasource.WSO2DPDP_DB]`), configure them using the following format:
+
+```toml
+[datasource.WSO2DPDP_DB]
+id = "WSO2DPDP_DB"
+url = "jdbc:postgresql://<database-host>:5432/WSO2DPDP_DB?sslmode=verify-full"
+username = "<database-user>"
+password = "<database-password>"
+driver = "org.postgresql.Driver"
+pool_options.maxActive = "150"
+pool_options.maxWait = "60000"
+pool_options.minIdle = "5"
+pool_options.testOnBorrow = true
+pool_options.validationQuery = "SELECT 1"
+pool_options.validationInterval = "30000"
+pool_options.defaultAutoCommit = false
+```
+
+</TabItem>
+</Tabs>
+
+---
+
+## 4. Install the JDBC driver
+
+Copy the JDBC driver JAR for your database into `<IS_HOME>/repository/components/lib` before starting the server. The `dropins` directory is for OSGi bundles, not for drivers.
+
+<Tabs groupId="database">
+<TabItem value="mysql" label="MySQL" default>
+
+MySQL 8.0: [`mysql-connector-j-9.2.0.jar`](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.2.0/mysql-connector-j-9.2.0.jar)
+
+</TabItem>
+<TabItem value="postgresql" label="PostgreSQL">
+
+PostgreSQL 15, 16 or 17: [`postgresql-42.7.13.jar`](https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.13/postgresql-42.7.13.jar)
+
+</TabItem>
+</Tabs>
+
+---
+
+## Next steps
+
+After setting up the databases, executing the scripts, and configuring datasources:
+
+- Continue with [Configuring deployment.toml](configuring-deployment-toml.md) to set up server hostnames, administrator credentials, and encrypt passwords with the Cipher Tool.

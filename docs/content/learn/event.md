@@ -21,7 +21,7 @@ yourself, follow the links to [Try Out → Event Notifications](../try-out/event
 
 ## How it works
 
-![Consent lifecycle and custom event-publication paths converging on the Event Notification service](../../assets/dpdp-consent-event-flow.svg)
+![Consent lifecycle and custom event-publication paths converging on the Event Notification service](../../assets/images/diagrams/dpdp-consent-event-flow.svg)
 
 Four ideas cover everything on this page:
 
