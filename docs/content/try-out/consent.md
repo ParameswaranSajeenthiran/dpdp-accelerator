@@ -278,7 +278,7 @@ actually a parent, lawful guardian, or other representative. A trusted Data
 Fiduciary system must verify that relationship before creating the delegated
 authorization.
 
-![Delegated consent flow from connected-application creation through guardian approval and data-subject verification](../../assets/dpdp-consent-delegation-flow.svg)
+![Delegated consent flow from connected-application creation through guardian approval and data-subject verification](../../assets/images/diagrams/dpdp-consent-delegation-flow.svg)
 
 **Portal:** The guardian or delegate uses **My Pending Consents** and can filter
 **My Consents** by **Managed**. The data subject can filter the same page

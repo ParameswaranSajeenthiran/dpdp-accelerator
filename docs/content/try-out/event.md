@@ -209,7 +209,7 @@ in the portal. To create one test consent, follow these steps.
    Copy the **Purpose ID** from the purpose page. Then open one of its elements
    and copy that element's ID too.
 
-   ![Purpose details page with the Purpose ID and its Contact email element](/img/try-out/event/00-purpose-id.png)
+   ![Purpose details page with the Purpose ID and its Contact email element](../../assets/images/try-out/event/00-purpose-id.png)
 
 2. **Get an access token with the `internal_consent_mgt_consent_create`
    scope**, which creating a consent requires. The accelerator provisions the
@@ -272,12 +272,12 @@ self-signed certificate.
    `carepulse-sample-secret-9d3e7b12` as the **Shared Secret**.
 7. Select **Register Subscription**.
 
-![Register Subscription dialog filled in for consent.revoke with the marketing-email purpose](/img/try-out/event/01-register-subscription.png)
+![Register Subscription dialog filled in for consent.revoke with the marketing-email purpose](../../assets/images/try-out/event/01-register-subscription.png)
 
 Identity Server immediately sends the listener a verification challenge. Once
 the listener answers it, the subscription shows **Active**:
 
-![Subscriptions list with the new consent.revoke subscription in Active status](/img/try-out/event/02-subscription-active.png)
+![Subscriptions list with the new consent.revoke subscription in Active status](../../assets/images/try-out/event/02-subscription-active.png)
 
 The listener prints the challenge it answered:
 
@@ -323,11 +323,11 @@ curl -X POST \
 2. Open **My Consents** and select the consent you created. It shows
    **Active**.
 
-   ![Consent details page for an active marketing-email consent with the Revoke button](/img/try-out/event/03-consent-active.png)
+   ![Consent details page for an active marketing-email consent with the Revoke button](../../assets/images/try-out/event/03-consent-active.png)
 
 3. Select **Revoke**, then **Revoke Consent** to confirm.
 
-   ![Confirm Revocation dialog](/img/try-out/event/04-confirm-revocation.png)
+   ![Confirm Revocation dialog](../../assets/images/try-out/event/04-confirm-revocation.png)
 
 The consent now shows **Revoked**. The portal sends the revocation without a
 request body:
@@ -377,12 +377,12 @@ To see the same event in the portal, sign in as the administrator and open
 **Event Notifications → Events**. Search for the `eventId` from the listener
 output, or find the newest `consent.revoke` event:
 
-![Events list showing the consent.revoke event for the marketing-email purpose with one subscriber](/img/try-out/event/06-events-list.png)
+![Events list showing the consent.revoke event for the marketing-email purpose with one subscriber](../../assets/images/try-out/event/06-events-list.png)
 
 Open the event to see its payload and its delivery to your subscription, which
 shows **Delivered**:
 
-![Event details page with the consent.revoke payload and a Delivered webhook delivery](/img/try-out/event/07-event-delivered.png)
+![Event details page with the consent.revoke payload and a Delivered webhook delivery](../../assets/images/try-out/event/07-event-delivered.png)
 
 The event carries only the consent ID and its previous status, not the Data
 Principal's personal data. A real processor uses `consentId` to find the data
@@ -440,7 +440,7 @@ same tenant.
 3. Enter `delivery.preferences.update` as the **Topic Name**, add a
    **Description**, and select **Register Topic**.
 
-![Register Topic dialog for delivery.preferences.update](/img/try-out/event/10-register-topic.png)
+![Register Topic dialog for delivery.preferences.update](../../assets/images/try-out/event/10-register-topic.png)
 
 ### Step 2: Subscribe a poll receiver
 
@@ -458,12 +458,12 @@ same tenant.
    securely.
 7. Select **Register Subscription**.
 
-![Register Subscription dialog for a poll subscription with the sample shared secret](/img/try-out/event/11-register-poll-subscription.png)
+![Register Subscription dialog for a poll subscription with the sample shared secret](../../assets/images/try-out/event/11-register-poll-subscription.png)
 
 A poll subscription needs no verification, so it shows **Active** straight
 away. Copy its **Subscription ID** with the copy icon in the list:
 
-![Subscriptions list with the active poll subscription](/img/try-out/event/12-poll-subscription-active.png)
+![Subscriptions list with the active poll subscription](../../assets/images/try-out/event/12-poll-subscription-active.png)
 
 ```bash
 export SUBSCRIPTION_ID="<subscription-id>"
@@ -591,7 +591,7 @@ As the administrator, open **Event Notifications → Events** and open the
 `delivery.preferences.update` event. Its delivery to the poll subscription
 shows **Acknowledged**:
 
-![Event details page with the custom event payload and an Acknowledged poll delivery](/img/try-out/event/13-poll-event-acknowledged.png)
+![Event details page with the custom event payload and an Acknowledged poll delivery](../../assets/images/try-out/event/13-poll-event-acknowledged.png)
 
 When you finish, delete the subscription and deregister the topic in the
 portal.

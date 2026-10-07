@@ -8,7 +8,7 @@ This guide walks you through submitting, managing, and resolving a grievance usi
 
 The portal provides separate interfaces for a Data Principal and a Complaint Officer. This walkthrough uses a single case to demonstrate submission, file attachments, public vs. internal communication, status transitions, statutory due dates, and resolution.
 
-![Grievance flow from Data Principal submission through complaint-officer review, communication, and resolution](../../assets/dpdp-grievance-flow.svg)
+![Grievance flow from Data Principal submission through complaint-officer review, communication, and resolution](../../assets/images/diagrams/dpdp-grievance-flow.svg)
 
 ---
 
