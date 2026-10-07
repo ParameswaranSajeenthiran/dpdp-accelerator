@@ -5,10 +5,8 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-The WSO2 DPDP Accelerator is a set of extensions that speeds up building a
-solution for India's
-[Digital Personal Data Protection Act, 2023](introduction.md). Built on WSO2
-Identity Server, it adds consent management, grievance handling, consent audit
+The WSO2 DPDP Accelerator helps you build solutions for India's [Digital Personal Data Protection Act, 2023](introduction.md). 
+Built on top of WSO2 Identity Server,Solution provides consent management, grievance handling, consent audit
 history, and event notifications, along with a Consent Portal for end users and
 administrators.
 
@@ -18,7 +16,7 @@ This guide sets up the accelerator in a local environment with the default
 :::info Setting up for production?
 
 This quickstart is for local evaluation only. For a production deployment,
-follow the [Setup Guide](setup-guide.md) instead.
+follow [Install and Set Up](install-and-setup/prerequisites.md) instead.
 
 :::
 
@@ -146,7 +144,7 @@ If the tool reports that it updated itself, run the same command again to
 update Identity Server.
 
 For more information about WSO2 updates and the update tool, see
-[WSO2 Updates](https://wso2.com/updates).
+[updating WSO2 products](https://updates.docs.wso2.com/en/latest/).
 
 ## Configure the accelerator
 
@@ -218,16 +216,13 @@ password `wso2123`.
 ## Set up portal users
 
 To fully try out the accelerator, create users and assign them these roles by
-following [Assign portal roles](configuration-guide.md#4-assign-portal-roles):
+following the [Configuring Users and Roles](install-and-setup/configuring-users-and-roles.md)
 
 | User | Role | What they can do in the portal |
 | --- | --- | --- |
 | Portal administrator | `dpdp-consent-admin` | Manage purposes and elements, view and revoke any user's consents, view consent history, manage Event Notifications, and handle all complaints. Use this user to check the portal in the next step. |
 | Data Principal | `dpdp-consent-user` | Exercise their data protection rights: review the history of their consents, raise and track grievances, and delete their own account. |
 | Data Protection Officer | `dpdp-consent-dpo` | View and respond to every complaint in the organization, without access to consents or other administration. |
-
-Any signed-in user can view and manage their own consents without a role. The
-roles add the extra features above.
 
 ## Open the Consent Portal
 
@@ -236,9 +231,9 @@ Open `https://localhost:9443/consent-portal/` and sign in as the user holding
 
 ## Next steps
 
-- [Learn through real stories](learn.md) — see how the main features fit
-  together from each participant's point of view
-- [Tryout Flows](tryout-flows.md) — walk through the catalog, consent
-  lifecycle, complaint, event, and account-deletion flows
-- [Setup Guide](setup-guide.md) — move to a production deployment with an
-  external MySQL or PostgreSQL database
+- [Learn through real stories](learn/manage-api-access.md) — see how the main
+  features fit together from each participant's point of view
+- [Try Out](try-out/consent.md) — walk through the catalog, consent lifecycle,
+  complaint, and event flows
+- [Install and Set Up](install-and-setup/prerequisites.md) — move to a
+  production deployment with an external MySQL or PostgreSQL database

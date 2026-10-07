@@ -36,7 +36,10 @@ The DPDP Accelerator introduces three roles to manage access to the Consent Port
 | **Catalog Management** | Ability to create, edit, and manage the Purposes and Elements catalog. |
 | **Consent History Oversight** | Grants all `consent:status-history:view:*` and `consent:history:view:*` scopes for viewing both personal and tenant-wide consent history. |
 | **Event Notification Management** | Grants read and write access to topics, subscriptions, and events. Polling and delivery completion are receiver operations and are not permissions of this portal role. |
-| **Global Complaint Oversight** | Grants `complaints:read:any` and `complaints:write:any`, allowing the admin to view every complaint in the organization, including internal notes and status transitions. |
+
+This role does **not** include complaint scopes — organization-wide complaint
+oversight belongs to `dpdp-consent-dpo` alone, so complaint handling stays
+separate from portal administration.
 
 :::tip
 Administrators do **not** automatically receive the `dpdp-consent-user` role. If an administrator needs to be able to delete their own account, you must assign both `dpdp-consent-admin` and `dpdp-consent-user` to them.
@@ -90,8 +93,8 @@ Complaint Management access:
 
 | Grievance operation | Required scope(s) | Admin | User | DPO |
 | :--- | :--- | :---: | :---: | :---: |
-| Create, view, reply to, or transition own complaints | `complaints:read:self`, `complaints:write:self` (user) or `complaints:read:any`, `complaints:write:any` (DPO/admin) | ✅ | ✅ | ✅ |
-| View or manage any tenant complaint | `complaints:read:any`, `complaints:write:any` | ✅ | ❌ | ✅ |
+| Create, view, reply to, or transition own complaints | `complaints:read:self`, `complaints:write:self` (user) or `complaints:read:any`, `complaints:write:any` (DPO) | ❌ | ✅ | ✅ |
+| View or manage any tenant complaint | `complaints:read:any`, `complaints:write:any` | ❌ | ❌ | ✅ |
 
 The `dpdp-consent-admin` and `dpdp-consent-dpo` roles use the management
 surface for complaints, including internal notes and organization-wide
@@ -186,7 +189,7 @@ The following steps must be performed manually by the operator in the **WSO2 IS 
 | View own consent history | `consent:status-history:view:self`, `consent:history:view:self` | ❌ | ✅ | ❌ | ✅ |
 | View tenant-wide consent history | `consent:status-history:view:any`, `consent:history:view:any` | ❌ | ❌ | ❌ | ✅ |
 | Delete own account | `account:self:delete` | ❌ | ✅ | ❌ | ❌ |
-| Manage own complaints | `complaints:read:self`, `complaints:write:self` (user) or `complaints:read:any`, `complaints:write:any` (DPO/admin) | ❌ | ✅ | ✅ | ✅ |
+| Manage own complaints | `complaints:read:self`, `complaints:write:self` (user) or `complaints:read:any`, `complaints:write:any` (DPO) | ❌ | ✅ | ✅ | ❌ |
 | Manage others' consents | `internal_consent_mgt_consent_view`, `internal_consent_mgt_consent_create`, `internal_consent_mgt_consent_update` | ❌ | ❌ | ❌ | ✅ |
 | Manage Purposes catalog | `internal_consent_mgt_purpose_view`, `internal_consent_mgt_purpose_create`, `internal_consent_mgt_purpose_update`, `internal_consent_mgt_purpose_delete` | ❌ | ❌ | ❌ | ✅ |
 | Manage Elements catalog | `internal_consent_mgt_element_view`, `internal_consent_mgt_element_create`, `internal_consent_mgt_element_delete` | ❌ | ❌ | ❌ | ✅ |
@@ -198,4 +201,4 @@ The following steps must be performed manually by the operator in the **WSO2 IS 
 | Publish events | `notifications:events:write` | ❌ | ❌ | ❌ | ✅ |
 | Poll event deliveries | `notifications:events:poll` | ❌ | ❌ | ❌ | ❌ |
 | Submit delivery completion | `notifications:event-deliveries:complete` | ❌ | ❌ | ❌ | ❌ |
-| Manage all complaints | `complaints:read:any`, `complaints:write:any` | ❌ | ❌ | ✅ | ✅ |
+| Manage all complaints | `complaints:read:any`, `complaints:write:any` | ❌ | ❌ | ✅ | ❌ |

@@ -37,7 +37,7 @@ content lives in `docs/content/`. Run `npm install` then `npm run start` inside
   delivery history.
 - [`docs/content/localization-guide.md`](docs/content/localization-guide.md) — correcting UI
   wording and localizing Purposes/Elements on a running deployment.
-- [`docs/content/release-guide.md`](docs/content/release-guide.md) — cutting a release with the
+- [`RELEASE.md`](RELEASE.md) — cutting a release with the
   Release builder workflow.
 
 ## Roles

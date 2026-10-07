@@ -1,8 +1,3 @@
----
-title: Release guide
-sidebar_position: 5
----
-
 # Release guide
 
 How to cut a release of the DPDP accelerator, and what the pipeline does on your behalf.

@@ -7,8 +7,8 @@ sidebar_position: 3
 
 Complete this after installing the accelerator, configuring the Consent Portal,
 and assigning the `dpdp-consent-admin` role — see
-[`setup-guide.md`](setup-guide.md) and
-[`configuration-guide.md`](configuration-guide.md) if you have not done that
+[Install and Set Up](install-and-setup/prerequisites.md) and
+[`configuring-the-accelerator.md`](install-and-setup/configuring-the-accelerator.md) if you have not done that
 yet.
 
 Event Notifications let an application publish an event to a topic and deliver
@@ -389,7 +389,7 @@ replace the original HTTP acknowledgement.
 For production deployments, use HTTPS and a certificate trusted by Identity
 Server. HTTP callback URLs should be enabled only for controlled development
 environments through the Event Notification settings described in
-[`configuration-guide.md`](configuration-guide.md#9-configure-event-notifications).
+[`configuring-the-accelerator.md`](install-and-setup/configuring-the-accelerator.md#configure-event-notifications).
 
 ### Run a sample reference listener {#run-the-sample-listener}
 

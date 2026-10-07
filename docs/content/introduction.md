@@ -148,9 +148,10 @@ systems, which can receive them through webhook or polling subscriptions.
 
 - [Quickstart](quickstart.md): install and try the solution locally with the
   default embedded H2 databases, then verify portal access.
-- [Setup Guide](setup-guide.md): configure external databases, JDBC drivers,
-  datasources, schemas, and migrations before starting the server.
-- [Configuration Guide](configuration-guide.md): configure provisioning, roles,
+- [Install and Set Up](install-and-setup/prerequisites.md): configure external
+  databases, JDBC drivers, datasources, schemas, and migrations before
+  starting the server.
+- [Configuration Guide](install-and-setup/configuring-the-accelerator.md): configure provisioning, roles,
   email, and optional runtime features after installation.
 
 ## Official references

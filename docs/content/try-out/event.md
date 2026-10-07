@@ -205,7 +205,7 @@ in the portal. To create one test consent, follow these steps.
    administrator, open **Definitions → Purposes**, and open the purpose you
    want to use. This flow uses `marketing-email`. If you don't have a purpose
    yet, create one with an element first, as described in
-   [Flow 1](../tryout-flows.md#flow-1-define-a-purpose-and-its-data-element).
+   [Define a purpose and its data element](consent.md#define-a-purpose-and-its-data-element).
    Copy the **Purpose ID** from the purpose page. Then open one of its elements
    and copy that element's ID too.
 
@@ -214,7 +214,7 @@ in the portal. To create one test consent, follow these steps.
 2. **Get an access token with the `internal_consent_mgt_consent_create`
    scope**, which creating a consent requires. The accelerator provisions the
    **DPDP Consent API Invoker** application for this. See
-   [Consent API Invoker provisioning](../configuration-guide.md#consent-api-invoker-provisioning)
+   [Consent API Invoker provisioning](../install-and-setup/configuring-the-accelerator.md#consent-api-invoker-provisioning)
    for how to get its credentials. Get the token from
    the same tenant the consent belongs to, because a token issued by one
    tenant isn't accepted by another. Then set it, along with your server and

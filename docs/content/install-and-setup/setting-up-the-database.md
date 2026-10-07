@@ -71,7 +71,7 @@ To create the database tables, navigate to the script locations within `<IS_HOME
 | `WSO2DPDP_DB` | `<IS_HOME>/dbscripts/dpdp-accelerator/complaint/mysql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/consent-history/mysql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/event-notification/mysql.sql` |
 
 :::note Consent Migration Script
-For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/mysql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/7.3.0/deploy/upgrade/upgrade-overview/).
+For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/mysql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/latest/apis/use-the-consent-management-rest-apis/#consent-management-api-v2).
 :::
 
 </TabItem>
@@ -86,7 +86,7 @@ For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME
 | `WSO2DPDP_DB` | `<IS_HOME>/dbscripts/dpdp-accelerator/complaint/postgresql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/consent-history/postgresql.sql`<br/>`<IS_HOME>/dbscripts/dpdp-accelerator/event-notification/postgresql.sql` |
 
 :::note Consent Migration Script
-For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/postgresql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/7.3.0/deploy/upgrade/upgrade-overview/).
+For `WSO2IDENTITY_DB`, execute the consent migration script located at `<IS_HOME>/dbscripts/migrations/consent/postgresql-migration.txt`. For instructions on executing migration scripts, refer to the [WSO2 Identity Server Documentation](https://is.docs.wso2.com/en/latest/apis/use-the-consent-management-rest-apis/#consent-management-api-v2).
 :::
 
 </TabItem>
@@ -224,4 +224,4 @@ PostgreSQL 15, 16 or 17: [`postgresql-42.7.13.jar`](https://repo1.maven.org/mave
 
 After setting up the databases, executing the scripts, and configuring datasources:
 
-- Continue with [Configuring deployment.toml](configuring-deployment-toml.md) to set up server hostnames, administrator credentials, and encrypt passwords with the Cipher Tool.
+- Continue with [Configuring the Accelerator](configuring-the-accelerator.md) to set up server hostnames, administrator credentials, and encrypt passwords with the Cipher Tool.

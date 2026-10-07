@@ -56,7 +56,7 @@ A relational database server is required for production and staging environments
 | Database | Supported Versions | Usage |
 |:---|:---|:---|
 | **MySQL** | 8.0 | Production and staging environments |
-| **PostgreSQL** | 15, 16, 17 | Production and staging environments (tested with Identity Server 7.3.0) |
+| **PostgreSQL** | 15, 16, 17 | Production and staging environments |
 | **Embedded H2** | Pre-packaged | Evaluation, development, and testing only |
 
 ---
@@ -127,7 +127,7 @@ The accelerator needs Identity Server at U2 update level 17 or later. A freshly 
 If the tool reports that it updated itself, run the same command again to update Identity Server.
 :::
 
-For more information about WSO2 updates and the update tool, see [WSO2 Updates](https://wso2.com/updates).
+For more information about WSO2 updates and the update tool, see [updating WSO2 products](https://updates.docs.wso2.com/en/latest/).
 
 ---
 

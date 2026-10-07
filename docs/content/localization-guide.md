@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # Localizing the Consent Portal
 
-Complete this after [`configuration-guide.md`](configuration-guide.md). This
+Complete this after [`configuring-the-accelerator.md`](install-and-setup/configuring-the-accelerator.md). This
 covers correcting or adding translated text on a running deployment — no
 rebuild of the accelerator is needed for anything described here, unless
 stated otherwise.

@@ -21,7 +21,7 @@ Ensure the Identity Server is stopped before extracting files, running scripts, 
 
 Download the latest `wso2-dpdpiam-accelerator-<version>.zip` from the [releases page](https://github.com/wso2/dpdp-accelerator/releases). To build it from source instead, see the [repository README](https://github.com/wso2/dpdp-accelerator#build).
 
-Extract it, and copy the extracted `wso2-dpdpiam-accelerator-<version>` directory into the root directory of Identity Server.
+Extract it, and copy the extracted `wso2-dpdpiam-accelerator-<version>` directory into the root directory of Identity Server `<IS_HOME>`.
 
 The rest of this guide refers to the directories as follows:
 

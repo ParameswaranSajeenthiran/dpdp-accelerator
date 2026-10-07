@@ -17,8 +17,8 @@ function Hero() {
 const guides = [
   { title: 'Introduction', description: 'Understand the DPDP Accelerator and its capabilities.', to: '/docs/introduction' },
   { title: 'Getting Started', description: 'Install the accelerator and open the Consent Portal.', to: '/docs/quickstart' },
-  { title: 'Install and Setup', description: 'Prepare databases and configure portal roles and runtime features.', to: '/docs/setup-guide' },
-  { title: 'Learn and Tryout', description: 'Explore real stories and follow feature walkthroughs.', to: '/docs/learn' },
+  { title: 'Install and Setup', description: 'Prepare databases and configure portal roles and runtime features.', to: '/docs/install-and-setup/prerequisites' },
+  { title: 'Learn and Tryout', description: 'Explore real stories and follow feature walkthroughs.', to: '/docs/learn/manage-api-access' },
   { title: 'Developer Guide', description: 'Explore roles, Event Notifications, grievances, and localization.', to: '/docs/developer-guide' },
 ];
 
