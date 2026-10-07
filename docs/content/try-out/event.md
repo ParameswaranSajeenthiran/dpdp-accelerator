@@ -55,14 +55,6 @@ Priya, with the username `priya@example.com`, the same person as in the
 [Learn → Event Notifications](../learn/event.md) stories. Use your own user's username
 wherever `priya@example.com` appears.
 
-:::note Windows commands
-
-The Windows commands on this page are for PowerShell 7 or later, which
-`Invoke-RestMethod -SkipCertificateCheck` needs. They call `curl.exe`
-explicitly, because `curl` in PowerShell is a different command.
-
-:::
-
 ### Step 1: Start the webhook listener
 
 Use one of the sample listeners. Each is a single file with no packages to
