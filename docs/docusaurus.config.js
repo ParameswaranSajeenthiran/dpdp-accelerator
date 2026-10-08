@@ -84,6 +84,7 @@ const config = {
           { to: '/docs/quickstart', label: 'Quickstart', position: 'left' },
           { to: '/docs/install-and-setup/prerequisites', label: 'Setup', position: 'left' },
           { to: '/docs/learn/manage-api-access', label: 'Learn', position: 'left' },
+          { to: '/docs/try-out/consent', label: 'Try Out', position: 'left' },
           {
             href: 'https://github.com/wso2/dpdp-accelerator',
             label: 'GitHub',
@@ -97,11 +98,10 @@ const config = {
           {
             title: 'Guides',
             items: [
-              { label: 'Setup', to: '/docs/setup-guide' },
-              { label: 'Configuration', to: '/docs/configuration-guide' },
+              { label: 'Setup', to: '/docs/install-and-setup/prerequisites' },
+              { label: 'Configuration', to: '/docs/install-and-setup/configuring-the-accelerator' },
               { label: 'Event Notifications', to: '/docs/event-notification-guide' },
               { label: 'Localization', to: '/docs/localization-guide' },
-              { label: 'Release', to: '/docs/release-guide' },
             ],
           },
         ],

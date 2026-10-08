@@ -218,16 +218,16 @@ call that API once yourself.
    administrator, go to **Definitions → Purposes**, and open the purpose you
    want to use. This flow uses `marketing-email`. No purpose yet? Create one
    with an element first, as described in
-   [Flow 1](../tryout-flows.md#flow-1-define-a-purpose-and-its-data-element).
+   [Define a purpose and its data element](consent.md#define-a-purpose-and-its-data-element).
    Copy the **Purpose ID** from the purpose page, then open one of its
    elements and copy its ID as well.
 
-   ![Purpose details page with the Purpose ID and its Contact email element](/img/try-out/event/00-purpose-id.png)
+   ![Purpose details page with the Purpose ID and its Contact email element](../../assets/images/try-out/event/00-purpose-id.png)
 
 2. **Get an access token with the `internal_consent_mgt_consent_create`
    scope.** Creating a consent needs it, and the accelerator provisions the
    **DPDP Consent API Invoker** application for exactly this.
-   [Consent API Invoker provisioning](../configuration-guide.md#consent-api-invoker-provisioning)
+   [Consent API Invoker provisioning](../install-and-setup/configuring-the-accelerator.md#consent-api-invoker-provisioning)
    explains how to get its credentials. Get the token from the same tenant
    the consent belongs to, since one tenant won't accept another tenant's
    token. Then set it, along with your server and tenant, for the next step:
@@ -355,12 +355,12 @@ it against a local server with a self-signed certificate.
    `carepulse-sample-secret-9d3e7b12` as the **Shared Secret**.
 7. Select **Register Subscription**.
 
-![Register Subscription dialog filled in for consent.revoke with the marketing-email purpose](/img/try-out/event/01-register-subscription.png)
+![Register Subscription dialog filled in for consent.revoke with the marketing-email purpose](../../assets/images/try-out/event/01-register-subscription.png)
 
 Right away, Identity Server sends the listener a verification challenge. As
 soon as the listener answers it, the subscription turns **Active**:
 
-![Subscriptions list with the new consent.revoke subscription in Active status](/img/try-out/event/02-subscription-active.png)
+![Subscriptions list with the new consent.revoke subscription in Active status](../../assets/images/try-out/event/02-subscription-active.png)
 
 Over in the listener's terminal, you'll see the challenge it answered:
 
@@ -468,11 +468,11 @@ Invoke-RestMethod -Method Post `
 2. Open **My Consents** and select the consent you created. It should show
    **Active**.
 
-   ![Consent details page for an active marketing-email consent with the Revoke button](/img/try-out/event/03-consent-active.png)
+   ![Consent details page for an active marketing-email consent with the Revoke button](../../assets/images/try-out/event/03-consent-active.png)
 
 3. Select **Revoke**, then **Revoke Consent** to confirm.
 
-   ![Confirm Revocation dialog](/img/try-out/event/04-confirm-revocation.png)
+   ![Confirm Revocation dialog](../../assets/images/try-out/event/04-confirm-revocation.png)
 
 The consent now shows **Revoked**. Behind the scenes, the portal sends this
 request, with no request body:
@@ -553,12 +553,12 @@ You can find the same event in the portal too. Sign in as the administrator,
 open **Event Notifications → Events**, and search for the `eventId` from the
 listener output, or just look for the newest `consent.revoke` event:
 
-![Events list showing the consent.revoke event for the marketing-email purpose with one subscriber](/img/try-out/event/06-events-list.png)
+![Events list showing the consent.revoke event for the marketing-email purpose with one subscriber](../../assets/images/try-out/event/06-events-list.png)
 
 Open it to see the payload and the delivery to your subscription, marked
 **Delivered**:
 
-![Event details page with the consent.revoke payload and a Delivered webhook delivery](/img/try-out/event/07-event-delivered.png)
+![Event details page with the consent.revoke payload and a Delivered webhook delivery](../../assets/images/try-out/event/07-event-delivered.png)
 
 Notice that the event carries only the consent ID and its previous status,
 none of Priya's personal data. A real processor would use `consentId` to find
@@ -645,7 +645,7 @@ that same tenant.
 3. Enter `delivery.preferences.update` as the **Topic Name**, add a
    **Description**, and select **Register Topic**.
 
-![Register Topic dialog for delivery.preferences.update](/img/try-out/event/10-register-topic.png)
+![Register Topic dialog for delivery.preferences.update](../../assets/images/try-out/event/10-register-topic.png)
 
 ### Step 2: Subscribe a poll receiver
 
@@ -662,12 +662,12 @@ that same tenant.
    icon at the end of the field instead, and keep the secret somewhere safe.
 7. Select **Register Subscription**.
 
-![Register Subscription dialog for a poll subscription with the sample shared secret](/img/try-out/event/11-register-poll-subscription.png)
+![Register Subscription dialog for a poll subscription with the sample shared secret](../../assets/images/try-out/event/11-register-poll-subscription.png)
 
 Poll subscriptions don't need verification, so this one is **Active**
 straight away. Copy its **Subscription ID** with the copy icon in the list:
 
-![Subscriptions list with the active poll subscription](/img/try-out/event/12-poll-subscription-active.png)
+![Subscriptions list with the active poll subscription](../../assets/images/try-out/event/12-poll-subscription-active.png)
 
 <Tabs groupId="operating-systems">
 <TabItem value="linux" label="Linux" default>
@@ -948,7 +948,7 @@ Back in the portal as the administrator, open **Event Notifications →
 Events** and find the `delivery.preferences.update` event. Its delivery to the
 poll subscription now shows **Acknowledged**:
 
-![Event details page with the custom event payload and an Acknowledged poll delivery](/img/try-out/event/13-poll-event-acknowledged.png)
+![Event details page with the custom event payload and an Acknowledged poll delivery](../../assets/images/try-out/event/13-poll-event-acknowledged.png)
 
 When you're done, tidy up by deleting the subscription and deregistering the
 topic in the portal.

@@ -1,27 +1,26 @@
-# Event Notifications
+# Understanding Event Notifications
 
-When Priya changes her mind about how her data is used, every company holding
-that data needs to find out, and quickly. Event Notifications make that
-happen. Each time something important changes, such as a consent being
-revoked or an account being deleted, the accelerator sends a message to the
-systems that need to act on it.
+Giving someone the ability to revoke consent or delete their account is only part of the job. Other systems that hold or process that person's data also need to know when something changes so they can take the appropriate action.
 
-This page explains how that works through the people below. To try each part
-yourself, follow the links to [Try Out → Event Notifications](../try-out/event.md).
+**Event Notifications** helps the accelerator keep connected systems informed when important changes occur. Instead of relying on someone to manually notify each system, the accelerator publishes an event that subscribed systems can receive and act on.
 
-- **Priya** is a Data Principal who uses CarePulse, an online healthcare
-  service.
-- **CarePulse** is the Data Fiduciary. It decides why Priya's data is
-  processed.
-- **CloudEngage** is a Data Processor that sends marketing emails for
-  CarePulse.
+For example, Priya may withdraw her consent for marketing communications. CarePulse needs to know about the change, but so does **CloudEngage**, the Data Processor that sends marketing emails on CarePulse's behalf. When the consent is revoked, the accelerator publishes an event so CloudEngage can receive the notification and take the required action.
+
+The same approach applies to other lifecycle changes, such as account deletion or changes to a person's data.
+
+This page explains how Event Notifications work through the example below. To try the flows yourself, see [Try Out → Event Notifications](../try-out/event.md).
+
+## The people and systems in this example
+
+- **Priya** is a Data Principal who uses CarePulse, an online healthcare service.
+- **CarePulse** is the Data Fiduciary. It decides why Priya's data is processed.
+- **CloudEngage** is a Data Processor that sends marketing emails for CarePulse.
 - **MedExpress** is a Data Processor that delivers CarePulse's orders.
-- **Anika** is CarePulse's privacy administrator. She manages Event
-  Notifications in the Consent Portal.
+- **Anika** is CarePulse's **Data Fiduciary administrator**. She manages Event Notifications in the Consent Portal.
 
 ## How it works
 
-![Consent lifecycle and custom event-publication paths converging on the Event Notification service](../../assets/dpdp-consent-event-flow.svg)
+![Consent lifecycle and custom event-publication paths converging on the Event Notification service](../../assets/images/diagrams/dpdp-consent-event-flow.svg)
 
 Four ideas cover everything on this page:
 
@@ -126,8 +125,6 @@ ID.
 Deleting the account removes Priya's Identity Server user. It doesn't
 automatically erase her consent history, complaints, or past events. CarePulse
 decides how long to keep those records under its own retention rules.
-
-**Try it:** [Delete a disposable account](../tryout-flows.md#flow-7-delete-a-disposable-account)
 
 ## What events don't do
 
