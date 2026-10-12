@@ -23,20 +23,17 @@ surface. Do not put a `userId` in a self-service request. A complaint officer
 can create a complaint on behalf of a Data Principal through the management
 surface when a complaint was received by phone, in person, or on paper.
 
-All complaints and attachments are isolated by the Identity Server tenant. Use
-the tenant-qualified URL for an ordinary tenant:
+All complaints and attachments are isolated by the Identity Server tenant. The
+examples below use:
 
 ```text
-https://<host>:9443/t/<tenant-domain>/api/dpdp/complaints/v1
+https://<host>:9443/api/dpdp/complaints/v1
 ```
-
-For the super tenant, omit `/t/<tenant-domain>`.
 
 The examples below use these shell variables:
 
 ```sh
 BASE_URL="https://localhost:9443"
-TENANT_DOMAIN="example.com"
 ACCESS_TOKEN="<data-principal-access-token>"
 OFFICER_ACCESS_TOKEN="<complaint-officer-access-token>"
 ```
@@ -114,7 +111,7 @@ The self-service create request is:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/me/complaints" \
+  "${BASE_URL}/api/dpdp/complaints/v1/me/complaints" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -130,7 +127,7 @@ form data; self-service uploads are always public:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/me/complaints/<complaint-id>/attachments" \
+  "${BASE_URL}/api/dpdp/complaints/v1/me/complaints/<complaint-id>/attachments" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -F "file=@incident-screenshot.png;type=image/png" \
   -F "file=@supporting-report.pdf;type=application/pdf"
@@ -158,7 +155,7 @@ request:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
+  "${BASE_URL}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
   -H "Authorization: Bearer ${OFFICER_ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -193,7 +190,7 @@ For example, a Data Principal can request the valid reopening transition with:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/me/complaints/<complaint-id>/status" \
+  "${BASE_URL}/api/dpdp/complaints/v1/me/complaints/<complaint-id>/status" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"toStatus":"AWAITING_INTERNAL_REVIEW"}'

@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Managing Access
 
 The DPDP Accelerator provides two ways to access its capabilities:
@@ -106,22 +103,9 @@ This is useful for testing APIs with curl or Postman, integrating the accelerato
 
 1. Sign in to the Identity Server Console:
 
-   <Tabs groupId="tenant-type">
-   <TabItem value="super" label="Super tenant" default>
-
    ```text
-   https://<host>:9443/console
+   https://<HOST>/console
    ```
-
-   </TabItem>
-   <TabItem value="tenant" label="Tenant">
-
-   ```text
-   https://<host>:9443/t/<tenant>/console
-   ```
-
-   </TabItem>
-   </Tabs>
 
 2. Select **Applications** from the left navigation.
 3. Click **New Application**.
@@ -160,7 +144,7 @@ Refer to the scope tables above to identify the scopes required for each operati
 Use the **client ID** and **client secret** of your machine-to-machine application to request an access token using the OAuth 2.0 `client_credentials` grant.
 
 ```bash
-curl -X POST "https://<HOST>/t/<TENANT_DOMAIN>/oauth2/token" \
+curl -X POST "https://<HOST>/oauth2/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=<CLIENT_ID>" \
@@ -171,7 +155,6 @@ curl -X POST "https://<HOST>/t/<TENANT_DOMAIN>/oauth2/token" \
 Replace the following placeholders with values from your environment:
 
 * `<HOST>` — the hostname of your Identity Server
-* `<TENANT_DOMAIN>` — your tenant domain.
 * `<CLIENT_ID>` — the client ID of your machine-to-machine application
 * `<CLIENT_SECRET>` — the client secret of your machine-to-machine application
 
@@ -188,11 +171,11 @@ trusted CA certificate, or pass it explicitly with `--cacert` instead.
 Once you have the access token, include it as a Bearer token in the API request. For example, fetching all consents in the tenant:
 
 ```bash
-curl "https://<HOST>/t/<TENANT_DOMAIN>/api/identity/consent-mgt/v2.0/consents" \
+curl "https://<HOST>/api/identity/consent-mgt/v2.0/consents" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
-Replace `<ACCESS_TOKEN>` with the `access_token` value from the response in Step 3, and `<TENANT_DOMAIN>` with your tenant domain.
+Replace `<ACCESS_TOKEN>` with the `access_token` value from the response in Step 3.
 
 The API validates the access token and checks whether it contains the scope required for the requested operation.
 

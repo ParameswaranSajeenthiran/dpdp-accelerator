@@ -42,7 +42,7 @@ access token yet):
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/elements" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/elements" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -87,7 +87,7 @@ Replace `<element-id>` with the `id` returned above. The equivalent request is:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/purposes" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/purposes" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -155,7 +155,7 @@ immediately, since Priya is consenting for herself:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -196,13 +196,13 @@ The equivalent API calls:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/revoke" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
@@ -228,7 +228,7 @@ To verify the lifecycle audit independently of the UI:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/consent-mgt/v1/consents/<consent-id>/status-history?limit=100&offset=0" \
+  "${BASE_URL}/api/dpdp/consent-mgt/v1/consents/<consent-id>/status-history?limit=100&offset=0" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
@@ -297,7 +297,7 @@ so he must approve it on her behalf.
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -362,7 +362,7 @@ Raj can inspect the pending consent directly before approving it:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents?state=PENDING&relation=AUTHORIZER&attributes=purposes,authorizations" \
+  "${BASE_URL}/api/users/v1/me/consents?state=PENDING&relation=AUTHORIZER&attributes=purposes,authorizations" \
   -H "Authorization: Bearer ${RAJ_ACCESS_TOKEN}"
 ```
 
@@ -370,7 +370,7 @@ Approve the consent with Raj's token:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/authorize" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/authorize" \
   -H "Authorization: Bearer ${RAJ_ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{ "state": "APPROVED" }'
@@ -393,7 +393,7 @@ The equivalent subject-scoped query is:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents?relation=SUBJECT&attributes=purposes,authorizations" \
+  "${BASE_URL}/api/users/v1/me/consents?relation=SUBJECT&attributes=purposes,authorizations" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 

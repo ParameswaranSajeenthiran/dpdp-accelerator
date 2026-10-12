@@ -72,40 +72,27 @@ not receive Event Notification scopes. None of these roles receives
 `event-receiver` roles above are least-privilege recommendations that an
 operator must create and assign manually.
 
-### Tenant-specific URLs
-
-Use the URL for the tenant whose data you want to access:
-
-| Tenant | Portal URL | Event Notification API base URL |
-|---|---|---|
-| Super tenant | `https://<host>:9443/consent-portal/` | `https://<host>:9443/api/dpdp/event-notifications/v1` |
-| Any other tenant | `https://<host>:9443/t/<tenant>/consent-portal/` | `https://<host>:9443/t/<tenant>/api/dpdp/event-notifications/v1` |
-
-For example, the API base URL for tenant `example.com` is:
+### API base URL
 
 ```text
-https://is.example.com:9443/t/example.com/api/dpdp/event-notifications/v1
+https://<host>:9443/api/dpdp/event-notifications/v1
 ```
 
-The server extracts the tenant domain from the tenant-qualified request and
-places it in the Carbon tenant context. The Event Notification endpoints then
-use that context as the organization identifier. Do not send a tenant or
-organization ID in a request body to select another tenant; it will not replace
-the request's tenant context.
+The endpoints use the request's Carbon tenant context as the organization
+identifier. Do not send a tenant or organization ID in a request body to
+select another tenant; it will not replace the request's tenant context.
 
 The examples below use these shell variables:
 
 ```sh
 IS_BASE_URL="https://is.example.com:9443"
 TENANT_DOMAIN="example.com"
-API_BASE="${IS_BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
+API_BASE="${IS_BASE_URL}/api/dpdp/event-notifications/v1"
 GROUP_ID="${TENANT_DOMAIN}"
 ACCESS_TOKEN="<access-token>"
 PUBLISHER_ACCESS_TOKEN="<event-publisher-access-token>"
 RECEIVER_ACCESS_TOKEN="<event-receiver-access-token>"
 ```
-
-For the super tenant, set `API_BASE` without the `/t/<tenant>` segment.
 
 The examples use certificates trusted by the client. For a local Identity
 Server using a self-signed certificate only, add `-k` to a `curl` command
