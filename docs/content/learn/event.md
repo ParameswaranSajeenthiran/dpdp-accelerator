@@ -16,7 +16,7 @@ This page explains how Event Notifications work through the example below. To tr
 - **CarePulse** is the Data Fiduciary. It decides why Priya's data is processed.
 - **CloudEngage** is a Data Processor that sends marketing emails for CarePulse.
 - **MedExpress** is a Data Processor that delivers CarePulse's orders.
-- **Anika** is CarePulse's **Data Fiduciary administrator**. She manages Event Notifications in the Consent Portal.
+- **Anika** is CarePulse's **Administrator**. She manages Event Notifications in the Consent Portal.
 
 ## How it works
 

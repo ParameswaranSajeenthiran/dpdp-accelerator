@@ -22,17 +22,17 @@ The DPDP Accelerator includes the Consent Portal, which is used by different typ
 
 The DPDP Accelerator comes with three predefined roles. Each role includes a set of permissions that defines what the user can do in the Consent Portal.
 
-| Role                     | Intended for                                          | What they can do                                                               |
-| :------------------------- |:------------------------------------------------------|:-------------------------------------------------------------------------------|
-| `dpdp-consent-user`  | Data principal                                        | Manage their own consents, view history and track their own complaints etc.    |
-| `dpdp-consent-admin` | Data fiduciary administrators                        | Manage all consents, purposes and data elements and manage event notifications |
-| `dpdp-consent-dpo`   | Data Protection Officers and complaint-handling staff | View and manage complaints across the organization.                            |
+| Role                     | Intended for                                         | What they can do                                                               |
+| :------------------------- |:-----------------------------------------------------|:-------------------------------------------------------------------------------|
+| `dpdp-consent-user`  | Data Principal                                       | Manage their own consents, view history and track their own complaints etc.    |
+| `dpdp-consent-admin` | Data Fiduciary Administrator                         | Manage all consents, purposes and data elements and manage event notifications |
+| `dpdp-consent-dpo`   | Data Protection Officer and complaint-handling staff | View and manage complaints across the organization.                            |
 
 ### Understanding roles and scopes
 
 Roles provide a convenient way to group permissions, while **scopes** are what the system actually checks when a user performs an action.
 
-For example, the **Consent Admin** role has a broader set of scopes because administrators need access to more functionality. The **Consent User** role has only the scopes required for users to manage their own data and complaints.
+For example, the **Data Fiduciary Administrator** role has a broader set of scopes because administrators need access to more functionality. The **Data Principal** role has only the scopes required for users to manage their own data and complaints.
 
 You can also create custom roles when the built-in roles do not match your organization's requirements. Assign only the scopes required for each role.
 
