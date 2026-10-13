@@ -592,6 +592,10 @@ curl -X POST "${API_BASE}/deliveries/${DELIVERY_ID}/completion" \
   -d "${COMPLETION_BODY}"
 ```
 
+For the full request/response schema, see the `POST /deliveries/{deliveryId}/completion`
+operation in the [DPDP Event Notification API](https://github.com/wso2/dpdp-accelerator/blob/main/dpdp-accelerator/internal-webapps/org.wso2.dpdp.accelerator.event.notifications.endpoint/src/main/resources/event-notifications.yaml)
+specification.
+
 ### Poll event deliveries
 
 Polling uses short, stateless request-response semantics and is scoped to one

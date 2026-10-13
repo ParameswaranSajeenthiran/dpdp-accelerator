@@ -139,3 +139,4 @@ For details about roles, permissions, and API access, see [Managing Access](mana
 ## Next Steps
 
 - **Hands-on Walkthrough:** Follow the step-by-step Try Out guide in [Try Out: Complaints](../try-out/complaint.md).
+- **Keep connected systems informed:** See [Event Notifications](event.md) to learn how systems like CloudEngage find out about changes such as a consent withdrawal.
