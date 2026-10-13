@@ -13,6 +13,7 @@ Throughout this guide, we'll use **CarePulse**, an online healthcare service, to
 * **Priya** is the **Data Principal**. She uses **CarePulse** and decides whether to give, change, or withdraw consent for the use of her personal data.
 * **CarePulse** is the **Data Fiduciary**. It determines why **Priya**'s personal data needs to be processed.
 * **Anika** is **CarePulse**'s **Administrator**. She manages the catalog of Purposes and Elements and oversees consent records within **CarePulse**'s tenant.
+* **Raj** is **Priya**'s spouse. He appears later as the other person involved whenever a consent needs someone besides **Priya** to also decide.
 
 ## 1. Define what data is needed
 
@@ -46,29 +47,23 @@ Once **CarePulse** has defined its purposes and data requirements, its applicati
 
 The application can use the **Consent Management REST API** to retrieve the available Purposes and their associated Elements, present them to **Priya**, and submit her decisions to create consent records. This allows applications to integrate consent collection into their own user journeys.
 
-For example, while booking a consultation, **Priya** might be asked to give consent for:
-
-- Consultation-related processing
-- Prescription delivery
-- Optional wellness tips
-
-**Priya** agrees to consultation-related processing and prescription delivery but declines wellness tips. **CarePulse** submits her choices through the Consent Management API to create a consent record reflecting her decisions.
+For example, while creating her account, **Priya** is asked whether she wants to receive marketing emails. She agrees, and **CarePulse** submits her choice through the Consent Management API to create a consent record for the `marketing-email` purpose, covering the `contact-email` element defined earlier.
 
 ### Record the purposes and data elements selected
 
 A consent record captures the purposes **Priya** agreed to and the specific data elements covered by each purpose. It does not automatically include every element associated with a purpose.
 
-For example, suppose **Priya** agrees to prescription delivery and provides her delivery address but chooses not to provide her optional phone number. The consent request includes only the delivery address element:
+For example, suppose **CarePulse** later adds an optional `phone-number` element to the `marketing-email` purpose, so it can also send promotional text messages. If **Priya** agrees to marketing emails but declines to share her phone number, the consent request includes only the `contact-email` element:
 
 ```json
 {
   ...
   "purposes": [
     {
-      "id": "<prescription-delivery-purpose-id>",
+      "id": "<marketing-email-purpose-id>",
       "elements": [
         {
-          "id": "<delivery-address-element-id>"
+          "id": "<contact-email-element-id>"
         }
       ]
     }
@@ -95,7 +90,7 @@ The Consent Portal allows individuals and administrators to review and manage co
 
 Consent can change over time. A person may update their choices or decide to withdraw consent they previously gave.
 
-For example, several weeks after booking her consultation, **Priya** decides she no longer wants to receive wellness messages. She opens **My Consents** in the Consent Portal, finds the relevant consent, and withdraws it.
+For example, several weeks after agreeing to marketing emails, **Priya** decides she no longer wants to receive them. She opens **My Consents** in the Consent Portal, finds her `marketing-email` consent, and withdraws it.
 
 The Consent Management API records the change, allowing the consent history to show:
 
@@ -146,17 +141,17 @@ The accelerator supports three consent models based on who is involved in author
 
 In direct consent, the subject gives consent for themself. No additional authorizers are required.
 
-For example, Alice gives consent for the use of her own data:
+This is the model behind **Priya**'s `marketing-email` consent from earlier in this guide:
 
 ```json
 {
-  "subjectId": "alice@wso2.com",
+  "subjectId": "priya@example.com",
   "purposes": [
     {
-      "id": "<purpose-id>",
+      "id": "<marketing-email-purpose-id>",
       "elements": [
         {
-          "id": "<element-id>"
+          "id": "<contact-email-element-id>"
         }
       ]
     }
@@ -166,7 +161,9 @@ For example, Alice gives consent for the use of her own data:
 
 Because no additional authorizers are specified, the consent becomes `ACTIVE` immediately.
 
-Alice can manage her consent, including revoking it after it becomes active.
+**Priya** can manage her own consent, including revoking it after it becomes active.
+
+**Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent).
 
 ### Delegated consent
 
@@ -176,7 +173,7 @@ For example, both parents may be required to approve a consent for their child:
 
 ```json
 {
-  "subjectId": "child@wso2.com",
+  "subjectId": "child@example.com",
   "purposes": [
     {
       "id": "<purpose-id>",
@@ -189,11 +186,11 @@ For example, both parents may be required to approve a consent for their child:
   ],
   "authorizations": [
     {
-      "userId": "mother@wso2.com",
+      "userId": "mother@example.com",
       "type": "USER"
     },
     {
-      "userId": "father@wso2.com",
+      "userId": "father@example.com",
       "type": "USER"
     }
   ]
@@ -202,17 +199,19 @@ For example, both parents may be required to approve a consent for their child:
 
 The consent remains `PENDING` until both parents approve it. If either parent rejects it, the consent becomes `REJECTED`.
 
-In this model, the subject is an **observer only**. They can view the consent but cannot approve, reject, revoke, or otherwise manage it.
+In this model, the subject is an **observer only**. They can view the consent but cannot approve, reject, revoke, or otherwise manage it. The same mechanism applies whenever someone other than the subject must authorize on their behalf — for example, **CarePulse** naming **Raj** as the sole authorizer on a consent for **Priya**'s enrollment in a shared family health plan.
+
+**Try it:** [Authorize consent as a guardian or delegate](../try-out/consent.md#authorize-consent-as-a-guardian-or-delegate).
 
 ### Co-authorized consent
 
 Co-authorized consent is useful when the subject must participate in the authorization decision alongside one or more other people.
 
-For example, two joint account holders may both need to approve a consent, including the account holder identified as the subject.
+For example, **Priya** and **Raj** are joint subscribers to a shared **CarePulse** family plan. **CarePulse** requires both account holders to approve a consent covering data shared between their accounts, including **Priya** herself as the subject:
 
 ```json
 {
-  "subjectId": "alice@wso2.com",
+  "subjectId": "priya@example.com",
   "purposes": [
     {
       "id": "<purpose-id>",
@@ -225,22 +224,22 @@ For example, two joint account holders may both need to approve a consent, inclu
   ],
   "authorizations": [
     {
-      "userId": "alice@wso2.com",
+      "userId": "priya@example.com",
       "type": "USER"
     },
     {
-      "userId": "bob@wso2.com",
+      "userId": "raj@example.com",
       "type": "USER"
     }
   ]
 }
 ```
 
-Because both Alice and Bob are authorizers, the consent remains `PENDING` until both approve it. If either rejects it, the consent becomes `REJECTED`.
+Because both **Priya** and **Raj** are authorizers, the consent remains `PENDING` until both approve it. If either rejects it, the consent becomes `REJECTED`.
 
 Unlike delegated consent, the subject in a co-authorized consent is an active participant in the decision and can approve or reject the consent as an authorizer.
 
-**Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent).
+**Try it:** [Create a co-authorized consent](../try-out/consent.md#create-a-co-authorized-consent).
 
 ## Review and enforce consent before processing
 
@@ -284,6 +283,8 @@ Before processing the data, the consuming application should check that:
 
 These checks help ensure that the application respects the person's recorded choices and does not rely on an earlier approval without verifying the consent's current state and scope.
 
+**Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent) — see the equivalent `GET` call under "Act on your own consent".
+
 ## Next Steps
 
 Now that you understand the consent lifecycle, try it yourself, or continue
@@ -291,6 +292,8 @@ to see what happens after a consent is revoked:
 
 - [Define a purpose and its data element](../try-out/consent.md#define-a-purpose-and-its-data-element)
 - [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent)
+- [Authorize consent as a guardian or delegate](../try-out/consent.md#authorize-consent-as-a-guardian-or-delegate)
+- [Create a co-authorized consent](../try-out/consent.md#create-a-co-authorized-consent)
 - [Complaints](complaint.md) — see what happens when a Data Principal believes something went wrong despite their consent decision
 
 
