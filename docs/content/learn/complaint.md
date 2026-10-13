@@ -1,86 +1,142 @@
----
-title: Complaints
----
-
 # Understanding Complaints
 
-Privacy compliance isn't just about recording consent checkboxes-it's about responding responsibly when things go wrong. In real-world enterprise architectures, third-party sync failures, network timeouts, and misunderstandings can happen. When an individual raises a concern about how their data is being handled, organizations need a transparent, auditable process to investigate, communicate, and fix the issue.
+Even when an organization has systems in place to manage consent, things can still go wrong. A consent withdrawal might not be reflected in a connected system, a person might continue receiving unwanted communications, or someone might have concerns about how their personal data is being used.
 
-The WSO2 DPDP Accelerator provides a built-in grievance handling system that connects Data Principals directly with grievance officers while linking complaints to underlying consent history and event audit trails.
+When this happens, people need a clear way to raise their concerns, understand what is being done about them, and track the outcome.
 
----
+The WSO2 DPDP Accelerator provides a grievance handling system that connects Data Principals with grievance officers. It supports complaint submission, communication, investigation, and resolution while maintaining a record of complaint activity.
 
-## The People Involved
+This guide uses a practical example to explain how complaints are handled and how Data Principals and grievance officers participate in the process.
 
-To understand grievance handling in practice, consider two key personas:
+## Meet the people in this example
 
-- **Priya (Data Principal):** An everyday user whose personal data is managed by CarePulse. She is assigned the `dpdp-consent-user` role (which provides the `complaints:read:self` and `complaints:write:self` scopes). When she notices an issue: such as receiving promotional messages after opting out-she uses the **My Complaints** section of the Consent Portal to file a complaint, upload evidence, and track updates directly.
-- **Ravi (Grievance Officer):** CarePulse's Data Protection Officer, assigned the `dpdp-consent-dpo` role. Ravi manages incoming cases under **Complaint Management**, investigates root causes, exchanges messages with complainants, and drives cases to resolution.
+We'll continue using **CarePulse**, the online healthcare service introduced in the Understanding Consent guide.
 
----
+- **Priya** is a **Data Principal** whose personal data is processed by **CarePulse**. She uses the Consent Portal to manage her consent and raise complaints when she has concerns.
+- **Ravi** is **CarePulse**'s **Grievance Officer**. He reviews complaints, investigates issues, communicates with complainants, and coordinates the actions needed to resolve them.
 
-## Real-World Scenario: When Revocation Fails Downstream
+## A real-world scenario: When a consent withdrawal isn't respected
 
-### The Background
-Priya previously withdrew her consent for optional marketing communications in the Consent Portal. CarePulse recorded her revocation and published a `consent.revoke` event to notify its external email provider (`CloudEngage`).
+### The situation
 
-However, due to a transient network outage, the event delivery to `CloudEngage` timed out after retries were exhausted. A couple of days later, Priya receives a marketing email. Naturally, she assumes her request was ignored: *"I already opted out of marketing emails, but I'm still receiving them."*
+**Priya** previously withdrew her consent for optional marketing communications through the Consent Portal. **CarePulse** recorded the withdrawal and notified its external email provider, **CloudEngage**, so that her marketing preferences could be updated.
 
-### 1. Submitting the Grievance
-Rather than searching for buried support emails or submitting generic helpdesk tickets, Priya signs in to the Consent Portal:
+However, CloudEngage received the notification but failed to update **Priya**'s preferences. A few days later, she receives another marketing email.
 
-1. Under **My Complaints**, she clicks **+ Submit a complaint**.
-2. She selects **Consent Withdrawal Issue** and writes a clear summary of what happened.
-3. She attaches a screenshot of the unwanted email showing the receipt timestamp.
-4. Upon submission, the portal generates a unique Reference ID (e.g., `CMP-2026-00001`) and begins tracking the statutory response deadline.
+She raises a concern:
 
-Priya receives immediate confirmation with an assigned tracking number and a clear deadline, ensuring her issue won't be lost in an unmonitored queue.
+> I already opted out of marketing emails, but I'm still receiving them.
 
-### 2. Investigating Complaint
-When Ravi opens the queue in **Complaint Management**, he doesn't treat Priya's complaint as an isolated ticket. Instead, he investigates by coordinating with the administrator to examine the accelerator's audit trails:
+Let's follow how **CarePulse** can investigate and handle her complaint.
 
-- **Consent Status History:** Verifies that Priya successfully revoked her consent.
-- **Event Delivery Logs:** Shows that the `consent.revoke` event was published by CarePulse, but failed delivery to `CloudEngage` due to an HTTP connection timeout.
+### 1. Submit a complaint
 
-This gives Ravi an immediate, verifiable factual timeline: Priya correctly opted out, CarePulse generated the event, but the downstream processor missed the update. With these facts confirmed alongside the administrator, Ravi now has the exact technical context needed to resolve the problem.
+**Priya** signs in to the Consent Portal and opens **My Complaints**.
 
-### 3. Public Dialogue vs. Internal Notes
-Investigating a grievance often requires collaboration between technical teams without confusing the complainant with internal jargon. The accelerator handles this by strictly separating public communication from internal investigation notes:
+She then:
 
-- **Public Messages (Shared Activity):** Ravi sends an immediate, clear response that Priya can see in her portal timeline:  
-  > *"Hello Priya, we verified that your consent was revoked as intended. We identified a sync delay with our downstream email service and are manually updating your preferences now."*
-- **Internal Notes (Officer-Only):** On the same complaint, Ravi adds an internal note visible strictly to users with the `dpdp-consent-dpo` role:  
-  > *"CloudEngage webhook timed out. Contacted vendor ops to purge email from active campaign lists and verified delivery endpoint health."*
+1. Selects **+ Submit a complaint**.
+2. Chooses **Consent Withdrawal Issue** and describes what happened.
+3. Attaches a screenshot of the unwanted email as supporting evidence.
+4. Submits the complaint.
 
-This allows the team to document technical root causes and vendor interactions without cluttering the Data Principal's view.
+![Submit a complaint dialog with Consent Withdrawal Issue selected, a description, and an attached screenshot](../../assets/images/learn/complaint-submit-dialog.png)
 
-### 4. Resolution and Accountability
-Once `CloudEngage` confirms that Priya's contact details have been purged from marketing lists:
+*Priya's view (Data Principal): submitting a complaint.*
 
-1. Ravi transitions the complaint status to **`RESOLVED`** and leaves a closing explanation.
-2. The complaint view locks against accidental edits, while allowing the Data Principal to reopen the case if a new message is sent.
-3. The full history, including timestamps, attachments, comments, and status transitions, remains permanently archived for compliance reporting and regulatory audits.
+The portal creates a complaint record with a reference ID, such as `CMP-2026-00001`, allowing **Priya** and the grievance officer to identify and track the case.
 
----
+**Priya** can return to **My Complaints** to follow its progress and view updates.
 
-:::note Accountability Principle
-The accelerator's grievance handling tools provide the intake mechanisms, deadline tracking, role separation, and evidence trails necessary for compliance; they provide the factual record so organizations can investigate and resolve complaints fairly and transparently.
-:::
+### 2. Investigate the complaint
 
----
+**Ravi** opens **Complaint Management** and reviews **Priya**'s complaint.
 
-## Role Separation for Complaints
+To understand what happened, he examines the relevant consent history and works with the appropriate technical team to investigate how the marketing preferences are updated in CloudEngage.
 
-Grievance handling enforces strict role boundaries between complainants and investigators:
+The investigation reveals that:
 
-| Role | Persona | Permissions and Scope |
-|---|---|---|
-| **`dpdp-consent-user`** | Data Principal (Priya) | **Self-service access only:** Can file, view, reply to, and track only their own complaints via `/me/complaints/*`. Cannot access complaints belonging to any other user. |
-| **`dpdp-consent-dpo`** | Grievance Officer / DPO (Ravi) | **Tenant-wide oversight:** Can view and manage all complaints across the organization, send public replies, add internal notes, and update statuses via `/complaints/*`. |
+- **Consent history:** **Priya**'s consent withdrawal was recorded successfully by **CarePulse**.
+- **Marketing preferences:** CloudEngage received the notification but did not update **Priya**'s marketing preferences.
 
----
+![Complaint Officer detail view of Priya's complaint, showing its Open status, priority, description, and attachment](../../assets/images/learn/complaint-officer-detail-view.png)
+
+*Ravi's view (DPO): reviewing Priya's complaint in Complaint Management.*
+
+These findings help **Ravi** establish that **Priya**'s withdrawal was recorded correctly, but the external email provider continued using outdated preferences.
+
+With the cause identified, **Ravi** can coordinate the corrective actions needed to prevent further unwanted marketing emails.
+
+### 3. Communicate with the complainant
+
+Resolving a complaint often involves technical investigation, but the person who raised it still needs clear updates. The accelerator distinguishes between messages shared with the complainant and internal investigation notes.
+
+**Public messages**
+
+**Ravi** sends **Priya** an update through the complaint record:
+
+> Hello **Priya**, we have confirmed that your consent was withdrawn successfully. We found that our email provider did not update your marketing preferences as expected. We are working with the provider to correct this.
+
+**Priya** can view this message in her complaint timeline.
+
+**Internal notes**
+
+**Ravi** can also record investigation details for authorized officers, such as:
+
+> CloudEngage received the consent withdrawal notification but did not update the contact's marketing preferences. Coordinate with the vendor operations team to correct the preferences and verify that the contact is removed from active marketing campaigns.
+
+These notes help document technical findings and follow-up actions without exposing internal investigation details to the complainant.
+
+![Complaint Officer's activity view showing both internal notes and public replies on the same complaint](../../assets/images/learn/complaint-resolved-timeline.png)
+
+*Ravi's view (DPO): public replies and internal notes together on the same complaint.*
+
+### 4. Resolve the complaint
+
+Once CloudEngage confirms that **Priya**'s marketing preferences have been corrected, **Ravi** updates the complaint's status to `RESOLVED` and records an explanation of the outcome.
+
+**Priya** can review the response and the complaint's recorded activity through the Consent Portal.
+
+![Priya's view of the resolved complaint, showing only the public replies and a banner explaining how to reopen it](../../assets/images/learn/complaint-resolved-principal-view.png)
+
+*Priya's view (Data Principal): the resolved complaint, with only the public replies visible.*
+
+The complaint history provides a record of the investigation, communications, supporting evidence, and status changes. This helps **CarePulse** understand how the issue was handled and supports internal reviews and compliance activities.
+
+## Understanding complaint status
+
+A complaint moves through a defined set of statuses as it progresses from submission to resolution.
+
+| Status | Meaning |
+|---|---|
+| `OPEN` | The complaint has been submitted and is awaiting review. |
+| `IN_PROGRESS` | A grievance officer is investigating the complaint. |
+| `WAITING_ON_CLIENT` | The officer needs additional information from the complainant before continuing. |
+| `AWAITING_INTERNAL_REVIEW` | The complainant has responded, and the officer needs to review the response before proceeding. |
+| `RESOLVED` | The complaint has been resolved and closed. |
+
+### How status transitions work
+
+Complaints follow defined status transitions rather than allowing arbitrary changes. For example, a complaint cannot move directly from `OPEN` to `RESOLVED`; it must first progress through `IN_PROGRESS`.
+
+A resolved complaint can also be reopened if further review is needed. It can transition to `AWAITING_INTERNAL_REVIEW`, allowing the grievance officer to review the new information and determine the next steps.
+
+For example, if **Priya** continues receiving marketing emails after her complaint is resolved, she can ask **CarePulse** to review the case again.
+
+## Role separation for complaints
+
+The accelerator separates complaint access according to each user's role. Data Principals manage their own complaints, while grievance officers handle complaints across the organization.
+
+| Role | Responsibility and access |
+|---|---|
+| `dpdp-consent-user` | Can submit, view, and respond to their own complaints through the self-service portal, subject to the granted permissions. |
+| `dpdp-consent-dpo` | Can review and manage tenant-wide complaints, send public replies, add internal notes, and update complaint statuses, subject to the granted permissions. |
+
+The roles also use different API scopes and endpoint paths. Data Principals access their own complaints through self-service endpoints, while grievance officers use tenant-wide complaint management endpoints.
+
+For details about roles, permissions, and API access, see [Managing Access](managing-access.md).
 
 ## Next Steps
 
 - **Hands-on Walkthrough:** Follow the step-by-step Try Out guide in [Try Out: Complaints](../try-out/complaint.md).
-- **Configuration & APIs:** Learn about statutory deadlines, attachment limits, and email notification templates in the [Developer Grievance Guide](../grievances-guide.md).
+- **Keep connected systems informed:** See [Event Notifications](event.md) to learn how systems like CloudEngage find out about changes such as a consent withdrawal.

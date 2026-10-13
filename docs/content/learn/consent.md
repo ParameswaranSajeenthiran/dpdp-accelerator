@@ -1,100 +1,111 @@
 # Understanding Consent
 
-Consent is more than a yes/no decision. It starts with clearly defining what data is needed and why, and continues throughout the consent lifecycle as people give, change, or withdraw their decisions.
+Consent is not just about asking for a yes or no. It involves understanding what personal data is needed, why it is needed, and giving people control over how their data is used.
 
-This guide walks through that lifecycle using a simple example. It explains how to define the data required for a purpose, collect consent, handle changes and withdrawals, and understand who can act on a consent at each stage.
+In practice, consent can change over time. People may give consent, update their preferences, or withdraw it altogether. Each of these decisions needs to be handled consistently throughout the consent lifecycle.
 
-## The people in this example
+This guide uses a simple example to explain how consent works in the DPDP Accelerator, from defining data requirements and collecting consent to managing changes, handling withdrawals, and understanding who can manage each consent.
 
-To make the concepts easier to follow, we'll use a healthcare service called **CarePulse**.
+## Meet the people in this example
 
-* **Priya** is a Data Principal who uses CarePulse's online healthcare service.
-* **CarePulse** is the Data Fiduciary that decides why Priya's data is processed.
-* **Anika** is CarePulse's **Data Fiduciary administrator**. She manages the Purposes and Elements catalog and monitors consent records across the tenant.
+Throughout this guide, we'll use **CarePulse**, an online healthcare service, to explain how consent works in practice.
+
+* **Priya** is the **Data Principal**. She uses **CarePulse** and decides whether to give, change, or withdraw consent for the use of her personal data.
+* **CarePulse** is the **Data Fiduciary**. It determines why **Priya**'s personal data needs to be processed.
+* **Anika** is **CarePulse**'s **Administrator**. She manages the catalog of Purposes and Elements and oversees consent records within **CarePulse**'s tenant.
+* **Raj** is **Priya**'s spouse. He appears later as the other person involved whenever a consent needs someone besides **Priya** to also decide.
 
 ## 1. Define what data is needed
 
-Before asking Priya for consent, CarePulse needs to clearly describe what data it wants to use and why.
+Before **CarePulse** asks **Priya** for consent, it needs to define **what personal data it wants to use and for what purpose**. This helps **Priya** understand what she is agreeing to.
 
-Anika does this by defining the required information in the catalog.
+**Anika** sets this up in the catalog by defining the data elements and the purposes they support.
 
 For example:
 
-1. In **Elements**, Anika creates an element called `contact-email` with a clear display name and description.
-2. In **Purposes**, she creates a `marketing-email` purpose, version `1.0`, and associates the email element with it.
-3. CarePulse can now use this definition when presenting a consent request to Priya.
+1. **Define the data element.** In **Elements**, **Anika** creates an element named `contact-email`, with a display name and description that explain what the data represents.
 
-![Elements list showing reusable consent elements and their descriptions](../../assets/images/learn/admin-element-list-view.png)
+   ![Elements list showing reusable consent elements and their descriptions](../../assets/images/learn/admin-element-list-view.png)
 
-![Purposes list showing each purpose, its type, version, and description](../../assets/images/learn/admin-purpose-list-view.png)
+2. **Define the purpose.** In **Purposes**, she creates a purpose named `marketing-email`, with version `1.0`, and associates the `contact-email` element with it.
 
-This separation is important. The catalog describes **what data is needed and why**. Creating an Element or Purpose does not create a consent.
+   ![Purposes list showing each purpose, its type, version, and description](../../assets/images/learn/admin-purpose-list-view.png)
 
-The connected application or Consent Management API creates the actual consent using these catalog definitions.
+3. **Use the definition in a consent request.** **CarePulse** can now use this configuration to explain the purpose and the data involved when asking **Priya** for consent.
+
+The key distinction is that **Elements and Purposes define what data is needed and why**, but they do not record anyone's consent. Creating an Element or Purpose alone does not mean **Priya** has agreed to anything.
+
+The connected application or the Consent Management API uses these definitions to create an actual consent record when **Priya**'s consent is collected.
 
 **Try it:** [Define a purpose and its data element](../try-out/consent.md#define-a-purpose-and-its-data-element).
 
-### Record the data the person actually agreed to
+## 2. Give consent and record the person's choices
 
-When CarePulse creates a consent, the request identifies the purpose and the elements that Priya selected.
+### Present consent choices
 
-Suppose Priya agrees to prescription delivery but does not provide her optional phone number. The consent request can contain:
+Once **CarePulse** has defined its purposes and data requirements, its application can present the relevant consent choices to **Priya**.
+
+The application can use the **Consent Management REST API** to retrieve the available Purposes and their associated Elements, present them to **Priya**, and submit her decisions to create consent records. This allows applications to integrate consent collection into their own user journeys.
+
+For example, while creating her account, **Priya** is asked whether she wants to receive marketing emails. She agrees, and **CarePulse** submits her choice through the Consent Management API to create a consent record for the `marketing-email` purpose, covering the `contact-email` element defined earlier.
+
+### Record the purposes and data elements selected
+
+A consent record captures the purposes **Priya** agreed to and the specific data elements covered by each purpose. It does not automatically include every element associated with a purpose.
+
+For example, suppose **CarePulse** later adds an optional `phone-number` element to the `marketing-email` purpose, so it can also send promotional text messages. If **Priya** agrees to marketing emails but declines to share her phone number, the consent request includes only the `contact-email` element:
 
 ```json
 {
+  ...
   "purposes": [
     {
-      "id": "<prescription-delivery-purpose-id>",
+      "id": "<marketing-email-purpose-id>",
       "elements": [
-        { "id": "<delivery-address-element-id>" }
+        {
+          "id": "<contact-email-element-id>"
+        }
       ]
     }
   ]
+  ...
 }
 ```
 
-If Priya also agrees to provide her phone number, its element ID is included in the same array.
+If **Priya** also agrees to share her phone number, **CarePulse** includes the phone number element ID in the same `elements` array.
 
-The consent record captures the **specific elements Priya selected**, along with the version of the purpose that was used when the consent was created.
+The consent record also captures the version of the purpose used when the consent was created. This helps establish which version of the purpose the consent refers to.
 
-## 2. Give the person a clear choice
+### Review consent in the Consent Portal
 
-Once CarePulse has defined its purposes and data requirements, its application can present the consent request to Priya.
+After giving consent, **Priya** can open **My Consents** in the Consent Portal to review her consent records, including what she agreed to, which service requested the consent, its current status, and when it expires.
 
-For example, while booking a consultation, Priya might see separate choices for:
+**Anika**, as **CarePulse**'s **Administrator**, can use **All Consents** to review tenant-wide consent records, subject to her permissions.
 
-* Consultation-related processing
-* Prescription delivery
-* Optional wellness tips
-
-Priya agrees to the consultation and prescription delivery but leaves wellness tips unchecked.
-
-The application records her decision, and the accelerator maintains the resulting consent record and its history.
-
-Priya can later open **My Consents** to see what she agreed to, which service requested the consent, its current state, and when it expires.
-
-Anika, as CarePulse's Data Fiduciary administrator, can review tenant-wide consent records through **All Consents** when she has the required permissions.
-
-The Consent Portal provides a place to **review and manage consent records**.
+The Consent Portal allows individuals and administrators to review and manage consent records according to their roles.
 
 **Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent).
 
-## 3. Change or withdraw a consent
+## 3. Change or withdraw consent
 
-Consent does not necessarily remain unchanged after it is given.
+Consent can change over time. A person may update their choices or decide to withdraw consent they previously gave.
 
-For example, several weeks later, Priya may decide that she no longer wants to receive wellness messages. She can open her consent history, review the relevant consent, and withdraw it.
+For example, several weeks after agreeing to marketing emails, **Priya** decides she no longer wants to receive them. She opens **My Consents** in the Consent Portal, finds her `marketing-email` consent, and withdraws it.
 
-The consent history allows CarePulse to determine:
+The Consent Management API records the change, allowing the consent history to show:
 
-* What changed
-* When the change happened
-* Which purpose version was involved
-* How the consent moved through its lifecycle
+- What changed
+- When the change occurred
+- Which purpose version was involved
+- How the consent progressed through its lifecycle
 
-Revoking consent changes the consent record. It does **not** automatically erase every copy of the data that may already exist with a Data Processor.
+### What happens after consent is withdrawn?
 
-Any follow-up processing, such as notifying processors or handling data according to retention requirements, is coordinated through the relevant lifecycle events and CarePulse's own contracts and retention rules.
+Withdrawing consent updates the consent record, but it does **not** automatically delete personal data already held by **CarePulse** or its Data Processors.
+
+**CarePulse** must handle the consequences of the withdrawal according to applicable requirements, including stopping processing that relies on the withdrawn consent where required. Any necessary follow-up actions, such as notifying Data Processors or handling data under applicable retention requirements, depend on the relevant obligations and system integrations.
+
+The Event Notifications feature can help **CarePulse** communicate consent changes to connected systems so they can take the appropriate action.
 
 See [Event Notifications](event.md) for more information.
 
@@ -104,121 +115,145 @@ See [Event Notifications](event.md) for more information.
 
 ## Understanding consent states
 
-A consent moves through a defined lifecycle. Its current state determines whether it can still be acted on.
+A consent moves through a defined lifecycle. Its current state indicates whether it is awaiting a decision, in effect, or has been rejected, revoked, or expired.
 
-| State      | Meaning                                                                                       |
-| ---------- | --------------------------------------------------------------------------------------------- |
-| `PENDING`  | The consent is waiting for one or more people to approve or reject it.                        |
-| `ACTIVE`   | The consent has been approved and is currently in effect.                                     |
-| `REJECTED` | An authorizer rejected the consent. This is a final state and the consent cannot be reopened. |
-| `REVOKED`  | The consent was withdrawn after becoming active. This is a final state.                       |
-| `EXPIRED`  | The consent passed its expiry time. This is a final state.                                    |
+| State | Meaning |
+|---|---|
+| `PENDING` | The consent is awaiting a decision from one or more required authorizers. |
+| `ACTIVE` | The consent has received all required approvals and is in effect. |
+| `REJECTED` | A required authorizer rejected the consent. |
+| `REVOKED` | An active consent was withdrawn. |
+| `EXPIRED` | The consent has reached its expiry time. |
 
-The starting state depends on how the consent is configured.
+### How does a consent become active?
 
-A consent created for the subject alone becomes **ACTIVE immediately**, because there is no other person whose decision is required.
+The initial state depends on how the consent is configured:
 
-If one or more authorizers are specified, the consent starts as **PENDING**. It becomes **ACTIVE only after every named authorizer approves it**.
-
-If any named authorizer rejects a pending consent, the consent immediately becomes **REJECTED**.
+- **No authorizers specified:** The consent becomes `ACTIVE` immediately.
+- **One or more authorizers specified:** The consent starts as `PENDING` and becomes `ACTIVE` only after all required authorizers approve it.
+- **An authorizer rejects a pending consent:** The consent becomes `REJECTED`.
 
 ## Three consent models
 
-The accelerator supports three common ways of setting up consent.
+The accelerator supports three consent models based on who is involved in authorizing a consent: direct, delegated, and co-authorized consent.
 
 ### Direct consent
 
-In a direct consent, the person gives consent for themself. No other person is required to make a decision.
+In direct consent, the subject gives consent for themself. No additional authorizers are required.
 
-For example, Alice gives consent for her own data:
+This is the model behind **Priya**'s `marketing-email` consent from earlier in this guide:
 
 ```json
 {
-  "subjectId": "alice@wso2.com",
+  "subjectId": "priya@example.com",
   "purposes": [
     {
-      "id": "...",
+      "id": "<marketing-email-purpose-id>",
       "elements": [
-        { "id": "..." }
+        {
+          "id": "<contact-email-element-id>"
+        }
       ]
     }
   ]
 }
 ```
 
-The consent becomes `ACTIVE` immediately.
+Because no additional authorizers are specified, the consent becomes `ACTIVE` immediately.
 
-Alice can manage the consent herself, including revoking it after it becomes active.
+**Priya** can manage her own consent, including revoking it after it becomes active.
+
+**Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent).
 
 ### Delegated consent
 
-In a delegated consent, another person gives consent on behalf of the subject.
+In delegated consent, one or more people authorize the use of data on behalf of the subject. This model is useful when a parent gives consent for a child or a guardian acts on behalf of a dependent.
 
-This can be useful when a parent gives consent for a child or a guardian gives consent for a dependent.
-
-The subject is not automatically an authorizer. They can see the consent, but they cannot approve, reject, or revoke it unless they are explicitly included as an authorizer.
-
-You can also require more than one authorizer.
-
-For example, both parents may need to approve a child's consent:
+For example, both parents may be required to approve a consent for their child:
 
 ```json
 {
-  "subjectId": "child@wso2.com",
+  "subjectId": "child@example.com",
   "purposes": [
     {
-      "id": "...",
+      "id": "<purpose-id>",
       "elements": [
-        { "id": "..." }
+        {
+          "id": "<element-id>"
+        }
       ]
     }
   ],
   "authorizations": [
-    { "userId": "mother@wso2.com", "type": "USER" },
-    { "userId": "father@wso2.com", "type": "USER" }
+    {
+      "userId": "mother@example.com",
+      "type": "USER"
+    },
+    {
+      "userId": "father@example.com",
+      "type": "USER"
+    }
   ]
 }
 ```
 
-The consent remains `PENDING` until both parents approve it.
+The consent remains `PENDING` until both parents approve it. If either parent rejects it, the consent becomes `REJECTED`.
 
-If either parent rejects it, the consent becomes `REJECTED`.
+In this model, the subject is an **observer only**. They can view the consent but cannot approve, reject, revoke, or otherwise manage it. The same mechanism applies whenever someone other than the subject must authorize on their behalf — for example, **CarePulse** naming **Raj** as the sole authorizer on a consent for **Priya**'s enrollment in a shared family health plan.
+
+**Try it:** [Authorize consent as a guardian or delegate](../try-out/consent.md#authorize-consent-as-a-guardian-or-delegate).
 
 ### Co-authorized consent
 
-A co-authorized consent requires the subject and at least one other person to make the decision together.
+Co-authorized consent is useful when the subject must participate in the authorization decision alongside one or more other people.
 
-For example, two joint account holders may both need to approve a consent:
+For example, **Priya** and **Raj** are joint subscribers to a shared **CarePulse** family plan. **CarePulse** requires both account holders to approve a consent covering data shared between their accounts, including **Priya** herself as the subject:
 
 ```json
 {
-  "subjectId": "alice@wso2.com",
+  "subjectId": "priya@example.com",
   "purposes": [
     {
-      "id": "...",
+      "id": "<purpose-id>",
       "elements": [
-        { "id": "..." }
+        {
+          "id": "<element-id>"
+        }
       ]
     }
   ],
   "authorizations": [
-    { "userId": "alice@wso2.com", "type": "USER" },
-    { "userId": "bob@wso2.com", "type": "USER" }
+    {
+      "userId": "priya@example.com",
+      "type": "USER"
+    },
+    {
+      "userId": "raj@example.com",
+      "type": "USER"
+    }
   ]
 }
 ```
 
-Because Alice and Bob are both authorizers, both must approve before the consent becomes `ACTIVE`.
+Because both **Priya** and **Raj** are authorizers, the consent remains `PENDING` until both approve it. If either rejects it, the consent becomes `REJECTED`.
 
-## Review the purpose and enforce consent before processing
+Unlike delegated consent, the subject in a co-authorized consent is an active participant in the decision and can approve or reject the consent as an authorizer.
 
-Before relying on a consent, an application can fetch the full consent record — its current state, the purpose it covers, and the specific data elements involved — rather than assuming an earlier decision still applies.
+**Try it:** [Create a co-authorized consent](../try-out/consent.md#create-a-co-authorized-consent).
+
+## Review and enforce consent before processing
+
+Creating a consent record does not automatically ensure that an application uses personal data in accordance with that consent. Before processing personal data, the consuming application should verify that the consent is valid for the intended operation.
+
+The application can retrieve the full consent record using the Consent Management REST API:
 
 ```http
 GET /api/identity/consent-mgt/v2.0/consents/<consent-id>
 ```
 
-The response includes the purpose and its elements:
+The response provides information about the consent, including its current state, the purposes it covers, and the associated data elements.
+
+For example, a consent response might include:
 
 ```json
 {
@@ -229,17 +264,26 @@ The response includes the purpose and its elements:
       "name": "marketing-email",
       "version": "1.0",
       "elements": [
-        { "id": "...", "name": "contact-email", "displayName": "Contact email" }
+        {
+          "id": "<element-id>",
+          "name": "contact-email",
+          "displayName": "Contact email"
+        }
       ]
     }
   ]
 }
 ```
 
-A consuming application should validate this response as part of consent
-enforcement — checking the consent's state, the purpose, and the specific
-elements selected — before processing the person's data, rather than
-assuming a prior approval still applies.
+Before processing the data, the consuming application should check that:
+
+- **The consent is active.** Its current state permits the intended processing.
+- **The purpose matches.** The intended processing is covered by a purpose included in the consent.
+- **The required data elements are covered.** The consent includes the specific data elements the application intends to use.
+
+These checks help ensure that the application respects the person's recorded choices and does not rely on an earlier approval without verifying the consent's current state and scope.
+
+**Try it:** [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent) — see the equivalent `GET` call under "Act on your own consent".
 
 ## Next Steps
 
@@ -248,6 +292,8 @@ to see what happens after a consent is revoked:
 
 - [Define a purpose and its data element](../try-out/consent.md#define-a-purpose-and-its-data-element)
 - [Review, authorize, revoke, and audit a consent](../try-out/consent.md#review-authorize-revoke-and-audit-a-consent)
+- [Authorize consent as a guardian or delegate](../try-out/consent.md#authorize-consent-as-a-guardian-or-delegate)
+- [Create a co-authorized consent](../try-out/consent.md#create-a-co-authorized-consent)
 - [Complaints](complaint.md) — see what happens when a Data Principal believes something went wrong despite their consent decision
 
 

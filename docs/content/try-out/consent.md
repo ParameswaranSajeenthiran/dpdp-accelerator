@@ -42,7 +42,7 @@ access token yet):
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/elements" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/elements" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -87,7 +87,7 @@ Replace `<element-id>` with the `id` returned above. The equivalent request is:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/purposes" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/purposes" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -155,7 +155,7 @@ immediately, since Priya is consenting for herself:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -196,13 +196,13 @@ The equivalent API calls:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/revoke" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
@@ -228,7 +228,7 @@ To verify the lifecycle audit independently of the UI:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/consent-mgt/v1/consents/<consent-id>/status-history?limit=100&offset=0" \
+  "${BASE_URL}/api/dpdp/consent-mgt/v1/consents/<consent-id>/status-history?limit=100&offset=0" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
@@ -297,7 +297,7 @@ so he must approve it on her behalf.
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -362,7 +362,7 @@ Raj can inspect the pending consent directly before approving it:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents?state=PENDING&relation=AUTHORIZER&attributes=purposes,authorizations" \
+  "${BASE_URL}/api/users/v1/me/consents?state=PENDING&relation=AUTHORIZER&attributes=purposes,authorizations" \
   -H "Authorization: Bearer ${RAJ_ACCESS_TOKEN}"
 ```
 
@@ -370,7 +370,7 @@ Approve the consent with Raj's token:
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/authorize" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/authorize" \
   -H "Authorization: Bearer ${RAJ_ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{ "state": "APPROVED" }'
@@ -393,7 +393,7 @@ The equivalent subject-scoped query is:
 
 ```bash
 curl \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents?relation=SUBJECT&attributes=purposes,authorizations" \
+  "${BASE_URL}/api/users/v1/me/consents?relation=SUBJECT&attributes=purposes,authorizations" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}"
 ```
 
@@ -406,7 +406,86 @@ authorization, state resolution, and audit behavior in the accelerator.
 
 ---
 
+## Create a co-authorized consent
+
+Unlike the delegated flow above, a co-authorized consent names the subject as
+one of the authorizers herself, alongside at least one other person. This
+demonstrates that pattern using the same purpose and element from
+[Define a purpose and its data element](#define-a-purpose-and-its-data-element).
+
+**Portal:** Both **Priya** and **Raj** act from their own **My Consents**,
+filtered to **Managed** — since each has their own entry in
+`authorizations`, each sees Approve/Reject for their own decision.
+
+1. Using the Consent API Invoker's client-credentials token, create a consent
+   whose `subjectId` is Priya and whose `authorizations` list names both
+   Priya and Raj:
+
+```bash
+curl -X POST \
+  "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "subjectId": "priya@example.com",
+    "serviceId": "CarePulse-client",
+    "purposes": [
+      {
+        "id": "<marketing-email-purpose-id>",
+        "elements": [
+          { "id": "<contact-email-element-id>" }
+        ]
+      }
+    ],
+    "language": "en",
+    "expiryTime": 1990411096000,
+    "authorizations": [
+      { "userId": "priya@example.com", "type": "USER" },
+      { "userId": "raj@example.com", "type": "USER" }
+    ],
+    "properties": {}
+  }'
+```
+
+   Because at least one authorization is supplied, the consent is created
+   `PENDING`, even though the subject is also an authorizer.
+
+2. Sign in as **Priya**, open **My Consents**, filter to **Managed**, and
+   approve her own entry:
+
+```bash
+curl -X POST \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/authorize" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{ "state": "APPROVED" }'
+```
+
+   Reopening the consent now shows Priya's own decision recorded, while the
+   consent as a whole stays `PENDING` until Raj also decides.
+
+3. Sign in as **Raj** and approve the same consent with his own token, the
+   same way as in
+   [Approve as the guardian or delegate](#approve-as-the-guardian-or-delegate)
+   above.
+
+4. Reopen the consent as either **Priya** or **Raj**. With both
+   authorizations `APPROVED`, the aggregate consent is now `ACTIVE`, and
+   either of them can revoke it going forward — not only whoever approved it
+   first.
+
+Expected result: both named authorizers, including the subject herself, had
+to approve independently before the consent became active — demonstrating
+that co-authorized consent is distinct from both Direct Consent (no
+authorizers) and Delegated Consent (the subject has no entry at all).
+
+---
+
 ## Next Steps
 
+- **[Learn: Consent](../learn/consent.md):** Story-based overview of how
+  consent collection, review, and withdrawal fit together.
 - Continue with [Complaint Management](complaint.md) to submit, manage, and
   resolve a grievance.
+- **[Try Out: All Flows](event.md):** End-to-end Try Out guide covering
+  consents and event notifications.

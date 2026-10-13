@@ -24,7 +24,6 @@ Before starting, ensure users and roles are configured:
 :::info REST API Testing with M2M Applications
 To test the REST APIs, define the server variables and obtain two distinct OAuth 2.0 access tokens:
 - **`BASE_URL`**: Base URL of your WSO2 Identity Server instance (e.g., `https://localhost:9443`).
-- **`TENANT_DOMAIN`**: Tenant domain of the organization (e.g., `carbon.super`).
 - **`DATA_PRINCIPAL_TOKEN`**: Scoped to self-service endpoints (`complaints:read:self`, `complaints:write:self`).
 - **`DPO_TOKEN`**: Scoped to organization-wide complaint handling (`complaints:read:any`, `complaints:write:any`).
 
@@ -37,7 +36,6 @@ Set your environment variables and request the tokens:
 ```bash
 # Environment variables
 export BASE_URL="https://localhost:9443"
-export TENANT_DOMAIN="carbon.super"
 
 # Obtain Data Principal token (scoped: complaints:read:self complaints:write:self)
 DATA_PRINCIPAL_TOKEN=$(curl -s -X POST "${BASE_URL}/oauth2/token" \
@@ -106,7 +104,7 @@ The self-service API derives the identity of the complainant from the OAuth bear
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/me/complaints" \
+  "${BASE_URL}/api/dpdp/complaints/v1/me/complaints" \
   -H "Authorization: Bearer ${DATA_PRINCIPAL_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -163,7 +161,7 @@ An officer can send a message and transition the case status in a single request
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
+  "${BASE_URL}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
   -H "Authorization: Bearer ${DPO_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -209,7 +207,7 @@ To transition the complaint status to `RESOLVED` via the API, send a comment usi
 
 ```bash
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
+  "${BASE_URL}/api/dpdp/complaints/v1/complaints/<complaint-id>/comments" \
   -H "Authorization: Bearer ${DPO_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{

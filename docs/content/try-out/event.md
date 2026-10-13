@@ -273,7 +273,7 @@ call that API once yourself.
    <TabItem value="linux" label="Linux" default>
 
    ```bash {10}
-   curl -sk -X POST "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+   curl -sk -X POST "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
      -H "Authorization: Bearer ${TOKEN}" \
      -H "Content-Type: application/json" \
      -d '{
@@ -291,7 +291,7 @@ call that API once yourself.
    <TabItem value="macos" label="macOS">
 
    ```bash {10}
-   curl -sk -X POST "${BASE_URL}/t/${TENANT_DOMAIN}/api/identity/consent-mgt/v2.0/consents" \
+   curl -sk -X POST "${BASE_URL}/api/identity/consent-mgt/v2.0/consents" \
      -H "Authorization: Bearer ${TOKEN}" \
      -H "Content-Type: application/json" \
      -d '{
@@ -322,7 +322,7 @@ call that API once yourself.
    '@
 
    Invoke-RestMethod -SkipCertificateCheck -Method Post `
-     -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/identity/consent-mgt/v2.0/consents" `
+     -Uri "$env:BASE_URL/api/identity/consent-mgt/v2.0/consents" `
      -Headers @{ Authorization = "Bearer $env:TOKEN" } `
      -ContentType "application/json" `
      -Body $Body | ConvertTo-Json -Depth 10
@@ -390,7 +390,7 @@ equivalent request. It uses the administrator's access token, which carries
 export ADMIN_TOKEN="<admin-access-token>"
 
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
+  "${BASE_URL}/api/dpdp/event-notifications/v1/subscriptions" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -414,7 +414,7 @@ curl -X POST \
 export ADMIN_TOKEN="<admin-access-token>"
 
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1/subscriptions" \
+  "${BASE_URL}/api/dpdp/event-notifications/v1/subscriptions" \
   -H "Authorization: Bearer ${ADMIN_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -453,7 +453,7 @@ $Body = @'
 '@
 
 Invoke-RestMethod -Method Post `
-  -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/dpdp/event-notifications/v1/subscriptions" `
+  -Uri "$env:BASE_URL/api/dpdp/event-notifications/v1/subscriptions" `
   -Headers @{ Authorization = "Bearer $env:ADMIN_TOKEN" } `
   -ContentType "application/json" `
   -Body $Body | ConvertTo-Json -Depth 10
@@ -484,7 +484,7 @@ request, with no request body:
 export PRIYA_TOKEN="<priya-access-token>"
 
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/revoke" \
   -H "Authorization: Bearer ${PRIYA_TOKEN}"
 ```
 
@@ -495,7 +495,7 @@ curl -X POST \
 export PRIYA_TOKEN="<priya-access-token>"
 
 curl -X POST \
-  "${BASE_URL}/t/${TENANT_DOMAIN}/api/users/v1/me/consents/<consent-id>/revoke" \
+  "${BASE_URL}/api/users/v1/me/consents/<consent-id>/revoke" \
   -H "Authorization: Bearer ${PRIYA_TOKEN}"
 ```
 
@@ -506,7 +506,7 @@ curl -X POST \
 $env:PRIYA_TOKEN = "<priya-access-token>"
 
 Invoke-RestMethod -Method Post `
-  -Uri "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/users/v1/me/consents/<consent-id>/revoke" `
+  -Uri "$env:BASE_URL/api/users/v1/me/consents/<consent-id>/revoke" `
   -Headers @{ Authorization = "Bearer $env:PRIYA_TOKEN" }
 ```
 
@@ -605,7 +605,7 @@ lists the roles that grant them:
 ```bash
 export BASE_URL="https://localhost:9443"
 export TENANT_DOMAIN="example.com"
-export API_BASE="${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
+export API_BASE="${BASE_URL}/api/dpdp/event-notifications/v1"
 export PUBLISHER_TOKEN="<publisher-access-token>"
 export RECEIVER_TOKEN="<receiver-access-token>"
 ```
@@ -616,7 +616,7 @@ export RECEIVER_TOKEN="<receiver-access-token>"
 ```bash
 export BASE_URL="https://localhost:9443"
 export TENANT_DOMAIN="example.com"
-export API_BASE="${BASE_URL}/t/${TENANT_DOMAIN}/api/dpdp/event-notifications/v1"
+export API_BASE="${BASE_URL}/api/dpdp/event-notifications/v1"
 export PUBLISHER_TOKEN="<publisher-access-token>"
 export RECEIVER_TOKEN="<receiver-access-token>"
 ```
@@ -627,7 +627,7 @@ export RECEIVER_TOKEN="<receiver-access-token>"
 ```powershell
 $env:BASE_URL = "https://localhost:9443"
 $env:TENANT_DOMAIN = "example.com"
-$env:API_BASE = "$env:BASE_URL/t/$env:TENANT_DOMAIN/api/dpdp/event-notifications/v1"
+$env:API_BASE = "$env:BASE_URL/api/dpdp/event-notifications/v1"
 $env:PUBLISHER_TOKEN = "<publisher-access-token>"
 $env:RECEIVER_TOKEN = "<receiver-access-token>"
 ```

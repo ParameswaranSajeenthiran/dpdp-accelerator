@@ -14,10 +14,14 @@ Once you have set up the DPDP Accelerator, you can start exploring it using the 
 
 | Component                   | URL |
 |-----------------------------|---|
-| **Identity Server Console** | `https://<HOST>/t/<TENANT>/console` |
-| **Consent Portal**          | `https://<HOST>/t/<TENANT>/consent-portal` |
+| **Identity Server Console** | `https://<HOST>/console` |
+| **Consent Portal**          | `https://<HOST>/consent-portal/` |
 
 These are the main starting points for exploring the DPDP Accelerator. You can use the sections in this guide to understand what you can do with these components and how the different capabilities work together.
+
+:::note Using a tenant?
+The URLs above are for the super tenant. If you're working within a specific tenant, insert `/t/<tenant-domain>` before the path, for example `https://<HOST>/t/<tenant-domain>/console`. See WSO2's [multi-tenancy guide](https://is.docs.wso2.com/en/latest/guides/multitenancy/) for more on how tenants work.
+:::
 
 ## What you'll learn
 
