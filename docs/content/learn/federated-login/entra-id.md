@@ -1,6 +1,6 @@
 # Add Microsoft Entra ID Login
 
-Integrate Microsoft Entra ID with the DPDP Consent Portal through WSO2 Identity Server to let users sign in with their existing Entra ID accounts. Their Entra ID group memberships determine the DPDP roles assigned to them.
+This section illustrates how to integrate Microsoft Entra ID with the DPDP Consent Portal through WSO2 Identity Server to let users sign in with their existing Entra ID accounts. Their Entra ID group memberships determine the DPDP roles assigned to them.
 
 :::note
 - Before you begin, make sure WSO2 Identity Server 7.3.0 (update level 17 or later) and the DPDP Accelerator are installed. WSO2 Identity Server must also be able to reach `login.microsoftonline.com`.
@@ -52,18 +52,14 @@ Next, create a client secret that WSO2 Identity Server can use to authenticate t
    </figure>
 
    :::note[Important]
-   Copy the generated **Value**, not the **Secret ID**. Entra ID displays the secret value only once, so store it securely. Record the expiry date and replace the secret before it expires. An expired secret stops Entra ID sign-in until it is replaced.
+   Copy the generated **Value**, not the **Secret ID**. Entra ID displays the secret value only once, so store it securely. Record the expiry date and replace the secret before it expires.
    :::
 
 Configure the claims that Microsoft Entra ID includes in the ID token sent to WSO2 Identity Server.
 
 1. Go to **Manage** → **Token configuration**.
 
-2. Click **Add optional claim**, select the **ID** token type, choose `upn`, and click **Add**. If prompted, select **Turn on the Microsoft Graph profile permission** and click **Add**.
-
-   :::note
-   Entra ID doesn't include `upn` in the ID token unless you add it. WSO2 Identity Server maps it to the **Username** attribute, which the Consent Portal uses to identify the signed-in user and match them to their consent records.
-   :::
+2. Click **Add optional claim**, select the **ID** token type, choose `upn` (User Principal Name), and click **Add**. If prompted, select **Turn on the Microsoft Graph profile permission** and click **Add**.
 
 3. Click **Add groups claim**, select **Security groups**, choose **Group ID** as the claim type for the ID token, and click **Add**.
 

@@ -54,10 +54,10 @@ Configure the user attributes that Asgardeo shares with WSO2 Identity Server.
 
 2. Select **Email** and mark it as **Mandatory**.
 
-3. Select **Profile** and **Groups**.
+3. Select **Groups**. Leave the other scopes cleared, because DPDP needs only the user's email address and groups.
 
    <figure className="doc-figure">
-     <img src={require('@site/assets/images/learn/federated-login/asgardeo-user-attributes.png').default} alt="User Attribute Selection with the Email, Groups and Profile scopes selected" />
+     <img src={require('@site/assets/images/learn/federated-login/asgardeo-user-attributes.png').default} alt="User Attribute Selection with only the Email and Groups scopes selected" />
    </figure>
 
    :::note
@@ -125,13 +125,13 @@ Next, add Asgardeo as an identity provider (IdP) in WSO2 Identity Server.
 5. Open the new connection, select the **Settings** tab, enter the following values, and click **Update**.
 
    <figure className="doc-figure">
-     <img src={require('@site/assets/images/learn/federated-login/asgardeo-is-connection-settings.png').default} alt="Connection Settings tab showing the Authorized redirect URL, the Logout Endpoint URL and the openid, email, profile and groups scopes" />
+     <img src={require('@site/assets/images/learn/federated-login/asgardeo-is-connection-settings.png').default} alt="Connection Settings tab showing the Authorized redirect URL, the Logout Endpoint URL and the openid, email and groups scopes" />
    </figure>
 
    | Parameter | Description |
    | :--- | :--- |
    | Logout Endpoint URL | `https://api.asgardeo.io/t/<ASGARDEO_ORG>/oidc/logout` |
-   | Scopes | `openid email profile groups` |
+   | Scopes | `openid email groups`. Add `email` and `groups` next to the default `openid`. |
 
    :::tip
    The **Authorized redirect URL** shown here must exactly match the redirect URL registered in Asgardeo. If the values differ, update the Asgardeo application to use the URL shown in WSO2 Identity Server.
@@ -145,19 +145,17 @@ Map the claims received from Asgardeo to the corresponding WSO2 Identity Server 
 
 1. On the **Asgardeo** connection, go to the **Attributes** tab.
 
-2. Click **Add Attribute Mapping** and configure the following mappings. If a claim isn't in the list, type it in the **External IdP Attribute** field.
+2. Click **Add Attribute Mapping** and configure the following mappings.
 
    | Asgardeo claim | WSO2 Identity Server claim | Purpose |
    | :--- | :--- | :--- |
    | `email` | Email Addresses (`http://wso2.org/claims/emailAddresses`) | Identifies the user |
-   | `given_name` | First Name (`http://wso2.org/claims/givenname`) | The user's first name |
-   | `family_name` | Last Name (`http://wso2.org/claims/lastname`) | The user's last name |
    | `groups` | Groups (`http://wso2.org/claims/groups`) | Role mapping |
 
 3. Set **Subject Attribute** to `email`, then click **Update**. If the **Subject** section doesn't appear, reload the tab after saving the mappings.
 
    <figure className="doc-figure">
-     <img src={require('@site/assets/images/learn/federated-login/asgardeo-is-connection-attributes.png').default} alt="Attributes tab with the email, family_name, given_name and groups mappings and the Subject Attribute set to email" />
+     <img src={require('@site/assets/images/learn/federated-login/asgardeo-is-connection-attributes.png').default} alt="Attributes tab with the email and groups mappings and the Subject Attribute set to email" />
    </figure>
 
 ## Map Asgardeo groups to DPDP roles

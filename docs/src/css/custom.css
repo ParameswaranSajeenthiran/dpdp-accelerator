@@ -83,7 +83,11 @@ html[class*='docs-doc-id-learn/federated-login/'] .markdown li > p {
   margin-bottom: 0.5rem;
 }
 
-html[class*='docs-doc-id-learn/federated-login/'] .markdown li > .doc-figure,
+html[class*='docs-doc-id-learn/federated-login/'] .markdown li > .doc-figure {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 html[class*='docs-doc-id-learn/federated-login/'] .markdown li > table,
 html[class*='docs-doc-id-learn/federated-login/'] .markdown li > .theme-admonition {
   margin-bottom: 0.75rem;
